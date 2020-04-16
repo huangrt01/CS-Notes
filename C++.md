@@ -1,5 +1,22 @@
 ### C/C++
-[toc]
+
+- [C/C++](#c-c--)
+  * [debug](#debug)
+  * [C](#c)
+  * [C++的特性](#c-----)
+    + [可扩展性](#----)
+  * [输入输出](#----)
+    + [输入用逗号间隔的数据](#----------)
+  * [STL](#stl)
+    + [\<deque>](#--deque-)
+    + [\<list>](#--list-)
+    + [\<vector>](#--vector-)
+  * [其它的库](#----)
+    + [\<exception>](#--exception-)
+    + [\<pthread.h>](#--pthreadh-)
+    + [\<string>](#--string-)
+    + [\<sys.h>](#--sysh-)
+
 #### debug
 * [macOS上用VSCode](https://zhuanlan.zhihu.com/p/106935263?utm_source=wechat_session)
 * [lldb的使用](https://www.jianshu.com/p/9a71329d5c4d)
