@@ -1,29 +1,23 @@
-### C/C++
-
-- [C/C++](#c-c--)
-  * [debug](#debug)
-  * [C](#c)
-  * [C++的特性](#c-----)
-    + [可扩展性](#----)
-  * [输入输出](#----)
-    + [输入用逗号间隔的数据](#----------)
-  * [STL](#stl)
-    + [\<deque>](#--deque-)
-    + [\<list>](#--list-)
-    + [\<vector>](#--vector-)
-  * [其它的库](#----)
-    + [\<exception>](#--exception-)
-    + [\<pthread.h>](#--pthreadh-)
-    + [\<string>](#--string-)
-    + [\<sys.h>](#--sysh-)
-
+### C++
+[toc]
 #### debug
 * [macOS上用VSCode](https://zhuanlan.zhihu.com/p/106935263?utm_source=wechat_session)
 * [lldb的使用](https://www.jianshu.com/p/9a71329d5c4d)
 
 #### C
+
+* volatile特性：这条代码不要被编译器优化，`volatile int counter = 0`，避免出现意料之外的情况，常用于全局变量
+
 * C不能用for(int i=0; ; ) 需要先定义i
+
 * 负数取余是负数，如果想取模：a = (b%m+m)%m;
+
+##### 结构体
+
+结构体内存分配问题：内存对齐
+* 起始地址为该变量的类型所占的整数倍，若不足则不足部分用数据填充至所占内存的整数倍。
+* 该结构体所占内存为结构体成员变量中最大数据类型的整数倍。
+* e.g.: 1+4+1+8->4+4+8+8=24
 
 #### C++的特性
 面向对象、构造函数、析构函数、动态绑定、内存管理
@@ -32,6 +26,7 @@
 * 二维数组的定义：`TYPE(*p)[N] = new TYPE[][N];`，要指出行数
 * 复制构造函数：常引用
 * 虚析构函数    =>对象内有虚函数表，指向虚函数表的指针：32位系统4字节，64位系统8字节
+* 虚基类偏移量表指针
 
 ##### 可扩展性
 * [类的成员指针函数](https://www.cnblogs.com/zhoug2020/p/11394408.html)
@@ -101,6 +96,11 @@ class cplus_input{
 #### STL
 十三大头文件：\<algorithm>、\<functional>、\<deque>、、\<iterator>、\<array>、\<vector>、\<list>、\<forward_list>、\<map>、\<unordered_map>、\<memory>、\<numeric>、\<queue>、\<set>、\<unordered_set>、\<stack>、\<utility>
 
+##### \<algorithm>
+sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
+* `static bool cmp1(vector<int> &a, vector<int> &b)`
+
+
 ##### \<deque>
 * deque，两端都能进出，双向队列
 * [STL之deque实现详解]( https://blog.csdn.net/u010710458/article/details/79540505?depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-6&utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-6)
@@ -116,7 +116,7 @@ class cplus_input{
   * 也可以 `int a[10]={…};vector<int> b(a,a+10); `       左闭右开
 * 方法：
   * reverse(nums.begin(),nums.end());
-* 关于vector的内存释放问题](https://www.cnblogs.com/jiayouwyhit/p/3878047.html)
+* [关于vector的内存释放问题](https://www.cnblogs.com/jiayouwyhit/p/3878047.html)
   * 方法一：`vector<int>().swap(nums);`
   * 方法二：利用代码块和临时变量
 ```c++
