@@ -15,8 +15,8 @@ I hear and I forget. I see and I remember. I do and I understand.    其实是�
 * Von Neumann model
 * OS：并行，外设，resource manager
 * 概念：virtualization, API, system calls, standard library
-##### CRUX：how to virtualize resources
-##### CRUX：how to build correct concurrent programs
+##### CRUX: how to virtualize resources
+##### CRUX: how to build correct concurrent programs
 * persistance
 * write有讲究：1）先延迟一会按batch操作    2）protocol, such as journaling or copy-on-write    3）复杂结构B-tree
 ##### CRUX: how to store data persistently
@@ -63,7 +63,7 @@ I hear and I forget. I see and I remember. I do and I understand.    其实是�
   * thread-local: 栈不共用，在进程的栈区域开辟多块栈，不是递归的话影响不大
   * thread的意义：1) parallelism, 2) 适应于I/O阻塞系统、缺页中断（需要KLT），这一点类似于multiprogramming的思想，在server-based applications中应用广泛。
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown4Zhihu/master/Data/OSTEP-Operating-Systems-Three-Easy-Pieces/015.jpg" alt="015" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Data/OSTEP-Operating-Systems-Three-Easy-Pieces/015.jpg" alt="015" style="zoom:50%;" />
 
 NOTE：
 * pthread_join与[detach](https://blog.csdn.net/heybeaman/article/details/90896663)
@@ -131,6 +131,7 @@ int main(int argc, char *argv[])
 * pthread_join
   * simpler argument passing：`(void *)100, (void **)rvalue`
   * `(void **)value_ptr`，小心局部变量存在栈中，回传指针报错
+* gcc -o main main.c -Wall -pthread
 
 ##### lock
 ```c++
@@ -139,9 +140,21 @@ pthread_mutex_lock(&lock);
 x = x + 1; // or whatever your critical section is
 pthread_mutex_unlock(&lock);
 ```
-lack of proper initialization
+* ` pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;`
+* `int rc = pthread_mutex_init(&lock, NULL);		assert(rc == 0); // always check success!`
+* pthread_mutex_trylock和timedlock
 
+##### conditional variables
+```c++
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t  cond = PTHREAD_COND_INITIALIZER;
+Pthread_mutex_lock(&lock);
+while (ready == 0) Pthread_cond_wait(&cond, &lock);
+Pthread_mutex_unlock(&lock);
+```
 
+* [关于条件变量需要互斥量保护的问题](https://www.zhihu.com/question/53631897)
+* pthread_cond_wait内部先解锁再等待，之所以加锁是防止cond_wait内部解锁后时间片用完。https://blog.csdn.net/zrf2112/article/details/52287915
 
 
 
