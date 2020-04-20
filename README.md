@@ -3,7 +3,7 @@
 
 ### 数据结构与算法
 
-#### [leetcode题目简评](https://github.com/huangrt01/CS-Notes/blob/master/leetcode%E9%A2%98%E7%9B%AE%E7%AE%80%E8%AF%84.md)
+#### [leetcode题目简评 ](https://github.com/huangrt01/CS-Notes/blob/master/leetcode%E9%A2%98%E7%9B%AE%E7%AE%80%E8%AF%84.md)
 
 #### [《剑指offer》题目简评  (0%)](https://github.com/huangrt01/CS-Notes/blob/master/%E3%80%8A%E5%89%91%E6%8C%87offer%E3%80%8B%E9%A2%98%E7%9B%AE%E7%AE%80%E8%AF%84.md)
 
