@@ -63,7 +63,7 @@ I hear and I forget. I see and I remember. I do and I understand.    其实是�
   * thread-local: 栈不共用，在进程的栈区域开辟多块栈，不是递归的话影响不大
   * thread的意义：1) parallelism, 2) 适应于I/O阻塞系统、缺页中断（需要KLT），这一点类似于multiprogramming的思想，在server-based applications中应用广泛。
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Data/OSTEP-Operating-Systems-Three-Easy-Pieces/015.jpg" alt="015" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/015.jpg" alt="015" style="zoom:50%;" />
 
 NOTE：
 * pthread_join与[detach](https://blog.csdn.net/heybeaman/article/details/90896663)

@@ -125,11 +125,6 @@ sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
     curLevel.swap(tmp); 
 }
 ```
-##### \<queue>
-* priority_queue，默认比较函数是less，大顶堆
-
-##### \<unordered_map>
-[hash+bucket实现](https://blog.csdn.net/hnlylyb/article/details/81189236)，随机访问性能好，数据无序时整体效率比红黑树实现的map高
 
 #### 其它的库
 
