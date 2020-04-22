@@ -1,7 +1,7 @@
 ## leetcode题目简评
 
 ##### 言简意赅，持续更新，利于速览复习。有导航、有代码、有细节、有引申。
-已记录题目编号：1, 5, 10, 15, 20, 21, 26, 53, 54, 56, 65, 72, 79, 84, 88, 101, 102, 103, 104, 105, 121, 122, 123, 125, 136, 137, 145, 146, 153, 154, 155, 161, 167, 169, 170, 172, 190, 191, 198, 203, 206, 215, 217, 219, 220, 226, 229, 240, 343, 653, 946, 974, 1209
+已记录题目编号：1, 5, 10, 15, 20, 21, 26, 53, 54, 56, 65, 72, 79, 84, 88, 101, 102, 103, 104, 105, 121, 122, 123, 125, 136, 137, 138, 145, 146, 153, 154, 155, 161, 167, 169, 170, 172, 190, 191, 198, 203, 206, 215, 217, 219, 220, 226, 229, 240, 343, 653, 946, 974, 1209
 
 #### 0000.资料
 [leetcode精选题详解](https://github.com/azl397985856/leetcode)
@@ -125,7 +125,7 @@ bool isNumber(string s) {
 * 经典回溯法
 
 #### 0084.largest-rectangle-in-histogram [柱状图中最大的矩形](https://leetcode-cn.com/problems/largest-rectangle-in-histogram) 
-* 单调栈，[很好的文章](https://blog.csdn.net/lucky52529/article/details/89155694)
+* 单调栈，[很好的文章，但有小错，纠正代码如下](https://blog.csdn.net/lucky52529/article/details/89155694)
 
 ```c++
 int largestRectangleArea(vector<int> &heights)
@@ -155,19 +155,12 @@ stack<int> st;
 //此处一般需要给数组最后添加结束标志符
 for (遍历这个数组)
 {
-	if (栈空 || 栈顶元素大于等于当前比较元素)
-	{
-		入栈;
-	}
-	else
-	{
-		while (栈不为空 && 栈顶元素小于当前元素)
-		{
-			栈顶元素出栈;
-			更新结果;
-		}
-		当前数据入栈;
-	}
+  while (栈不为空 && 栈顶元素小于当前元素)
+  {
+    栈顶元素出栈;
+    更新结果;
+  }
+  当前数据入栈;
 }
 ```
 
@@ -200,7 +193,7 @@ bool isSymmetric1(TreeNode* a,TreeNode* b) {
 #### 0104.maximum-depth-of-binary-tree [二叉树的最大深度](https://leetcode-cn.com/problems/maximum-depth-of-binary-tree/) 
 * 方法一：递归
 * 方法二：BFS，queue
-* 方法三：DFS，stack，[利用c++的pair](https://blog.csdn.net/sevenjoin/article/details/81937695)(https://blog.csdn.net/sevenjoin/article/details/81937695)，或者python的tuple
+* 方法三：DFS，stack，[利用c++的pair](https://blog.csdn.net/sevenjoin/article/details/81937695)，或者python的tuple
 
 #### 0105. construct-binary-tree-from-preorder-and-inorder-traversal [从前序与中序遍历序列构造二叉树](https://leetcode-cn.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/) 
 * 《剑指offer》第7题
@@ -279,6 +272,10 @@ def singleNumber(self, nums: List[int]) -> int:
     return seen_once
 
 ```
+
+#### 0138.copy-list-with-random-pointer [复制带随机指针的链表](https://leetcode-cn.com/problems/copy-list-with-random-pointer/)
+* 《剑指offer》第35题
+* 思路值得学习，在原链表的主线上复制节点，进行删改操作。
 
 #### 0145.binary-tree-postorder-traversal [二叉树的后序遍历](https://leetcode-cn.com/problems/binary-tree-postorder-traversal)
 
@@ -422,7 +419,7 @@ int majorityElement(vector<int> nums) {
 * Hash表
 
 #### 0172.factorial-trailing-zeroes [阶乘后的零](https://leetcode-cn.com/problems/factorial-trailing-zeroes) 
-*  <img src="https://www.zhihu.com/equation?tex=n/5%2Bn/5%5E2%2Bn/5%5E3%2B%E2%80%A6" alt="n/5+n/5^2+n/5^3+…" class="ee_img tr_noresize" eeimg="1">  递归即可
+*  <img src="https://www.zhihu.com/equation?tex=n/5%2Bn/5%5E2%2Bn/5%5E3%2B%E2%80%A6" alt="n/5+n/5^2+n/5^3+…" class="ee_img tr_noresize" eeimg="1">  递归即可
 
 #### 0190.reverse-bits [颠倒二进制位](https://leetcode-cn.com/problems/reverse-bits) 
 * 法一：位运算
@@ -697,7 +694,7 @@ public class Solution {
 
 * 记录前缀和数组v[i]，
 
-<img src="https://www.zhihu.com/equation?tex=result%3D%5Csum_%7Bi%3D0%7D%5E%7Bi%3DK-1%7D%5Cbinom%7Bv%5Bi%5D%7D%7B2%7D%5Cnotag%0A" alt="result=\sum_{i=0}^{i=K-1}\binom{v[i]}{2}\notag
+<img src="https://www.zhihu.com/equation?tex=%5Crm%7Bresult%7D%3D%5Csum_%7Bi%3D0%7D%5E%7Bi%3DK-1%7D%5Cbinom%7Bv%5Bi%5D%7D%7B2%7D%5Cnotag%0A" alt="\rm{result}=\sum_{i=0}^{i=K-1}\binom{v[i]}{2}\notag
 " class="ee_img tr_noresize" eeimg="1">
 
 #### 1209.remove-all-adjacent-duplicates-in-string-ii [删除字符串中的所有相邻重复项 II](https://leetcode-cn.com/problems/remove-all-adjacent-duplicates-in-string-ii) 
