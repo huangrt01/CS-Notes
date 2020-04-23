@@ -1,17 +1,43 @@
-[toc]
-## OSTEP-Operating-Systems-Three-Easy-Pieces
+<!-- vscode-markdown-toc -->
+* [OSTEP-Operating-Systems-Three-Easy-Pieces](#OSTEP-Operating-Systems-Three-Easy-Pieces)
+	* [Intro](#Intro)
+		* [1.Dialogue](#Dialogue)
+		* [2.Introduction to Operating Systems](#IntroductiontoOperatingSystems)
+	* [Virtualization](#Virtualization)
+		* [3.Dialogue](#Dialogue-1)
+		* [4.the abstraction: The Process](#theabstraction:TheProcess)
+		* [5.Interlude: Process API](#Interlude:ProcessAPI)
+		* [6.Mechanism: Limited Direct Execution](#Mechanism:LimitedDirectExecution)
+		* [7.Scheduling: Introduction](#Scheduling:Introduction)
+		* [8.Scheduling: The Multi-Level Feedback Queue(MLFQ) 多级反馈队列](#Scheduling:TheMulti-LevelFeedbackQueueMLFQ)
+		* [9.Scheduling: Proportional share](#Scheduling:Proportionalshare)
+		* [10.Multiprocessor Scheduling](#MultiprocessorScheduling)
+		* [11.summary](#summary)
+		* [12.A dialogue on memory virtualization](#Adialogueonmemoryvirtualization)
+		* [13.The Abstraction: Address Spaces](#TheAbstraction:AddressSpaces)
+	* [Concurrency](#Concurrency)
+		* [25.A Dialogue on Concurrency](#ADialogueonConcurrency)
+		* [26.Concurrency: An Introduction](#Concurrency:AnIntroduction)
+		* [27.Interlude: Thread API](#Interlude:ThreadAPI)
+
+<!-- vscode-markdown-toc-config
+	numbering=false
+	autoSave=true
+	/vscode-markdown-toc-config -->
+<!-- /vscode-markdown-toc -->
+## <a name='OSTEP-Operating-Systems-Three-Easy-Pieces'></a>OSTEP-Operating-Systems-Three-Easy-Pieces
 
 __主题：virtualization, concurrency, persistence__
 
 [book](http://pages.cs.wisc.edu/~remzi/OSTEP/), [book-code](https://github.com/remzi-arpacidusseau/ostep-code), [projects](https://github.com/remzi-arpacidusseau/ostep-projects), [homework answer](https://github.com/xxyzz/ostep-hw)
 
-### Intro
+### <a name='Intro'></a>Intro
 
-#### 1.Dialogue
+#### <a name='Dialogue'></a>1.Dialogue
 
 I hear and I forget. I see and I remember. I do and I understand.    其实是荀子说的
 
-#### 2.Introduction to Operating Systems
+#### <a name='IntroductiontoOperatingSystems'></a>2.Introduction to Operating Systems
 * Von Neumann model
 * OS：并行，外设，resource manager
 * 概念：virtualization, API, system calls, standard library
@@ -35,11 +61,11 @@ I hear and I forget. I see and I remember. I do and I understand.    其实是�
   * memory protection    concurrency    ASIDE:UNIX
   * modern era: PC    Linus Torvalds: Linux
 
-### Virtualization
+### <a name='Virtualization'></a>Virtualization
 
-#### 3.Dialogue
+#### <a name='Dialogue-1'></a>3.Dialogue
 
-#### 4.the abstraction: The Process
+#### <a name='theabstraction:TheProcess'></a>4.the abstraction: The Process
 ##### CRUX: how to provide the illusion of many CPUs
 * low level machinery    
   * e.g. context switch : register context
@@ -93,7 +119,7 @@ struct proc {
 * HW:process-run.py
   * -I IO_RUN_IMMEDIATE      发生IO的进程接下来会有IO的概率大，所以这样高效
 
-#### 5.Interlude: Process API
+#### <a name='Interlude:ProcessAPI'></a>5.Interlude: Process API
 ##### CRUX: how to create and control processes
 * #include <unistd.h>，getpid()，fork()    不从开头开始运行
 * scheduler的non-determinism，影响concurrency
@@ -165,7 +191,7 @@ fork()和vfork()的区别：
   * The pid parameter specifies the set of child processes for which to wait. If pid is -1, the call waits for any child process.  If pid is 0, the call waits for any child process in the process group of the caller.  If pid is greater than zero, the call waits for the process with process id pid.  If pid is less than -1, the call waits for any process whose process group id equals the absolute value of pid.
 * 5.8    [注意子进程返回0](https://blog.csdn.net/beautysleeper/article/details/52585224)
 
-#### 6.Mechanism: Limited Direct Execution
+#### <a name='Mechanism:LimitedDirectExecution'></a>6.Mechanism: Limited Direct Execution
 ##### CRUX: how to efficiently virtualize the cpu with control
 * limited direct execution
 ##### CRUX: how to perform restricted operations
@@ -217,7 +243,7 @@ HW: measurement
     system call需要0.3 microseconds; context switch 0.6 microseconds; 单次记录用时1 microseconds
     MacOS上没有sched.h    https://yyshen.github.io/2015/01/18/binding_threads_to_cores_osx.html
 
-#### 7.Scheduling: Introduction
+#### <a name='Scheduling:Introduction'></a>7.Scheduling: Introduction
 
 ##### CRUX: how to develop scheduling policy
 
@@ -234,7 +260,7 @@ FIFO: convoy effect  <img src="https://www.zhihu.com/equation?tex=%5Cstackrel%7B
   * 时间片长：amortize the cost of context switching 
 * 针对I/O：overlap
 
-#### 8.Scheduling: The Multi-Level Feedback Queue(MLFQ) 多级反馈队列 
+#### <a name='Scheduling:TheMulti-LevelFeedbackQueueMLFQ'></a>8.Scheduling: The Multi-Level Feedback Queue(MLFQ) 多级反馈队列 
 * Corbato图灵奖；和security有联系
 ##### CRUX: How to schedule without perfect knowledge
 多个queue，每个queue对应一个priority，队内用RR => how to change priority
@@ -271,7 +297,7 @@ attempt3: better accounting
 
 * HW: iobump，io结束后把进程调到当前队列第一位，否则最后一位；io越多效果越好
 
-#### 9.Scheduling: Proportional share
+#### <a name='Scheduling:Proportionalshare'></a>9.Scheduling: Proportional share
 
 ##### CRUX: how to share the CPU proportionally
 
@@ -314,17 +340,17 @@ NOTE:
 * 这个idea应用广泛，比如用于虚拟机的资源分配
 * [why index-0?](https://www.cs.utexas.edu/users/EWD/ewd08xx/EWD831.PDF) 
 
-#### 10.Multiprocessor Scheduling
+#### <a name='MultiprocessorScheduling'></a>10.Multiprocessor Scheduling
 * 概念：multicore processor        threads
 * 还没看
 
-#### 11.summary
+#### <a name='summary'></a>11.summary
 
-#### 12.A dialogue on memory virtualization
+#### <a name='Adialogueonmemoryvirtualization'></a>12.A dialogue on memory virtualization
 every address generated by a user program is a virtual address
   * ease of use, isolation, protection
 
-#### 13.The Abstraction: Address Spaces
+#### <a name='TheAbstraction:AddressSpaces'></a>13.The Abstraction: Address Spaces
 * multiprogramming
 * abstraction: address space
 ##### CRUX：how to virtualize memory
@@ -338,11 +364,11 @@ location of stack: 0x7ffee9cbf8ac        [64bit系统下进程的内存分布](h
 NOTE:
 * 用microkernels的思想实现isolation，机制和策略的分离
 
-### Concurrency
+### <a name='Concurrency'></a>Concurrency
 
-#### 25.A Dialogue on Concurrency
+#### <a name='ADialogueonConcurrency'></a>25.A Dialogue on Concurrency
 
-#### 26.Concurrency: An Introduction
+#### <a name='Concurrency:AnIntroduction'></a>26.Concurrency: An Introduction
 
 概念：thread, multi-threaded, thread control blocks (TCBs)
   * thread-local: 栈不共用，在进程的栈区域开辟多块栈，不是递归的话影响不大
@@ -373,7 +399,7 @@ HW26:
 * data race来源于线程保存的寄存器和stack，
 * 验证了忙等待的低效
 
-#### 27.Interlude: Thread API
+#### <a name='Interlude:ThreadAPI'></a>27.Interlude: Thread API
 ##### CRUX: how to create and control threads
 ```c++
 #include <pthread.h>
