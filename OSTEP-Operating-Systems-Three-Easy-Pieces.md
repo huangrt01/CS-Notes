@@ -1,31 +1,24 @@
-<!-- TOC -->autoauto- [OSTEP-Operating-Systems-Three-Easy-Pieces](#ostep-operating-systems-three-easy-pieces)auto    - [Intro](#intro)auto        - [1.Dialogue](#1dialogue)auto        - [2.Introduction to Operating Systems](#2introduction-to-operating-systems)auto            - [CRUX: how to virtualize resources](#crux-how-to-virtualize-resources)auto            - [CRUX: how to build correct concurrent programs](#crux-how-to-build-correct-concurrent-programs)auto            - [CRUX: how to store data persistently](#crux-how-to-store-data-persistently)auto    - [Virtualization](#virtualization)auto        - [3.Dialogue](#3dialogue)auto        - [4.the abstraction: The Process](#4the-abstraction-the-process)auto            - [CRUX: how to provide the illusion of many CPUs](#crux-how-to-provide-the-illusion-of-many-cpus)auto        - [5.Interlude: Process API](#5interlude-process-api)auto            - [CRUX: how to create and control processes](#crux-how-to-create-and-control-processes)auto            - [HW](#hw)auto        - [6.Mechanism: Limited Direct Execution](#6mechanism-limited-direct-execution)auto            - [CRUX: how to efficiently virtualize the cpu with control](#crux-how-to-efficiently-virtualize-the-cpu-with-control)auto            - [CRUX: how to perform restricted operations](#crux-how-to-perform-restricted-operations)auto            - [CRUX: how to regain control of the CPU](#crux-how-to-regain-control-of-the-cpu)auto            - [CRUX: how to gain control without cooperation](#crux-how-to-gain-control-without-cooperation)auto        - [7.Scheduling: Introduction](#7scheduling-introduction)auto            - [CRUX: how to develop scheduling policy](#crux-how-to-develop-scheduling-policy)auto        - [8.Scheduling: The Multi-Level Feedback Queue(MLFQ) 多级反馈队列](#8scheduling-the-multi-level-feedback-queuemlfq-多级反馈队列)auto            - [CRUX: How to schedule without perfect knowledge](#crux-how-to-schedule-without-perfect-knowledge)auto        - [9.Scheduling: Proportional share](#9scheduling-proportional-share)auto            - [CRUX: how to share the CPU proportionally](#crux-how-to-share-the-cpu-proportionally)auto        - [10.Multiprocessor Scheduling](#10multiprocessor-scheduling)auto        - [11.summary](#11summary)auto        - [12.A dialogue on memory virtualization](#12a-dialogue-on-memory-virtualization)auto        - [13.The Abstraction: Address Spaces](#13the-abstraction-address-spaces)auto            - [CRUX：how to virtualize memory](#cruxhow-to-virtualize-memory)auto    - [Concurrency](#concurrency)auto        - [25.A Dialogue on Concurrency](#25a-dialogue-on-concurrency)auto        - [26.Concurrency: An Introduction](#26concurrency-an-introduction)auto            - [CRUX: how to support synchronization](#crux-how-to-support-synchronization)auto        - [27.Interlude: Thread API](#27interlude-thread-api)auto            - [CRUX: how to create and control threads](#crux-how-to-create-and-control-threads)auto            - [lock](#lock)auto            - [conditional variables](#conditional-variables)autoauto<!-- /TOC -->
-<a id="markdown-ostep-operating-systems-three-easy-pieces" name="ostep-operating-systems-three-easy-pieces"></a>
+[toc]
 ## OSTEP-Operating-Systems-Three-Easy-Pieces
 
 __主题：virtualization, concurrency, persistence__
 
 [book](http://pages.cs.wisc.edu/~remzi/OSTEP/), [book-code](https://github.com/remzi-arpacidusseau/ostep-code), [projects](https://github.com/remzi-arpacidusseau/ostep-projects), [homework answer](https://github.com/xxyzz/ostep-hw)
 
-<a id="markdown-intro" name="intro"></a>
 ### Intro
 
-<a id="markdown-1dialogue" name="1dialogue"></a>
 #### 1.Dialogue
 
 I hear and I forget. I see and I remember. I do and I understand.    其实是荀子说的
 
-<a id="markdown-2introduction-to-operating-systems" name="2introduction-to-operating-systems"></a>
 #### 2.Introduction to Operating Systems
 * Von Neumann model
 * OS：并行，外设，resource manager
 * 概念：virtualization, API, system calls, standard library
-<a id="markdown-crux-how-to-virtualize-resources" name="crux-how-to-virtualize-resources"></a>
 ##### CRUX: how to virtualize resources
-<a id="markdown-crux-how-to-build-correct-concurrent-programs" name="crux-how-to-build-correct-concurrent-programs"></a>
 ##### CRUX: how to build correct concurrent programs
 * persistance
 * write有讲究：1）先延迟一会按batch操作    2）protocol, such as journaling or copy-on-write    3）复杂结构B-tree
-<a id="markdown-crux-how-to-store-data-persistently" name="crux-how-to-store-data-persistently"></a>
 ##### CRUX: how to store data persistently
 * 目标：
   * performance: minimize the overheads
@@ -42,15 +35,11 @@ I hear and I forget. I see and I remember. I do and I understand.    其实是�
   * memory protection    concurrency    ASIDE:UNIX
   * modern era: PC    Linus Torvalds: Linux
 
-<a id="markdown-virtualization" name="virtualization"></a>
 ### Virtualization
 
-<a id="markdown-3dialogue" name="3dialogue"></a>
 #### 3.Dialogue
 
-<a id="markdown-4the-abstraction-the-process" name="4the-abstraction-the-process"></a>
 #### 4.the abstraction: The Process
-<a id="markdown-crux-how-to-provide-the-illusion-of-many-cpus" name="crux-how-to-provide-the-illusion-of-many-cpus"></a>
 ##### CRUX: how to provide the illusion of many CPUs
 * low level machinery    
   * e.g. context switch : register context
@@ -104,9 +93,7 @@ struct proc {
 * HW:process-run.py
   * -I IO_RUN_IMMEDIATE      发生IO的进程接下来会有IO的概率大，所以这样高效
 
-<a id="markdown-5interlude-process-api" name="5interlude-process-api"></a>
 #### 5.Interlude: Process API
-<a id="markdown-crux-how-to-create-and-control-processes" name="crux-how-to-create-and-control-processes"></a>
 ##### CRUX: how to create and control processes
 * #include <unistd.h>，getpid()，fork()    不从开头开始运行
 * scheduler的non-determinism，影响concurrency
@@ -161,7 +148,6 @@ int main(int argc, char *argv[])
 * 谁可以发送SIGINT信号给process=>signal(), process group, 引入user的概念
 * RTFM：read the fucking manual* 
 
-<a id="markdown-hw" name="hw"></a>
 ##### HW
 * 5.3 [用vfork()保证父进程后执行](https://www.cnblogs.com/zhangxuan/p/6387422.html)
 
@@ -179,12 +165,9 @@ fork()和vfork()的区别：
   * The pid parameter specifies the set of child processes for which to wait. If pid is -1, the call waits for any child process.  If pid is 0, the call waits for any child process in the process group of the caller.  If pid is greater than zero, the call waits for the process with process id pid.  If pid is less than -1, the call waits for any process whose process group id equals the absolute value of pid.
 * 5.8    [注意子进程返回0](https://blog.csdn.net/beautysleeper/article/details/52585224)
 
-<a id="markdown-6mechanism-limited-direct-execution" name="6mechanism-limited-direct-execution"></a>
 #### 6.Mechanism: Limited Direct Execution
-<a id="markdown-crux-how-to-efficiently-virtualize-the-cpu-with-control" name="crux-how-to-efficiently-virtualize-the-cpu-with-control"></a>
 ##### CRUX: how to efficiently virtualize the cpu with control
 * limited direct execution
-<a id="markdown-crux-how-to-perform-restricted-operations" name="crux-how-to-perform-restricted-operations"></a>
 ##### CRUX: how to perform restricted operations
 * aside: open() read()这些系统调用是trap call，写好了汇编，参数和系统调用number都放入well-known locations
   * 概念：trap into the kernel        return-from-trap        trap table    trap handler
@@ -198,18 +181,16 @@ fork()和vfork()的区别：
 	* protection: user code中存在的是system call number，避开内核地址
 	* 告诉硬件trap table在哪也是privileged operation
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/002.jpg" alt="LDE protocal" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/002.jpg" alt="LDE protocal" style="zoom:70%;" />
 
 [stub code](https://www.zhihu.com/question/24844900/answer/35126766)
 
-<a id="markdown-crux-how-to-regain-control-of-the-cpu" name="crux-how-to-regain-control-of-the-cpu"></a>
 ##### CRUX: how to regain control of the CPU
 * problem #2:switching between processes
   * A cooperative approach: wait for system calls
   * [MacOS9 Emulator](http://www.columbia.edu/~em36/macos9osx.html#summary)
   * NOTE: only solution to infinite loops is to reboot the machine，reboot is useful
   * A Non-Cooperative Approach: The OS Takes Control
-<a id="markdown-crux-how-to-gain-control-without-cooperation" name="crux-how-to-gain-control-without-cooperation"></a>
 ##### CRUX: how to gain control without cooperation
 * a timer interrupt    interrupt handler
   * timer也可以关
@@ -232,14 +213,12 @@ NOTE:
   * 思考：baby-proof
 
 HW: measurement
-    多核时代不宜用x86的RDTSC http://www.360doc.com/content/12/0827/17/7851074_232649576.shtml
-    system call需要0.3 microseconds; context switch 0.6 microseconds; 单次记录用时1 microseconds
-    MacOS上没有sched.h    https://yyshen.github.io/2015/01/18/binding_threads_to_cores_osx.html
+* [多核时代不宜用x86的RDTSC](http://www.360doc.com/content/12/0827/17/7851074_232649576.shtml)
+* system call需要0.3 microseconds; context switch 0.6 microseconds; 单次记录用时1 microseconds
+* [MacOS上没有sched.h](https://yyshen.github.io/2015/01/18/binding_threads_to_cores_osx.html) 
 
-<a id="markdown-7scheduling-introduction" name="7scheduling-introduction"></a>
 #### 7.Scheduling: Introduction
 
-<a id="markdown-crux-how-to-develop-scheduling-policy" name="crux-how-to-develop-scheduling-policy"></a>
 ##### CRUX: how to develop scheduling policy
 
 * workload assumptions
@@ -255,10 +234,8 @@ FIFO: convoy effect  <img src="https://www.zhihu.com/equation?tex=%5Cstackrel%7B
   * 时间片长：amortize the cost of context switching 
 * 针对I/O：overlap
 
-<a id="markdown-8scheduling-the-multi-level-feedback-queuemlfq-多级反馈队列" name="8scheduling-the-multi-level-feedback-queuemlfq-多级反馈队列"></a>
 #### 8.Scheduling: The Multi-Level Feedback Queue(MLFQ) 多级反馈队列 
 * Corbato图灵奖；和security有联系
-<a id="markdown-crux-how-to-schedule-without-perfect-knowledge" name="crux-how-to-schedule-without-perfect-knowledge"></a>
 ##### CRUX: How to schedule without perfect knowledge
 多个queue，每个queue对应一个priority，队内用RR => how to change priority
 
@@ -281,7 +258,8 @@ attempt2: the priority boost
 
 * Rule 5:After some time period S, move all the jobs in the system to the topmost queue.
   * 部分地解决1和3
-  * Solaris：Default values for the table are 60 queues, with slowly increasing time-slice lengths from 20 milliseconds (highest priority) to a few hundred milliseconds (lowest),and priorities boosted around every 1 second or so，和思考一致：高优先级，把time slice调短
+  * 和思考一致：高优先级，把time slice调短
+  * Solaris：Default values for the table are 60 queues, with slowly increasing time-slice lengths from 20 milliseconds (highest priority) to a few hundred milliseconds (lowest),and priorities boosted around every 1 second or so，
 
 attempt3: better accounting
 
@@ -294,10 +272,8 @@ attempt3: better accounting
 
 * HW: iobump，io结束后把进程调到当前队列第一位，否则最后一位；io越多效果越好
 
-<a id="markdown-9scheduling-proportional-share" name="9scheduling-proportional-share"></a>
 #### 9.Scheduling: Proportional share
 
-<a id="markdown-crux-how-to-share-the-cpu-proportionally" name="crux-how-to-share-the-cpu-proportionally"></a>
 ##### CRUX: how to share the CPU proportionally
 
 Basic Concept: Tickets Represent Your Share
@@ -339,42 +315,118 @@ NOTE:
 * 这个idea应用广泛，比如用于虚拟机的资源分配
 * [why index-0?](https://www.cs.utexas.edu/users/EWD/ewd08xx/EWD831.PDF) 
 
-<a id="markdown-10multiprocessor-scheduling" name="10multiprocessor-scheduling"></a>
 #### 10.Multiprocessor Scheduling
 * 概念：multicore processor        threads
 * 还没看
 
-<a id="markdown-11summary" name="11summary"></a>
 #### 11.summary
 
-<a id="markdown-12a-dialogue-on-memory-virtualization" name="12a-dialogue-on-memory-virtualization"></a>
 #### 12.A dialogue on memory virtualization
 every address generated by a user program is a virtual address
   * ease of use, isolation, protection
 
-<a id="markdown-13the-abstraction-address-spaces" name="13the-abstraction-address-spaces"></a>
 #### 13.The Abstraction: Address Spaces
 * multiprogramming
 * abstraction: address space
-<a id="markdown-cruxhow-to-virtualize-memory" name="cruxhow-to-virtualize-memory"></a>
 ##### CRUX：how to virtualize memory
 * virtual memory            
   * goals：transparency, efficiency (e.g. TLBs), protection
 
 location of code : 0x105f40ec0
+
 location of heap : 0x105f55000
+
 location of stack: 0x7ffee9cbf8ac        [64bit系统下进程的内存分布](https://blog.csdn.net/chenyijun/article/details/79441166)
 
 NOTE:
 * 用microkernels的思想实现isolation，机制和策略的分离
 
-<a id="markdown-concurrency" name="concurrency"></a>
+#### 14.Interlude: Memory API
+##### CRUX:how to allocate and manage memory
+* 64bit UNIX系统，int和double都是8个字节
+* automatic memory management         ~ garbage collector
+* 其它calls：calloc()先置0，realloc()更大区域
+
+一些常见错误：
+* segmentation fault    =>用strdup    ###
+* buffer overflow        e.g. 应该strlen(src)+1
+* uninitialized read/undefined value    ###
+* memory leak            针对long-running server，是OS层面的错误
+* dangling pointer
+* double free   ###
+* invalid frees
+* strcat的参数内存区域重复    ###
+* （valgrind：###）
+
+* 用[purify](https://www.cnblogs.com/Leo_wl/p/7699489.html)和valgrind检查内存泄漏
+
+* 底层基础：
+  * brk，sbrk    不要用
+  * mmap内存映射
+
+HW:
+* null.c    segmentation fault
+* forget_free.c    lldb没反应
+* dangling_pointer.c    直接run会print出0
+* free_wrong.c    int *类型的+操作符重载过，直接加数字，不用乘sizeof(XXX)
+
+#### 15.Mechanism: Address Translation
+efficiency and control
+##### CRUX: how to efficiently and flexibly virtualize memory
+hardware-based address translation
+
+dynamic (hardware-based) relocation=base and bounds 
+  * physical address = virtual address + base
+  * base and bounds register，本质上是MMU(memory management unit)
+  * bounds register: 两种方式，一是size，二是physical address
+
+<->
+
+static (software-based) relocation: loader，不安全，难以再次换位
+
+一些硬件要素：寄存器，异常，内核态，privileged instructions
+* 硬件和protection联系紧密
+
+OS需要的数据结构：
+* free list(定长进程内存)
+* PCB(or process structure)            储存base和bounds信息
+* exception handlers: 掐掉过界的进程
+
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/004.jpg" alt="LDE+Dynamic Relocation" style="zoom:60%;" />
+
+问题：internal fragmentation，内存利用率不高 => segmentation
+
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/005.jpg" alt="Dynamic Relocation" style="zoom:80%;" />
+
+#### 16.Segmentation
+
+##### CRUX:how to support a large address space
+* 意义：节省内存，不赋予全部虚拟地址空间以实体
+* 概念：sparse address spaces、segmentation、segmentation fault
+* 实现
+  * explicit：利用前两位；也可只利用一位，把code和heap合并
+  * implicit：利用计组知识，比如PC生成的地址属于code区
+  * 对于stack的特殊处理：negative offset
+
+support for sharing
+* code sharing    这是一个潜在的好处
+* protection bits (硬件支持)
+
+* fine-grained segmentation: segment table
+* coarse-grained
+
+OS support
+* segment registers
+* malloc
+* manage free space 
+  * 问题：external fragmentation
+  * 方案1: compaction： 消耗大；makes requests to grow existing segments hard to serve
+  * 方案2：free-list：best-fit，worst-fit，first-fit，[buddy algorithm](https://blog.csdn.net/wan_hust/article/details/12688017) 块链表，合并 
+
 ### Concurrency
 
-<a id="markdown-25a-dialogue-on-concurrency" name="25a-dialogue-on-concurrency"></a>
 #### 25.A Dialogue on Concurrency
 
-<a id="markdown-26concurrency-an-introduction" name="26concurrency-an-introduction"></a>
 #### 26.Concurrency: An Introduction
 
 概念：thread, multi-threaded, thread control blocks (TCBs)
@@ -398,18 +450,15 @@ NOTE：
 * 和数据库, journaling、copy-on-write联系紧密
 * 条件变量：用来等待而非上锁
 
-<a id="markdown-crux-how-to-support-synchronization" name="crux-how-to-support-synchronization"></a>
 ##### CRUX: how to support synchronization
 * the OS was the first concurrent program!
-* Not surprisingly, pagetables, process lists, file system structures, and virtuallyevery kernel datastructure has to be carefully accessed, with the proper synchronizationprimitives, to work correctly.
+* Not surprisingly, pagetables, process lists, file system structures, and virtually every kernel data structure has to be carefully accessed, with the proper synchronization primitives, to work correctly.
 
 HW26:
 * data race来源于线程保存的寄存器和stack，
 * 验证了忙等待的低效
 
-<a id="markdown-27interlude-thread-api" name="27interlude-thread-api"></a>
 #### 27.Interlude: Thread API
-<a id="markdown-crux-how-to-create-and-control-threads" name="crux-how-to-create-and-control-threads"></a>
 ##### CRUX: how to create and control threads
 ```c++
 #include <pthread.h>
@@ -454,7 +503,6 @@ int main(int argc, char *argv[])
   * `(void **)value_ptr`，小心局部变量存在栈中，回传指针报错
 * gcc -o main main.c -Wall -pthread
 
-<a id="markdown-lock" name="lock"></a>
 ##### lock
 ```c++
 pthread_mutex_t lock;
@@ -466,7 +514,6 @@ pthread_mutex_unlock(&lock);
 * `int rc = pthread_mutex_init(&lock, NULL);		assert(rc == 0); // always check success!`
 * pthread_mutex_trylock和timedlock
 
-<a id="markdown-conditional-variables" name="conditional-variables"></a>
 ##### conditional variables
 ```c++
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
