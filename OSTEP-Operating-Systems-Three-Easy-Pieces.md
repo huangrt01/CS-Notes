@@ -176,7 +176,8 @@ fork()和vfork()的区别：
   1. x86用[per-process kernel stack](https://stackoverflow.com/questions/24413430/why-keep-a-kernel-stack-for-each-process-in-linux)，用于存进程的寄存器值，以便trap的时候寄存器够 
   2. 如何控制：set up trap table at boot time；直接进任何内核地址是very bad idea
   3. user mode不能I/O request
-
+4. [内核堆栈和用户堆栈小结](https://www.cnblogs.com/dormant/p/5456491.html)
+  
 * system call，包括accessing the file system, creating and destroying processes, communicating with other processes, and allocating more memory（POSIX standard）
 	* protection: user code中存在的是system call number，避开内核地址
 	* 告诉硬件trap table在哪也是privileged operation
