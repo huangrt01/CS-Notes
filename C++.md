@@ -1,8 +1,10 @@
 ### C++
 [toc]
 #### debug
-* [macOS上用VSCode](https://zhuanlan.zhihu.com/p/106935263?utm_source=wechat_session)
-* [lldb的使用](https://www.jianshu.com/p/9a71329d5c4d)
+[macOS上用VSCode](https://zhuanlan.zhihu.com/p/106935263?utm_source=wechat_session)
+
+[lldb的使用](https://www.jianshu.com/p/9a71329d5c4d)
+* run, print, breakpoint set -n main, next
 
 #### C
 
