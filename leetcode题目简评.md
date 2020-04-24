@@ -2,7 +2,7 @@
 
 **言简意赅，持续更新，利于速览复习。有导航、有代码、有细节、有引申。**
 
-已记录题目编号：1, 3, 5, 10, 15, 20, 21, 26, 53, 54, 56, 65, 72, 79, 84, 88, 101, 102, 103, 104, 105, 121, 122, 123, 125, 136, 137, 138, 145, 146, 153, 154, 155, 161, 167, 169, 170, 172, 190, 191, 198, 203, 206, 215, 217, 219, 220, 226, 229, 240, 343,426,  653, 946, 974, 1209
+已记录题目编号：1, 3, 5, 10, 15, 20, 21, 26, 53, 54, 56, 65, 72, 79, 84, 88, 101, 102, 103, 104, 105, 121, 122, 123, 125, 136, 137, 138, 145, 146, 153, 154, 155, 161, 167, 169, 170, 172, 190, 191, 198, 203, 206, 215, 217, 219, 220, 226, 229, 240, 297, 343,426,  653, 946, 974, 1209
 
 #### 0000.资料
 [leetcode精选题详解](https://github.com/azl397985856/leetcode)
@@ -682,6 +682,82 @@ public class Solution {
 #### 0240.search-a-2d-matrix-ii [搜索二维矩阵 II](https://leetcode-cn.com/problems/search-a-2d-matrix-ii) 
 
 * 《剑指offer》第4题，关键在于起点的选取，从左下角或者右上角开始
+
+#### 0297.serialize-and-deserialize-binary-tree [二叉树的序列化与反序列化](https://leetcode-cn.com/problems/serialize-and-deserialize-binary-tree/)
+
+* 思路上可以使用DFS或者BFS
+* C++具体实现，利用stringstream
+```c++
+class Codec {
+public:
+    // Encodes a tree to a single string.
+    string serialize(TreeNode* root) {
+        if(root==NULL)return "";
+        ostringstream ostr;
+        queue<TreeNode*>q;
+        TreeNode*temp;
+        q.push(root);
+        int curNum=1;
+        while(!q.empty()){
+            temp=q.front();
+            q.pop();
+            if(!temp){
+                if(curNum) ostr<<"null,";
+            }
+            else {
+                ostr<<temp->val<<",";
+                curNum--;
+                q.push(temp->left);
+                if(temp->left)curNum++;
+                q.push(temp->right);
+                if(temp->right)curNum++;
+            }
+        }
+        return ostr.str();
+    }
+
+    // Decodes your encoded data to tree.
+    TreeNode* deserialize(string data) {
+        if(data=="")return NULL;
+        istringstream istr(data);
+        queue<TreeNode*>q;
+        TreeNode* root=new TreeNode;
+        TreeNode **number=new TreeNode*;
+        if(ReadStream (istr,number)){
+            root=number[0];
+            if(!root)return NULL;
+            q.push(root);
+        }
+        else return NULL;
+        TreeNode *temp;
+        while(!q.empty()){
+            temp=q.front();
+            q.pop();
+            if(!temp)continue;
+            if(ReadStream(istr,number)){
+                temp->left=number[0];
+                q.push(temp->left);
+            }
+            else break;
+            if(ReadStream(istr,number)){
+                temp->right=number[0];
+                q.push(temp->right);
+            }
+            else break;
+        }
+        return root;
+    }
+    bool ReadStream(istringstream &istr,TreeNode **number){
+        string s;
+        if(getline(istr,s,',')){
+            if(s=="null")number[0]=NULL;
+            else number[0]=new TreeNode(stoi(s));
+            return 1;
+        }
+        return 0;
+    }
+};
+```
 
 #### 0343.integer-break [整数拆分](https://leetcode-cn.com/problems/integer-break) 
 
