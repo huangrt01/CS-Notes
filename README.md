@@ -5,7 +5,7 @@
 
 #### [leetcode题目简评](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/leetcode%E9%A2%98%E7%9B%AE%E7%AE%80%E8%AF%84.md)
 
-#### [《剑指offer》题目简评  (完成60%，整理20%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/%E3%80%8A%E5%89%91%E6%8C%87offer%E3%80%8B%E9%A2%98%E7%9B%AE%E7%AE%80%E8%AF%84.md)
+#### [《剑指offer》笔记  (完成60%，整理20%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/%E3%80%8A%E5%89%91%E6%8C%87offer%E3%80%8B%E7%AC%94%E8%AE%B0.md)
 
 ### 编程语言
 
