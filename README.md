@@ -1,5 +1,6 @@
 # CS-Notes
-我的自学笔记，在整理C++、算法、操作系统，后续学习计算机网络、数据库、分布式系统。
+我的自学笔记，在整理C++、算法、操作系统，后续学习计算机网络、数据库、分布式系统，终身更新。
+* 为了能兼顾备份的简便性和可靠性，采用github作为图床，如果图片资源加载失败，可以clone本仓库，打开/Notes文件夹，利用typora等md阅读器直接阅读。
 
 ### 数据结构与算法
 
@@ -20,4 +21,6 @@
 ### 计算机网络
 
 #### [Computer-Networking-A-Top-Down-Approach  (完成0%，整理1%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Computer-Networking-A-Top-Down-Approach.md)
+
+
 
