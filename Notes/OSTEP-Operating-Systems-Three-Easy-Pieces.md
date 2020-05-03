@@ -191,7 +191,8 @@ int main(int argc, char *argv[])
 * problem #2:switching between processes
   * A cooperative approach: wait for system calls
   * [MacOS9 Emulator](http://www.columbia.edu/~em36/macos9osx.html#summary)
-  * NOTE: only solution to infinite loops is to reboot the machine，reboot is useful
+  * NOTE: only solution to infinite loops is to reboot the machine，reboot is useful。
+  * 重启的意义：1）回到确定无误的初始状态；2）回收过期和泄漏的资源；3）不仅适合手动操作，也易于自动化
   * A Non-Cooperative Approach: The OS Takes Control
 ##### CRUX: how to gain control without cooperation
 * a timer interrupt    interrupt handler
