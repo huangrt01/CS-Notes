@@ -7,7 +7,7 @@
 
 #### [面试心得体会、转行相关](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/%E9%9D%A2%E8%AF%95%E5%BF%83%E5%BE%97%E4%BD%93%E4%BC%9A%E4%B8%8E%E8%BD%AC%E8%A1%8C%E7%9B%B8%E5%85%B3.md)
 * 我对校招技术面试的粗浅理解
-* 非科班转行的同学该如何突破重围？
+* 非科班转行的同学该如何突破重围
 
 ### 数据结构与算法
 
