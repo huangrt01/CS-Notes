@@ -3,6 +3,12 @@
 * 我不是贵系oi出身的大神，目前在以一个初学者的心态补习计算机知识，学习路径和心得可能更值得大家借鉴。
 * 欢迎交流任何问题，知乎咨询满意率100%，私信交流也可，力所能及的都会回复，有代表性的问题会加进本仓库分享。
 
+### 杂感随想
+
+#### [面试心得体会、转行相关](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/%E9%9D%A2%E8%AF%95%E5%BF%83%E5%BE%97%E4%BD%93%E4%BC%9A%E4%B8%8E%E8%BD%AC%E8%A1%8C%E7%9B%B8%E5%85%B3.md)
+* 我对校招技术面试的粗浅理解
+* 非科班转行的同学该如何突破重围？
+
 ### 数据结构与算法
 
 #### [leetcode题目简评](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/leetcode%E9%A2%98%E7%9B%AE%E7%AE%80%E8%AF%84.md)

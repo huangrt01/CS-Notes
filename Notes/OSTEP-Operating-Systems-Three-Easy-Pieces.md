@@ -850,9 +850,117 @@ int main(int argc, char *argv[]) {
 
 ```
 
+#### 28.Locks
+* 概念：lock, owner, 
+* locks: 利用OS来schedule线程，套在critical section两边，有available(unlocked, free)和acquired(locked, held)两种状态
+* POSIX的mutex
+
+##### CRUX: how to build a lock
+evaluating locks
+* correctness (mutual exclusion), fairness (starve), performance
+* 需要考虑starve，设不设置contending
+* 多核问题
+* 定义锁的精细化程度：coarse和fine-grained lock
+
+解决互斥问题应遵循的条件
+1. 任何两个进程不能同时处于临界区
+2. 不应对CPU的速度和数量做任何假设 
+3. 临界区外运行的进程不得阻塞其他进程 
+4. 不得使进程无限期等待进入临界区
+
+##### 禁止中断 interrupt masking
+* 优点：简单
+* 把禁止中断的权利交给用户进程导致系统可靠性较差
+* 不适用于多处理器(违反条件2)
+* 可能错过其它interrupts，比如disk的read request
+* 对于现代CPU，这个实现速度慢
+* 应用场景：OS内部数据结构的互斥访问
+
+##### 共享锁变量 just using loads/stores
+```c++
+while(lock==1);
+lock=1;
+//critical region
+lock=0;
+//non_critical region;
+```
+* 违反条件1（interleaving）
+* 忙等待（spin-waiting）
+* Murphy's law
+
+##### Building Working Spin Locks with Test-And-Set
+* test-and-set(atomic exchange)：把返回原值+修改值这两个操作绑定
+  * xchg(x86), ldstub(SPARC)
+* spin lock，要求preemptive scheduler，抢占式调度
+  * 满足correctness
+  * 不满足fairness和performance
+  * 在多核处理器上表现良好，因为当前的线程可以很快通过critical section，不需要多次spin，上下文切换
+
+##### DEKKER’S AND PETERSON’S ALGORITHMS
+```c++
+#define FALSE 0
+#define TRUE  1
+#define N     2                                           /* 进程数量 */
+  
+int turn=0;                                 /* 现在轮到谁？*/
+int interested[N];               /* 所有值初始化为0（FALSE）*/
+
+void enter_region(int process)               /* 进程是0或1 */
+{
+	interested[process] = TRUE;              /* 表名所感兴趣的*/
+	turn = 1-process;                            /* 设置标志 */
+	while(turn == 1-process && interested[1-process] ==TRUE); /* 空语句 */
+}
+
+void leave_region(int process)                    
+{
+	interested[process] = FALSE;             /* 表示离开临界区*/ 
+}
+```
+##### Compare-And-Swap
+* 这是SPARC上的叫法，在x86上称作compare-and-exchange
+* 对于简单的同步问题，效果和test-and-set一样
+* [利用CAS实现lock-free和wait-free](https://www.jianshu.com/p/baaf53d69b51)
+  * 实现lock-free的ATM存钱问题
+  * ABA(AtomicStampedReference)问题 
+  * 相关论文：[Wait-Free Synchronization](http://www.cs.utexas.edu/users/lorenzo/corsi/cs380d/papers/p124-herlihy.pdf)
 
 
+##### Load-Linked and Store-Conditional
+* [MIPS处理器](http://groups.csail.mit.edu/cag/raw/documents/R4400_Uman_book_Ed2.pdf)
 
+```c++
+typedef struct __lock_t{
+	int flag;
+} lock_t;
+
+void init(lock_t *lock){
+	//0:lock is available, 1:lock is held
+	lock->flag = 0;
+}
+
+int LoadLinked(int *ptr)
+{
+	return *ptr;
+}
+int StoreConditional(int*ptr, int value) {
+	if (no update to *ptr since LoadLinked to this address) {
+		*ptr = value;
+		return 1; // success!
+	} 
+	else {
+		return 0; // failed to update
+	}
+}
+void lock(lock_t *lock){
+	while (LoadLinked(&lock->flag) ||!StoreConditional(&lock->flag, 1));
+}
+void unlock(lock_t *lock){
+	lock->flag = 0;
+}
+```
+
+##### Fetch-And-Add
 
 
 #### Appendix
