@@ -119,17 +119,18 @@ sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
 * 方法：
   * reverse(nums.begin(),nums.end());
 * [关于vector的内存释放问题](https://www.cnblogs.com/jiayouwyhit/p/3878047.html)
-  * 方法一：`vector<int>().swap(nums);`
-  * 方法二：利用代码块和临时变量
-```c++
+  * 方法一：clear 
+  * 方法二：`vector<int>().swap(nums);`
+  * 方法三：利用代码块和临时变量
+`
 {
     vector<int> tmp = curLevel;   
     curLevel.swap(tmp); 
 }
-```
+`
 
-* clear虽然不会deallocate释放空间，但是会destroy执行析构函数，所以可以用同一个空间construct构造节点，如果swap了就要重新allocate空间在contruct节点
-* 如果要每次都释放空间，可以用`res.emplace_back(std::move(curLevel))`，涉及[emplace_back](https://www.cnblogs.com/ChrisCoder/p/9919646.html), [std::move](https://blog.csdn.net/p942005405/article/details/84644069/), [左值、右值引用](https://blog.csdn.net/p942005405/article/details/84644101), [这是一篇有关类定义的总结](https://blog.csdn.net/zzhongcy/article/details/86747794)
+  * clear虽然不会deallocate释放空间，但是会destroy执行析构函数，所以可以用同一个空间构造节点，如果swap了就要重新分配空间再构造节点。因此对于同一个vector的重复利用，可以直接用clear();
+  * 如果要每次都释放空间，也可以用`res.emplace_back(std::move(curLevel))`，涉及[emplace_back](https://www.cnblogs.com/ChrisCoder/p/9919646.html), [std::move](https://blog.csdn.net/p942005405/article/details/84644069/), [左值、右值引用](https://blog.csdn.net/p942005405/article/details/84644101), [这是一篇有关类定义的总结](https://blog.csdn.net/zzhongcy/article/details/86747794)
 
 #### 其它的库
 

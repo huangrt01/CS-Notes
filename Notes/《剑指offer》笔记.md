@@ -206,11 +206,19 @@ vector<int> spiralOrder(vector<vector<int>>& matrix) {
 * [32-I，直接存](https://leetcode-cn.com/problems/cong-shang-dao-xia-da-yin-er-cha-shu-lcof/)：队列
 * [32-II，按层保存](https://leetcode-cn.com/problems/cong-shang-dao-xia-da-yin-er-cha-shu-lcof): [leetcode 102.](https://leetcode-cn.com/problems/binary-tree-level-order-traversal/)，队列，设变量curNum和nextNum分别保存本层和下层的数的个数
 * [32-III，锯齿形](https://leetcode-cn.com/problems/cong-shang-dao-xia-da-yin-er-cha-shu-iii-lcof/): [leetcode 103.](https://leetcode-cn.com/problems/binary-tree-zigzag-level-order-traversal/)，在102的基础上保存层数的奇偶性
-* 引申：析构vector的方法：
-  * `vector<int>().swap(num);`
-  * `{ vector<int> tmp = curLevel;   curLevel.swap(tmp);} `
-  * 本题不需要swap：clear虽然不会deallocate释放空间，但是会destroy执行析构函数，所以可以用同一个空间construct构造节点，如果swap了就要重新allocate空间在contruct节点
-  * 如果要每次都释放空间，可以用`res.emplace_back(std::move(curLevel))`，涉及[emplace_back](https://www.cnblogs.com/ChrisCoder/p/9919646.html), [std::move](https://blog.csdn.net/p942005405/article/details/84644069/), [左值、右值引用](https://blog.csdn.net/p942005405/article/details/84644101), [这是一篇有关类定义的总结](https://blog.csdn.net/zzhongcy/article/details/86747794)
+* 引申：[关于vector的内存释放问题](https://www.cnblogs.com/jiayouwyhit/p/3878047.html)
+  * 方法一：clear 
+  * 方法二：`vector<int>().swap(nums);`
+  * 方法三：利用代码块和临时变量
+`
+{
+    vector<int> tmp = curLevel;   
+    curLevel.swap(tmp); 
+}
+`
+
+  * clear虽然不会deallocate释放空间，但是会destroy执行析构函数，所以可以用同一个空间构造节点，如果swap了就要重新分配空间再构造节点。由于本题是对同一个vector的重复利用，可以直接用clear();，空间复杂度是单层最大节点数。
+  * 如果要每次都释放空间，也可以用`res.emplace_back(std::move(curLevel))`，涉及[emplace_back](https://www.cnblogs.com/ChrisCoder/p/9919646.html), [std::move](https://blog.csdn.net/p942005405/article/details/84644069/), [左值、右值引用](https://blog.csdn.net/p942005405/article/details/84644101), [这是一篇有关类定义的总结](https://blog.csdn.net/zzhongcy/article/details/86747794)
 
 ##### 33.[二叉搜索树的后序遍历序列](https://leetcode-cn.com/problems/er-cha-sou-suo-shu-de-hou-xu-bian-li-xu-lie-lcof/)
 * 法1:递归子树，直观的思路
