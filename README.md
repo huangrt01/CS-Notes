@@ -23,7 +23,7 @@
 
 #### [操作系统本科课程笔记  (整理40%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F.md)
 
-#### [OSTEP-Operating-Systems-Three-Easy-Pieces  (完成60%，整理40%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/OSTEP-Operating-Systems-Three-Easy-Pieces.md)
+#### [OSTEP-Operating-Systems-Three-Easy-Pieces  (完成60%，整理50%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/OSTEP-Operating-Systems-Three-Easy-Pieces.md)
 
 ### 计算机网络
 
