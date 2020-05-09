@@ -4,7 +4,7 @@
 [macOS上用VSCode](https://zhuanlan.zhihu.com/p/106935263?utm_source=wechat_session)
 
 [lldb的使用](https://www.jianshu.com/p/9a71329d5c4d)
-* run, print, breakpoint set -n main, next
+*  breakpoint set -n main, run, print, next
 
 #### C
 
@@ -209,6 +209,11 @@ strcpy(buf, str.c_str());//strncpy(buf, str.c_str(), 10);
 
 ##### \<sys.h>
 
+sche.h
+
+`pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &m->set)`
+* [CPU亲和性](https://blog.csdn.net/ma950924/article/details/81773719)
+
 ```c++
 #ifndef __common_h__
 #define __common_h__
@@ -229,6 +234,12 @@ void Spin(int howlong) {
     while ((GetTime() - t) < (double) howlong)
     ; // do nothing in loop
 }
+
+struct timeval start, end;
+gettimeofday(&start, NULL);
+gettimeofday(&end, NULL);
+printf("Time (seconds): %f\n\n", (float) (end.tv_usec - start.tv_usec + (end.tv_sec - start.tv_sec) * 1000000) / 1000000);
+
 
 #endif // __common_h__
 ```

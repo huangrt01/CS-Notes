@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
   * 类似的应用：UNIX的pipe()特性，grep -o foo file | wc -l
 
 * 谁可以发送SIGINT信号给process=>signal(), process group, 引入user的概念
-* RTFM：read the fucking manual* 
+* RTFM：read the fucking manual
 
 **HW:**
 
@@ -671,6 +671,124 @@ HW:
 3. 4.  cat /proc/meminfo 可用内存132GB，运行巨量mem会core dumped，       in(中断时间)明显增加    偶尔会有sy(system time)
 5. swapon -s，显示可供swap的大小 ，相当于 cat /proc/swaps
 
+#### 22.Beyond Physical Memories: Policies
+##### CRUX: how to decide which page to evict
+* 本质上是cache management
+* 评价指标average memory access time： <img src="https://www.zhihu.com/equation?tex=%20AMAT%20%3D%20T_%7BM%7D%2B%28P_%7BMiss%7D%20%C2%B7%20T_%7BD%7D%29%20" alt=" AMAT = T_{M}+(P_{Miss} · T_{D}) " class="ee_img tr_noresize" eeimg="1"> ，hit rate很重要
+
+the optimal replacement policy
+* Belady: furtherest in the future
+
+ASIDE: types of cache misses:    Three C’s: compulsory, capacity, conflict
+* OS page cache是全相联，不会发生conflict miss
+
+A simple policy: FIFO
+* Belady’s Anomaly: FIFO，cache size高可能反而不好，因为没有stack property(N+1-cache和N-cache的包含关系)，不像LRU有这个性质
+
+another simple policy : random
+
+Using History: LRU    least-recently-used            
+* frequency and recency            LFU
+* 其它变种：scan resistance
+
+workload有几种：随机，80-20（适合LRU），looping sequential（适合RAND）
+
+##### CRUX: how to implement an LRU replacement policy
+关于实现：approximating LRU
+* use bit(reference bit) 
+* clock algorithm: 循环数组，遇到1置为0，遇到0置换
+  * 效果比其它的好，只比LRU差一点
+  * 改进：考虑dirty bits，先evict unused and clean pages，否则swap损耗大
+
+其它policy：
+* page selection: demand paging/prefetching
+* clustering(grouping) of writes
+
+thrashing: memory is oversubscribed, demands > physical memory
+* 方法一：admission control，控制working sets的大小
+* 方法二：out-of-memory killer，       潜在的问题：kill X server
+
+#### 23.Complete Virtual Memory Systems
+
+##### CRUX: how to build a complete VM system
+
+##### VAX/VMS virtual memory
+
+DEC发明
+
+存在的问题：
+* 需要覆盖的机器类型range太宽，the curse of generality    
+* 有inherent flaws
+
+page+segmentation
+
+Q：page太小，512bytes，如何解决内存压力？
+
+1. hybrid approach: 引入segmentation    
+2. 利用内核memory    
+3. 与2联系，利用TLB缓解复杂机制带来的损耗 
+
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/008.jpg" alt="具体实现" style="zoom:50%;" />
+
+NOTE：
+* page 0: in order to provide some support for detecting null-pointer accesses
+* kernel is mapped into each address space
+
+有关page replacement:
+*  no reference bit
+* 针对memory hog：segmented FIFO，给每个进程规定一个RSS(resident set size)，超出这个范围要FIFO
+* second-chance lists： clean-page list和dirty-page list，从clean开始evict
+* clustering
+
+other neat tricks:
+* demand zeroing: 等到进程要用page，再交给OS给page置0
+* COW: copy-on-write，和UNIX的fork() exec()机制结合
+* 核心思想是be lazy: 好处一是提高responsiveness，二是可能obviate the need to do things at all
+
+##### the Linux virtual memory system
+
+
+内核、用户部分的内存分配，大体沿用以前，区别在于内核分为两部分：
+* kernel logical addresses:
+  * kmalloc，存page tables, per-process kernel stacks，不能swap到disk
+  * direct mapping to physical addresses  : 1) simple to translate，0xC0000000变0x00000000；2) contiguous，适合于DMA
+* kernel virtual addresses: vmalloc，不连续，用于large buffers，可以让32bit系统处理超过1GB的memory
+* 0xC0000000开始是内核
+
+64-bit x86：
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/009.jpg" alt="64-bit x86" style="zoom:50%;" />
+
+large page support
+* explicit的支持：mmap, shmget    => transparent huge page support
+* 对TLB好处大，miss rate和path都降低成本
+* 缺点：internal fragmentation; swapping效果不好
+* 体现了incrementalism，慢慢引入特性并迭代
+
+the page cache
+* 主要来源：memory-mapped files, file data and metadata from devices , and heap and stack pages that comprise each process (anonymous memory)
+* pdflush：背景线程，把dirty data写入backing store
+* 2Q replacement：inactive list不时加入active list，解决大文件频繁访问的问题
+* memory mapping体现在linux的方方面面: 用pmap命令查看
+
+**security相关**
+
+[buffer overflow](https://en.wikipedia.org/wiki/Buffer_overflow)
+
+[smashing the stack for fun and profit](https://insecure.org/stf/smashstack.html)
+* 概念：privilege escalation
+* 对策：NX bit page禁止执行，针对stack
+
+return-oriented programming (ROP)
+* 对策：address space layout randomization(ASLR).    even  KALSR
+  * macOS上，调整[27:12]16位，随机
+
+Other Security Problems: Meltdown And Spectre
+* meltdownattack.com    spectreattack.com
+* 思想：speculation execution会暴露内存信息
+* 对策：kernel page-table isolation (KPTI)
+
+《cloud atlas》quote: “My life amounts to no more than one drop in a limitless ocean. Yet what is any ocean, but a multitude of drops?”
+
 
 #### 24.Summary
 
@@ -1006,7 +1124,7 @@ void lock() {
 ##### 方法三：Linux的futex，更多内核特性
 * OS support: per-futex in-kernel queue
 * [nptl库](http://ftp.gnu.org/gnu/glibc/)中lowlevellock.h的代码片段：
-  * 
+  * mutex的巧妙设计
 
 ```c++
 void mutex_lock (int*mutex) {
@@ -1050,15 +1168,55 @@ void mutex_unlock (int*mutex) {
 Concurrent Counters
 * 概念：thread safe, perfect scaling
 
-Scalable Counting： [approximate counter](https://lwn.net/Articles/170003/)
+Scalable Counting： approximate counter
 * local counter和global counter，一个CPU配一个锁，再加上一个global锁
 * threshold S: scalable的程度，local到global的transfer间隔
 * 实现见[书上本章P5](http://pages.cs.wisc.edu/~remzi/OSTEP/threads-locks-usage.pdf)
 
-LWN上的文章：
+[LWN上的文章](https://lwn.net/Articles/170003/) : 
 * atomic_t变量, SMP-safe (SMP:Symmetrical Multi-Processing)，缺点在于锁操作的损耗、cache line频繁在CPU之间跳动
 * approximate counter：缺点在于耗内存、低于实际值
 * 进一步引入 local\_t，每个GPU设两个counter
+
+Concurrent Linked Lists
+* malloc error之后接unlock，这样的代码风格容易出问题。实际实现时推荐只在update数据结构的时候加锁，因为malloc具有thread safe特性。
+* TIP：be wary of control flow changes that lead to function returns, exits, or other similar error conditions that halt the execution of a function
+* hand-over-hand locking(lock coupling)：并发性强，但锁操作频繁，实际性能不见得好 
+
+Concurrent Queue
+* Michael and Scott Concurrent Queue: 1）两个锁；2）头节点法
+* A more fully developed bounded queue, that enables a thread to wait if the queue is either empty or overly full, is the subject of our intense study in the next chapter on condition variables.
+
+Concurrent Hash Table
+
+```c++
+#define BUCKETS (101)
+typedef struct __hash_t {
+    list_t lists[BUCKETS];
+} hash_t;
+void Hash_Init(hash_t*H) {
+    int i;
+    for (i = 0; i < BUCKETS; i++)
+        List_Init(&H->lists[i]);
+}
+int Hash_Insert(hash_t*H, int key) {
+    return List_Insert(&H->lists[key % BUCKETS], key);
+}
+int Hash_Lookup(hash_t*H, int key) {
+    return List_Lookup(&H->lists[key % BUCKETS], key);
+}
+```
+
+**premature optimization** (Knuth's Law)
+
+* linux、Sun OS这样成熟的OS，为了规避这一问题，也是一开始只用 big kernel lock(BKL)，等多核瓶颈出现后再做优化。 《Understanding the Linux Kernel 》
+
+#### 30.Condition Variables
+
+##### CRUX: how to wait for a condition
+
+* 概念：condition variable, wait/signal on the condition
+* 
 
 #### Appendix
 
@@ -1129,4 +1287,4 @@ all: $(TARG)
 
 inbox：
 * hm5.8    g++ hm5.8.cpp -o hm5.8 -Wall && "/Users/huangrt01/Desktop/OSTEP/ostep-code/cpu-api/“hm5.8  同一个命令，用coderunner输出六行，用terminal输出五行 
-* 19. physically-indexed cache
+* 19.physically-indexed cache
