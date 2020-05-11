@@ -35,6 +35,13 @@
 
 ### 其它
 
-* 关于本仓库
-  * 为了能兼顾备份的简便性和可靠性，采用github作为图床，如果图片资源加载失败，可以clone本仓库，打开/Notes文件夹，利用typora等md阅读器直接阅读。
+关于本仓库
+* 为了能兼顾备份的简便性和可靠性，采用github作为图床，如果图片资源加载失败，可以clone本仓库，打开/Notes文件夹，利用typora等md阅读器直接阅读。
 
+内容预告
+* 《剑指offer》整理
+* OSTEP concurrency部分整理
+* 计网前三章
+* 结合uunp做ostep project（web server，shell）
+* OSTEP persistency部分
+* 结合6.828做xv6
