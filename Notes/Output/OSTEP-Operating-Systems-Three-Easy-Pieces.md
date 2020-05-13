@@ -902,9 +902,6 @@ while (ready == 0) Pthread_cond_wait(&cond, &lock);
 Pthread_mutex_unlock(&lock);
 ```
 
-* [关于条件变量需要互斥量保护的问题](https://www.zhihu.com/question/53631897)
-* pthread_cond_wait内部先解锁再等待，之所以加锁是防止cond_wait内部解锁后时间片用完。https://blog.csdn.net/zrf2112/article/details/52287915
-
 HW:
 * main-race.c:
   * `valgrind --tool=helgrind ./main-race`，结果给出了“Possible data race during write of size 4 at 0x30A014 by thread #1”
@@ -1118,7 +1115,7 @@ void lock() {
 * 利用guard，虽然也有一定的spin lock损耗，但不涉及critical section，损耗较小
 * Q1：wakeup/waiting race：在park之前切换上下文
 * A1: 1）利用setpark(); 2)guard传入内核，可能类似后面futex的实现
-* Q2：priority inversion: 高优先级线程waiting低优先级线程，可能因为spin lock或者存在中优先级线程而无法运行。
+* Q2：priority inversion: 高优先级线程waiting低优先级线程，可能因为spin lock或者存在**中优先级线程**而无法运行。
 * A2: 1）priority inheritance; 2)所有线程平等
 
 ##### 方法三：Linux的futex，更多内核特性
@@ -1165,10 +1162,10 @@ void mutex_unlock (int*mutex) {
 #### 29.Lock-based Concurrent Data Structures
 ##### CRUX: how to add locks to data structures
 
-Concurrent Counters
+**Concurrent Counters**
 * 概念：thread safe, perfect scaling
 
-Scalable Counting： approximate counter
+**Scalable Counting： approximate counter**
 * local counter和global counter，一个CPU配一个锁，再加上一个global锁
 * threshold S: scalable的程度，local到global的transfer间隔
 * 实现见[书上本章P5](http://pages.cs.wisc.edu/~remzi/OSTEP/threads-locks-usage.pdf)
@@ -1178,16 +1175,16 @@ Scalable Counting： approximate counter
 * approximate counter：缺点在于耗内存、低于实际值
 * 进一步引入 local\_t，每个GPU设两个counter
 
-Concurrent Linked Lists
+**Concurrent Linked Lists**
 * malloc error之后接unlock，这样的代码风格容易出问题。实际实现时推荐只在update数据结构的时候加锁，因为malloc具有thread safe特性。
 * TIP：be wary of control flow changes that lead to function returns, exits, or other similar error conditions that halt the execution of a function
 * hand-over-hand locking(lock coupling)：并发性强，但锁操作频繁，实际性能不见得好 
 
-Concurrent Queue
+**Concurrent Queue**
 * Michael and Scott Concurrent Queue: 1）两个锁；2）头节点法
 * A more fully developed bounded queue, that enables a thread to wait if the queue is either empty or overly full, is the subject of our intense study in the next chapter on condition variables.
 
-Concurrent Hash Table
+**Concurrent Hash Table**
 
 ```c++
 #define BUCKETS (101)
@@ -1216,13 +1213,81 @@ int Hash_Lookup(hash_t*H, int key) {
 ##### CRUX: how to wait for a condition
 
 * 概念：condition variable, wait/signal on the condition
-* 
+* wait(): unlock, 然后让线程睡眠
+* signal(): lock，返回caller
+
+```c++
+int done  = 0;
+pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t c  = PTHREAD_COND_INITIALIZER;
+void thr_exit() {
+    Pthread_mutex_lock(&m);
+    done = 1;
+    Pthread_cond_signal(&c);
+    Pthread_mutex_unlock(&m);
+}
+void*child(void*arg) {
+    printf("child\n");
+    thr_exit();
+    return NULL;
+}
+void thr_join() {
+    Pthread_mutex_lock(&m);
+    while (done == 0)
+        Pthread_cond_wait(&c, &m);2
+    thread_mutex_unlock(&m);
+}
+int main(int argc, char*argv[]) {
+    printf("parent: begin\n");
+    pthread_t p;
+    Pthread_create(&p, NULL, child, NULL);
+    thr_join();
+    printf("parent: end\n");
+    return 0;
+}
+```
+
+* 代码中变量done的意义：state varibale，使程序的正确性不受两个线程运行先后顺序影响
+* [关于条件变量需要互斥量保护的问题](https://www.zhihu.com/question/53631897)，pthread_cond_wait内部先解锁再等待，之所以加锁是防止cond_wait内部解锁后时间片用完。https://blog.csdn.net/zrf2112/article/details/52287915
+
+##### The Producer/Consumer (Bounded Buffer) Problem
+* bounded buffer的应用场景：HTTP requests的work queue；pipe
+
+实现一：用一个条件变量+if实现
+* 问题：Mesa semantics: there is no guarantee that when the woken thread runs, the state will still be as desired <-> Hoare semantics；前者广泛采用
+
+实现二：一中的if改成**while**，尽量不被遗漏
+* 多线程程序尽量用while来check条件，还可以避免spurious wakeups(一次唤醒了多个线程)
+* 问题：signal不确定唤醒的是生产者还是消费者
+
+实现三：while+两个条件变量
+
+
+**Covering Conditions**：针对memory allocator问题，直接用`pthread_cond_broadcast`唤醒所有wait中的线程，这是最简洁有效的思路
+
+HW:
+
+2.`./main-two-cvs-while -l 10 -m 10 -p 1 -c 1 -v -t -C 0,0,0,0,0,0,1`
+
+3.Linux switchs more often between producer and consumer than Mac
+
+4.5.改m之后，由12/13秒到7秒
+
+6.7.均是5秒，因为睡眠的时候释放了锁
+
+9.`./main-one-cv-while -l 100 -p 1 -c 2 -m 1 -v -t`
+
+
+
+
+
+
+
 
 #### Appendix
 
-编译相关的知识
+##### 编译相关的知识
 * libc: Linux 下的 ANSI C 函数库
-
 * gcc
   * cpp文件预处理相关的#  <img src="https://www.zhihu.com/equation?tex=%5Clongrightarrow" alt="\longrightarrow" class="ee_img tr_noresize" eeimg="1">  cc1 由C到汇编  <img src="https://www.zhihu.com/equation?tex=%5Clongrightarrow" alt="\longrightarrow" class="ee_img tr_noresize" eeimg="1">  ac：assembler  <img src="https://www.zhihu.com/equation?tex=%5Clongrightarrow" alt="\longrightarrow" class="ee_img tr_noresize" eeimg="1">  ld: linker
 
@@ -1233,7 +1298,6 @@ int Hash_Lookup(hash_t*H, int key) {
 	* -O     optimization
   * -E  寻找所有依赖
   * One issue with mem.c is that address space randomization is usually on by default. To turn it off: Just compile/link as follows: gcc -o mem mem.c -Wall -Wl,-no_pie
-
 
 `FLAGS = -Wall -pthread, INCLUDES = ../include, gcc -I  <img src="https://www.zhihu.com/equation?tex=%28INCLUDES%29%20-o%20t0%20t0.c%20" alt="(INCLUDES) -o t0 t0.c " class="ee_img tr_noresize" eeimg="1"> (FLAGS)`
 
@@ -1283,7 +1347,6 @@ all: $(TARG)
     rm -f  <img src="https://www.zhihu.com/equation?tex=%28OBJS%29%20" alt="(OBJS) " class="ee_img tr_noresize" eeimg="1"> (TARG)
 ```
 * makedepend工具能帮助寻找依赖
-
 
 inbox：
 * hm5.8    g++ hm5.8.cpp -o hm5.8 -Wall && "/Users/huangrt01/Desktop/OSTEP/ostep-code/cpu-api/“hm5.8  同一个命令，用coderunner输出六行，用terminal输出五行 
