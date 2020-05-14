@@ -14,13 +14,13 @@
 
 ### 数据结构与算法
 
-#### [leetcode题目简评](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/leetcode%E9%A2%98%E7%9B%AE%E7%AE%80%E8%AF%84.md)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;:heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign:
+#### [leetcode题目简评](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/leetcode%E9%A2%98%E7%9B%AE%E7%AE%80%E8%AF%84.md)&ensp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;:heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign:
 
-#### [《剑指offer》笔记 ](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/%E3%80%8A%E5%89%91%E6%8C%87offer%E3%80%8B%E7%AC%94%E8%AE%B0.md):white_check_mark::white_check_mark::white_check_mark::white_check_mark::white_check_mark::white_check_mark::black_square_button::black_square_button::black_square_button::black_square_button:
+#### [《剑指offer》笔记 ](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/%E3%80%8A%E5%89%91%E6%8C%87offer%E3%80%8B%E7%AC%94%E8%AE%B0.md)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;:heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign:
 
 ### 编程语言
 
-#### [C++  (整理10%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/C%2B%2B.md):white_check_mark::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button:
+#### [C++  (整理10%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/C%2B%2B.md)&emsp;&emsp;&emsp;■■■■■□□□□□ 
 
 ### 操作系统
 
