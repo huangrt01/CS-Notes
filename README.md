@@ -20,7 +20,7 @@
 
 ### 编程语言
 
-#### [C++  (整理10%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/C%2B%2B.md)■□□□□□□□□□
+#### [C++ ](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/C%2B%2B.md)■□□□□□□□□□
 
 ### 操作系统
 
