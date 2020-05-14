@@ -14,29 +14,29 @@
 
 ### 数据结构与算法
 
-#### [leetcode题目简评](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/leetcode%E9%A2%98%E7%9B%AE%E7%AE%80%E8%AF%84.md)&ensp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;:heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign:
+#### [leetcode题目简评](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/leetcode%E9%A2%98%E7%9B%AE%E7%AE%80%E8%AF%84.md)■■■■■■■■■■
 
-#### [《剑指offer》笔记 ](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/%E3%80%8A%E5%89%91%E6%8C%87offer%E3%80%8B%E7%AC%94%E8%AE%B0.md)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;:heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_plus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign::heavy_minus_sign:
+#### [《剑指offer》笔记 ](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/%E3%80%8A%E5%89%91%E6%8C%87offer%E3%80%8B%E7%AC%94%E8%AE%B0.md)■■■■■■□□□□
 
 ### 编程语言
 
-#### [C++  (整理10%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/C%2B%2B.md)&emsp;&emsp;&emsp;■■■■■□□□□□ 
+#### [C++  (整理10%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/C%2B%2B.md)■□□□□□□□□□
 
 ### 操作系统
 
-#### [操作系统本科课程笔记  (整理40%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F.md):white_check_mark::white_check_mark::white_check_mark::white_check_mark::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button:
+#### [操作系统本科课程笔记](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F.md)■■■■□□□□□□
 
-#### [OSTEP-Operating-Systems-Three-Easy-Pieces  (整理60%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/OSTEP-Operating-Systems-Three-Easy-Pieces.md):white_check_mark::white_check_mark::white_check_mark::white_check_mark::white_check_mark::white_check_mark::black_square_button::black_square_button::black_square_button::black_square_button:
+#### [OSTEP-Operating-Systems-Three-Easy-Pieces ](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/OSTEP-Operating-Systems-Three-Easy-Pieces.md)■■■■■■□□□□
 
-#### [Linux   --  结合MIT 6.NULL课程学习（整理5%）](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Linux.md):white_check_mark::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button:
+#### [Linux   --  结合MIT 6.NULL课程学习（整理5%）](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Linux.md)■□□□□□□□□□
 
 ### 计算机网络
 
-#### [Computer-Networking-A-Top-Down-Approach  (完成0%，整理1%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Computer-Networking-A-Top-Down-Approach.md):white_check_mark::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button:
+#### [Computer-Networking-A-Top-Down-Approach](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Computer-Networking-A-Top-Down-Approach.md)■□□□□□□□□□
 
 ### 密码学
 
-#### [Cryptography I, Stanford University, Dan Boneh (完成95%。整理1%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Cryptography%20I%2C%20Stanford%20University%2C%20Coursera.md):white_check_mark::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button::black_square_button:
+#### [Cryptography I, Stanford University, Dan Boneh (完成95%)](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Cryptography%20I%2C%20Stanford%20University%2C%20Coursera.md)■□□□□□□□□□
 
 ### 其它
 
@@ -44,7 +44,6 @@
 * 为了能兼顾备份的简便性和可靠性，采用github作为图床，如果图片资源加载失败，可以clone本仓库，打开/Notes文件夹，利用typora等md阅读器直接阅读。
 
 内容预告
-* readme的进度条用符号代替，彩色emoji
 * 《剑指offer》整理
 * OSTEP concurrency部分整理
 * 计网前三章
