@@ -44,9 +44,12 @@
 * 为了能兼顾备份的简便性和可靠性，采用github作为图床，如果图片资源加载失败，可以clone本仓库，打开/Notes文件夹，利用typora等md阅读器直接阅读。
 
 内容预告
-* 《剑指offer》整理
-* OSTEP concurrency部分整理
-* 计网前三章
+* MIT 6.NULL，熟悉linux
+* OSTEP concurrency补完
+* 《剑指offer》做过的题整理
+* 计网上面两层看网课做项目
 * 结合uunp做ostep project（web server，shell）
 * OSTEP persistency部分
-* 结合6.828做xv6
+* 计网剩下的部分看网课做项目
+* MIT6.824
+* 结合MIT6.828做xv6
