@@ -1,0 +1,1 @@
+* git clone --depth=1：clone速度慢的时候可以试试只clone最后一次commit
