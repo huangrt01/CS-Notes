@@ -1,4 +1,4 @@
-### Linux
+### Shell
 
 * [哪些命令行工具让你相见恨晚？ - Jackpop的回答 - 知乎](https://www.zhihu.com/question/41115077/answer/624385012)
 
@@ -22,7 +22,7 @@ https://missing.csail.mit.edu/ ，介绍了如何利用工具提升效率
 * [shell中不同类型quotes的含义](https://www.gnu.org/software/bash/manual/html_node/Quoting.html)
 
 ##### Lecture2. Shell Tools and Scripting
-shell scripting
+**shell scripting**
 * foo=bar, \$foo	注意等号前后不能有space，否则被当成参数
 * 单引号和双引号的区别：同样套在\$foo上，前者是literal meaning，而" "会替换成变量值
 * shell scripting也有if、case、while、for、function特性
@@ -37,11 +37,11 @@ mcd(){
 
 * **special variables**
   * \$0 - Name of the script
-  * \$1 to \$9 - Arguments to the script. $1 is the first argument and so on.
+  * \ <img src="https://www.zhihu.com/equation?tex=1%20to%20%5C" alt="1 to \" class="ee_img tr_noresize" eeimg="1"> 9 - Arguments to the script. $1 is the first argument and so on.
   * \$@ - All the arguments
   * \$# - Number of arguments
   * \$? - Return code of the previous command
-  * \$\$ - Process Identification number for the current script
+  * \ <img src="https://www.zhihu.com/equation?tex=%5C" alt="\" class="ee_img tr_noresize" eeimg="1">  - Process Identification number for the current script
   * !! - Entire last command, including arguments. A common pattern is to execute a command only for it to fail due to missing permissions, then you can quickly execute it with sudo by doing sudo !!
   * \$_ - Last argument from the last command. If you are in an interactive shell, you can also quickly get this value by typing Esc followed by .
 
@@ -64,7 +64,10 @@ false ; echo "This will always run"
 
 ```
 
-* command substitution: `for file in $(ls)`
+**[Linux-shell中各种替换的辨析](https://www.cnblogs.com/chengd/p/7803664.html)**
+
+* variable substitution：` <img src="https://www.zhihu.com/equation?tex=var%2C%20" alt="var, " class="ee_img tr_noresize" eeimg="1"> {var}`
+* command substitution: `for file in  <img src="https://www.zhihu.com/equation?tex=%28ls%29%60%EF%BC%8C%E5%8F%AF%E4%BB%A5%E7%94%A8%60%27%20%27%60%E4%BB%A3%E6%9B%BF%60" alt="(ls)`，可以用`' '`代替`" class="ee_img tr_noresize" eeimg="1"> ( )`，但后者辨识度更高
 * process substitution: 生成返回temporary file，`diff <(ls foo) <(ls bar)`
 
 ```shell
@@ -72,7 +75,7 @@ false ; echo "This will always run"
 
 echo "Starting program at $(date)" # Date will be substituted
 
-echo "Running program $0 with $# arguments with pid $$"
+echo "Running program  <img src="https://www.zhihu.com/equation?tex=0%20with%20" alt="0 with " class="ee_img tr_noresize" eeimg="1"> # arguments with pid $$"
 
 for file in $@; do
     grep foobar $file > /dev/null 2> /dev/null
@@ -109,8 +112,10 @@ done
   * 比如cd只能在function中影响到外界shell
 - As with any programming language functions are a powerful  construct to achieve modularity, code reuse and clarity of shell code.  Often shell scripts will include their own function definitions.
 
-** shell tools**
-帮助文档：
+**shell tools**
+
+**帮助文档**
+
 * XX -h
 * man XX
 * :help 或 ? (interactive)
@@ -145,7 +150,40 @@ rg --stats PATTERN
 * 寻找目录
   * [fasd](https://github.com/clvv/fasd): 用[frecency](https://developer.mozilla.org/en/The_Places_frecency_algorithm)(frequency+recency)这个指标排序，这一指标最早用于火狐浏览器
   * [autojump](https://www.baidu.com/link?url=mmPr58MUREjyOpep_Bjba3FyOvqmlUlHSjwpit3kmUPWMWCrvvrUjx1-MKzWeBCsFBiJoXKF-A3Qk23C07rCTa&wd=&eqid=c4204f66000031cb000000065ebf6b15)
+  * More complex tools exist to quickly get an overview of a directory structure [`tree`](https://linux.die.net/man/1/tree), [`broot`](https://github.com/Canop/broot) or even full fledged file managers like [`nnn`](https://github.com/jarun/nnn) or [`ranger`](https://github.com/ranger/ranger)
 
+**Exercises**
+
+1. `alias ll='ls -aGhlt'`
+
+2. marco记录directory，polo前往
+```shell
+#!/bin/bash
+marco(){
+        foo=$(pwd)
+        export MARCO=$foo
+}
+polo(){
+        cd "$MARCO" || echo "cd error"
+}
+```
+
+3. 实用小工具，比如跑深度学习算法抢GPU
+```shell
+#!/usr/bin/env bash
+try_except(){
+        echo "start capture the program failure log"
+        cnt=-1
+        ret=0
+        while [[ $ret -eq 0 ]]; do
+# let cnt++
+                sh "$1" 2>&1
+                ret=$?
+                cnt=$((cnt+1))
+        done
+        echo "failed after ${cnt} times"
+}
+```
 
 #### zsh
 * [oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh)
@@ -159,7 +197,7 @@ Aliases
 * pyfind
 * pyclean [dirs]
 * pygrep \<text\> 
-```shell
+​```shell
 alias python3="/Users/huangrt01/anaconda3/bin/python3"
 # alias base
 alias ll='ls -alGh'
@@ -209,7 +247,7 @@ alias dkcpstop="docker-compose stop"
   * colorized output, default regex matching, Unicode support, more intuitive syntax
 * find：1）寻找文件； 2）机械式操作
   * -iname：大小写不敏感
-```shell
+​```shell
 # Find all directories named src
 find . -name src -type d
 # Find all python files that have a folder named test in their path

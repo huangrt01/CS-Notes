@@ -1,4 +1,4 @@
-### Linux
+### Shell
 
 * [哪些命令行工具让你相见恨晚？ - Jackpop的回答 - 知乎](https://www.zhihu.com/question/41115077/answer/624385012)
 
@@ -37,11 +37,11 @@ mcd(){
 
 * **special variables**
   * \$0 - Name of the script
-  * \ <img src="https://www.zhihu.com/equation?tex=1%20to%20%5C" alt="1 to \" class="ee_img tr_noresize" eeimg="1"> 9 - Arguments to the script. $1 is the first argument and so on.
+  * \$1 to \$9 - Arguments to the script. $1 is the first argument and so on.
   * \$@ - All the arguments
   * \$# - Number of arguments
   * \$? - Return code of the previous command
-  * \ <img src="https://www.zhihu.com/equation?tex=%5C" alt="\" class="ee_img tr_noresize" eeimg="1">  - Process Identification number for the current script
+  * \$\$ - Process Identification number for the current script
   * !! - Entire last command, including arguments. A common pattern is to execute a command only for it to fail due to missing permissions, then you can quickly execute it with sudo by doing sudo !!
   * \$_ - Last argument from the last command. If you are in an interactive shell, you can also quickly get this value by typing Esc followed by .
 
@@ -66,8 +66,8 @@ false ; echo "This will always run"
 
 **[Linux-shell中各种替换的辨析](https://www.cnblogs.com/chengd/p/7803664.html)**
 
-* variable substitution：` <img src="https://www.zhihu.com/equation?tex=var%2C%20" alt="var, " class="ee_img tr_noresize" eeimg="1"> {var}`
-* command substitution: `for file in  <img src="https://www.zhihu.com/equation?tex=%28ls%29%60%EF%BC%8C%E5%8F%AF%E4%BB%A5%E7%94%A8%60%27%20%27%60%E4%BB%A3%E6%9B%BF%60" alt="(ls)`，可以用`' '`代替`" class="ee_img tr_noresize" eeimg="1"> ( )`，但后者辨识度更高
+* variable substitution：`$var, ${var}`
+* command substitution: `for file in $(ls)`，可以用`' '`代替`$( )`，但后者辨识度更高
 * process substitution: 生成返回temporary file，`diff <(ls foo) <(ls bar)`
 
 ```shell
@@ -75,7 +75,7 @@ false ; echo "This will always run"
 
 echo "Starting program at $(date)" # Date will be substituted
 
-echo "Running program  <img src="https://www.zhihu.com/equation?tex=0%20with%20" alt="0 with " class="ee_img tr_noresize" eeimg="1"> # arguments with pid $$"
+echo "Running program $0 with $# arguments with pid $$"
 
 for file in $@; do
     grep foobar $file > /dev/null 2> /dev/null
