@@ -24,7 +24,7 @@
 
 ### 效率工具
 
-#### [Shell   --  结合MIT 6.NULL课程学习](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Linux.md)■■■□□□□□□□
+#### [Shell   --  结合MIT 6.NULL课程学习](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Shell.md)■■■□□□□□□□
 
 ### 操作系统
 
