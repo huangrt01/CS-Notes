@@ -47,7 +47,8 @@
 ### 其它
 
 关于本仓库
-* 为了能兼顾备份的简便性和可靠性，采用github作为图床，如果图片资源加载失败，可以clone本仓库，打开/Notes文件夹，利用typora等md阅读器直接阅读。
+* 为了能兼顾备份的简便性和可靠性，采用github作为图床。
+* [笔记转化器](https://github.com/huangrt01/Markdown-Transformer-and-Uploader)有bug，会把shell的含有`$`的行当作latex行内公式转化掉，暂时没有时间改，可以先clone下来看
 
 内容预告
 * MIT 6.NULL，熟悉命令行
