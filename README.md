@@ -5,7 +5,7 @@
 
 ### 杂感随想
 
-#### [面试心得体会、转行相关](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/%E9%9D%A2%E8%AF%95%E5%BF%83%E5%BE%97%E4%BD%93%E4%BC%9A%E4%B8%8E%E8%BD%AC%E8%A1%8C%E7%9B%B8%E5%85%B3.md)■■■■□□□□□□
+#### [面试心得体会、转行相关](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/%E9%9D%A2%E8%AF%95%E5%BF%83%E5%BE%97%E4%BD%93%E4%BC%9A%E4%B8%8E%E8%BD%AC%E8%A1%8C%E7%9B%B8%E5%85%B3.md)■■■■□□□□□□
 
   * 我对校招技术面试的粗浅理解
   * 非科班转行的同学该如何突破重围
@@ -24,7 +24,7 @@
 
 ### 效率工具
 
-#### [Shell   --  结合MIT 6.NULL课程学习](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Shell.md)■■■□□□□□□□
+#### [Shell   --  结合MIT 6.NULL课程学习](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Shell-MIT-6-NULL.md)■■■■□□□□□□
 
 ### 操作系统
 
@@ -34,7 +34,9 @@
 
 ### 计算机网络
 
-#### [Stanford-CS144](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Stanford-CS144.md)■□□□□□□□□□
+#### [Stanford-CS144-Lecture](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Computer-Networking-Lecture-CS144-Stanford.md)■□□□□□□□□□
+
+#### [Stanford-CS144-Lab](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Computer-Networking-Lab-CS144-Stanford.md)■□□□□□□□□□
 
 #### [Computer-Networking-A-Top-Down-Approach](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Computer-Networking-A-Top-Down-Approach.md)□□□□□□□□□□
 
@@ -49,11 +51,11 @@
 
 内容预告
 * MIT 6.NULL，熟悉命令行
+* 计网上面两层看网课做项目
 * OSTEP concurrency补完
 * 《剑指offer》做过的题整理
-* 计网上面两层看网课做项目
 * 结合uunp做ostep project（web server，shell）
+* MIT6.824
 * OSTEP persistency部分
 * 计网剩下的部分看网课做项目
-* MIT6.824
 * 结合MIT6.828做xv6
