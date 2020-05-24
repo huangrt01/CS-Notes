@@ -26,6 +26,8 @@
 
 #### [Shell   --  结合MIT 6.NULL课程学习](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Shell-MIT-6-NULL.md)■■■■□□□□□□
 
+#### [git](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/git.md)
+
 ### 操作系统
 
 #### [操作系统本科课程笔记](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F.md)■■■■□□□□□□
@@ -51,10 +53,10 @@
 * [笔记转化器](https://github.com/huangrt01/Markdown-Transformer-and-Uploader)有bug，会把shell的含有`$`的行当作latex行内公式转化掉，暂时没有时间改，可以先clone下来看
 
 内容预告
-* MIT 6.NULL，熟悉命令行
-* 计网上面两层看网课做项目
-* OSTEP concurrency补完
+* MIT 6.NULL学完，熟悉命令行
+* 计网CS144看网课做项目
 * 《剑指offer》做过的题整理
+* OSTEP concurrency补完
 * 结合uunp做ostep project（web server，shell）
 * MIT6.824
 * OSTEP persistency部分
