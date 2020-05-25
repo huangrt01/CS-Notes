@@ -121,7 +121,7 @@
 * 2^32 ~ 4GB ~  0x0100000000
 * 1024=0x0400	大端：0x04 0x00；小端: 0x00 0x04. 
 * Little endian: x86, big endian: ARM, network byte order
-* e.g. `uint16_t http_port=80; if(packet->port==http+port){...}` IPv4的packet_length注意大小端
+* e.g. `uint16_t http_port=80; if(packet->port==http_port){...}` IPv4的packet_length注意大小端
 * 函数：`htons(),ntohs(),htonl(),ntohl()`
   * host/network, short/long
   * `#include<arpa/inet.h>`
@@ -212,13 +212,15 @@ SIP的应用场景
 * detect errors的三个算法：checksums, cyclic redundancy checks, message authentication codes
 * TCP(Transmission Control Protocol)、UDP(User Datagram Protocol)、ICMP(Internet Control Message Protocol)
 
-##### 
 
 
 
 
 
 
+
+
+##### potpourri
 * [RFC 2606](https://datatracker.ietf.org/doc/rfc2606/): localhost
 
 

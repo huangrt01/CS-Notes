@@ -589,15 +589,17 @@ sudo mount -t vboxsf -o rw,gid=vboxsf FolderName /media/sf_FolderName `
   * `ls | ssh foobar@server grep PATTERN`
 * [用SSH连GitHub](https://help.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh)
 ```shell
-ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+ssh-keygen -t rsa -b 4096 -C "huangrt01@163.com"
 eval "$(ssh-agent -s)"
 ssh-add -K ~/.ssh/id_rsa
-pbcopy < ~/.ssh/id_rsa.pub
+pbcopy < ~/.ssh/id_rsa.pub  #适合MacOS , Linux用xclip
 # 上github添加SSH Key
+
 ssh -T git@github.com
 
 ssh-keygen -y -f ~/.ssh/id_rsa
 ```
+* [ssh agent及其forwarding特性](https://www.ssh.com/ssh/agent#ssh-agent-forwarding)
 * ssh连虚拟机
 ```shell
 ssh -p 2222 cs144@localhost
