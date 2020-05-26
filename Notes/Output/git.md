@@ -25,6 +25,7 @@
 
 * `git push` updates the remote repository with any commits made locally to a branch.
   * `git push origin lab1:lab1`
+  * `git push --set-upstream origin my-branch`，本地关联远程分支，用来省略上面一行的分支标注
 
 #### 和Github联动
 * GitHub is a Git hosting repository that provides developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, or the use of a collection of free and for-purchase apps in the GitHub Marketplace. 

@@ -141,6 +141,7 @@ done
 * 查找文件：find, fd, locate，见底部命令解释
 * 查找代码：grep, [ack](https://beyondgrep.com/), [ag](https://github.com/ggreer/the_silver_searcher) and [rg](https://github.com/BurntSushi/ripgrep)
   * grep -R can be improved in many ways, such as ignoring .git folders, using multi CPU support, &c
+  * 代码行数统计工具[cloc](https://github.com/AlDanial/cloc)
 
 ```shell
 # Find all python files where I used the requests library
