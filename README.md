@@ -30,19 +30,19 @@
 
 ### 操作系统
 
-#### [操作系统本科课程笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F.md)■■■■□□□□□□
+#### [操作系统——本科课程笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F.md)■■■■□□□□□□
 
 #### [OSTEP-Operating-Systems-Three-Easy-Pieces ](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/OSTEP-Operating-Systems-Three-Easy-Pieces.md)■■■■■■□□□□
 
 ### 计算机网络
 
-#### [Stanford-CS144-Lecture](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lecture-CS144-Stanford.md)■□□□□□□□□□
+#### [Stanford-CS144-Lecture](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lecture-CS144-Stanford.md)■■□□□□□□□□
 
 #### [Stanford-CS144-Lab](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lab-CS144-Stanford.md)■■□□□□□□□□
 
 #### [Computer-Networking-A-Top-Down-Approach](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-A-Top-Down-Approach.md)□□□□□□□□□□
 
-#### [通信与网络](https://github.com/huangrt01/CS-Notes/blob/master/Notes/%E9%80%9A%E4%BF%A1%E4%B8%8E%E7%BD%91%E7%BB%9C.md)■□□□□□□□□□
+#### [通信与网络——本科课程笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/%E9%80%9A%E4%BF%A1%E4%B8%8E%E7%BD%91%E7%BB%9C.md)■□□□□□□□□□
 
 ### 密码学
 
@@ -50,17 +50,22 @@
 
 ### 其它
 
-关于本仓库
+**关于本仓库**
+
 * 为了能兼顾备份的简便性和可靠性，采用github作为图床。
 * [笔记转化器](https://github.com/huangrt01/CS-Notes)有bug，会把shell的含有`$`的行当作latex行内公式转化掉，暂时没有时间改，可以先clone下来看
 
-内容预告
+**内容预告**
+
 * MIT 6.NULL学完，熟悉命令行
-* 计网CS144看网课做项目
+* 计网CS144看网课看到router，做完TCP lab
 * 《剑指offer》做过的题整理
-* OSTEP concurrency补完
-* 结合uunp做ostep project（web server，shell）
-* MIT6.824
+* OSTEP concurrency补完剩下的几节
+* 开始试着做MIT6.824
+* 挑着看CSAPP，做web server和shell lab
+* 参考uunp，在上面的基础上添加ostep project中web server和shell lab的需求功能
+* CS144剩余的课
 * OSTEP persistency部分
-* 计网剩下的部分看网课做项目
+* CSAPP其它部分和lab
 * 结合MIT6.828做xv6
+
