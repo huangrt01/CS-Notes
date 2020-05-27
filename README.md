@@ -64,7 +64,7 @@
 * 开始试着做MIT6.824
 * 挑着看CSAPP，做web server和shell lab
 * 参考uunp，在上面的基础上添加ostep project中web server和shell lab的需求功能
-* CS144剩余的课
+* CS144剩余的课+router lab
 * OSTEP persistency部分
 * CSAPP其它部分和lab
 * 结合MIT6.828做xv6

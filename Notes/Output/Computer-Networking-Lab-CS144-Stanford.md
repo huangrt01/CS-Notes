@@ -115,11 +115,16 @@ void get_URL(const string &host, const string &path) {
 3.5 An in-memory reliable byte stream
 * 数据结构deque，注意eof的判断条件即可
 
-#### lab1:stitching substrings into a byte stream
+#### lab1: stitching substrings into a byte stream
 ##### 3.Putting substrings in sequence
-* 用set保存(index, data)数据，便于查找，可以用`lower_bound`查找，代码视线中省略了，采用的顺序遍历
-* `push_substring`的bytes接收范围图
+* assemble数据时，为了简化代码流程，先将其和可能的字段合并，再判断是否可以write，因此需要设计一个merge函数
+* 注意`end_input()`的判断条件
+* 用set保存(index, data)数据，便于查找，可以用`lower_bound`查找，代码实现中省略了这一点，采用的是顺序遍历set
+* 细节：`push_substring`的bytes接收范围图
   * <img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lab-CS144-Stanford/reassembler.png" alt="reassembler" style="zoom:100%;" />
+
+#### lab2: the TCP receiver
+##### 
 
 
 #### 工程细节
