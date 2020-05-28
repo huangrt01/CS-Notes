@@ -3,8 +3,15 @@
 #### debug
 [macOS上用VSCode](https://zhuanlan.zhihu.com/p/106935263?utm_source=wechat_session)
 
-[lldb的使用](https://www.jianshu.com/p/9a71329d5c4d)
-*  breakpoint set -n main, run, print, next
+* [CS107 GDB and Debugging教程](https://web.stanford.edu/class/archive/cs/cs107/cs107.1202/resources/gdb)
+* [CS107 Software Testing Strategies](https://web.stanford.edu/class/archive/cs/cs107/cs107.1202/testing.html)
+
+* [lldb的使用](https://www.jianshu.com/p/9a71329d5c4d)
+  *  breakpoint set -n main, run, print, next
+* 内存泄露问题
+  * `cmake  .. -DCMAKE_BUILD_TYPE=RelASan`
+  * `valgrind`
+  * `cmake  .. -DCMAKE_BUILD_TYPE=Debug` + `gdb`
 
 #### C
 
@@ -57,6 +64,10 @@ public:
 ```
 * 类的静态成员函数指针
 
+#### 编程习惯
+RAII原则：Resource acquisition is initialization
+* [CppCoreGuidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
+* 用[CppCheck](http://cppcheck.net/)诊断，`make cppcheck`
 
 #### 输入输出
 
@@ -104,7 +115,7 @@ sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
 
 
 ##### \<deque>
-* deque，两端都能进出，双向队列
+* deque，两端都能进出，双向队列，[用法详解](https://blog.csdn.net/u011630575/article/details/79923132)
 * [STL之deque实现详解]( https://blog.csdn.net/u010710458/article/details/79540505?depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-6&utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-6)
 * deque的pop_front相当于queue的pop()
 

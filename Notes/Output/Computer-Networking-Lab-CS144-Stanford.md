@@ -124,7 +124,38 @@ void get_URL(const string &host, const string &path) {
   * <img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lab-CS144-Stanford/reassembler.png" alt="reassembler" style="zoom:100%;" />
 
 #### lab2: the TCP receiver
-##### 
+##### 3.1 Sequence Numbers
+
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lab-CS144-Stanford/001.jpg" alt="different index" style="zoom:100%;" />
+* 利用头文件中的函数简化代码
+* 计算出相对checkpoint的偏移量之后，再转化成离checkpoint最近的点，如果加多了就左移，注意返回值太小无法左移的情形。
+
+```c++
+uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
+    uint32_t offset = n - wrap(checkpoint, isn);
+    uint64_t ret = checkpoint + offset;
+    // 取距离checkpoint最近的值，因此判断的情况是否左移ret
+    //注意位置不够左移的情形！！！
+    if (offset >= (1u << 31) && ret >= UINT32_LEN)
+        ret -= (1ul << 32);
+    return ret;
+}
+```
+##### 3.2 window
+* lower:ackno     
+* higher~window size
+* window size = capacity - ByteStream.buffer_size()
+
+##### 3.3 TCP receiver的实现
+1. receive segmentsfrom its peer
+2. reassemble the ByteStream using your StreamReassembler, and calculate the 
+3. acknowledgment number (ackno) 
+4. and the window size.
+
+* `_reassembler`忽视SYN，所以要手动对index减1、ackno()加1
+* 非常规路线的处理：比如对于第二个SYN或者FIN信号，接收机选择忽视，具体见`bool TCPReceiver::segment_received(const TCPSegment &seg)`的实现
+
+
 
 
 #### 工程细节
@@ -140,7 +171,6 @@ string d(size, 0);
 generate(d.begin(), d.end(), [&] { return rd(); });
 ```
 
-
 * 类cmp函数的定义，适用 `lower_bound()`方法
   * 两个**const**都不能掉！
 ```c++
@@ -152,3 +182,4 @@ class typeUnassembled {
     bool operator<(const typeUnassembled &t1) const { return index < t1.index; }
 };
 ```
+* `urg = static_cast<bool>(fl_b & 0b0010'0000); // binary literals and ' digit separator since C++14!!!`

@@ -38,7 +38,7 @@
 
 #### [Stanford-CS144-Lecture](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lecture-CS144-Stanford.md)■■□□□□□□□□
 
-#### [Stanford-CS144-Lab](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lab-CS144-Stanford.md)■■□□□□□□□□
+#### [Stanford-CS144-Lab](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lab-CS144-Stanford.md)■■■□□□□□□□
 
 #### [Computer-Networking-A-Top-Down-Approach](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-A-Top-Down-Approach.md)□□□□□□□□□□
 

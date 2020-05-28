@@ -1,7 +1,7 @@
 ### C++
 [toc]
 #### debug
-* [macOS上用VSCode](https://zhuanlan.zhihu.com/p/106935263?utm_source=wechat_session)
+[macOS上用VSCode](https://zhuanlan.zhihu.com/p/106935263?utm_source=wechat_session)
 
 * [CS107 GDB and Debugging教程](https://web.stanford.edu/class/archive/cs/cs107/cs107.1202/resources/gdb)
 * [CS107 Software Testing Strategies](https://web.stanford.edu/class/archive/cs/cs107/cs107.1202/testing.html)
@@ -12,9 +12,6 @@
   * `cmake  .. -DCMAKE_BUILD_TYPE=RelASan`
   * `valgrind`
   * `cmake  .. -DCMAKE_BUILD_TYPE=Debug` + `gdb`
-
-
-
 
 #### C
 
@@ -67,12 +64,10 @@ public:
 ```
 * 类的静态成员函数指针
 
-
 #### 编程习惯
 RAII原则：Resource acquisition is initialization
 * [CppCoreGuidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
 * 用[CppCheck](http://cppcheck.net/)诊断，`make cppcheck`
-
 
 #### 输入输出
 
@@ -128,9 +123,6 @@ sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
 * 参考[LRU cache](https://leetcode-cn.com/problems/lru-cache/)，类似双向链表的实现
   * map<int,list<pair<int,int>>::iterator> m;
 * r.push_front(…), r.begin(), r.back()
-
-##### \<set>
-* [multiset用法总结](https://blog.csdn.net/sodacoco/article/details/84798621)
 
 ##### \<vector>
 * 初始化，可以用列表
@@ -189,8 +181,6 @@ strcpy(buf, str.c_str());//strncpy(buf, str.c_str(), 10);
     * s.find_last_of(s1) 查找在s1中任意一个字符在s中最后一次出现的位置，并返回（包括0）
     * s.fin_first_not_of(s1) 查找s中第一个不属于s1中的字符的位置，并返回（包括0）
     * s.fin_last_not_of(s1) 查找s中最后一个不属于s1中的字符的位置，并返回（包括0）
-
-* `basic_string::_M_create`错误：string用两个迭代器初始化第一个比第二个大。
 
 
 ##### \<sys.h>
