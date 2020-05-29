@@ -9,9 +9,8 @@
 * [lldb的使用](https://www.jianshu.com/p/9a71329d5c4d)
   *  breakpoint set -n main, run, print, next
 * 内存泄露问题
-  * `cmake  .. -DCMAKE_BUILD_TYPE=RelASan`
   * `valgrind`
-  * `cmake  .. -DCMAKE_BUILD_TYPE=Debug` + `gdb`
+  * `gdb`s
 
 #### C
 
@@ -37,7 +36,98 @@
 * 虚析构函数    =>对象内有虚函数表，指向虚函数表的指针：32位系统4字节，64位系统8字节
 * 虚基类偏移量表指针
 
-##### 可扩展性
+#### 操作符重载
+**特点**
+* 既不能改变原运算符的运算优先级和结合性，也不能改变操作数的个数
+*“.”、“.*”(成员指针运算符)、“::”（作用域分辨符）、“ ? : ”（三目运算符） 、sizeof 以及typeid这6个操作符不能重载。否则会带来难以琢磨的问题
+* 和类的概念紧密联系，操作数中至少有一个是自定义的类类型。 这一点也和编译原理有联系
+
+**成员函数和友元函数**
+
+* 非成员函数不一定要作为类的友元，如果只通过外部接口访问类，当类的内部结构改变时，不用改操作符
+```c++
+inline WrappingInt32 operator++(WrappingInt32 &a, int) {
+    uint32_t r = a.raw_value();
+    a = a + 1;
+    return WrappingInt32(r);
+}
+```
+
+* `=, [], (), ->`只能重载为成员函数
+* 友元函数实现
+```c++
+#include <iostream>
+using namespace std;
+class pwr {
+public: 
+	pwr(int i) { num = i; }
+	friend int operator ^(pwr, pwr);
+private: int num;
+};
+int operator ^(pwr b, pwr e)
+{
+	int t, temp;
+	temp = b.num;
+	for (t = e.num - 1; t; t--)
+		b.num *= temp;
+	return b.num;
+}
+```
+
+* 二目操作符的成员函数：参数常引用
+* 二目操作符的友员函数
+* 单目操作符的成员函数
+  * 前置重载`++a`视为无形参的成员函数，后置`a++`具有一个int类型形参
+  * 前置重载`++a`返回值带引用，而后置重载返回值不带引用
+* 单目操作符的友元函数：见上面`WrappingInt32`的例子
+
+**其它操作符重载**
+
+1.string类的赋值运算符函数
+* 经典解法：考虑[返回引用](https://bbs.csdn.net/topics/100000589?depth_1-utm_source=distribute.pc_relevant.none-task&utm_source=distribute.pc_relevant.none-task)、连续赋值、等号两边相同的情形
+```c++
+CMyString& CMyString::operator=(const CMyString &str){
+	if(this==&str)
+		return *this;
+	delete []m_pData;
+	m_pData = new char[strlen(str.m_pData)+1];
+	strcpy(m_pData, str.m_pData);
+	return *this;
+}
+```
+* 考虑异常安全性：上面的解法在new分配之前先delete，违背了Exception Safety原则，我们需要保证分配内存失败时原先的实例不会被修改，因此可以先复制，或者创造临时实例。(临时实例利用了if语句，在if的大括号外会自动析构)
+```c++
+CMyString& CMyString::operator=(const CMyString &str){
+	if(this!=&str){
+		CMyString strTemp(str);
+		swap(m_pData,strTemp.m_pData);
+	}
+	return this;
+}
+```
+
+2.<< 操作符的重载
+* `ostream &operator << (ostream &output, 自定义类型&); //istream也可`
+* 只能重载为类的友元函数（否则必须修改系统的ostream类，不被允许） 
+* 为了级联输出，重载函数的形参和返回值必须是I / O对象的引用
+* 对于 `cout << c1 << c2 << c3;`语句，编译器需要一次性生成可执行代码，因为C++是编译型语言，不是BASIC那种边编译边执行的解释型语言。为了按照c1，c2，c3的顺序输出，就需要把对象按照c3，c2，c1的次序依此入栈，便于执行时的边出栈边打印，因此一次性传递完参数然后再从左向右执行。
+
+3.类型操作符的重载强制类型转换
+
+```c++
+operator 类型名()
+{
+	return 与类型名类型相同的转换结果;
+}
+```
+
+* 此函数前没有返回类型，函数也没有参数。函数将会自动返回与类型转换函数类型名相同的类型。
+* 这里的类型名是基本数据类型int，double等。
+* 类型转换函数只能作为相应类的成员函数。
+* 总的来看，类中的类型转换函数优先级很高，导致类的对象在运算时，不按常规方式操作，而是先进行类型强制转换，导致结果不可琢磨，因此类型转换函数要慎用！
+
+
+#### C++的可扩展性
 * [类的成员指针函数](https://www.cnblogs.com/zhoug2020/p/11394408.html)
 ```c++
 class Solution;
@@ -126,7 +216,10 @@ sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
 
 ##### \<vector>
 * 初始化，可以用列表
+  
   * 也可以 `int a[10]={…};vector<int> b(a,a+10); `       左闭右开
+  
+* [动态扩容](https://www.cnblogs.com/zxiner/p/7197327.html)，容量翻倍，可以用reserve()预留容量
 * 方法：
   * reverse(nums.begin(),nums.end());
 * [关于vector的内存释放问题](https://www.cnblogs.com/jiayouwyhit/p/3878047.html)

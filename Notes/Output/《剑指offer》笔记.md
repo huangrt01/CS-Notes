@@ -21,7 +21,70 @@
 #### chpt2 面试需要的基础知识
 * C++：面向对象的特性、构造函数、析构函数、动态绑定、内存管理
   * e.g. 空类1字节
+  
 * 软件工程：常见的设计模式、UML图
+* C#
+  * struct和class中成员默认都是private，struct和class区别在于struct定义的是值类型，在栈上分配内存；而class定义的是引用类型，在堆上分配内存。
+  * C#的垃圾回收机制：Finalizer写法同C++，但是在运行时（CLR）进行垃圾回收时调用，调用时机不确定
+  * 静态构造函数
+  * 反射和应用程序域（p31）
+
+* 数据结构
+  * 数组
+    * 可以用数组做简单的Hash表，见本书第50题“第一个只出现一次的字符”
+    * STL的vector，[动态扩容](https://www.cnblogs.com/zxiner/p/7197327.html)，容量翻倍，可以用reserve()预留容量
+
+
+##### 1.赋值运算符函数
+* 经典解法：考虑[返回引用](https://bbs.csdn.net/topics/100000589?depth_1-utm_source=distribute.pc_relevant.none-task&utm_source=distribute.pc_relevant.none-task)、连续赋值、等号两边相同的情形
+```c++
+CMyString& CMyString::operator=(const CMyString &str){
+	if(this==&str)
+		return *this;
+	delete []m_pData;
+	m_pData = new char[strlen(str.m_pData)+1];
+	strcpy(m_pData, str.m_pData);
+	return *this;
+}
+```
+* 考虑异常安全性：上面的解法在new分配之前先delete，违背了Exception Safety原则，我们需要保证分配内存失败时原先的实例不会被修改，因此可以先复制，或者创造临时实例。(临时实例利用了if语句，在if的大括号外会自动析构)
+```c++
+CMyString& CMyString::operator=(const CMyString &str){
+	if(this!=&str){
+		CMyString strTemp(str);
+		swap(m_pData,strTemp.m_pData);
+	}
+	return this;
+}
+```
+
+##### 2.实现Singleton模式
+* 思考路径（C#）：静态实例->多线程加同步锁->加同步锁前后两次判断实例是否存在->静态构造函数->实现按需创造实例（利用私有嵌套类型的特性）
+* [C++的单例模式总结，全面的长文分析](https://www.cnblogs.com/sunchaothu/p/10389842.html#223--%E6%9C%80%E6%8E%A8%E8%8D%90%E7%9A%84%E6%87%92%E6%B1%89%E5%BC%8F%E5%8D%95%E4%BE%8Bmagic-static-%E5%B1%80%E9%83%A8%E9%9D%99%E6%80%81%E5%8F%98%E9%87%8F)
+* C++11有专门的线程安全机制
+> If control enters the declaration concurrently while the variable is being initialized, the concurrent execution shall wait for completion of the initialization.
+如果当变量在初始化的时候，并发同时进入声明语句，并发线程将会阻塞等待初始化结束。
+
+##### 3.[数组中重复的数字](https://leetcode-cn.com/problems/shu-zu-zhong-zhong-fu-de-shu-zi-lcof/submissions/)
+* 我的解法，思路见注释
+```c++
+int findRepeatNumber(vector<int>& nums) {
+    //时间复杂度O(n),空间复杂度O(1)
+    int temp; int i=0;
+    while(1){
+        if(nums[i]==-1)return i;
+        //用nums[i]保存是否遍历到i，如果nums[i]=-1说明找到了重复的元素
+        temp=nums[i]; 
+        nums[temp]=-1;
+        if(temp==i){//避免死循环的情形，以nums.size()为模循环递增下标
+            while(nums[temp]==-1)
+                {temp=(++temp)%nums.size();} 
+        }            
+        i=temp;
+    }
+}
+```
+* 标答很巧妙，从头开始，对于下标和元素不等的不断进行置换，相等的则保持不变
 
 ##### 4.[二维数组中的查找](https://leetcode-cn.com/problems/er-wei-shu-zu-zhong-de-cha-zhao-lcof/)
 * [leetcode 240.](https://leetcode-cn.com/problems/search-a-2d-matrix-ii)

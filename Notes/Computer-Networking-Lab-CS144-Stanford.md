@@ -142,7 +142,7 @@ uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
 }
 ```
 ##### 3.2 window
-* lower:ackno     
+* lower: ackno     
 * higher~window size
 * window size = capacity - ByteStream.buffer_size()
 
