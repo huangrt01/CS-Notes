@@ -20,7 +20,7 @@
 
 ### 编程语言
 
-#### [C++ ](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/C%2B%2B.md)■□□□□□□□□□
+#### [C++ ](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/C%2B%2B.md)■■□□□□□□□□
 
 ### 效率工具
 
@@ -36,7 +36,7 @@
 
 ### 计算机网络
 
-#### [Stanford-CS144-Lecture](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lecture-CS144-Stanford.md)■■□□□□□□□□
+#### [Stanford-CS144-Lecture](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lecture-CS144-Stanford.md)■■■□□□□□□□
 
 #### [Stanford-CS144-Lab](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lab-CS144-Stanford.md)■■■□□□□□□□
 
@@ -52,8 +52,8 @@
 
 **关于本仓库**
 
-* 为了能兼顾备份的简便性和可靠性，采用github作为图床。
-* 本仓库内容由自制的[笔记转化器](https://github.com/huangrt01/CS-Notes)生成，转化器有bug，会把shell的含有`$`的行当作latex行内公式转化掉，暂时没有时间改，可以clone下来看用typora等md阅读器阅读。
+* 为了兼顾备份的简便性和可靠性，采用github作为图床。
+* 本仓库内容由自制的[笔记转化器](https://github.com/huangrt01/CS-Notes)生成，转化器有bug，会把shell的含有`$`的行当作latex行内公式转化掉，暂时没有时间改，可以clone下来看用typora等md阅读器阅读/Note文件夹里的本体文件。
 
 **内容预告**
 

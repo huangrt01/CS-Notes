@@ -222,7 +222,7 @@ SIP的应用场景
 * Peer TCP layers communicate: connection
 * congestion control
 
-**过程**：三次握手和四次挥手
+**过程**：三次握手和四次挥手（参考2-6的状态转移图理解）
 
 * 3-way handshake
   1. client: SYN, 送base number to identify bytes
@@ -263,12 +263,15 @@ SIP的应用场景
 * source port: 初始化用不同的port避免冲突
 * PSH flag: push，比如键盘敲击
 * HLEN和(TCP options)联系
+* URG应该在ACK前面
 
 <img src="Computer-Networking-Lecture-CS144-Stanford/009.jpg" alt="TCP uniqueness" style="zoom:60%;" />
 * 五个部分，104bit
 * 唯一性
   * 要求source port initiator每次increment:64k new connections
   * TCP picks ISN to avoid overlap with previous connection with same ID, 多一个域，增加随机性
+  * ISN的意义在于：1）security 2）便于filter out不同类型的包  
+
 
 ##### 2-2 UDP service model
 不需要可靠性：app自己控制重传，比如早期版本的NFS(network file system)
@@ -313,9 +316,9 @@ end-to-end check
 ##### 2-5 Error Detection: 3 schemes: 3 schemes
 
 * detect errors的三个算法：checksums, CRC(cyclic redundancy checks), MAC(message authentication codes)
+* 增补方式
   * append: ethernet CRC, TLS MAC
   * prepend: IP checksum
-
 * Checksum (IP, TCP)
   * not very robust, 只能检1位错
   * fast and cheap even in software
@@ -388,9 +391,41 @@ end-to-end check
 * Receiver advertises RWS using window field
 * Sender can only send data up to LAR+SWS
 
+##### 2-8 Retransmission Strategies
+protocol可能的运转方式
+* Go-back-N: pessimistic，重传ack, ack+1, ack+2 ...
+  * e.g. RWS=1的情形
+* Selective repeat: optimistic，重传ack, last_sent, last_sent+1, ...
+  * e.g. RWS=SWS=N的情形
+  * 对burst of losses效果不好
+
+##### 2-9 TCP Header
+
+<img src="Computer-Networking-Lecture-CS144-Stanford/015.jpg" alt="TCP header" style="zoom:100%;" />
 
 
 
+* pseudo header：类似2-2，checksum的计算囊括了IP header
+* ack: 如果是bi-directional，也携带data信息；如果是uni-directional，好像不携带
+* URG: urgent, PSH: push
+* ACK: 除了第一个packet SYN，其它seg的ACK都置换为1  
+* RST: reset the connection
+* urgent pointer：和URG联系，指出哪里urgent
+
+
+
+##### TCP Recap
+
+* IP和UDP都是best-effort and unreliable，但是我们不需要担心truncation和corruption，因为：
+
+     * Header checksum (IP)
+     * Data checksum (UDP)
+
+
+
+<img src="Computer-Networking-Lecture-CS144-Stanford/016.jpeg" alt="HTTP" style="zoom:45%;" />
+
+<img src="Computer-Networking-Lecture-CS144-Stanford/017.jpg" alt="HTTP3" style="zoom:60%;" />
 
 
 
