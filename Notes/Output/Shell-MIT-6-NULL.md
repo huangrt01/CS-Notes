@@ -2,8 +2,6 @@
 
 ###  Shell
 
-* [哪些命令行工具让你相见恨晚？ - Jackpop的回答 - 知乎](https://www.zhihu.com/question/41115077/answer/624385012)
-
 ### MIT 6.NULL课程
 https://missing.csail.mit.edu/ ，介绍了如何利用工具提升效率
 
@@ -225,6 +223,7 @@ debug(){
 * autojump: j, jc, jo, jco, j A B
 * [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
 * [zsh-history-substring-search](https://github.com/zsh-users/zsh-history-substring-search)
+* [zsh-completions](https://github.com/zsh-users/zsh-completions): tab自动补全，比如输cd按tab会自动识别文件夹；输git add会自动识别需要add的文件
 
 Aliases
 * pyfind
@@ -254,7 +253,7 @@ Aliases
   * :q   quit (close window)
   * :w   save (“write”)
   * :wq   save and quit    = `ZZ`
-  * :e {name of file}   open file for editing
+  * :e {name of file}   open file for editing   **利用这一命令和:sp在文件间复制粘贴**
   * :ls   show open buffers
   * :help {topic}   open help，`Ctrl-D`显示补全命令列表
   * `:r`提取和合并文件；`:r !ls`可读取存放外部命令输出
@@ -327,6 +326,7 @@ Aliases
   * [ctrlp.vim](https://github.com/ctrlpvim/ctrlp.vim): fuzzy file finder
   * [ack.vim](https://github.com/mileszs/ack.vim): code search
   * [nerdtree](https://github.com/scrooloose/nerdtree): file explorer
+    * 手动输`vim -u NONE -c "helptags ~/.vim/pack/my_plugs/start/nerdtree/doc" -c q`激活帮助插件，配置在了我的dotfiles里
   * [vim-easymotion](https://github.com/easymotion/vim-easymotion): magic motions
 
 
@@ -428,6 +428,8 @@ Aliases
 - [Vi/Vim Stack Exchange](https://vi.stackexchange.com/)
 - [Vim Screencasts](http://vimcasts.org/)
 - [Practical Vim](https://pragprog.com/book/dnvim2/practical-vim-second-edition) (book)
+
+#### Lecture 4.Data Wrangling
 
 #### Lecture 5.Command-line Environment
 
@@ -549,7 +551,9 @@ e.g.
 - `ssh` - `~/.ssh/config`
 - `tmux` - `~/.tmux.conf`
 
-管理方法：单独的文件夹，版本控制，**symlinked** into place using a script"
+管理方法：单独的文件夹，版本控制，**symlinked** into place using a script
+  * 用git的submodule
+  * [Dotbot](https://github.com/anishathalye/dotbot) 
 
 * **Easy installation**: if you log in to a new machine, applying your customizations will only take a minute.
 * **Portability**: your tools will work the same way everywhere.
@@ -558,6 +562,9 @@ e.g.
 
 一些有用的构造代码块：
 ```shell
+# $HOME/dotfiles
+BASEDIR=" <img src="https://www.zhihu.com/equation?tex=%28cd%20%22" alt="(cd "" class="ee_img tr_noresize" eeimg="1"> (dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 if [[ "$(uname)" == "Linux" ]]; then {do_something}; fi
 
 # Check before using shell-specific features
@@ -665,6 +672,10 @@ zsh的新特性
 - Scrollback configuration
 - Performance (some newer terminals like [Alacritty](https://github.com/jwilm/alacritty) or [kitty](https://sw.kovidgoyal.net/kitty/) offer GPU acceleration).
 
+#### Lecture 6.Version Control (Git)
+* 见[我的Git笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/git.md)
+
+#### Lecture 7.Debugging and Profiling
 
 ### Linux命令按字母分类
 #### a
@@ -674,6 +685,7 @@ zsh的新特性
 * cat
 * cd
 * chmod：sudo chmod 777 文件修改为可执行
+* cloc: 代码行数统计
 * curl
   * -I/--head: 只显示传输文档，经常用于测试连接本身
 `curl --head --silent baidu.com | grep --ignore-case content-length | cut -f2 -d ' '`
@@ -699,6 +711,8 @@ zsh的新特性
 * [fg](https://blog.csdn.net/carolzhang8406/article/details/51314894): Run jobs in foreground
 * find：1）寻找文件； 2）机械式操作
   * -iname：大小写不敏感
+
+* [fuck](https://github.com/nvbn/thefuck#the-fuck-----):流行的纠正工具
 ```shell
 # Find all directories named src
 find . -name src -type d
@@ -718,6 +732,8 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 #### g
 #### h
 #### i
+* [icdiff](): 分屏比较文档
+  * `icdiff button-{a,b}.css`
 * ifconfig
 #### j
 * jobs
@@ -739,6 +755,10 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 * nohup
 #### o 
 #### p
+* [pandoc](https://github.com/jgm/pandoc)
+  * `pandoc test1.md -f markdown -t html -s -o test1.html
+`
+  * `pandoc -s --toc -c pandoc.css -A footer.html MANUAL.txt -o example3.html`
 * pbcopy: 复制到剪贴板 `pbcopy < file`
 * ping
 * pgrep: 配合jobs
@@ -747,6 +767,9 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 #### q
 #### r
 #### s
+* script
+  * 记录终端操作记录，按`C-d`退出
+  * 可用于demo演示终端操作
 #### t
 * tail
   * `ls -l | tail -n1`
@@ -754,8 +777,12 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 * tee: Read from standard input and write to standard output and files (or commands).
   * 和`xargs`有相似之处，都是转化stdin用于他用
   * `echo "example" | tee /dev/tty | xargs printf "[%s]"`
+* tig
+  
+  * >tig是一个基于ncurses的git文本模式接口。它的功能主要是作为一个Git存储库浏览器，但也可以帮助在块级别上分段提交更改，并充当各种Git命令输出的分页器。
 * tmux 
 * traceroute: -w 1
+* tree: 显示树形文件结构, `-L`设置层数
 #### u
 #### v
 #### w
@@ -766,4 +793,7 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 * xargs：[解决命令的输入来源问题](https://blog.csdn.net/vanturman/article/details/84325846)：命令参数有标准输入和命令行参数两大来源，有的命令只接受命令行参数，需要xargs来转换标准输入
   * e.g. ` ls | xargs rm`
 #### y
+* youget
+  * 自动补全：`curl -fLo ~/.zplug/repos/zsh-users/zsh-completions/src/_youget https://raw.githubusercontent.com/soimort/you-get/develop/contrib/completion/_you-get`
+  * 
 #### z

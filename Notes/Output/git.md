@@ -14,6 +14,7 @@
 * `git add` stages a change. Git tracks changes to a developer’s codebase, but it’s necessary to stage and take a snapshot of the changes to include them  in the project’s history. This command performs staging, the first part  of that two-step process. Any changes that are staged will become a part of the next snapshot and a part of the project’s history. Staging and  committing separately gives developers complete control over the history of their project without changing how they code and work.
 
 * `git commit` saves the snapshot to the project history and completes the  change-tracking process. In short, a commit functions like taking a  photo. Anything that’s been staged with `git add` will become a part of the snapshot with `git commit`.
+  * `git commit -am "m"`可以先add再commit，但前提是commit的文件都是tracked状态
 
 * `git status` shows the status of changes as untracked, modified, or staged.
 
@@ -26,6 +27,12 @@
 * `git push` updates the remote repository with any commits made locally to a branch.
   * `git push origin lab1:lab1`
   * `git push --set-upstream origin my-branch`，本地关联远程分支，用来省略上面一行的分支标注
+
+* `git submodule add <url> /path`
+  * clone之后初始化：`git submodule update --init --recursive`
+  * 更新：`git submodule update --init --remote`
+  * 如果报错already exists in the index ，用`git rm -r --cached /path`解决此问题 
+  * 这个特性很适合和[dotfiles](https://github.com/huangrt01/dotfiles)搭配，但如果用在项目里可能[出现问题](https://codingkilledthecat.wordpress.com/2012/04/28/why-your-company-shouldnt-use-git-submodules/)，尤其是需要commit模块代码的时候
 
 #### 和Github联动
 * GitHub is a Git hosting repository that provides developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, or the use of a collection of free and for-purchase apps in the GitHub Marketplace. 
@@ -45,7 +52,23 @@ ssh-keygen -y -f ~/.ssh/id_rsa
   * `git remote -v`查看origin使用的是https还是ssh
   * 如果是https，替换成ssh即可 `git remote set-url origin git@github.com:huangrt01/XXX.git`
 
+* 建立仓库
+```
+git init
+git remote add origin git@github.com:huangrt01@163.com/dotfiles.git
+git pull --rebase origin master
+git push --set-upstream origin master
+```
+
+* 回退敏感信息
+```shell
+git log
+git reset --hard XXXXXXXX
+git push origin HEAD --force
+```
+
 #### 其它
 * [tig](https://jonas.github.io/tig/doc/manual.html)：图形化git历史
-  * 先安装[ncurses](https://blog.csdn.net/weixin_40123831/article/details/82490687)
+  * >Tig是一个基于ncurses的git文本模式接口。它的功能主要是作为一个Git存储库浏览器，但也可以帮助在块级别上分段提交更改，并充当各种Git命令输出的分页器。
+  * 先[安装ncurses](https://blog.csdn.net/weixin_40123831/article/details/82490687)
   * [使用指南](https://www.jianshu.com/p/d9f60c0abbf7)
