@@ -455,8 +455,9 @@ while True:
     i += 1
 ```
 
-Pausing and backgrounding processes
-* 暂停：`Ctrl-Z`,`SIGTSTP`
+**Pausing and backgrounding processes**
+
+* 暂停并放入后台：`Ctrl-Z`,`SIGTSTP`
 * 继续暂停的job：`fg和bg`；`jobs`搭配`pgrep`
 * `$!` - last backgrounded job
 * 命令行后缀`&`在背景运行命令
@@ -500,6 +501,7 @@ Pausing and backgrounding processes
 
 * For further reading, [here](https://www.hamvocke.com/blog/a-quick-and-easy-guide-to-tmux/) is a quick tutorial on `tmux` and [this](http://linuxcommand.org/lc3_adv_termmux.php) has a more detailed explanation that covers the original `screen` command. You might also want to familiarize yourself with [`screen`](http://man7.org/linux/man-pages/man1/screen.1.html), since it comes installed in most UNIX systems.
 * tmux是client-server的实现模式
+* [tmux customizations](https://www.hamvocke.com/blog/a-guide-to-customizing-your-tmux-conf/)
 
 ##### Aliases
 * `alias ll`可print出alias的对象
@@ -672,6 +674,20 @@ zsh的新特性
 - Scrollback configuration
 - Performance (some newer terminals like [Alacritty](https://github.com/jwilm/alacritty) or [kitty](https://sw.kovidgoyal.net/kitty/) offer GPU acceleration).
 
+**Exercises**
+* pidwait，用于跨终端的控制
+```shell
+#!/bin/bash
+pidwait(){
+	try=0
+	while [[ $try -eq 0 ]]; do
+		kill -0 "$1" || try=1
+		sleep 1
+	done
+}
+```
+
+
 #### Lecture 6.Version Control (Git)
 * 见[我的Git笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/git.md)
 
@@ -762,7 +778,10 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 * pbcopy: 复制到剪贴板 `pbcopy < file`
 * ping
 * pgrep: 配合jobs
+  * `pgrep -f 100` 全命令行匹配
 * pkill = pgrep + kill
+  *`pkill -9 -f 100` 
+* ps aux
 * pwd: print cwd
 #### q
 #### r
@@ -786,6 +805,7 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 #### u
 #### v
 #### w
+* wait：`wait pid`，不加pid则等待所有进程
 * which：找到程序路径
 * [wget](https://blog.csdn.net/wangshuminjava/article/details/79916655): 断点续传-c    后台-b
 
