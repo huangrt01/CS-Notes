@@ -70,17 +70,19 @@ CMyString& CMyString::operator=(const CMyString &str){
 ```c++
 int findRepeatNumber(vector<int>& nums) {
     //时间复杂度O(n),空间复杂度O(1)
-    int temp; int i=0;
+    int save=-1; int i=nums[0];
     while(1){
-        if(nums[i]==-1)return i;
-        //用nums[i]保存是否遍历到i，如果nums[i]=-1说明找到了重复的元素
-        temp=nums[i]; 
-        nums[temp]=-1;
-        if(temp==i){//避免死循环的情形，以nums.size()为模循环递增下标
-            while(nums[temp]==-1)
-                {temp=(++temp)%nums.size();} 
-        }            
-        i=temp;
+        if(nums[i]==-1)return i;    //用nums[i]保存是否遍历到i，如果nums[i]=-1说明找到了重复的元素
+        if(nums[i]==save) return save;   //前后两次相邻跳转重复的情形
+        if(nums[i]==i){
+            nums[i]=-1;
+            while(nums[i]==-1) i=(++i)%nums.size(); //避免死循环的情形，以nums.size()为模循环递增下标
+        }
+        else{
+            save=nums[i];
+            nums[i]=-1;
+            i=save;
+        }
     }
 }
 ```

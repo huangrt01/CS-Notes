@@ -469,35 +469,41 @@ while True:
 
 ##### tmux: terminal multiplexer
 
+基于我的键位（[配置文件](https://github.com/huangrt01/dotfiles/blob/master/tmux.conf)）
+
 - Sessions - a session is an independent workspace with one or more windows    
 
   - `tmux` starts a new session.
   - `tmux new -s NAME` starts it with that name. `tmux rename-session -t 0 database` 重命名
   - `tmux ls` lists the current sessions
-  - Within `tmux` typing `<C-b> d/D`  detaches the current session
+  - Within `tmux` typing `<C-a> d/D`  detaches the current session
   - `tmux a` attaches the last session. You can use `-t` flag to specify which
 
 - Windows
 
    \- Equivalent to tabs in editors or browsers, they are visually separate parts of the same session    
 
-  - `<C-b> c` Creates a new window. To close it you can just terminate the shells doing `<C-d> / exit`
-  - `<C-b> N` Go to the *N* th window. Note they are numbered
-  - `<C-b> p` Goes to the previous window
-  - `<C-b> n` Goes to the next window
-  - `<C-b> ,` Rename the current window
-  - `<C-b> w` List current windows
+  - `<C-a> c` Creates a new window. To close it you can just terminate the shells doing `<C-d> / exit`
+  - `<C-a> N` Go to the *N* th window. Note they are numbered
+  - `<C-a> p` Goes to the previous window
+  - `<C-a> n` Goes to the next window
+  - `<C-a> ,` Rename the current window
+  - `<C-a> w` List current windows
 
 - Panes
 
    \- Like vim splits, panes let you have multiple shells in the same visual display.    
+  - 配置下可以用鼠标选取/缩放pane
+  - `<C-a> -` Split the current pane horizontally
+  - `<C-a> |` Split the current pane vertically
+  - `<Alt> <direction>` Move to the pane in the specified *direction*. Direction here means arrow keys.
+  - `<C-a> z` make a pane go full screen. Hit `<C-a> z` again to shrink it back to its previous size
+  - `<C-a> [` Start scrollback. You can then press `<space>` to start a selection and `enter` to copy that selection.
+  - `<C-a> <space> ` Cycle through pane arrangements.
 
-  - `<C-b> "` Split the current pane horizontally
-  - `<C-b> %` Split the current pane vertically
-  - `<C-b> <direction>` Move to the pane in the specified *direction*. Direction here means arrow keys.
-  - `<C-b> z` make a pane go full screen. Hit `<C-b> z` again to shrink it back to its previous size
-  - `<C-b> [` Start scrollback. You can then press `<space>` to start a selection and `enter` to copy that selection.
-  - `<C-b> <space> ` Cycle through pane arrangements.
+* 其它操作
+  * `<C-a> r ` reload配置文件
+  * `Shift + Command + c`，配合iTerm2复制文件
 
 * For further reading, [here](https://www.hamvocke.com/blog/a-quick-and-easy-guide-to-tmux/) is a quick tutorial on `tmux` and [this](http://linuxcommand.org/lc3_adv_termmux.php) has a more detailed explanation that covers the original `screen` command. You might also want to familiarize yourself with [`screen`](http://man7.org/linux/man-pages/man1/screen.1.html), since it comes installed in most UNIX systems.
 * tmux是client-server的实现模式
@@ -542,7 +548,7 @@ alias dkcpstop="docker-compose stop"
 ```
 
 ##### Dotfiles
-* [很详尽的tutorial](https://www.anishathalye.com/2014/08/03/managing-your-dotfiles/)
+* [Anish: 很详尽的tutorial](https://www.anishathalye.com/2014/08/03/managing-your-dotfiles/)
 * [有关dotfile的种种](https://dotfiles.github.io/)
 * [shell-startup的机理](https://blog.flowblok.id.au/2013-02/shell-startup-scripts.html)
 
@@ -686,6 +692,8 @@ pidwait(){
 	done
 }
 ```
+* `history | awk '{$1="";print substr($0,2)}' | sort | uniq -c | sort -n | tail -n 10` 可得到使用频率最高的10个命令
+* [background port forwarding](https://mpharrigan.com/2016/05/17/background-ssh.html)
 
 
 #### Lecture 6.Version Control (Git)
@@ -695,6 +703,7 @@ pidwait(){
 
 ### Linux命令按字母分类
 #### a
+* awk: 一种控制台编程工具，寻找和处理pattern
 #### b
 * bg: resume后台暂停的命令
 #### c
