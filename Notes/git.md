@@ -55,10 +55,9 @@ def load(id):
     return objects[id]
 ```
 ##### Staging area
-* 和`git add`联系
+* 和`git add`相关
+  * Git tracks changes to a developer’s codebase, but it’s necessary to stage and take a snapshot of the changes to include them  in the project’s history. `git add` performs staging, the first part  of that two-step process. Any changes that are staged will become a part of the next snapshot and a part of the project’s history. Staging and  committing separately gives developers complete control over the history of their project without changing how they code and work. 
 * 意义在于摆脱snapshot和当前状态的绝对联系，使commit操作更灵活
-
-
 
 #### Git command-line interface
 
@@ -69,10 +68,12 @@ def load(id):
 - `git status`: tells you what's going on
 - `git add <filename>`: adds files to staging area
 - `git commit`: creates a new commit
-  - Write [good commit messages](https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html)!
-  - Even more reasons to write [good commit messages](https://chris.beams.io/posts/git-commit/)!
+  - Write [good commit messages](https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html) and Even more reasons to write [good commit messages](https://chris.beams.io/posts/git-commit/): 大写开头，祈使句，简短
+  - saves the snapshot to the project history and completes the  change-tracking process. In short, a commit functions like taking a photo. Anything that’s been staged with `git add` will become a part of the snapshot with `git commit`.
+  - `git commit -am "m"`可以先add再commit，但前提是commit的文件都是tracked状态
 - `git log`: shows a flattened log of history
-- `git log --all --graph --decorate`: visualizes history as a DAG
+  - `git log --all --graph --decorate`: visualizes history as a DAG
+  - `git shortlog/ git log --oneline`: 只显示标题
 - `git diff <filename>`: show differences since the last commit
 - `git diff <revision> <filename>`: shows differences in a file between snapshots
 - `git checkout <revision>`: updates HEAD and current branch
@@ -90,17 +91,36 @@ def load(id):
 - `git remote`: list remotes
 - `git remote add <name> <url>`: add a remote
 - `git push <remote> <local branch>:<remote branch>`: send objects to remote, and update remote reference
+  * `git push origin lab1:lab1`
+  * `git push --set-upstream origin my-branch`，本地关联远程分支，用来省略上面一行的分支标注
 - `git branch --set-upstream-to=<remote>/<remote branch>`: set up correspondence between local and remote branch
 - `git fetch`: retrieve objects/references from a remote
+```shell
+git fetch origin master:tmp
+git diff tmp
+git merge tmp
+git branch -d tmp
+```
 - `git pull`: same as `git fetch; git merge`
 - `git clone`: download repository from remote
 
 ##### Undo
 - `git commit --amend`: edit a commit's contents/message
 - `git reset HEAD <file>`: unstage a file
+  * `git reset --hard` 回到上次commit的版本，配合`git pull/push` 
+```shell
+git log
+git reset --hard XXXXXXXX
+git push origin HEAD --force # 回退remote敏感信息
+```
 - `git checkout -- <file>`: discard changes
+  - `git checkout master`: 丢弃未commit的变化 
 
 ##### Advanced Git
+- `git cat-file -p`: 显示对象信息
+  * 40位Hash值，前2位是文件夹，后38位是文件名
+  * 存在`.git/objects/`中 
+  * [理解git常用命令原理](http://www.cppblog.com/kevinlynx/archive/2014/09/09/208257.html)
 - `git config`: Git is [highly customizable](https://git-scm.com/docs/git-config)
 - `git clone --depth=1`: shallow clone, without entire version history
 - `git add -p`: interactive staging
@@ -108,6 +128,13 @@ def load(id):
 - `git blame`: show who last edited which line
 - `git stash`: temporarily remove modifications to working directory
 - `git bisect`: binary search history (e.g. for regressions)
+- `git submodule add <url> /path`
+    * clone之后初始化：`git submodule update --init --recursive`
+    * 更新：`git submodule update --init --remote`
+    * 如果报错already exists in the index ，用`git rm -r --cached /path`解决此问题 
+    * 这个特性很适合和[dotfiles](https://github.com/huangrt01/dotfiles)搭配，但如果用在项目里可能[出现问题](https://codingkilledthecat.wordpress.com/2012/04/28/why-your-company-shouldnt-use-git-submodules/)，尤其是需要commit模块代码的时候
+    * [使用时可能遇到的坑的集合](https://blog.csdn.net/a13271785989/article/details/42777793)
+    * commit的时候有坑，需要先commit子模块，再commit主体，参考：https://stackoverflow.com/questions/8488887/git-error-changes-not-staged-for-commit
 - `.gitignore`: [specify](https://git-scm.com/docs/gitignore) intentionally untracked files to ignore
 
 #### Miscellaneous
@@ -153,49 +180,6 @@ words](https://smusamashah.github.io/blog/2017/10/14/explain-git-in-simple-words
 game that teaches you Git.
 
 
-* `git add` stages a change. Git tracks changes to a developer’s codebase, but it’s necessary to stage and take a snapshot of the changes to include them  in the project’s history. This command performs staging, the first part  of that two-step process. Any changes that are staged will become a part of the next snapshot and a part of the project’s history. Staging and  committing separately gives developers complete control over the history of their project without changing how they code and work.
-* `git log --all --graph --decorate`
-* `git cat-file -p`: 显示对象信息
-  * 40位Hash值，前2位是文件夹，后38位是文件名
-  * 存在`.git/objects/`中 
-  * [理解git常用命令原理](http://www.cppblog.com/kevinlynx/archive/2014/09/09/208257.html)
-* `git clone` creates a local copy of a project that already exists remotely. The  clone includes all the project’s files, history, and branches.
-  * --depth=1：clone速度慢的时候只clone最后一次commit 
-* `git checkout master`: 丢弃未commit的变化  
-* `git commit` saves the snapshot to the project history and completes the  change-tracking process. In short, a commit functions like taking a  photo. Anything that’s been staged with `git add` will become a part of the snapshot with `git commit`.
-  * `git commit -am "m"`可以先add再commit，但前提是commit的文件都是tracked状态
-
-* `git status` shows the status of changes as untracked, modified, or staged.
-
-* `git branch` shows the branches being worked on locally.
-
-* `git merge` merges lines of development together. This command is typically used to combine changes made on two distinct branches. For example, a developer would merge when they want to combine changes from a feature branch  into the master branch for deployment.
-
-* `git pull` updates the local line of development with updates from its remote  counterpart. Developers use this command if a teammate has made commits  to a branch on a remote, and they would like to reflect those changes in their local environment.
-
-* `git fetch`可以获取最新版本
-```shell
-git fetch origin master:tmp
-git diff tmp
-git merge tmp
-git branch -d tmp
-```
-
-* `git push` updates the remote repository with any commits made locally to a branch.
-  * `git push origin lab1:lab1`
-  * `git push --set-upstream origin my-branch`，本地关联远程分支，用来省略上面一行的分支标注
-
-* `git reset`
-  * `git reset --hard` 回到上次commit的版本，配合`git pull` 
-
-* `git submodule add <url> /path`
-  * clone之后初始化：`git submodule update --init --recursive`
-  * 更新：`git submodule update --init --remote`
-  * 如果报错already exists in the index ，用`git rm -r --cached /path`解决此问题 
-  * 这个特性很适合和[dotfiles](https://github.com/huangrt01/dotfiles)搭配，但如果用在项目里可能[出现问题](https://codingkilledthecat.wordpress.com/2012/04/28/why-your-company-shouldnt-use-git-submodules/)，尤其是需要commit模块代码的时候
-  * [使用时可能遇到的坑的集合](https://blog.csdn.net/a13271785989/article/details/42777793)
-  * commit的时候有坑，需要先commit子模块，再commit主体，参考：https://stackoverflow.com/questions/8488887/git-error-changes-not-staged-for-commit
-
 #### 和Github联动
 * GitHub is a Git hosting repository that provides developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, or the use of a collection of free and for-purchase apps in the GitHub Marketplace. 
 * [用SSH连GitHub](https://help.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh)
@@ -222,13 +206,6 @@ git init
 git remote add origin git@github.com:huangrt01@163.com/dotfiles.git
 git pull --rebase origin master
 git push --set-upstream origin master
-```
-
-* 回退敏感信息
-```shell
-git log
-git reset --hard XXXXXXXX
-git push origin HEAD --force
 ```
 
 #### 其它

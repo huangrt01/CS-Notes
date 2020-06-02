@@ -701,6 +701,12 @@ pidwait(){
 
 #### Lecture 7.Debugging and Profiling
 
+#### Lecture 8.Metaprogramming
+
+#### Lecture 9.Security and Cryptography
+
+#### Lecture 10.Potpourri
+
 ### Linux命令按字母分类
 #### a
 * awk: 一种控制台编程工具，寻找和处理pattern
