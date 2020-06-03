@@ -24,9 +24,9 @@
 
 ### 效率工具
 
-#### [Shell   --  结合MIT 6.NULL课程学习](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Shell-MIT-6-NULL.md)■■■■□□□□□□
+#### [Shell   --  结合MIT 6.NULL课程学习](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Shell-MIT-6-NULL.md)■■■■■□□□□□
 
-#### [Git](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/git.md)■■□□□□□□□□
+#### [Git](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/git.md)■■■■■■■■□□
 
 ### 操作系统
 
