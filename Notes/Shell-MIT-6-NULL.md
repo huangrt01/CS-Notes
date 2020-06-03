@@ -716,6 +716,7 @@ pidwait(){
 * cat
 * cd
 * chmod：sudo chmod 777 文件修改为可执行
+  * `Permissions 0644 for ‘~/.ssh/id_rsa’ are too open` => `chmod 0600 ~/.ssh/id_rsa`
 * cloc: 代码行数统计
 * curl
   * -I/--head: 只显示传输文档，经常用于测试连接本身
