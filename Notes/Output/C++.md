@@ -1,16 +1,8 @@
 ### C++
 [toc]
-#### debug
-[macOS上用VSCode](https://zhuanlan.zhihu.com/p/106935263?utm_source=wechat_session)
+#### Debug
 
-* [CS107 GDB and Debugging教程](https://web.stanford.edu/class/archive/cs/cs107/cs107.1202/resources/gdb)
-* [CS107 Software Testing Strategies](https://web.stanford.edu/class/archive/cs/cs107/cs107.1202/testing.html)
-
-* [lldb的使用](https://www.jianshu.com/p/9a71329d5c4d)
-  *  breakpoint set -n main, run, print, next
-* 内存泄露问题
-  * `valgrind`
-  * `gdb`s
+* 参考我的[Debugging and Profiling笔记]()
 
 #### C
 

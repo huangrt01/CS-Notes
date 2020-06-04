@@ -26,22 +26,8 @@
 
 #### Lab0: networking warmup
 ##### 1.配环境
-设虚拟机，[实验指导书](https://stanford.edu/class/cs144/vm_howto/vm-howto-image.html#connect) ，可参考[Shell笔记](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Shell-MIT-6-NULL.md)，迁移dotfiles
+设虚拟机，[实验指导书](https://stanford.edu/class/cs144/vm_howto/vm-howto-image.html#connect) ，可参考[Shell笔记](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Shell-MIT-6-NULL.md)，迁移[dotfiles](https://github.com/huangrt01/dotfiles)
 
-```shell
-sudo apt-get update
-sudo apt install zsh
-zsh --version
-
-# log out and login back
-echo $SHELL
-$SHELL --version
-
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
-source ~/.zshrc
-
-```
 
 ##### 2.Networking by Hand
 2.1 Fetch a Web page

@@ -730,6 +730,7 @@ pidwait(){
 * df: disk情况
 * disown
 * diff：[Linux中diff的渊源](https://www.cnblogs.com/moxiaopeng/articles/4853352.html)
+* dmesg: kernel log
 
 #### e
 * echo: 输出输入，空格分割
@@ -831,5 +832,12 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 #### y
 * youget
   * 自动补全：`curl -fLo ~/.zplug/repos/zsh-users/zsh-completions/src/_youget https://raw.githubusercontent.com/soimort/you-get/develop/contrib/completion/_you-get`
-  * 
 #### z
+
+### some bugs
+* `_arguments:450: _vim_files: function definition file not found`
+```shell
+rm ~/.zcompdump*
+rm ~/.zplug/zcompdump*
+exec zsh
+```

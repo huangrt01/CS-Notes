@@ -1,4 +1,5 @@
 ### Git
+[toc]
 
 * [Pro Git](https://git-scm.com/book/en/v2)
 * [MIT 6.NULL - git](https://missing.csail.mit.edu/2020/version-control/)
@@ -237,9 +238,22 @@ ssh -T git@github.com
 #Linux
 
 ```
+#### some bugs!
 * 如果设置ssh key后，git push仍然要求输入邮箱密码
   * `git remote -v`查看origin使用的是https还是ssh
   * 如果是https，替换成ssh即可 `git remote set-url origin git@github.com:huangrt01/XXX.git`
+
+* `Failed to connect to github 443`这一问题的解决方案
+  1. `git remote set-url origin git@github.com:huangrt01/XXX.git`, 先把连接方式由https改成ssh
+  2. 再在`~/.ssh/config`中把ssh的端口22改成https端口443
+```shell
+Host github.com
+	User huangrt01@163.com
+	Hostname ssh.github.com
+	PreferredAuthentications publickey
+	IdentityFile ~/.ssh/id_rsa
+	Port 443
+```
 
 * 建立仓库
 ```
