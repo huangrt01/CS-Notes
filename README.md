@@ -26,6 +26,8 @@
 
 #### [Git](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/git.md)■■■■■■■■□□
 
+#### [Debugging and Profiling](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Debugging-and-Profiling.md)■■■□□□□□□□
+
 ### 操作系统
 
 #### [操作系统——本科课程笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F.md)■■■■□□□□□□
