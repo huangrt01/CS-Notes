@@ -207,6 +207,8 @@ frameworks like [Oh My Zsh](https://github.com/ohmyzsh/ohmyzsh).
 - **Editor integration**: similarly to the above, handy integrations with many
 features. [fugitive.vim](https://github.com/tpope/vim-fugitive) is the standard
 one for Vim.
+  - `:Gblame`, `:Gbrowse`很方便，需要装[rhubarb.vim](https://github.com/tpope/vim-rhubarb)
+  - `:Git`直接打开`hub`
 - **Workflows**: we taught you the data model, plus some basic commands; we
 didn't tell you what practices to follow when working on big projects (and
 there are [many](https://nvie.com/posts/a-successful-git-branching-model/)

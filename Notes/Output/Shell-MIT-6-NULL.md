@@ -254,6 +254,7 @@ Aliases
   * :w   save (“write”)
   * :wq   save and quit    = `ZZ`
   * :e {name of file}   open file for editing   **利用这一命令和:sp在文件间复制粘贴**
+  * `:E` 打开netrw文件浏览器
   * :ls   show open buffers
   * :help {topic}   open help，`Ctrl-D`显示补全命令列表
   * `:r`提取和合并文件；`:r !ls`可读取存放外部命令输出
@@ -321,13 +322,25 @@ Aliases
 - `d2a` 删除到a之前
 
 ##### Vim拓展
-* ./vimrc: [课程推荐config](https://missing.csail.mit.edu/2020/files/vimrc), instructors’ Vim configs ([Anish](https://github.com/anishathalye/dotfiles/blob/master/vimrc), [Jon](https://github.com/jonhoo/configs/blob/master/editor/.config/nvim/init.vim) (uses [neovim](https://neovim.io/)), [Jose](https://github.com/JJGO/dotfiles/blob/master/vim/.vimrc))
-* plugin: [推荐网站](https://vimawesome.com/)，git clone到`~/.vim/pack/vendor/start/`
-  * [ctrlp.vim](https://github.com/ctrlpvim/ctrlp.vim): fuzzy file finder
-  * [ack.vim](https://github.com/mileszs/ack.vim): code search
-  * [nerdtree](https://github.com/scrooloose/nerdtree): file explorer
-    * 手动输`vim -u NONE -c "helptags ~/.vim/pack/my_plugs/start/nerdtree/doc" -c q`激活帮助插件，配置在了我的dotfiles里
-  * [vim-easymotion](https://github.com/easymotion/vim-easymotion): magic motions
+./vimrc: [课程推荐config](https://missing.csail.mit.edu/2020/files/vimrc), instructors’ Vim configs ([Anish](https://github.com/anishathalye/dotfiles/blob/master/vimrc), [Jon](https://github.com/jonhoo/configs/blob/master/editor/.config/nvim/init.vim) (uses [neovim](https://neovim.io/)), [Jose](https://github.com/JJGO/dotfiles/blob/master/vim/.vimrc))
+
+plugin: [推荐网站](https://vimawesome.com/)，git clone到`~/.vim/pack/vendor/start/`
+* [ctrlp.vim](https://github.com/ctrlpvim/ctrlp.vim): fuzzy file finder
+
+* [ack.vim](https://github.com/mileszs/ack.vim): code search
+
+* [nerdtree](https://github.com/scrooloose/nerdtree): file explorer
+  
+  * 手动输`vim -u NONE -c "helptags ~/.vim/pack/my_plugs/start/nerdtree/doc" -c q`激活帮助插件，配置在了我的dotfiles里
+  
+* [vim-easymotion](https://github.com/easymotion/vim-easymotion): magic motions
+
+* [ale](https://github.com/dense-analysis/ale#installation-with-vim-plug)
+
+  * `:ALEGoToDefinition`
+  * `:ALEFindReferences`
+  * `:ALEHover`
+  * `:ALESymbolSearch`
 
 
 ##### Vim-mode的其它应用
@@ -697,9 +710,11 @@ pidwait(){
 
 
 #### Lecture 6.Version Control (Git)
-* 见[我的Git笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/git.md)
+* [我的Git笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/git.md)
 
 #### Lecture 7.Debugging and Profiling
+
+* [我的Debugging and Profiling笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Debugging-and-Profiling.md)
 
 #### Lecture 8.Metaprogramming
 
@@ -841,3 +856,4 @@ rm ~/.zcompdump*
 rm ~/.zplug/zcompdump*
 exec zsh
 ```
+

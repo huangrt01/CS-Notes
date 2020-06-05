@@ -10,7 +10,7 @@
 
 - [x] Lab 1: stitching substrings into a byte stream
 
-- [ ] Lab 2: the TCP receiver
+- [x] Lab 2: the TCP receiver
 
 - [ ] Lab 3: the TCP sender
 

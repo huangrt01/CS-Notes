@@ -92,7 +92,16 @@ For web development, the Chrome/Firefox developer tools are quite handy. They fe
 - Storage - Look into the Cookies and local application storage.
 
 #### Static Analysis
-
+* [Static Analysis介绍](https://en.wikipedia.org/wiki/Static_program_analysis)
+  
+  * formal methods 
+  * Python: [`pyflakes`](https://pypi.org/project/pyflakes) , [`mypy`](http://mypy-lang.org/), [`shellcheck`](https://www.shellcheck.net/)
+  * English也有静态分析！
+  * 静态分析可以融入编辑器, vim:[`ale`](https://vimawesome.com/plugin/ale) or [`syntastic`](https://vimawesome.com/plugin/syntastic) 
+* [Static Analysis仓库整理](https://github.com/analysis-tools-dev/static-analysis#go)
+* [awesome linters整理](https://github.com/caramelomartins/awesome-linters#go)
+  * Python:  [`pylint`](https://github.com/PyCQA/pylint) and [`pep8`](https://pypi.org/project/pep8/) 是stylistic linters，[`bandit`](https://pypi.org/project/bandit/) 可查security问题
+* A complementary tool to stylistic linting are code formatters such as [`black`](https://github.com/psf/black) for Python, `gofmt` for Go, `rustfmt` for Rust or [`prettier`](https://prettier.io/) for JavaScript, HTML and CSS.
 
 **内存泄露问题**
 
@@ -100,3 +109,9 @@ For web development, the Chrome/Firefox developer tools are quite handy. They fe
 * `gdb`
 
 ### Profiling
+
+profilers和monitoring tools的意义：[premature optimization is the root of all evil](http://wiki.c2.com/?PrematureOptimization)
+
+概念：real/user/system time
+
+* 
