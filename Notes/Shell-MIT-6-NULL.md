@@ -831,6 +831,7 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 * tig
   
   * >tig是一个基于ncurses的git文本模式接口。它的功能主要是作为一个Git存储库浏览器，但也可以帮助在块级别上分段提交更改，并充当各种Git命令输出的分页器。
+* time
 * tmux 
 * traceroute: -w 1
 * tree: 显示树形文件结构, `-L`设置层数

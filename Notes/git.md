@@ -55,9 +55,20 @@ objects = map<string, object>
 def store(object):
     id = sha1(object) 
     objects[id] = object
-
 def load(id):
     return objects[id]
+
+references = map<string, string>
+def update_reference(name, id):
+    references[name] = id
+def read_reference(name):
+    return references[name]
+def load_reference(name_or_id):
+    if name_or_id in references:
+        return load(references[name_or_id])
+    else:
+        return load(name_or_id)
+
 ```
 ##### Staging area
 <img src="git/areas.png" alt="areas" style="zoom:80%;" />
@@ -100,6 +111,17 @@ def load(id):
 - `git rm file`
   - `git rm --cached`，只删除staging areas，不删除working tree
   - `git rm log/\*.log` ，通配符，注意要加`\`，Git有自己的文件名拓展
+- `git tag -l "v1.8.5*"`: `-l`是为了通配符匹配
+  - Annotated Tags: `git tag -a v1.4 (<commit>) -m "my version 1.4"`
+  - Lightweight Tags: `git tag v1.4-lw`
+  - `git push origin <tag>/--tags`，需要单独push, `--follow-tags`只push annotated tags
+```shell
+git tag -d v1.4-lw
+git push origin :refs/tags/v1.4-lw
+git push origin --delete <tagname>
+
+```
+- `git show <commit>/<tag>`
 * `git mv file_from file_to`
 ```shell
 mv README.md README
@@ -113,6 +135,7 @@ git add README
 - `git branch <name>`: creates a branch
 - `git checkout -b <name>`: creates a branch and switches to it
   - same as `git branch <name>; git checkout <name>`
+  - `git checkout <tag>`会进入detached HEAD状态，做的commit只属于这一个commit
 - `git merge <revision>`: merges into current branch
 - `git mergetool`: use a fancy tool to help resolve merge conflicts
 - `git rebase`: rebase set of patches onto a new base
@@ -120,11 +143,13 @@ git add README
 ##### Remotes
 - `git remote`: list remotes
 - `git remote add <name> <url>`: add a remote
+  - name本质上是reference 
+- `git remote show/rename/rm <remote>`
 - `git push <remote> <local branch>:<remote branch>`: send objects to remote, and update remote reference
   * `git push origin lab1:lab1`
   * `git push --set-upstream origin my-branch`，本地关联远程分支，用来省略上面一行的分支标注
 - `git branch --set-upstream-to=<remote>/<remote branch>`: set up correspondence between local and remote branch
-- `git fetch`: retrieve objects/references from a remote
+- `git fetch <remote>`: retrieve objects/references from a remote
 ```shell
 git fetch origin master:tmp
 git diff tmp
@@ -136,16 +161,16 @@ git branch -d tmp
   - 在最后可加文件夹名参数 
 
 ##### Undo
-- `git commit --amend`: edit a commit's contents/message
-- `git reset HEAD <file>`: unstage a file
-  * `git reset --hard` 回到上次commit的版本，配合`git pull/push`
+- `git commit --amend`: edit a commit's contents/message, 可把staging area加到上一次commit里
+- `git reset HEAD <file>`: unstage a file 
+  * `git reset --hard` 回到上次commit的版本，配合`git pull/push`（如果file是working directory内的，会很危险）
   * [Github如何回退敏感信息](https://help.github.com/en/github/authenticating-to-github/removing-sensitive-data-from-a-repository) 
 ```shell
 git log
 git reset --hard XXXXXXXX
 git push origin HEAD --force # 回退remote敏感信息
 ```
-- `git checkout -- <file>`: discard changes
+- `git checkout -- <file>`: discard changes （很危险的指令）
 
 ##### Advanced Git
 - `git cat-file -p`: 显示对象信息
