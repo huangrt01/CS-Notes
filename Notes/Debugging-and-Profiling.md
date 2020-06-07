@@ -136,6 +136,11 @@ del b
 - `perf record COMMAND ARG1 ARG2` - Records the run of a command and saves the statistical data into a file called `perf.data`
 - `perf report` - Formats and prints the data collected in `perf.data`
 
+```shell
+sudo perf record stress -c 1 # record->stat
+sudo perf report
+```
+
 **内存泄露问题**
 
 * [Valgrind](https://valgrind.org/)
