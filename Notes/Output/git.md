@@ -163,6 +163,7 @@ git branch -d tmp
 ##### Undo
 - `git commit --amend`: edit a commit's contents/message, 可把staging area加到上一次commit里
 - `git reset HEAD <file>`: unstage a file 
+  * `git reset HEAD~`或`git reset HEAD~1`撤销上次的commit（会回复到modified状态） 
   * `git reset --hard` 回到上次commit的版本，配合`git pull/push`（如果file是working directory内的，会很危险）
   * [Github如何回退敏感信息](https://help.github.com/en/github/authenticating-to-github/removing-sensitive-data-from-a-repository) 
 ```shell

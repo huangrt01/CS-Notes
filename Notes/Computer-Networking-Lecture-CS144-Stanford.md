@@ -392,7 +392,7 @@ end-to-end check
 * Sender can only send data up to LAR+SWS
 
 ##### 2-8 Retransmission Strategies
-protocol可能的运转方式
+protocol可能的运转方式 (ARQ: automatic repeat request)
 * Go-back-N: pessimistic，重传ack, ack+1, ack+2 ...
   * e.g. RWS=1的情形
 * Selective repeat: optimistic，重传ack, last_sent, last_sent+1, ...
@@ -444,6 +444,7 @@ protocol可能的运转方式
 * RFC 792: ICMP Message
 * [RFC 1958](https://datatracker.ietf.org/doc/rfc1958/?include_text=1):Architectural Principles of the Internet
 * [RFC 2606](https://datatracker.ietf.org/doc/rfc2606/): localhost
+* [RFC 6298](https://datatracker.ietf.org/doc/rfc6298/?include_text=1): Computing TCP's Retransmission Timer
 * [RFC 6335](https://tools.ietf.org/html/rfc6335): port number
 
 

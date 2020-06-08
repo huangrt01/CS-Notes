@@ -26,7 +26,7 @@
 
 #### Lab0: networking warmup
 ##### 1.配环境
-设虚拟机，[实验指导书](https://stanford.edu/class/cs144/vm_howto/vm-howto-image.html#connect) ，可参考[Shell笔记](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Shell-MIT-6-NULL.md)，迁移[dotfiles](https://github.com/huangrt01/dotfiles)
+设虚拟机，[实验指导书](https://stanford.edu/class/cs144/vm_howto/vm-howto-image.html#connect) ，可参考[我的Shell笔记](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Shell-MIT-6-NULL.md)，迁移[dotfiles](https://github.com/huangrt01/dotfiles)
 
 
 ##### 2.Networking by Hand
@@ -141,6 +141,14 @@ uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
 * `_reassembler`忽视SYN，所以要手动对index减1、ackno()加1
 * 非常规路线的处理：比如对于第二个SYN或者FIN信号，接收机选择忽视，具体见`bool TCPReceiver::segment_received(const TCPSegment &seg)`的实现
 
+#### lab3: the TCP sender
+##### 3.1 When should the TCPSender conclude that a segment was lost and send it again?
+sponge网络库的设计，TCP的测试中利用到状态判断，但具体到sender、receiver这几个类的设计时，对类是面向对象，对类内部的函数是面向过程，而不像Linux内核利用`goto`语句来模拟有限状态机。因此，在实现这个Lab的函数的时候，依然要以面向过程的思路，理解sender和receiver在不同的情景下会如何工作，使函数在内部看来是一个过程，外界测试时又能完美的体现状态变化。比如三次握手和四次挥手就是一个很好的例子
+* sender发送new segments(包含SYN/FIN)，用`_segments_out`这个queue跟踪，影响它的因素是ackno
+* 重传条件是"outstanding for too long", 受tick影响，tick仅由外部的类调用，sender内部不调用任何时间相关的函数
+* retransmission timeout(RTO)，具体实现是RFC6298的简化版
+  * 重传连续的之后double ；收到ackno后重置到`_initial_RTO`
+* 注意读`/lib_sponge/tcp_helper/tcp_state.cc`帮助理解状态变化
 
 
 
