@@ -1,10 +1,17 @@
 [toc]
 ### CS144-Lab-Computer-Networking
-* 我的Lab仓库：https://github.com/huangrt01/sponge-CS144-Lab
-* [CS144课程网站（包括pdf、project）](https://cs144.github.io/)
-* [CS144: Lab FAQs](https://cs144.github.io/lab_faq.html)
-* [Sponge: Class Hierarchy]()
 
+**写在前面**
+
+在历史的伟力面前，个人的命运是不可捉摸的。学生生涯结束地比想象中快，下个月就要正式入职字节跳动了。回顾本科期间，做过的大作业不少，却大多是期中对着一页不明就里的薄纸发呆，期末临近deadline，东抄抄西补补，勉强弄个不忍直视的半成品，没有时间也没有能力完成一次高质量的大作业。打算在入职前至少做一个Lab，之所以选择stanford的CS144，一方面是因为这门课质量很高，b站有配套的视频，Lab也在这两年做了大的改进，改为了一个优雅的TCP实现，全部资料都开源在[课程网站](https://cs144.github.io/)上，适合自学。另一方面，我本科期间没有学过计算机网络，这次补课也有一举两得的意味。
+
+做下来感觉不错，课程的老师和助教很用心：说明文档十页长，FAQ覆盖了作业中会遇到的方方面面的问题；大作业的单元测试的代码量是模块代码的几倍，倾注了助教的心血。如果没有这些模块架构和单元测试，对于初学者来说是很难完成即使是初级的TCP协议栈编写，充分利用这些资源，站在巨人的肩膀上，能力能得到更好的锻炼。
+
+以下是一些课程资源：
+
+* 我的Lab仓库：https://github.com/huangrt01/sponge-CS144-Lab
+* [CS144课程网站（including pdf, project and FAQs）](https://cs144.github.io/)
+* [大课视频](https://www.bilibili.com/video/BV1wt41167iN?from=search&seid=12807244912122184980)
 
 - [x] Lab 0: networking warmup
 
@@ -12,17 +19,11 @@
 
 - [x] Lab 2: the TCP receiver
 
-- [ ] Lab 3: the TCP sender
+- [x] Lab 3: the TCP sender
 
 - [ ] Lab 4: the TCP connection
 - [ ] Lab 5: the network interface
 - [ ] Lab 6: the IP router  
-
-#### Lab结构
-* In Lab 1, you’ll implement astream reassembler—a module that stitches small piecesof the byte stream (known as substrings, or segments) back into a contiguous stream of bytes in the correct sequence.
-* In Lab 2, you’ll implement the part of TCP that handles the inbound byte-stream:  the **TCPReceiver**.  This involves thinking about how TCP will represent each byte’s place in the stream—known as a “sequence number.”  The **TCPReceiver** is responsible for telling the sender (a) how much of the inbound byte stream it’s been able to assemble successfully (this is called “acknowledgment”) and (b) how many more bytes the sender is allowed to send right now (“flow control”).
-* In Lab 3, you’ll implement the part of TCP that handles the outbound byte-stream:  the **TCPSender**.  How should the sender react when it suspects that a segment it transmitted was lost along the way and never made it to the receiver?  When should it try again and re-transmit a lost segment?
-* In Lab 4,  you’ll combine your work from the previous to labs to create a working TCP implementation:  a **TCPConnection** that contains a **TCPSender** and **TCPReceiver**.You’ll use this to talk to real servers around the world.
 
 #### Lab0: networking warmup
 ##### 1.配环境
@@ -113,6 +114,7 @@ void get_URL(const string &host, const string &path) {
 ##### 3.1 Sequence Numbers
 
 <img src="Computer-Networking-Lab-CS144-Stanford/001.jpg" alt="different index" style="zoom:100%;" />
+
 * 利用头文件中的函数简化代码
 * 计算出相对checkpoint的偏移量之后，再转化成离checkpoint最近的点，如果加多了就左移，注意返回值太小无法左移的情形。
 
@@ -142,8 +144,9 @@ uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
 * 非常规路线的处理：比如对于第二个SYN或者FIN信号，接收机选择忽视，具体见`bool TCPReceiver::segment_received(const TCPSegment &seg)`的实现
 
 #### lab3: the TCP sender
-##### 3.1 When should the TCPSender conclude that a segment was lost and send it again?
-sponge网络库的设计，TCP的测试中利用到状态判断，但具体到sender、receiver这几个类的设计时，对类是面向对象，对类内部的函数是面向过程，而不像Linux内核利用`goto`语句来模拟有限状态机。因此，在实现这个Lab的函数的时候，依然要以面向过程的思路，理解sender和receiver在不同的情景下会如何工作，使函数在内部看来是一个过程，外界测试时又能完美的体现状态变化。比如三次握手和四次挥手就是一个很好的例子
+##### 3.1 重传时机
+
+sponge网络库的设计，TCP的测试中利用到状态判断，但具体到sender、receiver这几个类的设计时，对类的设计是面向对象，对类内部的函数是面向过程，而不像[Linux内核的tcp实现](https://github.com/torvalds/linux/blob/cb8e59cc87201af93dfbb6c3dccc8fcad72a09c2/net/ipv4/tcp.c)中有利用`goto`语句来模拟有限状态机。因此，在实现这个Lab的函数的时候，依然要以面向过程的思路，理解sender和receiver在不同的情景下会如何工作，使函数在内部看来是一个过程，外界测试时又能完美的体现状态变化。比如三次握手和四次挥手就是一个很好的例子
 * sender发送new segments(包含SYN/FIN)，用`_segments_out`这个queue跟踪，影响它的因素是ackno
 * 重传条件是"outstanding for too long", 受tick影响，tick仅由外部的类调用，sender内部不调用任何时间相关的函数
 * retransmission timeout(RTO)，具体实现是RFC6298的简化版
@@ -152,7 +155,39 @@ sponge网络库的设计，TCP的测试中利用到状态判断，但具体到se
 
 
 
+<img src="Computer-Networking-Lab-CS144-Stanford/receiver.jpg" alt="receiver" style="zoom:100%;" />
+
+
+
+<img src="Computer-Networking-Lab-CS144-Stanford/sender.jpg" alt="sender" style="zoom:100%;" />
+
+#### lab4: the summit (TCP in full)
+
+这次Lab是把之前的receiver和sender封装成TCPConnection类，用来进行真实世界的通信。
+
+<img src="Computer-Networking-Lab-CS144-Stanford/dataflow.jpg" alt="TCP dataflow" style="zoom:100%;" />
+
+<img src="Computer-Networking-Lab-CS144-Stanford/header.jpg" alt="TCP header" style="zoom:80%;" />
+
+
+
+In the test names
+
+* “c” means your code is the client (peer that sends the first syn)
+* “s” means your code is the server.  
+* “u” means it is testing TCP-over-UDP
+* “i” is testing TCP-over-IP(TCP/IP). 
+* “n” means it is trying to interoperate with Linux’s TCP implementation
+* “S” means your code is sending data
+* “R” means your code is receiving data
+* “D” means data is being sent in bothdirections
+* At the end of a test name, a lowercase “l” means there is packet loss on the receiving (incoming segment) direction
+* uppercase “L” means there is packet loss on the sending (outgoing segment) direction.
+
+
+
 #### 工程细节
+
 * [注意迭代器的使用](https://www.cnblogs.com/blueoverflow/p/4923523.html)
   * `container.erase(iter++)`, 同时完成删除和迭代
 * 如果iterator重复erase，可能在初始化string时发生未知的seg fault

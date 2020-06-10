@@ -28,6 +28,25 @@
 * 虚析构函数    =>对象内有虚函数表，指向虚函数表的指针：32位系统4字节，64位系统8字节
 * 虚基类偏移量表指针
 
+#### C++11
+`=default`和`=delete`，前者在自己有写构造函数的情况下生成默认构造函数，减小代码量，后者禁止函数
+```c++
+//! moving is allowed; copying is disallowed; default construction not possible
+//!@{
+~TCPConnection();  //!< destructor sends a RST if the connection is still open
+TCPConnection() = delete;
+TCPConnection(TCPConnection &&other) = default;
+TCPConnection &operator=(TCPConnection &&other) = default;
+TCPConnection(const TCPConnection &other) = delete;
+TCPConnection &operator=(const TCPConnection &other) = delete;
+//!@}
+```
+
+`void DUMMY_CODE(Targs &&... /* unused */) {}`的[应用](https://blog.csdn.net/xs18952904/article/details/85221921)
+
+`std::optional<>`
+* 方法：has_value(), value(), value_or(XX)
+
 #### 操作符重载
 **特点**
 * 既不能改变原运算符的运算优先级和结合性，也不能改变操作数的个数

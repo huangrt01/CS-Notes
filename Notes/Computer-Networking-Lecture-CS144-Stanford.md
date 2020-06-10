@@ -226,7 +226,7 @@ SIP的应用场景
 
 * 3-way handshake
   1. client: SYN, 送base number to identify bytes
-  2. server: SYN/ACK, 也送base number
+  2. server: SYN+ACK, 也送base number
   3. client: ACK
 * 传送TCP segment，最小可以1byte，比如在ssh session打字
 * connection teardown
