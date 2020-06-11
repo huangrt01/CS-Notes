@@ -184,6 +184,14 @@ In the test names
 * At the end of a test name, a lowercase “l” means there is packet loss on the receiving (incoming segment) direction
 * uppercase “L” means there is packet loss on the sending (outgoing segment) direction.
 
+**非常重要的细节**
+
+**In `TCPConnection::segment_received`, what are the three conditions in which the TCPConnection needs     to make sure that the segment receives at least one ACK segment in reply, and may need to force the TCPSender to spit out an empty segment to make this happen?**
+
+1. If the incoming segment occupies any sequence numbers       (`length_in_sequence_space() > 0`) 	    
+2. If the `TCPReceiver` thinks the segment is unacceptable (`TCPReceiver::segment_received()` returns `false`) 	    
+3. If the `TCPSender` thinks the ackno is invalid (`TCPSender::ack_received()` returns `false`)   
+
 
 
 #### 工程细节
