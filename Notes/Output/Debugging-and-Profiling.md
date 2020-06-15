@@ -205,3 +205,12 @@ reverse-cont
 [memory-profiler](https://pypi.org/project/memory-profiler/)
 
 [pycallgraph](http://pycallgraph.slowchop.com/en/master/)
+
+
+
+**限制进程资源**
+
+taskset --cpu-list 0,2 stress -c 3
+
+[利用cgroup控制内存等资源](https://segmentfault.com/a/1190000008125359)
+
