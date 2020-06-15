@@ -7,7 +7,7 @@
 #### Printf Debugging and Logging
 脑力劳动debug，借助打印信息思考和推断问题所在
 
-信息除了Printf，还可以Logging，更灵活（可以输出到文件、sockets、remote servers），并且可复用
+信息除了Printf，还可以Logging，更灵活（可以输出到文件、sockets、remote servers），可复用
 
 [Here](https://missing.csail.mit.edu/static/files/logger.py) is an example code that logs messages:
 
@@ -52,14 +52,17 @@ journalctl --since "1m ago" | grep Hello
 ```
 
 #### Debuggers
-* 共同命令：l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), q(uit), c(continue)
+共同命令：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(uit), watch
+
+* `watch -l `同时监视表达式本身和表达式指向的内容
 
 **Python**: [`ipdb`](https://pypi.org/project/ipdb/) is an improved `pdb` that uses the [`IPython`](https://ipython.org) REPL enabling tab completion, syntax highlighting, better tracebacks,  and better introspection while retaining the same interface as the `pdb` module.
-* ipdb特有命令: `p locals()`, j(ump), pp([`pprint`](https://docs.python.org/3/library/pprint.html)), restart
+* ipdb命令: `p locals()`, j(ump), pp([`pprint`](https://docs.python.org/3/library/pprint.html)), restart
 * [pdb turorial](https://github.com/spiside/pdb-tutorial), [pdb depth tutorial](https://realpython.com/python-debugging-pdb)
 
 **C++**: [`gdb`](https://www.gnu.org/software/gdb/) (and its quality of life modification [`pwndbg`](https://github.com/pwndbg/pwndbg)) and [`lldb`](https://lldb.llvm.org/)
-* gdb特有命令: start, finish
+* gdb命令: start, finish, cond, disable, where
+* `cond 3 this==0xXXX`
 * `gdb --args sleep 20`
 
 [CS107 GDB and Debugging教程](https://web.stanford.edu/class/archive/cs/cs107/cs107.1202/resources/gdb)
@@ -116,7 +119,7 @@ profilers和monitoring tools的意义：[premature optimization is the root of a
 
 #### Profilers
 
-**CPU**:[两种CPU profilers](https://jvns.ca/blog/2017/12/17/how-do-ruby---python-profilers-work-)，tracing and sampling profilers
+**CPU**: [两种CPU profilers](https://jvns.ca/blog/2017/12/17/how-do-ruby---python-profilers-work-)，tracing and sampling profilers
 
 * Python
   * cProfile: `python -m cProfile -s tottime grep.py 1000 '^(import|\s*def)[^,]*$' *.py`
@@ -125,6 +128,9 @@ profilers和monitoring tools的意义：[premature optimization is the root of a
 ```Python
 b = [2] * (2 * 10 ** 7)
 del b
+
+kernprof -l -v sorts.py
+python -m line_profiler sorts.py.lprof
 ```
 
 **Event Profiling** 
@@ -188,3 +194,14 @@ As it was the case for debugging, browsers also come with a fantastic set of too
 ### Exercises
 
 (Advanced) Read about [reversible debugging](https://undo.io/resources/reverse-debugging-whitepaper/) and get a simple example working using [`rr`](https://rr-project.org/) or [`RevPDB`](https://morepypy.blogspot.com/2016/07/reverse-debugging-for-python.html).    
+
+rr:
+
+```
+watch -l XX
+reverse-cont
+```
+
+[memory-profiler](https://pypi.org/project/memory-profiler/)
+
+[pycallgraph](http://pycallgraph.slowchop.com/en/master/)

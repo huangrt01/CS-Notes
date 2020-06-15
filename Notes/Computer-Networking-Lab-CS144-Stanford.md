@@ -151,6 +151,7 @@ sponge网络库的设计，TCP的测试中利用到状态判断，但具体到se
 * 重传条件是"outstanding for too long", 受tick影响，tick仅由外部的类调用，sender内部不调用任何时间相关的函数
 * retransmission timeout(RTO)，具体实现是RFC6298的简化版
   * 重传连续的之后double ；收到ackno后重置到`_initial_RTO`
+  * 可参考[RFC 6298](https://datatracker.ietf.org/doc/rfc6298/?include_text=1)第5小节实现_timer
 * 注意读`/lib_sponge/tcp_helper/tcp_state.cc`帮助理解状态变化
 
 
@@ -163,7 +164,7 @@ sponge网络库的设计，TCP的测试中利用到状态判断，但具体到se
 
 #### lab4: the summit (TCP in full)
 
-这次Lab是把之前的receiver和sender封装成TCPConnection类，用来进行真实世界的通信。
+这次Lab是把之前的receiver和sender封装成TCPConnection类，用来进行真实世界的通信，下图有助于直观理解结构。
 
 <img src="Computer-Networking-Lab-CS144-Stanford/dataflow.jpg" alt="TCP dataflow" style="zoom:100%;" />
 
@@ -171,7 +172,7 @@ sponge网络库的设计，TCP的测试中利用到状态判断，但具体到se
 
 
 
-In the test names
+实验的测试文件一如既往的重要，命名规则如下：
 
 * “c” means your code is the client (peer that sends the first syn)
 * “s” means your code is the server.  
@@ -181,16 +182,47 @@ In the test names
 * “S” means your code is sending data
 * “R” means your code is receiving data
 * “D” means data is being sent in bothdirections
-* At the end of a test name, a lowercase “l” means there is packet loss on the receiving (incoming segment) direction
+* lowercase “l” means there is packet loss on the receiving (incoming segment) direction
 * uppercase “L” means there is packet loss on the sending (outgoing segment) direction.
 
-**非常重要的细节**
+**实现时的重要细节：** 
+
+1.需要单独讨论重传ACK的情形，在我的实现中我写了一个`send_ack_back()`函数
 
 **In `TCPConnection::segment_received`, what are the three conditions in which the TCPConnection needs     to make sure that the segment receives at least one ACK segment in reply, and may need to force the TCPSender to spit out an empty segment to make this happen?**
 
-1. If the incoming segment occupies any sequence numbers       (`length_in_sequence_space() > 0`) 	    
-2. If the `TCPReceiver` thinks the segment is unacceptable (`TCPReceiver::segment_received()` returns `false`) 	    
-3. If the `TCPSender` thinks the ackno is invalid (`TCPSender::ack_received()` returns `false`)   
+* If the incoming segment occupies any sequence numbers       (`length_in_sequence_space() > 0`) 	    
+* If the `TCPReceiver` thinks the segment is unacceptable (`TCPReceiver::segment_received()` returns `false`) 	    
+* If the `TCPSender` thinks the ackno is invalid (`TCPSender::ack_received()` returns `false`)   
+
+2.处理RST
+* 如果收到RST，需要给sender和receiver的stream用set_error()，不需要回传
+* 发送RST的情形
+  * 错误的connect，connect()函数中  
+  * unclean shutdown，析构函数中
+  * 连续重传超次数 `_sender.consecutive_retransmissions() > TCPConfig::MAX_RETX_ATTEMPTS`
+
+3.判断终结条件
+* 具体实现：见代码以及实验指导书的第5节。
+* 背后的理念：Because of the [Two Generals Problem](https://en.wikipedia.org/wiki/Two_Generals'_Problem), it’s impossible to guarantee that both peers can achieve a clean shutdown
+
+**Debug**
+
+1.最后和linux系统真实地进行通信，总有10个tests过不了，打算先研究这一个测试样例: `../txrx.sh -isDnd 128K -w 8K -l 0.1`
+
+2.Github上找到一个顺利过关的[印度大哥](https://github.com/gcidart/cs144)，他给了一些[debug建议](https://github.com/gcidart/cs144/issues/1)
+
+3.改了一些tcp_connection和tcp_sender的细节，benchmark速度提升
+
+4.debug无果，决定替换印度大哥模块逐一排查，发现是tcp_receiver出了问题，
+
+4.最终的bug非常坑，即使是助教写的测试样例也无法照顾到，只有当和linux的tcp进行真实丢包通信时才会出现，具体是在以下这一行tcp滑窗控制: 
+
+`bool inbound =  (seq_start>=win_start&& seq_start<=win_end) ||  (payload_end>=win_start && seq_end<=win_end);`
+
+receive的条件是数据片段和receiver的窗有重合，这个实现看似很简单，只需要写出数据的begin和end，窗的begin和end，然后做判断。具体来说，判断数据的begin是否在窗里，再判断数据的end是否在窗里即可。但在TCPReceiver的具体实现中，在判断数据的end是否在窗里时，需要用两个普通的end：代码中的`payload_end`是原先的`seq_end`经过处理得到的，需要把syn和fin占的位置排除掉，这样处理是因为receiver内部的`_reassembler`类只处理data，不处理syn和fin。
+
+综合来说，需要对基础的窗的判断条件做修改，具体实现中不是一个uniform的形式，只有这样才能过最后几个tests。
 
 
 
@@ -220,3 +252,4 @@ class typeUnassembled {
 };
 ```
 * `urg = static_cast<bool>(fl_b & 0b0010'0000); // binary literals and ' digit separator since C++14!!!`
+

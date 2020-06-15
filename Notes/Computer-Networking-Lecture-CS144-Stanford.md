@@ -35,22 +35,23 @@
 ##### 1-2 The four layer Internet model
 <img src="Computer-Networking-Lecture-CS144-Stanford/001.jpg" alt="4-layer" style="zoom:60%;" />
 
-* 4 layer: 利于reuse
-* Internet: end-hosts, links and routers
-  * Link Layer: 利用link在end host和router或router和router之间传输数据, hop-by-hop逐跳转发; e.g. Ethernet and WiFi
-  * Network Layer: datagrams, Packet: (Data, Header(from, to))
-    * packets可能失去/损坏/复制，no guarantees
-    * must use the IP
-    * may be out of order
-  * Transport Layer: TCP(Transmission Control Protocol)负责上述Network的局限性，controls congestion
-    * sequence number -> 保序
-    * ACK(acknowledgement of receipt)，如果发信人没收到就resend
-    * 比如视频传输不需要TCP，可以用UDP(User Datagram Protocol),不保证传输
+4 layer: 利于reuse
+
+Internet: end-hosts, links and routers
+* Link Layer: 利用link在end host和router或router和router之间传输数据, hop-by-hop逐跳转发; e.g. Ethernet and WiFi
+* Network Layer: datagrams, Packet: (Data, Header(from, to))
+  * packets可能失去/损坏/复制，no guarantees
+  * must use the IP
+  * may be out of order
+* Transport Layer: TCP(Transmission Control Protocol)负责上述Network的局限性，controls congestion  
+  * sequence number -> 保序
+  * ACK(acknowledgement of receipt)，如果发信人没收到就resend
+  * 比如视频传输不需要TCP，可以用UDP(User Datagram Protocol),不保证传输
 * Application Layer
   
-* two extra things
-  * IP is the "thin waist"   ,这一层的选择最少
-  * the 7-layer OSI Model
+two extra things
+* IP is the "thin waist"   ,这一层的选择最少
+* the 7-layer OSI Model
 
 <img src="Computer-Networking-Lecture-CS144-Stanford/002.jpg" alt="7-layer" style="zoom:60%;" />
 
@@ -85,16 +86,16 @@
   * forwarding table
   * default router
 
-* wireshark: 
-  * [谈谈Linux中的TCP重传抓包分析](https://segmentfault.com/a/1190000019734707)
-
 ##### 1-5 Principle: Packet switching principle
-* packet: self-contained
-* packet switching: independently for each arriving packet, pick its outgoing link. If the link is free, send it. Else hold the packet for later.
-* source packet: (Data, (dest, C, B, A))  发展成只存destination，每个switch有table
-* two consequences
-  * simple packet forwarding: No per-flow state required，state不需要store/add/remove
-  * efficient sharing of links: busty data traffic; statistical multiplexing => 对packet一视同仁，可共享links
+packet: self-contained
+
+packet switching: independently for each arriving packet, pick its outgoing link. If the link is free, send it. Else hold the packet for later.
+
+source packet: (Data, (dest, C, B, A))  发展成只存destination，每个switch有table
+
+two consequences
+* simple packet forwarding: No per-flow state required，state不需要store/add/remove
+* efficient sharing of links: busty data traffic; statistical multiplexing => 对packet一视同仁，可共享links
 
 ##### 1-6 Principle: Layering
 
@@ -224,17 +225,6 @@ SIP的应用场景
 
 **过程**：三次握手和四次挥手（参考2-6的状态转移图理解）
 
-* 3-way handshake
-  1. client: SYN, 送base number to identify bytes
-  2. server: SYN+ACK, 也送base number
-  3. client: ACK
-* 传送TCP segment，最小可以1byte，比如在ssh session打字
-* connection teardown
-  1. client: FIN
-  2. server: (Data +) ACK
-  3. server: FIN
-  4. client: ACK
-
 **Techniques to manufacture reliability**
 
 * Remedies
@@ -266,11 +256,12 @@ SIP的应用场景
 * URG应该在ACK前面
 
 <img src="Computer-Networking-Lecture-CS144-Stanford/009.jpg" alt="TCP uniqueness" style="zoom:60%;" />
-* 五个部分，104bit
-* 唯一性
-  * 要求source port initiator每次increment:64k new connections
-  * TCP picks ISN to avoid overlap with previous connection with same ID, 多一个域，增加随机性
-  * ISN的意义在于：1）security 2）便于filter out不同类型的包  
+五个部分，104bit
+
+唯一性
+* 要求source port initiator每次increment:64k new connections
+* TCP picks ISN to avoid overlap with previous connection with same ID, 多一个域，增加随机性
+* ISN的意义在于：1）security，避免自己的window被overlap 2）便于filter out不同类型的包  
 
 
 ##### 2-2 UDP service model
@@ -355,7 +346,7 @@ end-to-end check
 
 <img src="Computer-Networking-Lecture-CS144-Stanford/014.jpg" alt="stop-and-wait" style="zoom:100%;" />
 
-##### 2-7 Flow Control II: Sliding Window
+##### 2-8 Flow Control II: Sliding Window
 * Stop-and-Wait的性能：RTT=50ms, Bottleneck=10Mbps, Ethernet packet length=12Kb => 性能(2%)远远不到瓶颈
 * Sliding Window计算Window size填满性能
 
@@ -391,7 +382,7 @@ end-to-end check
 * Receiver advertises RWS using window field
 * Sender can only send data up to LAR+SWS
 
-##### 2-8 Retransmission Strategies
+##### 2-9 Retransmission Strategies
 protocol可能的运转方式 (ARQ: automatic repeat request)
 * Go-back-N: pessimistic，重传ack, ack+1, ack+2 ...
   * e.g. RWS=1的情形
@@ -399,7 +390,7 @@ protocol可能的运转方式 (ARQ: automatic repeat request)
   * e.g. RWS=SWS=N的情形
   * 对burst of losses效果不好
 
-##### 2-9 TCP Header
+##### 2-10 TCP Header
 
 <img src="Computer-Networking-Lecture-CS144-Stanford/015.jpg" alt="TCP header" style="zoom:100%;" />
 
@@ -412,9 +403,35 @@ protocol可能的运转方式 (ARQ: automatic repeat request)
 * RST: reset the connection
 * urgent pointer：和URG联系，指出哪里urgent
 
+##### 2-11 TCP Setup and Teardown
+状态机的实现很简洁，核心是如何set up和clean up(port number, etc)
 
 
-##### TCP Recap
+**3-way handshake**
+
+Active opener and Passive opener
+
+1. client: SYN, 送base number(syqno) to identify bytes
+2. server: SYN+ACK, 也送base number
+3. client: ACK
+
+支持“simultaneous open”
+
+传送TCP segment，最小可以1byte，比如在ssh session打字
+
+**connection teardown**
+
+1. client: FIN
+2. server: (Data +) ACK
+3. server: FIN
+4. client: ACK
+
+<img src="Computer-Networking-Lecture-CS144-Stanford/018.jpg" alt="Clean Teardown" style="zoom:45%;" />
+
+
+
+
+##### 2-12 TCP Recap
 
 * IP和UDP都是best-effort and unreliable，但是我们不需要担心truncation和corruption，因为：
 
@@ -428,7 +445,14 @@ protocol可能的运转方式 (ARQ: automatic repeat request)
 <img src="Computer-Networking-Lecture-CS144-Stanford/017.jpg" alt="HTTP3" style="zoom:60%;" />
 
 
+##### 2-13 TCP/IP -- Kevin Fall
+《TCP/IP Illustrated》2nd edition 
 
+securites: firewalls;  architectural underpinnings
+
+packets和datagrams是两个核心概念，datagrams为了明确目的地，在设计时有更多的trade-off
+
+3-d printing、枪、DRM(Digital Rights Management)
 
 
 
@@ -446,6 +470,21 @@ protocol可能的运转方式 (ARQ: automatic repeat request)
 * [RFC 2606](https://datatracker.ietf.org/doc/rfc2606/): localhost
 * [RFC 6298](https://datatracker.ietf.org/doc/rfc6298/?include_text=1): Computing TCP's Retransmission Timer
 * [RFC 6335](https://tools.ietf.org/html/rfc6335): port number
+* RFC 7414: A Roadmap for TCP
+
+
+##### wireshark: 
+[谈谈Linux中的TCP重传抓包分析](https://segmentfault.com/a/1190000019734707)
+
+```
+telnet cs144.keithw.org http
+GET /hello HTTP/1.1 # path part,第三个slash后面的部分
+Host: cs144.keithw.org # host part,`https://`和第三个slash之间的部分
+
+tcp.port == 90 and ip.addr== XXX
+```
+
+
 
 
 

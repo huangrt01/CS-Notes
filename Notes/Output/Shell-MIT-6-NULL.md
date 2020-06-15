@@ -805,6 +805,9 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
   * 
 * nohup
 #### o 
+
+* open: -n用来多开，比如``
+
 #### p
 * [pandoc](https://github.com/jgm/pandoc)
   * `pandoc test1.md -f markdown -t html -s -o test1.html
