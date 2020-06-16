@@ -54,6 +54,7 @@ I hear and I forget. I see and I remember. I do and I understand.    其实是�
   * I/O setups; default file descriptors
 
 <img src="OSTEP-Operating-Systems-Three-Easy-Pieces/001.jpg" alt="进程状态转移" style="zoom:50%;" />
+
 * final态（在UNIX称作zombie state）等待子进程return 0，parent进程 wait()子进程
 
 * xv6 process structure
@@ -1177,14 +1178,15 @@ void mutex_unlock (int*mutex) {
 
 **Concurrent Linked Lists**
 * malloc error之后接unlock，这样的代码风格容易出问题。实际实现时推荐只在update数据结构的时候加锁，因为malloc具有thread safe特性。
-* TIP：be wary of control flow changes that lead to function returns, exits, or other similar error conditions that halt the execution of a function
+* Tip：be wary of control flow changes that lead to function returns, exits, or other similar error conditions that halt the execution of a function
 * hand-over-hand locking(lock coupling)：并发性强，但锁操作频繁，实际性能不见得好 
 
 **Concurrent Queue**
-* Michael and Scott Concurrent Queue: 1）两个锁；2）头节点法
+* Michael and Scott Concurrent Queue: 1）头尾两个锁；2）头节点法
 * A more fully developed bounded queue, that enables a thread to wait if the queue is either empty or overly full, is the subject of our intense study in the next chapter on condition variables.
 
-**Concurrent Hash Table**
+**Concurrent Hash**
+基于concurrent lists
 
 ```c++
 #define BUCKETS (101)
@@ -1234,7 +1236,7 @@ void*child(void*arg) {
 void thr_join() {
     Pthread_mutex_lock(&m);
     while (done == 0)
-        Pthread_cond_wait(&c, &m);2
+        Pthread_cond_wait(&c, &m);
     thread_mutex_unlock(&m);
 }
 int main(int argc, char*argv[]) {
@@ -1257,13 +1259,15 @@ int main(int argc, char*argv[]) {
 * 问题：Mesa semantics: there is no guarantee that when the woken thread runs, the state will still be as desired <-> Hoare semantics；前者广泛采用
 
 实现二：一中的if改成**while**，尽量不被遗漏
-* 多线程程序尽量用while来check条件，还可以避免spurious wakeups(一次唤醒了多个线程)
+* 多线程程序尽量用while来check条件，可以避免if条件满足时一次唤醒多个线程，spurious wakeups，资源不足
 * 问题：signal不确定唤醒的是生产者还是消费者
 
 实现三：while+两个条件变量
 
 
-**Covering Conditions**：针对memory allocator问题，直接用`pthread_cond_broadcast`唤醒所有wait中的线程，这是最简洁有效的思路
+**Covering Conditions**：指需要唤醒过多的满足条件的线程的情形
+* eg1: 针对memory allocator问题，直接用`pthread_cond_broadcast`唤醒所有wait中的线程，这是最简洁有效的思路
+* eg2: 生产者消费者问题的实现一，也有这个问题，但可以从原理上进行改进，而eg1不方便进行原理上的改进，只能broadcast
 
 HW:
 
@@ -1277,6 +1281,230 @@ HW:
 
 9.`./main-one-cv-while -l 100 -p 1 -c 2 -m 1 -v -t`
 
+#### 31.Semaphores
+
+##### CRUX: how to use semaphores?
+
+信号量和锁/条件变量的互相转换问题
+
+```c++
+#include <semaphore.h>
+sem_t s;
+sem_init(&s, 0, 1);
+// second arg set to 0:the semaphore is shared between threads in the same process
+// third arg: initial value
+
+sem_wait(&m);
+//critical section
+sem_post(&m);
+
+```
+* 信号量初始化的值如何选取：consider the number of resources you are willing to give away immediately after initialization
+* 信号量为负值时，绝对值是正在等待的线程数
+* sem_post(&m)运行不停滞
+
+信号量的应用
+
+* Binary Semaphores
+
+* Semaphores For Ordering
+* The Producer/Consumer (Bounded Buffer) Problem
+  * mutual exclusion
+  * mutex在内层，否则会deadlock 
+
+```c++
+void*producer(void*arg) {
+	int i;
+	for (i = 0; i < loops; i++) {
+		sem_wait(&empty);       // Line P1
+		sem_wait(&mutex);       // Line P1.5 (MUTEX HERE)
+		put(i);                 // Line P2
+		sem_post(&mutex);       // Line P2.5 (AND HERE)
+		sem_post(&full);        // Line P3
+	}
+}
+
+void*consumer(void*arg) {
+	int i;
+	for (i = 0; i < loops; i++) {
+		sem_wait(&full);        // Line C1
+		sem_wait(&mutex);       // Line C1.5 (MUTEX HERE)
+		int tmp = get();        // Line C2
+		sem_post(&mutex);       // Line C2.5 (AND HERE)
+		sem_post(&empty);       // Line C3
+		printf("%d\n", tmp);
+	}
+}
+```
+
+* Reader-Writer Locks
+  * 如果要保证公平竞争：设置互斥信号量S，加在读者/写者的acquire_lock函数上
+  * 引申到设计理念，复杂往往低效，可能简单的spin lock更好；比如说CPU的cache设计，全相联比组相连效率高，部分是因为全相联实现的lookups更快
+
+```c++
+typedef struct _rwlock_t {
+	sem_t lock;      // binary semaphore (basic lock)
+	sem_t writelock; // allow ONE writer/MANY readers
+	int   readers;   // #readers in critical section
+} rwlock_t;
+
+void rwlock_init(rwlock_t *rw) {
+	rw->readers = 0;
+	sem_init(&rw->lock, 0, 1);
+	sem_init(&rw->writelock, 0, 1);
+}
+
+void rwlock_acquire_readlock(rwlock_t *rw) {
+	sem_wait(&rw->lock);
+	rw->readers++;
+	if (rw->readers == 1) // first reader gets writelock
+		sem_wait(&rw->writelock);
+	sem_post(&rw->lock);
+}
+
+void rwlock_release_readlock(rwlock_t *rw) {
+	sem_wait(&rw->lock);
+	rw->readers--;
+	if (rw->readers == 0) // last reader lets it go
+		sem_post(&rw->writelock);
+	sem_post(&rw->lock);
+}
+
+void rwlock_acquire_writelock(rwlock_t *rw) {
+	sem_wait(&rw->writelock);
+}
+void rwlock_release_writelock(rwlock_t *rw) {
+	sem_post(&rw->writelock);
+}
+```
+
+* The Dining Philosophers
+  * 需要解决的问题：死锁，哲学家同时拿到左手的餐具，**资源依赖成环**
+  * 方法一：对每个fork设置信号量；如下面代码所示，修改其中一位哲学家的get_forks()避免成环
+  * 方法二：对每个人设置信号量，定义test函数，在test的外围加互斥锁
+```c++
+#define NUM 5
+while(1){
+	think();
+	get_forks();
+	eat();
+	put_forks();
+}
+
+int left(int p) {return p;}
+int right(int p) {return (p+1)%NUM;}
+
+void put_forks(int p){
+	sem_post(&forks[left(p)]);
+	sem_post(&forks[right(p)]);
+}
+void get_forks(int p){
+	if(p==NUM){
+		sem_wait(&forks[right(p)]);
+		sem_wait(&forks[left(p)]);
+	} else{
+		sem_wait(&forks[left(p)]);
+		sem_wait(&forks[right(p)]);
+	}
+}
+
+```
+
+* thread throttling
+
+admission control, 比如针对memory-intensive region，避免thrashing(swap pages)  
+
+* 如何实现信号量？
+  * 用条件变量和互斥锁
+  * 用信号量实现条件变量很难，书中有提到论文
+```c++
+typedef struct __Zem_t {
+	int value;
+	pthread_cond_t cond;
+	pthread_mutex_t lock;
+} Zem_t;
+
+// only one thread can call this
+void Zem_init(Zem_t *s, int value) {
+	s->value = value;
+	Cond_init(&s->cond);
+	Mutex_init(&s->lock);
+}
+
+void Zem_wait(Zem_t *s) {
+	Mutex_lock(&s->lock);
+	while (s->value <= 0)
+		Cond_wait(&s->cond, &s->lock);
+	s->value--;
+	Mutex_unlock(&s->lock);
+}
+void Zem_post(Zem_t *s) {
+	Mutex_lock(&s->lock);
+	s->value++;
+	Cond_signal(&s->cond);
+	Mutex_unlock(&s->lock);
+}
+```
+
+HW:
+
+5.reader-write-nostarve
+
+```c++
+void rwlock_acquire_readlock(rwlock_t *rw) {
+    sem_wait(&rw->S);
+    sem_post(&rw->S);
+    sem_wait(&rw->lock);
+    rw->readers++;
+    if(rw->readers==1)
+        sem_wait(&rw->writelock);
+    sem_post(&rw->lock);
+}
+
+void rwlock_release_readlock(rwlock_t *rw) {
+    sem_wait(&rw->lock);
+    rw->readers--;
+    if(rw->readers==0)
+        sem_post(&rw->writelock);
+    sem_post(&rw->lock);
+}
+
+void rwlock_acquire_writelock(rwlock_t *rw) {
+    sem_wait(&rw->S);
+    sem_wait(&rw->writelock);
+}
+
+void rwlock_release_writelock(rwlock_t *rw) {
+    sem_post(&rw->S); //这行代码的位置有讲究，书上是放在这里，我觉得放在sem_post(&rw->writelock)后面或者sem_wait(&rw->writelock)前面好像都行
+    sem_post(&rw->writelock);
+}
+```
+
+
+
+6.no-starve-mutex
+
+很难的问题，参考[The Little Book of Semaphores](https://www.docin.com/p-424286179.html) 4.3节
+
+weak semaphore和strong semaphore：strong semaphore能确保在一个wait线程之前唤醒的线程数量有界
+
+no-starve-mutex的目的是基于weak semaphore实现no starving，具体实现非常巧妙，设两个room，轮流全部倒出，这样就不会出现单线程的loop。
+
+t1、t2和mutex三个信号量，状态转移图如下：
+
+<img src="OSTEP-Operating-Systems-Three-Easy-Pieces/no-starve-mutex.jpeg" alt="进程状态转移" style="zoom:50%;" />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1289,7 +1517,7 @@ HW:
 ##### 编译相关的知识
 * libc: Linux 下的 ANSI C 函数库
 * gcc
-  * cpp文件预处理相关的# $\longrightarrow$ cc1 由C到汇编 $\longrightarrow$ ac：assembler $\longrightarrow$ ld: linker
+  * cpp文件预处理相关的# $\longrightarrow$ cc1: 由C到汇编 $\longrightarrow$ ac：assembler $\longrightarrow$ ld: linker
 
 * gcc参数 
   * -o：output

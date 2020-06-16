@@ -6,11 +6,13 @@
 
 #### C
 
-* volatile特性：这条代码不要被编译器优化，`volatile int counter = 0`，避免出现意料之外的情况，常用于全局变量
+volatile特性：这条代码不要被编译器优化，`volatile int counter = 0`，避免出现意料之外的情况，常用于全局变量
 
-* C不能用for(int i=0; ; ) 需要先定义i
+C不能用for(int i=0; ; ) 需要先定义i
 
-* 负数取余是负数，如果想取模：a = (b%m+m)%m;
+负数取余是负数，如果想取模：a = (b%m+m)%m;
+
+Dijkstra反对goto的[文章](http://www.cs.utexas.edu/users/EWD/ewd02xx/EWD215.PDF)
 
 ##### 结构体
 
@@ -18,6 +20,21 @@
 * 起始地址为该变量的类型所占的整数倍，若不足则不足部分用数据填充至所占内存的整数倍。
 * 该结构体所占内存为结构体成员变量中最大数据类型的整数倍。
 * e.g.: 1+4+1+8->4+4+8+8=24
+
+不同操作系统的编译:
+```c++
+#ifdef __APPLE__
+	#include "TargetConditionals.h"
+	#ifdef TARGET_OS_MAC
+		#include <GLUT/glut.h>
+		#include <OpenGL/OpenGL.h>
+	#endif
+#elif defined _WIN32 || defined _WIN64
+	#include <GL\glut.h>
+#elif defined __LINUX__
+	XXX
+#endif
+```
 
 #### C++的特性
 面向对象、构造函数、析构函数、动态绑定、内存管理
