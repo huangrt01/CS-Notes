@@ -22,13 +22,15 @@
 
 ### 效率工具
 
-#### [Shell   --  MIT 6.NULL](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Shell-MIT-6-NULL.md) ■■■■■■□□□□
+#### [Shell   --  MIT 6.NULL](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Shell-MIT-6-NULL.md) ■■■■■■■□□□
 
 #### [Vim](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Vim.md) ■■■■■■■■■■
 
 #### [Git](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/git.md) ■■■■■■■■□□
 
 #### [Debugging and Profiling](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Debugging-and-Profiling.md) ■■■■■■■■■■
+
+#### [Metaprogramming](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Metaprogramming)■■■■■■■■■■
 
 ### 操作系统
 
@@ -69,7 +71,7 @@
 * 读MLsys论文，研究tensorflow源码
 * 试着做MIT6.824
 * 挑着看CSAPP，做web server和shell lab
-* 参考uunp，在上面的基础上添加ostep project中web server和shell lab的需求功能
+* 参考uunp，在CSAPP Lab的基础上添加ostep project中web server和shell lab的需求功能
 * CS144剩余的课+router lab
 * OSTEP persistency部分
 * CSAPP其它部分和lab

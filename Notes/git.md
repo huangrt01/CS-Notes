@@ -192,6 +192,7 @@ git push origin HEAD --force # 回退remote敏感信息
 - `git stash`: temporarily remove modifications to working directory
 	- `git stash show -p | git apply -R`
 - `git bisect`: binary search history (e.g. for regressions)
+- [git ls-files](https://git-scm.com/docs/git-ls-files)
 - `git submodule add <url> /path`
     * clone之后初始化：`git submodule update --init --recursive`
     * 更新：`git submodule update --init --remote`
@@ -286,7 +287,7 @@ Host github.com
 * 建立仓库
 ```
 git init
-git remote add origin git@github.com:huangrt01@163.com/dotfiles.git
+git remote add origin git@github.com:huangrt01/dotfiles.git
 git pull --rebase origin master
 git push --set-upstream origin master
 ```

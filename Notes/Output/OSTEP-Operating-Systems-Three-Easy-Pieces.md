@@ -1526,6 +1526,7 @@ t1、t2和mutex三个信号量，状态转移图如下：
 	* -O     optimization
   * -E  寻找所有依赖
   * One issue with mem.c is that address space randomization is usually on by default. To turn it off: Just compile/link as follows: gcc -o mem mem.c -Wall -Wl,-no_pie
+  * -m32
 
 `FLAGS = -Wall -pthread, INCLUDES = ../include, gcc -I  <img src="https://www.zhihu.com/equation?tex=%28INCLUDES%29%20-o%20t0%20t0.c%20" alt="(INCLUDES) -o t0 t0.c " class="ee_img tr_noresize" eeimg="1"> (FLAGS)`
 
@@ -1537,44 +1538,7 @@ linking with libraries: -lXXX
 
 Separate Compilation: -c, 只产生object file, 不link, 后面联合link-editor
 
-Makefiles:
-```
-target: prerequisite1 prerequisite2 ...
-	command1
-	command2 (需要tab)
-```
-* 知道什么需要regenerate
-```shell
-# specify all source files here
-SRCS = hw.c helper.c
 
-# specify target here (name of executable)
-TARG = hw
-
-# specify compiler, compile flags, and needed libs
-CC   = gcc
-OPTS = -Wall -O
-LIBS = -lm
-
-# this translates .c files in src list to .o’s
-OBJS = $(SRCS:.c=.o)
-
-# all is not really needed, but is used to generate the target
-all: $(TARG)
-
-# this generates the target executable
- <img src="https://www.zhihu.com/equation?tex=%28TARG%29%3A%20" alt="(TARG): " class="ee_img tr_noresize" eeimg="1"> (OBJS)
-	 <img src="https://www.zhihu.com/equation?tex=%28CC%29%20-o%20" alt="(CC) -o " class="ee_img tr_noresize" eeimg="1"> (TARG)  <img src="https://www.zhihu.com/equation?tex=%28OBJS%29%20" alt="(OBJS) " class="ee_img tr_noresize" eeimg="1"> (LIBS)
-	
-  # this is a generic rule for .o files
-  %.o: %.c
-     <img src="https://www.zhihu.com/equation?tex=%28CC%29%20" alt="(CC) " class="ee_img tr_noresize" eeimg="1"> (OPTS) -c  <img src="https://www.zhihu.com/equation?tex=%3C%20-o%20" alt="< -o " class="ee_img tr_noresize" eeimg="1"> @
-
-  # and finally, a clean line
-  clean:
-    rm -f  <img src="https://www.zhihu.com/equation?tex=%28OBJS%29%20" alt="(OBJS) " class="ee_img tr_noresize" eeimg="1"> (TARG)
-```
-* makedepend工具能帮助寻找依赖
 
 inbox：
 * hm5.8    g++ hm5.8.cpp -o hm5.8 -Wall && "/Users/huangrt01/Desktop/OSTEP/ostep-code/cpu-api/“hm5.8  同一个命令，用coderunner输出六行，用terminal输出五行 
