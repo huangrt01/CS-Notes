@@ -1494,6 +1494,111 @@ t1、t2和mutex三个信号量，状态转移图如下：
 
 <img src="OSTEP-Operating-Systems-Three-Easy-Pieces/no-starve-mutex.jpeg" alt="进程状态转移" style="zoom:50%;" />
 
+#### 32.Common Concurrency Problems
+
+##### CRUX: how to handle common concurrency bugs?
+
+##### Non-Deadlock Bugs
+
+1.atommicity-violation bugs
+```c++
+Thread 1::
+if (thd->proc_info) {
+	fputs(thd->proc_info, ...);
+}
+
+Thread 2::
+thd->proc_info = NULL;
+```
+
+2.Order-Violation Bugs
+
+用条件变量解决
+
+
+##### Deadlock Bugs
+
+##### CRUX: how to deal with deadlock?
+
+为什么会有出现死锁？
+* large code bases, complex dependencies
+* encapsulation，底层细节，比如Java Vector class `v1.AddAll(v2)`需要multi-thread safe，获取锁的顺序随机
+
+**死锁条件**
+
+* **Mutual exclusion:** Threads claim exclusive control of resources that they require (e.g., a thread grabs a lock)
+* **Hold-and-wait: **Threads hold resources allocated to them (e.g., locks that they have already acquired) while waiting for additional resources (e.g., locks that they wish to acquire)
+* **No preemption: **Resources (e.g., locks) cannot be forcibly removed from threads that are holding them
+* **Circular wait: **There exists a circular chain of threads such that each thread holds one or more resources (e.g., locks) that are being requested by the next thread in the chain.
+
+**Prevention**:分别针对上面的条件
+
+Circular  wait 
+
+* total ordering 固定锁的唤醒顺序
+
+* partial ordering: linux filemap.c
+* 小Tip：Enforce Lock Ordering by Lock Address
+
+```c++
+if (m1 > m2) { // grab in high-to-low address order
+  pthread_mutex_lock(m1);
+  pthread_mutex_lock(m2);
+} else {
+  pthread_mutex_lock(m2);
+  pthread_mutex_lock(m1);
+}// Code assumes that m1 != m2 (not the same lock)
+```
+
+Hold-and-wait
+
+* 用一个prevention锁包住所有锁的获取，意义不大
+
+No Preemption
+
+* a deadlock-free, ordering-robust lock acquisition protocol
+
+```c++
+top:
+	pthread_mutex_lock(L1);
+	if (pthread_mutex_trylock(L2) != 0) {
+    pthread_mutex_unlock(L1);
+    goto top;
+  }
+```
+* 可能有livelock，但太巧了，可以用随机性处理
+* 存在encapsulation的问题，但这个解法至少对某些场合有效
+
+Mutual Exclusion
+
+* lock-free系列方法，见第28节或笔记文件夹内threads-bugs.cpp文件
+
+* 感觉这系列的方法适用于分布式系统，backup、试错、no bounded loop
+
+
+
+**Deadlock Avoidance via Scheduling**
+
+* 全局信息=>更优决策
+* Dijkstra’s Banker’s Algorithm [D64]
+* 应用不多：场景有限，比如嵌入式系统；限制了并行性
+
+* 设计理念： “Not everything worth doing is worth doing well”
+
+  
+
+**Detect and Recover**
+
+A deadlock detector runs periodically, building a resource graph and checking it for cycles.  常应用于数据库
+
+
+
+
+
+
+
+
+
 
 
 

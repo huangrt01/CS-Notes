@@ -244,3 +244,14 @@ unsigned floatPower2(int x)
 }
 ```
 
+### Shell Lab
+
+shell
+* 空格分割，不断产生prompt
+* ampersand `&`结尾 => background运行
+
+command分为两类
+* built-in command: current process执行
+* the pathname of an executable file: forks a child process
+* **job**的概念，指代initial child process，job用PID或JID标识，JID由`%`开头
+
