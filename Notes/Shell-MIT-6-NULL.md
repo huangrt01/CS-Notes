@@ -606,11 +606,12 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 `
   * `pandoc -s --toc -c pandoc.css -A footer.html MANUAL.txt -o example3.html`
 * pbcopy: 复制到剪贴板 `pbcopy < file`
-* ping
 * pgrep: 配合jobs
   * `pgrep -f 100` 全命令行匹配
+* ping
 * pkill = pgrep + kill
   *`pkill -9 -f 100` 
+* pmap: Displays the memory map of a process.
 * ps aux
 * pwd: print cwd
 #### q

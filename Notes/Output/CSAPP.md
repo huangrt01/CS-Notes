@@ -73,7 +73,76 @@ Linux能获取内核信息的文件系统
 * error-reporting function
 * error-handling wrappers
 
-##### 8.4 
+##### 8.4 Process Control
+
+设置exit status的方式：1）输入exit参数	2）main function的return value
+
+fork的其中一个特性是share files，比如共享stdout file，print到同一个地方
+
+画process graph辅助理解nested fork的行为
+
+8.4.3: reap child processes, p779, `waitpid`的详细介绍
+
+如果parent不reap，由kernel创建的pid为1的`init`进程reap zombie children
+
+
+
+**execve**(p786)
+
+unlike fork, which is called once but returns twice, execve is called once and never returns.
+
+load file-name之后，call the start-up code
+
+p788: user-stack结构图		%rdi %rsi %rdx: argc argv envp
+
+env相关的函数
+
+* `char *getenv(const char *name); `
+* `int setenv(const char *name, const char *newvalue, int overwrite);`
+* `void unsetenv(const char *name);`
+
+##### 8.5 Signals
+
+p793: Linux Signals		`man 7 signal`
+
+signal体现了kernel exception handlers和user space的交互
+
+pending signal，后续的相同signal会被discard，process可以block signal
+* linux中，`pending`和`block` vector
+
+process groups: `getpgrp(), setgpid(pid,pgid)`
+
+kill和alarm函数 p798
+
+install the handler -> catch the signal -> handle the signal
+
+e.g. 一个空return handler可以让sleep进程return
+
+
+**实现handler的关键细节**
+* p801: block机制
+* Declare global variables with volatile: 这样不会被编译器优化，确保handler更新的global值能被main知道
+
+p811: Signal wrapper
+
+p817: 用sigsuspend处理spin loop问题
+
+##### 8.6 Nonlocal Jumps
+
+user-level层面的ECF
+
+```c++
+#include <setjmp.h>
+int setjmp(jmp_buf env);
+int sigsetjmp(sigjmp_buf env, int savesigs);
+//Returns: 0 from setjmp, nonzero from longjmps
+```
+
+
+
+
+
+
 
 
 

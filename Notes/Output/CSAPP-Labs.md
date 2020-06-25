@@ -255,3 +255,6 @@ command分为两类
 * the pathname of an executable file: forks a child process
 * **job**的概念，指代initial child process，job用PID或JID标识，JID由`%`开头
 
+
+
+The parent needs to block the SIGCHLD signals in this way in order to avoid the **race condition** where the child is reaped by sigchld handler(and thus removed from the job list) before the parent calls addjob.
