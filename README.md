@@ -32,9 +32,11 @@
 
 #### [Metaprogramming](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Metaprogramming)■■■■■■■■■■
 
-### 操作系统
+### 系统
 
-#### [CSAPP-Labs](https://github.com/huangrt01/CSAPP-Labs) ■■□□□□□□□□
+#### [CSAPP-Notes](https://github.com/huangrt01/CSAPP) ■□□□□□□□□□
+
+#### [CSAPP-Labs](https://github.com/huangrt01/CSAPP-Labs) ■■□□□□□□□□
 
 #### [操作系统——本科课程笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F.md) ■■■■□□□□□□
 
@@ -71,7 +73,7 @@
 * 《剑指offer》做过的题整理
 * 读MLsys论文，研究tensorflow源码
 * 在CSAPP shell lab的基础上添加[OSTEP shell lab](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/processes-shell)的功能
-* [OSTEP web server lab](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/concurrency-webserver)结合[书上HW](http://pages.cs.wisc.edu/~remzi/OSTEP/threads-events.pdf) + [CSAPP web proxy lab](http://csapp.cs.cmu.edu/3e/labs.html)
+* [OSTEP web server lab](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/concurrency-webserver)结合[书上HW](https://github.com/xxyzz/ostep-hw/tree/master/33) + [CSAPP web proxy lab](http://csapp.cs.cmu.edu/3e/labs.html)
 * MIT6.824 MapReduce Lab + DDIA
 * CS144剩余的课+network and router lab
 * OSTEP persistency部分

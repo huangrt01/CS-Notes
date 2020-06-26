@@ -320,7 +320,7 @@ NOTE:
 * 这个idea应用广泛，比如用于虚拟机的资源分配
 * [why index-0?](https://www.cs.utexas.edu/users/EWD/ewd08xx/EWD831.PDF) 
 
-#### 10.Multiprocessor Scheduling
+#### 10.Multiprocessor Scheduling (Advanced)
 * 概念：multicore processor        threads
 * 还没看
 
@@ -1517,8 +1517,9 @@ thd->proc_info = NULL;
 
 用条件变量解决
 
-
 ##### Deadlock Bugs
+
+一个死锁tutorial：https://deadlockempire.github.io/
 
 ##### CRUX: how to deal with deadlock?
 
@@ -1607,7 +1608,51 @@ A deadlock detector runs periodically, building a resource graph and checking it
 
 #### 33.Event-based Concurrency (Advanced)
 
+##### CRUX: how to build concurrent servers without threads?
 
+**Event-based Concurrency** 
+* event handler独占时间，explicit control over scheduling
+* event-based servers中一定不要block！
+
+```c++
+while (1) {
+	events = getEvents();
+	for (e in events)
+		processEvent(e);
+}
+```
+
+**an important API: select() (or poll())**
+
+```c++
+int select(int nfds,fd_set *restrict readfds,fd_set *restrict writefds,fd_set *restrict errorfds,struct timeval *restrict timeout);
+```
+* 这个api的意义是monitor各种fd是否“可用”（比如有新信息可读、有新空间可写）
+* timeout参数使用灵活，NULL表示允许无限block，0表示立刻返回，类似于`waitpid`的参数`WNOHANG`
+* `pselect`针对pthread做sigmask处理
+
+**A Problem: Blocking System Calls**
+
+=> no blocking calls are allowed
+
+**A Solution: Asynchronous I/O**
+
+思考：对于一个特殊的问题场景，需要厘清可用操作的边界，必要时可能引入新的概念，例如这里的asynchronous I/O、CSAPP p801的async-signal-safe functions
+
+AIO control block: 见笔记`event-based.cpp`文件，利用`aio_error`配合signal机制interrupt，这一思想也用于I/O devices中
+
+* "Flash"这篇论文用hybrid思想，events are used to process network packets, and a thread pool is used to manage outstanding I/Os
+
+**Another Problem: State Management**
+
+manual stack management => use an old programming language construct known as a **continuation**, 用hash table这种数据结构存continuation信息
+
+**What Is Still Difficult With Events**
+
+1. 不适用于多CPU
+2. 和systems activity配合不行，比如paging，是implicit blocking
+3. 不容易manage over time，改api的routine
+4. 这个系统的实现并不容易，hybrid
 
 
 

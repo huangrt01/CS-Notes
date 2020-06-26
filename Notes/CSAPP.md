@@ -17,7 +17,13 @@ ECF：e.g. hardware timer, packet arrived, request data from disk and sleep unti
 
 *  nonlocal jumps (provided in C via the `setjump` and `longjump`)
 * 概念event：change in state
-* handler的返回方式：1）返回到$I_{curr}$    2）返回到$I_{next}$	3）abort
+* handler的返回方式：1.返回到$I_{curr}$    2.返回到$I_{next}$	3.abort
+  * interrupt - 2.   
+  * trap - 2.
+  * fault - 1. or 3.
+  * abort - 3.
+  
+* 思考：返回到$I_{next}$的情形值得注意，例如一个空的handler可以中断sleep。是否可能会丢失一些需要curr指令处理的状态，然后出现不可预知的问题？
 * exception number, exception table base register
 
 exception和procedure call的区别
@@ -120,8 +126,10 @@ e.g. 一个空return handler可以让sleep进程return
 
 
 **实现handler的关键细节**
-* p801: block机制
-* Declare global variables with volatile: 这样不会被编译器优化，确保handler更新的global值能被main知道
+
+p801: block机制，async-signal-safe functions，特征：reentrant，或者不会被signal handler interrupt
+
+Declare global variables with volatile: 这样不会被编译器优化，确保handler更新的global值能被main知道
 
 p811: Signal wrapper
 
