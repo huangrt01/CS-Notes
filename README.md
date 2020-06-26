@@ -1,5 +1,5 @@
 ## CS-Notes
-* 我的自学笔记，在学习shell和计算机网络，整理C++、算法、操作系统、密码学，后续学习数据库、分布式系统，终身更新。
+* 我的自学笔记，在学习shell和MLSys，整理C++、算法、操作系统，后续学习分布式系统，终身更新。
 * 我不是贵系oi出身的大神，目前在以一个初学者的心态补习计算机知识，学习路径和心得可能更值得大家借鉴。
 * 欢迎交流任何问题，知乎咨询满意率100%，私信交流也可，力所能及的都会回复，有代表性的问题会加进本仓库分享。
 
@@ -34,6 +34,8 @@
 
 ### 操作系统
 
+#### [CSAPP-Labs](https://github.com/huangrt01/CSAPP-Labs) ■■□□□□□□□□
+
 #### [操作系统——本科课程笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F.md) ■■■■□□□□□□
 
 #### [OSTEP-Operating-Systems-Three-Easy-Pieces ](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/OSTEP-Operating-Systems-Three-Easy-Pieces.md) ■■■■■■□□□□
@@ -42,7 +44,7 @@
 
 #### [Stanford-CS144-Lecture](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lecture-CS144-Stanford.md) ■■■■□□□□□□
 
-#### [Stanford-CS144-Lab](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lab-CS144-Stanford.md) ■■■■■■■□□□
+#### [Stanford-CS144-Lab](https://github.com/huangrt01/TCP-Lab) ■■■■■■■□□□
 
 #### [Computer-Networking-A-Top-Down-Approach](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-A-Top-Down-Approach.md) □□□□□□□□□□
 
@@ -50,7 +52,7 @@
 
 ### 分布式系统
 
-### [MIT 6.824]()
+#### [MIT 6.824]() ■□□□□□□□□□
 
 ### 密码学
 
@@ -65,15 +67,14 @@
 
 **内容预告**
 
-* MIT 6.NULL学完，熟悉命令行
+* MIT 6.NULL学完
 * 《剑指offer》做过的题整理
-* OSTEP concurrency补完剩下的几节
 * 读MLsys论文，研究tensorflow源码
-* 试着做MIT6.824
-* 挑着看CSAPP，做web server和shell lab
-* 参考uunp，在CSAPP Lab的基础上添加ostep project中web server和shell lab的需求功能
-* CS144剩余的课+router lab
+* 在CSAPP shell lab的基础上添加[OSTEP shell lab](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/processes-shell)的功能
+* [OSTEP web server lab](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/concurrency-webserver)结合[书上HW](http://pages.cs.wisc.edu/~remzi/OSTEP/threads-events.pdf) + [CSAPP web proxy lab](http://csapp.cs.cmu.edu/3e/labs.html)
+* MIT6.824 MapReduce Lab + DDIA
+* CS144剩余的课+network and router lab
 * OSTEP persistency部分
-* CSAPP其它部分和lab
+* CSAPP其它部分和lab挑着做
 * 结合MIT6.828做xv6
 
