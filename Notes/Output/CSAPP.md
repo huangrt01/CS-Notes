@@ -129,7 +129,7 @@ p817: 用sigsuspend处理spin loop问题
 
 ##### 8.6 Nonlocal Jumps
 
-user-level层面的ECF
+user-level层面的ECF，`setjmp`类比catch，sigsetjmp类比throw
 
 ```c++
 #include <setjmp.h>

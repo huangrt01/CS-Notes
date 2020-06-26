@@ -6,6 +6,8 @@
 
 #### C
 
+STDERR_FILENO: [文件描述符的概念](http://guoshaoguang.com/blog/tag/stderr_fileno/)
+
 volatile特性：这条代码不要被编译器优化，`volatile int counter = 0`，避免出现意料之外的情况，常用于全局变量
 
 C不能用for(int i=0; ; ) 需要先定义i

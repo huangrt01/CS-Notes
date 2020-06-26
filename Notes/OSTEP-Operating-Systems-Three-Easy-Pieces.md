@@ -666,6 +666,7 @@ when replacements really occurs
 HW:
 
 [vmstat命令](https://www.cnblogs.com/ftl1012/p/vmstat.html)
+
 * vmstat 1 显示每秒状态
 1. 运行多个，user time变大，idle time 变少
 2. 运行1024MB，swpd不变，free减少，exit之后还原
@@ -1500,7 +1501,8 @@ t1、t2和mutex三个信号量，状态转移图如下：
 
 ##### Non-Deadlock Bugs
 
-1.atommicity-violation bugs
+1.atomicity-violation bugs
+
 ```c++
 Thread 1::
 if (thd->proc_info) {
@@ -1573,7 +1575,7 @@ Mutual Exclusion
 
 * lock-free系列方法，见第28节或笔记文件夹内threads-bugs.cpp文件
 
-* 感觉这系列的方法适用于分布式系统，backup、试错、no bounded loop
+* 感觉这类方法适用于分布式系统，backup、试错、no bounded loop
 
 
 
@@ -1591,7 +1593,15 @@ Mutual Exclusion
 
 A deadlock detector runs periodically, building a resource graph and checking it for cycles.  常应用于数据库
 
+**HW**
 
+`./vector-*** -n 8 -d -l 100000 -t`
+
+`vector-try-wait`比`vector-global-order`速度略快
+
+`vector-avoid-hold-and-wait`用global锁住local锁的获取，单线程有优势，但不支持并行操作
+
+`vector-nolock`利用fetch-and-add，效率较低
 
 
 
