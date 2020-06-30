@@ -321,8 +321,59 @@ NOTE:
 * [why index-0?](https://www.cs.utexas.edu/users/EWD/ewd08xx/EWD831.PDF) 
 
 #### 10.Multiprocessor Scheduling (Advanced)
-* 概念：multicore processor        threads
-* 还没看
+* 概念：multicore processor       与threads配合
+
+##### CRUX: how to schedule jobs on multiple CPUs
+
+**Background: Multiprocessor Architecture**
+
+单核与多核的区别：the use of hardware caches(e.g., Figure 10.1), and exactly how data is shared across multiple processors. 
+
+Q: cache coherence问题，不同CPU的cache未及时更新，导致读错数据
+
+A: 利用hardware, by monitoring memory accesses: bus snooping; write-back caches
+
+**Don’t Forget Synchronization**
+
+虽然解决了coherence问题，依然需要mutual exclusion primitives(locks)
+
+**One Final Issue: Cache Affinity**
+
+**Single-Queue Scheduling**
+
+SQMS (single-queue multiprocessor scheduling)，存在的问题如下：
+
+* lack of scalability: lock overhead随CPU数目增加而变高
+* cache affinity: 需要用复杂的机制调度，比如将少量jobs migrating from CPU to CPU
+
+->
+
+MQMS (multi-queue multiprocessor scheduling): 分配jobs给CPU
+
+* 优点：more scalable; intrinsically provides cache affinity
+* 缺点：load imbalance
+
+##### CRUX: how to deal with load imbalance?
+
+migration: 将余数migrate
+
+the tricky part: how should the system decide to enact such a migration?
+
+e.g. work stealing: source queue经常peek其它的target queue，使两边work load均衡
+
+* peek频率是超参数，过高会失去MQMS的意义，过低会有load imbalances
+
+**Linux Multiprocessor Schedulers**
+
+O(1) scheduler: priority-based scheduler
+
+CFS (Completely Fair Scheduler): a deterministic proportional-share approach
+
+BFS (BF Scheduler): also proportional-share, but based on a more complicated scheme known as Earliest Eligible Virtual Deadline First (EEVDF) 
+
+* BFS是single queue，前两个是multiple queues
+
+
 
 #### 11.summary
 
@@ -1711,3 +1762,4 @@ Separate Compilation: -c, 只产生object file, 不link, 后面联合link-editor
 inbox：
 * hm5.8    g++ hm5.8.cpp -o hm5.8 -Wall && "/Users/huangrt01/Desktop/OSTEP/ostep-code/cpu-api/“hm5.8  同一个命令，用coderunner输出六行，用terminal输出五行 
 * 19.physically-indexed cache
+

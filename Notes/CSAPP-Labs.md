@@ -1,6 +1,12 @@
 ## CSAPP-Labs
 
+[我的CSAPP-Labs实现](https://github.com/huangrt01/CSAPP-Labs)
+
+- [x] Data Lab
+- [x] Shell Lab (plus [OSTEP shell lab](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/processes-shell))
+
 ### Data Lab
+
 #### Integer
 
 ##### bitXor(x,y)
@@ -255,6 +261,27 @@ command分为两类
 * the pathname of an executable file: forks a child process
 * **job**的概念，指代initial child process，job用PID或JID标识，JID由`%`开头
 
-
-
 The parent needs to block the SIGCHLD signals in this way in order to avoid the **race condition** where the child is reaped by sigchld handler(and thus removed from the job list) before the parent calls addjob.
+
+**BUG**：
+
+有signal时，getc()可能会有很奇怪的bug，不会返回EOF，最终影响fgets的行为，太坑了！！！具体来说，注释掉eval(cmdline)这一行读取文件则不会出错，最终的解决方案是先把文件整体读入内存...... bug留存进了branch getc_error分支
+
+**Bonus**:
+
+current Built-in commands:
+
+* exit/quit
+* cd
+* pwd
+* jobs
+* bg/fg
+* path: The `path` command takes 0 or more arguments, with each argument separated by whitespace from the others. A typical usage would be like this: `wish> path /bin /usr/bin`, which would add `/bin` and `/usr/bin` to the search path of the shell. If the user sets path to be empty, then the shell should not be able to run any programs (except built-in commands). The `path` command always overwrites the old path with the newly specified path.
+
+based on the needs of [OSTEP Projects](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/processes-shell), additionally implement the following features:
+
+* Wrong input error
+* Paths
+* Redirection
+* Parallel commands
+

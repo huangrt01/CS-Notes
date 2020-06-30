@@ -226,6 +226,7 @@ git reset --hard XXXXXXXX
 git push origin HEAD --force # 回退remote敏感信息
 ```
 - `git checkout -- <file>`: discard changes （很危险的指令）
+- `git clean -fd` 删掉unstaged文件
 
 ##### Advanced Git
 - `git cat-file -p`: 显示对象信息

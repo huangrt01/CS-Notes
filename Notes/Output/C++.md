@@ -16,6 +16,8 @@ C不能用for(int i=0; ; ) 需要先定义i
 
 Dijkstra反对goto的[文章](http://www.cs.utexas.edu/users/EWD/ewd02xx/EWD215.PDF)
 
+getopt函数处理参数，用法参照[tsh.c](https://github.com/huangrt01/CSAPP-Labs/blob/master/shlab-handout/tsh.c)
+
 ##### 结构体
 
 结构体内存分配问题：内存对齐
