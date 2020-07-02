@@ -114,7 +114,7 @@ profilers和monitoring tools的意义：[premature optimization is the root of a
 
 [时间概念](https://stackoverflow.com/questions/556405/what-do-real-user-and-sys-mean-in-the-output-of-time1)：real/user/system time
 
-* real: 真实时间, user: 用户态耗时, sys: 内核态耗时, user+sys: 实际用时
+* real time(wall time): 真实时间, user: 用户态耗时, sys: 内核态耗时, user+sys: 实际用时
 * time指令
 
 #### Profilers

@@ -509,9 +509,14 @@ pidwait(){
 
 #### Lecture 8.Metaprogramming
 
+* [我的Metaprogramming笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Metaprogramming.md)
+
 #### Lecture 9.Security and Cryptography
+* [我的Security&Privacy&Cryptography笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Security-Privacy-Cryptography.md)
 
 #### Lecture 10.Potpourri
+
+
 
 ### Linux命令按字母分类
 #### a
@@ -620,6 +625,8 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 * script
   * 记录终端操作记录，按`C-d`退出
   * 可用于demo演示终端操作
+* sha1sum:  `printf 'hello' | sha1sum`  
+
 #### t
 * tac: 反向
 * tail

@@ -2,7 +2,18 @@
 
 ### 密码学在计算机领域的应用
 
-#### hash function原理
+#### hash function
+##### 1.性质
+
+- Deterministic: the same input always generates the same output.
+- Non-invertible: it is hard to find an input `m` such that `hash(m) = h` for some desired output `h`.
+- Target collision resistant: given an input `m_1`, it’s hard to find a different input `m_2` such that `hash(m_1) = hash(m_2)`.
+- Collision resistant: it’s hard to find two inputs `m_1` and `m_2` such that `hash(m_1) = hash(m_2)` (note that this is a strictly stronger property than target collision resistance).
+
+注意区分Target collision resistant和Collision resistant
+
+
+##### 2.原理
 
 ```c++
 int sum=0; 
@@ -21,19 +32,65 @@ return sum;
 * 方法I中取模用质数更好的原因
 
   * “ 如果p是一个质数，n是任意非零整数（不是p的倍数）， 那么px+ny=z对于任意的x,y,z都有解”， 这样可以保证取模相对均匀一些， 避免所谓的 primary clustering， 要证明这个需要引理：“方程 ax+by=1 有整数解当且仅当 a 和 b 互质”
+* 哈希算法可能用到乘除法。模素数的剩余系除去 0 ，这个集合关于乘法构成群。只有群才能保证每个元素都有逆元，除法才能合法。假设要计算 (p / q) mod m，如果想让结果与 (p mod m) / (q mod m) 相等，必须令 m 为素数，否则逆元求不出来。
 
-  * 哈希算法可能用到乘除法。模素数的剩余系除去 0 ，这个集合关于乘法构成群。只有群才能保证每个元素都有逆元，除法才能合法。假设要计算 (p / q) mod m，如果想让结果与 (p mod m) / (q mod m) 相等，必须令 m 为素数，否则逆元求不出来。
-
-#### hash function应用
+##### 3.应用
 * Git中的id是由SHA-1 hash生成，40个16进制字符
   * SHA-1: 160bit 
   * SHA-2: 有不同位数，比如SHA-256
+  * `$ printf 'hello' | sha1sum`
+
+* [Commitment scheme](https://en.wikipedia.org/wiki/Commitment_scheme)
+
+
 
 ### MIT 6.NULL 
 [6.NULL Security and Cryptography](https://missing.csail.mit.edu/2020/security/)
+
 [6.NULL Security and Privacy](https://missing.csail.mit.edu/2019/security/)
 
 #### Security and Cryptography
+
+[Cryptographic Right Answers](https://latacora.micro.blog/2018/04/03/cryptographic-right-answers.html)
+
+一些概念：
+
+##### Entropy
+online guessing - 40 bits of entropy
+
+offline guessing - 80 bits of entropy
+
+##### Hash functions
+
+ [lifetimes of cryptographic hash functions](https://valerieaurora.org/hash.html) 
+
+##### Key derivation functions(KDFs)
+
+应用：
+
+- Producing keys from passphrases for use in other cryptographic algorithms (e.g. symmetric cryptography, see below).
+- Storing login credentials. Storing plaintext passwords is bad; the right approach is to generate and store a random [salt](https://en.wikipedia.org/wiki/Salt_(cryptography)) `salt = random()` for each user, store `KDF(password + salt)`, and verify login attempts by re-computing the KDF given the entered password and the stored salt.
+
+
+##### Symmetric cryptography
+
+应用：
+
+- Encrypting files for storage in an untrusted cloud service. This can be combined with KDFs, so you can encrypt a file with a passphrase. Generate `key = KDF(passphrase)`, and then store `encrypt(file, key)`.
+
+##### Asymmetric cryptography
+
+- [PGP email encryption](https://en.wikipedia.org/wiki/Pretty_Good_Privacy). People can have their public keys posted online (e.g. in a PGP keyserver, or on [Keybase](https://keybase.io/)). Anyone can send them encrypted email.
+- Private messaging. Apps like [Signal](https://signal.org/) and [Keybase](https://keybase.io/) use asymmetric keys to establish private communication channels.
+- Signing software. Git can have GPG-signed commits and tags. With a posted public key, anyone can verify the authenticity of downloaded software.
+
+* Key distribution: Asymmetric-key cryptography is wonderful, but it has a big challenge of distributing public keys / mapping public keys to real-world identities. There are many solutions to this problem. Signal has one simple solution: trust on first use, and support out-of-band public key exchange (you verify your friends’ “safety numbers” in person). PGP has a different solution, which is [web of trust](https://en.wikipedia.org/wiki/Web_of_trust). Keybase has yet another solution of [social proof](https://keybase.io/blog/chat-apps-softer-than-tofu) (along with other neat ideas). Each model has its merits; we (the instructors) like Keybase’s model.
+
+应用：
+
+* In use, once the server knows the client’s public key (stored in the `.ssh/authorized_keys` file), a connecting client can prove its identity using asymmetric signatures. This is done through [challenge-response](https://en.wikipedia.org/wiki/Challenge–response_authentication). At a high level, the server picks a random number and sends it to the client. The client then signs this message and sends the signature back to the server, which checks the signature against the public key on record. This effectively proves that the client is in possession of the private key corresponding to the public key that’s in the server’s `.ssh/authorized_keys` file, so the server can allow the client to log in.
+
+
 
 #### Security and Privacy
 

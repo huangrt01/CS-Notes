@@ -91,10 +91,12 @@ def load_reference(name_or_id):
   - `git status -s`: 左列是staging area，右列是working tree 
 - `git add <filename>`: adds files to staging area
   - 对于同一文件，add之后有新改动要重新add
+  - `-p` 添加每个变化前，都会要求确认。对于同一个文件的多处变化，可以实现分次提交
 - `git commit`: creates a new commit
   - Write [good commit messages](https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html) and Even more reasons to write [good commit messages](https://chris.beams.io/posts/git-commit/): 大写开头，祈使句，简短
   - saves the snapshot to the project history and completes the  change-tracking process. In short, a commit functions like taking a photo. Anything that’s been staged with `git add` will become a part of the snapshot with `git commit`.
   - `git commit -am "m"`可以先add再commit，但前提是commit的文件都是tracked状态
+  - `-v`显示diff信息
 - `git log`: shows a flattened log of history
   - `git log --pretty=format:"%h %s" --all --graph --decorate --no-merges`: visualizes history as a DAG
   - `git shortlog/ git log --oneline`: 只显示标题
@@ -109,7 +111,7 @@ def load_reference(name_or_id):
   - `git difftool`，图形界面
 - `git checkout <revision>`: updates HEAD and current branch
 - `git rm file`
-  - `git rm --cached`，只删除staging areas，不删除working tree
+  - `git rm --cached`，只删除index，不删除working tree
   - `git rm log/\*.log` ，通配符，注意要加`\`，Git有自己的文件名拓展
 - `git tag -l "v1.8.5*"`: `-l`是为了通配符匹配
   - Annotated Tags: `git tag -a v1.4 (<commit>) -m "my version 1.4"`
@@ -138,13 +140,14 @@ branch的使用方式：1.Long-Running Branches 2.Topic Branches
 branch的成本极低，instantaneous
 
 - `git branch`: shows branches
-  - `-v` verbose
+  - `-v -r` verbose，显示远程分支, `-a`显示所有本地和远程
   - `--merged` 和`--no-merged`
 - `git branch <name>`: creates a branch
-  
+  - `git branch <name> <commit>` 
   - `git branch -d` 删除branch 
-- `git checkout -b <name>`: creates a branch and switches to it
+- `git checkout -b <name>`: creates a branch and switches to it 
   - same as `git branch <name>; git checkout <name>`
+  - `git checkout --` 切换到上一个分支
   - checkout需要所有changes已经commit，或者参考[Stashing and Cleaning](https://git-scm.com/book/en/v2/ch00/_git_stashing)
   - `git checkout <tag>`会进入detached HEAD状态，做的commit只属于这一个commit
   
@@ -205,7 +208,7 @@ git branch -vv
 git push origin --delete serverfix
 ```
 
-- `git pull`: same as `git fetch; git merge`
+- `git pull`: same as `git fetch; git merge` 
 - `git clone`: download repository from remote
   - 在最后可加文件夹名参数 
   - `-o` 修改origin name
@@ -216,6 +219,7 @@ fetch只能得到远程新分支的引用，如果想得到实体：
 
 ##### Undo
 - `git commit --amend`: edit a commit's contents/message, 可把staging area加到上一次commit里
+  - 可指定文件
 - `git reset HEAD <file>`: unstage a file 
   * `git reset HEAD~`或`git reset HEAD~1`撤销上次的commit（会回复到modified状态） 
   * `git reset --hard` 回到上次commit的版本，配合`git pull/push`（如果file是working directory内的，会很危险）
@@ -226,7 +230,7 @@ git reset --hard XXXXXXXX
 git push origin HEAD --force # 回退remote敏感信息
 ```
 - `git checkout -- <file>`: discard changes （很危险的指令）
-- `git clean -fd` 删掉unstaged文件
+- `git clean -fd` 删掉unstaged文件
 
 ##### Advanced Git
 - `git cat-file -p`: 显示对象信息
@@ -246,8 +250,10 @@ git push origin HEAD --force # 回退remote敏感信息
   - `git blame -L :collection _config.yml`
 - `git stash`: temporarily remove modifications to working directory
 	- `git stash show -p | git apply -R`
+- `git cherry-pick`
+  - [利用它只pull request一个特定的commit](https://www.iteye.com/blog/bucketli-2442195)
 - `git bisect`: binary search history (e.g. for regressions)
-- [git ls-files](https://git-scm.com/docs/git-ls-files)
+- [`git ls-files`](https://git-scm.com/docs/git-ls-files)
 - `git submodule add <url> /path`
     * clone之后初始化：`git submodule update --init --recursive`
     * 更新：`git submodule update --init --remote`
@@ -322,7 +328,37 @@ ssh -T git@github.com
 #Linux
 
 ```
+Github被墙
+
+* `sudo vim /etc/hosts`
+
+```
+# GitHub Start 
+192.30.253.112 github.com 
+192.30.253.119 gist.github.com
+151.101.184.133 assets-cdn.github.com
+151.101.184.133 raw.githubusercontent.com
+151.101.184.133 gist.githubusercontent.com
+151.101.184.133 cloud.githubusercontent.com
+151.101.184.133 camo.githubusercontent.com
+151.101.184.133 avatars0.githubusercontent.com
+151.101.184.133 avatars1.githubusercontent.com
+151.101.184.133 avatars2.githubusercontent.com
+151.101.184.133 avatars3.githubusercontent.com
+151.101.184.133 avatars4.githubusercontent.com
+151.101.184.133 avatars5.githubusercontent.com
+151.101.184.133 avatars6.githubusercontent.com
+151.101.184.133 avatars7.githubusercontent.com
+151.101.184.133 avatars8.githubusercontent.com
+# GitHub End
+```
+* 改电信DNS: `101.226.4.6`, ` 218.30.118.6`
+
+
+
+
 #### some bugs!
+
 * 如果设置ssh key后，git push仍然要求输入邮箱密码
   * `git remote -v`查看origin使用的是https还是ssh
   * 如果是https，替换成ssh即可 `git remote set-url origin git@github.com:huangrt01/XXX.git`
