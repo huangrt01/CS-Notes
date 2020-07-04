@@ -78,7 +78,16 @@ offline guessing - 80 bits of entropy
 
 - Encrypting files for storage in an untrusted cloud service. This can be combined with KDFs, so you can encrypt a file with a passphrase. Generate `key = KDF(passphrase)`, and then store `encrypt(file, key)`.
 
+```sh
+openssl aes-256-cbc -salt -in {input filename} -out {output filename}
+openssl aes-256-cbc -d -in {input filename} -out {output filename}
+```
+
+
+
 ##### Asymmetric cryptography
+
+用private key来sign，用public key来encrypt
 
 - [PGP email encryption](https://en.wikipedia.org/wiki/Pretty_Good_Privacy). People can have their public keys posted online (e.g. in a PGP keyserver, or on [Keybase](https://keybase.io/)). Anyone can send them encrypted email.
 - Private messaging. Apps like [Signal](https://signal.org/) and [Keybase](https://keybase.io/) use asymmetric keys to establish private communication channels.
@@ -89,6 +98,60 @@ offline guessing - 80 bits of entropy
 应用：
 
 * In use, once the server knows the client’s public key (stored in the `.ssh/authorized_keys` file), a connecting client can prove its identity using asymmetric signatures. This is done through [challenge-response](https://en.wikipedia.org/wiki/Challenge–response_authentication). At a high level, the server picks a random number and sends it to the client. The client then signs this message and sends the signature back to the server, which checks the signature against the public key on record. This effectively proves that the client is in possession of the private key corresponding to the public key that’s in the server’s `.ssh/authorized_keys` file, so the server can allow the client to log in.
+* [Set up GPG](https://www.digitalocean.com/community/tutorials/how-to-use-gpg-to-encrypt-and-sign-messages)
+
+[在Github上使用GPG的全过程 - 林溪的文章 - 知乎](https://zhuanlan.zhihu.com/p/76861431)
+
+```sh
+sudo apt-get install gnupg
+gpg --gen-key
+gpg --output ~/revocation.crt --gen-revoke your_email@address.com
+chmod 600 ~/revocation.crt
+
+gpg --import name_of_pub_key_file
+https://pgp.mit.edu/
+
+gpg --keyserver pgp.mit.edu  --search-keys search_parameters
+gpg --fingerprint your_email@address.com
+
+# 信任（用自己的密钥为其签名验证）
+gpg --sign-key email@example.com
+gpg --output ~/signed.key --export --armor email@example.com
+gpg --import ~/signed.key
+
+gpg --output ~/mygpg.key --armor --export your_email@address.com
+
+gpg --keyserver pgp.mit.edu  --send-keys ...
+gpg --keyserver pgp.mit.edu  --recv-keys ...
+
+gpg --encrypt --sign --armor -r person@email.com name_of_file
+# 如果想自己decrypt，需要第二个-r recipient
+gpg file_name.asc
+
+gpg --list-keys
+gpg --refresh-keys
+
+gpg --keyserver key_server --refresh-keys
+
+```
+
+Git and GPG
+```sh
+git config --global user.signingkey {key_id}
+git config --global commit.gpgsign true
+
+git commit -S
+git tag -s
+
+git log/show --show-signature
+git tag -v
+```
+
+信任Github所用的GPG密钥，使本地确认在Github网页端进行的操作的真实性
+```sh
+curl https://github.com/web-flow.gpg | gpg --import
+gpg --sign-key 4AEE18F83AFDEB23
+```
 
 
 
@@ -98,7 +161,9 @@ Follow the [right people](https://heimdalsecurity.com/blog/best-twitter-cybersec
 
 使用安全的密码管理器，比如[1password](https://1password.com/), [KeePass](https://keepass.info/), [KeePass](https://keepass.info/), [`pass`](https://www.passwordstore.org/)
 
-更安全的two-factor authentication双因素认证：a [FIDO/U2F](https://fidoalliance.org/) dongle (a [YubiKey](https://www.yubico.com/quiz/) for example, which has [20% off for students](https://www.yubico.com/why-yubico/for-education/)). TOTP (like Google Authenticator or Duo) will also work in a pinch, but [doesn’t protect against phishing](https://twitter.com/taviso/status/1082015009348104192). SMS is pretty much useless unless your threat model only includes random strangers picking up your password in transit.
+更安全的two-factor authentication双因素认证：a [FIDO/U2F](https://fidoalliance.org/) dongle (a [YubiKey](https://www.yubico.com/quiz/) for example, which has [20% off for students](https://www.yubico.com/why-yubico/for-education/)). TOTP (like Google Authenticator or Duo) will also work in a pinch, but [doesn’t protect against phishing](https://twitter.com/taviso/status/1082015009348104192). SMS is pretty much useless unless your threat model only includes random strangers picking up your password in transit. 
+
+* [SMS's issue](https://www.kaspersky.com/blog/2fa-practical-guide/24219/)
 
 ##### General Security Advice
 

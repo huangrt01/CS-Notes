@@ -284,6 +284,8 @@ git push origin HEAD --force # 回退remote敏感信息
 # doc/**/*.pdf
 ```
 
+- Git and GPG: my security [notes](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Security-Privacy-Cryptography.md)
+
 #### Miscellaneous
 - **GUIs**: there are many [GUI clients](https://git-scm.com/downloads/guis)
 out there for Git. We personally don't use them and use the command-line

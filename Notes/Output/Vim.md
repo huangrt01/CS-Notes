@@ -72,6 +72,8 @@
 * visual mode + manipulation    
   - select text, `d` to delete it or `c` to change it
 * `u` to undo, `<C-r>` to redo，`U`撤销行内命令
+  * vim plugin: undotree[https://github.com/mbbill/undotree] 
+  * [how to persistently undo](https://vim.fandom.com/wiki/Using_undo_branches#Persistent_undo)
 * `y` to copy / “yank” (some other commands like `d` also copy)
 * `p` to paste
 * Lots more to learn: e.g. `~` flips the case of a character
@@ -128,10 +130,17 @@ plugin: [推荐网站](https://vimawesome.com/)，git clone到`~/.vim/pack/vendo
 
 ##### Vim的其它特性积累
 
-* buffer操作：` :ls,:b num, :bn（下一个）, :bp（前一个）, :b#(上次的buffer) `
-* window操作： `:sp / :vsp` split window，`C-w + hjkl`切换
-* tab操作：`gt`切换tab
+buffer操作：` :ls,:b num, :bn（下一个）, :bp（前一个）, :b#(上次的buffer) `
+
+window操作： `:sp / :vsp` split window，`C-w + hjkl`切换
+
+tab操作：`gt`切换tab
+
+跳转操作：
+
 * `Ctrl-O/I` 进入更旧/新的位置
+
+* Marks - In vim, you can set a mark doing `m<X>` for some letter `X`. You can then go back to that mark doing `'<X>`. This let’s you quickly navigate to specific locations within a file or even across files.
 
 查找替换：
 * `:%s/foo/bar/g`
@@ -139,11 +148,17 @@ plugin: [推荐网站](https://vimawesome.com/)，git clone到`~/.vim/pack/vendo
   * `%`表示修改全文件而不是第一个匹配串，`/g`表示全行/全文件匹配，`/gc`会提示每个匹配串是否替换 
   * `:#,#s/...`表示对行号之间的内容操作
 * ` :%s/\[.*\](\(.*\))/\1/g`
+  
   - replace named Markdown links with plain URLs
-* `:g/pattern/command`，对匹配行执行命令
+  
 
+命令操作：
+* `:g/pattern/command`，对匹配行执行命令
 * `.`复制操作
 * 外部命令：`:!`
+
+Advanced Text Objects - Text objects like searches can also be composed with vim commands. E.g. `d/<pattern>` will delete to the next match of said pattern or `cgn` will change the next occurrence of the last searched string.
+
 
 
 ##### Macros

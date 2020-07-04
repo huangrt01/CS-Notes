@@ -117,6 +117,11 @@ profilers和monitoring tools的意义：[premature optimization is the root of a
 * real time(wall time): 真实时间, user: 用户态耗时, sys: 内核态耗时, user+sys: 实际用时
 * time指令
 
+Jeff Dean推崇的back-of-the-envelope方法估算系统性能，这是一篇很好的[文章](http://highscalability.com/blog/2011/1/26/google-pro-tip-use-back-of-the-envelope-calculations-to-choo.html)，里面有各种实用数据
+
+* scalable counter
+* keep per user comment indexes when paging through comments
+
 #### Profilers
 
 **CPU**: [两种CPU profilers](https://jvns.ca/blog/2017/12/17/how-do-ruby---python-profilers-work-)，tracing and sampling profilers

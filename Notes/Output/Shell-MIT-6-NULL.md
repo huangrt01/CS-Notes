@@ -235,6 +235,14 @@ Aliases
 
 #### Lecture 4.Data Wrangling
 
+**What are other useful data wrangling tools?**
+
+Some of the data wrangling tools we did not have time to cover during the data wrangling lecture include `jq` or `pup` which are specialized parsers for JSON and HTML data respectively. The  Perl programming language is another good tool for more advanced data  wrangling pipelines. Another trick is the `column -t` command that can be used to convert whitespace text (not necessarily aligned) into properly column aligned text.
+
+More generally a couple of more unconventional data wrangling tools  are vim and Python. For some complex and multi-line transformations, vim macros can be a quite invaluable tools to use. You can just record a  series of actions and repeat them as many times as you want, for  instance in the editors [lecture notes](https://missing.csail.mit.edu/2020/editors/#macros) (and last year’s [video](https://missing.csail.mit.edu/2019/editors/)) there is an example of converting a XML-formatted file into JSON just using vim macros.
+
+For tabular data, often presented in CSVs, the [pandas](https://pandas.pydata.org/) Python library is a great tool. Not only because it makes it quite easy to define complex operations like group by, join or filters; but also  makes it quite easy to plot different properties of your data. It also  supports exporting to many table formats including XLS, HTML or LaTeX.  Alternatively the R programming language (an arguably [bad](http://arrgh.tim-smith.us/) programming language) has lots of functionality for computing  statistics over data and can be quite useful as the last step of your  pipeline. [ggplot2](https://ggplot2.tidyverse.org/) is a great plotting library in R.
+
 #### Lecture 5.Command-line Environment
 
 ##### Job Control
@@ -515,6 +523,131 @@ pidwait(){
 * [我的Security&Privacy&Cryptography笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Security-Privacy-Cryptography.md)
 
 #### Lecture 10.Potpourri
+[Potpourri](https://missing.csail.mit.edu/2020/potpourri/)
+
+**Keyboard remapping**
+
+**Daemons**
+
+e.g. sshd, systemd
+
+`systemctl status`
+
+Systemd can be interacted with the `systemctl` command in order to `enable`, `disable`, `start`, `stop`, `restart` or check the `status` of services (those are the `systemctl` commands).
+
+[systemd入门教程](https://www.ruanyifeng.com/blog/2016/03/systemd-tutorial-commands.html)
+
+**FUSE**
+
+[FUSE](https://en.wikipedia.org/wiki/Filesystem_in_Userspace) (Filesystem in User Space)
+
+- [sshfs](https://github.com/libfuse/sshfs) - Open locally remote files/folder through an SSH connection.
+- [rclone](https://rclone.org/commands/rclone_mount/) - Mount cloud storage services like Dropbox, GDrive, Amazon S3 or Google Cloud Storage and open data locally.
+- [gocryptfs](https://nuetzlich.net/gocryptfs/) - Encrypted overlay system. Files are stored encrypted but once the FS is mounted they appear as plaintext in the mountpoint.
+- [kbfs](https://keybase.io/docs/kbfs) - Distributed filesystem with end-to-end encryption. You can have private, shared and public folders.
+- [borgbackup](https://borgbackup.readthedocs.io/en/stable/usage/mount.html) - Mount your deduplicated, compressed and encrypted backups for ease of browsing.
+
+**Backups**
+
+a copy of the data in the same disk is not a backup, because the disk is the single point of failure for all the data
+
+Synchronization solutions are not backups
+
+Some core features of good backups solutions are versioning, deduplication and security.
+
+[backups lecture](https://missing.csail.mit.edu/2019/backups/)
+
+**APIs**
+
+ “[OAuth](https://www.oauth.com/)” is a protocol you will often see used. At its heart, OAuth is a way to give you tokens that can “act as you” on a given service, and can only be used for particular purposes. Keep in mind that these tokens are *secret*, and anyone who gains access to your token can do whatever the token allows under *your* account!
+
+[IFTTT](https://ifttt.com/) is a website and service centered around the idea of APIs — it provides integrations with tons of services, and lets you chain events from them in nearly arbitrary ways.
+
+**Common command-line flags/patterns**
+
+Command-line tools vary a lot, and you will often want to check out their `man` pages before using them. They often share some common features though that can be good to be aware of:
+
+- Most tools support some kind of `--help` flag to display brief usage instructions for the tool.
+- Many tools that can cause irrevocable change support the notion of a “dry run” in which they only print what they *would have done*, but do not actually perform the change. Similarly, they often have an “interactive” flag that will prompt you for each destructive action.
+- You can usually use `--version` or `-V` to have the program print its own version (handy for reporting bugs!).
+- Almost all tools have a `--verbose` or `-v` flag to produce more verbose output. You can usually include the flag multiple times (`-vvv`) to get *more* verbose output, which can be handy for debugging. Similarly, many tools have a `--quiet` flag for making it only print something on error.
+- In many tools, `-` in place of a file name means “standard input” or “standard output”, depending on the argument.
+- Possibly destructive tools are generally not recursive by default, but support a “recursive” flag (often `-r`) to make them recurse.
+- Sometimes, you want to pass something that *looks* like a flag as a normal argument. For example, imagine you wanted to remove a file called `-r`. Or you want to run one program “through” another, like `ssh machine foo`, and you want to pass a flag to the “inner” program (`foo`). The special argument `--` makes a program *stop* processing flags and options (things starting with `-`) in what follows, letting you pass things that look like flags without them being interpreted as such: `rm -- -r` or `ssh machine --for-ssh -- foo --for-foo`.
+
+**VPNs**
+
+[Don't use VPN services.](https://gist.github.com/joepie91/5a9909939e6ce7d09e29)
+
+**Markdown**
+
+[Markdown](https://commonmark.org/help/)
+
+**Hammerspoon (desktop automation on macOS)**
+
+[Hammerspoon](https://www.hammerspoon.org/) 
+
+- Bind hotkeys to move windows to specific locations
+- Create a menu bar button that automatically lays out windows in a specific layout
+- Mute your speaker when you arrive in lab (by detecting the WiFi network)
+- Show you a warning if you’ve accidentally taken your friend’s power supply
+
+resources:
+- [Learn Lua in Y minutes](https://learnxinyminutes.com/docs/lua/)
+- [Getting Started with Hammerspoon](https://www.hammerspoon.org/go/)
+- [Sample configurations](https://github.com/Hammerspoon/hammerspoon/wiki/Sample-Configurations)
+- [Hammerspoon APIs](http://www.hammerspoon.org/docs/)
+- [Anish’s Hammerspoon config](https://github.com/anishathalye/dotfiles-local/tree/mac/hammerspoon)
+
+**Booting + Live USBs**
+
+When your machine boots up, before the operating system is loaded, the [BIOS](https://en.wikipedia.org/wiki/BIOS)/[UEFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface) initializes the system. During this process, you can press a specific key combination to configure this layer of software. For example, your computer may say something like “Press F9 to configure BIOS. Press F12 to enter boot menu.” during the boot process. You can configure all sorts of hardware-related settings in the BIOS menu. You can also enter the boot menu to boot from an alternate device instead of your hard drive.
+
+[Live USBs](https://en.wikipedia.org/wiki/Live_USB) are USB flash drives containing an operating system. You can create one of these by downloading an operating system (e.g. a Linux distribution) and burning it to the flash drive. This process is a little bit more complicated than simply copying a `.iso` file to the disk. There are tools like [UNetbootin](https://unetbootin.github.io/) to help you create live USBs.
+
+Live USBs are useful for all sorts of purposes. Among other things, if you break your existing operating system installation so that it no longer boots, you can use a live USB to recover data or fix the operating system.
+
+**Docker, Vagrant, VMs, Cloud, OpenStack**
+
+docker和VM的区别：docker运行的时候和host共享kernel，在Linux中用LXC机制，利用一系列isolation机制spin up a program that thinks it’s running on its own hardware but it’s actually sharing the hardware and kernel with the host
+
+[Vagrant](https://www.vagrantup.com/) is a tool that lets you describe machine configurations (operating system, services, packages, etc.) in code, and then instantiate VMs with a simple `vagrant up`. [Docker](https://www.docker.com/) is conceptually similar but it uses containers instead.
+
+Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](https://cloud.google.com/), and [DigitalOcean](https://www.digitalocean.com/).
+
+**Notebook programming**
+
+[Notebook programming environments](https://en.wikipedia.org/wiki/Notebook_interface) can be really handy for doing certain types of interactive or exploratory development. Perhaps the most popular notebook programming environment today is [Jupyter](https://jupyter.org/), for Python (and several other languages). [Wolfram Mathematica](https://www.wolfram.com/mathematica/) is another notebook programming environment that’s great for doing math-oriented programming.
+
+**Q&A**
+
+[Writing an OS in Rust](https://os.phil-opp.com/)
+
+- `/bin` - Essential command binaries
+- `/sbin` - Essential system binaries, usually to be run by root
+- `/dev` - Device files, special files that often are interfaces to hardware devices
+- `/etc` - Host-specific system-wide configuration files
+- `/home` - Home directories for users in the system
+- `/lib` - Common libraries for system programs
+- `/opt` - Optional application software
+- `/sys` - Contains information and configuration for the system (covered in the [first lecture](https://missing.csail.mit.edu/2020/course-shell/))
+- `/tmp` - Temporary files (also `/var/tmp`). Usually deleted between reboots.
+- `/usr/` - Read only user data    
+- `/usr/bin` - Non-essential command binaries
+  - `/usr/sbin` - Non-essential system binaries, usually to be run by root
+  - `/usr/local/bin` - Binaries for user compiled programs
+- `/var` - Variable files like logs or caches
+
+关于package manager的选择
+
+* use the language-specific package manager whenever possible, and to use  isolated environments (like Python’s virtualenv) to avoid polluting the  global environment.
+* Depending on the operating system and the hardware architecture, some of these packages might come with binaries or might need to be compiled.  For instance, in ARM computers like the Raspberry Pi, using the system  package manager can be better than the language specific one if the  former comes in form of binaries and the later needs to be compiled.  This is highly dependent on your specific setup.
+
+
+
+
+
+
 
 
 
@@ -536,6 +669,7 @@ pidwait(){
 * cut
   * 使用 -f 选项提取指定字段：`cut -f2,3 test.txt`
 * cp
+* cron: a daemon your system already runs to perform scheduled tasks
 #### d
 * d: zsh的特点，可显示最近10个目录，然后`cd -数字`进入
 * date：日期
@@ -625,7 +759,7 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 * script
   * 记录终端操作记录，按`C-d`退出
   * 可用于demo演示终端操作
-* sha1sum:  `printf 'hello' | sha1sum`  
+* sha1sum:  `printf 'hello' | sha1sum`  
 
 #### t
 * tac: 反向
@@ -657,7 +791,7 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
   * 自动补全：`curl -fLo ~/.zplug/repos/zsh-users/zsh-completions/src/_youget https://raw.githubusercontent.com/soimort/you-get/develop/contrib/completion/_you-get`
 #### z
 
-### some bugs
+### bugs
 * `_arguments:450: _vim_files: function definition file not found`
 ```shell
 rm ~/.zcompdump*
