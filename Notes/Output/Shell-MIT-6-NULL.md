@@ -440,13 +440,12 @@ cat .ssh/id_ed25519.pub | ssh foobar@remote 'cat >> ~/.ssh/authorized_keys'
   - `ssh+tee`, the simplest is to use `ssh` command execution and STDIN input by doing `cat localfile | ssh remote_server 'tee serverfile'`. Recall that [`tee`](http://man7.org/linux/man-pages/man1/tee.1.html) writes the output from STDIN into a file.
   - [`scp`](http://man7.org/linux/man-pages/man1/scp.1.html) when copying large amounts of files/directories, the secure copy `scp` command is more convenient since it can easily recurse over paths. The syntax is `scp -P 2075 -r path/to/local_file remote_host:path/to/remote_file`
   - [`rsync`](http://man7.org/linux/man-pages/man1/rsync.1.html) improves upon `scp` by detecting identical files in local and remote, and preventing  copying them again. It also provides more fine grained control over  symlinks, permissions and has extra features like the `--partial` flag that can resume from a previously interrupted copy. `rsync` has a similar syntax to `scp`.
-
 * Port Forwarding: `localhost:PORT or 127.0.0.1:PORT`
   * Local Port Forwarding: ssh端口重定向：`-L 9999:127.0.0.1:8097，比如在服务器开`jupyter notebook`
     * <img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Shell-MIT-6-NULL/001.png" alt="Local Port Forwarding" style="zoom:100%;" />
   * Remote Port Forwarding
     * <img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Shell-MIT-6-NULL/002.png" alt="Remote Port Forwarding" style="zoom:100%;" />
-
+* `ssh -K`: 穿越服务器，打开GSSAPIDelegateCredentials, 可转存tgt
 * ssh configuration: `~/.ssh/config`，server side: `/etc/ssh/sshd_config`，调端口、X11 forwarding等
 ```shell
 Host vm

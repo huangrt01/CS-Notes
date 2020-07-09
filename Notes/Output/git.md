@@ -318,16 +318,16 @@ hosts, like [GitLab](https://about.gitlab.com/) and
 git config --global user.name "John Doe"
 git config --global user.email johndoe@example.com
 
-#MacOs
-ssh-keygen -t rsa -b 4096 -C "huangrt01@163.com"
+# MacOs
+ssh-keygen -t rsa -b 4096 -C "huangrt01@163.com" # 如果rsa已占用，可用ssh-keygen -t ed25519 -C "huangruiteng@xxx.com"
 eval "$(ssh-agent -s)"
-ssh-add -K ~/.ssh/id_rsa
-pbcopy < ~/.ssh/id_rsa.pub  #适合MacOS , Linux用xclip
+ssh-add ~/.ssh/id_rsa # MacOS带-K
+pbcopy < ~/.ssh/id_rsa.pub  # MacOS , Linux用xclip
 # 上github添加SSH Key
 ssh -T git@github.com
-#ssh-keygen -y -f ~/.ssh/id_rsa
+# ssh-keygen -y -f ~/.ssh/id_rsa
 
-#Linux
+# Linux
 
 ```
 Github被墙
