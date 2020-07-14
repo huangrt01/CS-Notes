@@ -1,8 +1,171 @@
-### C++
 [toc]
+### 《Effective Modern C++》, Scott Meyers 
+
+**Intro**
+
+* lvalue: 和地址密切联系，all parameters are lvalues
+* function object可以是定义了operator ()的object，只要有function-calling syntax就行
+* deprecated feature: `std::auto_ptr -> std::unique_ptr`
+* Undefined behavior: 数组越界、dereferencing an uninitialized iterator、engaging in a data race
+
+#### chpt1 Deducing Types
+
+deducing types的机制：
+
+* c++98: function template 
+
+  =>
+
+* c++11: auto, decltype
+
+  =>
+
+* c++14: decltype(auto)
+
+##### Item 1: Understand template type deduction.
+
+auto的deduction机制和template type deduction紧密相联
+
+模版类型推断是综合性的，不止和T相关，也和ParamType相关(adornments)，有三种情形
+
+```c++
+template<typename T> 
+void f(ParamType param);
+
+f(expr); // deduce T and ParamType from expr
+```
+
+* Case 1: **ParamType** is a Reference or Pointer, but not a Universal
+
+  Reference
+
+* Case 2: **ParamType** is a Universal Reference
+  * 右值->右值引用；左值->左值引用
+
+  * 唯一T会deduce为引用的场景
+
+* Case 3: **ParamType** is Neither a Pointer nor a Reference
+  * 去除const、&等修饰
+  * ` const char* const ptr =  // ptr is const pointer to const object
+     "Fun with pointers";` 保留左边的const
+  
+* array arguments
+  
+  * the type of an array that’s passed to a template function by value is deduced to be a pointer type，需要注意数组传引用的时候不一样！存在数组引用`constchar(&)[13]` !
+
+```c++
+// return size of an array as a compile-time constant. (The
+// array parameter has no name, because we care only about
+// the number of elements it contains.)
+template<typename T, std::size_t N> // see info 
+constexpr std::size_t arraySize(T (&)[N]) noexcept // below on 
+{																									// constexpr
+	return N; // and
+}// noexcept
+
+int keyVals[] = { 1, 3, 7, 9, 11, 22, 35 };      // keyVals has
+                                                    // 7 elements
+int mappedVals[arraySize(keyVals)]; // so does // mappedVals
+
+std::array<int, arraySize(keyVals)> mappedVals; // mappedVals' 
+																								// size is 7
+```
+
+##### Item 2: Understand **auto** type deduction.
+
+```c++
+template<typename T> 
+void f(ParamType param);
+
+f(expr); // deduce T and ParamType from expr
+```
+
+auto对应T，type specifier对应ParamType，因此同Item1，也有三个cases，但有一个exception
+
+唯一的exception：`auto x = { 20 }; `  the deduced type is a std::initializer_list，如果里面元素类型不一致，不会编译
+* the only real difference between auto and template type deduction is that auto assumes that a braced initializer represents a std::initializer_list, but template type deduction doesn’t
+
+Things to Remember
+• auto type deduction is usually the same as template type deduction, but auto type deduction assumes that a braced initializer represents a std::initial izer_list, and template type deduction doesn’t.
+• auto in a function return type or a lambda parameter implies template type deduction, not auto type deduction.
+
+##### Item 3: Understand decltype.
+
+##### Item 8: Prefer nullptr to 0 and NULL.
+
+1. 0和NULL混用带来函数重载问题 -> counterintuitive behavior 
+
+2. nullptr’s advantage is that it doesn’t have an integral type, but you can think of it as a pointer of *all* types
+3. NULL和0在template type deduction中问题更严重
+
+##### Item 11: Prefer deleted functions to private undefined ones.
+
+##### Item 17: Understand special member function generation
+
+问题的来源：memberwise move的思路，move能move的，剩下的copy
+
+**special member functions**: 
+
+* c++98: the default constructor, the destructor, the copy constructor, and the copy assignment operator
+* c++11: the move constructor and the move assignment operator
+  * 和copy constructor的区别在于，c++11的这两个fucntion是dependent的
+  * 如果有explicit copy constructor，move constructor不会自动生成
+
+*the rule of three*: copy constructor, copy assignment operator, or destructor
+
+动机：the rule of three和move/copy的dependent特性有冲突 => C++11 does *not* generate move operations for a class with a user-declared destructor
+
+`=default`和`=delete`，前者在自己有写构造函数的情况下生成默认构造函数，减小代码量，后者禁止函数
+
+```c++
+//! moving is allowed; copying is disallowed; default construction not possible
+//!@{
+~TCPConnection();  //!< destructor sends a RST if the connection is still open
+TCPConnection() = delete;
+TCPConnection(TCPConnection &&other) = default;
+TCPConnection &operator=(TCPConnection &&other) = default;
+TCPConnection(const TCPConnection &other) = delete;
+TCPConnection &operator=(const TCPConnection &other) = delete;
+//!@}
+```
+
+Note: Member function templates never suppress generation of special member functions.
+
+
+#### chpt 4: Smart Pointers
+
+##### Item 19: Use std::shared_ptr for shared-ownership resource management.
+
+
+
+
+
+
+### C++
+
 #### Debug
 
 * 参考我的[Debugging and Profiling笔记]()
+
+#### 编译相关
+
+不同操作系统的编译:
+
+```c++
+#ifdef __APPLE__
+	#include "TargetConditionals.h"
+	#ifdef TARGET_OS_MAC
+		#include <GLUT/glut.h>
+		#include <OpenGL/OpenGL.h>
+	#endif
+#elif defined _WIN32 || defined _WIN64
+	#include <GL\glut.h>
+#elif defined __LINUX__
+	XXX
+#endif
+```
+
+`#pragma once`: 只编译一次
 
 #### C
 
@@ -25,21 +188,6 @@ getopt函数处理参数，用法参照[tsh.c](https://github.com/huangrt01/CSAP
 * 该结构体所占内存为结构体成员变量中最大数据类型的整数倍。
 * e.g.: 1+4+1+8->4+4+8+8=24
 
-不同操作系统的编译:
-```c++
-#ifdef __APPLE__
-	#include "TargetConditionals.h"
-	#ifdef TARGET_OS_MAC
-		#include <GLUT/glut.h>
-		#include <OpenGL/OpenGL.h>
-	#endif
-#elif defined _WIN32 || defined _WIN64
-	#include <GL\glut.h>
-#elif defined __LINUX__
-	XXX
-#endif
-```
-
 #### C++的特性
 面向对象、构造函数、析构函数、动态绑定、内存管理
 
@@ -49,23 +197,30 @@ getopt函数处理参数，用法参照[tsh.c](https://github.com/huangrt01/CSAP
 * 虚析构函数    =>对象内有虚函数表，指向虚函数表的指针：32位系统4字节，64位系统8字节
 * 虚基类偏移量表指针
 
-#### C++11
-`=default`和`=delete`，前者在自己有写构造函数的情况下生成默认构造函数，减小代码量，后者禁止函数
+##### namespace
+
+https://www.runoob.com/cplusplus/cpp-namespaces.html
+
 ```c++
-//! moving is allowed; copying is disallowed; default construction not possible
-//!@{
-~TCPConnection();  //!< destructor sends a RST if the connection is still open
-TCPConnection() = delete;
-TCPConnection(TCPConnection &&other) = default;
-TCPConnection &operator=(TCPConnection &&other) = default;
-TCPConnection(const TCPConnection &other) = delete;
-TCPConnection &operator=(const TCPConnection &other) = delete;
-//!@}
+namespace XXX{
+	//
+}
+using namespace XXX;
+using XXX::object;
+
+//可嵌套
+using namespace namespace_name1::namespace_name2;
 ```
 
+
+
+
+
+#### C++11
 `void DUMMY_CODE(Targs &&... /* unused */) {}`的[应用](https://blog.csdn.net/xs18952904/article/details/85221921)
 
 `std::optional<>`
+
 * 方法：has_value(), value(), value_or(XX)
 
 #### 操作符重载
@@ -158,8 +313,15 @@ operator 类型名()
 * 类型转换函数只能作为相应类的成员函数。
 * 总的来看，类中的类型转换函数优先级很高，导致类的对象在运算时，不按常规方式操作，而是先进行类型强制转换，导致结果不可琢磨，因此类型转换函数要慎用！
 
+#### 继承与派生
 
-#### C++的可扩展性
+[Access Modifiers in C++](https://www.geeksforgeeks.org/access-modifiers-in-c/)
+* protected: 类似private，但可以被派生类调用
+
+
+
+#### C++的其它可扩展性
+
 * [类的成员指针函数](https://www.cnblogs.com/zhoug2020/p/11394408.html)
 ```c++
 class Solution;
@@ -254,6 +416,7 @@ sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
 * [动态扩容](https://www.cnblogs.com/zxiner/p/7197327.html)，容量翻倍，可以用reserve()预留容量
 * 方法：
   * reverse(nums.begin(),nums.end());
+  * reserve(size_type n) 预先分配内存
 * [关于vector的内存释放问题](https://www.cnblogs.com/jiayouwyhit/p/3878047.html)
   * 方法一：clear 
   * 方法二：`vector<int>().swap(nums);`

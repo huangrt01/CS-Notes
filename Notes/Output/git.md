@@ -71,6 +71,7 @@ def load_reference(name_or_id):
 ```
 ##### Staging area
 <img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/git/areas.png" alt="areas" style="zoom:80%;" />
+
 * staging area也称作index
 * 和`git add`相关
   * Git tracks changes to a developer’s codebase, but it’s necessary to stage and take a snapshot of the changes to include them  in the project’s history. `git add` performs staging, the first part  of that two-step process. Any changes that are staged will become a part of the next snapshot and a part of the project’s history. Staging and  committing separately gives developers complete control over the history of their project without changing how they code and work. 
@@ -209,6 +210,9 @@ git push origin --delete serverfix
 ```
 
 - `git pull`: same as `git fetch; git merge` 
+
+  `git pull --rebase`  and `git rebase --continue` [实用的冲突处理策略](https://juejin.im/post/5d3685146fb9a07ed064f11b)
+
 - `git clone`: download repository from remote
   - 在最后可加文件夹名参数 
   - `-o` 修改origin name
@@ -315,8 +319,8 @@ hosts, like [GitLab](https://about.gitlab.com/) and
 * GitHub is a Git hosting repository that provides developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, or the use of a collection of free and for-purchase apps in the GitHub Marketplace. 
 * [用SSH连GitHub](https://help.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh)
 ```shell
-git config --global user.name "John Doe"
-git config --global user.email johndoe@example.com
+git config --global user.name "huangrt01"
+git config --global user.email huangrt01@163.com
 
 # MacOs
 ssh-keygen -t rsa -b 4096 -C "huangrt01@163.com" # 如果rsa已占用，可用ssh-keygen -t ed25519 -C "huangruiteng@xxx.com"
