@@ -18,11 +18,11 @@
 
 ### 编程语言
 
-#### [C++](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/C%2B%2B.md) ■■□□□□□□□□
+#### [C++](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/C%2B%2B.md) ■■■■□□□□□□
 
 ### 效率工具
 
-#### [Shell   --  MIT 6.NULL](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Shell-MIT-6-NULL.md) ■■■■■■■□□□
+#### [Shell   --  MIT 6.NULL](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Shell-MIT-6-NULL.md) ■■■■■■■■■□
 
 #### [Vim](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Vim.md) ■■■■■■■■■■
 
@@ -54,7 +54,11 @@
 
 ### 分布式系统
 
-#### [MIT 6.824]() ■□□□□□□□□□
+### 机器学习系统
+
+#### [MLSys](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/MLSys.md) 
+
+#### [Nvidia CUDA programming](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/nvidia.md)
 
 ### 密码学
 
@@ -71,8 +75,7 @@
 
 * MIT 6.NULL学完
 * 《剑指offer》做过的题整理
-* 读MLsys论文，研究tensorflow源码
-* 在CSAPP shell lab的基础上添加[OSTEP shell lab](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/processes-shell)的功能
+* TensorFlow Internals
 * [OSTEP web server lab](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/concurrency-webserver)结合[书上HW](https://github.com/xxyzz/ostep-hw/tree/master/33) + [CSAPP web proxy lab](http://csapp.cs.cmu.edu/3e/labs.html)
 * MIT6.824 MapReduce Lab + DDIA
 * CS144剩余的课+network and router lab
