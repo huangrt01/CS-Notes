@@ -52,18 +52,39 @@ journalctl --since "1m ago" | grep Hello
 ```
 
 #### Debuggers
-共同命令：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(uit), watch
+
+**C++**: [`gdb`](https://www.gnu.org/software/gdb/) (and its quality of life modification [`pwndbg`](https://github.com/pwndbg/pwndbg)) and [`lldb`](https://lldb.llvm.org/)
+
+gdb：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(uit), watch
+
+* 特有：start, finish, cond, disable, where
+* `cond 3 this==0xXXX`
+* `gdb --args sleep 20`
+* bt(backtrace), frame X 进帧
 
 * `watch -l `同时监视表达式本身和表达式指向的内容
 
+
+
+```c++
+//利用类型转换显示智能指针对象指向的变量
+(gdb) p ((matrix::io::ModelMeta*)model_meta)->meta_
+  
+//显示vector内部值
+(gdb) p ((FetchPsContext*) *(fetch_ps_ctxs_._M_impl._M_start+0))->model_configs
+
+```
+
+
+
+
+
+
+
 **Python**: [`ipdb`](https://pypi.org/project/ipdb/) is an improved `pdb` that uses the [`IPython`](https://ipython.org) REPL enabling tab completion, syntax highlighting, better tracebacks,  and better introspection while retaining the same interface as the `pdb` module.
+
 * ipdb命令: `p locals()`, j(ump), pp([`pprint`](https://docs.python.org/3/library/pprint.html)), restart
 * [pdb turorial](https://github.com/spiside/pdb-tutorial), [pdb depth tutorial](https://realpython.com/python-debugging-pdb)
-
-**C++**: [`gdb`](https://www.gnu.org/software/gdb/) (and its quality of life modification [`pwndbg`](https://github.com/pwndbg/pwndbg)) and [`lldb`](https://lldb.llvm.org/)
-* gdb命令: start, finish, cond, disable, where
-* `cond 3 this==0xXXX`
-* `gdb --args sleep 20`
 
 [CS107 GDB and Debugging教程](https://web.stanford.edu/class/archive/cs/cs107/cs107.1202/resources/gdb)
 

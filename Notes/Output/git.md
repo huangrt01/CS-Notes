@@ -335,8 +335,8 @@ ssh -T git@github.com
 
 ```
 Github被墙
-
 * `sudo vim /etc/hosts`
+
 
 ```
 # GitHub Start 
@@ -372,6 +372,7 @@ Github被墙
 * `Failed to connect to github 443`这一问题的解决方案
   1. `git remote set-url origin git@github.com:huangrt01/XXX.git`, 先把连接方式由https改成ssh
   2. 再在`~/.ssh/config`中把ssh的端口22改成https端口443
+
 ```shell
 Host github.com
 	User huangrt01@163.com

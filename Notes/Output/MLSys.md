@@ -42,7 +42,7 @@ these persistent mutable tensors can be passed to a handful of special operation
 
 ##### 3.Implementation
 
-subgraph ~ devices $\stackrel{\bf{多对一}}{\longrightarrow}$workers $\stackrel{\bf{}}{\longrightarrow}$ master $\stackrel{\bf{session}}{\longleftarrow}$ client 
+subgraph ~ devices  <img src="https://www.zhihu.com/equation?tex=%5Cstackrel%7B%5Cbf%7B%E5%A4%9A%E5%AF%B9%E4%B8%80%7D%7D%7B%5Clongrightarrow%7D" alt="\stackrel{\bf{多对一}}{\longrightarrow}" class="ee_img tr_noresize" eeimg="1"> workers  <img src="https://www.zhihu.com/equation?tex=%5Cstackrel%7B%5Cbf%7B%7D%7D%7B%5Clongrightarrow%7D" alt="\stackrel{\bf{}}{\longrightarrow}" class="ee_img tr_noresize" eeimg="1">  master  <img src="https://www.zhihu.com/equation?tex=%5Cstackrel%7B%5Cbf%7Bsession%7D%7D%7B%5Clongleftarrow%7D" alt="\stackrel{\bf{session}}{\longleftarrow}" class="ee_img tr_noresize" eeimg="1">  client 
 
 device信息: the job of "the task of worker" or "localhost"
 
@@ -148,7 +148,7 @@ tensors存在backing store buffers
 
 模型并行：参数如何划分？复杂的通信模式
 
-![截屏2020-08-1110.44.20](MLSys/截屏2020-08-1110.44.20.jpg)
+![截屏2020-08-1110.44.20](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/截屏2020-08-1110.44.20.jpg)
 
 横向拓展：片间高速互联，e.g. TPU
 
@@ -156,7 +156,7 @@ tensors存在backing store buffers
 
 
 
-静态调度与流式执行系统![截屏2020-08-1110.55.07](MLSys/截屏2020-08-1110.55.07.jpg)
+静态调度与流式执行系统![截屏2020-08-1110.55.07](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/截屏2020-08-1110.55.07.jpg)
 
 
 
@@ -165,11 +165,11 @@ OneFlow架构
 * actor及流水线
   * 内存槽，用类似rust的ownership解决内存冲突问题，ownership随状态转移
 
-![截屏2020-08-1111.00.58](MLSys/截屏2020-08-1111.00.58.jpg)
+![截屏2020-08-1111.00.58](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/截屏2020-08-1111.00.58.jpg)
 
 * node placement: consistent view
   * SBP, 在op层面实现数据和模型并行 
-![截屏2020-08-1111.10.09](MLSys/截屏2020-08-1111.10.09.jpg)
+![截屏2020-08-1111.10.09](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/截屏2020-08-1111.10.09.jpg)
 
 
 ### Ray: 动态可编程分布式计算框架

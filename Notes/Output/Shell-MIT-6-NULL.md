@@ -52,12 +52,12 @@ done
   * ` <img src="https://www.zhihu.com/equation?tex=1%20to%20%5C" alt="1 to \" class="ee_img tr_noresize" eeimg="1"> 9` - Arguments to the script. $1 is the first argument and so on.
   * `$@` - All the arguments
   * `$#` - Number of arguments
+      * 最后一个参数：${!#}
   * `$?` - Return code of the previous command
   * `$$` - Process Identification number for the current script
   * `!!` - Entire last command, including arguments. A common pattern is to execute a command only for it to fail due to missing permissions, then you can quickly execute it with sudo by doing sudo !!
   * `$_` - Last argument from the last command. If you are in an interactive shell, you can also quickly get this value by typing Esc followed by .
   * `$!` - last backgrounded job
-
 * ||和&& operator：机制和error code联系，true和false命令返回固定的error code
   * [linux中，&和&&, |和|| ,&> 与 >的区别](https://blog.csdn.net/sunfengye/article/details/78973831)
 ```shell

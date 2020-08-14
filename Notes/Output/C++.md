@@ -91,14 +91,493 @@ Things to Remember
 
 ##### Item 3: Understand decltype.
 
+In C++11, perhaps the primary use for decltype is declaring function templates where the function’s return type depends on its parameter types.
+
+* the type returned by a container’s operator[] depends on the container，比如`vector<bool>`返回的不是引用
+  * c++14甚至可以不需要->，用模版判断，但存在无法引用的问题
+
+```c++
+template<typename Container, typename Index>  // works, but requires 			
+auto authAndAccess(Container& c, Index i)     // refinement
+	-> decltype(c[i])
+{
+  authenticateUser();
+  return c[i];
+}
+
+template<typename Container, typename Index> // C++14; works,
+decltype(auto)															 // but still requires 
+authAndAccess(Container& c, Index i)				 // refinement
+{
+  authenticateUser();
+  return c[i];
+}
+
+
+```
+
+* decltype(auto)利用decltype rule，帮助单独的auto返回引用
+  * 本质上是因为auto难以识别type specifier
+  * decltype(**(x)**) is therefore int&. Putting parentheses around a name can change the type that decltype reports for it!
+
+##### Item 4: Know how to view deduced types.
+
+```c++
+template<typename T>       // declaration only for TD;
+class TD;                  // TD == "Type Displayer"
+
+TD<decltype(x)> xType;     // elicit errors containing
+TD<decltype(y)> yType;     // x's and y's types
+
+///
+std::cout << typeid(x).name() << '\n'; // display types for std::cout << typeid(y).name() << '\n'; // x and y
+```
+
+`std::type_info::name` 对模版中变量类型的判断不准
+
+```c++
+#include <boost/type_index.hpp>
+template<typename T>
+void f(const T& param)
+{
+  using std::cout;
+  using boost::typeindex::type_id_with_cvr;
+  
+  // show T
+  cout << "T = "<< type_id_with_cvr<T>().pretty_name() << '\n';
+  // show param's type
+  cout << "param = "<< type_id_with_cvr<decltype(param)>().pretty_name() 
+    	 << '\n'; 
+}
+```
+
+#### chpt2 auto
+
+##### Item 5: Prefer auto to explicit type declarations.
+```c++
+template<typename It>
+void dwim(It b, It e)
+{
+  while (b != e) {
+// algorithm to dwim ("do what I mean")
+// for all elements in range from
+// b to e
+		typename std::iterator_traits<It>::value_type 
+			currValue = *b;
+	} 
+}
+```
+
+auto必须初始化，潜在地避免未初始化的问题
+
+```c++
+auto derefUPLess =
+[](const std::unique_ptr<Widget>& p1,
+const std::unique_ptr<Widget>& p2) 
+{ return *p1 < *p2; };
+
+// C++14内部也可用auto
+
+std::function<bool(const std::unique_ptr<Widget>&, const std::unique_ptr<Widget>&)>
+derefUPLess = [](const std::unique_ptr<Widget>& p1, const std::unique_ptr<Widget>& p2)
+               { return *p1 < *p2; };
+
+// std::function相比auto占用内存多，效率低（对象统一进行了转化）
+```
+
+##### Item 6: Use the explicitly typed initializer idiom when **auto** deduces undesired types.
+
+`有关vector<bool>：because operator[] for std::vector<T> is supposed to return a T&, but C++ forbids references to bits.`
+
+`std::vector<bool>::reference` is an example of a proxy class: a class that exists for the purpose of emulating and augmenting the behavior of some other types
+
+proxy class
+* invisible: `vector<bool>`
+* apparent: `std::shared_ptr, std::unique_ptr`
+* expression templates: `Matrix sum = m1 + m2 + m3 + m4;`
+
+
+
+#### chpt3: Moving to Modern C++
+
+##### Item 7: Distinguish between () and {} when creating objects.
+
+`std::vector<int> v{ 1, 3, 5 }; // v's initial content is 1, 3, 5`
+
+**特性**：
+
+* uncopyable objects (e.g., std::atomics—see Item 40) 
+
+`std::atomic<int> ai1{ 0 }; // fine`
+
+*  it prohibits implicit *narrowing conversions* among built-in types
+*  immunity to C++’s *most vexing parse*
+  * A side effect of C++’s rule that anything that can be parsed as a declaration must be interpreted as one
+
+**缺点**：
+
+* the unusually tangled relationship among braced initializers, std::initializer_lists, and constructor overload resolution
+
+  * `Widget(std::initializer_list<long double> il);`对{}的优先级极高，只有在实在转换不了的情况下才会用non-std::initializer_list constructors
+  * Empty braces mean no arguments, not an empty std::initializer_list
+  * vector对{}和()初始化的区分是不合理的
+  * 因此：重载initializer_list参数的函数尤其要谨慎
+
+  
+
 ##### Item 8: Prefer nullptr to 0 and NULL.
 
 1. 0和NULL混用带来函数重载问题 -> counterintuitive behavior 
-
 2. nullptr’s advantage is that it doesn’t have an integral type, but you can think of it as a pointer of *all* types
 3. NULL和0在template type deduction中问题更严重
 
+##### Item 9: Prefer alias declarations to typedefs.
+
+```c++
+template<typename T> // MyAllocList<T> 
+using MyAllocList = std::list<T, MyAlloc<T>>; // is synonym for
+                                                  // std::list<T,
+                                                  //   MyAlloc<T>>
+MyAllocList<Widget> lw; // client code
+
+
+template<typename T> // MyAllocList<T>::type 
+struct MyAllocList { // is synonym for
+typedef std::list<T, MyAlloc<T>> type; // std::list<T, 
+}; 																			// MyAlloc<T>>
+MyAllocList<Widget>::type lw;           // client code
+
+template<typename T>
+class Widget {                         // Widget<T> contains
+ private:                               // a MyAllocList<T>
+	typename MyAllocList<T>::type list; // as a data member
+...
+};
+
+
+```
+
+using的优势是能让编译器知道这是一个type，尤其在模版的使用中，避免混淆`MyAllocList<T>::type`
+
+ template metaprogramming (TMP)
+
+* C++11中的type traits是用typedef实现的，因此使用的时候要在前面声明`typename`
+
+```c++
+std::remove_const<T>::type					// yields T from const T
+std::remove_reference<T>::type			// yields T from T& and T&&
+std::add_lvalue_reference<T>::type	// yields T& from T
+  
+std::remove_const_t<T>
+std::remove_reference_t<T>
+std::add_lvalue_reference_t<T>
+  
+  
+template <class T>
+using remove_const_t = typename remove_const<T>::type;
+
+template <class T>
+using remove_reference_t = typename remove_reference<T>::type;
+
+template <class T>
+using add_lvalue_reference_t =
+	typename add_lvalue_reference<T>::type;
+
+```
+
+
+##### Item 10: Prefer scoped **enum**s to unscoped **enum**s.
+
+```c++
+enum class Color { black, white, red };
+auto c = Color::white;
+
+enum Color;               // error!
+enum class Color;         // fine
+```
+
+=> The reduction in namespace pollution 
+
+=> There are no implicit conversions from enumerators in a scoped enum to any other type
+
+=> scoped enums may always be forward-declared, unscoped enums只有指定了underlying type才可以
+
+* 普通的enum默认是char，编译器需要选类最小的类型=> unscoped enums不需要大部分重新编译
+* Scoped enums默认类型int，可指定
+
+```c++
+enum class Status: std::uint32_t; // underlying type for
+																	// Status is std::uint32_t
+                                  // (from <cstdint>)
+
+```
+
+unscoped enum更好的少数场景，uiEmail有implicit转换为size_t
+```c++
+enum UserInfoFields { uiName, uiEmail, uiReputation };
+   UserInfo uInfo;                        // as before
+   ...
+auto val = std::get<uiEmail>(uInfo); // ah, get value of // email field
+
+
+enum class UserInfoFields { uiName, uiEmail, uiReputation };
+   UserInfo uInfo;                        // as before
+   ...
+auto val = std::get<static_cast<std::size_t>(UserInfoFields::uiEmail)>(uInfo);
+```
+如果用函数转，需要constexpr
+```c++
+template<typename E>
+constexpr typename std::underlying_type<E>::type
+	toUType(E enumerator) noexcept
+{
+	return static_cast<typename std::underlying_type<E>::type>(enumerator);
+}
+```
+
+c++14可以用` static_cast<std::underlying_type_t<E>>(enumerator)`
+
+```c++
+template<typename E> // C++14 
+constexpr auto
+	toUType(E enumerator) noexcept
+{
+	return static_cast<std::underlying_type_t<E>>(enumerator); 
+}
+auto val = std::get<toUType(UserInfoFields::uiEmail)>(uInfo);
+```
+
+
+
 ##### Item 11: Prefer deleted functions to private undefined ones.
+
+e.g.: std::basic_ios，禁止copy streams
+
+相比undefined private function
+
+* 错误信息更清晰
+* 可以delete非成员函数
+
+* 针对模版
+
+```c++
+template<typename T>
+void processPointer(T* ptr);
+
+template<>
+void processPointer<void>(void*) = delete;
+template<>
+void processPointer<char>(char*) = delete;
+template<>
+void processPointer<const void>(const void*) = delete;
+template<>
+void processPointer<const char>(const char*) = delete;
+
+// const volatile char*, const volatile void*, std::wchar_t, std::char16_t, std::char32_t.
+
+//如果在类内定义
+template<>
+void Widget::processPointer<void>(void*) = delete;
+```
+
+
+
+##### Item 12: Declare overriding functions **override**.
+
+```c++
+class Base {
+public:
+  virtual void doWork();
+...
+};
+class Derived: public Base {
+public:
+  virtual void doWork();
+...
+};
+std::unique_ptr<Base> upb = std::make_unique<Derived>();
+upb->doWork();
+// derived class function is invoked
+```
+
+* override的各种要求，还包括reference qualifier
+* 改变signature方便看有多少依赖
+* Applying **final** to a virtual function prevents the function from being overridden in derived classes. final may also be applied to a class, in which case the class is prohibited from being used as a base class.
+
+*  Member function reference qualifiers make it possible to treat lvalue and rvalue objects (*this) differently.
+
+```c++
+class Widget {
+public:
+  using DataType = std::vector<double>;
+  DataType& data() & { return values; }
+  DataType data() && { return std::move(values); } ...
+  private:
+    DataType values;
+};
+```
+
+##### Item 13: Prefer **const_iterator**s to **iterator**s.
+
+**pointer-to-const == const_iterators**
+
+there’s no portable conversion from a const_iterator to an iterator, not even with a static_cast. Even the semantic sledgehammer known as reinterpret_cast can’t do the job. 
+
+```c++
+std::vector<int> values; // as before ...
+auto it = // use cbegin
+	std::find(values.cbegin(),values.cend(), 1983); // and cend
+values.insert(it, 1998);
+```
+
+```c++
+template<typename C, typename V>
+void findAndInsert(C& container,
+{
+  const V& targetVal,
+  const V& insertVal)
+  using std::cbegin;
+  using std::cend;
+  auto it = std::find(cbegin(container), cend(container),
+  targetVal);
+  container.insert(it, insertVal); 
+}
+                   
+template <class C>
+auto cbegin(const C& container)->decltype(std::begin(container)) {
+  return std::begin(container);         // see explanation below
+}
+```
+
+Non-member cbegin只有C++14才有；C++11中，即使是vector非const，begin返回的带const引用的vector也会是const_iterator类型
+
+
+
+##### Item 14: Declare functions **noexcept** if they won’t emit exceptions.
+
+noexcept意味着函数行为const
+
+e.g. C++11，vector.push_back(std::move(XX))影响异常安全性，`std::vector::push_back` takes advantage of this “move if you can, but copy if you must” strategy，依据是否declared noexcept来判断
+
+```c++
+template <class T, size_t N>
+void swap(T (&a)[N], // see
+					T (&b)[N]) noexcept(noexcept(swap(*a, *b))); // below
+
+template <class T1, class T2>
+struct pair {
+	...
+	void swap(pair& p) noexcept(noexcept(swap(first, p.first)) && 						   								 					noexcept(swap(second, p.second)));
+	...
+};
+```
+
+* Wide contract functions更适合noexcept，因为没有后续调试抛出异常的需求
+
+
+
+>Things to Remember
+>
+>• noexcept is part of a function’s interface, and that means that callers may depend on it.
+>
+>• noexcept functions are more optimizable than non-noexcept functions.
+>
+>• noexcept is particularly valuable for the move operations, swap, memory deallocation functions, and destructors.
+>
+>• Most functions are exception-neutral rather than noexcept.
+
+
+
+##### Item 15: Use **constexpr** whenever possible.
+
+* translation时知晓，包括compilation和linking
+* constexpr变量声明时需要初始化
+* constexpr function，用法参考Item 1
+  * c++11只能写一句return
+
+```c++
+constexpr
+int pow(int base, int exp) noexcept
+{
+...
+}
+constexpr auto numConds = 5;
+std::array<int, pow(3, numConds)> results;
+
+constexpr int pow(int base, int exp) noexcept     //c++11
+{
+	return (exp == 0 ? 1 : base * pow(base, exp - 1)); 
+}
+
+constexpr int pow(int base, int exp) noexcept
+{
+  auto result = 1;
+  for (int i = 0; i < exp; ++i) result *= base;
+  return result;
+}
+
+```
+
+P100: 自定义的类型也可以constexpr
+
+* C++14中即使是Point.set也可以constexpr
+
+
+
+##### Item 16: Make **const** member functions thread safe.
+
+```c++
+class Polynomial {
+  public:
+    using RootsType = std::vector<double>;
+    RootsType roots() const
+    {
+      std::lock_guard<std::mutex> g(m);
+      if (!rootsAreValid) {
+        ...
+        rootsAreValid = true;
+      }
+      return rootVals;
+    }
+  private:
+  	mutable std::mutex m;
+    mutable bool rootsAreValid{ false };
+    mutable RootsType rootVals{};
+};
+```
+
+私有成员`mutable std::atomic<unsigned> callCount{ 0 };`适合用于计数
+
+* std::mutex和std::atomic都是move-only types，不能copy
+  * 如果想定义一个数组，数组中的对象包含atomic类型，不能用vector直接构造（因为会调用复制构造函数），可以构造`vector<shared_ptr<Object>>`
+  * atomic适合递增操作，但如果是先运算后赋值，可能出现竞争
+
+```c++
+class Widget {
+public:
+...
+  int magicValue() const
+  {
+    std::lock_guard<std::mutex> guard(m);
+    if (cacheValid) return cachedValue;
+    else {
+      auto val1 = expensiveComputation1();
+      auto val2 = expensiveComputation2();
+      cachedValue = val1 + val2;
+      cacheValid = true;
+      return cachedValue;
+    }
+	}
+private:
+  mutable std::mutex m;
+  mutable int cachedValue;
+  mutable bool cacheValid{ false };
+};
+```
+
+
+
+
 
 ##### Item 17: Understand special member function generation
 
@@ -350,6 +829,9 @@ public:
 
 #### 编程习惯
 RAII原则：Resource acquisition is initialization
+
+* [Google: Developer Documentation Style Guide](https://developers.google.com/style)
+
 * [CppCoreGuidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
 * 用[CppCheck](http://cppcheck.net/)诊断，`make cppcheck`
 
@@ -427,9 +909,9 @@ sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
     curLevel.swap(tmp); 
 }
 `
-
-  * clear虽然不会deallocate释放空间，但是会destroy执行析构函数，所以可以用同一个空间构造节点，如果swap了就要重新分配空间再构造节点。因此对于同一个vector的重复利用，可以直接用clear();
+* clear虽然不会deallocate释放空间，但是会destroy执行析构函数，所以可以用同一个空间构造节点，如果swap了就要重新分配空间再构造节点。因此对于同一个vector的重复利用，可以直接用clear();
   * 如果要每次都释放空间，也可以用`res.emplace_back(std::move(curLevel))`，涉及[emplace_back](https://www.cnblogs.com/ChrisCoder/p/9919646.html), [std::move](https://blog.csdn.net/p942005405/article/details/84644069/), [左值、右值引用](https://blog.csdn.net/p942005405/article/details/84644101), [这是一篇有关类定义的总结](https://blog.csdn.net/zzhongcy/article/details/86747794)
+* [无法构造有atomic类型成员的对象的vector](https://stackoverflow.com/questions/13193484/how-to-declare-a-vector-of-atomic-in-c)
 
 #### 其它的库
 
