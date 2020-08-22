@@ -182,7 +182,7 @@ OneFlow架构
 
 灵活数据源（流批处理融合，支持简单的数据处理chain）
 
-One-off system：针对RL任务的特化，1）training, serving, simulation一体化，2）dynamic execution。但这些能力我们的推荐系统不一定需要
+One-off system：针对RL任务的特化，1）training, serving, simulation一体化，2）dynamic execution。推荐系统不一定需要，可能跟粗排联系更紧密 3）model serving的时候，更强调client and server colocate的情形，不适合我们的精排场景
 
 2.目前工业界主要使用Ray的方式分两种，一是用Ray的上游生态lib，二是用Ray的底层能力深入自研框架
 
@@ -226,3 +226,38 @@ Ray是用户友好的分布式计算框架，具体体现在
 无状态和有状态
 
 * In contrast stateful computations are a good fit for implementing parameter servers, performing repeated computation on GPU-backed data, or running third-party simulators that do not expose their state.
+
+Stateful edges
+
+* embed actors in an otherwise stateless task graph
+* enable us to maintain lineage.
+
+<img src="MLSys/ray-graph.png" alt="" style="zoom:70%;" />
+
+The system layer consists of three major components: a global control store, a distributed scheduler, and a distributed object store. 
+
+<img src="MLSys/ray-system.png" alt="" style="zoom:50%;" />
+
+* GCS让系统的任何成分都是stateless的 ，支持fault tolerance，makes it easy to scale the distributed object store and scheduler independently
+
+* 调度的分层，有助于scaling，先由local scheduler调度，只有overload的情形，才会给global scheduler
+
+
+
+**读源码：**https://www.qtmuniao.com/2019/07/28/ray-source-reading-1/
+
+<img src="MLSys/ray-state.png" alt="" style="zoom:50%;" />
+
+src/ray/common/task/scheduling_resources.cc
+
+* ResourceSet
+* ResourceIds
+* ResourceIdSet
+* SchedulingResources
+
+src/ray/raylet/scheduling_queue.cc
+
+* TaskQueue
+* SchedulingQueue
+
+src/ray/raylet/scheduling_policy.cc

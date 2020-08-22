@@ -4,7 +4,7 @@
 
 [Cuda-C-Best-Practices](https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#who-should-read-this-guide)
 
-#### Accelerating Applications with CUDA C/C++
+#### 1.Accelerating Applications with CUDA C/C++
 
 [课程网页](https://courses.nvidia.com/courses/course-v1:DLI+C-AC-01+V1/courseware/85f2a3ac16a0476685257996b84001ad/9ef2f68fb10d40c5b54b783392938d04/?activate_block_id=block-v1%3ADLI%2BC-AC-01%2BV1%2Btype%40sequential%2Bblock%409ef2f68fb10d40c5b54b783392938d04)
 
@@ -185,16 +185,6 @@ dim3 number_of_blocks(16, 16, 1);
 someKernel<<<number_of_blocks, threads_per_block>>>()
 ```
 
-
-
-
-
-
-
-
-
-
-
 ##### Environments and Projects
 
 https://github.com/NVIDIA/nvidia-docker
@@ -202,3 +192,46 @@ https://github.com/NVIDIA/nvidia-docker
 GPU加速[Mandelbrot Set Simulator](https://github.com/sol-prog/Mandelbrot_set)
 
 Peruse [*GPU-Accelerated Libraries for Computing*](https://developer.nvidia.com/gpu-accelerated-libraries) to learn where you can use highly optimized CUDA libraries for tasks like [basic linear algebra solvers](https://developer.nvidia.com/cublas) (BLAS), [graph analytics](https://developer.nvidia.com/nvgraph), [fast fourier transforms](https://developer.nvidia.com/cufft) (FFT), [random number generation](https://developer.nvidia.com/curand) (RNG), and [image and signal processing](https://developer.nvidia.com/npp), to name a few.
+
+#### 2.Managing Accelerated Application Memory with CUDA Unified Memory and nsys
+
+Assess, Parallelize, Optimize, Deploy(APOD) design cycle
+
+##### Iterative Optimizations with the NVIDIA Command Line Profiler
+
+Profile configuration details, Report file(s) generation details, CUDA API Statistics, CUDA Kernel Statistics, CUDA Memory Operation Statistics (time and size), OS Runtime API Statistics
+
+```shell
+nvcc -o single-thread-vector-add 01-vector-add/01-vector-add.cu -run
+nsys profile --stats=true ./single-thread-vector-add
+```
+
+##### Streaming Multiprocessors and Querying the Device
+
+GPU内部很多functional units: SMs(Streaming Multiprocessors)，一个SM可以schedule多个block，但同一时间只能执行一个
+
+block size的选择
+* SM的倍数
+* 32的倍数， [in depth coverage of SMs and warps](http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#hardware-implementation)
+
+```c++
+#include <stdio.h>
+
+int main()
+{
+  int deviceId;
+  cudaGetDevice(&deviceId);                  
+  cudaDeviceProp props;
+  cudaGetDeviceProperties(&props, deviceId); 
+
+  int computeCapabilityMajor = props.major;
+  int computeCapabilityMinor = props.minor;
+  int multiProcessorCount = props.multiProcessorCount;
+  int warpSize = props.warpSize;
+
+  printf("Device ID: %d\nNumber of SMs: %d\nCompute Capability Major: %d\nCompute Capability Minor: %d\nWarp Size: %d\n", deviceId, multiProcessorCount, computeCapabilityMajor, computeCapabilityMinor, warpSize);
+}
+```
+
+![截屏2020-08-20 11.28.31](nvidia/截屏2020-08-20 11.28.31.png)
+

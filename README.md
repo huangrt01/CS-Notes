@@ -38,6 +38,8 @@
 
 #### [CSAPP-Labs](https://github.com/huangrt01/CSAPP-Labs) ■■□□□□□□□□
 
+* [My solution](https://github.com/huangrt01/CSAPP-Labs): data lab and shell lab
+
 #### [操作系统——本科课程笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F.md) ■■■■□□□□□□
 
 #### [OSTEP-Operating-Systems-Three-Easy-Pieces ](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/OSTEP-Operating-Systems-Three-Easy-Pieces.md) ■■■■■■□□□□
@@ -47,28 +49,36 @@
 #### [Stanford-CS144-Lecture](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lecture-CS144-Stanford.md) ■■■■□□□□□□
 
 #### [Stanford-CS144-Lab](https://github.com/huangrt01/TCP-Lab) ■■■■■■■□□□
+* an elegant implementation of TCP protocal
 
 #### [Computer-Networking-A-Top-Down-Approach](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-A-Top-Down-Approach.md) □□□□□□□□□□
 
 #### [通信与网络——本科课程笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/%E9%80%9A%E4%BF%A1%E4%B8%8E%E7%BD%91%E7%BB%9C.md) ■□□□□□□□□□
 
-### 分布式系统
-
 ### 机器学习系统
 
-#### [MLSys](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/MLSys.md) 
+#### [Machine Learning Systems](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/MLSys.md) 
 
-#### [Nvidia CUDA programming](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/nvidia.md)
+* 推荐系统论文阅读
+* TensorFlow, Ray等经典开源框架笔记
+
+#### [《深度学习推荐系统》—— 王喆](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F%E2%80%94%E7%8E%8B%E5%96%86.md)
+
+#### [Nvidia courses](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/nvidia.md)
+* Accelerating Applications with CUDA C/C++
+* Basic Deep Learning
 
 ### 密码学
 
 #### [Cryptography I, Stanford University, Dan Boneh (完成95%)](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Cryptography%20I%2C%20Stanford%20University%2C%20Coursera.md) ■□□□□□□□□□
 
+### 分布式系统
+
 ### 其它
 
 **关于本仓库**
 
-* 为了兼顾备份的简便性和可靠性，采用github作为图床。
+* Use Github as image host, for the simplicity and reliability of backup.
 * 本仓库内容由自制的[笔记转化器](https://github.com/huangrt01/CS-Notes)生成，转化器有bug，会把shell的含有`$`的行当作latex行内公式转化掉，暂时没有时间改，可以clone下来看用typora等md阅读器阅读/Note文件夹里的本体文件。
 
 **内容预告**
