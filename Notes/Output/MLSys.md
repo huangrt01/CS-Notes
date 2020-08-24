@@ -148,7 +148,7 @@ tensors存在backing store buffers
 
 模型并行：参数如何划分？复杂的通信模式
 
-![截屏2020-08-1110.44.20](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/截屏2020-08-1110.44.20.jpg)
+![platforms](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/platforms.jpg)
 
 横向拓展：片间高速互联，e.g. TPU
 
@@ -156,7 +156,7 @@ tensors存在backing store buffers
 
 
 
-静态调度与流式执行系统![截屏2020-08-1110.55.07](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/截屏2020-08-1110.55.07.jpg)
+静态调度与流式执行系统![layers](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/layers.jpg)
 
 
 
@@ -165,11 +165,11 @@ OneFlow架构
 * actor及流水线
   * 内存槽，用类似rust的ownership解决内存冲突问题，ownership随状态转移
 
-![截屏2020-08-1111.00.58](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/截屏2020-08-1111.00.58.jpg)
+![memory-pipeline](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/memory-pipeline.jpg)
 
 * node placement: consistent view
   * SBP, 在op层面实现数据和模型并行 
-![截屏2020-08-1111.10.09](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/截屏2020-08-1111.10.09.jpg)
+![SBP](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/SBP.jpg)
 
 
 ### Ray: 动态可编程分布式计算框架

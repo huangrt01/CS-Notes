@@ -233,5 +233,6 @@ int main()
 }
 ```
 
-![截屏2020-08-20 11.28.31](nvidia/截屏2020-08-20 11.28.31.png)
+![page-fault](nvidia/page-fault.png)
 
+![shared-memory](nvidia/shared-memory.png)

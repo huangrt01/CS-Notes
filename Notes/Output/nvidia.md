@@ -99,7 +99,7 @@ cudaMallocManaged(&a, size);
 cudaFree(a);
 ```
 
-![image-20200813121956711](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/image-20200813121956711.png)
+![image-20200813121956711](/Users/bytedance/Documents/Github/Markdown4Zhihu/Notes/nvidia/image-20200813121956711.png)
 
  这个地址在统一的内存空间里，GPU和CPU都可以使用，但物理上数据可以不在它被访问的设备里，这时会产生page fault（缺页错误），对这个错误的处理就是把数据拷贝到需要访问它的设备或主机内存里，这个操作是透明的（自动执行）。
 
@@ -233,5 +233,6 @@ int main()
 }
 ```
 
-![截屏2020-08-20 11.28.31](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/截屏2020-08-20 11.28.31.png)
+![page-fault](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/page-fault.png)
 
+![shared-memory](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/shared-memory.png)
