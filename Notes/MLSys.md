@@ -261,3 +261,20 @@ src/ray/raylet/scheduling_queue.cc
 * SchedulingQueue
 
 src/ray/raylet/scheduling_policy.cc
+
+### 论文阅读
+
+#### Clipper: A Low-Latency Online Prediction Serving System, NSDI 17
+
+low latencies, high throughputs, and improved accuracy
+
+prediction cache, batching queue
+
+Model abstraction layer
+
+* 用object store存模型，减少初始化开销
+* prediction cache：本质上类似SHARED属性（同一batch内的某一特征用相同的预估结果）。两者的区别在于，前者的输入更简单，以模型和req id为标识，易于做cache操作；后者是feature层面，更精细。推荐系统入图的特征输入很难做到完全一致，因此做prediction cache操作难度较大。
+* batching：
+
+Model selection layer
+

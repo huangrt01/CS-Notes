@@ -66,6 +66,12 @@ gdb：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(ui
 
 
 
+set print pretty on/off 增加print的可读性
+
+ptype可以打印变量类型
+
+打印stl使用python pretty print https://lumiera.org/documentation/technical/howto/DebugGdbPretty.html
+
 ```c++
 //利用类型转换显示智能指针对象指向的变量
 (gdb) p ((matrix::io::ModelMeta*)model_meta)->meta_

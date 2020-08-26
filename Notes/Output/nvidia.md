@@ -4,6 +4,24 @@
 
 [Cuda-C-Best-Practices](https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#who-should-read-this-guide)
 
+
+
+3 ways to accelerate applications:
+
+1.Libraries    
+
+2.OpenACC    		加directive，HPC工程
+
+3.Programming Languages
+
+
+
+CPU: latency-optimized low latency processor
+
+GPU: throughput-optimized high throughput processor
+
+![截屏2020-08-26 10.13.51](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/截屏2020-08-26 10.13.51.jpg)
+
 #### 1.Accelerating Applications with CUDA C/C++
 
 [课程网页](https://courses.nvidia.com/courses/course-v1:DLI+C-AC-01+V1/courseware/85f2a3ac16a0476685257996b84001ad/9ef2f68fb10d40c5b54b783392938d04/?activate_block_id=block-v1%3ADLI%2BC-AC-01%2BV1%2Btype%40sequential%2Bblock%409ef2f68fb10d40c5b54b783392938d04)
@@ -16,7 +34,7 @@ CUDA supports many, if not most, of the [world's most performant applications](h
 
 ```c++
 nvidia-smi
-cudaMallocManaged()分配data
+cudaMallocManaged()
 cudaDeviceSynchronize()
   
 nvcc -arch=sm_70 -o hello-gpu 01-hello/01-hello-gpu.cu -run
@@ -70,7 +88,7 @@ blockIdx.x: block index
 threadIdx.x: thread index
 ```
 
-如果不同的线程在不同的Warp里，他们的执行顺序会有所不同（但如果执行的操作非常简单，那么它们执行的先后时间也相差非常小），因为硬件（叫SM）是以Warp为单位调度线程运行的，每个Warp有32个线程
+如果不同的线程在不同的Warp里，他们的执行顺序会有所不同（但如果执行的操作非常简单，那么它们执行的先后时间也相差非常小），因为硬件（SM）是以Warp为单位调度线程运行的，每个Warp有32个线程
 
 ##### Allocating Memory to be accessed on the GPU and the CPU
 ```c++
@@ -98,8 +116,6 @@ cudaMallocManaged(&a, size);
 
 cudaFree(a);
 ```
-
-![image-20200813121956711](/Users/bytedance/Documents/Github/Markdown4Zhihu/Notes/nvidia/image-20200813121956711.png)
 
  这个地址在统一的内存空间里，GPU和CPU都可以使用，但物理上数据可以不在它被访问的设备里，这时会产生page fault（缺页错误），对这个错误的处理就是把数据拷贝到需要访问它的设备或主机内存里，这个操作是透明的（自动执行）。
 
@@ -210,7 +226,39 @@ nsys profile --stats=true ./single-thread-vector-add
 
 GPU内部很多functional units: SMs(Streaming Multiprocessors)，一个SM可以schedule多个block，但同一时间只能执行一个
 
+* A set of CUDA cores
+  * Tensor core相比CUDA core，实现了MMA operations，支持2:4 sparsity，支持in8和int4，更高效
+  * CUDA core和thread在抽象层次上对应
+* Registers / Shared Memory / L1 Cache
+* SMs share Global Memory 
+* PCIe / NVLINk
+
+
+![截屏2020-08-26 10.18.01](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/截屏2020-08-26 10.18.01.jpg)
+
+![截屏2020-08-26 10.27.55](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/截屏2020-08-26 10.27.55.png)
+
+* SM片上单元比L2快3倍
+
+```c++
+cudaMallocManaged()     不注意的话开销大
+cudaMalloc()       分配显存
+cudaMemcpyHostToDevice
+```
+
+* 编译器决定kernel内定义的变量是否分配在寄存器上（没有超过上限的标量）
+* 寄存器之间的值不一定是私有的，可以shuffle
+
+![image-20200813121956711](/Users/bytedance/Desktop/CS-Notes/Notes/nvidia/截屏2020-08-26 11.30.31.png)
+
+![截屏2020-08-26 10.33.02](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/截屏2020-08-26 10.33.02.jpg)
+
+* 左边的不是全连接结构，NV引入了NVSwitch单元，交换机芯片，支持最多16个GPU的直联
+
+
+
 block size的选择
+
 * SM的倍数
 * 32的倍数， [in depth coverage of SMs and warps](http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#hardware-implementation)
 
@@ -233,6 +281,9 @@ int main()
 }
 ```
 
-![page-fault](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/page-fault.png)
+![截屏2020-08-20 11.28.31](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/截屏2020-08-20 11.28.31.png)
 
-![shared-memory](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/shared-memory.png)
+![截屏2020-08-26 11.40.55](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/截屏2020-08-26 11.40.55.jpg)
+
+**dynamic parallelism in cuda**: kernel内执行kernel，但launch kernel开销较大，有几微秒
+

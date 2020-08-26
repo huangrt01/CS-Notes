@@ -646,6 +646,15 @@ Note: Member function templates never suppress generation of special member func
 
 `#pragma once`: 只编译一次
 
+
+
+Multiple definition报错的讨论：
+
+如果在.h文件里定义函数，需要[加inline防止重复定义](https://softwareengineering.stackexchange.com/questions/339486/when-a-function-should-be-declared-inline-in-c)
+
+* [inline specifier in C++](https://en.cppreference.com/w/cpp/language/inline)支持重复引用.h内函数
+* 如果是gcc而非g++编译，会报错
+
 #### C
 
 STDERR_FILENO: [文件描述符的概念](http://guoshaoguang.com/blog/tag/stderr_fileno/)
