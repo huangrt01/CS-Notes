@@ -10,7 +10,7 @@
 
 1.Libraries    
 
-2.OpenACC    		加directive，HPC工程
+2.OpenACC    	(add directive, for applications like HPC)
 
 3.Programming Languages
 
@@ -20,7 +20,7 @@ CPU: latency-optimized low latency processor
 
 GPU: throughput-optimized high throughput processor
 
-![截屏2020-08-26 10.13.51](nvidia/截屏2020-08-26 10.13.51.png)
+![CPU-GPU](nvidia/CPU-GPU.png)
 
 #### 1.Accelerating Applications with CUDA C/C++
 
@@ -219,7 +219,7 @@ Profile configuration details, Report file(s) generation details, CUDA API Stati
 
 ```shell
 nvcc -o single-thread-vector-add 01-vector-add/01-vector-add.cu -run
-nsys profile --stats=true ./single-thread-vector-add
+nsys profile --stats=true -o output-report ./single-thread-vector-add
 ```
 
 ##### Streaming Multiprocessors and Querying the Device
@@ -234,9 +234,9 @@ GPU内部很多functional units: SMs(Streaming Multiprocessors)，一个SM可以
 * PCIe / NVLINk
 
 
-![截屏2020-08-26 10.18.01](nvidia/截屏2020-08-26 10.18.01.png)
+![SM](nvidia/SM.png)
 
-![截屏2020-08-26 10.27.55](nvidia/截屏2020-08-26 10.27.55.png)
+![memory-hierarchy](nvidia/memory-hierarchy.png)
 
 * SM片上单元比L2快3倍
 
@@ -249,9 +249,9 @@ cudaMemcpyHostToDevice
 * 编译器决定kernel内定义的变量是否分配在寄存器上（没有超过上限的标量）
 * 寄存器之间的值不一定是私有的，可以shuffle
 
-![image-20200813121956711](/Users/bytedance/Desktop/CS-Notes/Notes/nvidia/截屏2020-08-26 11.30.31.png)
+![shared-memory](nvidia/shared_memory.png)
 
-![截屏2020-08-26 10.33.02](nvidia/截屏2020-08-26 10.33.02.png)
+![nvlink](nvidia/nvlink.png)
 
 * 左边的不是全连接结构，NV引入了NVSwitch单元，交换机芯片，支持最多16个GPU的直联
 
@@ -281,9 +281,52 @@ int main()
 }
 ```
 
-![截屏2020-08-20 11.28.31](nvidia/截屏2020-08-20 11.28.31.png)
+![workflow](nvidia/workflow.png)
 
-![截屏2020-08-26 11.40.55](nvidia/截屏2020-08-26 11.40.55.png)
+![stencil](nvidia/stencil.png)
 
 **dynamic parallelism in cuda**: kernel内执行kernel，但launch kernel开销较大，有几微秒
+
+#### 3.Asynchronous Streaming, and Visual Profiling with CUDA C/C++
+
+unmanaged memory allocation and migration; pinning, or page-locking host memory; and non-default concurrent CUDA streams.
+
+prefetch: 减少HtoD耗时（因为larger chunks），大幅减少kernel耗时（不再page fault）
+
+init-kernel: 不再有HtoD，OS耗时也没了
+
+https://developer.nvidia.com/blog/maximizing-unified-memory-performance-cuda/
+
+
+
+##### CUDA Streams
+* Kernels within any single stream must execute in order
+* Kernels in different, non-default streams can interact concurrently
+* The default stream is special: it blocks all kernels in all other streams 
+  * 这一规则有副作用，因此推荐用non-default streams
+
+```c++
+cudaStream_t stream;       // CUDA streams are of type `cudaStream_t`.
+cudaStreamCreate(&stream); // Note that a pointer must be passed to `cudaCreateStream`.
+
+someKernel<<<number_of_blocks, threads_per_block, 0, stream>>>(); // `stream` is passed as 4th EC argument.
+// 3th argument: the number of bytes in shared memory
+
+cudaStreamDestroy(stream); // Note that a value, not a pointer, is passed to `cudaDestroyStream`.
+
+
+for (int i = 0; i < 5; ++i){
+  cudaStream_t stream;
+  cudaStreamCreate(&stream);
+  printNumber<<<1, 1, 0, stream>>>(i);
+  cudaStreamDestroy(stream);
+}
+cudaDeviceSynchronize();
+```
+
+
+
+Exericise: Accelerate and Optimize an N-Body Simulator
+
+nbody-raw.cu -> nbody-optimized.cu
 

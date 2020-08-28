@@ -881,7 +881,26 @@ class cplus_input{
 
 ```
 
+#### multi-thread programming
+
+读写锁
+
+```c++
+#include <boost/thread/thread.hpp>
+#include <shared_mutex>
+
+//读锁
+//灵活使用：可以用{}包起来，控制释放锁的时机
+{
+	std::shared_lock<boost::shared_mutex> lock(filter_mutex_);
+}
+
+//写锁
+std::unique_lock<boost::shared_mutex> lock(filter_mutex_);
+```
+
 #### STL
+
 十三大头文件：\<algorithm>、\<functional>、\<deque>、、\<iterator>、\<array>、\<vector>、\<list>、\<forward_list>、\<map>、\<unordered_map>、\<memory>、\<numeric>、\<queue>、\<set>、\<unordered_set>、\<stack>、\<utility>
 
 ##### \<algorithm>
