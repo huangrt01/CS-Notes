@@ -89,7 +89,7 @@
 
 投递链接（算法/工程均投此链接）：https://job.toutiao.com/s/JrNd24k
 
-[JD] (https://github.com/huangrt01/CS-Notes/job-description.pic)
+[JD](https://github.com/huangrt01/CS-Notes/blob/master/job-description.jpg)
 
 
 
