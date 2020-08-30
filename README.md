@@ -74,6 +74,8 @@
 
 ### 分布式系统
 
+
+
 ### 其它
 
 **关于本仓库**
@@ -85,18 +87,15 @@
 
 **内推字节AML**
 
-内推码: REBTETW
-
 投递链接（算法/工程均投此链接）：https://job.toutiao.com/s/JrNd24k
 
-[JD](https://github.com/huangrt01/CS-Notes/blob/master/job-description.jpg)
+* 内推码: REBTETW
 
+[JD](https://github.com/huangrt01/CS-Notes/blob/master/job-description.jpg): AML(Applied Machine Learning)团队（北京、杭州），负责全公司的ML System、推荐/NLP中台构建，此外也有基础研究团队（硅谷、西雅图）。
 
-
-
-
-
-
+* 方向自由，领域前沿，涵盖学界工业界热点领域的方方面面。
+* 团队Google海归及名校phd较多，有姚班本科大佬，也有一届北大cs本科四人同来。
+* 工作效率高，作息较好。
 
 
 **内容预告**
