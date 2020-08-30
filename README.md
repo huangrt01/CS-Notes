@@ -78,18 +78,32 @@
 
 **关于本仓库**
 
-* Use Github as image host, for the simplicity and reliability of backup.
-* 本仓库内容由自制的[笔记转化器](https://github.com/huangrt01/CS-Notes)生成，转化器有bug，会把shell的含有`$`的行当作latex行内公式转化掉，暂时没有时间改，可以clone下来看用typora等md阅读器阅读/Note文件夹里的本体文件。
+* This repository uses Github as image host, for the simplicity and reliability of backup.
+* 本仓库内容由自制[笔记转化器](https://github.com/huangrt01/CS-Notes)自动生成
+  * remaining bug: 包含`$`的行会视为latex行内公式转化为公式图片，但这样会将shell代码转换，需要判断是否在latex代码域内，予以排除
+  * solution: clone仓库，用[Typora](https://typora.io/)阅读Note文件夹里的本体文件。
+
+**内推字节AML**
+
+内推码: REBTETW
+
+投递链接（算法/工程均投此链接）：https://job.toutiao.com/s/JrNd24k
+
+[JD] (https://github.com/huangrt01/CS-Notes/job-description.pic)
+
+
+
+
+
+
+
+
 
 **内容预告**
 
-* MIT 6.NULL学完
-* 《剑指offer》做过的题整理
-* TensorFlow Internals
+* MIT 6.NULL学完; 《剑指offer》做过的题整理; TensorFlow Internals
 * [OSTEP web server lab](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/concurrency-webserver)结合[书上HW](https://github.com/xxyzz/ostep-hw/tree/master/33) + [CSAPP web proxy lab](http://csapp.cs.cmu.edu/3e/labs.html)
 * MIT6.824 MapReduce Lab + DDIA
 * CS144剩余的课+network and router lab
-* OSTEP persistency部分
-* CSAPP其它部分和lab挑着做
-* 结合MIT6.828做xv6
+* OSTEP persistency部分; CSAPP其它部分和lab挑着做; 结合MIT6.828做xv6
 
