@@ -3,8 +3,18 @@
 #include <stdlib.h>
 #include "timer.h"
 #include "check.h"
+#include <assert.h>
 
 #define SOFTENING 1e-9f
+
+inline cudaError_t checkCuda(cudaError_t result)
+{
+  if (result != cudaSuccess) {
+    fprintf(stderr, "CUDA Runtime Error: %s\n", cudaGetErrorString(result));
+    assert(result == cudaSuccess);
+  }
+  return result;
+}
 
 /*
  * Each body contains x, y, and z coordinate positions,
@@ -12,11 +22,6 @@
  */
 
 typedef struct { float x, y, z, vx, vy, vz; } Body;
-
-/*
- * Do not modify this function. A constraint of this exercise is
- * that it remain a host function.
- */
 
 void randomizeBodies(float *data, int n) {
   for (int i = 0; i < n; i++) {
@@ -29,8 +34,11 @@ void randomizeBodies(float *data, int n) {
  * on all others, but does not update their positions.
  */
 
+__global__ 
 void bodyForce(Body *p, float dt, int n) {
-  for (int i = 0; i < n; ++i) {
+  int index = threadIdx.x + blockIdx.x * blockDim.x;
+  int stride = blockDim.x * gridDim.x;
+  for (int i = index; i < n; i += stride) {
     float Fx = 0.0f; float Fy = 0.0f; float Fz = 0.0f;
 
     for (int j = 0; j < n; j++) {
@@ -45,6 +53,17 @@ void bodyForce(Body *p, float dt, int n) {
     }
 
     p[i].vx += dt*Fx; p[i].vy += dt*Fy; p[i].vz += dt*Fz;
+  }
+}
+
+__global__
+void updatePos(Body *p, float dt, int n){
+  int index = threadIdx.x + blockIdx.x * blockDim.x;
+  int stride = blockDim.x * gridDim.x;
+  for (int i = index; i < n; i += stride) { // integrate position
+    p[i].x += p[i].vx*dt;
+    p[i].y += p[i].vy*dt;
+    p[i].z += p[i].vz*dt;
   }
 }
 
@@ -68,10 +87,17 @@ int main(const int argc, const char** argv) {
   const float dt = 0.01f; // time step
   const int nIters = 10;  // simulation iterations
 
+  int deviceId;
+  int numberOfSMs;
+
+  cudaGetDevice(&deviceId);
+  cudaDeviceGetAttribute(&numberOfSMs, cudaDevAttrMultiProcessorCount, deviceId);
+  printf("Device ID: %d\tNumber of SMs: %d\n", deviceId, numberOfSMs);
+
   int bytes = nBodies * sizeof(Body);
   float *buf;
 
-  buf = (float *)malloc(bytes);
+  cudaMallocManaged(&buf, bytes);
 
   Body *p = (Body*)buf;
 
@@ -79,14 +105,18 @@ int main(const int argc, const char** argv) {
    * As a constraint of this exercise, `randomizeBodies` must remain a host function.
    */
 
+  cudaMemPrefetchAsync(buf, bytes, cudaCpuDeviceId);
+
   randomizeBodies(buf, 6 * nBodies); // Init pos / vel data
 
   double totalTime = 0.0;
 
-  /*
-   * This simulation will run for 10 cycles of time, calculating gravitational
-   * interaction amongst bodies, and adjusting their positions to reflect.
-   */
+  size_t threadsPerBlock;
+  size_t numberOfBlocks;
+
+  threadsPerBlock = 256;
+  numberOfBlocks = 32 * numberOfSMs;
+
 
   /*******************************************************************/
   // Do not modify these 2 lines of code.
@@ -94,23 +124,19 @@ int main(const int argc, const char** argv) {
     StartTimer();
   /*******************************************************************/
 
-  /*
-   * You will likely wish to refactor the work being done in `bodyForce`,
-   * as well as the work to integrate the positions.
-   */
+    cudaMemPrefetchAsync(buf, bytes, deviceId);
 
-    bodyForce(p, dt, nBodies); // compute interbody forces
+    bodyForce<<<numberOfBlocks, threadsPerBlock>>>(p, dt, nBodies); // compute interbody forces
 
-  /*
-   * This position integration cannot occur until this round of `bodyForce` has completed.
-   * Also, the next round of `bodyForce` cannot begin until the integration is complete.
-   */
+    checkCuda(cudaGetLastError());
 
-    for (int i = 0 ; i < nBodies; i++) { // integrate position
-      p[i].x += p[i].vx*dt;
-      p[i].y += p[i].vy*dt;
-      p[i].z += p[i].vz*dt;
-    }
+    checkCuda(cudaDeviceSynchronize());
+
+    updatePos<<<numberOfBlocks, threadsPerBlock>>>(p, dt, nBodies);
+
+    checkCuda(cudaGetLastError());
+
+    checkCuda(cudaDeviceSynchronize());
 
   /*******************************************************************/
   // Do not modify the code in this section.
@@ -130,9 +156,5 @@ int main(const int argc, const char** argv) {
 #endif
   /*******************************************************************/
 
-  /*
-   * Feel free to modify code below.
-   */
-
-  free(buf);
+  cudaFree(buf);
 }

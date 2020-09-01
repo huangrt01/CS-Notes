@@ -1,8 +1,8 @@
+[toc]
+
 plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, HugeCTR, DALI
 
 ### TensorFlow Internals
-
-[toc]
 
 #### chpt1: 介绍
 
@@ -221,6 +221,8 @@ Ray是用户友好的分布式计算框架，具体体现在
 
 
 **读论文**：
+《Ray: A Distributed Framework for Emerging AI Applications》, OSDI 18
+
 结合Bulk-synchronous parallel systems和Task-parallel systems这两类系统
 
 无状态和有状态
@@ -264,17 +266,63 @@ src/ray/raylet/scheduling_policy.cc
 
 ### 论文阅读
 
-#### Clipper: A Low-Latency Online Prediction Serving System, NSDI 17
+已读，待整理：
+
+#### 《MLSys: The New Frontier of Machine Learning Systems》
+
+#### 《Deep Neural Networks for Youtube Recommendations, RecSys 16》
+
+#### 《Wide & Deep learning for Recommender Systems, RecSys 17》
+
+#### 《A Hitchhiker's Guide On Distributed Training Of Deep Neural Networks, JPDC 18》
+
+#### 《TFX: A TensorFlow-based production-scale machine learning platform》
+
+#### 《TensorFlow: A system for large-scale machine learning, OSDI 16》
+
+#### 《Clipper: A Low-Latency Online Prediction Serving System, NSDI 17》
 
 low latencies, high throughputs, and improved accuracy
 
 prediction cache, batching queue
 
-Model abstraction layer
+##### Model abstraction layer
 
-* 用object store存模型，减少初始化开销
-* prediction cache：本质上类似SHARED属性（同一batch内的某一特征用相同的预估结果）。两者的区别在于，前者的输入更简单，以模型和req id为标识，易于做cache操作；后者是feature层面，更精细。推荐系统入图的特征输入很难做到完全一致，因此做prediction cache操作难度较大。
-* batching：
+用object store存模型，减少初始化开销
 
-Model selection layer
+prediction cache：本质上类似SHARED属性（同一batch内的某一特征用相同的预估结果）。两者的区别在于，前者的输入更简单，以模型和req id为标识，易于做cache操作；后者是feature层面，更精细。推荐系统入图的特征输入很难做到完全一致，因此做prediction cache操作难度较大。
+
+batching：动态选batch size的方式
+* additive-increase-multiplicative-decrease (AIMD) scheme 
+* quantile regression
+* delayed batching：按攒batch的timeout来delay，适合并行优化明显的模型
+
+model container: 无状态服务
+* Clipper performs adaptive batching independently for each replica
+
+##### Model selection layer
+
+动态调整选用模型的策略，推荐系统采用这类技术比CV/NLP难度更大
+
+* Single Model Selection Policy
+  * address the trade-off between exploring possible actions and exploiting the estimated best action. 
+* Ensemble Model Selection Policies
+  * Robust Prediction 
+    * agreement衡量prediction confidence 
+    * 有针对degraded模型的降级机制
+  * Straggler Mitigation
+* Contextualization: instantiate a unique model selection state for each user, context, or session.
+
+
+
+#### 《Hidden Technical Debt in Machine Learning Systems, NIPS 15》
+
+boundary erosion, entanglement, hidden feedback loops, undeclared consumers, data dependencies, configuration issues, changes in the external world, and a variety of system-level anti-patterns.
+
+2. Complex Models Erode Boundaries
+
+
+
+
+#### 《XDL: An industrial deep learning framework for high-dimensional sparse data, KDD 19》
 
