@@ -1762,4 +1762,5 @@ Separate Compilation: -c, 只产生object file, 不link, 后面联合link-editor
 inbox：
 * hm5.8    g++ hm5.8.cpp -o hm5.8 -Wall && "/Users/huangrt01/Desktop/OSTEP/ostep-code/cpu-api/“hm5.8  同一个命令，用coderunner输出六行，用terminal输出五行 
 * 19.physically-indexed cache
+* [Linux堆内存管理深入分析]([https://introspelliam.github.io/2017/09/10/Linux%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E6%B7%B1%E5%85%A5%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%8A%EF%BC%89/](https://introspelliam.github.io/2017/09/10/Linux堆内存管理深入分析（上）/))
 

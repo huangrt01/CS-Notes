@@ -226,19 +226,30 @@ nsys profile --stats=true -o output-report ./single-thread-vector-add
 
 GPU内部很多functional units: SMs(Streaming Multiprocessors)，一个SM可以schedule多个block，但同一时间只能执行一个
 
+GPU and Programming Model
+
 * A set of CUDA cores
   * Tensor core相比CUDA core，实现了MMA operations，支持2:4 sparsity，支持in8和int4，更高效
-  * CUDA core和thread在抽象层次上对应
+  
+  * CUDA Core和Thread在抽象层次上对应; SM <-> Thread Block; Device <-> Grid
+* Warp is successive 32 threads in a block
+  * 一个SM有64个warp，一个warp scheduler 16个warp
+  * 如果不能整除，余数占据one more warp
+  * 一个warp中的线程执行同一指令（Volta架构之后，可以执行不同指令，但不同时）
+  * Instructions will be issued to execution units by warp.
+  * Latency is caused by not able to issue next instruction to execution unit
+  * warp's context switching is free -> 通过大量warp来hide memory latency
 * Registers / Shared Memory / L1 Cache
 * SMs share Global Memory 
-* PCIe / NVLINk
-
+* PCIe / NVLINk 与CPU Chipset交互
 
 ![SM](nvidia/SM.png)
 
+* 白框：subpartition
+
 ![memory-hierarchy](nvidia/memory-hierarchy.png)
 
-* SM片上单元比L2快3倍
+* SM片上单元比L2快3倍，比Global Memory快几十倍 
 
 ```c++
 cudaMallocManaged()     不注意的话开销大
@@ -246,7 +257,7 @@ cudaMalloc()       分配显存
 cudaMemcpyHostToDevice
 ```
 
-* 编译器决定kernel内定义的变量是否分配在寄存器上（没有超过上限的标量）
+* 编译器决定kernel内定义的变量是分配在寄存器上（**没有超过上限的标量**）还是per-thread local memory上
 * 寄存器之间的值不一定是私有的，可以shuffle
 
 ![shared-memory](nvidia/shared_memory.png)
@@ -257,7 +268,7 @@ cudaMemcpyHostToDevice
 
 
 
-block size的选择
+block size的选择，最小取64，通常取128、256
 
 * SM的倍数
 * 32的倍数， [in depth coverage of SMs and warps](http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#hardware-implementation)
@@ -281,15 +292,49 @@ int main()
 }
 ```
 
+
+
 ![workflow](nvidia/workflow.png)
 
-![stencil](nvidia/stencil.png)
-
 **dynamic parallelism in cuda**: kernel内执行kernel，但launch kernel开销较大，有几微秒
+
+
+
+##### CPU-GPU Interaction Optimization
+
+* Host<->device data transfer has much lower bandwidth than global memory access.
+
+  * 16 GB/s (PCIe x16 Gen3) vs 250 GB/s & 10.6 T inst/s (GP100) 
+
+* Minimize transfer
+
+  * Intermediate data can be allocated, operated, de-allocated directly on GPU
+
+  * Sometimes it’s even better to re-compute on GPU
+
+* Group transfer
+  * One large transfer much better than many small ones
+  * Overlap memory transfer with computation
+
+
+
+
+
+
+
 
 #### 3.Asynchronous Streaming, and Visual Profiling with CUDA C/C++
 
 unmanaged memory allocation and migration; pinning, or page-locking host memory; and non-default concurrent CUDA streams.
+
+![optimization-workflow](nvidia/optimization-workflow.png)
+
+优化工具：
+
+* NVVP & nvprof (legacy)
+* Nsight System & Nsight Compute
+
+
 
 prefetch: 减少HtoD耗时（因为larger chunks），大幅减少kernel耗时（不再page fault）
 
@@ -332,7 +377,23 @@ nbody-raw.cu -> nbody-optimized.cu
 
 
 
-优化：
+##### Memory Optimization
+
+* Improve memory access pattern to reduce wasted transactions，提高bus utilization
+  * per warp (coalesced, 32/64/128B)
+    * 线程访问可以不连续，但内存需要连续
+  * in discrete chunks (transported in segments: L2 cache line, 32B)
+    * 长度和index均需对齐
+* Reduce redundant access: shared memory
+  * Inter-block communication
+  * User-managed cache to reduce redundant global memory accesses
+  * Avoid non-coalesced access: shared memory没有cache line的概念
+
+![stencil](nvidia/stencil.png)
+
+Shared memory应用于矩阵乘法：global read次数除以BATCH_SIZE
+
+![warp](nvidia/warp-sharing.png)
 
 Manual Device Memory Allocation and Copying
 
@@ -357,5 +418,130 @@ cudaFree(device_a);
 cudaFreeHost(host_a);          // Free pinned memory like this.
 ```
 
+cudaHostAlloc: Pinned(Non-pageable) Memory, very expensive
+
+
+
+
+##### Latency Optimization
+
+Warp State
+
+* Active: warps inside the pool which has non-exiting threads
+* Eligible: active warps that are not stalled
+* Issued: a single eligible warp that the warp scheduler choose to issue one or more instructions on this cycle
+
+Latency
+
+* bound: for many cycles, lack of eligible warps to issue instructions
+
+* hiding: switching warp
+* technique: increase active warps
+
+Occupancy & Active Warps
+* Occupancy: ratio of active warps per SM to the maximum number of allowed warps
+  * Hardware limit: 64 in Volta GV100 Per SM(16 per sub-partition), but **32** in Turing
+* We need the occupancy to be high enough to hide latency
+* Theoretical occupancy is limited by resource usage (shared memory/registers/blocks per SM)
+
+Achieved occupancy can be significantly lower than theoretical occupancy when: 
+
+*  Unbalanced workload within blocks
+* Unbalanced workload across blocks
+* Too few blocks launched
+
+Know the occupancy: NVIDIA Visual profiler / Nsight Compute ❑ Adjust resource usage to increase theoretical occupancy
+
+* Change block size ❑ Limit register usage
+
+* Compiler option –maxregcount=n: per file
+
+* __launch_bounds__: per kernel ❑ Limit shared memory usage.
+
+* Launch enough load-balanced blocks to increase achieved occupancy
+
+```c++
+__global__ void
+__launch_bounds__(maxThreadsPerBlock, minBlocksPerMultiprocessor)
+MyKernel(...){
+  ...
+}
+```
+
+
+
+
 Using Streams to Overlap Data Transfers and Code Execution
+
 * cudaMemcpyAsync: `manual-malloc.cu`, `memcpy-async.cu`
+
+
+
+##### Instruction Optimization
+
+* Use float if precision allow
+  * Adding “f” to floating literals (e.g. 1.0f) because the default is double 
+
+* Fast math functions
+  * Two types of runtime math library functions
+    * func(): slower but higher accuracy (5 ulp or less)
+    * __func(): fast but lower accuracy (SFU做，see prog. guide for full details) 
+    *  -use_fast_math: forces every func() to __func ()
+
+* High-throughput function:
+  * DP4A and DP2A for int8 and int16 dot productions 
+  * Warp matrix function for tensor core operations
+
+![control-flow](nvidia/control-flow.png)
+
+##### CUDA cooperative group 协作线程组
+
+<img src="nvidia/cooperative-groups.png" alt="cooperative-groups.png" style="zoom:100%;" />
+
+```c++
+namespace cooperative_groups{
+class thread_group{
+public:
+  __device__ unsigned int size() const;
+  __device__ unsigned int thread_rank() const;
+  __device__ void sync() const;
+};
+  
+thread_block myblock = this_thread_block();
+// intra-block groups
+thread_group tile32 = tiled_partition(myblock, 32);
+thread_group tile4 = tiled_partition(tile32, 4);
+thread_block_tile<8> tile8 = tiled_partition<8>(this_thread_block());
+
+
+// Warp collectives
+
+template <unsigned int Size>
+class thread_block_tile : public thread_group{
+public:
+  __device__ unsigned int size() const;
+  __device__ unsigned int thread_rank() const;
+  __device__ void sync() const;
+  
+  // Shuffle collectives
+  __device__ int shfl(int var, int srcRank) const;
+  __device__ int shfl_down(int var, unsigned int delta) const;
+  __device__ int shfl_up(int var, unsigned int delta) const;
+  __device__ int shfl_xor(int var, unsigned int laneMask);
+  
+  // Vote collectives
+  __device__ int any(int predicate) const;
+  __device__ int all(int predicate) const;
+  __device__ unsigned int ballot(int predicate) const;
+  
+  // Match collectives
+  __device__ unsigned int match_any(int val);
+  __device__ unsigned int match_all(int val, int &pred);
+}; 
+}
+```
+
+
+
+![shuffle](nvidia/shuffle.png)
+

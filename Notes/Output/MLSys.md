@@ -320,7 +320,12 @@ model container: 无状态服务
 boundary erosion, entanglement, hidden feedback loops, undeclared consumers, data dependencies, configuration issues, changes in the external world, and a variety of system-level anti-patterns.
 
 2. Complex Models Erode Boundaries
+* Entanglement: 即使多模型/超参的配置独立，但效果互相影响
+* Correction Cascade: 模型级联是hidden debt
+* Undeclared Consumers: 需要SLA(service-level agreement)
 
+3. Data Dependencies Cost More than Code Dependencies
+* 
 
 
 

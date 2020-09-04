@@ -2,6 +2,27 @@
 
 #define N  64
 
+__global__ void sharedMatMult( float * a, float * b, float *c){
+  __shared__ float aTile[BLOCK_SIZE][BLOCK_SIZE];
+  __shared__ float bTile[BLOCK_SIZE][BLOCK_SIZE];
+
+  int row = blockIdx.x * blockDim.x + threadIdx.x;
+  int col = blockIdx.y * blockDim.y + threadIdx.y;
+  float sum = 0.0f;
+
+  for(int k = 0; k < N; k += BLOCK_SIZE){
+    aTile[threadIdx.x][threadIdx.y] = a[row * N + threadIdx.y + k];
+    bTile[threadIdx.x][threadIdx.y] = b[(threadIdx.x + k) * N + col];
+    __syncthreads();
+
+    for(int i = 0; i < BLOCK_SIZE; i++){
+      sum += aTile[threadIdx.x][i] * bTile[i][threadIdx.y];
+    }
+    __syncthreads();
+  }
+  c[row * N + col] = sum;
+}
+
 __global__ void matrixMulGPU( int * a, int * b, int * c )
 {
   int val = 0;
