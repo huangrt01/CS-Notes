@@ -142,6 +142,33 @@ tensors存在backing store buffers
 * 抛开细枝末节： `git checkout -b code-reading`
 * 适可而止，BFS阅读
 
+### Go+Torch
+
+https://github.com/wangkuiyi/gotorch
+
+Q: TensorFlow为什么需要引入图这个概念
+
+A: 
+
+1.backward自动求导，需要定义前向的数据结构
+
+2.python执行速度慢，决定执行效率的是图的解释器。图是python代码的另一种表示形式，开始包括前向计算过程，通过调用TensorFlow API，加入其它op包括反向计算过程和模型更新过程。构造图本质上是在编译。
+
+* [TFRT](https://github.com/tensorflow/runtime)
+
+调用libtorch内部的native function类比tf的op，但native function是函数，而不是一个class，每一个function可以用HLO（一种古老的适用于数值计算的语言）写一遍。gotorch调libtorch调pytorch XLA里的HLO程序，翻译成特定设备优化的代码
+
+* native function有YAML描述，可自动生成Go Wrapper
+* torchscripts：用到的python语法的子集 => python高层api可翻译成torchscripts再翻译
+
+如果 Go+Torch 在未来一年里孕育成熟，有望优化以下核心 应用场景:
+
+1. 统一训练和预测系统(目前训练用 Python 写，预测用 C++)
+2. 统一云和端系统(目前云上用 TensorFlow，端上比如 xNN 调用 TensorFlow Lite)
+3. 统一训练和预测时的数据处理流程(目前需要用 Python和C++分别做两套，开销大，而且容易出错)
+4. 统一搜索、推荐、广告、金融核心、移动智能和端智能、无人驾驶等多个领域的基础架构
+5. 能支持新的机器学习模式——online learning、GAN、reinforcement learning、imitation learning等。
+
 ### OneFlow: 大规模分布式深度学习框架
 
 数据并行：allreduce + PS
@@ -325,9 +352,69 @@ boundary erosion, entanglement, hidden feedback loops, undeclared consumers, dat
 * Undeclared Consumers: 需要SLA(service-level agreement)
 
 3. Data Dependencies Cost More than Code Dependencies
-* 
+* Underutilized dependencies: legacy/bundled/epsilon/correlated, use exhaustive leave-one-feature-out evaluations to detect
+
+4. Feedback Loops
+* direct: related to bandit algorithms, costly
+* hidden: two independent systems may interact
+
+5. ML-System Anti-Patterns
+* Glue Code: hard to achieve a domain-specific goal
+* Pipeline Jungle: 特征工程的意义所在，thinking holistically about data collection and feature ex traction
+* Dead Experimental Codepaths
+* Abstraction Debt
+* Common Smells
+
+6. Configuration Debts
+* Feature A was incorrectly logged from 9/14 to 9/17
+* Feature B is not available on data before 10/7
+* The code used to compute feature C has to change for data before and after 11/1 because of changes to the logging format
+* Feature D is not available in production, so a substitute features D′ and D′′ must be used when querying the model in a live setting
+* If feature Z is used, then jobs for training must be given extra memory due to lookup tables or they will train inefficient
+* Feature Q precludes the use of feature R because of latency constraints.
+
+7. Dealing with Changes in the External World
 
 
+
+
+#### 《Ad Click Prediction: a View from the Trenches, KDD 13》
+* a high-dimensional visualization tool was used to allow researchers to quickly see effects across many dimensions and slicings
+* enables data sources and features to be annotated. Automated checks can then be run to ensure that all dependencies have the appropriate annotations, and dependency trees can be fully resolved.
 
 #### 《XDL: An industrial deep learning framework for high-dimensional sparse data, KDD 19》
 
+MPI(All Reduce)和PS，两种分布式计算方向
+
+Sparse + Dense
+
+* SparseNet: Representa-tion learning which captures information from high-dimensional sparse input and embeds them into a low-dimensional space
+
+* DenseNet: Function fitting which models the relationship between dense em- bedding representation and supervised label
+
+In order to facilitate deployment on various computing platforms,
+XDL can be scheduled by multiple resource management platform, like Yarn, and provides data I/O interfaces to various data storage systems, like HDFS and Kafka.
+
+
+
+* I/O
+  * Hierarchical sample compression: prefix tree
+
+![prefix-tree](MLSys/prefix-tree.png)
+
+* Workflow pipeline
+
+  * I/O: read sample and group mini-batch -> prefetch (maybe cudaMemcpyAsync()) -> pull/forward/backward/push
+  * SparseNet and DenseNet
+
+* Optimization for Advanced Model Server
+
+  * Network: [Seastar](https://github.com/scylladb/seastar) + zero-copy/CPU-binding
+
+* Online Learning with XDL
+
+  * Feature Entry Filter
+  * Incremental Model Export
+  * Feature Expire
+
+  

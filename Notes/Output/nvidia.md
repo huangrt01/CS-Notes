@@ -323,7 +323,7 @@ int main()
 
 
 
-#### 3.Asynchronous Streaming, and Visual Profiling with CUDA C/C++
+#### 3.Optimization Workflow
 
 unmanaged memory allocation and migration; pinning, or page-locking host memory; and non-default concurrent CUDA streams.
 
@@ -387,7 +387,7 @@ nbody-raw.cu -> nbody-optimized.cu
 * Reduce redundant access: shared memory
   * Inter-block communication
   * User-managed cache to reduce redundant global memory accesses
-  * Avoid non-coalesced access: shared memory没有cache line的概念
+  * Avoid non-coalesced access: shared memory没有cache line的概念，e.g. matrix-transposition.cu
 
 ![stencil](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/stencil.jpg)
 
@@ -425,38 +425,43 @@ cudaHostAlloc: Pinned(Non-pageable) Memory, very expensive
 
 ##### Latency Optimization
 
-Warp State
+**Warp State**
 
 * Active: warps inside the pool which has non-exiting threads
 * Eligible: active warps that are not stalled
 * Issued: a single eligible warp that the warp scheduler choose to issue one or more instructions on this cycle
 
-Latency
+**Latency**
 
 * bound: for many cycles, lack of eligible warps to issue instructions
 
 * hiding: switching warp
 * technique: increase active warps
 
-Occupancy & Active Warps
+**Occupancy & Active Warps**
+
 * Occupancy: ratio of active warps per SM to the maximum number of allowed warps
   * Hardware limit: 64 in Volta GV100 Per SM(16 per sub-partition), but **32** in Turing
 * We need the occupancy to be high enough to hide latency
 * Theoretical occupancy is limited by resource usage (shared memory/registers/blocks per SM)
 
-Achieved occupancy can be significantly lower than theoretical occupancy when: 
+**Achieved occupancy can be significantly lower than theoretical occupancy when:** 
 
 *  Unbalanced workload within blocks
 * Unbalanced workload across blocks
 * Too few blocks launched
 
-Know the occupancy: NVIDIA Visual profiler / Nsight Compute ❑ Adjust resource usage to increase theoretical occupancy
+**Occupancy Optimization**
 
-* Change block size ❑ Limit register usage
+* Know the occupancy: NVIDIA Visual profiler / Nsight Compute 
+* Adjust resource usage to increase theoretical occupancy
+  * Change block size
+  * Limit register usage
 
-* Compiler option –maxregcount=n: per file
+    * Compiler option –maxregcount=n: per file
 
-* __launch_bounds__: per kernel ❑ Limit shared memory usage.
+    * `__launch_bounds__`: per kernel 
+  * Limit shared memory usage.
 
 * Launch enough load-balanced blocks to increase achieved occupancy
 
@@ -545,3 +550,31 @@ public:
 
 ![shuffle](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/shuffle.png)
 
+
+
+#### 4.Introduction to Nsight Profiling Tools
+
+![nsight-product](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/nsight-product.png)
+
+
+```shell
+nsys profile -t cuda,osrt,nvtx -o baseline -w true python main.py
+```
+
+Support:
+
+* OS Thread state and CPU utilization, pthread, file I/O, etc.
+* User annotations API (NVTX)
+* Compute
+  * CUDA API: Kernel launch and execution correlation
+  * Libraries and directive: cuBLAS, cuDNN, OpenACC
+* Graphics
+  * Vulkan, OpenGL, DX11, DX12, DXR, V-sync
+
+
+
+Key features
+
+* section is a group of metrics
+
+![warp-scheduler](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/warp-scheduler.jpg)
