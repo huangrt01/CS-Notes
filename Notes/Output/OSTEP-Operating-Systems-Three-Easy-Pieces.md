@@ -53,7 +53,7 @@ I hear and I forget. I see and I remember. I do and I understand.    其实是�
   * run-time stack; heap(malloc(),free())    
   * I/O setups; default file descriptors
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/001.jpg" alt="进程状态转移" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/001.jpg" alt="进程状态转移" style="zoom:50%;" />
 
 * final态（在UNIX称作zombie state）等待子进程return 0，parent进程 wait()子进程
 
@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 	* protection: user code中存在的是system call number，避开内核地址
 	* 告诉硬件trap table在哪也是privileged operation
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/002.jpg" alt="LDE protocal" style="zoom:70%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/002.jpg" alt="LDE protocal" style="zoom:70%;" />
 
 [stub code](https://www.zhihu.com/question/24844900/answer/35126766)
 
@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
 * deal with malfeasance: in modern systems, the way the OS tries to handle such malfeasance is to simply terminate the offender.
 
 * scheduler    context switch
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/003.jpg" alt="LDE protocal + timer interrupt" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/003.jpg" alt="LDE protocal + timer interrupt" style="zoom:50%;" />
 
 注意有两种register saves/restores:
 * timer interrupt: 用hardware，kernel stack，implicitly，存user registers
@@ -450,11 +450,11 @@ static (software-based) relocation: loader，不安全，难以再次换位
 * PCB(or process structure)            储存base和bounds信息
 * exception handlers: 掐掉过界的进程
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/004.jpg" alt="LDE+Dynamic Relocation" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/004.jpg" alt="LDE+Dynamic Relocation" style="zoom:60%;" />
 
 问题：internal fragmentation，内存利用率不高 => segmentation
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/005.jpg" alt="Dynamic Relocation" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/005.jpg" alt="Dynamic Relocation" style="zoom:80%;" />
 
 #### 16.Segmentation
 
@@ -538,7 +538,7 @@ translate: virtual address= virtual page number(VPN) + offset
 
 * 实际存储：VirtualAddress：32=20(VPN)+12(Offset)；PTE内部：20(PFN)+3(empty)+9(flag)
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/006.jpg" alt="accessing memory with paging" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/006.jpg" alt="accessing memory with paging" style="zoom:80%;" />
 
 #### 19.Paging: Faster Translations(TLBs)
 
@@ -619,7 +619,7 @@ ASIDE: TLB Valid Bit和Page Table Valid Bit的区别：
 
 * MIPS的TLBs是software-managed，一个entry64bit，有32或64个entry，会给OS预留，比如用于TLB miss handler
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/007.jpg" alt="A MIPS TLB Entry" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/007.jpg" alt="A MIPS TLB Entry" style="zoom:80%;" />
 
 * MIPS的TLB相关的四个privileged OS命令：TLBP(probe), TLBR(read), TLBWI(replace specific), TLBWR(replace random)
 * Culler's Law：TLB经常是性能瓶颈
@@ -781,7 +781,7 @@ Q：page太小，512bytes，如何解决内存压力？
 2. 利用内核memory    
 3. 与2联系，利用TLB缓解复杂机制带来的损耗 
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/008.jpg" alt="具体实现" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/008.jpg" alt="具体实现" style="zoom:50%;" />
 
 NOTE：
 * page 0: in order to provide some support for detecting null-pointer accesses
@@ -809,7 +809,7 @@ other neat tricks:
 * 0xC0000000开始是内核
 
 64-bit x86：
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/009.jpg" alt="64-bit x86" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/009.jpg" alt="64-bit x86" style="zoom:50%;" />
 
 large page support
 * explicit的支持：mmap, shmget    => transparent huge page support
@@ -855,7 +855,7 @@ Other Security Problems: Meltdown And Spectre
   * thread-local: 栈不共用，在进程的栈区域开辟多块栈，不是递归的话影响不大
   * thread的意义：1) parallelism, 2) 适应于I/O阻塞系统、缺页中断（需要KLT），这一点类似于multiprogramming的思想，在server-based applications中应用广泛。
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/015.jpg" alt="015" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/015.jpg" alt="015" style="zoom:50%;" />
 
 NOTE：
 * pthread_join与[detach](https://blog.csdn.net/heybeaman/article/details/90896663)
@@ -1289,7 +1289,7 @@ void thr_join() {
     Pthread_mutex_lock(&m);
     while (done == 0)
         Pthread_cond_wait(&c, &m);
-    thread_mutex_unlock(&m);
+    Pthread_mutex_unlock(&m);
 }
 int main(int argc, char*argv[]) {
     printf("parent: begin\n");
@@ -1544,7 +1544,7 @@ no-starve-mutex的目的是基于weak semaphore实现no starving，具体实现�
 
 t1、t2和mutex三个信号量，状态转移图如下：
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/no-starve-mutex.jpeg" alt="进程状态转移" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/no-starve-mutex.jpeg" alt="进程状态转移" style="zoom:50%;" />
 
 #### 32.Common Concurrency Problems
 

@@ -3,6 +3,8 @@
 * [CS144课程网站（包括Pdf、Lab）](https://cs144.github.io/)
 * [我的CS144 Lab笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lab-CS144-Stanford.md)
 
+[toc]
+
 ##### 1-0 The Internet and IP Introduction
 internet layer: Internet Protocol, IP address, packet's path
 
@@ -517,6 +519,39 @@ icmp.code == 0
 * VM的第一跳是到laptop，不会decrement the TTL，因此hop 10对应TTL 9
 
 
+
+### 论文阅读
+
+#### 《Ethane: Taking Control of the Enterprise, SIGCOMM 07》
+
+make networks more manageable and more secure，一种思路是全方位的增加控制，相当于新增一层，只是hide了复杂度；于是提出ethane：
+
+Ethane的思想
+
+* The network should be governed by policies declared over high-level names
+* Policy should determine the path that packets follow
+* The network should enforce a strong binding between a packet
+  and its origin.
+
+Ethane的优势
+
+* Security follows management.
+* Incremental deployability.
+* Significant deployment experience.
+
+设计思想
+
+* Controllers: 决定是否允许packet传输
+* Switches: a simple flow table and a secure channel to the Controller
+  * flow是一个重要的属性概念
+  * Binding: When machines use DHCP to request an IP address, Ethane assigns it knowing to which switch port the machine is connected, enabling Ethane to attribute an arriving packet to a physical port.
+
+
+
+其它细节
+
+* Replicating the Controller: Fault-Tolerance and Scalability
+  * cold-standby (having no network binding state) or warm-standby (having network binding state) modes
 
 
 

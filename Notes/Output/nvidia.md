@@ -20,7 +20,7 @@ CPU: latency-optimized low latency processor
 
 GPU: throughput-optimized high throughput processor
 
-![CPU-GPU](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/CPU-GPU.jpg)
+![CPU-GPU](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/CPU-GPU.jpg)
 
 #### 1.Accelerating Applications with CUDA C/C++
 
@@ -243,11 +243,11 @@ GPU and Programming Model
 * SMs share Global Memory 
 * PCIe / NVLINk 与CPU Chipset交互
 
-![SM](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/SM.jpg)
+![SM](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/SM.jpg)
 
 * 白框：subpartition
 
-![memory-hierarchy](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/memory-hierarchy.png)
+![memory-hierarchy](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/memory-hierarchy.png)
 
 * SM片上单元比L2快3倍，比Global Memory快几十倍 
 
@@ -260,9 +260,9 @@ cudaMemcpyHostToDevice
 * 编译器决定kernel内定义的变量是分配在寄存器上（**没有超过上限的标量**）还是per-thread local memory上
 * 寄存器之间的值不一定是私有的，可以shuffle
 
-![shared-memory](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/shared_memory.png)
+![shared-memory](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/shared_memory.png)
 
-![nvlink](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/nvlink.jpg)
+![nvlink](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/nvlink.jpg)
 
 * 左边的不是全连接结构，NV引入了NVSwitch单元，交换机芯片，支持最多16个GPU的直联
 
@@ -294,7 +294,7 @@ int main()
 
 
 
-![workflow](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/workflow.png)
+![workflow](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/workflow.png)
 
 **dynamic parallelism in cuda**: kernel内执行kernel，但launch kernel开销较大，有几微秒
 
@@ -327,7 +327,7 @@ int main()
 
 unmanaged memory allocation and migration; pinning, or page-locking host memory; and non-default concurrent CUDA streams.
 
-![optimization-workflow](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/optimization-workflow.png)
+![optimization-workflow](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/optimization-workflow.png)
 
 优化工具：
 
@@ -389,11 +389,11 @@ nbody-raw.cu -> nbody-optimized.cu
   * User-managed cache to reduce redundant global memory accesses
   * Avoid non-coalesced access: shared memory没有cache line的概念，e.g. matrix-transposition.cu
 
-![stencil](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/stencil.jpg)
+![stencil](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/stencil.jpg)
 
 Shared memory应用于矩阵乘法：global read次数除以BATCH_SIZE
 
-![warp](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/warp-sharing.png)
+![warp](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/warp-sharing.png)
 
 Manual Device Memory Allocation and Copying
 
@@ -497,11 +497,11 @@ Using Streams to Overlap Data Transfers and Code Execution
   * DP4A and DP2A for int8 and int16 dot productions 
   * Warp matrix function for tensor core operations
 
-![control-flow](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/control-flow.png)
+![control-flow](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/control-flow.png)
 
 ##### CUDA cooperative group 协作线程组
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/cooperative-groups.png" alt="cooperative-groups.png" style="zoom:100%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/cooperative-groups.png" alt="cooperative-groups.png" style="zoom:100%;" />
 
 ```c++
 namespace cooperative_groups{
@@ -548,13 +548,13 @@ public:
 
 
 
-![shuffle](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/shuffle.png)
+![shuffle](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/shuffle.png)
 
 
 
 #### 4.Introduction to Nsight Profiling Tools
 
-![nsight-product](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/nsight-product.png)
+![nsight-product](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/nsight-product.png)
 
 
 ```shell
@@ -577,4 +577,4 @@ Key features
 
 * section is a group of metrics
 
-![warp-scheduler](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/nvidia/warp-scheduler.jpg)
+![warp-scheduler](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/warp-scheduler.jpg)

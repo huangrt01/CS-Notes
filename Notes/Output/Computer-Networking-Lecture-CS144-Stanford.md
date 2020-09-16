@@ -3,11 +3,13 @@
 * [CS144课程网站（包括Pdf、Lab）](https://cs144.github.io/)
 * [我的CS144 Lab笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lab-CS144-Stanford.md)
 
+[toc]
+
 ##### 1-0 The Internet and IP Introduction
 internet layer: Internet Protocol, IP address, packet's path
 
 彩蛋：世一大惺惺相惜
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/005.jpg" alt="Stanford-THU" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/005.jpg" alt="Stanford-THU" style="zoom:60%;" />
 
 用`ping`和`traceroute`看IP地址; 光纤2/3光速，8637km - RTT=86ms
 
@@ -32,10 +34,10 @@ internet layer: Internet Protocol, IP address, packet's path
   * 如果模式是A -- NAT-- (Internet + Rendezvous server) -- NAT -- B，Skype用Relay来间接传递信息
   
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/003.jpg" alt="Lego TCP/IP" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/003.jpg" alt="Lego TCP/IP" style="zoom:60%;" />
 
 ##### 1-2 The four layer Internet model
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/001.jpg" alt="4-layer" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/001.jpg" alt="4-layer" style="zoom:60%;" />
 
 4 layer: 利于reuse
 
@@ -56,7 +58,7 @@ two extra things
 * IP is the "thin waist"   ,这一层的选择最少
 * the 7-layer OSI Model
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/002.jpg" alt="7-layer" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/002.jpg" alt="7-layer" style="zoom:60%;" />
 
 ##### 1-3 The IP Service
 * Link Frame (IP Datagram(IP Data(Data, Hdr), IP Hdr), Link Hdr )
@@ -143,7 +145,7 @@ IPv4:
 * 4 octets  a.b.c.d
 * 子网掩码netmask: 255.128.0.0 前9位，1越少网络越大，same network不需要路由，直接link即可
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/004.jpg" alt="IPv4 Datagram" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/004.jpg" alt="IPv4 Datagram" style="zoom:60%;" />
 
 IPv4 Datagram
 * Total Packet Length: 大端，最多65535bytes, 1400 -> 0x0578
@@ -182,7 +184,7 @@ Addressing Problem: 一个host对应多个IP地址，不容易对应
 * MacOS中保留20min
 * gratuitous request: 要求不存在的mapping，推销自己
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/007.jpg" alt="ARP" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/007.jpg" alt="ARP" style="zoom:60%;" />
 
 e.g. 
 
@@ -260,7 +262,7 @@ Paradox of airplanes
 
 
 **The TCP Segment Format**
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/008.jpg" alt="TCP header" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/008.jpg" alt="TCP header" style="zoom:60%;" />
 
 * [IANA port number](https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml): ssh 22, smtp 23, web 80
 * source port: 初始化用不同的port避免冲突
@@ -268,7 +270,7 @@ Paradox of airplanes
 * HLEN和(TCP options)联系
 * URG应该在ACK前面
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/009.jpg" alt="TCP uniqueness" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/009.jpg" alt="TCP uniqueness" style="zoom:60%;" />
 五个部分，104bit
 
 唯一性
@@ -280,7 +282,7 @@ Paradox of airplanes
 ##### 2-2 UDP service model
 不需要可靠性：app自己控制重传，比如早期版本的NFS(network file system)
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/010.jpg" alt="UDP header" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/010.jpg" alt="UDP header" style="zoom:60%;" />
 * Checksum对于IPv4可选，可以为全0
 * checksum用了IP header，违背layering principle，因为能detect错传
 * UDP header有length字段，而TCP没有，因为TCP对空间要求高，用隐含的方式计算length
@@ -301,7 +303,7 @@ report errors and diagnoise problems about network layer
 
 网络层work的三个因素：IP、Routing Tables、ICMP
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/011.jpg" alt="ICMP" style="zoom:40%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/011.jpg" alt="ICMP" style="zoom:40%;" />
 
 Message的意义见RFC 792
 
@@ -346,9 +348,9 @@ end-to-end check
   * 对于replay，`ctr++`, 具体见[我的密码学笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Cryptography%20I%2C%20Stanford%20University%2C%20Coursera.md)的TLS部分
   
 ##### 2-6 Finite State Machines
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/012.jpg" alt="HTTP Request" style="zoom:40%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/012.jpg" alt="HTTP Request" style="zoom:40%;" />
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/013.jpg" alt="TCP Connection" style="zoom:100%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/013.jpg" alt="TCP Connection" style="zoom:100%;" />
 
 * 非常规路线的处理：比如对于第二个SYN或者FIN信号，接收机选择忽视，具体见`bool TCPReceiver::segment_received(const TCPSegment &seg)`的实现
 
@@ -364,7 +366,7 @@ end-to-end check
   * 解决方案：用一个1-bit counter提供信息
   * assumptions：1）网络不产生重复packets；2）不delay multiple timeouts
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/014.jpg" alt="stop-and-wait" style="zoom:100%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/014.jpg" alt="stop-and-wait" style="zoom:100%;" />
 
 ##### 2-8 Flow Control II: Sliding Window
 * Stop-and-Wait的性能：RTT=50ms, Bottleneck=10Mbps, Ethernet packet length=12Kb => 性能(2%)远远不到瓶颈
@@ -412,7 +414,7 @@ protocol可能的运转方式 (ARQ: automatic repeat request)
 
 ##### 2-10 TCP Header
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/015.jpg" alt="TCP header" style="zoom:100%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/015.jpg" alt="TCP header" style="zoom:100%;" />
 
 
 
@@ -446,7 +448,7 @@ Active opener and Passive opener
 3. server: FIN
 4. client: ACK
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/018.jpg" alt="Clean Teardown" style="zoom:45%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/018.jpg" alt="Clean Teardown" style="zoom:45%;" />
 
 
 
@@ -459,9 +461,9 @@ IP和UDP都是best-effort and unreliable，但是我们不需要担心truncation
 
 
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/016.jpeg" alt="HTTP" style="zoom:45%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/016.jpeg" alt="HTTP" style="zoom:45%;" />
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lecture-CS144-Stanford/017.jpg" alt="HTTP3" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/017.jpg" alt="HTTP3" style="zoom:60%;" />
 
 
 ##### 2-13 TCP/IP -- Kevin Fall
@@ -517,6 +519,39 @@ icmp.code == 0
 * VM的第一跳是到laptop，不会decrement the TTL，因此hop 10对应TTL 9
 
 
+
+### 论文阅读
+
+#### 《Ethane: Taking Control of the Enterprise, SIGCOMM 07》
+
+make networks more manageable and more secure，一种思路是全方位的增加控制，相当于新增一层，只是hide了复杂度；于是提出ethane：
+
+Ethane的思想
+
+* The network should be governed by policies declared over high-level names
+* Policy should determine the path that packets follow
+* The network should enforce a strong binding between a packet
+  and its origin.
+
+Ethane的优势
+
+* Security follows management.
+* Incremental deployability.
+* Significant deployment experience.
+
+设计思想
+
+* Controllers: 决定是否允许packet传输
+* Switches: a simple flow table and a secure channel to the Controller
+  * flow是一个重要的属性概念
+  * Binding: When machines use DHCP to request an IP address, Ethane assigns it knowing to which switch port the machine is connected, enabling Ethane to attribute an arriving packet to a physical port.
+
+
+
+其它细节
+
+* Replicating the Controller: Fault-Tolerance and Scalability
+  * cold-standby (having no network binding state) or warm-standby (having network binding state) modes
 
 
 

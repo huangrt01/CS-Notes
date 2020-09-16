@@ -52,7 +52,7 @@ Linux x86-64进程地址空间
 
 
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/CSAPP/process.jpg" alt="process address space" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/CSAPP/process.jpg" alt="process address space" style="zoom:50%;" />
 
 mode bit (in control register) is set => 内核态
 

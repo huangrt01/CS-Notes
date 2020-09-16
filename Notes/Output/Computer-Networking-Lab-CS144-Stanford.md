@@ -108,12 +108,12 @@ void get_URL(const string &host, const string &path) {
 * 注意`end_input()`的判断条件
 * 用set保存(index, data)数据，便于查找，可以用`lower_bound`查找，代码实现中省略了这一点，采用的是顺序遍历set
 * 细节：`push_substring`的bytes接收范围图
-  * <img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lab-CS144-Stanford/reassembler.png" alt="reassembler" style="zoom:100%;" />
+  * <img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lab-CS144-Stanford/reassembler.png" alt="reassembler" style="zoom:100%;" />
 
 #### lab2: the TCP receiver
 ##### 3.1 Sequence Numbers
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lab-CS144-Stanford/001.jpg" alt="different index" style="zoom:100%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lab-CS144-Stanford/001.jpg" alt="different index" style="zoom:100%;" />
 
 * 利用头文件中的函数简化代码
 * 计算出相对checkpoint的偏移量之后，再转化成离checkpoint最近的点，如果加多了就左移，注意返回值太小无法左移的情形。
@@ -156,19 +156,19 @@ sponge网络库的设计，TCP的测试中利用到状态判断，但具体到se
 
 
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lab-CS144-Stanford/receiver.jpg" alt="receiver" style="zoom:100%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lab-CS144-Stanford/receiver.jpg" alt="receiver" style="zoom:100%;" />
 
 
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lab-CS144-Stanford/sender.jpg" alt="sender" style="zoom:100%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lab-CS144-Stanford/sender.jpg" alt="sender" style="zoom:100%;" />
 
 #### lab4: the summit (TCP in full)
 
 这次Lab是把之前的receiver和sender封装成TCPConnection类，用来进行真实世界的通信，下图有助于直观理解结构。
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lab-CS144-Stanford/dataflow.jpg" alt="TCP dataflow" style="zoom:100%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lab-CS144-Stanford/dataflow.jpg" alt="TCP dataflow" style="zoom:100%;" />
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Computer-Networking-Lab-CS144-Stanford/header.jpg" alt="TCP header" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lab-CS144-Stanford/header.jpg" alt="TCP header" style="zoom:80%;" />
 
 
 

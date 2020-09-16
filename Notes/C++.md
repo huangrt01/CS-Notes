@@ -804,6 +804,7 @@ operator 类型名()
 #### 继承与派生
 
 [Access Modifiers in C++](https://www.geeksforgeeks.org/access-modifiers-in-c/)
+
 * protected: 类似private，但可以被派生类调用
 
 
@@ -898,6 +899,37 @@ class cplus_input{
 //写锁
 std::unique_lock<boost::shared_mutex> lock(filter_mutex_);
 ```
+
+大量读，少量更新，可以用tbb::concurrent_hash_map<key_type, value_type>;
+
+```c++
+{
+	typename map_type::const_accessor cit;
+	bool found = _map.find(cit, key);
+}
+{
+  typename map_type::accessor it;
+  _map.insert(it, key);
+}
+
+using queue_type = tbb::concurrent_bounded_queue<timed_key>;
+_queue.try_push(tk);
+while(_queue.try_pop(tk)){
+  ...
+}
+```
+
+
+
+```c++
+std::mutex mutex_;
+std::condition_variable cond_;
+
+cond_.notify_one();
+cond_.notify_all();
+```
+
+
 
 #### STL
 
@@ -1017,6 +1049,18 @@ printf("Time (seconds): %f\n\n", (float) (end.tv_usec - start.tv_usec + (end.tv_
 
 #endif // __common_h__
 ```
+
+
+
+```c++
+static thread_local std::mt19937 rng(std::random_device{}());
+std::uniform_int_distribution<int> distribution(0, RAND_MAX-1);
+int32_t sleep_time = static_cast<int32_t>(
+        _expire_delta * ((double) distribution(rng)/ (RAND_MAX)) * _expire_num);
+    std::this_thread::sleep_for(std::chrono::seconds(sleep_time));
+```
+
+
 
 
 

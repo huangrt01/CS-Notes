@@ -1289,7 +1289,7 @@ void thr_join() {
     Pthread_mutex_lock(&m);
     while (done == 0)
         Pthread_cond_wait(&c, &m);
-    thread_mutex_unlock(&m);
+    Pthread_mutex_unlock(&m);
 }
 int main(int argc, char*argv[]) {
     printf("parent: begin\n");

@@ -181,7 +181,7 @@ E-mail is particularly problematic, even if PGP signed. It’s not generally for
 
 File security is hard, and operates on many level. What is it you’re trying to secure against?
 
-[![$5 wrench](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Security-Privacy-Cryptography/security.png)](https://xkcd.com/538/)
+[![$5 wrench](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Security-Privacy-Cryptography/security.png)](https://xkcd.com/538/)
 
 - Offline attacks (someone steals your laptop while it’s off): turn on full disk encryption. ([cryptsetup + LUKS](https://wiki.archlinux.org/index.php/Dm-crypt/Encrypting_a_non-root_file_system) on Linux, [BitLocker](https://fossbytes.com/enable-full-disk-encryption-windows-10/) on Windows, [FileVault](https://support.apple.com/en-us/HT204837) on macOS. Note that this won’t help if the attacker *also* has you and really wants your secrets.
 

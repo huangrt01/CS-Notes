@@ -9,9 +9,9 @@
 * 现场面试：准备几个问题
 * 行为面试->技术面试->应聘者提问
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/《剑指offer》笔记/001.jpg" alt="001" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/《剑指offer》笔记/001.jpg" alt="001" style="zoom:50%;" />
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/《剑指offer》笔记/002.jpg" alt="002" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/《剑指offer》笔记/002.jpg" alt="002" style="zoom:50%;" />
 
 * 技能：了解、熟悉、精通
 * 常考点：链表、二叉树、快排

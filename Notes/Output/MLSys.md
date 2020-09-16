@@ -175,7 +175,7 @@ A:
 
 模型并行：参数如何划分？复杂的通信模式
 
-![platforms](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/platforms.jpg)
+![platforms](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/platforms.jpg)
 
 横向拓展：片间高速互联，e.g. TPU
 
@@ -183,7 +183,7 @@ A:
 
 
 
-静态调度与流式执行系统![layers](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/layers.jpg)
+静态调度与流式执行系统![layers](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/layers.jpg)
 
 
 
@@ -192,11 +192,11 @@ OneFlow架构
 * actor及流水线
   * 内存槽，用类似rust的ownership解决内存冲突问题，ownership随状态转移
 
-![memory-pipeline](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/memory-pipeline.jpg)
+![memory-pipeline](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/memory-pipeline.jpg)
 
 * node placement: consistent view
   * SBP, 在op层面实现数据和模型并行 
-![SBP](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/SBP.jpg)
+![SBP](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/SBP.jpg)
 
 
 ### Ray: 动态可编程分布式计算框架
@@ -261,11 +261,11 @@ Stateful edges
 * embed actors in an otherwise stateless task graph
 * enable us to maintain lineage.
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/ray-graph.png" alt="" style="zoom:70%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/ray-graph.png" alt="" style="zoom:70%;" />
 
 The system layer consists of three major components: a global control store, a distributed scheduler, and a distributed object store. 
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/ray-system.png" alt="" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/ray-system.png" alt="" style="zoom:50%;" />
 
 * GCS让系统的任何成分都是stateless的 ，支持fault tolerance，makes it easy to scale the distributed object store and scheduler independently
 
@@ -275,7 +275,7 @@ The system layer consists of three major components: a global control store, a d
 
 **读源码：**https://www.qtmuniao.com/2019/07/28/ray-source-reading-1/
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/ray-state.png" alt="" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/ray-state.png" alt="" style="zoom:50%;" />
 
 src/ray/common/task/scheduling_resources.cc
 
@@ -400,7 +400,7 @@ XDL can be scheduled by multiple resource management platform, like Yarn, and pr
 * I/O
   * Hierarchical sample compression: prefix tree
 
-![prefix-tree](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/MLSys/prefix-tree.jpg)
+![prefix-tree](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/prefix-tree.jpg)
 
 * Workflow pipeline
 

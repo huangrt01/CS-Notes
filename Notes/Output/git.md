@@ -18,7 +18,7 @@
 
 This [XKCD comic](https://xkcd.com/1597/) captures Git’s reputation:
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/git/git.png" alt="git" style="zoom:100%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/git/git.png" alt="git" style="zoom:100%;" />
 
 ##### Git's data model
 * Snapshots: 文件是blob，文件夹是tree，snapshot是top-level tree 
@@ -70,7 +70,7 @@ def load_reference(name_or_id):
 
 ```
 ##### Staging area
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/git/areas.png" alt="areas" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/git/areas.png" alt="areas" style="zoom:80%;" />
 
 * staging area也称作index
 * 和`git add`相关

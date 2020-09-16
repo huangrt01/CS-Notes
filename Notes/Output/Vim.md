@@ -215,7 +215,7 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
     - Manually remove last `,` and add `[` and `]` delimiters
   - [在vimrc中存宏](https://stackoverflow.com/questions/2024443/saving-vim-macros) 
 
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/master/Notes/Vim/vim.png" alt="vim" style="zoom:100%;" />
+<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Vim/vim.png" alt="vim" style="zoom:100%;" />
 
 
 ##### Resources
