@@ -59,12 +59,10 @@ gdb：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(ui
 
 * 特有：start, finish, cond, disable, where
 * `cond 3 this==0xXXX`
-* `gdb --args sleep 20`
+* `gdb --args sleep 20` debug带参数的binary
 * bt(backtrace), frame X 进帧
-
-* `watch -l `同时监视表达式本身和表达式指向的内容
-
-
+* `watch -l ` 同时监视表达式本身和表达式指向的内容
+* `attach $pid` debug正在运行的进程
 
 set print pretty on/off 增加print的可读性
 

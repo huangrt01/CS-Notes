@@ -417,4 +417,25 @@ XDL can be scheduled by multiple resource management platform, like Yarn, and pr
   * Incremental Model Export
   * Feature Expire
 
+#### 《Ethane: Taking control of the enterprise, SIGCOMM 2007》
+
+make networks more manageable and more secure，一种思路是全方位的增加控制，相当于新增一层，只是hide了复杂度；于是提出ethane
+
+ethane的思想：
+* The network should be governed by policies declared over high-
+level names
+* Policy should determine the path that packets follow
+* The network should enforce a strong binding between a packet
+and its origin.
+
+Ethane的优势：
+* Security follows management.
+
+* Incremental deployability.
+
+* Significant deployment experience.
+  
+  
+  
+  
   

@@ -1,5 +1,23 @@
 ### Python
 
+list操作
+
+```python
+list.extend(list)
+list.append(item)
+```
+
+#### ipython
+
+重启kernel，释放GPU内存
+```python
+import IPython
+app = IPython.Application.instance()
+app.kernel.do_shutdown(True)
+```
+
+
+
 ```python
 counters = [Counter.remote() for _ in range(10)]  # 创建10个Counter实例
 ```
@@ -48,3 +66,24 @@ for arg in reversed(sys.argv[1:]):
     print(arg)
 ```
 
+#### pandas
+
+https://pandas.pydata.org/pandas-docs/stable/index.html
+
+#### random
+
+```python
+import random
+index = [i for i in range(X_train.shape[0])]
+random.choice(a)    随机取一个
+random.sample(a, n) 随机取n个
+random.shuffle(index)
+random.randint(0,n)
+
+# 保证同一shuffle顺序
+randnum = random.randint(0,100)
+random.seed(randnum)
+random.shuffle(train_x)
+random.seed(randnum)
+random.shuffle(train_y)
+```

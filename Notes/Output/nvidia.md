@@ -578,3 +578,83 @@ Key features
 * section is a group of metrics
 
 ![warp-scheduler](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/warp-scheduler.jpg)
+
+
+
+#### 5.Lecture: NVIDIA GPU通用推理加速及部署SDK
+
+线上推理加速的思路
+* 模型本身的加速，TensorRT、DL complier
+  * [Layer & Tensor Fusion](https://docs.nvidia.com/deeplearning/tensorrt/best-practices/): 横向/纵向的融合，减少copy显存; layer merge (concatforward)
+  * Weights & Activation Precision Calibration
+    * Symmetric quantization: 超参threshold，超过会截断，提高转换精度
+    * 用KL-divergence来衡量threshold
+
+  * Kernel Auto-Tuning: 找当前硬件下最优的卷积算法、kernels、tensor layouts
+  * Dynamic Tensor Memory: 给层加引用计数 
+
+```c++
+  IBuilderConfig * config = builder->createBuilderConfig(); 
+  config->setFlag(BuilderFlag::kFP16); //INT8 and FP16 can be both set
+```
+
+* 部署服务，CPU or GPU
+
+* Model Parser 解析TensorFlow/Caffe模型
+  * [ONNX Parser](https://github.com/onnx)
+* TensorRT Network Definition API
+  * 自定义算子需要自己写
+
+```c++
+IBuilder* builder = createInferBuilder(gLogger.getTRTLogger());
+INetworkDefinition* network = builder->createNetwork();
+ITensor* data = network->addInput(INPUT_BLOB_NAME, dt, Dims3{1, INPUT_H, INPUT_W});
+IScaleLayer* scale_1 = network->addScale(*data, ScaleMode::kUNIFORM, shift, scale, power);
+IConvolutionLayer* conv2 = network->addConvolution(*scale_1->getOutput(0), 50, DimsHW{5, 5}, weightMap["conv2filter"], weightMap["conv2bias"]);
+conv2->setStride(DimsHW{1, 1});
+ISoftMaxLayer* prob = network->addSoftMax(*conv2->getOutput(0));
+prob->getOutput(0)->setName(OUTPUT_BLOB_NAME); // set output 
+network->markOutput(*prob->getOutput(0)); // mark output
+
+//序列化反序列化
+IHostMemory* trtModelStream = engine->serialize(); //store model to disk
+//<...>
+IRuntime* runtime = createInferRuntime(gLogger.getTRTLogger());
+ICudaEngine* engine = runtime->deserializeCudaEngine(trtModelStream->data(), trtModelStream->size(), nullptr);
+IExecutionContext* context = engine->createExecutionContext();
+```
+
+
+
+TF-TRT (TensorFlow integration with TensorRT) parses the frozen TF graph or saved model, and **converts each supported subgraph to a TRT optimized node** (TRTEngineOp), allowing TF to execute the remaining graph.
+
+```c++
+# Set Precision
+conversion_params = trt.DEFAULT_TRT_CONVERSION_PARAMS._replace(
+precision_mode=trt.TrtPrecisionMode.INT8)
+# Convert to TF-TRT Graph
+converter = trt.TrtGraphConverterV2(input_saved_model_dir=input_saved_model_dir, conversion_params=conversion_params)
+# INT8 Calibration
+converter.convert(calibration_input_fn=my_calibration_fn)
+# Run Inference 
+converter.save(output_saved_model_dir)
+```
+
+
+
+Triton Inference Server
+
+* Client/server在本地：Inputs/outputs needed to be passed to/from Triton are stored in system/CUDA shared memory. Reduces HTTP/gRPC overhead
+
+![utilize-gpu](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/utilize-gpu.png)
+
+```
+dynamic_batching {
+	preferred_batch_size:[4,8],
+	max_queue_delay_microseconds: 100,
+}
+```
+
+Case Study: NVIDA BERT Solution: [FasterTransformer2.0](https://github.com/NVIDIA/DeepLearningExamples/tree/master/FasterTransformer) and [TensorRT](https://github.com/NVIDIA/DeepLearningExamples/tree/master/TensorFlow/LanguageModeling/BERT/trt)
+
+
