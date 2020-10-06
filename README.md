@@ -64,9 +64,9 @@
 
 #### [《深度学习推荐系统》—— 王喆](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F%E2%80%94%E7%8E%8B%E5%96%86.md)
 
-#### [Nvidia courses](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/nvidia.md)
-* Accelerating Applications with CUDA C/C++
-* Basic Deep Learning
+#### Nvidia courses
+* [Accelerating Applications with CUDA C/C++](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/nvidia.md)
+* [Basic Deep Learning](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Machine-Learning.md)
 
 ### 密码学
 
