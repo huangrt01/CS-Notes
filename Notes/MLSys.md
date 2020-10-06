@@ -301,6 +301,45 @@ src/ray/raylet/scheduling_policy.cc
 
 #### 《Wide & Deep learning for Recommender Systems, RecSys 17》
 
+1.Introduction
+* Wide ~ Memorization: 模型直接学习并利用历史数据中物品或者特征的“共现频率”的能力
+* Deep ~ Generalization: 模型传递特征的相关性，以及发掘稀疏甚至从未出现过的稀有特征与最终标签相关性的能力
+* Generalized linear models with nonlinear feature transformations
+* cross-product transformations: 特征工程的概念，交叉积变换，缺点是无法generalize没出现过的query-item feature pairs
+
+问题：输入是稀疏高秩矩阵，缺少interactions，难以利用它学到合适的低维embedding
+
+3.WIDE&DEEP Learning
+
+3.1 The Wide Component
+
+利用cross-product transformation提供多个特征的非线性
+
+<->  对比：[Deep Neural Networks for YouTube Recommendations ] 用平方和平方根项提供单个特征的非线性
+
+3.3 Joint Training of Wide & Deep Model
+
+注意辨析joint training和ensemble的区别
+* 前者是共同训练，后者不是
+* 后者模型可以更大
+* 前者，Wide只需要给Deep补少量cross-product feature transformations
+
+4.System Implementation 4.2 Model Training
+* warm-starting system
+* dry run
+* sanity check
+* 概念：AUC：ROC曲线下方的面积，ROC横坐标FPR，纵坐标TPR
+* 资源：
+  * 这个大佬的专栏很实用，讲解tensorflow和推荐系统，https://zhuanlan.zhihu.com/learningdeep
+* 思考：可否联系到IRLS方法，最优化稀疏矩阵的秩，用一个类似的矩阵学习秩的表示
+
+
+
+**改进：Deep&Cross模型**
+
+* 多层交叉层: $x_{l+1}=x_0x_l^Tw_l+b_l+x_l$ 
+  * 参数引入较为克制，增强模型的非线性学习能力
+
 #### 《A Hitchhiker's Guide On Distributed Training Of Deep Neural Networks, JPDC 18》
 
 #### 《TFX: A TensorFlow-based production-scale machine learning platform》
@@ -347,7 +386,7 @@ model container: 无状态服务
 boundary erosion, entanglement, hidden feedback loops, undeclared consumers, data dependencies, configuration issues, changes in the external world, and a variety of system-level anti-patterns.
 
 2. Complex Models Erode Boundaries
-* Entanglement: 即使多模型/超参的配置独立，但效果互相影响
+* Entanglement: 即使多模型/超参的配置独立，效果也会互相影响
 * Correction Cascade: 模型级联是hidden debt
 * Undeclared Consumers: 需要SLA(service-level agreement)
 

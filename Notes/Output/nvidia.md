@@ -20,7 +20,7 @@ CPU: latency-optimized low latency processor
 
 GPU: throughput-optimized high throughput processor
 
-![CPU-GPU](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/CPU-GPU.jpg)
+![CPU-GPU](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/CPU-GPU.png)
 
 #### 1.Accelerating Applications with CUDA C/C++
 
@@ -243,7 +243,7 @@ GPU and Programming Model
 * SMs share Global Memory 
 * PCIe / NVLINk 与CPU Chipset交互
 
-![SM](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/SM.jpg)
+![SM](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/SM.png)
 
 * 白框：subpartition
 
@@ -262,7 +262,7 @@ cudaMemcpyHostToDevice
 
 ![shared-memory](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/shared_memory.png)
 
-![nvlink](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/nvlink.jpg)
+![nvlink](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/nvlink.png)
 
 * 左边的不是全连接结构，NV引入了NVSwitch单元，交换机芯片，支持最多16个GPU的直联
 
@@ -389,7 +389,7 @@ nbody-raw.cu -> nbody-optimized.cu
   * User-managed cache to reduce redundant global memory accesses
   * Avoid non-coalesced access: shared memory没有cache line的概念，e.g. matrix-transposition.cu
 
-![stencil](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/stencil.jpg)
+![stencil](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/stencil.png)
 
 Shared memory应用于矩阵乘法：global read次数除以BATCH_SIZE
 
@@ -577,7 +577,7 @@ Key features
 
 * section is a group of metrics
 
-![warp-scheduler](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/warp-scheduler.jpg)
+![warp-scheduler](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/warp-scheduler.png)
 
 
 
