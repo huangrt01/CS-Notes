@@ -62,9 +62,19 @@ if __name__ == '__main__':
 
 ```python
 import sys
+import os
 for arg in reversed(sys.argv[1:]):
     print(arg)
+    
+# 当前路径插入系统路径最高优先级，有效解决部分import问题
+sys.path.insert(0,os.getcwd())
 ```
+
+```python
+os.path.join(dir,file)
+```
+
+
 
 #### pandas
 

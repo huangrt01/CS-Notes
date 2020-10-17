@@ -220,7 +220,7 @@ One-off system：针对RL任务的特化，1）training, serving, simulation一�
 * 超参调优库(Tune):  支持任意ML框架：PyTorch，XGBoost， MXNet， Keras，集成了很多优化器的库和算法， 通过TensorBoard做显示，可以和Ray Serve无缝结合
 * Training with RaySGD: 优势在于能和其它Ray lib无缝结合，并且实现了分布式的dataset
 
-（2）Ray的底层能力：大厂结合Ray自研框架的lecture在这里：[蚂蚁金服Ray Forward推广](https://tech.antfin.com/community/activities/698/review)，还没来得及听
+（2）Ray的底层能力：大厂结合Ray自研框架的lecture在这里：[蚂蚁金服Ray Forward推广](https://tech.antfin.com/community/activities/698/review)
 
 3.Ray对应于我们系统中的多个层次，它的底层能力对应于资源管理层REAM (包括Flink, Yarn等)，上游生态对应于我们的LagrangeX
 
@@ -328,6 +328,9 @@ src/ray/raylet/scheduling_policy.cc
 * warm-starting system
 * dry run
 * sanity check
+
+Appendix
+
 * 概念：AUC：ROC曲线下方的面积，ROC横坐标FPR，纵坐标TPR
 * 资源：
   * 这个大佬的专栏很实用，讲解tensorflow和推荐系统，https://zhuanlan.zhihu.com/learningdeep
@@ -339,6 +342,7 @@ src/ray/raylet/scheduling_policy.cc
 
 * 多层交叉层:  <img src="https://www.zhihu.com/equation?tex=x_%7Bl%2B1%7D%3Dx_0x_l%5ETw_l%2Bb_l%2Bx_l" alt="x_{l+1}=x_0x_l^Tw_l+b_l+x_l" class="ee_img tr_noresize" eeimg="1">  
   * 参数引入较为克制，增强模型的非线性学习能力
+  * 解决了Wide&Deep模型人工组合特征的问题
 
 #### 《A Hitchhiker's Guide On Distributed Training Of Deep Neural Networks, JPDC 18》
 

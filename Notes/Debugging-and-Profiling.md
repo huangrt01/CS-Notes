@@ -76,6 +76,8 @@ ptype可以打印变量类型
   
 //显示vector内部值
 (gdb) p ((FetchPsContext*) *(fetch_ps_ctxs_._M_impl._M_start+0))->model_configs
+  
+  
 ```
 
 
