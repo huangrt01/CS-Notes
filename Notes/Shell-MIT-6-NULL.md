@@ -676,6 +676,7 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
 * disown
 * diff：[Linux中diff的渊源](https://www.cnblogs.com/moxiaopeng/articles/4853352.html)
 * dmesg: kernel log
+* `du -b $file`
 
 #### e
 * echo: 输出输入，空格分割

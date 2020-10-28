@@ -72,17 +72,30 @@ ptype可以打印变量类型
 
 ```c++
 //利用类型转换显示智能指针对象指向的变量
-(gdb) p ((matrix::io::ModelMeta*)model_meta)->meta_
+(gdb) p ((Object*) A_ptr)->attribute
   
 //显示vector内部值
-(gdb) p ((FetchPsContext*) *(fetch_ps_ctxs_._M_impl._M_start+0))->model_configs
+(A_vec._M_impl._M_start+0).attribute
   
   
 ```
 
+[gdb的多线程调试](https://blog.csdn.net/lf_2016/article/details/59741705)
 
+* info threads:显示当前可调试的所有线程,GDB会给每一个线程都分配一个ID。前面有*的线程是当前正在调试的线程。
 
+* thread ID:切换当前调试的线程为指定ID的线程。
 
+* thread apply all command:让所有被调试的线程都执行command命令。
+
+* thread apply ID1 ID2 … command:让线程编号是ID1，ID2…等等的线程都执行command命令。
+
+* set scheduler-locking on|off|step:在使用step或continue命令调试当前被调试线程的时候，其他线程也是同时执行的，如果我们只想要被调试的线程执行，而其他线程停止等待，那就要锁定要调试的线程，只让他运行。
+  * off:不锁定任何线程，所有线程都执行。
+  * on:只有当前被调试的线程会执行。
+  * step:阻止其他线程在当前线程单步调试的时候抢占当前线程。只有当next、continue、util以及finish的时候，其他线程才会获得重新运行的
+
+* show scheduler-locking：查看当前锁定线程的模式。
 
 
 
