@@ -577,8 +577,6 @@ private:
 
 
 
-
-
 ##### Item 17: Understand special member function generation
 
 问题的来源：memberwise move的思路，move能move的，剩下的copy
@@ -610,16 +608,146 @@ TCPConnection &operator=(const TCPConnection &other) = delete;
 
 Note: Member function templates never suppress generation of special member functions.
 
-
 #### chpt 4: Smart Pointers
+
+##### Item 18: Use std::unique_ptr for exclusive-ownership resource management.
+
+* unique_ptr is a move-only type
+* also applied to the Pimpl Idiom (Item 22)
+* 还有`std::unique_ptr<T[]>`
+  * About the only situation I can conceive of when a `std::unique_ptr<T[]>` would make sense would be when you’re using a C-like API that returns a raw pointer to a heap array that you assume ownership of.
+* `std::shared_ptr<Investment> sp = makeInvestment( arguments );` 
+
+```c++
+class Investment {
+public:
+  virtual ~Investment();
+};
+class Stock:
+public Investment { ... };
+class Bond:
+public Investment { ... };
+class RealEstate:
+public Investment { ... };
+
+template<typename... Ts> std::unique_ptr<Investment> makeInvestment(Ts&&... params);
+
+{
+	auto pInvestment = // pInvestment is of type 
+		makeInvestment( arguments ); // std::unique_ptr<Investment>
+}// destroy *pInvestment
+```
+
+```c++
+auto delInvmt = [](Investment* pInvestment)
+                {
+                  makeLogEntry(pInvestment);
+                  delete pInvestment;
+                };
+
+template<typename... Ts>
+std::unique_ptr<Investment, decltype(delInvmt)> // 如果是C++14，返回值可以用auto，delInvmt的定义也可放入makeInvestment函数内
+makeInvestment(Ts&&... params) {
+	std::unique_ptr<Investment, decltype(delInvmt)> pInv(nullptr, delInvmt);
+  if ( /* a Stock object should be created */ ){
+		pInv.reset(new Stock(std::forward<Ts>(params)...)); 
+  }
+  else if ( /* a Bond object should be created */ ){
+		pInv.reset(new Bond(std::forward<Ts>(params)...)); 
+  }
+  else if ( /* a RealEstate object should be created */ ){
+		pInv.reset(new RealEstate(std::forward<Ts>(params)...)); 
+  }
+  return pInv;
+}
+
+```
+
+代码细节：
+
+* `std::forward`: 为了在使用右值引用参数的函数模板中解决参数的perfect-forward问题。(Item 25), [reference](https://blog.csdn.net/zhangsj1007/article/details/81149719?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-6.edu_weight&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-6.edu_weight)
+* unique_ptr可以作为函数返回值
+* 不能直接给unique_ptr赋值裸指针，`reset(new)`是标准用法
+* 引入deleter后unique_ptr的size变化：如果是函数指针，1 word -> 2 word；如果是函数对象，取决于函数内部的state
+
+
 
 ##### Item 19: Use std::shared_ptr for shared-ownership resource management.
 
+dynamically allocated control blocks, arbitrarily large deleters and allocators, virtual function machinery, and atomic reference count manipulations
+
 [shared_ptr的使用](https://blog.csdn.net/qq_33266987/article/details/78784852), [一篇看不太懂的shared_ptr使用技巧](https://gist.github.com/BruceChen7/8cccb33ea6fbc73a0651c4bce3166806)
 
-Warn:
+As with garbage collection, clients need not concern themselves with managing the life‐ time of pointed-to objects, but as with destructors, the timing of the objects’ destruc‐ tion is deterministic.
 
-`std::vector<std::shared_ptr<A> > a_vec(n, std::make_shared<A>());`这个用法是错的，会给里面元素赋值同一个智能指针，正确写法如下：
+reference count的影响：
+
+* std::shared_ptrs are twice the size of a raw pointer
+* Memory for the reference count must be dynamically allocated，除非用`std::make_shared`
+* Increments and decrements of the reference count must be atomic
+
+=> move assignment is faster than copy assignment
+
+![shared-ptr](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/C++/shared-ptr.png)
+
+对于custom deleter，和unique_ptr的区别在于deleter不影响shared_ptr的类型
+
+* 这样便于函数传参、放入同一容器
+* 始终two words size：
+
+```c++
+auto loggingDel = [](Widget *pw){
+                    makeLogEntry(pw);
+										delete pw; 
+									};
+std::unique_ptr<Widget, decltype(loggingDel) > upw(new Widget, loggingDel);
+std::shared_ptr<Widget> spw(new Widget, loggingDel);
+// deleter type is not part of ptr type
+```
+
+关于control block的rules
+
+* std::make_shared (see Item 21) always creates a control block
+* A control block is created when a std::shared_ptr is constructed from a unique-ownership pointer (i.e., a std::unique_ptr or std::auto_ptr).
+* When a std::shared_ptr constructor is called with a raw pointer, it creates a control block
+
+=> 
+
+* 用同一个裸指针创建两个shared_ptr是undefined behaviour
+  * 正确写法：
+
+```c++
+std::shared_ptr<Widget> spw1(new Widget, // direct use of new loggingDel);
+std::shared_ptr<Widget> spw2(spw1);
+```
+
+* 类似地，不要用this指针创建shared_ptr
+
+  * 正确写法：*The Curiously Recurring Template Pattern (CRTP)*
+  * 为了防止process一个不存在shared_ptr的对象，常把ctors设成private
+
+```c++
+class Widget: public std::enable_shared_from_this<Widget> {
+public:
+  // factory function that perfect-forwards args to a private ctor
+	template<typename... Ts>
+	static std::shared_ptr<Widget> create(Ts&&... params);
+	void process(){
+    processedWidgets.emplace_back(shared_from_this());
+  }
+private:
+  Widget Widget();
+  Widget(Widget &&other);
+  Widget(const Widget &other);
+  TCPConnection() = delete;
+};
+```
+
+
+
+**Warn:**
+
+* `std::vector<std::shared_ptr<A> > a_vec(n, std::make_shared<A>());`这个用法是错的，会给里面元素赋值同一个智能指针，正确写法如下：
 
 ```c++
 std::vector<std::shared_ptr<A>> a(size);
@@ -627,6 +755,9 @@ std::for_each(std::begin(a), std::end(a),[](std::shared_ptr<A> &ptr) {
                     ptr = std::make_shared<A>();
 ```
 
+* shared_ptr没有array的版本，一律建议用std::vector
+
+##### Item 20: Use std::weak_ptr for std::shared_ptr-like pointers that can dangle.
 
 
 
@@ -692,6 +823,8 @@ getopt函数处理参数，用法参照[tsh.c](https://github.com/huangrt01/CSAP
 * 从`int *p=(int *)malloc(sizeof(int));`到`int *p=new int[10]`
 * 二维数组的定义：`TYPE(*p)[N] = new TYPE[][N];`，要指出行数
 * 复制构造函数：常引用
+* 析构函数
+  * 对象的destructor不被call的情形：Most stem from abnormal program termination. If an exception propagates out of a thread’s primary function (e.g., main, for the program’s initial thread) or if a noexcept specifi‐ cation is violated (see Item 14), local objects may not be destroyed, and if `std::abort` or an exit function (i.e., `std::_Exit`, `std::exit`, or `std::quick_exit`) is called, they definitely won’t be.
 * 虚析构函数    =>对象内有虚函数表，指向虚函数表的指针：32位系统4字节，64位系统8字节
 * 虚基类偏移量表指针
 

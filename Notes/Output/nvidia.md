@@ -552,7 +552,7 @@ public:
 
 
 
-#### 4.Introduction to Nsight Profiling Tools
+#### 4.Lecture: Introduction to Nsight Profiling Tools
 
 ![nsight-product](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/nsight-product.png)
 
@@ -658,3 +658,83 @@ dynamic_batching {
 Case Study: NVIDA BERT Solution: [FasterTransformer2.0](https://github.com/NVIDIA/DeepLearningExamples/tree/master/FasterTransformer) and [TensorRT](https://github.com/NVIDIA/DeepLearningExamples/tree/master/TensorFlow/LanguageModeling/BERT/trt)
 
 
+
+#### 6.Lecture: NVIDIA ASR & TTS SOLUTIONS
+
+#####  ASR WFST decoding on GPU
+
+ASR Pipeline
+* 多级的转换：speech -> phoneme -> character -> word -> sentence
+  * 即使是深度学习兴起，工业界少有用e2e
+  * 多级带来海量choices，需要构建一个decoder解决识别任务(a search problem)
+* ASR system overview
+
+![ASR-system](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/ASR-system.png)
+
+*Q: How do we combine HMM, Lexicon & LM together?*
+
+*A: WFST (Weighted Finite State Transducer)*
+
+
+
+WFST是一种图的表示方式，能通用地表示上述三种模型，然后这三张图可以合并。
+
+* HMM的输出是phoneme的输入，phoneme的输出是language model的输入
+
+* WFST Decoding: 图的最短路径问题，Token Pathing，Traverse the graph by copying token
+
+Kaldi CUDA decoding pipeline
+
+* WFST Decoding逻辑判断和对象copy较多，之前很长时间之后CPU实现
+* GPU DECODE CHALLENGES
+  * Dynamic workload
+    * Amount of parallelism varies greatly throughout decode process
+    * Can have few or many candidates moving from frame to frame
+  * Limited parallelism
+    * Even with many candidates, the amount of parallelism is still far smaller to saturate a GPU
+  * Complex data structure
+    * Need a GPU-friendly data layout to obtain high performance on GPU
+* CUDA DECODER
+  * Operate FST on GPU
+    * CudaFst takes ~1/3 of its original size
+  * Accelerate decoding by parallelization
+    * Batch processing: batch不同语句的chunks，支持context switch
+    * Token Passing in parallel
+  * Process in streaming manner
+* ASR GPU PIPELINE: e2e acceleration, feature extraction + Acoustic Model + Language Model
+  * 结合Triton Inference Server
+
+
+![asr-pipeline](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/asr-pipeline.png)
+
+
+
+Reference:
+
+- Blogs: https://developer.nvidia.com/blog/gpu-accelerated-speech-to-text-with-kaldi-a-tutorial-on-getting-started/
+- Kaldi integration with Triton: https://github.com/NVIDIA/DeepLearningExamples/tree/master/Kaldi/SpeechRecognition
+- Kaldi GPU decoder
+  - NGC: nvcr.io/nvidia/kaldi:20.08-py3
+  - Kaldi github: github.com/kaldi-asr/src/cudadecoder
+
+
+
+##### Text To Speech(TTS) Synthesis
+
+Modern TTS Solution
+
+* Synthesizer: TACOTRON 2模型，合成发音特征
+* Vocoder：声码器 WAVENET、WAVEGLOW
+  * 思路：利用可逆网络生成声音, affine coupling layer很关键
+
+![waveglow](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/waveglow.png)
+
+
+
+APEX ～ Mixed Precision Training
+
+BERT
+
+* Challenge: polyphone disambiguation, prodisic structure prediction
+
+* BERT Optimization: 对self-attention layer做kernel fusion
