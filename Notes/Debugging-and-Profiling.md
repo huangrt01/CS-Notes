@@ -195,6 +195,7 @@ sudo perf report
 
 * [Valgrind](https://valgrind.org/)
 * `gdb`
+* [ps_mem的使用](https://linux.cn/article-8639-1.html)
 
 **Visualization**
 

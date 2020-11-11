@@ -130,6 +130,12 @@ plugin: [推荐网站](https://vimawesome.com/)，git clone到`~/.vim/pack/vendo
 
 ##### Vim的其它特性积累
 
+Q: 如果文件太大打不开怎么办？
+
+A: 先`grep -nr $target $FILE`获取行号，然后`vim $FILE +N`进入定位所在。
+
+
+
 buffer操作：` :ls,:b num, :bn（下一个）, :bp（前一个）, :b#(上次的buffer) `
 
 window操作： `:sp / :vsp` split window，`C-w + hjkl`切换

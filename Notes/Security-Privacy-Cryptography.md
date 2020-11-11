@@ -224,9 +224,22 @@ If you’re using Firefox, enable [Multi-Account Containers](https://support.moz
 * [A Graduate Course In Applied Cryptography](https://toc.cryptobook.us/)
 * [A Computational Introduction to Number Theory and Algebra](https://www.shoup.net/ntb/)
 
+
+
+### Potpourri
+
+* SSRF (Server-Side Request Forgery) attack
+  * 本质上，不允许访问内网资源即可修复，但可能会被301/302/307/308重定向、DNS重绑定攻破，修复的时候有可能手抖。
+  * 方案：可以用安全开发包，从传输层彻底断掉内网请求，提供自定义黑白名单功能
+
+* RCE (Remote Code Execution) attach
+  * 根本原因：开发者使用python的eval进行json解析，而本身eval是用来执行一个字符串表达式，并返回表达式的值，这意味着可以执行任何python代码，从而执行系统命令。
+  * 方案：通过AST Node类型识别，干掉不安全的执行
+
+* 任意文件读取/下载漏洞
+* SQL注入漏洞
+  * 编码不规范引发。攻击者拼接SQL片段，通过返回包内容的大小，逐步获取数据库的内容
+
 ##### Inbox:
 
 配wireguard
-
-
-

@@ -608,6 +608,10 @@ TCPConnection &operator=(const TCPConnection &other) = delete;
 
 Note: Member function templates never suppress generation of special member functions.
 
+
+
+
+
 #### chpt 4: Smart Pointers
 
 ##### Item 18: Use std::unique_ptr for exclusive-ownership resource management.
@@ -755,9 +759,188 @@ std::for_each(std::begin(a), std::end(a),[](std::shared_ptr<A> &ptr) {
                     ptr = std::make_shared<A>();
 ```
 
-* shared_ptr没有array的版本，一律建议用std::vector
+* shared_ptr没有array的版本。一律建议用std::vector
+* shared_ptr不能循环指向，会永不析构内存泄漏
+
+
 
 ##### Item 20: Use std::weak_ptr for std::shared_ptr-like pointers that can dangle.
+
+weak_ptr指示shared_ptr是否dangle，但不能直接dereference，需要一个原子操作(lock)，衔接判断和取值
+
+* Potential use cases for `std::weak_ptr` include caching, observer lists, and the prevention of std::shared_ptr cycles.
+
+```c++
+auto spw = std::make_shared<Widget>();
+std::weak_ptr<Widget> wpw(spw);
+spw = nullptr;
+if (wpw.expired()) ...
+auto spw2 = wpw.lock();
+std::shared_ptr<Widget> spw3(wpw); // if wpw's expired, throw std::bad_weak_ptr
+```
+
+应用：读写cache，自动删去不再使用的对象
+
+```c++
+std::unique_ptr<const Widget> loadWidget(WidgetID id);
+```
+
+=>
+
+```c++
+std::shared_ptr<const Widget> fastLoadWidget(WidgetID id) {
+static std::unordered_map<WidgetID, std::weak_ptr<const Widget>> cache;
+auto objPtr = cache[id].lock();
+  if (!objPtr) {
+    objPtr = loadWidget(id);
+    cache[id] = objPtr;
+}
+  return objPtr;
+}
+
+//优化空间：删除cache内不用的weak_ptr
+```
+
+
+
+##### Item 21: Prefer **std::make_unique** and **std::make_shared** to direct use of **new**.
+
+C++14没有`make_unique`
+
+```c++
+template<typename T, typename... Ts> std::unique_ptr<T> make_unique(Ts&&... params) {
+return std::unique_ptr<T>(new T(std::forward<Ts>(params)...)); }
+```
+
+```c++
+std::allocate_shared
+auto spw1(std::make_shared<Widget>());   //能用auto
+```
+
+
+
+`make_shared`优点
+
+* 不用的话，有潜在的内存泄漏风险，和异常安全性有关
+  * 先new再创建shared_ptr，如果在这中间computePriority抛出异常，则内存泄漏
+
+```c++
+processWidget(std::shared_ptr<Widget>(new Widget), computePriority());
+```
+
+* `make_shared`更高效，一次分配对象和control block的内存
+
+`make_shared`的缺点
+
+* deleter
+* `make_shared`的perfect forwarding code用`()`，而非`{}`; `{}`只能用new，除非参考Item 2
+```c++
+// create std::initializer_list
+auto initList = { 10, 20 };
+// create std::vector using std::initializer_list ctor
+auto spv = std::make_shared<std::vector<int>>(initList);
+```
+
+* using make functions to create objects of types with class-specific versions of operator new and operator delete is typically a poor idea. 因为只能new/delete本对象长度的内存，而非加上control block的
+* shared_ptr的场景，必须要所有相关weak_ptr全destroy，这块内存才会释放
+
+因为上述原因，想用new
+```c++
+std::shared_ptr<Widget> spw(new Widget, cusDel);
+processWidget(std::move(spw), computePriority()); // both efficient and exception safe
+```
+
+##### Item 22: When using the Pimpl Idiom, define special member functions in the implementation file.
+
+设计模式：减少client（只include .h文件）的相关编译
+
+`widget.h`
+
+```c++
+class Widget {
+public:
+	Widget(); 
+	~Widget(); 
+	...
+private:
+  struct Impl;
+  Impl *pImpl;
+};
+```
+
+`widget.cpp`
+
+```c++
+#include "widget.h" 
+#include "gadget.h" 
+#include <string> 
+#include <vector>
+struct Widget::Impl {
+  std::string name;
+  std::vector<double> data;
+  Gadget g1, g2, g3;
+};
+Widget::Widget() : pImpl(new Impl) {}
+Widget::~Widget() { delete pImpl; }
+```
+
+**新的用`unique_ptr`的版本**
+
+* 不要在.h文件里generate析构函数
+
+`widget.h`
+
+```c++
+class Widget {
+public:
+	Widget(); 
+  ~Widget();
+  Widget(Widget&& rhs);
+  Widget& operator=(Widget&& rhs);
+private:
+  struct Impl;
+  std::unique_ptr<Impl> pImpl;
+};
+```
+
+`widget.cpp`
+
+```c++
+#include "widget.h" 
+#include "gadget.h" 
+#include <string> 
+#include <vector>
+struct Widget::Impl {
+  std::string name;
+  std::vector<double> data;
+  Gadget g1, g2, g3;
+};
+Widget::Widget(): pImpl(std::make_unique<Impl>()) {}
+Widget::~Widget() = default;
+Widget::Widget(Widget&& rhs) = default;
+Widget& Widget::operator=(Widget&& rhs) = default;
+Widget::Widget(const Widget& rhs)
+: pImpl(std::make_unique<Impl>(*rhs.pImpl)) {}
+Widget& Widget::operator=(const Widget& rhs)
+{
+	*pImpl = *rhs.pImpl;
+  return *this;
+}
+```
+
+如果是shared_ptr，则不需要做任何操作，本质上是因为unique_ptr的deleter在类型定义中，为了更高效的runtime行为，隐性地generate一些function
+
+
+
+
+
+#### chpt 5 Rvalue References, Move Semantics, and Perfect Forwarding
+
+
+
+##### Item 23: Understand **std::move** and **std::forward**.
+
+
 
 
 
