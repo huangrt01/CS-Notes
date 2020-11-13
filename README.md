@@ -1,5 +1,5 @@
 ## CS-Notes
-* 我的自学笔记，在学习shell和MLSys，整理C++、算法、操作系统，后续学习分布式系统，终身更新。
+* 我的自学笔记，在学习MLSys和C++，整理算法、操作系统，后续学习分布式系统，终身更新。
 * 我不是贵系oi出身的大神，目前在以一个初学者的心态补习计算机知识，学习路径和心得可能更值得大家借鉴。
 * 欢迎交流任何问题，知乎咨询满意率100%，私信交流也可，力所能及的都会回复，有代表性的问题会加进本仓库分享。
 
@@ -49,7 +49,7 @@
 #### [Stanford-CS144-Lecture](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lecture-CS144-Stanford.md) ■■■■□□□□□□
 
 #### [Stanford-CS144-Lab](https://github.com/huangrt01/TCP-Lab) ■■■■■■■□□□
-* an elegant implementation of TCP protocal
+* an elegant implementation of TCP protocol 
 
 #### [Computer-Networking-A-Top-Down-Approach](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-A-Top-Down-Approach.md) □□□□□□□□□□
 
