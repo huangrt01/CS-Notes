@@ -74,7 +74,17 @@ sys.path.insert(0,os.getcwd())
 os.path.join(dir,file)
 ```
 
+#### imp
+[What does the first argument of the imp.load_source method do?
+](https://stackoverflow.com/questions/31773310/what-does-the-first-argument-of-the-imp-load-source-method-do)
+```python
+import imp
+var_file = imp.load_source('var', file_path)
+object = var_file.inside_object()
 
+import var
+object = var.inside_object()
+```
 
 #### pandas
 
@@ -96,4 +106,28 @@ random.seed(randnum)
 random.shuffle(train_x)
 random.seed(randnum)
 random.shuffle(train_y)
+```
+
+
+
+#### 网络
+
+* python传文件
+
+```
+tar -cvf file.tar file
+python -m SimpleHTTPServer 99**
+# python3 -m http.server 99**
+wget **.**.**.**:99**/tf_model.tar
+tar -xvf file.tar
+```
+
+
+
+#### 代码风格
+* format
+
+```
+pip install autopep8
+python -m autopep8 -i -r $folder
 ```

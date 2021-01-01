@@ -103,12 +103,12 @@ done
 
 ```
 * 2>重定向stderr；引申：>&2，重定向到stderr
-* -ne，更多的查看man test
+* `-ne`，更多的查看man test，比如`-n 文件存在为真 -z 不存在为真`
 * “test command”， \[\[和\[的区别：http://mywiki.wooledge.org/BashFAQ/031 ，[[是compound command，存在special parsing context，寻找reserved words or control operators 
 
 ##### shell globbing 通配
 * wildcard通配符：?和* 	`ls *.sh`
-* {}: `mv *{.py,.sh} folder`
+* {}: `mv *{.py,.sh} folder`, `mv abc{000..120}* folder`
 * `touch {foo,bar}/{a..h}`
 
 * 利用[shellcheck](https://github.com/koalaman/shellcheck)检查shell scripts的错误
@@ -530,9 +530,11 @@ pidwait(){
 
 e.g. sshd, systemd
 
-`systemctl status`
+`systemctl --user status`
 
 Systemd can be interacted with the `systemctl` command in order to `enable`, `disable`, `start`, `stop`, `restart` or check the `status` of services (those are the `systemctl` commands).
+
+* 如果出现端口占用，可以先stop再disable相关service
 
 [systemd入门教程](https://www.ruanyifeng.com/blog/2016/03/systemd-tutorial-commands.html)
 
@@ -590,6 +592,10 @@ Command-line tools vary a lot, and you will often want to check out their `man` 
 - Create a menu bar button that automatically lays out windows in a specific layout
 - Mute your speaker when you arrive in lab (by detecting the WiFi network)
 - Show you a warning if you’ve accidentally taken your friend’s power supply
+
+```
+command + option + 方向键
+```
 
 resources:
 - [Learn Lua in Y minutes](https://learnxinyminutes.com/docs/lua/)
@@ -653,7 +659,13 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
 ### Linux命令按字母分类
 #### a
 * awk: 一种控制台编程工具，寻找和处理pattern
+  * 入门[wiki](https://zh.wikipedia.org/wiki/AWK)
+  * `awk ' <img src="https://www.zhihu.com/equation?tex=NF%21~/%5C.so/%7Bnext%7D%20%7B" alt="NF!~/\.so/{next} {" class="ee_img tr_noresize" eeimg="1"> 0= <img src="https://www.zhihu.com/equation?tex=NF%7D%20%21a%5B" alt="NF} !a[" class="ee_img tr_noresize" eeimg="1"> 0]++' /proc/1585728/maps`
+    * `$NF!~/\.so/{next}` – If the last column doesn’t contain “*.so*“, we ignore it
+    * `{ <img src="https://www.zhihu.com/equation?tex=0%3D" alt="0=" class="ee_img tr_noresize" eeimg="1"> NF}` - If the last column contains a shared library, we replace the line by the last column, which is the filename of the library
+    * `*!a[$0]++*` is an *awk* trick to [remove duplicate lines](https://www.baeldung.com/linux/uniq-by-column):
 #### b
+* `bash -x run.sh` 显示shell脚本执行过程中的实际命令
 * bg: resume后台暂停的命令
 #### c
 * cat
@@ -676,7 +688,7 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
 * disown
 * diff：[Linux中diff的渊源](https://www.cnblogs.com/moxiaopeng/articles/4853352.html)
 * dmesg: kernel log
-* `du -b $file`
+* `du -h -d 1 $file`
 
 #### e
 * echo: 输出输入，空格分割
@@ -693,8 +705,9 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
 
 * [fuck](https://github.com/nvbn/thefuck#the-fuck-----):流行的纠正工具
 ```shell
-# Find all directories named src
+# Find all directories named/including src
 find . -name src -type d
+find . -name "*src*" -type d
 # Find all python files that have a folder named test in their path
 find . -path '**/test/**/*.py' -type f
 # Find all files modified in the last day
@@ -709,6 +722,17 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 
 ```
 #### g
+
+* gunzip
+
+```shell
+gunzip 1.gz
+gunzip -v 1.gz
+gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
+```
+
+
+
 #### h
 #### i
 * [icdiff](): 分屏比较文档

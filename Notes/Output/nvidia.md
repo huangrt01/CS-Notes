@@ -22,7 +22,7 @@ GPU: throughput-optimized high throughput processor
 
 ![CPU-GPU](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/CPU-GPU.png)
 
-#### 1.Accelerating Applications with CUDA C/C++
+#### 1.Course: Accelerating Applications with CUDA C/C++
 
 [课程网页](https://courses.nvidia.com/courses/course-v1:DLI+C-AC-01+V1/courseware/85f2a3ac16a0476685257996b84001ad/9ef2f68fb10d40c5b54b783392938d04/?activate_block_id=block-v1%3ADLI%2BC-AC-01%2BV1%2Btype%40sequential%2Bblock%409ef2f68fb10d40c5b54b783392938d04)
 
@@ -209,7 +209,7 @@ GPU加速[Mandelbrot Set Simulator](https://github.com/sol-prog/Mandelbrot_set)
 
 Peruse [*GPU-Accelerated Libraries for Computing*](https://developer.nvidia.com/gpu-accelerated-libraries) to learn where you can use highly optimized CUDA libraries for tasks like [basic linear algebra solvers](https://developer.nvidia.com/cublas) (BLAS), [graph analytics](https://developer.nvidia.com/nvgraph), [fast fourier transforms](https://developer.nvidia.com/cufft) (FFT), [random number generation](https://developer.nvidia.com/curand) (RNG), and [image and signal processing](https://developer.nvidia.com/npp), to name a few.
 
-#### 2.Managing Accelerated Application Memory with CUDA Unified Memory and nsys
+#### 2.Course: Managing Accelerated Application Memory with CUDA Unified Memory and nsys
 
 Assess, Parallelize, Optimize, Deploy(APOD) design cycle
 
@@ -323,7 +323,7 @@ int main()
 
 
 
-#### 3.Optimization Workflow
+#### 3.Course: Optimization Workflow
 
 unmanaged memory allocation and migration; pinning, or page-locking host memory; and non-default concurrent CUDA streams.
 
@@ -552,7 +552,15 @@ public:
 
 
 
-#### 4.Lecture: Introduction to Nsight Profiling Tools
+#### 4.Course: 用多GPU训练神经网络
+
+
+
+#### 5.Course: 用多GPU加速CUDA C/C++应用
+
+
+
+#### 5.Lecture: Introduction to Nsight Profiling Tools
 
 ![nsight-product](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/nsight-product.png)
 
@@ -581,7 +589,9 @@ Key features
 
 
 
-#### 5.Lecture: NVIDIA GPU通用推理加速及部署SDK
+#### 
+
+#### 6.Lecture: NVIDIA GPU通用推理加速及部署SDK
 
 线上推理加速的思路
 * 模型本身的加速，TensorRT、DL complier
@@ -659,7 +669,7 @@ Case Study: NVIDA BERT Solution: [FasterTransformer2.0](https://github.com/NVIDI
 
 
 
-#### 6.Lecture: NVIDIA ASR & TTS SOLUTIONS
+#### 7.Lecture: NVIDIA ASR & TTS SOLUTIONS
 
 #####  ASR WFST decoding on GPU
 
@@ -738,3 +748,100 @@ BERT
 * Challenge: polyphone disambiguation, prodisic structure prediction
 
 * BERT Optimization: 对self-attention layer做kernel fusion
+
+
+
+#### 8.Lecture: 基于GPU的大数据处理和机器学习加速
+
+用于Apache Spark的RAPIDS加速器
+
+* 不适合GPU大数据处理的场景
+  * 数据规模小：仅百兆
+  * 高缓存一致性的操作
+  * 数据移动：缓慢I/O，与CPU的不断交互(UDFs)，Shuffle
+  * 有限的GPU内存
+* SQL plugin擅长于
+  * 高散列度数据的joins、aggregates、sort
+  * Window operations、复杂计算、数据编码（创建Parquet和ORC文件，读取CSV）
+
+![RAPIDS accelerator for Apache Spark](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/RAPIDS.png)
+
+![dataframe](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/dataframe.png)
+
+
+
+Spark Shuffle: 前后stages间的数据交换
+
+* CPU-Centric Data Movement: GPU0->CPU->GPU1；PCIe总线(GPU and CPU)、Network(远端CPU)，CPU参与调度
+* GPU-Centric Data Movement: NVLink(同节点GPU), RDMA(远端GPU), GPU Direct Storage(落盘)
+* Shuffling Spilled Data: 溢出到cpu的host memory；如果无法满足，host memory内数据落盘或者通过RDMA传输到远端
+* UCX Library: https://www.openucx.org/
+
+Spark 0.2的亮点
+
+* 支持原生Spark、Databricks 7.0ML、Dataproc 2.0
+* 读取大量小的Parquet文件的优化：并行化处理文件Buffer，CPU与GPU无缝衔接
+* 初步支持SCALA UDF
+* 加速PANDAS UDFs
+  * 实现对Python进程的GPU资源管理，使JVM进程与Python进程共享一个GPU，以安全地在Pandas UDF里使用GPU
+  * 优化JVM与Python之间的数据交换，避免不必要的行列转换
+
+
+
+#### 9.Lecture: Merlin -- GPU-accelerated Recommendation Framework
+
+[NVTabular](https://github.com/NVIDIA/NVTabular)，基于RAPIDS的Recommendation ETL，底层是RAPIDS
+
+![pipeline](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/pipeline.png)
+
+![pipeline](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/pipeline-nvtabular.png)
+
+![nvtabular](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/nvtabular.png)
+
+
+
+[HugeCTR](https://github.com/NVIDIA/HugeCTR)
+
+* Embedding Table入显存：unified memory management，节点间交换不再layer by layer，可以一次交换所有PS
+  * 高效的GPU HashTable实现，解决冲突
+* Multi-nodes Model Parallel
+
+* Model Subscription: per req load PS to Embedding Cache in GPU
+
+#### 10.Lecture: NLP领域的GPU加速案例，Faster Transformer
+
+![faster transformer](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/faster-transformer.png)
+
+* decoder和decoding两层抽象，适用于不同灵活性的场景
+
+* GPT-2 model
+
+  * Only one attention block
+  * No beam search
+  * Support sequence length <= 4096
+
+* encoder和decoder的讨论
+
+  * encoder一次输入的词多、运行次数少、对GPU更友好
+  * decoder和上述相反，但依据Amdahl's Law，在encoder和decoder共用的场景，decoder是瓶颈
+  * Faster Transformer的实现：encoder参考BERT、decoder和decoding参考OpenNMT-tf (Attention is all you need)、GPT-2
+
+* 优化的讨论
+
+  * encoder：瓶颈是kernel launch bound，kernels are too small
+    * Fused Encoder: Fuse the kernels except GEMMs (General Matrix Multiplication)  as much as possible，GEMM用tensorcore优化。更进一步可以利用cutlass工具fuse multi-head attention
+  * decoder：更多small kernels
+    * Fuse multi-head attention：原因是decoder的batch size是1，不必要对GEMM优化
+  * decoding : 
+    * fuse the softmax and top k operations by [online-softmax](https://github.com/NVIDIA/online-softmax)
+    * use [CUB](https://nvlabs.github.io/cub/#sec5sec4) to accelerate the reduce operations
+    * [beam search](https://towardsdatascience.com/an-intuitive-explanation-of-beam-search-9b1d744e7a0f)之前要FP16转FP32
+    * [effective_transformer by ByteDance](https://github.com/bytedance/effective_transformer): 记录每个sentence的padding前缀和，矩阵计算前移除无用的padding，做attention时再映射回来，本质上是追求tensor的紧致组织。
+  * INT8 optimization：QAT + without quantizing residuals => 精度损失少
+
+  ![INT8](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/INT8-optimization.png)
+
+
+
+
+

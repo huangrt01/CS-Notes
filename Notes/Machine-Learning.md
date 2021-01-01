@@ -1,5 +1,29 @@
 ### Machine Learning
 
+#### Bert
+
+model finetune
+
+* model finetune是基于BERT预训练模型强大的通用语义能力，使用具体业务场景的训练数据做finetune，从而针对性地修正网络参数，是典型的双阶段方法。（[BERT在美团搜索核心排序的探索和实践](https://zhuanlan.zhihu.com/p/158181085)）
+* 在BERT预训练模型结构相对稳定的情况下，算法工程师做文章的是模型的输入和输出。首先需要了解BERT预训练时输入和输出的特点，BERT的输入是词向量、段向量、位置向量的特征融合（embedding相加或拼接），并且有[CLS]开头符和[SEP]结尾符表示句间关系；输出是各个位置的表示向量。finetune的主要方法有双句分类、单句分类、问答QA、单句标注，区别在于输入是单句/双句；需要监督的输出是 开头符表示向量作为分类信息 或 结合分割符截取部分输出做自然语言预测。
+* 搜索中finetune的应用：model finetune应用于query-doc语义匹配任务，即搜索相关性问题和embedding服务。在召回and粗排之后，需要用BERT精排返回一个相关性分数，这一问题和语句分类任务有相似性。搜索finetune的手法有以下特点：
+  * 广泛挖掘有收益的finetune素材：有效的包括发布号embedding、文章摘要、作者名，训练手段包括直接输入、预处理。model finetune方法能在标注数据的基础上，利用更多的挖掘数据优化模型。
+  * 改造模型输入or输出
+    * 模型输入
+      * 简单的title+summary+username+query拼接
+      * 多域分隔：“考虑到title和summary对于query的相关性是类似的分布，username和query的相关性关联是潜在的。所以给user_name单独设了一个域，用sep分隔”
+    * 模型输出
+      * 门过滤机制，用某些表示向量的相应分数加权CLS的语句类型输出分
+      * 引入UE，直接和CLS输出向量concat
+  * 素材的进一步处理，引入无监督学习
+    * 在model finetune的有监督训练之前，利用text rank算法处理finetune素材，相当于利用无监督学习提升了挖掘数据 —— 喂入BERT的数据的质量。
+    * 截断摘要，实测有效
+  * Bert训练任务的设计方式对模型效果影响大
+    * 将finetune进一步分为两阶段，把质量较低、挖掘的数据放在第一阶段finetune，质量高的标注数据放在第二阶段finetune，优化finetune的整体效果。
+    * 这种递进的训练技巧在BERT中较常见，论文中也有将长度较短的向量放在第一阶段训练的方法。
+
+
+
 #### Fundamentals of Deep Learning -- nvidia
 
 [MNIST](http://yann.lecun.com/exdb/mnist/)
@@ -378,12 +402,4 @@ seed_texts = [
 for seed in seed_texts:
     print(generate_headline(seed, next_words=5))
 ```
-
-
-
-
-
-#### Lecture - 微软小冰的NLP技术
-
-Xiaoice Smart Comment Service
 

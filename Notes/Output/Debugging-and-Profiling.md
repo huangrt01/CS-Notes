@@ -64,19 +64,23 @@ gdb：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(ui
 * `watch -l ` 同时监视表达式本身和表达式指向的内容
 * `attach $pid` debug正在运行的进程
 
-set print pretty on/off 增加print的可读性
-
-ptype可以打印变量类型
-
-打印stl使用python pretty print https://lumiera.org/documentation/technical/howto/DebugGdbPretty.html
+* `ptype` 打印变量类型；打印stl使用 [python pretty print](https://lumiera.org/documentation/technical/howto/DebugGdbPretty.html)
 
 ```c++
-//利用类型转换显示智能指针对象指向的变量
-(gdb) p ((Object*) A_ptr)->attribute
+//增加print的可读性
+set print pretty on/off
+
+//显示智能指针对象指向的变量
+p ((Object*) my_ptr)->attribute //利用类型转换
+p *(my_ptr._M_ptr)
   
 //显示vector内部值
-(A_vec._M_impl._M_start+0).attribute
+p *(my_vec._M_impl._M_start)@my_vec.size()  //打印大小
+p (my_vec._M_impl._M_start+0).attribute
+p *(my_vec._M_impl._M_start)@N //打印第N个成员
   
+//pb相关
+p *(std::string*)(*(X.rep_.elements)) //repeated string, 字段X
   
 ```
 
@@ -205,11 +209,15 @@ sudo perf report
 #### Resource Monitoring
 
 - **General Monitoring** - Probably the most popular is [`htop`](https://hisham.hm/htop/index.php), which is an improved version of [`top`](https://www.man7.org/linux/man-pages/man1/top.1.html). `htop` presents various statistics for the currently running processes on the system. `htop` has a myriad of options and keybinds, some useful ones  are: `<F6>` to sort processes, `t` to show tree hierarchy and `h` to toggle threads.  See also [`glances`](https://nicolargo.github.io/glances/) for similar implementation with a great UI. For getting aggregate measures across all processes, [`dstat`](http://dag.wiee.rs/home-made/dstat/) is another nifty tool that computes real-time resource metrics for lots of different subsystems like I/O, networking, CPU utilization, context  switches, &c.
+  - `dstat -nf`，n表示网络，f表示看详细信息
+  - `lscpu` `cat /proc/cpuinfo` 查cpu信息
 - **I/O operations** - [`iotop`](https://www.man7.org/linux/man-pages/man8/iotop.8.html) displays live I/O usage information and is handy to check if a process is doing heavy I/O disk operations
-- **Disk Usage** - [`df`](https://www.man7.org/linux/man-pages/man1/df.1.html) displays metrics per partitions and [`du`](http://man7.org/linux/man-pages/man1/du.1.html) displays **d**isk **u**sage per file for the current directory. In these tools the `-h` flag tells the program to print with **h**uman readable format. A more interactive version of `du` is [`ncdu`](https://dev.yorhel.nl/ncdu) which lets you navigate folders and delete files and folders as you navigate.
+- **Disk Usage** - [`df`](https://www.man7.org/linux/man-pages/man1/df.1.html) displays metrics per partitions and [`du`](http://man7.org/linux/man-pages/man1/du.1.html) displays disk usage per file for the current directory. In these tools the `-h` flag tells the program to print with human readable format. A more interactive version of `du` is [`ncdu`](https://dev.yorhel.nl/ncdu) which lets you navigate folders and delete files and folders as you navigate.
 - **Memory Usage** - [`free`](https://www.man7.org/linux/man-pages/man1/free.1.html) displays the total amount of free and used memory in the system. Memory is also displayed in tools like `htop`.
 - **Open Files** - [`lsof`](https://www.man7.org/linux/man-pages/man8/lsof.8.html)  lists file information about files opened by processes. It can be  quite useful for checking which process has opened a specific file.
 - **Network Connections and Config** - [`ss`](https://www.man7.org/linux/man-pages/man8/ss.8.html) lets you monitor incoming and outgoing network packets statistics as well as interface statistics. A common use case of `ss` is figuring out what process is using a given port in a machine. For  displaying routing, network devices and interfaces you can use [`ip`](http://man7.org/linux/man-pages/man8/ip.8.html). Note that `netstat` and `ifconfig` have been deprecated in favor of the former tools respectively.
+  - ss的[使用技巧](https://www.cnblogs.com/peida/archive/2013/03/11/2953420.html)，查端口占用通常用 `-nlp`，如果出现 (Not all processes could be identified, non-owned process info will not be shown, you would have to be root to see it all.) 是正常情况，意思就是没端口没被占用
+
 - **Network Usage** -  [`nethogs`](https://github.com/raboof/nethogs) and [`iftop`](http://www.ex-parrot.com/pdw/iftop/) are good interactive CLI tools for monitoring network usage.
 
 If you want to test these tools you can also artificially impose loads on the machine using the [`stress`](https://linux.die.net/man/1/stress) command.

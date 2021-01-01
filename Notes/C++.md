@@ -1,4 +1,11 @@
 [toc]
+
+各种资源
+
+* [大神 Andrei Alexandrescu 的 ppt，讲C语言优化](https://www.slideshare.net/andreialexandrescu1/three-optimization-tips-for-c-15708507)
+* https://github.com/miloyip/itoa-benchmark/
+
+
 ### 《Effective Modern C++》, Scott Meyers 
 
 **Intro**
@@ -8,7 +15,7 @@
 * deprecated feature: `std::auto_ptr -> std::unique_ptr`
 * Undefined behavior: 数组越界、dereferencing an uninitialized iterator、engaging in a data race
 
-#### chpt1 Deducing Types
+#### chpt 1 Deducing Types
 
 deducing types的机制：
 
@@ -86,8 +93,8 @@ auto对应T，type specifier对应ParamType，因此同Item1，也有三个cases
 * the only real difference between auto and template type deduction is that auto assumes that a braced initializer represents a std::initializer_list, but template type deduction doesn’t
 
 Things to Remember
-• auto type deduction is usually the same as template type deduction, but auto type deduction assumes that a braced initializer represents a std::initial izer_list, and template type deduction doesn’t.
-• auto in a function return type or a lambda parameter implies template type deduction, not auto type deduction.
+* auto type deduction is usually the same as template type deduction, but auto type deduction assumes that a braced initializer represents a std::initial izer_list, and template type deduction doesn’t.
+* auto in a function return type or a lambda parameter implies template type deduction, not auto type deduction.
 
 ##### Item 3: Understand decltype.
 
@@ -151,7 +158,7 @@ void f(const T& param)
 }
 ```
 
-#### chpt2 auto
+#### chpt 2 auto
 
 ##### Item 5: Prefer auto to explicit type declarations.
 ```c++
@@ -936,9 +943,94 @@ Widget& Widget::operator=(const Widget& rhs)
 
 #### chpt 5 Rvalue References, Move Semantics, and Perfect Forwarding
 
+Rvalue references => Move Semantics and Perfect Forwarding
 
+it’s especially important to bear in mind that a parameter is always an lvalue, even if its type is an rvalue reference
 
 ##### Item 23: Understand **std::move** and **std::forward**.
+
+`std::move` doesn’t move anything. `std::forward` doesn’t forward anything
+
+`std::move` unconditionally casts its argument to an rvalue, while `std::forward` performs this cast only if a particular condition is fulfilled
+
+```c++
+template<typename T> 
+decltype(auto) move(T&& param) {
+	using ReturnType = remove_reference_t<T>&&;
+	return static_cast<ReturnType>(param); 
+} // C++14
+// remove_reference是因为Item 1 => T有可能被推断为lvalue reference
+```
+
+First, don’t declare objects const if you want to be able to move from them. Move requests on const objects are silently transformed into copy operations. 
+
+Second, std::move not only doesn’t actually move anything, it doesn’t even guarantee that the object it’s casting will be eligible to be moved. The only thing you know for sure about the result of applying std::move to an object is that it’s an rvalue.
+
+```c++
+void process(const Widget& lvalArg);
+void process(Widget&& rvalArg);
+template<typename T>
+void logAndProcess(T&& param) {
+	auto now = std::chrono::system_clock::now();
+  makeLogEntry("Calling 'process'", now);
+	process(std::forward<T>(param));
+}
+
+Widget w;
+logAndProcess(w);                  // call with lvalue
+logAndProcess(std::move(w));       // call with rvalue
+```
+
+`std::forward`: a *conditional* cast, it casts to an rvalue only if its argument was initialized with an rvalue. 原理参考Item 28
+
+
+
+##### Item 24: Distinguish universal references from rvalue references.
+
+T&&不一定是rvalue references，称其为universal references，场景如下：
+
+* 模板: 
+
+```c++
+template<typename T>
+void f(T&& param); // param is a universal reference
+```
+
+* auto: `auto&& var2 = var1; // var2 is a universal reference`
+
+universal reference的场景有限制：
+
+* 必须是T&&，加const也不行
+* 必须有type deduction，e.g. `push_back` 's caller explicitly specifies the type，type deduction，而`emplace_back`有
+
+```c++
+template<class T, class Allocator = allocator<T>>  // from C++
+class vector {                                     // Standards
+public:
+	void push_back(T&& x);
+	...
+};
+template<class T, class Allocator = allocator<T>>  
+class vector {
+public:
+	template <class... Args>
+	void emplace_back(Args&&... args); ...
+};
+```
+
+universal reference的应用：
+
+```c++
+auto timeFuncInvocation = [](auto&& func, auto&&... params){
+  start timer;
+  std::forward<decltype(func)>(func)( std::forward<decltype(params)>(params)... );
+  stop timer and record elapsed time;
+};
+```
+
+
+
+##### Item 25: Use **std::move** on rvalue references, **std::forward** on universal references.
 
 
 
@@ -968,16 +1060,43 @@ Widget& Widget::operator=(const Widget& rhs)
 #endif
 ```
 
-`#pragma once`: 只编译一次
+
+
+* Multiple definition报错的讨论：如果在.h文件里定义函数，需要[加inline防止重复定义](https://softwareengineering.stackexchange.com/questions/339486/when-a-function-should-be-declared-inline-in-c)
+  * [inline specifier in C++](https://en.cppreference.com/w/cpp/language/inline)支持重复引用.h内函数
+  * 如果是gcc而非g++编译，会报错
+* 保证只编译一次
+  * 方法一：`#pragma once`
+  * 方法二：
+
+```c++
+#ifdef HEADER_H
+#define HEADER_H
+...
+#endif
+```
+
+* [LD_PRELOAD Trick](https://www.baeldung.com/linux/ld_preload-trick-what-is)
+  * [How to Show All Shared Libraries Used by Executables in Linux?](https://www.baeldung.com/linux/show-shared-libraries-executables)
+  * Alternative: `/etc/ld.so.preload`，系统层面的替换
+
+```shell
+ldd /usr/bin/vim
+objdump -p /usr/bin/vim | grep 'NEEDED'
+awk '$NF!~/\.so/{next} {$0=$NF} !a[$0]++' /proc/1585728/maps
+```
+
+  * LD_PRELOAD的应用
+      * when two libraries export the same symbol and our program links with the wrong one
+      * when an optimized or custom implementation of a library function should be preferred
+      * various profiling and monitoring tools widely use LD_PRELOAD for instrumenting code
+
+```shell
+LD_PRELOAD="/data/preload/lib/malloc_interpose.so:/data/preload/lib/free_interpose.so" ls -lh
+```
 
 
 
-Multiple definition报错的讨论：
-
-如果在.h文件里定义函数，需要[加inline防止重复定义](https://softwareengineering.stackexchange.com/questions/339486/when-a-function-should-be-declared-inline-in-c)
-
-* [inline specifier in C++](https://en.cppreference.com/w/cpp/language/inline)支持重复引用.h内函数
-* 如果是gcc而非g++编译，会报错
 
 #### C
 
@@ -1165,15 +1284,41 @@ public:
 
 #### 编程习惯
 RAII原则：Resource acquisition is initialization
-
+* [Google Style](https://google.github.io/styleguide/cppguide.html)
 * [Google: Developer Documentation Style Guide](https://developers.google.com/style)
-
 * [CppCoreGuidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
 * 用[CppCheck](http://cppcheck.net/)诊断，`make cppcheck`
 
+format
+
+* `/llvm-6.0/bin/clang-format -i *.cpp`
+
+
+
 #### 输入输出
 
+##### 文件
+
+```c++
+static std::string read_file(const std::string& file_name) {
+  std::string str = "";
+  std::ifstream infile;
+  infile.open(file_name);
+  infile.seekg(0, std::ios::end);
+  str.reserve(infile.tellg());
+  infile.seekg(0, std::ios::beg);
+
+  str.assign((std::istreambuf_iterator<char>(infile)),
+              std::istreambuf_iterator<char>());
+  infile.close();
+  return str;
+}
+```
+
+
+
 ##### 输入用逗号间隔的数据
+
 * 方法一：[混合使用cin>>和cin.get()](http://c.biancheng.net/view/1346.html)
 * 方法二：利用string和strtok
 ```c++
@@ -1208,16 +1353,52 @@ class cplus_input{
 
 ```
 
+
+
+LOG代码
+
+* `#、__FILE__、__LINE__` 的运用
+
+```c++
+#define CHECK(x)                                                \
+  if (!(x))                                                       \
+  LogMessageFatal(__FILE__, __LINE__).stream() \
+      << "Check failed: " #x << ": "
+
+namespace euclid {
+namespace rosetta {
+
+class LogMessageFatal {
+ public:
+  LogMessageFatal(const char* file, int line) {
+    log_stream_ << file << ":" << line << ": ";
+  }
+  std::ostringstream& stream() {
+    return log_stream_;
+  }
+  ~LogMessageFatal() noexcept(false) {
+    throw std::runtime_error(log_stream_.str());
+  }
+
+ private:
+  std::ostringstream log_stream_;
+};
+```
+
+* `__VA_ARGS__` 的[应用](https://stackoverflow.com/questions/26053959/what-does-va-args-in-a-macro-mean)
+
+
+
 #### multi-thread programming
 
-读写锁
+* 读写锁
 
 ```c++
 #include <boost/thread/thread.hpp>
 #include <shared_mutex>
 
 //读锁
-//灵活使用：可以用{}包起来，控制释放锁的时机
+//灵活使用：用{}包起来，控制释放锁的时机
 {
 	std::shared_lock<boost::shared_mutex> lock(filter_mutex_);
 }
@@ -1226,7 +1407,7 @@ class cplus_input{
 std::unique_lock<boost::shared_mutex> lock(filter_mutex_);
 ```
 
-大量读，少量更新，可以用tbb::concurrent_hash_map<key_type, value_type>;
+* 大量读，少量更新，可以用tbb::concurrent_hash_map<key_type, value_type>;
 
 ```c++
 {
@@ -1254,6 +1435,12 @@ std::condition_variable cond_;
 cond_.notify_one();
 cond_.notify_all();
 ```
+
+
+
+* Shared Store
+
+参考 `shared_store.h`
 
 
 
@@ -1306,10 +1493,10 @@ sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
 ##### \<exception>
 https://blog.csdn.net/qq_37968132/article/details/82431775
 
-throw invalid_argument("Invalid input.");
+`throw invalid_argument("Invalid input.");`
 
 ##### \<pthread.h>
-* [使用封装好的线程操作接口，mythreads.h]()：
+* 注意使用封装好的线程操作接口
 
 ##### \<string>
 * [和字符数组的相互转换](https://www.cnblogs.com/fnlingnzb-learner/p/6369234.html)
@@ -1340,6 +1527,11 @@ strcpy(buf, str.c_str());//strncpy(buf, str.c_str(), 10);
     * s.fin_first_not_of(s1) 查找s中第一个不属于s1中的字符的位置，并返回（包括0）
     * s.fin_last_not_of(s1) 查找s中最后一个不属于s1中的字符的位置，并返回（包括0）
 
+```c++
+# Interprets an unsigned integer value in the string str.
+size_t idx = 0;
+unsigned long ul = std::stoul(str,&id,0);
+```
 
 ##### \<sys.h>
 
