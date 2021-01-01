@@ -85,19 +85,8 @@
 * This repository uses Github as image host, for the simplicity and reliability of backup.
 * 本仓库内容由自制[笔记转化器](https://github.com/huangrt01/CS-Notes)自动生成
   * remaining bug: 包含`$`的行会视为latex行内公式转化为公式图片，但这样会将shell代码转换，需要判断是否在latex代码域内，予以排除
-  * solution: clone仓库，用[Typora](https://typora.io/)阅读Note文件夹里的本体文件。
-
-**内推字节AML**
-
-投递链接（算法/工程均投此链接）：https://job.toutiao.com/s/JrNd24k
-
-* 内推码: REBTETW
-
-[JD](https://github.com/huangrt01/CS-Notes/blob/master/job-description.jpg): AML(Applied Machine Learning)团队（北京、杭州），负责全公司的ML System、推荐/NLP中台构建，此外也有基础研究团队（硅谷、西雅图）。
-
-* 方向自由，领域前沿，涵盖学界工业界热点领域的方方面面。
-* 团队Google海归及名校phd较多，有姚班本科大佬，也有一届北大cs本科四人同来。
-* 工作效率高，作息较好。
+  * solution: clone仓库，用[Typora](https://typora.io/)阅读Note文件夹里的本体文件
+* 内推字节AML团队，请联系 huangrt01@163.com
 
 
 **内容预告**
