@@ -125,6 +125,7 @@ Even if what you are trying to debug is a black box binary there are tools that 
 ```shell
 # On Linux
 sudo strace (-e lstat) ls -l > /dev/null
+strace -p $PID
 # On macOS
 sudo dtruss -t lstat64_extended ls -l > /dev/null
 ```
@@ -148,6 +149,7 @@ For web development, the Chrome/Firefox developer tools are quite handy. They fe
 * [Static Analysis仓库整理](https://github.com/analysis-tools-dev/static-analysis#go)
 * [awesome linters整理](https://github.com/caramelomartins/awesome-linters#go)
   * Python:  [`pylint`](https://github.com/PyCQA/pylint) and [`pep8`](https://pypi.org/project/pep8/) 是stylistic linters，[`bandit`](https://pypi.org/project/bandit/) 可查security问题
+    * `python -m autopep8 -i -r $FOLDER`
 * A complementary tool to stylistic linting are code formatters such as [`black`](https://github.com/psf/black) for Python, `gofmt` for Go, `rustfmt` for Rust or [`prettier`](https://prettier.io/) for JavaScript, HTML and CSS.
 
 

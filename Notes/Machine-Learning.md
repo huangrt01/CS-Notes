@@ -1,6 +1,6 @@
-### Machine Learning
+## Machine Learning
 
-#### Bert
+### Bert
 
 model finetune
 
@@ -24,7 +24,7 @@ model finetune
 
 
 
-#### Fundamentals of Deep Learning -- nvidia
+### Fundamentals of Deep Learning -- nvidia
 
 [MNIST](http://yann.lecun.com/exdb/mnist/)
 
@@ -402,4 +402,167 @@ seed_texts = [
 for seed in seed_texts:
     print(generate_headline(seed, next_words=5))
 ```
+
+
+
+### 用多GPU训练神经网络 -- Nvidia
+
+* 与梯度下降法不同，随机梯度下降法并不使用整个数据集而是使用较小的数据子集（称为一个批次，即batch；其大小称为 batch size）来计算损失函数。这对我们算法的性能有着深远的影响。由于每个批次里的数据是从数据集里随机抽取的，所以每个批次的数据集都不相同。即使对于同一组权重，这些批次的数据集也会提供不同的梯度，引入一定程度的噪声
+* 这种噪声实际上是非常有益的，因为它所产生的极小值的数学特性与梯度下降大相径庭。这在多 GPU 训练问题中之所以重要，是因为通过增加参与训练过程的 GPU 数量，我们实际上加大了批量（batch size），而这会导致减少有益的噪声
+
+```python
+# This section generates the training dataset as defined by the variables in the section above.
+x = np.random.uniform(0, 10, n_samples)
+y = np.array([w_gen * (x + np.random.normal(loc=mean_gen, scale=std_gen, size=None)) + b_gen for x in x])
+
+# Create the placeholders for the data to be used.
+X = tf.placeholder(tf.float32, name="X")
+Y = tf.placeholder(tf.float32, name="Y")
+
+# Create our model variables w (weights; this is intended to map to the slope, w_gen) and b (bias; this maps to the intercept, b_gen).
+# For simplicity, we initialize the data to zero.
+w = tf.Variable(0.0, name="weights")
+b = tf.Variable(0.0, name="bias")
+
+# Define our model. We are implementing a simple linear neuron as per the diagram shown above.
+Y_predicted = w * X + b
+
+# Define a gradient descent optimizer
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001).minimize(loss)
+
+# Define the maximum number of times we want to process the entire dataset (the number of epochs).
+# In practice we won't run this many because we'll implement an early stopping condition that
+# detects when the training process has converged.
+max_number_of_epochs = 1000
+
+# We still store information about the optimization process here.
+loss_array = []
+b_array = []
+w_array = []
+    
+with tf.Session() as sess:
+    # Initialize the necessary variables
+    sess.run(tf.global_variables_initializer())
+    # Print out the parameters and loss before we do any training
+    w_value, b_value, loss_value = sess.run([w, b, loss], feed_dict={X: x, Y: y})
+    print("Before training: w = {:4.3f}, b = {:4.3f}, loss = {:7.3f}".format(w_value, b_value, loss_value))
+    print("")
+    print("Starting training")
+    print("")
+    # Start the training process
+    for i in range(max_number_of_epochs):
+        # Use the entire dataset to calculate the gradient and update the parameters
+        sess.run(optimizer, feed_dict={X: x, Y: y})
+        # Capture the data that we will use in our visualization
+        w_value, b_value, loss_value = sess.run([w, b, loss], feed_dict={X: x, Y: y})
+        w_array.append(w_value)
+        b_array.append(b_value)
+        loss_array.append(loss_value)
+        # At the end of every few epochs print out the learned weights
+        if (i + 1) % 5 == 0:
+            print("Epoch = {:2d}: w = {:4.3f}, b = {:4.3f}, loss = {:7.3f}".format(i+1, w_value, b_value, loss_value))
+        # Implement your convergence check here, and exit the training loop if
+        # you detect that we are converged:
+        if FIXME: # TODO
+            break
+    print("")
+    print("Training finished after {} epochs".format(i+1))
+    print("")
+    
+    print("After training: w = {:4.3f}, b = {:4.3f}, loss = {:7.3f}".format(w_value, b_value, loss_value))
+```
+
+```python
+# adjust batch size
+batch_size = 32
+num_batches_in_epoch = (n_samples + batch_size - 1) // batch_size
+```
+
+
+
+研究训练速度和 batch_size 的关系
+
+* 非常小或非常大的批量对于模型训练的收敛来说可能不是的最佳选择（非常小的批量带来的噪声往往过于嘈杂而无法使模型充分收敛到损失函数的最小值，而非常大的批量则往往造成训练的早期阶段就发散）
+* 观察到大batch size的val_acc和acc很接近，不容易过拟合，但后期准确度效果提升缓慢
+* Machine-Learning/GPU_training_batch_size.py 
+
+
+
+多GPU训练
+
+```shell
+# CPU training
+CUDA_VISIBLE_DEVICES= python fashion_mnist.py --epochs 3 --batch-size 512
+# GPU training
+horovodrun -np $num_gpus python fashion_mnist.py --epochs 3 --batch-size 512
+```
+
+* [Horovod](https://github.com/horovod/horovod)是一种最初由[Uber开发](https://eng.uber.com/horovod/)的开源工具，旨在满足他们许多工程团队对更快的深度学习模型训练的需求。它是跨框架的分布式深度学习库，支持多种框架、高性能算法、高性能网络（RDMA、GPUDirect），也是分布式训练方法不断发展的生态系统（包括[Distributed TensorFlow](https://github.com/tensorflow/examples/blob/master/community/en/docs/deploy/distributed.md)) 的一部分。Uber开发的这种解决方案利用[MPI](https://en.wikipedia.org/wiki/Message_Passing_Interface)进行分布式进程间通信，并利用[NVIDIA联合通信库（NCCL）](https://developer.nvidia.com/nccl)，以高度优化的方式实现跨分布式进程和节点的平均值计算。 由此产生的Horovod软件包实现了它的目标：仅需进行少量代码修改和直观的调试即可在多个GPU和多个节点上扩展深度学习模型的训练。
+
+  自2017年开始实施以来，Horovod已显著成熟，将其支持范围从TensorFlow扩展到了Keras，PyTorch和Apache MXNet。 Horovod经过了广泛的测试，迄今已用于一些最大的深度学习训练当中。例如，在[Summit系统上支持 **exascale** 深度学习，可扩展到 **27,000多个V100 GPU**](https://arxiv.org/pdf/1810.01993.pdf)
+  
+  * 支持多种框架
+
+```python
+import horovod.tensorflow as hvd
+import horovod.keras as hvd
+import horovod.tensorflow.keras as hvd
+import horovod.torch as hvd
+import horovod.mxnet as hvd
+```
+
+Horovod与MPI的渊源
+
+* Horovod与MPI具有非常深厚的联系。对于熟悉MPI编程的程序员来说，您对通过Horovod实现的分布式模型训练会感到非常熟悉。对于那些不熟悉MPI编程的人来说，简短地讨论一下Horovod或MPI分布式进程所需的一些约定和注意事项是值得的。
+* 与MPI一样，Horovod严格遵循[单程序多数据（SPMD）范例](https://en.wikipedia.org/wiki/SPMD)，即在同一文件或程序中实现多个进程的指令流。由于多个进程并行执行代码，因此我们必须注意[竞赛条件](https://en.wikipedia.org/wiki/Race_condition)以及这些进程间的同步。
+  * [Horovod and Model Parallelism](https://github.com/horovod/horovod/issues/96)
+* Horovod为执行程序的每个进程分配一个唯一的数字ID或**rank**（来自MPI的概念）。rank是可以通过编程的方式获得的。通过以编程方式在代码中标识进程的rank，我们可以进一步采取以下步骤：
+
+  * 将该进程固定到自己的专属GPU上。
+  * 使用单个rank来广播需要所有ranks统一使用的值。
+  * 利用单个rank收集所有ranks产生的值和/或计算它们的均值。
+  * 利用一个rank来记录或写入磁盘。
+
+![horovod-rank](Machine-Learning/horovod-rank.png)
+
+```python
+# 同步初始状态的几种方式
+# Method 1
+callbacks.append(hvd.callbacks.BroadcastGlobalVariablesCallback(0))
+model.fit_generator(train_iter,
+                    steps_per_epoch=len(train_iter) // hvd.size(),
+                    callbacks=callbacks, ...)
+# Method 2
+hooks = [hvd.BroadcastGlobalVariablesHook(0)]
+with tf.train.MonitoredTrainingSession(hooks=hooks, …) as sess:
+# Method 3
+bcast_op = hvd.broadcast_global_variables(0) sess.run(bcast_op)
+
+# 只由一个worker保留检查点
+ckpt_dir = "/tmp/train_logs" if hvd.rank() == 0 else None
+with tf.train.MonitoredTrainingSession(checkpoint_dir=ckpt_dir, …) as sess:
+```
+
+* 数据分区的方式：先洗牌再分区，workers按分区顺序读取；先洗牌，单worker从整个数据集随机读取
+
+```shell
+在 4 个有 4 块 GPU 卡的节点上运行:
+$ mpirun -np 16 -H server1:4,server2:4,server3:4,server4:4 -bind-to none -map-by slot -mca pml ob1 -mca btl openib -mca btl_tcp_if_include eth0 \
+-x NCCL_DEBUG=INFO -x NCCL_SOCKET_IFNAME=eth0 -x LD_LIBRARY_PATH -x ...\
+python train.py
+```
+
+
+
+分布式SGD在算法方面的挑战
+
+* throughput ~ GPU num
+  * 深度学习的大规模训练通常以线性增加的理想情况为基准，Horovod和NCCL库在保持高吞吐量方面做得很好，但是他们的性能与所使用的硬件有着千丝万缕的联系。高带宽和低延迟的要求导致了NVLink互连的开发，它是本课程所使用的服务器用来互连一个节点上的多个GPU的方法。 NVIDIA DGX-2通过NVSwitch将这种互连又推进一步，该互连结构可以300GB/s的峰值双向带宽连接多达16个GPU。
+
+* critical batch size ~ gradient noise scale (openai)
+* 对精度的影响：朴素的方法（比如不加data augmentation）会降低精度
+  * ImageNet training in minutes. CoRR
+  * [Train longer, generalize better: closing the generalization gap in large batch training of neural networks](https://arxiv.org/abs/1705.08741)
+  * [On large-batch training for deep learning: Generalization gap and sharp minima](https://arxiv.org/abs/1609.04836)
+  * [Visualizing the Loss Landscape of Neural Nets](https://arxiv.org/abs/1712.09913)
 

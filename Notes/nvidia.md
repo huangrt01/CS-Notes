@@ -552,11 +552,13 @@ public:
 
 
 
-#### 4.Course: 用多GPU训练神经网络
+#### 
 
 
 
-#### 5.Course: 用多GPU加速CUDA C/C++应用
+
+
+#### 4.Course: 用多GPU加速CUDA C/C++应用
 
 
 
@@ -588,8 +590,6 @@ Key features
 ![warp-scheduler](nvidia/warp-scheduler.png)
 
 
-
-#### 
 
 #### 6.Lecture: NVIDIA GPU通用推理加速及部署SDK
 

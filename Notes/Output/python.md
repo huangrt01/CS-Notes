@@ -86,6 +86,21 @@ import var
 object = var.inside_object()
 ```
 
+#### mpl_toolkits
+
+```python
+from mpl_toolkits.mplot3d import Axes3D
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+
+ax.scatter(w_array, b_array, loss_array)
+ax.set_xlabel('w', size=16)
+ax.set_ylabel('b', size=16)
+ax.tick_params(labelsize=12)
+
+plt.show()
+```
+
 #### pandas
 
 https://pandas.pydata.org/pandas-docs/stable/index.html

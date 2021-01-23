@@ -1038,6 +1038,30 @@ auto timeFuncInvocation = [](auto&& func, auto&&... params){
 
 ### C++
 
+#### VSCode 
+
+开发必备插件
+
+* 公共: Code Spell Checker, GitLens, EditorConfig for VSCode, String Manipulation, Visual Studio IntelliCode
+* C++: [cpplint](https://github.com/cpplint/cpplint), C/C++ (by Microsoft), CodeLLDB, Header source switch, Rainbow Brackets, C++ Intellisense
+
+#### 编程习惯
+
+RAII原则：Resource acquisition is initialization
+
+* [Google Style](https://google.github.io/styleguide/cppguide.html)
+* [Google: Developer Documentation Style Guide](https://developers.google.com/style)
+* [CppCoreGuidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
+* 用[CppCheck](http://cppcheck.net/)诊断，`make cppcheck`
+
+format
+
+* `/llvm-6.0/bin/clang-format -i *.cpp`
+
+经典案例：[goto fail](https://coolshell.cn/articles/11112.html)
+
+
+
 #### Debug
 
 * 参考我的[Debugging and Profiling笔记]()
@@ -1282,17 +1306,6 @@ public:
 ```
 * 类的静态成员函数指针
 
-#### 编程习惯
-RAII原则：Resource acquisition is initialization
-* [Google Style](https://google.github.io/styleguide/cppguide.html)
-* [Google: Developer Documentation Style Guide](https://developers.google.com/style)
-* [CppCoreGuidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
-* 用[CppCheck](http://cppcheck.net/)诊断，`make cppcheck`
-
-format
-
-* `/llvm-6.0/bin/clang-format -i *.cpp`
-
 
 
 #### 输入输出
@@ -1449,8 +1462,75 @@ cond_.notify_all();
 十三大头文件：\<algorithm>、\<functional>、\<deque>、、\<iterator>、\<array>、\<vector>、\<list>、\<forward_list>、\<map>、\<unordered_map>、\<memory>、\<numeric>、\<queue>、\<set>、\<unordered_set>、\<stack>、\<utility>
 
 ##### \<algorithm>
-sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
-* `static bool cmp1(vector<int> &a, vector<int> &b)`
+* sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
+  * `static bool cmp1(vector<int> &a, vector<int> &b)`
+
+* fill_n 在-O3优化下，[效率和memset一致](https://stackoverflow.com/questions/1373369/which-is-faster-preferred-memset-or-for-loop-to-zero-out-an-array-of-doubles)，是首选
+
+```c++
+/* reset_1d_tensor Benchmark
+---------------------------------------------------------------------------------------
+type              for_loop  v.s.  with_slice  v.s.  fill_n
+---------------------------------------------------------------------------------------
+float              1.00             1.18          ** 1.00 **
+Eigen::half        1.00             0.84          ** 0.65 **
+int32_t            1.00             1.05          ** 1.00 **
+tensorflow::int64  1.00             1.14          ** 1.00 **
+std::string        1.00          ** 0.52 **          0.90
+*/
+
+inline void reset_1d_tensor(std::shared_ptr<tensorflow::Tensor>& tensor,
+                            const tensorflow::TensorShape& shape,
+                            tensorflow::DataType type) {
+  if (!tensor || tensor->shape().dim_size(0) < shape.dim_size(0)) {
+    tensor.reset(new tensorflow::Tensor(type, shape));
+    return;
+  }
+  size_t len = shape.dim_size(0);
+  if (type == tensorflow::DT_FLOAT) {
+    auto data = tensor->flat<float>();
+    std::fill_n(data.data(), len, 0);
+  } else if (type == tensorflow::DT_HALF) {
+    auto data = tensor->flat<Eigen::half>();
+    std::fill_n(data.data(), len, Eigen::half(0));
+  } else if (type == tensorflow::DT_INT32) {
+    auto data = tensor->flat<int32_t>();
+    std::fill_n(data.data(), len, 0);
+  } else if (type == tensorflow::DT_INT64) {
+    auto data = tensor->flat<tensorflow::int64>();
+    std::fill_n(data.data(), len, 0);
+  } else if (type == tensorflow::DT_STRING) {
+    tensor->Slice(0, len).flat<std::string>().setConstant("");
+  } else {
+    LOG(FATAL) << "Unsupported tensorflow::DataType: " << type;
+  }
+}
+
+inline void reset_1d_tensor_with_slice(
+    std::shared_ptr<tensorflow::Tensor>& tensor,
+    const tensorflow::TensorShape& shape, tensorflow::DataType type) {
+  if (!tensor || tensor->shape().dim_size(0) < shape.dim_size(0)) {
+    tensor.reset(new tensorflow::Tensor(type, shape));
+    return;
+  }
+  size_t len = shape.dim_size(0);
+  if (type == tensorflow::DT_FLOAT) {
+    tensor->Slice(0, len).flat<float>().setZero();
+  } else if (type == tensorflow::DT_HALF) {
+    tensor->Slice(0, len).flat<Eigen::half>().setZero();
+  } else if (type == tensorflow::DT_INT32) {
+    tensor->Slice(0, len).flat<int32_t>().setZero();
+  } else if (type == tensorflow::DT_INT64) {
+    tensor->Slice(0, len).flat<tensorflow::int64>().setZero();
+  } else if (type == tensorflow::DT_STRING) {
+    tensor->Slice(0, len).flat<std::string>().setConstant("");
+  } else {
+    LOG(FATAL) << "Unsupported tensorflow::DataType: " << type;
+  }
+}
+```
+
+
 
 
 ##### \<deque>
@@ -1462,6 +1542,16 @@ sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
 * 参考[LRU cache](https://leetcode-cn.com/problems/lru-cache/)，类似双向链表的实现
   * map<int,list<pair<int,int>>::iterator> m;
 * r.push_front(…), r.begin(), r.back()
+
+##### \<unordered_map>
+operator`[]` hasn't a `const` qualifier, you cannot use it directly on a const instance, use `at` instead
+
+```c++
+T& operator[](const key_type& x);
+T& operator[](key_type&& x);
+T&       at(const key_type& x);
+const T& at(const key_type& x) const;
+```
 
 ##### \<vector>
 * 初始化，可以用列表
@@ -1494,6 +1584,18 @@ sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
 https://blog.csdn.net/qq_37968132/article/details/82431775
 
 `throw invalid_argument("Invalid input.");`
+
+##### \<google::gflags>
+
+[How To Use gflags (formerly Google Commandline Flags)](https://gflags.github.io/gflags/)
+
+```c++
+gflags::SetVersionString(get_version());
+```
+
+##### \<google::sparse_hash>
+
+[hashmap benchmarks](https://martin.ankerl.com/2019/04/01/hashmap-benchmarks-01-overview/)
 
 ##### \<pthread.h>
 * 注意使用封装好的线程操作接口

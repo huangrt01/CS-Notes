@@ -660,6 +660,8 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
 #### a
 * awk: 一种控制台编程工具，寻找和处理pattern
   * 入门[wiki](https://zh.wikipedia.org/wiki/AWK)
+  * 数据统计算均值
+    * `awk -F'[ ,]+' '{print $1,$3,$5,$7}' | awk '{ for (i=1; i<=NF; i++) { sum[i]+= $i }} END { for (i=1; i<=NF; i++) {printf "%.9f ", sum[i]/NR}}'`，`-F'[]'`内空格和逗号都是分隔符，`+`表示将连续分隔符视为一个
   * `awk '$NF!~/\.so/{next} {$0=$NF} !a[$0]++' /proc/1585728/maps`
     * `$NF!~/\.so/{next}` – If the last column doesn’t contain “*.so*“, we ignore it
     * `{$0=$NF}` - If the last column contains a shared library, we replace the line by the last column, which is the filename of the library
@@ -804,6 +806,7 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
 #### v
 #### w
 * wait：`wait pid`，不加pid则等待所有进程
+* `watch -n 5 $cmd`
 * which：找到程序路径
 * [wget](https://blog.csdn.net/wangshuminjava/article/details/79916655): 断点续传-c    后台-b
 
