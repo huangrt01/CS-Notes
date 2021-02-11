@@ -552,13 +552,13 @@ public:
 
 
 
-#### 
+#### 4.Course: Accelerating CUDA C++ Applications with Multiple GPUs
 
+目标：
 
+* 使 GPU 计算与 GPU 上的内存传输重叠
 
-
-
-#### 4.Course: 用多GPU加速CUDA C/C++应用
+* 在多个 GPU 上并发执行计算
 
 
 

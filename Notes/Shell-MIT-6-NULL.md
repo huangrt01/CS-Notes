@@ -52,7 +52,7 @@ done
   * `$1 to \$9` - Arguments to the script. $1 is the first argument and so on.
   * `$@` - All the arguments
   * `$#` - Number of arguments
-      * 最后一个参数：${!#}
+      * 最后一个参数：`${!#}`
   * `$?` - Return code of the previous command
   * `$$` - Process Identification number for the current script
   * `!!` - Entire last command, including arguments. A common pattern is to execute a command only for it to fail due to missing permissions, then you can quickly execute it with sudo by doing sudo !!
@@ -725,6 +725,13 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 ```
 #### g
 
+* grep
+
+```shell
+# 反向筛选
+grep -v "trash"
+```
+
 * gunzip
 
 ```shell
@@ -803,6 +810,9 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
 * traceroute: -w 1
 * tree: 显示树形文件结构, `-L`设置层数
 #### u
+
+* `uname -a` 查内核版本
+
 #### v
 #### w
 * wait：`wait pid`，不加pid则等待所有进程

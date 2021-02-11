@@ -1,3 +1,4 @@
+[toc]
 ## Machine Learning
 
 ### Bert
@@ -405,7 +406,7 @@ for seed in seed_texts:
 
 
 
-### 用多GPU训练神经网络 -- Nvidia
+### Fundamentals of Deep Learning for MultiGPUs -- Nvidia
 
 * 与梯度下降法不同，随机梯度下降法并不使用整个数据集而是使用较小的数据子集（称为一个批次，即batch；其大小称为 batch size）来计算损失函数。这对我们算法的性能有着深远的影响。由于每个批次里的数据是从数据集里随机抽取的，所以每个批次的数据集都不相同。即使对于同一组权重，这些批次的数据集也会提供不同的梯度，引入一定程度的噪声
 * 这种噪声实际上是非常有益的，因为它所产生的极小值的数学特性与梯度下降大相径庭。这在多 GPU 训练问题中之所以重要，是因为通过增加参与训练过程的 GPU 数量，我们实际上加大了批量（batch size），而这会导致减少有益的噪声
@@ -566,3 +567,27 @@ python train.py
   * [On large-batch training for deep learning: Generalization gap and sharp minima](https://arxiv.org/abs/1609.04836)
   * [Visualizing the Loss Landscape of Neural Nets](https://arxiv.org/abs/1712.09913)
 
+* 应对策略
+
+  * 提高学习率：One weird trick for parallelizing convolutional neural networks
+  * 早期学习率热身： Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour.
+* Batch Normalization
+    * BN通过最小化每个层的输入分布中的漂移来改善学习过程
+    * 提高学习速度并减少使用 Dropout 的需求
+    * 想法是针对每批数据对所有层的输入 进行规一化（这比简单地只对输入数据集进行规一化更为复杂）
+  * Ghost BN
+    * 计算更小批量的统计数据（“ghost 批量”）引入其他噪声
+    * 按 GPU 逐个单独执行批量归一化
+  * 将噪声添加至梯度
+    * 确保权重更新的协方差随着批量大小的变动保持不变 
+    * 不会改变权重更新的平均值 
+    * $$\hat{g}=\frac{1}{M}\sum^{N}_{n\in B}g_n z_n$$
+  * 更长的高学习率训练时间
+  * 增加批量大小代替学习率衰减
+  * LARS – 按层自适应学习率调整
+    *  [LARS论文](https://arxiv.org/abs/1904.00962): 大LR -> LR warm-up -> LARS，只是能保证大batch训练能训，关于效果问题，作者认为“increasing the batch does not give much additional gradient information comparing to smaller batches.”
+    * [LARC](https://github.com/NVIDIA/apex/blob/master/apex/parallel/LARC.py): 带梯度裁剪的分层自适应学习率，以具有动力的SGD作为基础优化器
+    * [LAMB](https://arxiv.org/abs/1904.00962): 分层自适应学习率，以 Adam 作为基础优化器，在BERT等语言模型上比LARC更成功
+    * [NovoGrad](https://arxiv.org/abs/1905.11286): 按层计算的移动平均值，在几个不同的领域也有不错的表现
+
+![training_result](Machine-Learning/training_result.png)

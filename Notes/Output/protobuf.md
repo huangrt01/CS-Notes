@@ -258,6 +258,16 @@ with open(os.path.join(out_dir, "person.protobuf"), "w") as f:
     f.write(str(person))
 ```
 
+
+
+python动态解析oneof字段
+
+```python
+data = getattr(config, config.WhichOneof('config')).value
+```
+
+
+
 #### tools
 
 ```python

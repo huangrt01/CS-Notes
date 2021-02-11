@@ -1136,12 +1136,24 @@ Dijkstra反对goto的[文章](http://www.cs.utexas.edu/users/EWD/ewd02xx/EWD215.
 
 getopt函数处理参数，用法参照[tsh.c](https://github.com/huangrt01/CSAPP-Labs/blob/master/shlab-handout/tsh.c)
 
+
+
 ##### 结构体
 
 结构体内存分配问题：内存对齐
 * 起始地址为该变量的类型所占的整数倍，若不足则不足部分用数据填充至所占内存的整数倍。
 * 该结构体所占内存为结构体成员变量中最大数据类型的整数倍。
 * e.g.: 1+4+1+8->4+4+8+8=24
+
+
+##### 宏
+
+[C++宏编程，不错的一篇blog](http://notes.tanchuanqi.com/language/cpp/cpp_micro.html)
+
+* do while(0) 技巧
+
+
+
 
 #### C++的特性
 面向对象、构造函数、析构函数、动态绑定、内存管理
@@ -1543,7 +1555,51 @@ inline void reset_1d_tensor_with_slice(
   * map<int,list<pair<int,int>>::iterator> m;
 * r.push_front(…), r.begin(), r.back()
 
+##### \<string>
+
+* 如何判断string是否以某一字符串开头？
+
+`str.rfind("pattern", 0) == 0`
+
+* [和字符数组的相互转换](https://www.cnblogs.com/fnlingnzb-learner/p/6369234.html)
+  * 字符数组->str：构造函数
+  * str->字符数组
+
+```c++
+char buf[10];
+string str("ABCDEFG");
+length = str.copy(buf, 9);
+buf[length] = '\0';
+
+char buf[10];
+string str("ABCDEFG");
+strcpy(buf, str.c_str());//strncpy(buf, str.c_str(), 10);
+```
+
+* [用find查找字串](https://www.cnblogs.com/wkfvawl/p/9429128.html)
+  * 截取子串
+    * s.substr(pos, n) 截取s中从pos开始（包括0）的n个字符的子串，并返回
+    * s.substr(pos) 截取s中从从pos开始（包括0）到末尾的所有字符的子串，并返回
+  * 替换子串
+    * s.replace(pos, n, s1)    用s1替换s中从pos开始（包括0）的n个字符的子串
+  * 查找子串
+    * s.find(s1) 查找s中第一次出现s1的位置，并返回（包括0）
+    * s.rfind(s1) 查找s中最后次出现s1的位置，并返回（包括0）
+    * s.find_first_of(s1) 查找在s1中任意一个字符在s中第一次出现的位置，并返回（包括0）
+    * s.find_last_of(s1) 查找在s1中任意一个字符在s中最后一次出现的位置，并返回（包括0）
+    * s.fin_first_not_of(s1) 查找s中第一个不属于s1中的字符的位置，并返回（包括0）
+    * s.fin_last_not_of(s1) 查找s中最后一个不属于s1中的字符的位置，并返回（包括0）
+
+```c++
+# Interprets an unsigned integer value in the string str.
+size_t idx = 0;
+unsigned long ul = std::stoul(str,&id,0);
+```
+
+
+
 ##### \<unordered_map>
+
 operator`[]` hasn't a `const` qualifier, you cannot use it directly on a const instance, use `at` instead
 
 ```c++
@@ -1600,40 +1656,20 @@ gflags::SetVersionString(get_version());
 ##### \<pthread.h>
 * 注意使用封装好的线程操作接口
 
-##### \<string>
-* [和字符数组的相互转换](https://www.cnblogs.com/fnlingnzb-learner/p/6369234.html)
-  * 字符数组->str：构造函数
-  * str->字符数组
-```c++
-char buf[10];
-string str("ABCDEFG");
-length = str.copy(buf, 9);
-buf[length] = '\0';
-
-char buf[10];
-string str("ABCDEFG");
-strcpy(buf, str.c_str());//strncpy(buf, str.c_str(), 10);
-```
-
-* [用find查找字串](https://www.cnblogs.com/wkfvawl/p/9429128.html)
-  * 截取子串
-    * s.substr(pos, n) 截取s中从pos开始（包括0）的n个字符的子串，并返回
-    * s.substr(pos) 截取s中从从pos开始（包括0）到末尾的所有字符的子串，并返回
-  * 替换子串
-    * s.replace(pos, n, s1)    用s1替换s中从pos开始（包括0）的n个字符的子串
-  * 查找子串
-    * s.find(s1) 查找s中第一次出现s1的位置，并返回（包括0）
-    * s.rfind(s1) 查找s中最后次出现s1的位置，并返回（包括0）
-    * s.find_first_of(s1) 查找在s1中任意一个字符在s中第一次出现的位置，并返回（包括0）
-    * s.find_last_of(s1) 查找在s1中任意一个字符在s中最后一次出现的位置，并返回（包括0）
-    * s.fin_first_not_of(s1) 查找s中第一个不属于s1中的字符的位置，并返回（包括0）
-    * s.fin_last_not_of(s1) 查找s中最后一个不属于s1中的字符的位置，并返回（包括0）
+##### \<random>
 
 ```c++
-# Interprets an unsigned integer value in the string str.
-size_t idx = 0;
-unsigned long ul = std::stoul(str,&id,0);
+static thread_local std::mt19937 rng(std::random_device{}());
+std::uniform_int_distribution<int> distribution(0, RAND_MAX-1);
+int32_t sleep_time = static_cast<int32_t>(
+        _expire_delta * ((double) distribution(rng)/ (RAND_MAX)) * _expire_num);
+    std::this_thread::sleep_for(std::chrono::seconds(sleep_time));
 ```
+
+* glibc的 [random](https://github.com/lattera/glibc/blob/master/stdlib/random.c) 函数涉及一个锁性能问题，使用的[锁](https://github.com/lattera/glibc/blob/895ef79e04a953cac1493863bcae29ad85657ee1/sysdeps/nptl/lowlevellock.h#L88)相比[pthread_mutex](https://github.com/lattera/glibc/blob/master/nptl/pthread_mutex_lock.c#L63)，没有spin的实现，性能有差距
+
+
+
 
 ##### \<sys.h>
 
@@ -1671,18 +1707,6 @@ printf("Time (seconds): %f\n\n", (float) (end.tv_usec - start.tv_usec + (end.tv_
 
 #endif // __common_h__
 ```
-
-
-
-```c++
-static thread_local std::mt19937 rng(std::random_device{}());
-std::uniform_int_distribution<int> distribution(0, RAND_MAX-1);
-int32_t sleep_time = static_cast<int32_t>(
-        _expire_delta * ((double) distribution(rng)/ (RAND_MAX)) * _expire_num);
-    std::this_thread::sleep_for(std::chrono::seconds(sleep_time));
-```
-
-
 
 
 

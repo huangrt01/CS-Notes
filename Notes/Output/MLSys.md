@@ -34,11 +34,7 @@ operations and kernels
 
 Sessions: 支持Extend和Run
 
-Variables: a special kind of opera-tion that returns a handle to a persistent mutable tensor
-that survives across executions of a graph. Handles to
-these persistent mutable tensors can be passed to a handful of special operations, such as `Assign` and `AssignAdd` (equivalent to +=) that mutate the referenced tensor. 
-
-
+Variables: a special kind of operation that returns a handle to a persistent mutable tensor that survives across executions of a graph. Handles to these persistent mutable tensors can be passed to a handful of special operations, such as `Assign` and `AssignAdd` (equivalent to +=) that mutate the referenced tensor. 
 
 ##### 3.Implementation
 
@@ -48,38 +44,32 @@ device信息: the job of "the task of worker" or "localhost"
 
 * `/job:localhost/device:cpu:0` or `/job:worker/task:17/device:gpu:3`
 
-tensors存在backing store buffers
+Tensor backing store buffers are reference counted
 
-* Single-Device Execution: 每个node存未执行的依赖数，降为0进入ready queue
+Execution
+
+* Single-Device Execution: 每个 node 存未执行的依赖数，降为0进入ready queue
 * Multi-Device Execution
-  * Node Placement: cost model估算node在特定device上执行用时，simulated execution, 贪心算法
+  * Node Placement: cost model 估算 node 在特定 device 上执行用时，simulated execution, 贪心算法
   * Cross-Device Communication: Send and Receive Nodes, 给特定tensor、特定device限制下的所有users只分配一次空间; scheduling下放给节点执行，而非master
 
 分布式实现：per subgraph per device, TCP or RDMA
 
-* device层面自然地形成CPU和GPU的并行
+* device层面自然地达成 CPU & GPU 并行计算
 
 **4.Extensions**
 
 4.1 Gradient Computation
 
-* extending the TensorFlow graph，使heuristics可能break down
-* improvements to memory management, options include:
+* 如果 extend the TensorFlow graph，自动地加入 gradient tensors，那么关于 tensor 使用位置/先后顺序 预测的 heuristic 可能break down，最先使用的 tensor 到最后依然需要使用
+* improvements to memory management, options include
   * using more sophisticated heuristics to determine the order of graph execution
   * recomputing tensors instead of retaining them in memory
-  * swapping out long-lived tensors from GPU memory to
-    more plentiful host CPU memory.
+  * swapping out long-lived tensors from GPU memory to more plentiful host CPU memory.
 
 4.2 Partial Execution
 
-* First, the Run call accepts inputs, an optional mapping
-  of `name:port` names to “fed” tensors values. Second,
-  the Run call accepts output names, a list of output
-  `name[:port]` specifications indicating which nodes
-  should be executed, and, if the port portion is present in a
-  name, that that particular output tensor value for the node
-  should be returned to the client if the Run call completes
-  successfully.
+* First, the Run call accepts inputs, an optional mapping of `name:port` names to “fed” tensors values. Second, the Run call accepts output names, a list of output `name[:port]` specifications indicating which nodes should be executed, and, if the port portion is present in a name, that that particular output tensor value for the node should be returned to the client if the Run call completes successfully.
 * 根据feed node和fetch node决定partial graph
 
 4.3 Device Constraints
@@ -116,7 +106,7 @@ tensors存在backing store buffers
 
 5.2 Controlling Data Communication and Memory Usage
 
-* e.g. 分析critical path，用control edge来delay Receive Nodes
+* e.g. 分析 critical path，用 control edge 来 delay Receive Nodes
 
 5.3 Asynchronous Kernels
 
