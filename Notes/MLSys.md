@@ -17,6 +17,14 @@ TensorFlow: 延迟计算、原子OP、抽象设备（CPU、GPU、ASIC）、抽�
 
 https://www.tensorflow.org/install/source#ubuntu
 
+#### 附录A：代码阅读
+
+* 发现领域模型
+* 抛开细枝末节： `git checkout -b code-reading`
+* 适可而止，BFS阅读
+
+
+
 
 #### TensorFlow: Large-Scale Machine Learning on Heterogeneous Distributed Systems [2015]
 
@@ -126,11 +134,52 @@ Execution
 
 9.2 Performance Tracing: EEG
 
-#### 附录A：代码阅读
 
-* 发现领域模型
-* 抛开细枝末节： `git checkout -b code-reading`
-* 适可而止，BFS阅读
+
+#### TensorFlow: A system for large-scale machine learning [OSDI, 2016]
+
+**Introduction**
+* TensorFlow allows vertices to represent computations that own or update mutable state.
+* synchronous replication
+
+While MXNet partially fulfills our extensibility requirements, the parameter server is “privileged” code, which makes it difficult for researchers to customize the handling of large models
+
+**3.TensorFlow execution model**
+
+Dataflow with mutable state 是tf吸取PS架构的经验 
+
+几种训练方式的讨论
+* 同步：大并发、无gradient staleness、scalable
+* 异步：资源利用率高 (maintain high throughput in the presence of
+  stragglers)；可以只使用一部分worker的梯度做更新，虽然损失了信息，但减少了异步带来的冲突
+* 半同步：dense同步、sparse异步
+
+
+
+**4.3 Fault tolerance**
+
+Having checkpoint and parameter management as programmable operations in the graph gives users the flexibility to implement schemes like these and others that we have not anticipated.
+
+
+
+**4.4 Synchronous replica coordination**
+
+synchronous with backup workers，和MapReduce的backup方案对比，更 proactive
+
+
+
+原生tensorflow架构分析：
+
+* 优点：
+  * 无需开发PS
+    * 实现需要额外存储变量的op在原生tf更为简单
+    * 新optimizer的探索不需要单独部署PS
+
+* 缺点：
+  * distributed runtime有通信问题，每个slot产生一对send/recv op，对于大规模embedding的场景基本训不动模型
+
+
+
 
 ### Go+Torch
 
@@ -469,6 +518,73 @@ Ethane的优势：
 * Significant deployment experience.
   
   
-  
+#### 《Scaling distributed machine learning with the parameter server, OSDI 2014》
+
+PS架构的优势主要还是高可用(system efficiency)
+
+2.2
+* distributed subgradient descent
+
+3.6 User-defined Filters
+* signifi-cantly modified filter
+* KKT(见5.1)：特征重要性筛选
+
+4.Implementation
+
+4.2 Messages
+* key-caching and value-compression can be used jointly.
+* key-cache让sender只需要传key lists的hash
+* 用snappy压缩 zero value
+
+4.3 Consistent Hashing
+一致性hash和 key-range 的概念紧密相连，论文 Chord: A scalable peer-to-peer lookup protocol for Internet applications
+
+4.5 Server Management
+* 计算节点分为server node和worker node
+* server共同维持全局共享的模型参数
+* workers保留一部分的训练数据，并且执行计算
+* worker只和server有通信，互相之间没有通信
+
+examples
+* CountMin Sketch Algo 有点像 bloom filter
+
+PS运维：
+* expectation - current_situation = operations
+* 服务发现、数据发现
+
+性能优化：
+* 双buffer + RCU，读不被锁阻碍
+* 简化版读写锁，优化系统态开销
+
+#### 《Serving DNNs like Clockwork: Performance Predictability from the BottomUp, OSDI 2020》
+
+[presentation](https://www.usenix.org/conference/osdi20/presentation/gujarati) 挺有意思
+
+model serving: ML system's "narrow waist"
+
+这篇文章尝试解决服务化请求长尾问题
+
+首先分析产生长尾的原因：out-of-order scheduling, interference from concurrency, power saving modes, and network queuing delays.
+然后基于以下两个假设：
+1) “DNN inference is predictable.”
+2) 能限制系统到应用层面的决策能力（减少worker内部的并行）
+
+提出解决方案：
+分布式系统常用的思路，request打到worker之前，先过一个中心controller，中心controller掌握全局信息（模型是否load、worker是否pending等），预测latency是否会超过SLA，以决定将请求打到哪个worker
+
+感觉这一系统难以直接应用于大公司的场景，因为：
+
+1.需要和rpc框架做更深的结合
+
+* 长尾问题本身有一部分是来自于服务化带来的网络传输开销，比如thrift worker负担，只有rpc框架能掌握更多信息
+* 如果要落地到生产场景，自制的简陋 controller 不易推广
+
+2.自身的优势不明显
+
+* 分业务服务化部署、并且是online learning的场景，显存不是瓶颈，模型本身已经是preload了
+* scalable能力未经过验证 (6.6)，controller成为瓶颈
+
+有启发的地方
+* 框架内的page cache可以借鉴一下 (https://gitlab.mpi-sws.org/cld/ml/clockwork/-/blob/master/src/clockwork/cache.h)
   
   

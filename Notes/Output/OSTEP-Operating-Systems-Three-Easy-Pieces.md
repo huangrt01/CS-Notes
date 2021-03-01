@@ -508,9 +508,36 @@ Other Approaches: (这些approach的问题在于lack of scaling)
 
 并行优化：Hoard，jemalloc
 
+
+
 [“Understanding glibc malloc” by Sploitfun. February, 2015.” ](https://sploitfun.wordpress.com/2015/02/10/understanding-glibc-malloc/) 
+
 * per thread arena
 * Fast Bin; Unsorted Bin; Small Bin; Large Bin; Top Chunk; Last Remainder Chunk
+
+
+
+(jemalloc) A Scalable Concurrent malloc(3) Implementation for FreeBSD
+
+Introduction: allocator 性能逐渐成为重点
+问题1: 要尽量避免 cache line的多线程争抢问题
+
+* jemalloc instead relies on multiple allocation
+  arenas to reduce the problem, and leaves it up to the application writer to pad allocations in order to avoid false cache line sharing in performance-critical code, or in code where one thread allocates objects and hands them off to multiple other threads.
+
+问题2: reduce lock contention <-> cache sloshing
+
+* jemalloc uses multiple arenas, but uses a more reliable mechanism than hashing for assignment of threads to arenas.
+
+解决方案：
+
+* the arena is chosen in round-robin fashion，用TLS(Thread-local storage)实现，可被TSD替代
+* 理解 "chunk" 2 MB，small、large、huge，huge用单个红黑树管理
+* 对于small/large，chunks用binary buddy algorithm分割成page runs
+  * small allocations用bitmap管理，run header 方案的优劣讨论
+  * fullness 这段没看懂
+
+
 
 #### 18.Paging: Introduction
 
@@ -1684,13 +1711,13 @@ int select(int nfds,fd_set *restrict readfds,fd_set *restrict writefds,fd_set *r
 
 **A Problem: Blocking System Calls**
 
-=> no blocking calls are allowed
+=> no blocking calls are allowed => AIO
 
 **A Solution: Asynchronous I/O**
 
 思考：对于一个特殊的问题场景，需要厘清可用操作的边界，必要时可能引入新的概念，例如这里的asynchronous I/O、CSAPP p801的async-signal-safe functions
 
-AIO control block: 见笔记`event-based.cpp`文件，利用`aio_error`配合signal机制interrupt，这一思想也用于I/O devices中
+AIO control block: 利用`aio_error`配合signal机制interrupt，这一思想也用于I/O devices中
 
 * "Flash"这篇论文用hybrid思想，events are used to process network packets, and a thread pool is used to manage outstanding I/Os
 

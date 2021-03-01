@@ -243,6 +243,9 @@ git push origin HEAD --force
 - `git clean -fd` 删掉unstaged文件
 
 ##### Advanced Git
+
+* `git diff > patch && git apply patch`
+
 - `git cat-file -p`: 显示对象信息
   * 40位Hash值，前2位是文件夹，后38位是文件名
   * 存在`.git/objects/`中 

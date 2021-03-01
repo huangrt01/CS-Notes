@@ -1592,8 +1592,11 @@ strcpy(buf, str.c_str());//strncpy(buf, str.c_str(), 10);
 
 ```c++
 # Interprets an unsigned integer value in the string str.
+std::string str;
+std::cout << "Enter an unsigned number: ";
+std::getline(std::cin,str);
 size_t idx = 0;
-unsigned long ul = std::stoul(str,&id,0);
+unsigned long ul = std::stoul(str,&idx,0);
 ```
 
 

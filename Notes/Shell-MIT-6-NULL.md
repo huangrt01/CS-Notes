@@ -47,7 +47,10 @@ do
 done
 ```
 
+* `set -e`：遇到错误，shell script 直接退出
+
 ##### special variables
+
   * `$0` - Name of the script
   * `$1 to \$9` - Arguments to the script. $1 is the first argument and so on.
   * `$@` - All the arguments

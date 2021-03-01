@@ -1,5 +1,10 @@
 [toc]
+
 ## Machine Learning
+
+Materials
+
+* http://neuralnetworksanddeeplearning.com/
 
 ### Bert
 
@@ -22,6 +27,18 @@ model finetune
   * Bert训练任务的设计方式对模型效果影响大
     * 将finetune进一步分为两阶段，把质量较低、挖掘的数据放在第一阶段finetune，质量高的标注数据放在第二阶段finetune，优化finetune的整体效果。
     * 这种递进的训练技巧在BERT中较常见，论文中也有将长度较短的向量放在第一阶段训练的方法。
+
+
+
+### 特征压缩
+
+According to [JL-lemma](https://en.wikipedia.org/wiki/Johnson–Lindenstrauss_lemma), [random projection](https://en.wikipedia.org/wiki/Random_projection) reduces the dimensionality of data while approximately preserving the pairwise distances between data points.
+
+* 压缩 feature num 而非压缩 embedding size (PCA, SVD)
+* 输入 feature，输出 concated_compressed_embedding + dot_products
+* 变种：instance-wise (Y adaptive to X), implicit-order, GroupCDot, CDotFlex
+* 对比：比[AutoInt](https://arxiv.org/pdf/1810.11921.pdf)计算量小；比[DCN-V2](https://arxiv.org/pdf/2008.13535.pdf)线上效果好
+
 
 
 
@@ -67,6 +84,7 @@ history = model.fit(x_train, y_train,
 ```
 
 One-hot编码
+
 ```python
 def label2OH(y, D_out):
   N = y.shape[0]
@@ -501,7 +519,7 @@ horovodrun -np $num_gpus python fashion_mnist.py --epochs 3 --batch-size 512
 * [Horovod](https://github.com/horovod/horovod)是一种最初由[Uber开发](https://eng.uber.com/horovod/)的开源工具，旨在满足他们许多工程团队对更快的深度学习模型训练的需求。它是跨框架的分布式深度学习库，支持多种框架、高性能算法、高性能网络（RDMA、GPUDirect），也是分布式训练方法不断发展的生态系统（包括[Distributed TensorFlow](https://github.com/tensorflow/examples/blob/master/community/en/docs/deploy/distributed.md)) 的一部分。Uber开发的这种解决方案利用[MPI](https://en.wikipedia.org/wiki/Message_Passing_Interface)进行分布式进程间通信，并利用[NVIDIA联合通信库（NCCL）](https://developer.nvidia.com/nccl)，以高度优化的方式实现跨分布式进程和节点的平均值计算。 由此产生的Horovod软件包实现了它的目标：仅需进行少量代码修改和直观的调试即可在多个GPU和多个节点上扩展深度学习模型的训练。
 
   自2017年开始实施以来，Horovod已显著成熟，将其支持范围从TensorFlow扩展到了Keras，PyTorch和Apache MXNet。 Horovod经过了广泛的测试，迄今已用于一些最大的深度学习训练当中。例如，在[Summit系统上支持 **exascale** 深度学习，可扩展到 **27,000多个V100 GPU**](https://arxiv.org/pdf/1810.01993.pdf)
-  
+
   * 支持多种框架
 
 ```python
@@ -572,9 +590,9 @@ python train.py
   * 提高学习率：One weird trick for parallelizing convolutional neural networks
   * 早期学习率热身： Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour.
 * Batch Normalization
-    * BN通过最小化每个层的输入分布中的漂移来改善学习过程
-    * 提高学习速度并减少使用 Dropout 的需求
-    * 想法是针对每批数据对所有层的输入 进行规一化（这比简单地只对输入数据集进行规一化更为复杂）
+  * BN通过最小化每个层的输入分布中的漂移来改善学习过程
+  * 提高学习速度并减少使用 Dropout 的需求
+  * 想法是针对每批数据对所有层的输入 进行规一化（这比简单地只对输入数据集进行规一化更为复杂）
   * Ghost BN
     * 计算更小批量的统计数据（“ghost 批量”）引入其他噪声
     * 按 GPU 逐个单独执行批量归一化
@@ -586,8 +604,8 @@ python train.py
   * 增加批量大小代替学习率衰减
   * LARS – 按层自适应学习率调整
     *  [LARS论文](https://arxiv.org/abs/1904.00962): 大LR -> LR warm-up -> LARS，只是能保证大batch训练能训，关于效果问题，作者认为“increasing the batch does not give much additional gradient information comparing to smaller batches.”
-    * [LARC](https://github.com/NVIDIA/apex/blob/master/apex/parallel/LARC.py): 带梯度裁剪的分层自适应学习率，以具有动力的SGD作为基础优化器
-    * [LAMB](https://arxiv.org/abs/1904.00962): 分层自适应学习率，以 Adam 作为基础优化器，在BERT等语言模型上比LARC更成功
-    * [NovoGrad](https://arxiv.org/abs/1905.11286): 按层计算的移动平均值，在几个不同的领域也有不错的表现
+    *  [LARC](https://github.com/NVIDIA/apex/blob/master/apex/parallel/LARC.py): 带梯度裁剪的分层自适应学习率，以具有动力的SGD作为基础优化器
+    *  [LAMB](https://arxiv.org/abs/1904.00962): 分层自适应学习率，以 Adam 作为基础优化器，在BERT等语言模型上比LARC更成功
+    *  [NovoGrad](https://arxiv.org/abs/1905.11286): 按层计算的移动平均值，在几个不同的领域也有不错的表现
 
 ![training_result](Machine-Learning/training_result.png)
