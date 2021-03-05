@@ -44,6 +44,8 @@
 
 #### [OSTEP-Operating-Systems-Three-Easy-Pieces ](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/OSTEP-Operating-Systems-Three-Easy-Pieces.md) ■■■■■■□□□□
 
+#### [Distributed-Systems](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Distributed-Systems.md)
+
 ### 计算机网络
 
 #### [Stanford-CS144-Lecture](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Computer-Networking-Lecture-CS144-Stanford.md) ■■■■□□□□□□
@@ -72,7 +74,7 @@
 
 ### 密码学
 
-#### [Cryptography I, Stanford University, Dan Boneh (完成95%)](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Cryptography%20I%2C%20Stanford%20University%2C%20Coursera.md) ■□□□□□□□□□
+#### [Cryptography I, Stanford University, Dan Boneh (待整理)](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Cryptography%20I%2C%20Stanford%20University%2C%20Coursera.md) ■□□□□□□□□□
 
 ### 分布式系统
 
