@@ -506,7 +506,6 @@ pidwait(){
 	done
 }
 ```
-* `history | awk '{$1="";print substr($0,2)}' | sort | uniq -c | sort -n | tail -n 10` 可得到使用频率最高的10个命令
 * [background port forwarding](https://mpharrigan.com/2016/05/17/background-ssh.html)
 
 
@@ -655,20 +654,19 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
 
 
 
-
-
-
-
 ### Linux命令按字母分类
 #### a
 * awk: 一种控制台编程工具，寻找和处理pattern
   * 入门[wiki](https://zh.wikipedia.org/wiki/AWK)
-  * 数据统计算均值
-    * `awk -F'[ ,]+' '{print $1,$3,$5,$7}' | awk '{ for (i=1; i<=NF; i++) { sum[i]+= $i }} END { for (i=1; i<=NF; i++) {printf "%.9f ", sum[i]/NR}}'`，`-F'[]'`内空格和逗号都是分隔符，`+`表示将连续分隔符视为一个
+  * 数据统计：
+    * `awk -F'[ ,]+' '{print $1,$3,$5,$7}' | awk '{ for (i=1; i<=NF; i++) { sum[i]+= $i }} END { for (i=1; i<=NF; i++) {printf "%.9f ", sum[i]/NR}}'`：算均值
+      * ``-F'[]'`内空格和逗号都是分隔符，`+`表示将连续分隔符视为一个
+    * `history | awk '{$1="";print substr($0,2)}' | sort | uniq -c | sort -n | tail -n 10` ：得到使用频率最高的10个命令
   * `awk '$NF!~/\.so/{next} {$0=$NF} !a[$0]++' /proc/1585728/maps`
     * `$NF!~/\.so/{next}` – If the last column doesn’t contain “*.so*“, we ignore it
     * `{$0=$NF}` - If the last column contains a shared library, we replace the line by the last column, which is the filename of the library
-    * `*!a[$0]++*` is an *awk* trick to [remove duplicate lines](https://www.baeldung.com/linux/uniq-by-column):
+    * `*!a[$0]++*` is an *awk* trick to [remove duplicate lines](https://www.baeldung.com/linux/uniq-by-column)
+  * `find . -name "*@to_be_deleted" | awk -F"@to_be_deleted" '{print "mv " $0 " " $1}'|sh`：将文件夹内文件名中的某个pattern删掉
 #### b
 * `bash -x run.sh` 显示shell脚本执行过程中的实际命令
 * bg: resume后台暂停的命令

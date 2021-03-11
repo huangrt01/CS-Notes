@@ -1,11 +1,35 @@
 ### Python
 
+[toc]
+
+#### 基础操作
+
 list操作
 
 ```python
 list.extend(list)
 list.append(item)
 ```
+
+
+
+[浅拷贝与深拷贝](https://zhuanlan.zhihu.com/p/25221086)，[copy.py](https://docs.python.org/3/library/copy.html)
+
+核心思想：
+
+* 赋值是将一个对象的地址赋值给一个变量，让变量指向该地址（ 旧瓶装旧酒 ）。
+* 修改不可变对象（str、tuple）需要开辟新的空间
+* 修改可变对象（list等）不需要开辟新的空间
+
+=> 所以说改 list 会牵连复制的对象，而改 str 等不会互相影响
+
+
+
+#### 类
+
+[@staticmethod v.s. @classmethod]([https://stackoverflow.com/questions/136097/difference-between-staticmethod-and-classmethod#:~:text=%40staticmethod%20function%20is%20nothing%20more,not%20Parent%20class%2C%20via%20inheritance.](https://stackoverflow.com/questions/136097/difference-between-staticmethod-and-classmethod#:~:text=%40staticmethod function is nothing more,not Parent class%2C via inheritance.))
+
+
 
 #### ipython
 

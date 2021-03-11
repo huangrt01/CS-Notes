@@ -2,8 +2,6 @@
 
 **[l01-Introduction and MapReduce](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Distributed-Systems/l01-Introduction%20and%20MapReduce)**
 
-
-
 #### 《Apache Hadoop YARN: Yet Another Resource Negotiator》
 
 [YARN官网](https://hadoop.apache.org/docs/stable/hadoop-yarn/hadoop-yarn-site/YARN.html)
@@ -14,7 +12,7 @@
 
 解决两大问题：1）依赖特定编程模型 2）中心式管理难以scale
 
-设计核心是 separating resource management func-tions from the programming model，更彻底地将 platform和framework抽象开
+设计核心是 separating resource management functions from the programming model，更彻底地将 platform和framework抽象开
 
 2.History
 
@@ -38,7 +36,7 @@ NM: container launch context (CLC)的概念，启动、监控、local service、
 
 AM: late binding, the process spawned is not bound to the request, but to the lease.
 
-fault tolerance: RM对AM有、AM责任最重
+fault tolerance: RM对AM有责任、AM责任最重
 
 * YARN only secures its deployment
 * RM单点故障，Work is in progress to add sufficient protocol sup-port for AMs to survive RM restart.
@@ -65,6 +63,12 @@ One of the most important architectural differences that partially explains thes
 和MesOs等类似架构对比，YARN特点是multiple application frameworks、per-job intra-framework scheduler、资源管控、lazy binding等
 
 和基于虚机的任务对比，YARN更适合运行时间短、切换更频繁的任务
+
+
+
+
+
+
 
 
 
@@ -100,9 +104,32 @@ ideal scheduler: Multiple Knapsack Problem(MKP) (NP-C Problem)
 
 * 队列和应用都同时声明不止一个维度的资源 (eg. CPU, MEM)
 * 在进行排序时, 如果只考虑一个维度, 可能导致其它维度碎片严重
-* DRF(Dominant Resource Fairness) 将各个维度上已经使用的资源占其维度上的资 源总量的百分比中最大的值作为其主资源的代表, 各个队列、应用直接对主资源代表进行比较, 进而得到排序
+* DRF(Dominant Resource Fairness) 将各个维度上已经使用的资源占其维度上的资源总量的百分比中最大的值作为其主资源的代表, 各个队列、应用直接对主资源代表进行比较, 进而得到排序
 
 => req定制Node的弱约束、req内强/弱约束
+
+
+
+Quota管理
+
+* 固定分组 -> 固定分组+池化quota -> 完全quota
+
+* 可抢占任务 & 不可抢占任务
+  * 可抢占任务不占用 Quota，填满空闲资源
+  * 不可抢占任务占用 Quota，保证 Quota 内的任务所需资源始终可以得到满足
+
+* Quota化带来资源碎片问题
+
+
+
+Fragmentation
+
+* 碎片率取决于 max_task_size/node_size，这也是为什么大家追求集群node数量的原因（YARN最多单集群5w nodes）
+
+* 资源碎片可能导致紧急任务的资源不够，这是池化的一个副作用
+* 策略：
+  * Binpack 算法尽量堆叠任务，优先将一台机器资源占满 => 高优任务堆叠 + 低优任务逆向堆叠
+  * 小分组问题（资源本身就少）：整机资源预留，以保证整机资源高可用；预留时可调度低优任务。
 
 
 
@@ -144,6 +171,8 @@ across framework的shared cluster
 
 two-level scheduling mechanism called resource offers. 
 
+* 不同框架接入Mesos很方便，只需要迁移自己的scheduler
+
 和YARN做对比：
 
 * YARN的AM的“影响调度”的能力比Mesos弱，并不具备完全的"two-level scheduling"能力
@@ -159,8 +188,6 @@ fault tolerance
 
 4.Mesos Behavior
 
-fragmentation: 碎片取决于 max_task_size/node_size，这也是为什么大家追求集群node数量的原因（YARN最多单集群5w nodes）
-
 5.Implementation
 
 hadoop port实现的local filesystem访问问题：
@@ -170,6 +197,14 @@ Hadoop normally writes map output files to the local filesystem, then serves the
 6.Evaluation
 
 overhead < 4%
+
+
+
+Mesos 迁移 Yarn 的思路
+
+* 阶段一：Proxy Solution: Big AM 模式，将 Yarn 调度提到一个 AM Proxy 来实现，好处是能复用原先的大部分逻辑，缺点是和 Yarn 生态有冲突，RM 的调度被“剥夺”，不利于后续资源池化推进
+* 阶段二：Yarn 池化方案：AM 不再感知所有机器节点信息并独占机器，而是将资源分配交给 RM
+* 阶段三：A Big AM -> An AM per Job
 
 
 
@@ -327,3 +362,92 @@ CNCF (Cloud Native Computing Foundation) 的定义
 * 未来：containerd + kata + 裸金属
 
 
+
+### Ray: 动态可编程分布式计算框架
+
+1.Ray是一个动态可编程的分布式计算框架，支持分布式训练，主要体现在以下几方面：
+
+丰富的本地训练场景（清晰指派local/remote的任务/角色，task无状态，actor有状态）
+
+灵活训练规划pipeline（用户可以在Actor里自定义逻辑，包括循环、计时器等）
+
+灵活数据源（流批处理融合，支持简单的数据处理chain）
+
+One-off system：针对RL任务的特化，1）training, serving, simulation一体化，2）dynamic execution。推荐系统不一定需要，可能跟粗排联系更紧密 3）model serving的时候，更强调client and server colocate的情形，不适合我们的精排场景
+
+2.目前工业界主要使用Ray的方式分两种，一是用Ray的上游生态lib，二是用Ray的底层能力深入自研框架
+
+（1）Ray的上游生态：
+
+- 强化学习库(RLLib)
+- 超参调优库(Tune):  支持任意ML框架：PyTorch，XGBoost， MXNet， Keras，集成了很多优化器的库和算法， 通过TensorBoard做显示，可以和Ray Serve无缝结合
+- Training with RaySGD: 优势在于能和其它Ray lib无缝结合，并且实现了分布式的dataset
+
+（2）Ray的底层能力：大厂结合Ray自研框架的lecture在这里：[蚂蚁金服Ray Forward推广](https://tech.antfin.com/community/activities/698/review)
+
+3.Ray对应于我们系统中的多个层次，它的底层能力对应于资源管理层REAM (包括Flink, Yarn等)，上游生态对应于我们的LagrangeX
+
+4.最值得我们借鉴的地方有哪些？
+
+底层：
+
+- Ray实现了高效的系统间数据传输， "在底层hack了python的内存对象，和Redis内存共享，实现Numpy、Pandas等数据格式序列化/反序列化时候zero-copy，没有损耗"，是否可以引入这一思想减小我们model serving/training过程中序列化/反序列化的开销
+- Ray的结构非常优雅，global scheduler调度全部任务，local scheduler调度同一Node内共享内存的worker，object store支持Node之间的通信。
+
+易用性：
+
+Ray是用户友好的分布式计算框架，具体体现在
+
+1）轻量级的API，几乎不提高代码复杂性。只用在函数前加`@ray.remote`，就能通过remote调用，使task在其它ray集群执行。
+
+2）支持ray dashboard，利于debugging and profiling
+
+
+
+官方doc：https://docs.ray.io/en/latest/installation.html
+
+开源史海钩沉系列 [1] Ray：分布式计算框架 - 高策的文章 - 知乎 https://zhuanlan.zhihu.com/p/104022670
+
+
+
+**读论文**： 《Ray: A Distributed Framework for Emerging AI Applications》, OSDI 18
+
+结合Bulk-synchronous parallel systems和Task-parallel systems这两类系统
+
+无状态和有状态
+
+- In contrast stateful computations are a good fit for implementing parameter servers, performing repeated computation on GPU-backed data, or running third-party simulators that do not expose their state.
+
+Stateful edges
+
+- embed actors in an otherwise stateless task graph
+- enable us to maintain lineage.
+
+![img](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Distributed-Systems/ray-graph.png)
+
+The system layer consists of three major components: a global control store, a distributed scheduler, and a distributed object store. 
+
+![img](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Distributed-Systems/ray-system.png)
+
+- GCS让系统的任何成分都是stateless的 ，支持fault tolerance，makes it easy to scale the distributed object store and scheduler independently
+- 调度的分层，有助于scaling，先由local scheduler调度，只有overload的情形，才会给global scheduler
+
+
+
+**读源码：**https://www.qtmuniao.com/2019/07/28/ray-source-reading-1/
+
+![img](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Distributed-Systems/ray-state.png)
+
+src/ray/common/task/scheduling_resources.cc
+
+- ResourceSet
+- ResourceIds
+- ResourceIdSet
+- SchedulingResources
+
+src/ray/raylet/scheduling_queue.cc
+
+- TaskQueue
+- SchedulingQueue
+
+src/ray/raylet/scheduling_policy.cc

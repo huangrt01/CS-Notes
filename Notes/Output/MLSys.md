@@ -180,6 +180,59 @@ synchronous with backup workers，和MapReduce的backup方案对比，更 proact
 
 
 
+### TensorFlow Serving
+
+#### 《TensorFlow-Serving: Flexible, High-Performance ML Serving》
+
+
+
+load模型（尤其是对模型进行warmup）导致延迟spike的问题，确实不容易解决。特别复杂的模型warm up引起服务cpu抖动，可能是因为线程不够了
+
+2.Library
+
+2.1 Model Lifecycle Management
+
+* Source, Source Adapters, Source Routers
+* Canary and Rollback
+* Aspired Versions Manager
+  * RCU
+
+2.2 Inference
+
+* Inter-Request Batching（图内/外）
+
+3.Canonical Binary and Hosted Service
+
+
+
+[How Zendesk Serves TensorFlow Models in Production](https://medium.com/zendesk-engineering/how-zendesk-serves-tensorflow-models-in-production-751ee22f0f4b)
+
+[美团：基于TensorFlow Serving的深度学习在线预估](https://tech.meituan.com/2018/10/11/tfserving-improve.html)
+
+
+
+#### [Jeff Dean: Achieving Rapid Response Times in Large Online Services](https://storage.googleapis.com/pub-tools-public-publication-data/pdf/44875.pdf)
+
+讨论了分布式服务的通用优化思想，很值得学习！
+
+shared environment 提升资源利用率的同时，也带来不可预测的因素（比如network congestion、background activities、bursts of foreground activity、not just your jobs, but everyone else’s jobs, too），影响服务长尾延时，并且会 exacerbated by large fanout systems
+
+Conclusion
+
+* Tolerating variability
+  * important for large-scale online services
+  * large fanout magnifies importance
+  * makes services more responsive
+  * saves significant computing resources
+* Collection of techniques
+  * general good engineering practices
+    * prioritized server queues, careful management of background activities
+  * cross-request adaptation
+    * load balancing, micro-partitioning
+  * within-request adaptation
+    * backup requests, backup requests w/ cancellation, tainted results
+
+
 
 ### Go+Torch
 
@@ -238,97 +291,19 @@ OneFlow架构
 ![SBP](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/SBP.jpg)
 
 
-### Ray: 动态可编程分布式计算框架
+### GPU 相关知识
 
-1.Ray是一个动态可编程的分布式计算框架，支持分布式训练，主要体现在以下几方面：
-
-丰富的本地训练场景（清晰指派local/remote的任务/角色，task无状态，actor有状态）
-
-灵活训练规划pipeline（用户可以在Actor里自定义逻辑，包括循环、计时器等）
-
-灵活数据源（流批处理融合，支持简单的数据处理chain）
-
-One-off system：针对RL任务的特化，1）training, serving, simulation一体化，2）dynamic execution。推荐系统不一定需要，可能跟粗排联系更紧密 3）model serving的时候，更强调client and server colocate的情形，不适合我们的精排场景
-
-2.目前工业界主要使用Ray的方式分两种，一是用Ray的上游生态lib，二是用Ray的底层能力深入自研框架
-
-（1）Ray的上游生态：
-
-* 强化学习库(RLLib)
-
-* 超参调优库(Tune):  支持任意ML框架：PyTorch，XGBoost， MXNet， Keras，集成了很多优化器的库和算法， 通过TensorBoard做显示，可以和Ray Serve无缝结合
-* Training with RaySGD: 优势在于能和其它Ray lib无缝结合，并且实现了分布式的dataset
-
-（2）Ray的底层能力：大厂结合Ray自研框架的lecture在这里：[蚂蚁金服Ray Forward推广](https://tech.antfin.com/community/activities/698/review)
-
-3.Ray对应于我们系统中的多个层次，它的底层能力对应于资源管理层REAM (包括Flink, Yarn等)，上游生态对应于我们的LagrangeX
-
-4.最值得我们借鉴的地方有哪些？
-
-底层：
-
-* Ray实现了高效的系统间数据传输， "在底层hack了python的内存对象，和Redis内存共享，实现Numpy、Pandas等数据格式序列化/反序列化时候zero-copy，没有损耗"，是否可以引入这一思想减小我们model serving/training过程中序列化/反序列化的开销
-* Ray的结构非常优雅，global scheduler调度全部任务，local scheduler调度同一Node内共享内存的worker，object store支持Node之间的通信。
-
-易用性：
-
-Ray是用户友好的分布式计算框架，具体体现在
-
-1）轻量级的API，几乎不提高代码复杂性。只用在函数前加`@ray.remote`，就能通过remote调用，使task在其它ray集群执行。
-
-2）支持ray dashboard，利于debugging and profiling
+共享卡 —— 如何实现算力和显存隔离
+* 隔离方式：时间片 vs 空间
+* 隔离级别：不隔离 vs 强隔离 vs 弹性
+* 几种隔离技术对比：
+  * vGPU(Grid)(Nvidia)：虚拟化；容器化支持不好，license
+  * vCuda(腾讯)：cuda hook；性能损耗严重
+  * cGPU(Alibaba)：ioctl；损耗小，硬隔离，侵入内核（机器容易坏）
+  * MPS(Nvidia)：thread；显存隔离，故障隔离不好
+  * MIG(~A100)：sm/global memory；硬件层面隔离
 
 
-
-官方doc：https://docs.ray.io/en/latest/installation.html
-
-开源史海钩沉系列 [1] Ray：分布式计算框架 - 高策的文章 - 知乎 https://zhuanlan.zhihu.com/p/104022670
-
-
-
-**读论文**：
-《Ray: A Distributed Framework for Emerging AI Applications》, OSDI 18
-
-结合Bulk-synchronous parallel systems和Task-parallel systems这两类系统
-
-无状态和有状态
-
-* In contrast stateful computations are a good fit for implementing parameter servers, performing repeated computation on GPU-backed data, or running third-party simulators that do not expose their state.
-
-Stateful edges
-
-* embed actors in an otherwise stateless task graph
-* enable us to maintain lineage.
-
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/ray-graph.png" alt="" style="zoom:70%;" />
-
-The system layer consists of three major components: a global control store, a distributed scheduler, and a distributed object store. 
-
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/ray-system.png" alt="" style="zoom:50%;" />
-
-* GCS让系统的任何成分都是stateless的 ，支持fault tolerance，makes it easy to scale the distributed object store and scheduler independently
-
-* 调度的分层，有助于scaling，先由local scheduler调度，只有overload的情形，才会给global scheduler
-
-
-
-**读源码：**https://www.qtmuniao.com/2019/07/28/ray-source-reading-1/
-
-<img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/ray-state.png" alt="" style="zoom:50%;" />
-
-src/ray/common/task/scheduling_resources.cc
-
-* ResourceSet
-* ResourceIds
-* ResourceIdSet
-* SchedulingResources
-
-src/ray/raylet/scheduling_queue.cc
-
-* TaskQueue
-* SchedulingQueue
-
-src/ray/raylet/scheduling_policy.cc
 
 ### 论文阅读
 
