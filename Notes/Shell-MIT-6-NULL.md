@@ -106,6 +106,7 @@ done
 
 ```
 * 2>重定向stderr；引申：>&2，重定向到stderr
+  * `$command > result 2>&1`，STDOUT、STDERR 均重定向到 result
 * `-ne`，更多的查看man test，比如`-n 文件存在为真 -z 不存在为真`
 * “test command”， \[\[和\[的区别：http://mywiki.wooledge.org/BashFAQ/031 ，[[是compound command，存在special parsing context，寻找reserved words or control operators 
 

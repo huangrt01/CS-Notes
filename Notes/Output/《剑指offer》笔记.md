@@ -54,7 +54,7 @@ CMyString& CMyString::operator=(const CMyString &str){
 		CMyString strTemp(str);
 		swap(m_pData,strTemp.m_pData);
 	}
-	return this;
+	return *this;
 }
 ```
 

@@ -812,11 +812,43 @@ auto objPtr = cache[id].lock();
 
 ##### Item 21: Prefer **std::make_unique** and **std::make_shared** to direct use of **new**.
 
+https://en.cppreference.com/w/cpp/memory/unique_ptr/make_unique
+
 C++14没有`make_unique`
 
+* 参数只能是 unbounded array： `std::unique_ptr<Vec3[]> v3 = std::make_unique<Vec3[]>(5);`
+
+
 ```c++
-template<typename T, typename... Ts> std::unique_ptr<T> make_unique(Ts&&... params) {
-return std::unique_ptr<T>(new T(std::forward<Ts>(params)...)); }
+// C++14 make_unique
+namespace detail {
+template<class>
+constexpr bool is_unbounded_array_v = false;
+template<class T>
+constexpr bool is_unbounded_array_v<T[]> = true;
+ 
+template<class>
+constexpr bool is_bounded_array_v = false;
+template<class T, std::size_t N>
+constexpr bool is_bounded_array_v<T[N]> = true;
+} // namespace detail
+ 
+template<class T, class... Args>
+std::enable_if_t<!std::is_array<T>::value, std::unique_ptr<T>>
+make_unique(Args&&... args)
+{
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+ 
+template<class T>
+std::enable_if_t<detail::is_unbounded_array_v<T>, std::unique_ptr<T>>
+make_unique(std::size_t n)
+{
+    return std::unique_ptr<T>(new std::remove_extent_t<T>[n]());
+}
+ 
+template<class T, class... Args>
+std::enable_if_t<detail::is_bounded_array_v<T>> make_unique(Args&&...) = delete;
 ```
 
 ```c++
@@ -987,7 +1019,9 @@ logAndProcess(std::move(w));       // call with rvalue
 
 ##### Item 24: Distinguish universal references from rvalue references.
 
-T&&不一定是rvalue references，称其为universal references，场景如下：
+T&&不一定是rvalue references，称其为universal references。用右值初始化即为右值引用，用左值初始化即为左值引用。
+
+场景如下：
 
 * 模板: 
 
@@ -1032,7 +1066,16 @@ auto timeFuncInvocation = [](auto&& func, auto&&... params){
 
 ##### Item 25: Use **std::move** on rvalue references, **std::forward** on universal references.
 
+Perfect forwarding is often used with [variadic templates](http://en.cppreference.com/w/cpp/language/parameter_pack) to wrap calls to functions with an arbitrary number of arguments. For example, [`std::make_unique`](http://en.cppreference.com/w/cpp/memory/unique_ptr/make_unique) and [`std::make_shared`](http://en.cppreference.com/w/cpp/memory/shared_ptr/make_shared) both use perfect forwarding to forward their arguments to the constructor of the wrapped type.
 
+
+
+
+### C++ Patterns
+
+https://cpppatterns.com/
+
+见[cpp-patterns.cpp]
 
 
 
@@ -1047,7 +1090,7 @@ auto timeFuncInvocation = [](auto&& func, auto&&... params){
 
 #### 编程习惯
 
-RAII原则：Resource acquisition is initialization
+RAII原则：Resource acquisition is initialization，充分利用局部对象的构造和析构特效，常需要与 rule of five, rule of zero 结合
 
 * [Google Style](https://google.github.io/styleguide/cppguide.html)
 * [Google: Developer Documentation Style Guide](https://developers.google.com/style)
@@ -1183,6 +1226,50 @@ using namespace namespace_name1::namespace_name2;
 
 
 
+##### std::function
+
+编程模式
+
+* 减少重复代码（避免用宏）
+
+```c++
+void object_loop(const std::function<void(Object&)>& func) {
+  for (auto& input : inputs) {
+  	func(input);
+  }
+}
+
+void do_sth() {
+  object_loop([&](Object& input) {
+    if (is_valid(input)) {
+      process(input);
+    }
+  });
+}
+```
+
+* 线程池使用
+
+```c++
+auto func = [&](int tid, size_t mi) {
+  process_part(mi);
+};
+my_thread_pool()->parallel_for(parallel_num, begin, end, func);
+```
+
+##### range iteration
+```c++
+int arr[] = {1, 2, 3, 4, 5};
+for (int value : arr) {
+// Use value
+}
+std::vector<int> vec = {1, 2, 3, 4, 5};
+for (int& ref : vec) {
+// Modify ref
+}
+```
+
+It supports arrays, types that provide begin and end member functions, and types for which begin and end functions are found via argument-dependent lookup
 
 
 #### C++11
@@ -1542,7 +1629,35 @@ inline void reset_1d_tensor_with_slice(
 }
 ```
 
+##### \<chrono>
 
+5s: C++14’s [duration literal suffixes](http://en.cppreference.com/w/cpp/chrono/duration#Literals)
+
+```c++
+#include <chrono>
+#include <thread>
+using namespace std::literals::chrono_literals;
+void some_complex_work();
+int main()
+{
+  // Fixed time step
+  using clock = std::chrono::steady_clock;
+  clock::time_point next_time_point = clock::now() + 5s;
+  some_complex_work();
+  std::this_thread::sleep_until(next_time_point);
+  
+  // Measure
+  clock::time_point start = clock::now();
+  // A long task...
+  clock::time_point end = clock::now();
+  clock::duration execution_time = end - start;
+  
+  // Sleep
+  std::chrono::milliseconds sleepDuration(20);
+  std::this_thread::sleep_for(sleepDuration);
+  std::this_thread::sleep_for(5s);
+}
+```
 
 
 ##### \<deque>
@@ -1661,12 +1776,26 @@ gflags::SetVersionString(get_version());
 
 ##### \<random>
 
+* Application
+
 ```c++
+// Choose a random element
 static thread_local std::mt19937 rng(std::random_device{}());
 std::uniform_int_distribution<int> distribution(0, RAND_MAX-1);
 int32_t sleep_time = static_cast<int32_t>(
         _expire_delta * ((double) distribution(rng)/ (RAND_MAX)) * _expire_num);
     std::this_thread::sleep_for(std::chrono::seconds(sleep_time));
+
+// Flip a biased coin
+std::random_device random_device;
+std::mt19937 random_engine{random_device()};
+std::bernoulli_distribution coin_distribution{0.25};
+bool outcome = coin_distribution(random_engine);
+
+// Seed a random number engine with greater unpredictability.
+std::random_device r;
+std::seed_seq seed_seq{r(), r(), r(), r(), r(), r()};
+std::mt19937 engine{seed_seq};
 ```
 
 * glibc的 [random](https://github.com/lattera/glibc/blob/master/stdlib/random.c) 函数涉及一个锁性能问题，使用的[锁](https://github.com/lattera/glibc/blob/895ef79e04a953cac1493863bcae29ad85657ee1/sysdeps/nptl/lowlevellock.h#L88)相比[pthread_mutex](https://github.com/lattera/glibc/blob/master/nptl/pthread_mutex_lock.c#L63)，没有spin的实现，性能有差距

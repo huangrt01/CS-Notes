@@ -4,14 +4,17 @@
 
 #### 基础操作
 
-list操作
+##### 数据结构
 
+list
 ```python
 list.extend(list)
 list.append(item)
+
+list = [x.strip() for x in list_string.split() if x.strip()]
 ```
-
-
+collections.defaultdict(list)、collections.defaultdict(set)
+* defaultdict相比普通dict的区别在于：使用索引时，如果未查找到，会自动插入默认值
 
 [浅拷贝与深拷贝](https://zhuanlan.zhihu.com/p/25221086)，[copy.py](https://docs.python.org/3/library/copy.html)
 
@@ -25,11 +28,36 @@ list.append(item)
 
 
 
+一些细节
+
+* 运行文件乱码问题，在文件开头加 `# coding=utf-8`
+
+
+
 #### 类
 
 [@staticmethod v.s. @classmethod]([https://stackoverflow.com/questions/136097/difference-between-staticmethod-and-classmethod#:~:text=%40staticmethod%20function%20is%20nothing%20more,not%20Parent%20class%2C%20via%20inheritance.](https://stackoverflow.com/questions/136097/difference-between-staticmethod-and-classmethod#:~:text=%40staticmethod function is nothing more,not Parent class%2C via inheritance.))
 
 
+
+#### virtualenv
+
+```
+virtualenv .myenv --python=python3.8
+source .myenv/bin/activate
+deactivate
+```
+
+#### conda
+
+```shell
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+conda create -n py37 -c anaconda python=3.7
+conda activate py37
+pip3 install --upgrade pip
+pip3 install -r requirements.txt
+conda deactivate
+```
 
 #### ipython
 
@@ -98,7 +126,10 @@ sys.path.insert(0,os.getcwd())
 os.path.join(dir,file)
 ```
 
+
+
 #### imp
+
 [What does the first argument of the imp.load_source method do?
 ](https://stackoverflow.com/questions/31773310/what-does-the-first-argument-of-the-imp-load-source-method-do)
 ```python
@@ -164,9 +195,23 @@ tar -xvf file.tar
 
 
 #### 代码风格
-* format
+format
+
+* Autopep8
 
 ```
 pip install autopep8
 python -m autopep8 -i -r $folder
 ```
+
+* Flake8
+  * `pip install yapf`
+  * VSCode setting.json 添加以下字段，文件页面 `Alt+Shift+F` 自动格式化代码
+
+```json
+"python.linting.flake8Enabled": true,
+"python.formatting.provider": "yapf",
+"python.linting.flake8Args": ["--max-line-length=120"],  
+"python.linting.pylintEnabled": false
+```
+
