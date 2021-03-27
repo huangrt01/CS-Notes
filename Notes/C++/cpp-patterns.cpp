@@ -461,6 +461,7 @@ int main()
             std::back_inserter(values));
 }
 
+// 这样写效率很低，不知道为啥。。。
 static inline std::string sort_and_concat_strings(
     std::vector<std::string>& str_list, const char* delimiter = "") {
   std::ostringstream oss;
