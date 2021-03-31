@@ -376,6 +376,10 @@ int main()
           std::end(v));
 }
 
+// Remove duplicate elements
+std::sort(v.begin(), v.end());
+v.erase(unique(v.begin(), v.end()), v.end());
+
 
 // Apply tuple to a function
 #include <cstddef>

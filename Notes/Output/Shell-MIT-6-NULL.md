@@ -668,6 +668,7 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
     * `{ <img src="https://www.zhihu.com/equation?tex=0%3D" alt="0=" class="ee_img tr_noresize" eeimg="1"> NF}` - If the last column contains a shared library, we replace the line by the last column, which is the filename of the library
     * `*!a[$0]++*` is an *awk* trick to [remove duplicate lines](https://www.baeldung.com/linux/uniq-by-column)
   * `find . -name "*@to_be_deleted" | awk -F"@to_be_deleted" '{print "mv "  <img src="https://www.zhihu.com/equation?tex=0%20%22%20%22%20" alt="0 " " " class="ee_img tr_noresize" eeimg="1"> 1}'|sh`：将文件夹内文件名中的某个pattern删掉
+  * 循环打印：`awk 'BEGIN { for (i=0; i<10; i++) printf("%02d ", i) }'`
 #### b
 * `bash -x run.sh` 显示shell脚本执行过程中的实际命令
 * bg: resume后台暂停的命令
@@ -730,8 +731,12 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 * grep
 
 ```shell
-# 反向筛选
+# "NOT"筛选
 grep -v "trash"
+# “OR”筛选
+grep -E "key1|key2"  
+# “AND”筛选
+grep -E "key1.*key2"
 ```
 
 * gunzip

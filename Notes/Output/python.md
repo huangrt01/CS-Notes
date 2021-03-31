@@ -16,6 +16,10 @@ list = [x.strip() for x in list_string.split() if x.strip()]
 collections.defaultdict(list)、collections.defaultdict(set)
 * defaultdict相比普通dict的区别在于：使用索引时，如果未查找到，会自动插入默认值
 
+[collections.counter](https://docs.python.org/3/library/collections.html#collections.Counter)
+
+
+
 [浅拷贝与深拷贝](https://zhuanlan.zhihu.com/p/25221086)，[copy.py](https://docs.python.org/3/library/copy.html)
 
 核心思想：
@@ -32,6 +36,20 @@ collections.defaultdict(list)、collections.defaultdict(set)
 
 * 运行文件乱码问题，在文件开头加 `# coding=utf-8`
 
+
+
+
+#### 正则表达式
+
+教程：https://www.runoob.com/regexp/regexp-tutorial.html
+
+python正则：https://www.runoob.com/python3/python3-reg-expressions.html
+
+```python
+import re
+tmp = re.sub("pattern", "", line.strip('\n'))
+matchObj = re.match(r'', line.strip('\n'), re.M|re.I)
+```
 
 
 #### 类
