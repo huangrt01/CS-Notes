@@ -21,6 +21,17 @@ CREATE TABLE Persons (
 
 
 
+SELECT
+
+```mysql
+# 判断范围
+select min(record_id),max(record_id) from service_status where service_type='abc' limit 10;
+# 精确规模
+explain select * from  service_status where service_type='abc' and (record_id between 1 and 100000) 
+```
+
+
+
 ALTER TABLE
 
 ```mysql
@@ -41,4 +52,8 @@ TIMESTAMP
 ```mysql
 `record_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录产生时间'
 ```
+
+
+
+
 

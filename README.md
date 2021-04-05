@@ -90,12 +90,3 @@
   * solution: clone仓库，用[Typora](https://typora.io/)阅读Note文件夹里的本体文件
 * 内推字节AML团队，请联系 huangrt01@163.com
 
-
-**内容预告**
-
-* MIT 6.NULL学完; 《剑指offer》做过的题整理; TensorFlow Internals
-* [OSTEP web server lab](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/concurrency-webserver)结合[书上HW](https://github.com/xxyzz/ostep-hw/tree/master/33) + [CSAPP web proxy lab](http://csapp.cs.cmu.edu/3e/labs.html)
-* MIT6.824 MapReduce Lab + DDIA
-* CS144剩余的课+network and router lab
-* OSTEP persistency部分; CSAPP其它部分和lab挑着做; 结合MIT6.828做xv6
-

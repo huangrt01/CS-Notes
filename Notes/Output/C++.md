@@ -1071,11 +1071,225 @@ Perfect forwarding is often used with [variadic templates](http://en.cppreferenc
 
 
 
-### C++ Patterns
+### 学习材料
+
+#### C++ Patterns
 
 https://cpppatterns.com/
 
 见[cpp-patterns.cpp]
+
+#### [GoingNative 2013 C++ Seasoning](https://www.youtube.com/watch?v=W2tWOdzgXHA)
+
+3 Goals for Better Code
+
+* No Raw Loops
+  * 问题：raw loop 影响对上下文理解、隐藏内部性能问题
+  * 解决：STL functions
+    * Now we can have the conversation about supporting multiple selections and disjoint selections!
+  * Range based for loops for for-each and simple transforms
+    * Use const auto& for for-each and auto& for transforms
+    * Keep the body **short**
+      * A general guideline is no longer than composition of two functions with an operator
+
+```c++
+template <typename I> // I models RandomAccessIterator
+auto slide(I f, I l, I p) -> pair<I, I>
+// 将 [f,l]上滑到 p 或 下滑到 p
+{
+    if (p < f) return { p, rotate(p, f, l) };
+    if (l < p) return { rotate(f, l, p), p };
+    return { f, l };
+}
+
+
+template <typename I, // I models BidirectionalIterator
+          typename S> // S models UnaryPredicate
+auto gather(I f, I l, I p, S s) -> pair<I, I> 
+{
+	return { stable_partition(f, p, not1(s)), stable_partition(p, l, s) };
+}
+```
+
+```c++
+// Next, check if the panel has moved to the left side of another panel.
+auto f = begin(expanded_panels_) + fixed_index;
+auto p = lower_bound(begin(expanded_panels_), f, center_x,
+[](const ref_ptr<Panel>& e, int x){ return e->cur_panel_center() < x; }); // If it has, then we reorder the panels.
+rotate(p, f, f + 1);
+```
+
+* No Raw Synchronization Primitives
+  * Synchronization primitives are basic constructs such as: Mutex、Atomic、Semaphore、Memory Fence
+  * [Amdahl's Law]([https://en.wikipedia.org/wiki/Amdahl%27s_law](https://en.wikipedia.org/wiki/Amdahl's_law)): 并行优化scaling特性取决于程序的异步、同步模型
+  * Task Systems: object, thread pool
+  * Unfortunately, we don’t yet have a standard async task model, `std::async()` is currently defined to be based on threads
+    * This may change in C++14 and Visual C++ 2012 already implements std::async() as a task model
+    * Windows - Window #read Pool and PPL
+    * Apple - Grand Central Dispatch (libdispatch): Open sourced, runs on Linux and Android
+    * Intel TBB - many platform
+  * std::packaged_task can be used to marshall results, including exceptions, from tasks
+    * `std::packaged_task` is also useful to safely bridge C++ code with exceptions to C code
+    * see prior `async()` implementation for an example
+
+
+```c++
+template <typename T>
+class bad_cow {
+	struct object_t {
+		explicit object_t(const T& x) : data_m(x) { ++count_m; }
+		atomic<int> count_m;
+		T data_m;
+	};
+	object_t* object_m;
+  public:
+	explicit bad_cow(const T& x) : object_m(new object_t(x)) { }
+	~bad_cow() { if (0 == --object_m->count_m) delete object_m; }
+	bad_cow(const bad_cow& x) : object_m(x.object_m) { ++object_m->count_m; }
+	bad_cow& operator=(const T& x) {
+		if (object_m->count_m == 1) object_m->data_m = x; 
+		else {
+			object_t* tmp = new object_t(x);
+			// --object_m->count_m;
+      // =>
+      // if (0 == --object_m->count_m) delete object_m;
+			object_m = tmp;
+		}
+    return *this;
+  }
+};
+```
+
+```c++
+// C++14 compatible async with libdispatch
+namespace adobe {
+template <typename F, typename ...Args>
+auto async(F&& f, Args&&... args)
+				-> std::future<typename std::result_of<F (Args...)>::type>
+{
+  using result_type = typename std::result_of<F (Args...)>::type;
+	using packaged_type = std::packaged_task<result_type ()>;
+	auto p = new packaged_type(std::forward<F>(f), std::forward<Args>(args)...);
+  auto result = p->get_future();
+  dispatch_async_f(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), p, [](void* f_) {
+		packaged_type* f = static_cast<packaged_type*>(f_); (*f)();
+		delete f;
+	});
+    return result;
+}
+  
+} // namespace adobe
+```
+
+```c++
+// std::list can be used in a pinch to create thread safe data structures with splice
+template <typename T> class concurrent_queue
+{
+	mutex   mutex_;
+  list<T> q_;
+ public:
+  void enqueue(T x) {
+    list<T> tmp;
+		tmp.push_back(move(x));
+		{
+			lock_guard<mutex> lock(mutex); 
+      q_.splice(end(q_), tmp);
+		} 
+  }
+	// ...
+};
+```
+
+* No Raw Pointers
+
+  Why Raw Pointers
+
+  * For containers we’ve moved from intrusive to non-intrusive (STL) containers
+    * Except for hierarchies - but containment hierarchies or non-intrusive hierarchies are both viable options
+    * [intrusive vs nontrusive](https://www.boost.org/doc/libs/1_35_0/doc/html/intrusive/intrusive_vs_nontrusive.html)
+  * PIMPL and copy optimizations are trivially wrapped
+  * See previous section regarding shared storage for asynchronous operations
+  * Runtime polymorphism
+
+  用智能指针处理的defects：1）要注意异常安全性=>make_shared；2）改变了对象的 semantics of copy, assignment and equality；3）thread-safety concerns
+
+  * shared structure also breaks our ability to reason locally about the code
+
+```c++
+class my_class_t : public object_t
+{
+public:
+  void draw(ostream& out, size_t position) const {
+    out << string(position, ' ') << "my_class_t" << endl; 
+  } 
+  /* ... */
+};
+int main() {
+	document_t document;
+	document.emplace_back(new my_class_t());
+  draw(document, cout, 0);
+}
+
+======> 用封装防范两个函数修改同一个object
+
+template <typename T>
+void draw(const T& x, ostream& out, size_t position) {
+  out << string(position, ' ') << x << endl; 
+}
+class object_t {
+ public:
+	template <typename T> // T models Drawable
+  // Pass sink arguments by value and move into place
+	object_t(T x) : self_(make_shared<model<T>>(move(x))) { }
+	friend void draw(const object_t& x, ostream& out, size_t position) {
+    x.self_->draw_(out, position); 
+  }
+
+ private:
+  struct concept_t {
+		virtual ~concept_t() = default;
+		virtual void draw_(ostream&, size_t) const = 0; 
+  };
+	template <typename T> struct model : concept_t {
+		model(T x) : data_(move(x)) { }
+		void draw_(ostream& out, size_t position) const { 
+      draw(data_, out, position); 
+    }
+		T data_; 
+  };
+  shared_ptr<const concept_t> self_; 
+};
+using document_t = vector<object_t>;
+void draw(const document_t& x, ostream& out, size_t position)
+{
+    out << string(position, ' ') << "<document>" << endl;
+    for (auto& e : x) draw(e, out, position + 2);
+    out << string(position, ' ') << "</document>" << endl;
+}
+
+class my_class_t // 无需继承 object_t => my_class_t 可以同时满足多个 polymorphic settings
+{
+ public:
+  void draw(ostream& out, size_t position){ 
+  	out << string(position, ' ') << "my_class_t" << endl;
+	}
+};
+
+int main(){
+	document_t document;
+	document.emplace_back(my_class_t());
+  auto saving = async([=]() { 
+    this_thread::sleep_for(chrono::seconds(3));
+    cout << "-- save --" << endl;
+    draw(document, cout, 0);
+	});
+  document.emplace_back(document);
+  
+  draw(document, cout, 0);
+  saving.get();
+}
+```
+
 
 
 
@@ -1538,7 +1752,12 @@ while(_queue.try_pop(tk)){
 }
 ```
 
+* ThreadPool
+  * [Thread pool that binds tasks for a given ID to the same thread](https://stackoverflow.com/questions/8162332/thread-pool-that-binds-tasks-for-a-given-id-to-the-same-thread)
 
+
+
+* 条件变量
 
 ```c++
 std::mutex mutex_;
@@ -1559,6 +1778,56 @@ cond_.notify_all();
 #### STL
 
 十三大头文件：\<algorithm>、\<functional>、\<deque>、、\<iterator>、\<array>、\<vector>、\<list>、\<forward_list>、\<map>、\<unordered_map>、\<memory>、\<numeric>、\<queue>、\<set>、\<unordered_set>、\<stack>、\<utility>
+
+[CppCon 2018: Jonathan Boccara “105 STL Algorithms in Less Than an Hour"](https://www.youtube.com/watch?v=2olsGf6JIkU)
+
+[FluentC++](https://www.fluentcpp.com/posts/) 对 STL 进行了归类, It's not just `for_each`.
+
+![world_map_of_cpp_STL_algorithms](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/C++/world_map_of_cpp_STL_algorithms.png)
+
+- queriers,
+- permutationers,
+- algos on sets,
+- movers,
+- value modifiers,
+- structure changers,
+- algos of raw memory.
+
+
+
+heap
+
+```c++
+std::make_heap(begin(numbers), end(numbers));  // max heap
+std::make_heap(begin(numbers), end(numbers), std::greater<>{}); // min heap
+
+numbers.push_back(num);
+std::push_heap(begin(numbers), end(numbers));
+
+std::pop_heap(begin(numbers), end(numbers));
+numbers.pop_back();
+// 假如不pop_back，而是持续pop_heap，相当于是在std::sort_heap
+
+// priority_queue: https://en.cppreference.com/w/cpp/container/priority_queue
+```
+
+sort
+
+```c++
+std::sort
+std::partial_sort
+std::nth_element //内部是QuickSort的实现，保证了左边的都小于它，右边的都大于它
+std::sort_heap
+std::inplace_merge // an incremental step in MergeSort
+```
+
+partitioning
+
+```c++
+
+```
+
+
 
 ##### \<algorithm>
 * sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
