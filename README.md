@@ -1,7 +1,7 @@
 ## CS-Notes
 * 我的自学笔记，在学习MLSys和C++，整理算法、操作系统，后续学习分布式系统，终身更新。
 * 我不是贵系oi出身的大神，目前在以一个初学者的心态补习计算机知识，学习路径和心得可能更值得大家借鉴。
-* 欢迎交流任何问题，知乎咨询满意率100%，私信交流也可，力所能及的都会回复，有代表性的问题会加进本仓库分享。
+* 欢迎交流任何问题，[知乎咨询](https://www.zhihu.com/people/huang-rui-teng)满意率100%，私信交流也可，力所能及的都会回复，有代表性的问题会加进本仓库分享。
 
 ### 杂感随想
 
@@ -76,7 +76,7 @@
 
 #### [Cryptography I, Stanford University, Dan Boneh (待整理)](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Cryptography%20I%2C%20Stanford%20University%2C%20Coursera.md) ■□□□□□□□□□
 
-### 分布式系统
+
 
 
 
