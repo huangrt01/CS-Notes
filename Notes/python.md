@@ -6,12 +6,13 @@
 
 ##### 数据结构
 
-list
 ```python
 list.extend(list)
 list.append(item)
 
 list = [x.strip() for x in list_string.split() if x.strip()]
+
+# dict: 同一dict中存储的value类型可以不一样
 ```
 collections.defaultdict(list)、collections.defaultdict(set)
 * defaultdict相比普通dict的区别在于：使用索引时，如果未查找到，会自动插入默认值

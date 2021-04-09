@@ -464,7 +464,9 @@ Non-member cbegin只有C++14才有；C++11中，即使是vector非const，begin�
 
 noexcept意味着函数行为const
 
-e.g. C++11，vector.push_back(std::move(XX))影响异常安全性，`std::vector::push_back` takes advantage of this “move if you can, but copy if you must” strategy，依据是否declared noexcept来判断
+e.g. C++11，`vector.push_back(std::move(XX))`可能违反异常安全性（比如vector重新申请内存的场景），`std::vector::push_back` takes advantage of this “move if you can, but copy if you must” strategy，依据是否declared noexcept来判断
+
+* 内部实现-> `std::move_if_noexcept` -> `std::is_nothrow_move_constructible`
 
 ```c++
 template <class T, size_t N>
@@ -1066,7 +1068,41 @@ auto timeFuncInvocation = [](auto&& func, auto&&... params){
 
 ##### Item 25: Use **std::move** on rvalue references, **std::forward** on universal references.
 
+std::forward 的动机是 conditionally cast
+
 Perfect forwarding is often used with [variadic templates](http://en.cppreference.com/w/cpp/language/parameter_pack) to wrap calls to functions with an arbitrary number of arguments. For example, [`std::make_unique`](http://en.cppreference.com/w/cpp/memory/unique_ptr/make_unique) and [`std::make_shared`](http://en.cppreference.com/w/cpp/memory/shared_ptr/make_shared) both use perfect forwarding to forward their arguments to the constructor of the wrapped type.
+
+Universal reference 的其中一个动机是替代“同时 overload lvalue、rvalue references”，后者的缺点是：1）某些场景的潜在开销；2）代码volume；3）scalability，多参数函数的拓展
+
+```c++
+Matrix // by-value return 
+operator+(Matrix&& lhs, const Matrix& rhs) {
+	lhs += rhs;
+  return std::move(lhs);
+}
+
+template<typename T>
+Fraction reduceAndCopy(T&& frac) {
+	frac.reduce();
+	return std::forward<T>(frac);
+}
+```
+
+
+
+Never apply std::move or std::forward to local objects if they would otherwise be eligible for the return value optimization.
+
+* RVO 生效的要求
+  * 类型一致
+  * the local object is what’s being returned，比如不能是referenced type、或函数参数
+  * unnamed (named->NRVO)
+* 永远无需move的原因："if the conditions for the RVO are met, but compilers choose not to perform copy elision, the object being returned *must be treated as an rvalue*."
+
+
+
+##### Item 26: Avoid overloading on universal references.
+
+
 
 
 
@@ -1408,6 +1444,43 @@ getopt函数处理参数，用法参照[tsh.c](https://github.com/huangrt01/CSAP
 [C++宏编程，不错的一篇blog](http://notes.tanchuanqi.com/language/cpp/cpp_micro.html)
 
 * do while(0) 技巧
+
+
+
+##### 大小端
+
+Big-Endian和Little-Endian的定义如下：
+
+1) Little-Endian就是低位字节排放在内存的低地址端，高位字节排放在内存的高地址端
+
+2) Big-Endian就是高位字节排放在内存的低地址端，低位字节排放在内存的高地址端（和字符串相似）
+
+```c++
+// 不同机器，统一返回小端
+inline uint64_t native_to_little(uint64_t in) {
+    const static union {
+        uint32_t i;
+        char c[4];
+    } endian_test = {0x01000000};
+
+    switch(endian_test.c[0]) {
+        case 1:
+            in = ((in >> 32) & 0x00000000FFFFFFFFULL) |
+                 ((in << 32) & 0xFFFFFFFF00000000ULL);
+            in = ((in >> 16) & 0x0000FFFF0000FFFFULL) |
+                 ((in << 16) & 0xFFFF0000FFFF0000ULL);
+            in = ((in >> 8) & 0x00FF00FF00FF00FFULL) |
+                 ((in << 8) & 0xFF00FF00FF00FF00ULL);
+        default:
+            break;
+    }
+    return in;
+}
+```
+
+
+
+
 
 
 
@@ -1775,6 +1848,16 @@ cond_.notify_all();
 
 
 
+#### DOD
+
+【TODO】
+
+[CppCon 2014: Mike Acton "Data-Oriented Design and C++"](https://www.youtube.com/watch?v=rX0ItVEVjHc)
+
+[CppCon 2018: Stoyan Nikolov “OOP Is Dead, Long Live Data-oriented Design”](https://www.youtube.com/watch?v=yy8jQgmhbAU)
+
+
+
 #### STL
 
 十三大头文件：\<algorithm>、\<functional>、\<deque>、、\<iterator>、\<array>、\<vector>、\<list>、\<forward_list>、\<map>、\<unordered_map>、\<memory>、\<numeric>、\<queue>、\<set>、\<unordered_set>、\<stack>、\<utility>
@@ -1785,15 +1868,57 @@ cond_.notify_all();
 
 ![world_map_of_cpp_STL_algorithms](C++/world_map_of_cpp_STL_algorithms.png)
 
-- queriers,
-- permutationers,
-- algos on sets,
-- movers,
-- value modifiers,
-- structure changers,
-- algos of raw memory.
+##### queriers
+
+```c++
+// numeric algorithms
+count
+acculumate/(transform_)reduce // reduce的区别是输入可以没有initial value、支持parallel
+                              // transform前缀在reduce之前transform
+partial_sum
+(transform_)inclusive_scan // 和前者的区别是支持parallel
+(transform_)exclusive_scan // 和前者的区别是操作不包括自身
+inner_product
+adjacent_difference
+sample  // 取N个random元素
+  
+  
+// querying a property
+all_of
+any_of
+none_of
+// 对于 empty input，all_of() and none_of() return true, and any_of() return false
+  
+// querying a property on 2 ranges
+equal
+is_permutation
+lexicographical_compare
+mismatch -> std::pair<Iterator, Iterator>
+
+// searching a value
+// NOT SORTED
+find
+adjacent_find
+// SORTED
+equal_range
+lower_bound
+upper_bound // bound: insert place
+binary_search
+
+// searching a range
+search   // looking for a subrange
+find_end // looking for a subrange but starting from the end
+find_first_of // finding any value in the subrange
+  
+// searching a relative value
+max_element
+min_element
+minmax_element
+```
 
 
+
+##### permutationers
 
 heap
 
@@ -1818,13 +1943,120 @@ std::sort
 std::partial_sort
 std::nth_element //内部是QuickSort的实现，保证了左边的都小于它，右边的都大于它
 std::sort_heap
-std::inplace_merge // an incremental step in MergeSort
+std::inplace_merge // an incremental step in MergeSort；实现利用了一块缓冲区（如果超过缓冲区长度，旋转操作后递归）
 ```
 
 partitioning
 
 ```c++
+auto it = std::partition(v.begin(), v.end(), [](int i){return i % 2 == 0;});
+std::partition_point // 返回 partition 的返回值
+```
 
+其它
+
+```c++
+std::rotate
+std::shuffle
+std::reverse
+1 2 3 4 5 --- next_permutation --> 1 2 3 5 4
+          <-- prev_permutation ---
+  
+```
+
+
+
+##### algos on sets
+
+set in C++: any sorted collection (including sorted vector)
+
+```c++
+std::set_difference(a.begin(),a.end(),b.begin(),b.end(),std::back_inserter(c));
+std::set_intersection
+std::set_union
+std::set_symmetric_difference
+std::includes
+std::merge
+```
+
+
+
+##### movers
+
+```c++
+std::copy(first, last, out);
+std::move
+std::swap_ranges
+  
+// e.g. 1 2 3 4 5 6 7 8 9 10 -> 1 2 3 1 2 3 4 5 9 10
+std::copy_backward
+std::move_backward
+```
+
+
+
+##### value modifiers
+
+```c++
+std::fill(first, last, 42);
+std::generate(first, last, [n = 0] () mutable { return n++; });
+std::iota(first, last, 42);
+std::replace(first, last, 42, 43);
+```
+
+
+
+##### structure changers
+
+```c++
+auto iter = std::remove(begin(collection), end(collection), 99);
+// remove、unique
+collection.erase(iter, end(collection));
+
+```
+
+
+
+##### algos of raw memory
+
+```c++
+fill、copy、move -> operator =
+uninitilized_fill、copy、move -> ctor、copy ctor、move ctor
+std::uninitilized_fill(first, last, 42);
+std::destroy(first, last);
+uninitilized_default_construct
+uninitilized_value_construct
+```
+
+
+
+##### potpourri
+
+Lonely islands
+
+```c++
+std::transform(begin(collection), end(collection), std::back_inserter(results), f);
+// std::transform 支持二元函数 f(x,y)
+std::transform(begin(collection1), end(collection1), begin(collection2), std::back_inserter(results), f);
+
+// for_each has side-effects
+std::for_each(begin(collection), end(collection), f);
+```
+
+Secret runes
+
+```c++
+stable_*   => stable_sort, stable_partition   // keep the relative order
+
+is_* => is_sorted, is_partitioned, is_heap
+is_*_until
+
+*_copy => remove_copy, unique_copy, reverse_copy, rotate_copy, replace_copy, partition_copy, partial_sort_copy
+  
+*_if => find_if, find_if_not, count_if, remove_if, remove_copy_if, replace_if, replace_copy_if, copy_if
+  
+*_n => Raw Memory Operation + _n, generate_n, search_n, for_each_n
+std::fill_n(std::back_inserter(v), 5, 42);
 ```
 
 
