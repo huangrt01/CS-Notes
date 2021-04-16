@@ -16,6 +16,19 @@ list = [x.strip() for x in list_string.split() if x.strip()]
 ```
 collections.defaultdict(list)、collections.defaultdict(set)
 * defaultdict相比普通dict的区别在于：使用索引时，如果未查找到，会自动插入默认值
+* dict 可以用 tuple 作 key
+
+```python
+d = defaultdict(lambda: 0)
+d[key1, key2] = val
+if (key, key2) in d:
+  ...
+for k in d.iteritems(): # 不支持直接用 for k, v 遍历
+  v = d[k]
+  ...
+for k,v in d.items(): # python3.6+
+  ...
+```
 
 [collections.counter](https://docs.python.org/3/library/collections.html#collections.Counter)
 
@@ -30,6 +43,13 @@ collections.defaultdict(list)、collections.defaultdict(set)
 * 修改可变对象（list等）不需要开辟新的空间
 
 => 所以说改 list 会牵连复制的对象，而改 str 等不会互相影响
+
+```python
+import copy
+copy.deepcopy(dict)
+```
+
+
 
 
 
@@ -144,6 +164,14 @@ sys.path.insert(0,os.getcwd())
 ```python
 os.path.join(dir,file)
 ```
+
+#### datetime
+
+```python
+from datetime import datetime
+datetime.now()
+```
+
 
 
 

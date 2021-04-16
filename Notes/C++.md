@@ -58,7 +58,8 @@ f(expr); // deduce T and ParamType from expr
   
 * array arguments
   
-  * the type of an array that’s passed to a template function by value is deduced to be a pointer type，需要注意数组传引用的时候不一样！存在数组引用`constchar(&)[13]` !
+  * the type of an array that’s passed to a template function by value is deduced to be a pointer type
+  * 需要注意数组传引用的时候不一样！存在数组引用`constchar(&)[13]`  => 利用它来推断数组大小
 
 ```c++
 // return size of an array as a compile-time constant. (The
@@ -93,7 +94,7 @@ auto对应T，type specifier对应ParamType，因此同Item1，也有三个cases
 * the only real difference between auto and template type deduction is that auto assumes that a braced initializer represents a std::initializer_list, but template type deduction doesn’t
 
 Things to Remember
-* auto type deduction is usually the same as template type deduction, but auto type deduction assumes that a braced initializer represents a std::initial izer_list, and template type deduction doesn’t.
+* auto type deduction is usually the same as template type deduction, but auto type deduction assumes that a braced initializer represents a std::initializer_list, and template type deduction doesn’t.
 * auto in a function return type or a lambda parameter implies template type deduction, not auto type deduction.
 
 ##### Item 3: Understand decltype.
@@ -194,7 +195,7 @@ derefUPLess = [](const std::unique_ptr<Widget>& p1, const std::unique_ptr<Widget
 
 ##### Item 6: Use the explicitly typed initializer idiom when **auto** deduces undesired types.
 
-`有关vector<bool>：because operator[] for std::vector<T> is supposed to return a T&, but C++ forbids references to bits.`
+有关`vector<bool>`：because operator[] for `std::vector<T>` is supposed to return a T&, but C++ forbids references to bits.
 
 `std::vector<bool>::reference` is an example of a proxy class: a class that exists for the purpose of emulating and augmenting the behavior of some other types
 
@@ -249,15 +250,15 @@ MyAllocList<Widget> lw; // client code
 
 
 template<typename T> // MyAllocList<T>::type 
-struct MyAllocList { // is synonym for
-typedef std::list<T, MyAlloc<T>> type; // std::list<T, 
-}; 																			// MyAlloc<T>>
+struct MyAllocList { // is synonym for std::list<T, MyAlloc<T>>
+	typedef std::list<T, MyAlloc<T>> type;
+};
 MyAllocList<Widget>::type lw;           // client code
 
 template<typename T>
-class Widget {                         // Widget<T> contains
- private:                               // a MyAllocList<T>
-	typename MyAllocList<T>::type list; // as a data member
+class Widget {
+ private:
+	typename MyAllocList<T>::type list;
 ...
 };
 
@@ -483,8 +484,6 @@ struct pair {
 
 * Wide contract functions更适合noexcept，因为没有后续调试抛出异常的需求
 
-
-
 >Things to Remember
 >
 >• noexcept is part of a function’s interface, and that means that callers may depend on it.
@@ -599,7 +598,7 @@ private:
 
 *the rule of three*: copy constructor, copy assignment operator, or destructor
 
-动机：the rule of three和move/copy的dependent特性有冲突 => C++11 does *not* generate move operations for a class with a user-declared destructor
+动机：the rule of three 和 move/copy 的 dependent 特性有冲突 => C++11 does *not* generate move operations for a class with a user-declared destructor
 
 `=default`和`=delete`，前者在自己有写构造函数的情况下生成默认构造函数，减小代码量，后者禁止函数
 
@@ -1088,8 +1087,6 @@ Fraction reduceAndCopy(T&& frac) {
 }
 ```
 
-
-
 Never apply std::move or std::forward to local objects if they would otherwise be eligible for the return value optimization.
 
 * RVO 生效的要求
@@ -1098,12 +1095,360 @@ Never apply std::move or std::forward to local objects if they would otherwise b
   * unnamed (named->NRVO)
 * 永远无需move的原因："if the conditions for the RVO are met, but compilers choose not to perform copy elision, the object being returned *must be treated as an rvalue*."
 
-
-
 ##### Item 26: Avoid overloading on universal references.
 
+* Overloading on universal references almost always leads to the universal reference overload being called more frequently than expected.
+* Perfect-forwarding constructors are especially problematic, because they’re typically better matches than copy constructors for non-const lvalues, and they can hijack derived class calls to base class copy and move constructors.
+  * 即使 compilers 因 Item 17 生成了相关构造函数，依然存在优先级低于 overloaded universal references 的情况
+
+##### Item 27: Familiarize yourself with alternatives to overloading on universal references.
+
+* Abandon overloading
+* Pass by const T&
+* Pass by value
+
+```c++
+class Person {
+ public:
+	explicit Person(std::string n) : name(std::move(n)) {}
+  explicit Person(int idx) : name(nameFromIdx(idx)) {}
+  ...
+private:
+  std::string name;
+};
+```
+
+* Use Tag dispatch
+
+```c++
+std::multiset<std::string> names;      // global data structure
+template<typename T>                   // make log entry and add
+void logAndAdd(T&& name)               // name to data structure
+{
+	auto now = std::chrono::system_clock::now();
+  log(now, "logAndAdd");
+  names.emplace(std::forward<T>(name));
+}
+
+=====>
+  
+template<typename T>
+void logAndAdd(T&& name)
+{
+	logAndAddImpl(
+		std::forward<T>(name),
+		std::is_integral<typename std::remove_reference<T>::type>()
+	); 
+}
+
+template<typename T>
+void logAndAddImpl(T&& name, std::false_type) {
+	auto now = std::chrono::system_clock::now();
+  log(now, "logAndAdd");
+  names.emplace(std::forward<T>(name));
+}
+// std::false_type(compile value) 而非 false(runtime value)
+
+void logAndAddImpl(int idx, std::true_type) {
+  logAndAdd(nameFromIdx(idx));
+}
+```
+
+* Constraining templates that take universal references
+
+```c++
+class Person {
+ public:
+	template<typename T,
+					 typename = typename std::enable_if<condition>::type>
+	explicit Person(T&& n);
+  
+=>
+
+class Person {
+ public:
+	template<typename T,
+					 typename = typename std::enable_if<
+												!std::is_same<Person,
+																			typename std::decay<T>::type
+																		 >::value
+               				>::type
+	>
+  explicit Person(T&& n);
+	...
+};
+  
+=>
+
+is_same -> is_base_of 进一步解决 Item 26 中派生类的问题
+  
+=>
+  
+c++14: typename -> _t后缀
+  
+=>
+  
+class Person {
+ public:
+	template<
+		typename T,
+		typename = std::enable_if_t<
+			!std::is_base_of<Person, std::decay_t<T>>::value
+			&&
+			!std::is_integral<std::remove_reference_t<T>>::value
+		>
+	>
+explicit Person(T&& n)
+: name(std::forward<T>(n)) 
+{
+  // assert that a std::string can be created from a T object
+	static_assert(
+		std::is_constructible<std::string, T>::value, 
+    "Parameter n can't be used to construct a std::string"
+	);
+  ...
+}
+explicit Person(int idx) : name(nameFromIdx(idx)) 
+{... }
+...
+ private:
+  std::string name;
+};
+```
+
+Disadvantages：perfect forwarding has failure cases (Item 30) and baffling error messages
 
 
+
+##### Item 28: Understand reference collapsing
+
+> If either reference is an lvalue reference, the result is an lvalue reference. Otherwise (i.e., if both are rvalue references) the result is an rvalue reference.
+
+Four contexts
+
+*  template instantiation
+* auto type generation
+* the generation and use of typedefs and alias declarations (Item 9)
+* decltype (Item 3)
+
+=> the implementation of `std::forward`
+
+```c++
+template<typename T>
+T&& forward(typename
+							remove_reference<T>::type& param)
+{
+	return static_cast<T&&>(param);
+}
+```
+
+=> 回顾 auto&&
+
+=>
+
+```c++
+template<typename T>
+class Widget {
+ public:
+  typedef T&& RvalueRefToT;
+  ...
+};
+```
+
+
+
+##### Item 29: Assume that move operations are not present, not cheap, and not used.
+
+not cheap
+
+*  `move std::array` runs in linear time
+* `std::string ` 有SSO优化，小 string 存在对象内的 buffer 中，move 并不更快
+
+not usable
+
+*  The context in which the moving would take place requires a move operation that emits no exceptions, but that operation isn’t declared `noexcept`
+
+
+
+##### Item 30: Familiarize yourself with perfect forwarding failure cases.
+
+perfect forwarding 的含义：传递 type 信息，只针对 references
+
+```c++
+template<typename... Ts>
+void fwd(Ts&&... params) {
+  f(std::forward<Ts>(params)...)
+}
+```
+
+应用：Item 42 (`std::make_unique`), Item 21 (`emplace`)
+
+failure cases 的内在原因是 f 和 fwd 做的事情不一样
+
+* Braced initializers：f有能力做转换，而fwd会类型推断失败
+* 0 or NULL as null pointers
+* Declaration-only integral **static const** data members
+  * 硬件层面，指针和引用含义类似
+
+```c++
+class Widget {
+ public:
+	static const std::size_t MinVals = 28; // MinVals' declaration
+	...
+};
+
+
+std::vector<int> widgetData; widgetData.reserve(Widget::MinVals); // use of MinVals
+
+f(Widget::MinVals); // fine, treated as "f(28)"
+fwd(Widget::MinVals); // error! shouldn't link
+
+const std::size_t Widget::MinVals; // in Widget's .cpp file, remember to specify it only once
+```
+
+* Overloaded function names and template names
+  * 本质上也是 fwd 没有能力推断函数信息
+
+```c++
+using ProcessFuncType = int (*)(int);
+ProcessFuncType processValPtr = processVal;
+fwd(processValPtr);
+fwd(static_cast<ProcessFuncType>(workOnVal));
+```
+
+* Bitfields
+  * Pointers to bitfields don't exist.
+
+```c++
+struct IPv4Header {
+  std::uint32_t version:4,
+                IHL:4,
+                DSCP:6,
+                ECN:2,
+                totalLength:16;
+  ...
+};
+void f(std::size_t sz); // function to call
+IPv4Header h;
+f(h.totalLength); // fine
+fwd(h.totalLength); // error
+
+// copy bitfield value; see Item 6 for info on init. form 
+auto length = static_cast<std::uint16_t>(h.totalLength);
+fwd(length); // forward the copy
+```
+
+
+
+#### chpt 6 Lambda Expressions
+
+场景：
+
+* STL algorithms, custom deleters, condition variables in threading API (Item 39)
+* callback functions, interface adaptation functions, context-specific functions for one-off calls
+
+概念：
+
+* Compilation: lambda expressions, closure class
+  * A *closure class* is a class from which a closure is instantiated. Each lambda causes compilers to generate a unique closure class. The statements inside a lambda become executable instructions in the member functions of its closure class.
+* Runtime: closure
+  * A *closure* is the runtime object created by a lambda. Depending on the capture mode, closures hold copies of or references to the captured data.
+
+##### Item 31: Avoid default capture modes
+
+There are two default capture modes in C++11: by-reference and by-value. Default by-reference capture can lead to dangling references. Default by-value capture lures you into thinking you’re immune to that problem (you’re not), and it lulls you into thinking your closures are self-contained (they may not be).
+
+```c++
+using FilterContainer =
+  std::vector<std::function<bool(int)>>;
+FilterContainer filters;
+void addDivisorFilter(){
+  auto calc1 = computeSomeValue1();
+  auto calc2 = computeSomeValue2();
+  auto divisor = computeDivisor(calc1, calc2);
+  filters.emplace_back(
+  	[&](int value) { return value % divisor == 0; }
+  ); 
+}
+
+template<typename C>
+void workWithContainer(const C& container)
+{
+  auto calc1 = computeSomeValue1();
+  auto calc2 = computeSomeValue2();
+  auto divisor = computeDivisor(calc1, calc2);
+  using ContElemT = typename C::value_type;
+  using std::begin;
+  using std::end;
+  if (std::all_of(
+  			begin(container), end(container),
+    		[&](const ContElemT& value)
+  			{ return value % divisor == 0; })
+  	) {
+  	...
+  } else {
+    ...
+  }
+}
+
+// C++14
+if (std::all_of(begin(container), end(container),
+								[&](const auto& value)
+                { return value % divisor == 0; }))
+```
+
+`auto`生成的`std::function`对象的大小更小，少在 fixed size in closure
+
+
+
+Captures apply only to non-static local variables (including parameters) visible in the scope where the lambda is created. 
+
+* default by-value capture 实质上捕获的是 Widget's this pointer => 无意间捕获 this
+
+```c++
+class Widget {
+ public:
+	...
+  void addFilter() const;
+
+ private:
+	int divisor;
+};
+void Widget::addFilter() const {
+	filters.emplace_back(
+		[=](int value) { return value % divisor == 0; }
+	);
+}
+
+===>
+  
+void Widget::addFilter() const {
+	filters.emplace_back( // C++14:
+		[divisor = divisor](int value) // copy divisor to closure 
+    { return value % divisor == 0; } // use the copy
+	);
+}
+```
+
+An additional drawback to default by-value captures is that they can suggest that the corresponding closures are self-contained and insulated from changes to data outside the closures. In general, that’s not true, because lambdas may be dependent not just on local variables and parameters (which may be captured), but also on objects with *static storage duration*. 
+
+```c++
+void addDivisorFilter() {
+	static auto calc1 = computeSomeValue1();
+  static auto calc2 = computeSomeValue2();
+	static auto divisor = computeDivisor(calc1, calc2);
+	filters.emplace_back(
+		[=](int value)
+		{ return value % divisor == 0; }
+	);
+  ++divisor;
+}
+// 虽然lambda expression写的是by-value，实质上捕获的是reference
+```
+
+
+
+##### Item 32: Use init capture to move objects into closures.
 
 
 
@@ -1661,6 +2006,18 @@ operator 类型名()
 [Access Modifiers in C++](https://www.geeksforgeeks.org/access-modifiers-in-c/)
 
 * protected: 类似private，但可以被派生类调用
+
+派生类的ctor要指明基类对象的初始化方式（否则用基类的无参构造函数）
+
+```c++
+class SpecialPerson: public Person {
+public:
+	SpecialPerson(const SpecialPerson& rhs) : Person(rhs) {... }
+	SpecialPerson(SpecialPerson&& rhs) : Person(std::move(rhs)) {... }
+};
+```
+
+
 
 
 

@@ -16,8 +16,11 @@ CREATE TABLE Persons (
 );
 ```
 
-* NOT NULL
-* AUTO INCREMENT
+NOT NULL
+
+* [为什么数据库字段要使用 NOT NULL？](https://mp.weixin.qq.com/s/XyOU6dimeZNjzIYyTv_fPA)
+
+AUTO INCREMENT
 
 
 
@@ -26,8 +29,12 @@ SELECT
 ```mysql
 # 判断范围
 select min(record_id),max(record_id) from service_status where service_type='abc' limit 10;
-# 精确规模
+# 精确查询规模
 explain select * from  service_status where service_type='abc' and (record_id between 1 and 100000) 
+# 从后往前
+select * from service_status order by id desc
+# 不等于
+<>
 ```
 
 
@@ -42,7 +49,9 @@ ADD
 MODIFY
   error_code int(11) NOT NULL COMMENT "请求错误类型（取最多的）",
 MODIFY
-  is_error int(5) NOT NULL COMMENT "是否是错误请求"
+  is_error int(5) NOT NULL COMMENT "是否是错误请求";
+  
+ALTER TABLE test TABLE (c1 char(1),c2 char(1));
 ```
 
 
