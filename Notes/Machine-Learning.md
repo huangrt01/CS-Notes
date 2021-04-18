@@ -609,3 +609,7 @@ python train.py
     *  [NovoGrad](https://arxiv.org/abs/1905.11286): 按层计算的移动平均值，在几个不同的领域也有不错的表现
 
 ![training_result](Machine-Learning/training_result.png)
+
+### 术语
+
+NLU: Natural Language Understanding

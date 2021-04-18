@@ -303,6 +303,16 @@ OneFlow架构
   * MPS(Nvidia)：thread；显存隔离，故障隔离不好
   * MIG(~A100)：sm/global memory；硬件层面隔离
 
+### MLOps
+
+* 磁盘U形故障率 -> GPU故障率建模
+
+### ToB
+
+[Palantir](https://www.palantir.com/)
+
+[C3.ai](https://c3.ai/#null)
+
 
 
 ### 论文阅读

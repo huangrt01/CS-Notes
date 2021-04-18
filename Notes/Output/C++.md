@@ -206,7 +206,7 @@ proxy class
 
 
 
-#### chpt3: Moving to Modern C++
+#### chpt 3 Moving to Modern C++
 
 ##### Item 7: Distinguish between () and {} when creating objects.
 
@@ -620,7 +620,7 @@ Note: Member function templates never suppress generation of special member func
 
 
 
-#### chpt 4: Smart Pointers
+#### chpt 4 Smart Pointers
 
 ##### Item 18: Use std::unique_ptr for exclusive-ownership resource management.
 
@@ -1449,6 +1449,216 @@ void addDivisorFilter() {
 
 
 ##### Item 32: Use init capture to move objects into closures.
+
+generalized lambda capture，能捕获表达式的结果
+
+e.g. for move-only object like `std::unique_ptr` or `std::future`
+
+Using an init capture makes it possible for you to specify
+
+* **the name of a data member** in the closure class generated from the lambda and
+* **an expression** initializing that data member.
+
+```c++
+auto pw = std::make_unique<Widget>();
+...
+auto func = [pw = std::move(pw)]
+						{ return pw->isValidated()
+										 && pw->isArchived(); };
+```
+
+如果用 C++11 实现：
+
+* moving the object to be captured into a function object produced by `std::bind` and
+* giving the lambda a reference to the “captured” object.
+  * `std::bind` -> a *bind* object
+  * the lifetime of the bind object is the same as that of the closure
+
+```c++
+// C++14
+std::vector<double> data;
+...
+auto func = [data = std::move(data)] { /* uses of data */ };
+
+// C++11
+std::vector<double> data;
+...
+auto func =
+  std::bind(
+		[](const std::vector<double>& data)
+	  { /* uses of data */ }, 
+  std::move(data)
+);
+
+auto func =
+  std::bind(
+		[](std::vector<double>& data) mutable
+	  { /* uses of data */ }, 
+  std::move(data)
+);
+```
+
+
+
+##### Item 33: Use **decltype** on **auto&&** parameters to **std::forward** them.
+
+generic lambdas: operator() in the lambda’s closure class is a template.
+
+```c++
+auto f = [](auto x){ return func(normalize(x)); };
+class SomeCompilerGeneratedClassName {
+ public:
+	template<typename T>
+	auto operator()(T x) const
+	{ return func(normalize(x)); }
+	...
+}
+
+利用reference collapse --->
+auto f = [](auto&& x){ return func(normalize(std::forward<decltype(param)>(x))); };
+
+auto f =
+  [](auto&&... x){ 
+  	return func(normalize(std::forward<decltype(param)...>(x)));
+	};
+```
+
+
+
+##### Item 34: Prefer lambdas to std::bind
+
+* Lambdas are more readable, more expressive, and may be more efficient than using std::bind.
+
+* In C++11 only, `std::bind` may be useful for implementing move capture or for binding objects with templatized function call operators.
+
+lambdas are more readable
+
+lambdas are faster (in some cases, function pointer called through `std::bind` is less likely to be inlined)
+
+```c++
+// typedef for a point in time (see Item 9 for syntax)
+using Time = std::chrono::steady_clock::time_point;
+// see Item 10 for "enum class"
+enum class Sound { Beep, Siren, Whistle };
+// typedef for a length of time
+using Duration = std::chrono::steady_clock::duration;
+
+// at time t, make sound s for duration d
+void setAlarm(Time t, Sound s, Duration d);
+
+auto setSoundL =
+[](Sound s) {
+	// make std::chrono components available w/o qualification
+	using namespace std::chrono;
+  setAlarm(steady_clock::now() + hours(1),
+           s,
+           seconds(30));
+};
+
+// 错误写法：steady_clock::now()没有在 setAlarm 调用时调用（而是在 std::bind）
+using namespace std::chrono;
+using namespace std::literals;
+using namespace std::placeholders;
+auto setSoundB =
+  std::bind(setAlarm,
+						steady_clock::now() + 1h, // incorrect!
+            _1,
+						30s);
+
+--->
+
+auto setSoundB =
+	std::bind(setAlarm,
+						std::bind(std::plus<>(), steady_clock::now(), 1h),
+            _1,
+						30s);
+// C++11: std::plus<steady_clock::time_point>()
+
+--->
+// 假如overload setAlarm
+void setAlarm(Time t, Sound s, Duration d, Volume v);
+
+using SetAlarm3ParamType = void(*)(Time t, Sound s, Duration d);
+auto setSoundB =
+	std::bind(static_cast<SetAlarm3ParamType>(setAlarm),
+						std::bind(std::plus<>(),
+                      steady_clock::now(),
+											1h),
+            _1,
+						30s);
+
+
+```
+
+```c++
+// C++14
+auto betweenL =
+     [lowVal, highVal]
+     (const auto& val)                          
+     { return lowVal <= val && val <= highVal; };
+
+using namespace std::placeholders;
+auto betweenB =
+	std::bind(std::logical_and<>(), // C++14
+						std::bind(std::less_equal<>(), lowVal, _1),
+            std::bind(std::less_equal<>(), _1, highVal));
+
+// C++11
+auto betweenL =
+     [lowVal, highVal]
+     (int val)                          
+     { return lowVal <= val && val <= highVal; };
+
+using namespace std::placeholders;
+auto betweenB =
+	std::bind(std::logical_and<bool>(), // C++14
+						std::bind(std::less_equal<int>(), lowVal, _1),
+            std::bind(std::less_equal<int>(), _1, highVal));
+
+```
+
+* `std::bind`: implicitly stored by value
+  * `std::bind` stores values, and all arguments passed to bind objects are passed by reference
+  * can store refs: `auto compressRateB = std::bind(compress, std::ref(w), _1);`
+
+* Lambdas: explicitly
+
+```c++
+enum class CompLevel { Low, Normal, High };
+Widget compress(const Widget& w,
+                CompLevel lev);
+```
+
+* `std::bind`有优势的场景 (all in C++11)
+  * Move capture (Item 32)
+  * Polymorphic function objects
+
+```c++
+class PolyWidget {
+public:
+ template<typename T>
+	void operator()(const T& param);
+  ...
+};
+
+PolyWidget pw;
+auto boundPW = std::bind(pw, _1);
+boundPW(1930);
+boundPW(nullptr);
+boundPW("Rosebud");
+
+// C++14 lambda
+auto boundPW = [pw](const auto& param) // C++14
+							 { pw(param); };
+```
+
+#### chpt 7  The Concurrency API
+
+
+
+#### chpt 8 Tweaks
+
+
 
 
 
