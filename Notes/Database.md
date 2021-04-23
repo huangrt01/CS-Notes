@@ -64,5 +64,20 @@ TIMESTAMP
 
 
 
+### 特征工程
+
+[滴滴特征工程](https://mp.weixin.qq.com/s/vUP4LAA7gAYDo91Wd5rSQQ)
+
+
+### OLAP
+
+DSL like ES -> (forward/aggregation/post-aggregation) -> view -> physical table
+
+* 难点是异构数据源查询，使用 query engine 封装收口了所有 olap 引擎的查询，同时用服务聚合多数据源数据，格式化&聚合 后返回给用户，带来的挑战是研发同学需要熟悉各个数据源特性时延精确去重，异构数据源聚合等
+* 指标杂乱，一张物理表几万个指标，配置分散在上十个元文件中
+* [浅谈数据治理、数据管理、数据资源与数据资产管理内涵及差异点](https://mp.weixin.qq.com/s/B9t1ZdNEl8u0mhxDLyS8-A)
+
+* [滴滴指标体系](https://mp.weixin.qq.com/s/-pLpLD_HMiasyyRxo5oTRQ)
+
 
 

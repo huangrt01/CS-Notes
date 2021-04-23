@@ -305,13 +305,17 @@ OneFlow架构
 
 ### MLOps
 
-* 磁盘U形故障率 -> GPU故障率建模
+* 磁盘U形故障率 ~ GPU故障率建模
 
 ### ToB
 
 [Palantir](https://www.palantir.com/)
 
 [C3.ai](https://c3.ai/#null)
+
+[一篇分析 ToB 与 ToC 技术上区别的文章](https://zhuanlan.zhihu.com/p/341358485)
+
+
 
 
 
@@ -571,5 +575,4 @@ model serving: ML system's "narrow waist"
 
 有启发的地方
 * 框架内的page cache可以借鉴一下 (https://gitlab.mpi-sws.org/cld/ml/clockwork/-/blob/master/src/clockwork/cache.h)
-  
   

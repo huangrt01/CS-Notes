@@ -1654,6 +1654,101 @@ auto boundPW = [pw](const auto& param) // C++14
 
 #### chpt 7  The Concurrency API
 
+futures: `std::future` or `std::shared_future`
+
+##### Item 35: Prefer task-based programming to thread-based.
+
+```c++
+// thread-based
+int doAsyncWork();
+std::thread t(doAsyncWork);
+// task-based
+auto fut = std::async(doAsyncWork);
+```
+
+* 优势：返回值；异常容错；脱离 thread 的概念
+* thread
+  * *Hardware threads* are the threads that actually perform computation. Contemporary machine architectures offer one or more hardware threads per CPU core.
+  *  *Software threads* (also known as *OS threads* or *system threads*) are the threads that the operating system manages across all processes and schedules for execution on hardware threads. It’s typically possible to create more software threads than hardware threads, because when a software thread is blocked (e.g., on I/O or waiting for a mutex or condition variable), throughput can be improved by executing other, unblocked, threads.
+    * limited resource: 超额申请 -> `std::system_error` (即使函数是noexcept属性)
+    * oversubscription: 线程过多 -> context switch 成本、cache 一致性
+  * *std::threads* are objects in a C++ process that act as handles to underlying software threads. Some std::thread objects represent “null” handles, i.e., corre‐ spond to no software thread, because they’re in a default-constructed state (hence have no function to execute), have been moved from (the moved-to `std::thread` then acts as the handle to the underlying software thread), have been joined (the function they were to run has finished), or have been detached (the connection between them and their underlying software thread has been severed).
+* Task model 脱离 thread 的概念 -> 不用自己做线程管理，交给 runtime scheduler
+  * 有全局信息，安排 "run it on the thread needing the result"
+  * improve load balancing across hardware cores through work-stealing algorithms
+* some situations where using threads directly may be appropriate
+  * You need access to the API of the underlying threading implementation.
+    * *native_handle*
+  * You need to and are able to optimize thread usage for your application.
+  * You need to implement threading technology beyond the C++ concurrency API
+
+
+##### Item 36: Specify std::launch::async if asynchronicity is essential.
+
+* `std::launch::async`: on a different thread
+  * GUI thread
+* `std::launch::deferred`: deferred until get or wait is invoked
+* `default = std::launch::async | std::launch::deferred` 
+  * 无法确认是否并行、是否统一线程；可能无法预测是否执行
+  * [Async Tasks in C++11: Not Quite There Yet](https://bartoszmilewski.com/2011/10/10/async-tasks-in-c11-not-quite-there-yet/)
+    * 与 TLS 互相影响
+    * affects wait-based loops using timeouts
+
+```c++
+using namespace std::literals;
+void f() {
+	std::this_thread::sleep_for(1s);
+}
+auto fut = std::async(f);
+while (fut.wait_for(100ms) != std::future_status::ready){
+	...
+  // loop until f has finished running...
+  // which may never happen!
+  // fut.wait_for will always return std::future_status::deferred
+}
+```
+
+->
+
+```c++
+auto fut = std::async(f);
+if (fut.wait_for(0s) == std::future_status::deferred) {
+	// use wait or get on fut to call f synchronously
+  ...
+} else { // task isn't deferred
+	while (fut.wait_for(100ms) != std::future_status::ready) {
+    ...
+  }
+  ...
+}
+```
+
+```c++
+//C++11
+template<typename F, typename... Ts>
+inline
+std::future<typename std::result_of<F(Ts...)>::type>
+reallyAsync(F&& f, Ts&&... params) {
+  return std::async(std::launch::async,
+										std::forward<F>(f),
+                    std::forward<Ts>(params)...);
+}
+
+//C++14
+template<typename F, typename... Ts>
+inline auto reallyAsync(F&& f, Ts&&... params) {
+  return std::async(std::launch::async,
+										std::forward<F>(f),
+                    std::forward<Ts>(params)...);
+}
+```
+
+
+
+##### Item 37: Make **std::threads** unjoinable on all paths.
+
+
+
 
 
 #### chpt 8 Tweaks
@@ -2394,6 +2489,7 @@ while(_queue.try_pop(tk)){
 
 * ThreadPool
   * [Thread pool that binds tasks for a given ID to the same thread](https://stackoverflow.com/questions/8162332/thread-pool-that-binds-tasks-for-a-given-id-to-the-same-thread)
+  * C++ 有什么好用的线程池？ - neverchanje的回答 - 知乎 https://www.zhihu.com/question/397916107/answer/1253114248
 
 
 
