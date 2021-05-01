@@ -51,8 +51,9 @@ f(expr); // deduce T and ParamType from expr
 
   * 唯一T会deduce为引用的场景
 
-* Case 3: **ParamType** is Neither a Pointer nor a Reference
-  * 去除const、&等修饰
+* Case 3: **ParamType** is Neither a Pointer nor a Reference 
+  * Param will be a copy
+     * 去除 const、&、volatile等修饰
   * ` const char* const ptr =  // ptr is const pointer to const object
      "Fun with pointers";` 保留左边的const
   
@@ -94,7 +95,7 @@ auto对应T，type specifier对应ParamType，因此同Item1，也有三个cases
 * the only real difference between auto and template type deduction is that auto assumes that a braced initializer represents a std::initializer_list, but template type deduction doesn’t
 
 Things to Remember
-* auto type deduction is usually the same as template type deduction, but auto type deduction assumes that a braced initializer represents a std::initializer_list, and template type deduction doesn’t.
+* auto type deduction is usually the same as template type deduction, but auto type deduction assumes that a braced initializer represents a `std::initializer_list`, and template type deduction doesn’t.
 * auto in a function return type or a lambda parameter implies template type deduction, not auto type deduction.
 
 ##### Item 3: Understand decltype.
@@ -1087,7 +1088,7 @@ Fraction reduceAndCopy(T&& frac) {
 }
 ```
 
-Never apply std::move or std::forward to local objects if they would otherwise be eligible for the return value optimization.
+Never apply `std::move` or `std::forward` to local objects if they would otherwise be eligible for the return value optimization.
 
 * RVO 生效的要求
   * 类型一致
@@ -1747,11 +1748,420 @@ inline auto reallyAsync(F&& f, Ts&&... params) {
 
 ##### Item 37: Make **std::threads** unjoinable on all paths.
 
+* Joinable `std::thread`
+  * Blocked or waiting to be scheduled
+  * have run to completion
+* Unjoinable `std::thread`
+  * Default-constructed std::threads
+  * `std::thread` objects that have been moved from. 
+  * `std::thread`s that have been joined.
+  * `std::thread`s that have been detached.
 
+```c++
+constexpr auto tenMillion = 10000000;  
+// C++ 14: tenMillion = 10'000'000
+bool doWork(std::function<bool(int)> filter,
+	          int maxVal = tenMillion) {
+	std::vector<int> goodVals;
+	std::thread t([&filter, maxVal, &goodVals] {
+									for (auto i = 0; i <= maxVal; ++i){
+                    if (filter(i)) goodVals.push_back(i);
+                  }
+	  						});
+  // use handle to set t's priority
+  // Recommend: start t suspended
+  auto nh = t.native_handle();
+  ...
+  if (conditionsAreSatisfied()) {
+    t.join();
+    performComputation(goodVals);
+    return true;
+	}
+	return false;
+}
+```
+
+destruction of a joinable thread causes program termination：以下两种设计都不合理
+
+* An implicit join：
+  * 潜藏性能问题
+  * Item 39: a hung program ---> interruptible threads ---> Anthony Williams’ *C++ Concurrency in Action* (Manning Publications, 2012), section 9.2.
+* An implicit detach：更坏的设计，局部变量销毁
+
+=> 设计 RAII object
+
+* Declare `std::thread` objects last in lists of data members.
+
+```c++
+class ThreadRAII {
+ public:
+	enum class DtorAction { join, detach };
+	ThreadRAII(std::thread&& t, DtorAction a)
+	: action(a), t(std::move(t)) {}
+	~ThreadRAII() {
+		if (t.joinable()) {
+			if (action == DtorAction::join) {
+        t.join();
+			} else {
+        t.detach();
+			}
+		}
+  }
+  ThreadRAII(ThreadRAII&&) = default;
+  ThreadRAII& operator=(ThreadRAII&&) = default;
+  
+  std::thread& get() { return t; }
+ 
+ private:
+  DtorAction action;
+  std::thread t;
+};
+```
+
+
+
+##### Item 38: Be aware of varying thread handle destructor behavior.
+
+both `std::thread` objects and future objects can be thought of as *handles* to system threads.
+
+* a future is one end of a communications channel through which a callee transmits a result to a caller
+  * 信息存在哪？ ---> callee's promise, caller's future 都不行 ---> shared state
+
+* Future destructors normally just destroy the future’s data members.
+
+* The final future referring to a shared state for a non-deferred task launched via `std::async` blocks until the task completes.
+  * deferred task <--- an implicit join
+  * 另一种产生 shared state 的方式：`std::packaged_task`
+
+```c++
+int calcValue();
+std::packaged_task<int()> pt(calcValue);
+auto fut = pt.get_future();
+
+std::thread t(std::move(pt));
+
+{
+  std::packaged_task<int()> pt(calcValue);
+	auto fut = pt.get_future();
+	std::thread t(std::move(pt));
+  ...
+}
+```
+
+
+
+##### Item 39: Consider void futures for one-shot event communication
+
+```c++
+std::condition_variable cv;
+std::mutex m;
+
+// detect event, tell reacting task
+cv.notify_one();
+
+/////////
+
+... //prepare to react
+{
+  std::unique_lock<std::mutex> lk(m);
+  cv.wait(lk); // wait for notify
+  ... // react to event
+}
+...
+```
+
+Reacting 代码的问题：
+
+* 可能不必要的 mutex
+* If the detecting task notifies the condvar before the reacting task waits, the reacting task will hang.
+* The wait statement fails to account for spurious wakeups.
+
+`cv.wait(lk, []{ return whether the event has occurred; });`
+
+<=>
+
+```c++
+while (!pred()) {
+    wait(lock);
+}
+```
+
+另一种方案
+
+* 缺点是 polling in the reacting task <--- not truly blocked
+
+```c++
+std::atomic<bool> flag(false);
+
+flag = true;
+
+...
+while (!flag);
+...
+```
+
+组合方案
+
+```c++
+// detector
+std::condition_variable cv;
+std::mutex m;
+bool flag(false);
+...
+{
+	std::lock_guard<std::mutex> g(m);
+	flag = true;
+}
+cv.notify_one();
+
+// reactor
+...
+{
+  std::unique_lock<std::mutex> lk(m);
+  cv.wait(lk, [] { return flag; });
+}
+...
+```
+
+组合方案正确性无误，但不简洁
+
+=> having the reacting task wait on a future that’s set by the detecting task (void future)
+
+```c++
+std::promise<void> p;
+
+// detector
+...
+p.set_value();
+
+// reactor
+...
+p.get_future().wait();
+...
+```
+
+* 优点：不浪费资源、无 spurious wakeups、无 mutex
+
+* 缺点：incur heap-based allocation and deallocation, limited to one-shot mechanism
+
+e.g.
+
+```c++
+std::promise<void> p;
+void react();
+
+void detect()
+{
+  std::thread t([] {
+									p.get_future().wait();
+									react();
+  							});
+  ...
+  p.set_value();
+  ...
+  t.join();
+}
+```
+
+=>
+
+```c++
+std::promise<void> p;
+void react();
+
+void detect()
+{
+  ThreadRAII tr(
+    std::thread t([] {
+                    p.get_future().wait();
+                    react();
+                  }),
+    ThreadRAII::DtorAction::join    // risky!
+  );
+  
+  ... // thread inside tr is suspended here.
+      // if an exception emitted --> ThreadRAII never returns
+  
+  p.set_value(); // unsuspend thread inside tr
+  ...
+}
+```
+
+拓展多个线程
+
+```c++
+std::promise<void> p;
+void react();
+
+void detect()
+{
+  auto sf = p.get_future().share();
+  std::vector<std::thread> vt;
+  
+  for (int i = 0; i < threadsToRun; i++) {
+    vt.emplace_back([sf]{ sf.wait();
+                        	react(); });
+  }
+  ...
+  p.set_value();
+  ...
+    
+  for (auto& t : vt) {
+    t.join();
+  }
+}
+```
+
+
+
+##### Item 40:  Use **std::atomic** for concurrency, **volatile** for special memory.
+
+`std::atomic` is for data accessed from multiple threads without using mutexes. It’s a tool for writing concurrent software.
+
+* what’s atomic is nothing more than the read of an `std::atomic`
+* read-modify-write (RMW) operations
+
+* Data race is an undefined behavior => 变量可能是任意值
+
+* 可用于满足 critical ordering requirement (using sequential consistency)
+
+```c++
+std::atomic<bool> valAvailable(false);
+auto imptValue = computeImportantValue();
+valAvailable = true;
+```
+
+* the copy operations for `std::atomic` are deleted
+  * 硬件不支持 read x and write y in a single atomic operation
+  * Move operations aren't explicitly declared
+* `load` and `store`
+
+```c++
+std::atomic<int> y(x.load());
+
+y.store(x.load());
+```
+
+
+
+
+`volatile` is for memory where reads and writes should not be optimized away. It’s a tool for working with special memory.
+
+* [volatile 关键字本质上是阻止编译器做常量优化](https://www.zhihu.com/question/388121842/answer/1195382979)
+* no guarantee of operation atomicity and insufficient restrictions on code reordering
+* In a nutshell, it’s for telling compilers that they’re dealing with memory that doesn’t behave normally
+* special memory
+  * Memory-mapped I/O，与 peripherals 交互
+* seemingly redundant loads and dead stores must be preserved when dealing with special memory
+
+共用两个特性：`volatile std::atomic<int> vai`
 
 
 
 #### chpt 8 Tweaks
+
+##### Item 41: Consider pass by value for copyable parameters that are cheap to move and always copied.
+
+```c++
+class Widget {
+ public:
+	void addName(std::string newName) { 	
+    names.push_back(std::move(newName));
+  }
+	...
+};
+```
+
+标题中 copyable 的含义讨论：
+
+```c++
+void setPtr(std::unique_ptr<std::string>&& ptr) {
+  p = std::move(ptr);
+}
+```
+
+assignment 场景不同于 construction 的 case：
+
+* applies to any parameter type that holds values in dynamically allocated memory
+
+```c++
+class Password {
+ public:
+	void changeTo(const std::string& newPwd) {
+    text = newPwd; // can reuse text's memory if text.capacity() >= new Pwd.size()
+  }
+}
+```
+
+that pass by value is susceptiable to *the slicing problem*
+
+```c++
+class Widget { ... };
+class SpecialWidget: public Widget { ... };
+void processWidget(Widget w); // suffers from slicing problem
+SpecialWidget sw;
+processWidget(sw);
+```
+
+
+
+##### Item 42: Consider emplacement instead of insertion
+
+insert, push_front, push_back, `std::forward_list::insert_after`
+
+<->
+
+emplace, emplace_front, emplace_back, `std::forward_list::emplace_after`
+
+* 所有容器中，只有 `std::forward_list`, `std::array` 不支持 `insert`
+* [emplace_hint](https://en.cppreference.com/w/cpp/container/map/emplace_hint)
+
+`emplace_back` uses perfect forwarding (limitations -> Item 30)
+
+a heuristic that can help you identify situations where emplacement functions are most likely to be worthwhile
+
+* The value being added is constructed into the container, not assigned.
+  * Node-based containers virtually always use construction to add new values, and most standard containers are node-based. The only ones that aren’t are `std::vector`, `std::deque`, and `std::string`. (`std::array` isn’t, either, but it doesn’t support insertion or emplacement, so it’s not relevant here.)
+* The argument type(s) being passed differ from the type held by the container.
+* The container is unlikely to reject the new value as a duplicate.
+
+
+
+two other issues
+
+* `shared_ptr` + `push_back` 异常安全性
+  * Fundamentally, the effectiveness of resource-managing classes like `std::shared_ptr` and `std::unique_ptr` is predicated on resources (such as raw pointers from new) being *immediately* passed to constructors for resource-managing objects. The fact that functions like `std::make_shared` and `std::make_unique` automate this is one of the reasons they’re so important.
+
+```c++
+std::list<std::shared_ptr<Widget>> ptrs;
+void killWidget(Widget* pWidget);
+ptrs.push_back(std::shared_ptr<Widget>(new Widget, killWidget));
+ptrs.push_back({ new Widget, killWidget });
+
+ptrs.emplace_back(new Widget, killWidget); // 异常安全性问题
+```
+
+=>
+
+```c++
+std::shared_ptr<Widget> spw(new Widget, killWidget);
+ptrs.push_back(std::move(spw));
+```
+
+* interaction with `explicit` constructors
+  * `emplace_back` is not considered an implicit conversion request
+  * 深入思考，direct initialization is permitted to use explicit constructors
+
+```c++
+std::vector<std::regex> regexes;
+regexes.emplace_back(nullptr); // why is it valid?
+regexes.push_back(nullptr); // compile error
+--->
+std::regex upperCaseWord("[A-Z]+"); // std::regex constructor takeing a const char* pointer is explicit
+
+std::regex r1 = nullptr; // compile error
+std::regex r2(nullptr); // compiles
+```
 
 
 
@@ -2142,7 +2552,7 @@ inline uint64_t native_to_little(uint64_t in) {
 * 二维数组的定义：`TYPE(*p)[N] = new TYPE[][N];`，要指出行数
 * 复制构造函数：常引用
 * 析构函数
-  * 对象的destructor不被call的情形：Most stem from abnormal program termination. If an exception propagates out of a thread’s primary function (e.g., main, for the program’s initial thread) or if a noexcept specifi‐ cation is violated (see Item 14), local objects may not be destroyed, and if `std::abort` or an exit function (i.e., `std::_Exit`, `std::exit`, or `std::quick_exit`) is called, they definitely won’t be.
+  * 对象的 destructor 不被 call 的情形：Most stem from abnormal program termination. If an exception propagates out of a thread’s primary function (e.g., main, for the program’s initial thread) or if a noexcept specification is violated (see Item 14), local objects may not be destroyed, and if `std::abort` or an exit function (i.e., `std::_Exit`, `std::exit`, or `std::quick_exit`) is called, they definitely won’t be.
 * 虚析构函数    =>对象内有虚函数表，指向虚函数表的指针：32位系统4字节，64位系统8字节
 * 虚基类偏移量表指针
 
@@ -2275,7 +2685,7 @@ CMyString& CMyString::operator=(const CMyString &str){
 	return *this;
 }
 ```
-* 考虑异常安全性：上面的解法在new分配之前先delete，违背了Exception Safety原则，我们需要保证分配内存失败时原先的实例不会被修改，因此可以先复制，或者创造临时实例。(临时实例利用了if语句，在if的大括号外会自动析构)
+* 考虑异常安全性：上面的解法在 new 分配之前先 delete，违背了 Exception Safety 原则，我们需要保证分配内存失败时原先的实例不会被修改，因此可以先复制，或者创造临时实例。(临时实例利用了if语句，在if的大括号外会自动析构)
 ```c++
 CMyString& CMyString::operator=(const CMyString &str){
 	if(this!=&str){
