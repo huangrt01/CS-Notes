@@ -11,18 +11,18 @@ internet layer: Internet Protocol, IP address, packet's path
 彩蛋：世一大惺惺相惜
 <img src="Computer-Networking-Lecture-CS144-Stanford/005.jpg" alt="Stanford-THU" style="zoom:60%;" />
 
-用`ping`和`traceroute`看IP地址; 光纤2/3光速，8637km - RTT=86ms
+用`ping`和`traceroute`看IP地址; 光纤2/3光速，8637km -> RTT=86ms
 
 ##### 1-1 A day in the life of an application
 * Networked Applications: connectivity, bidirectional and reliable data stream
 * Byte Stream Model: A - Internet - B, server和A、B均可中断连接
-* World Wide Web(HTTP: HyperText Transfer Protocol)
-  * request: GET, PUT, DELETE, INFO, 400(bad request) 
+* World Wide Web (HTTP: HyperText Transfer Protocol)
+  * request: GET, PUT, DELETE, INFO, 400 (bad request) 
   * GET - response(200, OK)  , 200代表有效
   * document-centric: "GET/HTTP/1.1", "HTTP/1.1 200 OK \<contents of the index.html\>"
 * BitTorrent: peer-to-peer model
   * breaks files into "pieces" and the clients join and leave "swarms" of clients
-  * 先下载torrent file -- tracker存储lists of other clients
+  * 先下载 torrent file -- tracker 存储 lists of other clients
   * dynamically exchange data
 * Skype: proprietary system, a mixed system
   * two clients： A -- (Internet + Rendezvous server) -- NAT -- B
@@ -42,12 +42,13 @@ internet layer: Internet Protocol, IP address, packet's path
 4 layer: 利于reuse
 
 Internet: end-hosts, links and routers
-* Link Layer: 利用link在end host和router或router和router之间传输数据, hop-by-hop逐跳转发; e.g. Ethernet and WiFi
+* Link Layer: 利用 link 在 end host和router 或 router和router之间 传输数据, hop-by-hop逐跳转发
+  * e.g. Ethernet and WiFi
 * Network Layer: datagrams, Packet: (Data, Header(from, to))
   * packets可能失去/损坏/复制，no guarantees
   * must use the IP
   * may be out of order
-* Transport Layer: TCP(Transmission Control Protocol)负责上述Network的局限性，controls congestion  
+* Transport Layer: TCP(Transmission Control Protocol) 负责上述Network层的局限性，controls congestion  
   * sequence number -> 保序
   * ACK(acknowledgement of receipt)，如果发信人没收到就resend
   * 比如视频传输不需要TCP，可以用UDP(User Datagram Protocol),不保证传输
@@ -63,13 +64,13 @@ two extra things
 ##### 1-3 The IP Service
 * Link Frame (IP Datagram(IP Data(Data, Hdr), IP Hdr), Link Hdr )
 * The IP Service Model的特点
-  * Datagram: (Data, IP SA, IP DA)，每个router有forwarding table，类比为postal service中的letter
+  * Datagram: (Data, IP SA, IP DA)，每个 router 有 forwarding table，类比为 postal service 中的 letter
   * Unreliable: 失去/损坏/复制，保证只在必要的时候不可靠（比如queue congestion）
   * **Best-effort** attempt
   * Connectionless : no per-flow state, mis-sequenced
 * IP设计简单的原因
   * minimal, faster, streamlined
-  * end-to-end(在end points implement features)
+  * end-to-end (在end points implement features)
   * build a variety of reliable/unreliable services on top
   * works over any link layer
 
@@ -86,7 +87,7 @@ two extra things
   2. server: SYN/ACK
   3. client: ACK
 * IP packets
-  * IP address + TCP port(web server通常是80)
+  * IP address + TCP port (web server通常是80)
   * hops, Routers: wireless access point (WiFi的第一次hop)
   * forwarding table
   * default router
@@ -108,11 +109,11 @@ two consequences
 * edit -> compile -> link -> execute
   
   * compiler: self-contained, e.g. lexical analysis, parsing the code, preprocessing declarations, code generation and optimization
-* 有时需要break layering
+* 有时需要 break layering
   * 比如Linux内核的部分代码C语言直接用汇编 => code不再layer-independent
   * a continual tension to improve the Internet by making cross-layer optimizations and the resulting loss of flexibility. e.g. NATs=>很难加其它类型的传输层
   * epoll这个接口是linux独有的，FreeBSD里是kqueue
-  * UDP header的checksum计算用到IP header
+  * UDP header 的 checksum 计算用到 IP header
   
 * layering的原因：1.modularity 2.well defined service 3.reuse 4.separation of concerns 5.continuous improvement 6.p2p communications
 
@@ -155,7 +156,7 @@ Address Structure
 * network+host
 * class A,B,C: 0,7+24; 10, 14+16; 110, 21+8
 
-Classless Inter-Domain Routing(CIDR，无类别域间路由)
+Classless Inter-Domain Routing (CIDR，无类别域间路由)
 * address block is a pair: address, count
 * counts是2的次方? 表示netmask长度
 * e.g. Stanford 5/16 blocks `5*2^(32-16)`
@@ -231,7 +232,7 @@ SIP的应用场景
 ##### 2-1 The TCP Service Model
 **The TCP Service Model**
 
-* reliable, end-to-end, bi-directional,in-sequence, bytestream service
+* reliable, end-to-end, bi-directional, in-sequence, bytestream service
 * Peer TCP layers communicate: connection
 * congestion control
 
@@ -249,7 +250,7 @@ Remedies
   * Header checksum (IP)
   * Data checksum (UDP)
 * Window-based Flow-control: prevents overrunning receiver
-* FEC
+* Forward error correction (FEC)
 * Retransmission
 * Heartbeats
 
@@ -266,26 +267,27 @@ Paradox of airplanes
 
 * [IANA port number](https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml): ssh 22, smtp 23, web 80
 * source port: 初始化用不同的port避免冲突
-* PSH flag: push，比如键盘敲击
-* HLEN和(TCP options)联系
-* URG应该在ACK前面
+* Flags
+  * PSH flag: push，比如键盘敲击
+  * URG应该在ACK前面
+* HLEN 和 (TCP options) 联系
 
 <img src="Computer-Networking-Lecture-CS144-Stanford/009.jpg" alt="TCP uniqueness" style="zoom:60%;" />
 五个部分，104bit
 
 唯一性
-* 要求source port initiator每次increment:64k new connections
+* 要求source port initiator每次increment: 64k new connections
 * TCP picks ISN to avoid overlap with previous connection with same ID, 多一个域，增加随机性
 * ISN的意义在于：1）security，避免自己的window被overlap 2）便于filter out不同类型的包  
 
 
 ##### 2-2 UDP service model
-不需要可靠性：app自己控制重传，比如早期版本的NFS(network file system)
+不需要可靠性：app自己控制重传，比如早期版本的NFS (network file system)
 
 <img src="Computer-Networking-Lecture-CS144-Stanford/010.jpg" alt="UDP header" style="zoom:60%;" />
-* Checksum对于IPv4可选，可以为全0
-* checksum用了IP header，违背layering principle，因为能detect错传
-* UDP header有length字段，而TCP没有，因为TCP对空间要求高，用隐含的方式计算length
+* Checksum 对于 IPv4 可选，可以为全0
+* Checksum 用了 IP header，违背 layering principle，是为了能detect错传
+* UDP header 有 length 字段，而TCP没有，因为TCP对空间要求高，用隐含的方式计算 length
 * port demultiplexing, connectionless, unreliable
 
 **应用**
@@ -296,7 +298,7 @@ DHCP: Dynamic Host Configuration Protocol
 * new host在join网络时得到IP
 * 连WiFi
 
-对重传、拥塞控制、in-sequence delivery有special needs的应用，比如音频，但现在UDP不像以前用的那么多，因为很多是http，基于TCP。
+对重传、拥塞控制、in-sequence delivery 有 special needs 的应用，比如音频，但现在UDP不像以前用的那么多，因为很多是http，基于TCP。
 
 ##### 2-3 The Internet Control Message Protocol (ICMP) Service Model
 report errors and diagnoise problems about network layer
@@ -311,9 +313,9 @@ Message的意义见RFC 792
 
 应用于traceroute: 
 * 核心思想：连续发送TTL从1开始递增的UDP，期待回复的11 0(TTL expires)
-  * Source is random and different for each; destination starts with arandom number and increases by one for each
+  * Source is random and different for each; destination starts with a random number and increases by one for each
 * 由于路由选择问题，traceroute 无法保证每次到同一个主机经过的路由都是相同的。
-* traceroute 发送的 UDP 数据报端口号是大于 30000 的。如果目的主机没有任何程序使用该端口，主机会产生一个3 3(端口不可达)ICMP报文给源主机。
+* traceroute 发送的 UDP 数据报端口号是大于 30000 的。如果目的主机没有任何程序使用该端口，主机会产生一个 3 3(端口不可达) ICMP报文给源主机。
 
 ##### 2-4 End-to-End Principle
 **Why Doesn't the Network Help?**
@@ -324,7 +326,7 @@ end-to-end check
 * e.g. File Transfer: link layer的error detection只检测transmission错误，不检测error storage
 * e.g. TCP小概率会出错（stack）、BitTorrent
 * wireless link相比wire link功能复杂，可靠性低，所以在link layer重传，可提升TCP性能
-* RFC1958: "strong" end to end: 不推荐在middle实现任何功能，比如在link layer重传，假定了reliabilty的提升值得latency的牺牲
+* RFC1958: "strong" end to end: 不推荐在 middle 实现任何功能，比如在 link layer 重传，假定了reliabilty的提升值得latency的牺牲
 
 ##### 2-5 Error Detection: 3 schemes: 3 schemes
 
@@ -335,7 +337,7 @@ end-to-end check
 * Checksum (IP, TCP)
   * not very robust, 只能检1位错
   * fast and cheap even in software
-  * IP, UDP, TCP use one's complement算法：16-bit word packet求和，进位加到底部，再取反码（特例：0xffff -> 0xffff，因为在TCP，checksum field为0意味着没有checksum）
+  * IP, UDP, TCP use one's complement算法：16-bit word packet求和，进位加到底部，再取反码（特例：0xffff -> 0xffff，因为在TCP，checksum field 为 0 意味着没有 checksum）
 * CRC: computes remainder of a polynomial (Ethernet)，见[通信与网络笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/%E9%80%9A%E4%BF%A1%E4%B8%8E%E7%BD%91%E7%BB%9C.md)
   * 虽然more expensive，但支持硬件计算
   * 可对抗2 bits error、奇数error、小于c bits的突发错(burst)
@@ -345,7 +347,7 @@ end-to-end check
   * robust to malicious modifications, but not errors
   * 检错能力有局限，受随机性影响，不如CRC，no error detection guarantee
   * $c=MAC(M,s)$，M + c意味着对方有secret或者replay
-  * 对于replay，`ctr++`, 具体见[我的密码学笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Cryptography%20I%2C%20Stanford%20University%2C%20Coursera.md)的TLS部分
+  * 对于replay，`ctr++`, 具体见[我的密码学笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Security-Privacy-Cryptography.md)的TLS部分【目前尚未整理】
   
 ##### 2-6 Finite State Machines
 <img src="Computer-Networking-Lecture-CS144-Stanford/012.jpg" alt="HTTP Request" style="zoom:40%;" />
@@ -355,15 +357,15 @@ end-to-end check
 * 非常规路线的处理：比如对于第二个SYN或者FIN信号，接收机选择忽视，具体见`bool TCPReceiver::segment_received(const TCPSegment &seg)`的实现
 
 ##### 2-7 Flow Control I: Stop-and-Wait
-* 核心是receiver给sender反馈，让sender不要送太多packets
+* 核心是 receiver 给 sender 反馈，让sender不要送太多 packets
 * 基本方法
-  * stop and wait
-  * sliding window
+  * 方案一：stop and wait
+  * 方案二：sliding window
 
 **stop and wait**
-* flight中最多一个packet
-* 针对ACK Delay（收到ACK的时间刚好在timeout之后）的情形，会有duplicates
-  * 解决方案：用一个1-bit counter提供信息
+* flight 中最多一个 packet
+* 针对 ACK Delay（收到ACK的时间刚好在timeout之后）的情形，会有duplicates
+  * 解决方案：用一个1-bit counter 提供信息
   * assumptions：1）网络不产生重复packets；2）不delay multiple timeouts
 
 <img src="Computer-Networking-Lecture-CS144-Stanford/014.jpg" alt="stop-and-wait" style="zoom:100%;" />
@@ -397,7 +399,7 @@ end-to-end check
 * $RWS \geq 1, SWS \geq 1, RWS \leq SWS$
 * if $RWS = 1$, "go back N" protocol ,need SWS+1 sequence numbers (需要多重传)
 * if $RWS = SWS$, need 2SWS sequence numbers
-* 通常需要$RWS+SWS$ sequence numbers：考虑临界情况，RWS最左侧的ACK没有成功发送，重传后收到了RWS最右侧的ACK
+* 通常需要$RWS+SWS$ sequence numbers：考虑临界情况，SWS最左侧的ACK没有成功发送，重传后收到了RWS最右侧的ACK
 
 **TCP Flow Control**
 
@@ -426,7 +428,7 @@ protocol可能的运转方式 (ARQ: automatic repeat request)
 * urgent pointer：和URG联系，指出哪里urgent
 
 ##### 2-11 TCP Setup and Teardown
-状态机的实现很简洁，核心是如何set up和clean up(port number, etc)
+状态机的实现很简洁，核心是如何 set up 和 clean up (port number, etc)
 
 
 **3-way handshake**
@@ -477,15 +479,128 @@ packets和datagrams是两个核心概念，datagrams为了明确目的地，在�
 
 
 
+##### 3-0 Packet Switching
+
+Packet -> self-contained data unit
+
+packet delay
+
+* Packetization delay
+* Propagation delay
+* Queueing delay
+
+##### 3-1 The History of Networks
+
+Semaphore telegraphs by Chappe (France)，发展出以下概念：
+
+* Codes
+* Flow Control
+* Synchronization
+* Error detection and retransmission
+* Encryption
+
+Pre-defined messages -> arbitrary messages -> compression -> control signals "Protocols"
+
+##### 3-2 What is packet switching?
+
+Circuit Switching
+
+* telephone: dedicated wire -> circuit switch -> dedicated wire
+* each phone call: 64 kb/s, no share with anybody else (private, guaranteed, isolated data rate from e2e)
+* A 10Gb/s trunk line can carry over 150000 calls
+
+Circuit Switching 用于 Internet 的缺点
+
+* Inefficient: bursty communication (images, ssh connection, web pages)
+* Diverse Rates
+* State Management
+
+Packet Switching 
+
+* Network = end hosts + links + packet switches
+* forwarding table (routed individually by looking up)
+  * All packets share the full capacity of a link
+  * The routers maintain no per-communication state
+* have buffers: must send one at a time during periods of congestion
+* 有不同 types: routers、ethernet switches
+
+Why Internet uses packet switching
+
+* Efficient use of expensive links
+* Resilience to failure of links & routers
+  * the Internet was to be a datagram subnet
+* Internet was designed to be the interconnection of the existing networks
+
+##### 3-3 Terminology, End to End Delay and Queueing
+
+Propagation Delay: $t_l = \frac{l}{c}$
+
+* single bit to travel over a link
+* 1000km, 2*10^8m/s ---> 5ms
+* 不受 link rate 影响
+
+Packetization Delay: $t_p=\frac{p}{r}$
+
+* 64byte packet, 100Mb/s link ---> 5.12us
+* 1kbit (1024bit) packet, 1kb/s link (1000bit/s) ---> 1.024s
+
+E2E delay $t=\sum_i(\frac{p}{r_i}+\frac{l_i}{c}+Q_i(t))$
+
+* store and forward network
+
+* router 理论上能等到 header 直接开始 packetization (cut through switching)，internet router 通常不这样做，是收到整个 packet 再发送
+* queueing delay -> packet delay variation
 
 
 
+##### 3-4 Playback Buffers
+
+Real-time applications (e.g. YouTube and Skype) have to cope with variable queueing delay
+
+![playback-buffer](Computer-Networking-Lecture-CS144-Stanford/playback-buffer.png)
+
+* variable delay 有下界
+* receive 曲线斜率有上界
 
 
+
+##### 3-5 Simple Deterministic Queue Model
+
+$Q(t) = A(t)-D(t)$
+
+d(t): 水平截距的差，表示单个 byte 的 queueing time
+
+Q: Why not send the entire message in one packet?
+
+A: parallel transmission across all links -> reduce e2e latency
+
+---> Statistical Multiplexing Gain = 2C/R
+
+
+
+##### 3-6 Queueing Model Properties
+
+Queues with Random Arrival Processes (Queueing Theory)
+
+* Bustiness increases delay
+* Determinism minimizes delay
+* Little's Result
+  * $L=\lambda d$, where d = average delay, lambda = arival rate, L = average number that are in the queue
+* The M/M/1 queue
+  * 用 Poisson process 建模 aggregation of many independent random events，lambda = arrival rate
+  * network traffic is very bursty => 用 poisson 过程建模 the arrival of new flows
+  * M/M/1 Queue: $d=\frac{1}{\mu-\lambda}, L=\lambda d = \frac{\frac{\lambda}{\mu}}{1-\frac{\lambda}{\mu}}$
+
+
+
+##### 3-7 Switching and Forwarding
 
 
 
 ##### potpourri
+
+RFC
+
 * RFC 792: ICMP Message
 * RFC 821: SMTP
 * [RFC 1958](https://datatracker.ietf.org/doc/rfc1958/?include_text=1):Architectural Principles of the Internet
@@ -493,6 +608,30 @@ packets和datagrams是两个核心概念，datagrams为了明确目的地，在�
 * [RFC 6298](https://datatracker.ietf.org/doc/rfc6298/?include_text=1): Computing TCP's Retransmission Timer
 * [RFC 6335](https://tools.ietf.org/html/rfc6335): port number
 * RFC 7414: A Roadmap for TCP
+
+[TCP backlog: syns queue and accept queue](https://www.cnblogs.com/Orgliny/p/5780796.html)
+
+
+
+[What is a REST API?](https://www.youtube.com/watch?v=Q-BpqyOT3a8)
+
+* Representational State Transfer (REST)
+* Architecture style
+* Relies on a stateless, client-server protocol, almost alwasys HTTP
+  * GET: retrieve data from a specified resource
+  * POST: submit data to be processed to a specified resource
+  * PUT: update a specified resource
+  * DELETE
+  * HEAD: same as get but does not return a body
+  * OPTIONS: return the supported HTTP methods
+  * PATCH: update partial resources
+* Treats server objects as resources that can be created or destroyed
+* GitHub REST API: https://docs.github.com/en/rest
+* 推荐 Postman 工具
+
+
+
+
 
 
 ##### wireshark: 
@@ -517,6 +656,10 @@ icmp.code == 0
 
 3.Traceroute
 * VM的第一跳是到laptop，不会decrement the TTL，因此hop 10对应TTL 9
+
+
+
+
 
 
 

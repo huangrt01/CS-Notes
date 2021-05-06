@@ -39,6 +39,37 @@ According to [JL-lemma](https://en.wikipedia.org/wiki/Johnson–Lindenstrauss_le
 * 变种：instance-wise (Y adaptive to X), implicit-order, GroupCDot, CDotFlex
 * 对比：比[AutoInt](https://arxiv.org/pdf/1810.11921.pdf)计算量小；比[DCN-V2](https://arxiv.org/pdf/2008.13535.pdf)线上效果好
 
+### 特征交叉
+
+CAN: Revisiting Feature Co-Action for Click-Through Rate Prediction
+
+[想为特征交互走一条新的路 - 周国睿的文章 - 知乎](https://zhuanlan.zhihu.com/p/287898562)
+
+feature co-action
+
+1. sum-pooling: DIN 系列
+2. graph-based
+3. combinatorial embedding methods: DCN、PNN
+
+1+2: the edges are only used for information aggregation but not information augmentation；edge weight 的维度不高，可能信息不足以刻画好 feature co-action
+
+3: 同时进行 representation learning and co-action modeling，可能有冲突
+
+CAN网络结构：
+
+* 核心思路是有限度地扩充交叉特征参数，CAN独立参数
+* Pitem做MLP参数，这样选取是考虑到 candidate ads 的量级比 user history少
+* CAN本质上感觉是一种更“深度”的“朴素特征交叉”，既直接由 Pitem + Puser 输出 embedding，又不引入新的 dense MLP 参数，保证“穿越性”
+
+相比笛卡尔积方案的优势是：1）参数解耦；2）参数量折中；3）冷启动
+
+Multi-level Independence
+
+* parameter independence
+  * 我认为这篇文章核心思路在这里，稀疏特征的场景将 表征学习 与 特征交叉 解耦，这一思想与长尾分布将 表征学习 与 分类器 解耦异曲同工（本质还是“有限地”增加参数）
+* combinations independence
+* orders independence
+
 
 
 

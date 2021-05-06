@@ -148,7 +148,7 @@ Even if what you are trying to debug is a black box binary there are tools that 
 
 ```shell
 # On Linux
-sudo strace (-e lstat) ls -l > /dev/null
+sudo strace [-e lstat] ls -l > /dev/null
 strace -p $PID
 # On macOS
 sudo dtruss -t lstat64_extended ls -l > /dev/null

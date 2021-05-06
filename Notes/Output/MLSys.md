@@ -323,11 +323,11 @@ OneFlow架构
 
 已读，待整理：
 
-#### 《MLSys: The New Frontier of Machine Learning Systems》
+#### MLSys: The New Frontier of Machine Learning Systems
 
-#### 《Deep Neural Networks for Youtube Recommendations, RecSys 16》
+#### Deep Neural Networks for Youtube Recommendations, RecSys 16
 
-#### 《Wide & Deep learning for Recommender Systems, RecSys 17》
+#### Wide & Deep learning for Recommender Systems, RecSys 17
 
 1.Introduction
 * Wide ~ Memorization: 模型直接学习并利用历史数据中物品或者特征的“共现频率”的能力
@@ -372,13 +372,13 @@ Appendix
   * 参数引入较为克制，增强模型的非线性学习能力
   * 解决了Wide&Deep模型人工组合特征的问题
 
-#### 《A Hitchhiker's Guide On Distributed Training Of Deep Neural Networks, JPDC 18》
+#### A Hitchhiker's Guide On Distributed Training Of Deep Neural Networks, JPDC 18
 
-#### 《TFX: A TensorFlow-based production-scale machine learning platform》
+#### TFX: A TensorFlow-based production-scale machine learning platform
 
-#### 《TensorFlow: A system for large-scale machine learning, OSDI 16》
+#### TensorFlow: A system for large-scale machine learning, OSDI 16
 
-#### 《Clipper: A Low-Latency Online Prediction Serving System, NSDI 17》
+#### Clipper: A Low-Latency Online Prediction Serving System, NSDI 17
 
 low latencies, high throughputs, and improved accuracy
 
@@ -413,7 +413,7 @@ model container: 无状态服务
 
 
 
-#### 《Hidden Technical Debt in Machine Learning Systems, NIPS 15》
+#### Hidden Technical Debt in Machine Learning Systems, NIPS 15
 
 boundary erosion, entanglement, hidden feedback loops, undeclared consumers, data dependencies, configuration issues, changes in the external world, and a variety of system-level anti-patterns.
 
@@ -449,11 +449,11 @@ boundary erosion, entanglement, hidden feedback loops, undeclared consumers, dat
 
 
 
-#### 《Ad Click Prediction: a View from the Trenches, KDD 13》
+#### Ad Click Prediction: a View from the Trenches, KDD 13
 * a high-dimensional visualization tool was used to allow researchers to quickly see effects across many dimensions and slicings
 * enables data sources and features to be annotated. Automated checks can then be run to ensure that all dependencies have the appropriate annotations, and dependency trees can be fully resolved.
 
-#### 《XDL: An industrial deep learning framework for high-dimensional sparse data, KDD 19》
+#### XDL: An industrial deep learning framework for high-dimensional sparse data, KDD 19
 
 MPI(All Reduce)和PS，两种分布式计算方向
 
@@ -488,7 +488,7 @@ XDL can be scheduled by multiple resource management platform, like Yarn, and pr
   * Incremental Model Export
   * Feature Expire
 
-#### 《Ethane: Taking control of the enterprise, SIGCOMM 2007》
+#### Ethane: Taking control of the enterprise, SIGCOMM 2007
 
 make networks more manageable and more secure，一种思路是全方位的增加控制，相当于新增一层，只是hide了复杂度；于是提出ethane
 
@@ -507,7 +507,7 @@ Ethane的优势：
 * Significant deployment experience.
   
   
-#### 《Scaling distributed machine learning with the parameter server, OSDI 2014》
+#### Scaling distributed machine learning with the parameter server, OSDI 2014
 
 PS架构的优势主要还是高可用(system efficiency)
 
@@ -545,7 +545,7 @@ PS运维：
 * 双buffer + RCU，读不被锁阻碍
 * 简化版读写锁，优化系统态开销
 
-#### 《Serving DNNs like Clockwork: Performance Predictability from the BottomUp, OSDI 2020》
+#### Serving DNNs like Clockwork: Performance Predictability from the BottomUp, OSDI 2020
 
 [presentation](https://www.usenix.org/conference/osdi20/presentation/gujarati) 挺有意思
 
@@ -576,3 +576,41 @@ model serving: ML system's "narrow waist"
 有启发的地方
 * 框架内的page cache可以借鉴一下 (https://gitlab.mpi-sws.org/cld/ml/clockwork/-/blob/master/src/clockwork/cache.h)
   
+
+#### The Hardware Lottery, 2020
+
+https://hardwarelottery.github.io/
+
+* hardware, software and ML research communities evolve in isolation
+  * Our own intelligence is both algorithm and machine.
+  * Moore's Law ---> The predictable increases in compute and memory every two years meant hardware design became risk-averse.
+  * machine learning researchers rationally began to treat hardware as a sunk cost to work around rather than something fluid that could be shaped
+* The Hardware Lottery
+  * "Happy families are all alike, every unhappy family is unhappy in it’s own way." (Tolstoy & Bartlett, 2016)
+  * e.g. Babbage 的构想直到二战 electronic vacuum tubes 的使用才成为现实。"being too early is the same as being wrong."
+  * von Neumann Bottleneck — the available compute is restricted by “the lone channel between the CPU and memory along which data has to travel sequentially” (Time, 1985).
+  * GPU 并行能力 ---> 高 FLOPS ---> 能做矩阵乘 ---> 训得动深度神经网络
+* The Persistence of the Hardware Lottery
+  * sparsity ~ Ampere Architecture
+  * 较为安全的硬件优化方向：matrix multiplication, unstructured sparsity, weight specific quantization
+  * the difficulty of trying to train a new type of image classification architecture called capsule networks on domain specialized hardware
+* The Likelyhood of Future Hardware Lotteries
+  * how much future algorithms will differ from models like deep neural networks?
+    * 许多子领域，参数量对效果提升的边际效应在下降（近似对数关系）
+    * 100TB model (fp16) ~ 50T ~ 50万亿参数
+    * Our own intelligence relies on decentralized local updates which surface a global signal in ways that are still not well understood
+* The Way Forward
+  * Producing a next generation chip typically costs $30-80 million dollars and takes 2-3 years to develop
+  * A software evolution
+    * one way is to focus on the development of domain-specific languages which cater to a narrow domain.
+    * another way is to automatically auto-tune the algorithmic parameters of a program based upon the downstream choice of hardware.
+
+
+#### A scalable pipeline for designing reconfigurable organisms, PNAS 2020
+
+ML with bioengineering
+
+如何探索更高效的器官组织
+* 模拟(silico)：performant + conform to constraints
+* 模拟(silico) ->现实(vivo)：noise resistance + build filter
+* 目标：见 Object Manipulation 小节
