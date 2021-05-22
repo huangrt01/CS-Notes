@@ -145,7 +145,12 @@ int howManyBits(int x) {
 
 #### Float
 
-[32位浮点数（很好的资料，认真复习）](https://www.runoob.com/w3cnote/32-float-storage.html)：S(1位) E(8位) M(23位)，exponent要减127做偏移，且需要讨论exponent全0或全1的情形
+* [32位浮点数（很好的资料，认真复习）](https://www.runoob.com/w3cnote/32-float-storage.html)：S(1位) E(8位) M(23位)，exponent要减127做偏移，且需要讨论exponent全0或全1的情形
+* Fp16 S(1) E(5) M(10)：
+  * 0 00000 0000000001 = 2−24 ≈ 5.96046 × 10−8  (min half precision)
+  * 0 11110 1111111111 = 65504  (max half precision)
+* [Bf16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) S(1) E(8) M(7)
+
 
 ##### floatScale2(uf)
 ```c++

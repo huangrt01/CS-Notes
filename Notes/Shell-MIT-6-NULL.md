@@ -47,7 +47,33 @@ do
 done
 ```
 
+* case-esac 语句的使用
+
+```shell
+while [ "$#" -gt 0 ]; do
+    case $1 in
+    -c | --clang)
+        clang=1
+        shift
+        ;;
+    -g | --gcc)
+        gcc=1
+        shift
+        ;;
+    --lto)
+        lto=1
+        shift
+        ;;
+    --thinlto)
+        thinlto=1
+        shift
+        ;;
+    esac
+done
+```
+
 * `set -e`：遇到错误，shell script 直接退出
+* `shift`: 含义是 `$0` 不移动，将 `$1` 起始的若干参数干掉 
 
 ##### special variables
 
@@ -143,7 +169,8 @@ done
 * 查找文件：find, fd, locate，见底部命令解释
 * 查找代码：grep, [ack](https://beyondgrep.com/), [ag](https://github.com/ggreer/the_silver_searcher) and [rg](https://github.com/BurntSushi/ripgrep)
   * grep -R can be improved in many ways, such as ignoring .git folders, using multi CPU support, &c
-  * 代码行数统计工具[cloc](https://github.com/AlDanial/cloc)
+  * 代码行数统计工具 [cloc](https://github.com/AlDanial/cloc)
+  * [C++阅码神器cpptree.pl和calltree.pl的使用 - satanson的文章 - 知乎](https://zhuanlan.zhihu.com/p/339910341)
 
 ```shell
 # Find all python files where I used the requests library
@@ -415,7 +442,7 @@ fi
   * `sudo apt-get install --reinstall lightdm && sudo systemctl start lightdm`图形界面
   * `Ctrl+Alt+A`打开终端
   * 自动/手动设置共享文件夹：`sudo mkdir -p /media/sf_<FolderName> && 
-sudo mount -t vboxsf -o rw,gid=vboxsf FolderName /media/sf_FolderName `
+  sudo mount -t vboxsf -o rw,gid=vboxsf FolderName /media/sf_FolderName `
 * ssh可执行命令
   * `ssh foobar@server ls | grep PATTERN` 
   * `ls | ssh foobar@server grep PATTERN`
@@ -526,6 +553,8 @@ pidwait(){
 
 #### Lecture 10.Potpourri
 [Potpourri](https://missing.csail.mit.edu/2020/potpourri/)
+
+[ubuntu无sudo权限以及非root的用户apt安装软件](https://blog.csdn.net/qq_24406903/article/details/88376829)
 
 **Keyboard remapping**
 
@@ -657,6 +686,9 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
 
 ### Linux命令按字母分类
 #### a
+* ag
+  * Flags 含义与 grep 相似
+  * http://conqueringthecommandline.com/book/ack_ag
 * awk: 一种控制台编程工具，寻找和处理pattern
   * 入门[wiki](https://zh.wikipedia.org/wiki/AWK)
   * 数据统计：
@@ -680,7 +712,7 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
 * cloc: 代码行数统计
 * curl
   * -I/--head: 只显示传输文档，经常用于测试连接本身
-`curl --head --silent baidu.com | grep --ignore-case content-length | cut -f2 -d ' '`
+  `curl --head --silent baidu.com | grep --ignore-case content-length | cut -f2 -d ' '`
   * [curl查询公网出口ip](https://www.jianshu.com/p/e9b26711c9de) `curl cip.cc`
 * cut
   * 使用 -f 选项提取指定字段：`cut -f2,3 test.txt`
@@ -731,6 +763,8 @@ find . -name '*.png' -exec convert {} {.}.jpg \;
 * grep
 
 ```shell
+# ignore cases
+-i
 # "NOT"筛选
 grep -v "trash"
 # “OR”筛选
@@ -766,7 +800,7 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
   * -l: long listing format; drwxr-xr-x，d代表文件夹，后面3*3代表owner、owning group、others的权限
   * r：read，w：modify，x：execute
 * lsof: 查看文件占用
-  * 也可查看端口占用，接grep 即可 
+  * 也可查看端口占用，接 grep 即可 
 #### m
 * man: q退出
 * mkdir
@@ -774,7 +808,8 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
 #### n
 * [nc(netcat)](https://zhuanlan.zhihu.com/p/83959309): TCP/IP 的瑞士军刀
   * 端口测试
-  * 
+* netstat 
+  * `netstat -anp | grep tcp6` 查 ipv6 监听
 * nohup
 #### o 
 
@@ -783,7 +818,7 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
 #### p
 * [pandoc](https://github.com/jgm/pandoc)
   * `pandoc test1.md -f markdown -t html -s -o test1.html
-`
+  `
   * `pandoc -s --toc -c pandoc.css -A footer.html MANUAL.txt -o example3.html`
 * pbcopy: 复制到剪贴板 `pbcopy < file`
 * pgrep: 配合jobs
@@ -804,18 +839,29 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
 
 #### t
 * tac: 反向
+
 * tail
   * `ls -l | tail -n1`
   * -f：不断读最新内容，实时监视
+  
 * tee: Read from standard input and write to standard output and files (or commands).
   * 和`xargs`有相似之处，都是转化stdin用于他用
   * `echo "example" | tee /dev/tty | xargs printf "[%s]"`
-* tig
   
-  * >tig是一个基于ncurses的git文本模式接口。它的功能主要是作为一个Git存储库浏览器，但也可以帮助在块级别上分段提交更改，并充当各种Git命令输出的分页器。
+* tig
+  * tig是一个基于ncurses的git文本模式接口。它的功能主要是作为一个Git存储库浏览器，但也可以帮助在块级别上分段提交更改，并充当各种Git命令输出的分页器
+
 * time
+
 * tmux 
+
+* top
+
+  * -H: 显示线程
+  * -H -p $pid：显示指定进程下的线程
+
 * traceroute: -w 1
+
 * tree: 显示树形文件结构, `-L`设置层数
 #### u
 

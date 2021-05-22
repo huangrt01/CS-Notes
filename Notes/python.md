@@ -207,6 +207,18 @@ plt.show()
 
 https://pandas.pydata.org/pandas-docs/stable/index.html
 
+`crosstab` 统计分组频率
+
+`drop`
+
+`get_dummies` convert categorical variables to sets of indicator
+
+```python
+data['not_working'] = np.where(np.in1d(data['job'], ['student', 'retired', 'unemployed']), 1, 0)
+```
+
+
+
 #### random
 
 ```python

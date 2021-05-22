@@ -148,10 +148,27 @@ Even if what you are trying to debug is a black box binary there are tools that 
 
 ```shell
 # On Linux
+strace git status 2>&1 >/dev/null | grep index.lock
 sudo strace [-e lstat] ls -l > /dev/null
+
+# 多线程 strace，要显示 PPID
+ps -efl | grep $task_name # 显示 PPID、PID
 strace -p $PID
+
+# 一些 flag
+-tt   发生时刻
+-T 		持续时间
+-s 1024 print输入参数的长度限制
+-e write=   -e read=     -e trace=file/desc
+-f 监控所有子线程   -ff
+
+
 # On macOS
 sudo dtruss -t lstat64_extended ls -l > /dev/null
+
+# 与之配合的技术
+readlink /proc/22067/fd/3
+lsof | grep /tmp/foobar.lock
 ```
 Under some circumstances, you may need to look at the network packets to figure out the issue in your program. Tools like [`tcpdump`](https://www.man7.org/linux/man-pages/man1/tcpdump.1.html) and [Wireshark](https://www.wireshark.org/) are network packet analyzers that let you read the contents of network packets and filter them based on different criteria.
 

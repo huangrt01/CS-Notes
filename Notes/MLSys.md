@@ -288,7 +288,7 @@ OneFlow架构
 
 * node placement: consistent view
   * SBP, 在op层面实现数据和模型并行 
-![SBP](MLSys/SBP.jpg)
+  ![SBP](MLSys/SBP.jpg)
 
 
 ### GPU 相关知识
@@ -306,6 +306,46 @@ OneFlow架构
 ### MLOps
 
 * 磁盘U形故障率 ~ GPU故障率建模
+
+
+
+### AWS - SageMaker
+
+#### Sagemaker Immersion Labs
+
+https://sagemaker-immersionday.workshop.aws/
+
+[Github Link](https://github.com/aws-samples/amazon-sagemaker-immersion-day)
+
+* Lab 1. Feature Engineering
+* Lab 2. Train, Tune and Deploy XGBoost
+  * Hyperparameter tuner
+* Lab 3. Bring your own model
+  * Bring your own container
+  * Bring your own script
+* Lab 4. Autopilot, Debugger and Model Monitor
+  * Autopilot: generates notebooks for you
+  * debug hooks that listen to events
+  * class activation maps with SageMaker Debugger
+* Lab 5. Bias and Explainability
+* Lab 6. SageMaker Pipelines
+
+总体分析
+
+* python SDK, IDE 式的开发体验
+* instance per notebook
+  * brings elastic, dedicated compute for each person, project, dataset, step in your ML lifecycle
+* Train a model
+  * Build-in algorithms
+  * Script mode
+  * Docker container
+  * AWS ML marketplace
+  * Notebook instance
+* use_spot_instances=True
+
+
+
+
 
 ### ToB
 
@@ -419,8 +459,8 @@ boundary erosion, entanglement, hidden feedback loops, undeclared consumers, dat
 
 2. Complex Models Erode Boundaries
 * Entanglement: 即使多模型/超参的配置独立，效果也会互相影响
-* Correction Cascade: 模型级联是hidden debt
-* Undeclared Consumers: 需要SLA(service-level agreement)
+* Correction Cascade: 模型级联是 hidden debt
+* Undeclared Consumers: 需要SLA (service-level agreement)
 
 3. Data Dependencies Cost More than Code Dependencies
 * Underutilized dependencies: legacy/bundled/epsilon/correlated, use exhaustive leave-one-feature-out evaluations to detect
@@ -431,7 +471,7 @@ boundary erosion, entanglement, hidden feedback loops, undeclared consumers, dat
 
 5. ML-System Anti-Patterns
 * Glue Code: hard to achieve a domain-specific goal
-* Pipeline Jungle: 特征工程的意义所在，thinking holistically about data collection and feature ex traction
+* Pipeline Jungle: 特征工程的意义所在，thinking holistically about data collection and feature extraction
 * Dead Experimental Codepaths
 * Abstraction Debt
 * Common Smells
@@ -450,12 +490,69 @@ boundary erosion, entanglement, hidden feedback loops, undeclared consumers, dat
 
 
 #### Ad Click Prediction: a View from the Trenches, KDD 13
+2. Brief System Overview：Google 场景是搜索广告
+
+3.Online Learning and Sparsity
+
+* FTRL-Proximal(Follow The Proximally Regularized Leader): get both the sparsity provided by RDA and the improved accuracy of OGD
+
+* [在线学习（Online Learning）导读 - 吴海波的文章](https://zhuanlan.zhihu.com/p/36410780)
+* FTRL的数学本质：SGD（梯度 + L2）+稀疏性（L1）
+
+* 李亦锬大佬的机器学习答题集，很精彩，其中介绍了 FTRL 的实践意义
+  https://zhuanlan.zhihu.com/p/20693546
+
+4.Saving Memory at Massive Scale
+
+进一步节省PS内存的方式
+
+* Probabilistic Feature Inclusion
+  * 出于效果、回溯性的考量，只考虑在 serving 时省内存
+  * Poisson Inclusion, Bloom Filter Inclusion
+* Encoding Values with Fewer Bits
+  * $\omega_{i,rounded}=2^{-13}\lfloor{2^{13}\omega_i+R}\rfloor$
+* Training Many Similar Models
+  * savings from not representing the key and the counts per model
+* A Single Value Structure
+  * 动机是省内存，本质上有点像是对极其相似的 models 的公共参数做 cotrain
+  * 用于特征淘汰、特征选择等实验场景 (Fast prediction of new feature utility. ICML, 2012)
+* Computing Learning Rates with Counts
+
+* Subsampling Training Data: 然后给负样本的 loss 增加权重，保证“期望上”目标函数的一致性
+
+5.Evaluating Model Performance
+
+* Progressive Validation: online loss, relative changes
+
+6.Confidence Estimates
+
+* 定义并估出了不确定度的 upper bound: 学习率向量点乘输入向量
+
+7.Calibrating Predictions
+
+* 有 Poisson regression、isotonic regression 等手段
+* 系统的 inherent feedback loop 不保证理论准确性
+
+8.Automated Feature Management
+
+* 特征平台化
+
+9.Unsuccessful Experiments
+
+* Feature Hashing, Dropout, Feature Bagging, Feature Vector Normalization
+
+
+
+机器学习框架易用性
+
 * a high-dimensional visualization tool was used to allow researchers to quickly see effects across many dimensions and slicings
 * enables data sources and features to be annotated. Automated checks can then be run to ensure that all dependencies have the appropriate annotations, and dependency trees can be fully resolved.
 
+
+
 #### XDL: An industrial deep learning framework for high-dimensional sparse data, KDD 19
 
-MPI(All Reduce)和PS，两种分布式计算方向
+MPI (All Reduce) 和 PS，两种分布式计算的发展方向
 
 Sparse + Dense
 
@@ -465,8 +562,6 @@ Sparse + Dense
 
 In order to facilitate deployment on various computing platforms,
 XDL can be scheduled by multiple resource management platform, like Yarn, and provides data I/O interfaces to various data storage systems, like HDFS and Kafka.
-
-
 
 * I/O
   * Hierarchical sample compression: prefix tree
@@ -490,7 +585,7 @@ XDL can be scheduled by multiple resource management platform, like Yarn, and pr
 
 #### Ethane: Taking control of the enterprise, SIGCOMM 2007
 
-make networks more manageable and more secure，一种思路是全方位的增加控制，相当于新增一层，只是hide了复杂度；于是提出ethane
+make networks more manageable and more secure，一种思路是全方位的增加控制，相当于新增一层，只是 hide 了复杂度；于是提出 ethane 解决这一问题
 
 ethane的思想：
 * The network should be governed by policies declared over high-
@@ -575,7 +670,6 @@ model serving: ML system's "narrow waist"
 
 有启发的地方
 * 框架内的page cache可以借鉴一下 (https://gitlab.mpi-sws.org/cld/ml/clockwork/-/blob/master/src/clockwork/cache.h)
-  
 
 #### The Hardware Lottery, 2020
 
@@ -604,6 +698,7 @@ https://hardwarelottery.github.io/
   * A software evolution
     * one way is to focus on the development of domain-specific languages which cater to a narrow domain.
     * another way is to automatically auto-tune the algorithmic parameters of a program based upon the downstream choice of hardware.
+* 另一篇强调 General Method + 算力 大力出奇迹的 blog: http://www.incompleteideas.net/IncIdeas/BitterLesson.html
 
 
 #### A scalable pipeline for designing reconfigurable organisms, PNAS 2020

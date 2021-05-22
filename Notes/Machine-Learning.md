@@ -6,6 +6,34 @@ Materials
 
 * http://neuralnetworksanddeeplearning.com/
 
+### ML Basics
+
+#### Algorithms
+
+XGBoost: gradient boosted trees works by combining predictions from many simple models, each of which tries to address the weaknesses of the previous models. By doing this the collection of simple models can actually outperform large, complex models.
+
+
+
+Feature Bagging
+
+* offering a potentially useful way of managing the bias-variance tradeoff
+* We were also interested in this as a potentially useful way to further parallelize training
+* 《An experimental comparison of three methods for constructing ensembles of decision trees: Bagging, boosting, and randomization》
+
+Dropout
+
+* In the dense setting, dropout serves to separate effects from strongly correlated features, resulting in a more robust classifier. But in our sparse, noisy setting adding in dropout appears to simply reduce the amount of data available for learning. 《Ad Click Prediction: a View from the Trenches》
+
+
+
+#### Validation
+
+holdout validation, cross-validation, leave-one-out validation, etc
+
+```python
+train_data, validation_data, test_data = np.split(model_data.sample(frac=1, random_state=1729), [int(0.7 * len(model_data)), int(0.9 * len(model_data))])   # Randomly sort the data then split out first 70%, second 20%, and last 10%
+```
+
 ### Bert
 
 model finetune
@@ -66,7 +94,7 @@ CAN网络结构：
 Multi-level Independence
 
 * parameter independence
-  * 我认为这篇文章核心思路在这里，稀疏特征的场景将 表征学习 与 特征交叉 解耦，这一思想与长尾分布将 表征学习 与 分类器 解耦异曲同工（本质还是“有限地”增加参数）
+  * 我认为这篇文章核心思路在这里，稀疏特征的场景将 表征学习 与 特征交叉 解耦，这一思想与CV领域解决长尾分布问题，[表征学习 与 分类器 解耦](https://arxiv.org/abs/1910.09217)的思路异曲同工（本质还是“有限地”增加参数）
 * combinations independence
 * orders independence
 

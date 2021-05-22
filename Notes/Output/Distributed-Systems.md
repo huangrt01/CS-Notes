@@ -4,6 +4,20 @@
 
 **[l01-Introduction and MapReduce](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Distributed-Systems/l01-Introduction%20and%20MapReduce)**
 
+
+
+#### 分布式基础
+
+[讲最终一致性的知乎文章](https://zhuanlan.zhihu.com/p/25933039)
+
+最终一致性指，系统中的所有分散在不同节点的数据，经过一定时间后，最终能够达到符合业务定义的一致的状态
+
+* 是数据一致性，不是事务一致性（ACID 是事务一致性）
+
+* 存在条件：多个节点/系统
+
+* 不一致可能是暂时的，最终要一致
+
 #### 《Apache Hadoop YARN: Yet Another Resource Negotiator》
 
 [YARN官网](https://hadoop.apache.org/docs/stable/hadoop-yarn/hadoop-yarn-site/YARN.html)
