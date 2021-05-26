@@ -373,26 +373,29 @@ https://sagemaker-immersionday.workshop.aws/
 * Wide ~ Memorization: 模型直接学习并利用历史数据中物品或者特征的“共现频率”的能力
 * Deep ~ Generalization: 模型传递特征的相关性，以及发掘稀疏甚至从未出现过的稀有特征与最终标签相关性的能力
 * Generalized linear models with nonlinear feature transformations
-* cross-product transformations: 特征工程的概念，交叉积变换，缺点是无法generalize没出现过的query-item feature pairs
+* cross-product transformations: 特征工程的概念，交叉积变换，缺点是无法 generalize 没出现过的 query-item feature pairs
 
-问题：输入是稀疏高秩矩阵，缺少interactions，难以利用它学到合适的低维embedding
+问题：输入是稀疏高秩矩阵，缺少 interactions，难以利用它学到合适的低维 embedding
 
-3.WIDE&DEEP Learning
+3.WIDE & DEEP Learning
 
 3.1 The Wide Component
 
-利用cross-product transformation提供多个特征的非线性
+利用 cross-product transformation 提供多个特征的非线性
 
-<->  对比：[Deep Neural Networks for YouTube Recommendations ] 用平方和平方根项提供单个特征的非线性
+<->  对比：[Deep Neural Networks for YouTube Recommendations ] 用平方 和 平方根项 提供单个特征的非线性
 
 3.3 Joint Training of Wide & Deep Model
 
-注意辨析joint training和ensemble的区别
+注意辨析 joint training 和 ensemble 的区别
 * 前者是共同训练，后者不是
 * 后者模型可以更大
-* 前者，Wide只需要给Deep补少量cross-product feature transformations
+* 前者，Wide 只需要给 Deep 补少量 cross-product feature transformations
 
-4.System Implementation 4.2 Model Training
+4.System Implementation
+
+4.2 Model Training
+
 * warm-starting system
 * dry run
 * sanity check
@@ -406,7 +409,7 @@ Appendix
 
 
 
-**改进：Deep&Cross模型**
+**改进：Deep&Cross模型 (DCN)**
 
 * 多层交叉层:  <img src="https://www.zhihu.com/equation?tex=x_%7Bl%2B1%7D%3Dx_0x_l%5ETw_l%2Bb_l%2Bx_l" alt="x_{l+1}=x_0x_l^Tw_l+b_l+x_l" class="ee_img tr_noresize" eeimg="1">  
   * 参数引入较为克制，增强模型的非线性学习能力

@@ -10,13 +10,26 @@
 
 [讲最终一致性的知乎文章](https://zhuanlan.zhihu.com/p/25933039)
 
-最终一致性指，系统中的所有分散在不同节点的数据，经过一定时间后，最终能够达到符合业务定义的一致的状态
+最终一致性：系统中的所有分散在不同节点的数据，经过一定时间后，最终能够达到符合业务定义的一致的状态
 
-* 是数据一致性，不是事务一致性（ACID 是事务一致性）
+* 一致性指数据一致性，不是事务一致性（ACID 是事务一致性）
 
 * 存在条件：多个节点/系统
 
 * 不一致可能是暂时的，最终要一致
+
+[CAP theorem](https://en.wikipedia.org/wiki/CAP_theorem)
+
+[PACELC theorem](https://en.wikipedia.org/wiki/PACELC_theorem)
+
+最终一致性解决方案
+
+* 两阶段提交
+* 异步确保（无事务消息）
+* 异步确保（事务消息）
+* [补偿交易 (Compensating Transaction)](https://docs.microsoft.com/en-us/azure/architecture/patterns/compensating-transaction)
+* 消息重试
+* 幂等（接口支持重入）：数据库唯一键挡重入
 
 #### 《Apache Hadoop YARN: Yet Another Resource Negotiator》
 

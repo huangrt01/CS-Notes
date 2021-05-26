@@ -69,7 +69,7 @@ According to [JL-lemma](https://en.wikipedia.org/wiki/Johnson–Lindenstrauss_le
 
 ### 特征交叉
 
-CAN: Revisiting Feature Co-Action for Click-Through Rate Prediction
+##### CAN: Revisiting Feature Co-Action for Click-Through Rate Prediction
 
 [想为特征交互走一条新的路 - 周国睿的文章 - 知乎](https://zhuanlan.zhihu.com/p/287898562)
 
@@ -97,6 +97,48 @@ Multi-level Independence
   * 我认为这篇文章核心思路在这里，稀疏特征的场景将 表征学习 与 特征交叉 解耦，这一思想与CV领域解决长尾分布问题，[表征学习 与 分类器 解耦](https://arxiv.org/abs/1910.09217)的思路异曲同工（本质还是“有限地”增加参数）
 * combinations independence
 * orders independence
+
+
+
+##### DCN-V2: Improved Deep & Cross Network and Practical Lessons for Web-scale Learning to Rank Systems
+
+1.Introduction
+
+* DNN比较难学好二阶、三阶特征交叉 ---> implicit 转 explicit 的思路
+
+* DCN的问题：Cross网络的参数量 O(input size) is overwhelmed by Deep网络
+
+2.Related Work
+
+* Parallel Structure: Wide & Deep, DeepFM, DCN, xDeepFM, AutoInt, InterHAt
+
+* Stacked Structure: PNN(IPNN, OPNN), NFM, DLRM, AFN
+
+* 一些对比的要点：特征交叉的方式、高阶特征交叉、定长/变长特征交叉
+
+3.Proposed Architecture: DCN-V2
+
+stacked and parallel structure
+
+* cross network(DCN-M) 在W为对角阵时退化为DCN
+* Cost-Effective Mixture of Low-Rank DCN：本质上是矩阵分解减参数，insights:
+  * learn feature crosses in a subspace -> Mixture-of-Experts(MoE)
+  * 利用低秩特性，先降维再升维 -> 在低维空间做非线性
+
+6.Emprical Understanding
+
+* DCN-V2的交叉能力优于DNN
+
+* CrossNet ~ ReLu 学习非线性
+
+* 朴素情况下的类比：rank threshold ~ feature num
+  * 第8小节声明 rank=input_size/4 时无效果损失
+
+9.Conclusion
+
+DCN-V2: to model explicit crosses in an expressive yet simple manner. 
+
+DCN-Mix: Observing the low-rank nature of the weight matrix in the cross network, to propose a mixture of low-rank DCN，是效果和延时的折中
 
 
 
