@@ -5,6 +5,129 @@ __主题：virtualization, concurrency, persistence__
 
 [book](http://pages.cs.wisc.edu/~remzi/OSTEP/), [book-code](https://github.com/remzi-arpacidusseau/ostep-code), [projects](https://github.com/remzi-arpacidusseau/ostep-projects), [homework](https://github.com/remzi-arpacidusseau/ostep-homework/) [xxxzz's homework answer](https://github.com/xxyzz/ostep-hw), [my homework answer](https://github.com/huangrt01/ostep-homework)
 
+
+
+### jemalloc 等底层组件
+
+#### jemalloc 多篇论文介绍
+
+[“Understanding glibc malloc” by Sploitfun. February, 2015.” ](https://sploitfun.wordpress.com/2015/02/10/understanding-glibc-malloc/) 
+
+* per thread arena
+* Fast Bin; Unsorted Bin; Small Bin; Large Bin; Top Chunk; Last Remainder Chunk
+
+
+(jemalloc) A Scalable Concurrent malloc(3) Implementation for FreeBSD
+
+Introduction: allocator 性能逐渐成为重点
+
+问题1: 要尽量避免 cache line 的多线程争抢问题
+
+* jemalloc instead relies on multiple allocation arenas to reduce the problem, and leaves it up to the application writer to pad allocations in order to avoid false cache line sharing in performance-critical code, or in code where one thread allocates objects and hands them off to multiple other threads.
+  * Multiple Arenas 默认是cpu core 数乘以 4
+  * 线程争抢 (false sharing)：一个 cacheline 64 bytes，如果a线程b线程每个线程共享一块malloc出来的内存的前32byte和后32byte，两个线程会争抢这个cache line。这种编程模式，依赖业务代码加一些 padding 避免争抢
+
+问题2: reduce lock contention <-> cache sloshing
+
+* jemalloc uses multiple arenas, but uses a more reliable mechanism than hashing for assignment of threads to arenas.
+
+解决方案：
+
+* the arena is chosen in round-robin fashion，用 TLS(Thread-local storage) 实现，可被 TSD 替代
+* 理解 "chunk" 2 MB，small、large、huge，huge 用单个红黑树管理
+* 对于small/large，chunks 用 binary buddy algorithm 分割成 page runs
+  * small allocations 用 bitmap 管理，run header 方案的优劣讨论
+  * fullness 这段没看懂
+
+
+
+[Scalable memory allocation using jemalloc](https://engineering.fb.com/2011/01/03/core-data/scalable-memory-allocation-using-jemalloc/) by Facebook
+
+生产环境的 challenges for allocations
+
+* Allocation and deallocation must be **fast**. 
+* The relation between active memory and RAM usage must be **consistent**.
+* Memory **heap profiling** is a critical operational aid.
+
+文章介绍了 jemalloc 的核心设计思想：通用地去解决过往 allocator 解决/待解决的问题
+
+![img](OSTEP-Operating-Systems-Three-Easy-Pieces/jemalloc-arena.jpg)
+
+![img](OSTEP-Operating-Systems-Three-Easy-Pieces/jemalloc-layers.jpg)
+
+
+
+http://applicative.acm.org/2015/applicative.acm.org/speaker-JasonEvans.html
+
+
+
+#### jemalloc 代码阅读
+
+* API
+  * `malloc()`, `posix_memalign()`, `calloc()`, `realloc()`, and `free()`
+  * rudimentary introspection capabilities: `malloc_usable_size()`
+
+* base_alloc(): metadata，jemalloc直接调用mmap从os申请，不释放
+
+* malloc(): 递进的 size class（默认页 4KB）
+
+* free(): lib 自己维护地址到 metadata 的映射
+  * ptmalloc: 在每一个 malloc 出去的内存块前都加若干字节的 metadata (pre size field - chunk size field - N - M - P - User Data - next chunk)，所以相邻的内存块的溢出可能会踩踏到下一块内存的 metadata 
+  * jemalloc: 内存地址稀疏，radix trees
+  
+* jemalloc 设置了一个界线，`size < 4*os_page_size` 的 size_class, 称这类分配为"**small**"，内存管理会用 bitmap 额外再多一层 [slab](https://en.wikipedia.org/wiki/Slab_allocation) 缓存。`size>=4*os_page_size ` 的 size_class 称为 "**large**"，不再进行额外的缓存。
+
+* TLS cache
+  * x86 的 linux 下会使用 fs 段寄存器指向线程的 TCB
+  * 动态链接库访问线程局部变量理论上要经过 `__tls_get_addr` 系统调用，有 overhead，而 jemalloc 绕过了这一开销。缺点是 jemalloc 这么编译出来的 lib 是没法被 dlopen 动态链接的，详情见 `--disable-initial-exec-tls` 这个 flag
+  * cache bin: `include/jemalloc/internal/cache_bin.h:cache_bin_alloc_easy()`
+  * maintains large objects up to a limited size (32 KiB by default)，增加这个 limit 会导致 unacceptable fragmentation cost
+  * 对应地，有 GC 策略：Cached objects that go unused for one or more GC passes are progressively flushed to their respective arenas using an exponential decay approach.
+  
+* bin
+  * `include/jemalloc/internal/bin.h`
+  * 开始并发访问，thread 到 arena 的分配是 round robin
+  * large size class: 下一层 extent 的包装
+    * `src/large.c:large_malloc()`
+  * small size class: 如果没取到 cache_bin，`tcache_alloc_small_hard()->arena_tcache_fill_small()->arena_slab_reg_alloc_batch()`
+    * `bin->slancur` 指向当前可用的 bitmap
+    * nonfull_slab/full_slab: pairing heap
+    * jemalloc 希望分配的内存空间尽量紧凑，地址尽可能复用，这样能获得更好的 cache line，TLB 的局部性，所以用到 Pairing heap 维护 slabs_nonfull 去查找尽可能老的，或地址空间最低的 slab 用于分配
+    * `arena_slab_reg_alloc_batch()`: bitmap 操作, [ffsl](https://man7.org/linux/man-pages/man3/ffs.3.html) find first set
+  
+* extent
+  * dirty_muzzy_retained
+    * `extents_t extents_dirty`
+    * large size class 的核心函数：`arena_extent_alloc_large()`
+    * small size class 的核心函数：`arena_bin_malloc_hard()--->arena_bin_nonfulll_slab_get()--->arena_slab_alloc()`
+  * slab/large_alloc  <--->  extents_dirty  <--->  extents_muzzy  <---> extents_retained
+  * 内存块的合并：每次从左边的 extent 向右边释放的时候，会查询全局的radix trees，检查这个 extent 是否能和相邻的 extent 合并
+  * 调用 madvise 定时对内存进行 gc， 可能会引起系统的 stall
+  * 小内存会抢占大内存，切割大内存的 extent；分配完也会合并成大内存 extent
+  
+* kernal
+  * 内存地址空间的分配 [mmap](https://man7.org/linux/man-pages/man2/mmap.2.html)：`mmap()<---os_pages_map()<---pages_map()<---extent_alloc_mmap()`
+    * extents_retained 只存虚拟地址空间，没有物理页
+    * `pages_map()` 的逻辑主要在处理内存 alignment
+  * 内存清理，认为 unmap 有开销，于是只清理物理内存，不清理虚拟地址空间
+    * 代码详见 `base_unmap()`
+    * extents_dirty ---> extents_muzzy 调用 `madvise(MADV_FREE)`，将内存给其它内存
+    * extents_muzzy ---> extents_retained 调用 `madvise(MADV_DONTNEED)` ，将内存拿走，可能发生ipi中断，再次访问会产生缺页中断
+  * 透明巨页的分配：从mmap出来的extern，`pages_huge_impl()`调用` madvise(MADV_HUGEPAGE)`
+  
+* 其它
+
+  * 性能瓶颈：cache bin 的 fill、flush，madvise；arena 分配机制（场景：多个线程分配一个静态对象内的内存，单线程操作它，会产生 high fragmentation）
+
+    
+
+#### TLB 研究
+
+* `cat /proc/interrupts | grep "TLB shootdowns"`
+  * 文件记录的是 remote TLB flush 事件。本地CPU使用IPI中断通知其他CPU flush TLB时，该节点对应的CPU会计数。
+
+
+
 ### Intro
 
 #### 1.Dialogue
@@ -419,7 +542,7 @@ NOTE:
 
 * 底层基础：
   * brk，sbrk    不要用
-  * mmap内存映射
+  * mmap 内存映射
 
 HW:
 * null.c    segmentation fault
@@ -495,49 +618,18 @@ Low-level mechanisms: 运用了以下机制
   
   * `void free(void*ptr) {header_t*hptr = (header_t*) ptr - 1;}`
   
-  * size和magic；寻找chunk的时候需要加上头的大小
+  * size 和 magic；寻找 chunk 的时候需要加上头的大小
   
 * Embedding A Free List  
   * `typedef struct __node_t {int size; struct __node_t *next;} node_t;`
 * Growing The Heap
 
-Other Approaches: (这些approach的问题在于lack of scaling)
+Other Approaches: (这些 approaches 的问题在于 lack of scaling)
 * segregated list，针对高频的size
   * slab allocator： 利用了这个特性，object caches，pre-initialized state
 * binary buddy allocator
 
-并行优化：Hoard，jemalloc
-
-
-
-[“Understanding glibc malloc” by Sploitfun. February, 2015.” ](https://sploitfun.wordpress.com/2015/02/10/understanding-glibc-malloc/) 
-
-* per thread arena
-* Fast Bin; Unsorted Bin; Small Bin; Large Bin; Top Chunk; Last Remainder Chunk
-
-
-
-(jemalloc) A Scalable Concurrent malloc(3) Implementation for FreeBSD
-
-Introduction: allocator 性能逐渐成为重点
-问题1: 要尽量避免 cache line的多线程争抢问题
-
-* jemalloc instead relies on multiple allocation
-  arenas to reduce the problem, and leaves it up to the application writer to pad allocations in order to avoid false cache line sharing in performance-critical code, or in code where one thread allocates objects and hands them off to multiple other threads.
-
-问题2: reduce lock contention <-> cache sloshing
-
-* jemalloc uses multiple arenas, but uses a more reliable mechanism than hashing for assignment of threads to arenas.
-
-解决方案：
-
-* the arena is chosen in round-robin fashion，用TLS(Thread-local storage)实现，可被TSD替代
-* 理解 "chunk" 2 MB，small、large、huge，huge用单个红黑树管理
-* 对于small/large，chunks用binary buddy algorithm分割成page runs
-  * small allocations用bitmap管理，run header 方案的优劣讨论
-  * fullness 这段没看懂
-
-
+并行优化：Hoard，jemalloc (radix trees 存 metadata)
 
 #### 18.Paging: Introduction
 
@@ -575,7 +667,7 @@ translate: virtual address= virtual page number(VPN) + offset
 
 * 属于MMU，是address-translation cache
 * TLB hit/miss 
-* cache：spatial and temporal locality ; locality是一种heuristic
+* cache：spatial and temporal locality ; locality 是一种 heuristic
 * [TLB是全相联cache](https://my.oschina.net/fileoptions/blog/1630855)
 
 TLB Control Flow Algorithm
@@ -637,18 +729,18 @@ ASIDE: TLB Valid Bit和Page Table Valid Bit的区别：
 * solution1: flush the TLB    
   * 对于硬件实现，PTBR的变化后flush the TLB
 * solution2: ASID(address space identifier)  8bit ,性质上类似于32bit的PID 
-* NOTE: 可能存在进程间的sharing pages，比如库或者代码段
+* NOTE: 可能存在进程间的 sharing pages，比如库或者代码段
 
 **Issue: cache replacement policy**
 ##### CRUX: how to design TLB replacement policy
 * LRU， 会有corner-case behaviors
 * random policy
 
-* MIPS的TLBs是software-managed，一个entry64bit，有32或64个entry，会给OS预留，比如用于TLB miss handler
+* MIPS 的 TLBs 是 software-managed，一个 entry 64bit，有  32或64个 entry，会给OS预留，比如用于 TLB miss handler
 
 <img src="OSTEP-Operating-Systems-Three-Easy-Pieces/007.jpg" alt="A MIPS TLB Entry" style="zoom:80%;" />
 
-* MIPS的TLB相关的四个privileged OS命令：TLBP(probe), TLBR(read), TLBWI(replace specific), TLBWR(replace random)
+* MIPS TLB 相关的四个 privileged OS 命令：TLBP(probe), TLBR(read), TLBWI(replace specific), TLBWR(replace random)
 * Culler's Law：TLB经常是性能瓶颈
 
 * Issue: exceeding the TLB converge => larger pages，应用于DBMS
@@ -840,15 +932,15 @@ other neat tricks:
 
 large page support
 * explicit的支持：mmap, shmget    => transparent huge page support
-* 对TLB好处大，miss rate和path都降低成本
+* 对 TLB 好处大，miss rate 和 path 都降低成本
 * 缺点：internal fragmentation; swapping效果不好
-* 体现了incrementalism，慢慢引入特性并迭代
+* 体现了 incrementalism，慢慢引入特性并迭代
 
 the page cache
 * 主要来源：memory-mapped files, file data and metadata from devices , and heap and stack pages that comprise each process (anonymous memory)
 * pdflush：背景线程，把dirty data写入backing store
 * 2Q replacement：inactive list不时加入active list，解决大文件频繁访问的问题
-* memory mapping体现在linux的方方面面: 用pmap命令查看
+* memory mapping 体现在 linux 的方方面面: 用 pmap 命令查看
 
 **security相关**
 

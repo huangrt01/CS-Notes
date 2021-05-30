@@ -740,7 +740,6 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
 * find：1）寻找文件； 2）机械式操作
   * -iname：大小写不敏感
 
-* [fuck](https://github.com/nvbn/thefuck#the-fuck-----):流行的纠正工具
 ```shell
 # Find all directories named/including src
 find . -name src -type d
@@ -758,6 +757,8 @@ find . -name '*.tmp' -exec rm {} \;
 find . -name '*.png' -exec convert {} {.}.jpg \;
 
 ```
+* [fuck](https://github.com/nvbn/thefuck#the-fuck-----): 流行的纠正工具
+
 #### g
 
 * grep
@@ -771,6 +772,8 @@ grep -v "trash"
 grep -E "key1|key2"  
 # “AND”筛选
 grep -E "key1.*key2"
+# 颜色
+--color
 ```
 
 * gunzip
