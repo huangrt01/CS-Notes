@@ -57,17 +57,76 @@ Introduction: allocator 性能逐渐成为重点
 
 
 
-http://applicative.acm.org/2015/applicative.acm.org/speaker-JasonEvans.html
+[Tick Tock, malloc Needs a Clock](https://www.youtube.com/watch?v=RcWp5vwGlYU&list=PLn0nrSd4xjjZoaFwsTnmS1UFj3ob7gf7s)
 
-
+* Background & basics
+  * Chunk: 1024 contiguous pages (4MB), aligned on a 4MB boundary
+  * Page run: 1+ contiguous pages in a chunk
+  * Region: contiguous bytes (<16KB)
+* Fragmentation & dirty page purging
+  * 重点关注 external fragmentation
+  * 设计原则：prefer low addresses during reuse (e.g. cache bin), exceptions:
+    * size-segregated slabs for small allocations (size class 互相独立，不去找更前面的 size class 制造 internal fragmentation)
+    * disjoint arenas
+    * thread caches
+    * unused dirty page caching delays page run coalescing
+* Clockless purging history
+  * jemalloc 不进行异步调用，all work must be hooked into [de]allocation event
+  * side effect: conflict between speed and memory usage optimization
+  * Aggressive (2006): immediately purge, disabled by default, MADV_FREE-only
+  * Spare Arena Chunk (2007):
+    * keep max one spare per arena, which never purges
+    * Rational: hysteresis for small/huge allocations
+  * Fixed-size dirty page cache (2008):  512 pages per arena，追求速度
+  * Proportional dirty page cache (2009): active/dirty=32/1，内存更大
+  * Purge chunks in FIFO order (2010)
+    * Chunk iterations cost a lot
+    * Rational: purge chunks with high dirty page density (faster)
+  * Purge chunks in fragmentation order (2012)
+    * maintain chunk fragmentation metric
+  * Purge runs in LRU order (2014)
+    * Dirty runs 进入 LRU 后 coalesce, 减少了整体的 madvise 次数
+  * Integrate chunks into dirty LRU (2015)
+    * Rational: huge allocation hysteresis
+* Clock-based purging challenges
+  * Prototype
+    * ~4.3s delay (2e32 ns)
+    * 32-slot timer wheel
+  * 结果内存涨的太多，因为尤其是多个 arena 内存的累加
+  * Limit dirty page globally?
+    * too strict -> per numa node attached RAM
+    * Jemalloc 目前没有将 CPU core 和 arena 联系起来
+  * Hybrid?  不现实
+  * decay curves
+    * timer wheel stutters
+    * Sigmoid > delayed linear > linear >> exponential
+  * Online decay algorithm
+* Plausible plan
+  * One dirty page cache per numa node
+  * One arena per CPU
+  * Opt-in clock-based purging
+    * Asynchronus purging thread
+    * Synchronus purging during allocation at peak usage
+  * Prefer dirty run reuse? 期望不要，因为会 purge 更频繁
+  * Other wall clock uses
+    * Incrementally flush arena cache
+    * Incrementally/asynchronusly flush thread cache
+      * Idle threads don't need caches
+      * Current HHVM hack: LIFO worker thread scheduling; flush cache after 5 seconds inactivity
+      * Flushing may be impossibly without impacting fast path (必须和线程做同步)
 
 #### jemalloc 代码阅读
 
-* API
+![img](OSTEP-Operating-Systems-Three-Easy-Pieces/jemalloc-size.png)
+
+* [API](http://jemalloc.net/jemalloc.3.html)
+  
   * `malloc()`, `posix_memalign()`, `calloc()`, `realloc()`, and `free()`
   * rudimentary introspection capabilities: `malloc_usable_size()`
-
-* base_alloc(): metadata，jemalloc直接调用mmap从os申请，不释放
+  * `*allocx()`: Mix/match alignment, zeroing, relocations, arenas, tcaches
+  * `mallctl*()`: Comprehensive introspection/control
+  
+* base_alloc(): metadata，jemalloc 直接调用 mmap 从 os 申请，不释放
 
 * malloc(): 递进的 size class（默认页 4KB）
 
@@ -83,7 +142,7 @@ http://applicative.acm.org/2015/applicative.acm.org/speaker-JasonEvans.html
   * cache bin: `include/jemalloc/internal/cache_bin.h:cache_bin_alloc_easy()`
   * maintains large objects up to a limited size (32 KiB by default)，增加这个 limit 会导致 unacceptable fragmentation cost
   * 对应地，有 GC 策略：Cached objects that go unused for one or more GC passes are progressively flushed to their respective arenas using an exponential decay approach.
-  
+
 * bin
   * `include/jemalloc/internal/bin.h`
   * 开始并发访问，thread 到 arena 的分配是 round robin
@@ -96,12 +155,12 @@ http://applicative.acm.org/2015/applicative.acm.org/speaker-JasonEvans.html
     * `arena_slab_reg_alloc_batch()`: bitmap 操作, [ffsl](https://man7.org/linux/man-pages/man3/ffs.3.html) find first set
   
 * extent
-  * dirty_muzzy_retained
+  * dirty muzzy retained
     * `extents_t extents_dirty`
     * large size class 的核心函数：`arena_extent_alloc_large()`
-    * small size class 的核心函数：`arena_bin_malloc_hard()--->arena_bin_nonfulll_slab_get()--->arena_slab_alloc()`
+    * small size class 的核心函数：`arena_bin_malloc_hard()--->arena_bin_nonfull_slab_get()--->arena_slab_alloc()`
   * slab/large_alloc  <--->  extents_dirty  <--->  extents_muzzy  <---> extents_retained
-  * 内存块的合并：每次从左边的 extent 向右边释放的时候，会查询全局的radix trees，检查这个 extent 是否能和相邻的 extent 合并
+  * 内存块的合并：每次从左边的 extent 向右边释放的时候，会查询全局的 radix trees，检查这个 extent 是否能和相邻的 extent 合并
   * 调用 madvise 定时对内存进行 gc， 可能会引起系统的 stall
   * 小内存会抢占大内存，切割大内存的 extent；分配完也会合并成大内存 extent
   
@@ -111,8 +170,9 @@ http://applicative.acm.org/2015/applicative.acm.org/speaker-JasonEvans.html
     * `pages_map()` 的逻辑主要在处理内存 alignment
   * 内存清理，认为 unmap 有开销，于是只清理物理内存，不清理虚拟地址空间
     * 代码详见 `base_unmap()`
-    * extents_dirty ---> extents_muzzy 调用 `madvise(MADV_FREE)`，将内存给其它内存
+    * extents_dirty ---> extents_muzzy 调用 `madvise(MADV_FREE)`，轻量操作，将内存给其它内存
     * extents_muzzy ---> extents_retained 调用 `madvise(MADV_DONTNEED)` ，将内存拿走，可能发生ipi中断，再次访问会产生缺页中断
+    * Facebook 优化：`mmap(...MAP_UNINITIALIZED)`
   * 透明巨页的分配：从mmap出来的extern，`pages_huge_impl()`调用` madvise(MADV_HUGEPAGE)`
   
 * 其它

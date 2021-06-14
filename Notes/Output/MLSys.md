@@ -232,13 +232,26 @@ Conclusion
   * within-request adaptation
     * backup requests, backup requests w/ cancellation, tainted results
 
+### 召回
+
+* 索引方式
+  * BF (BruteForce): 秒级到分钟级构建，十万到百万量级
+  * IVF (Inverted File System): 分钟级到小时级构建，百万到亿级
+    * GPU 对聚类进行加速
+  * HNSW: 分钟级到天级构建，千万到百亿级实时性
+    * 可能会 sharding
+
+* 量化方式
+  * Int8 
+  * PQ
+
 
 
 ### Go+Torch
 
 https://github.com/wangkuiyi/gotorch
 
-Q: TensorFlow为什么需要引入图这个概念
+Q: TensorFlow为什么需要引入图这个概念？
 
 A: 
 
@@ -343,6 +356,66 @@ https://sagemaker-immersionday.workshop.aws/
   * Notebook instance
 * use_spot_instances=True
 
+#### SageMaker Debugger
+
+《AMAZON SAGEMAKER DEBUGGER: A SYSTEM FOR REAL-TIME INSIGHTS INTO MACHINE LEARNING MODEL TRAINING》
+
+https://github.com/awslabs/sagemaker-debugger#run-debugger-locally
+
+* 痛点：训练过程长、不透明（训练进程、底层资源情况）
+  * e.g. 遇到过拟合，终止训练任务的机制
+* 关键特性
+  * 数据采集：零代码修改；持久化存储
+  * 自动数据检测：检测训练过程、系统瓶颈；提前终止；自定义规则；与 Cloudwatch 事件集成
+  * 实时监控：指标调试；通过训练的 step 或时间间隔进行资源利用率分析
+    * 算法层面：特征重要性、layer weight/gradient 信息展现、帮助理解 serving/training 一致性 (data drift)
+  * 节省时间和成本：原型验证；资源
+  * 集成在 Studio 环境中
+* 实现
+  * 训练容器 ---> 存储 ---> Debugger 容器 ---> actions
+  * [smdebug](https://pypi.org/project/smdebug/#description)
+  * Profiling
+    * 原生框架分析：可能增加 GPU 内存消耗
+    * 数据加载分析：调试器收集 DataLoader 事件信息，可能影响训练性能
+    * python：cProfile (python operator), Pyinstrument (隔段时间记录堆栈情况)
+  * Debugger Hook: 类似 Tensorflow 的 hook，传入 callback 对象，采集指标到存储
+  * Rule 集成在 Hook 中: 系统层、模型层（过拟合、梯度消失）
+
+```python
+# record tensors
+import smdebug.tensorflow as smd
+hook = smd.KerasHook("/opt/ml/tensors")
+model.fit(x, y, epochs=10, callbacks=[hook])
+
+custom_collection=CollectionConfig(
+	name="relu_ouput",
+	parameters={
+		"include_regex": ".*relu_output",
+		"save_interval": "500"
+  }
+)
+
+# access tensors
+from smdebug.trials import create_trial
+trial = create_trial("/opt/ml/tensors")
+```
+
+
+
+### Other MLSys
+
+* [介绍 Facebook 推荐系统的文章](https://engineering.fb.com/2021/01/26/ml-applications/news-feed-ranking/)
+  * 多目标 MMoE、分数融合
+  * 相比抖音，社交属性更强
+    * unread bumping logic: 未来得及展现的信息
+    * action-bumping logic: 交互过的信息有再次交互
+  * serving 流程
+    * integrity processes
+    * pass 0: lightweight model 选出 500 条
+    * pass 1: 精排 500 条
+      * 《Observational data for heterogeneous treatment effects with application to recommender systems》
+      * People with higher correlation gain more value from that specific event, as long as we make this method incremental and control for potential confounding variables.
+    * pass 2: 混排，contextual features, such as content-type diversity rules
 
 
 

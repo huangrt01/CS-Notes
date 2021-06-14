@@ -3313,12 +3313,12 @@ const T& at(const key_type& x) const;
   * 方法一：clear 
   * 方法二：`vector<int>().swap(nums);`
   * 方法三：利用代码块和临时变量
-`
-{
+  `
+  {
     vector<int> tmp = curLevel;   
     curLevel.swap(tmp); 
-}
-`
+  }
+  `
 * clear虽然不会deallocate释放空间，但是会destroy执行析构函数，所以可以用同一个空间构造节点，如果swap了就要重新分配空间再构造节点。因此对于同一个vector的重复利用，可以直接用clear();
   * 如果要每次都释放空间，也可以用`res.emplace_back(std::move(curLevel))`，涉及[emplace_back](https://www.cnblogs.com/ChrisCoder/p/9919646.html), [std::move](https://blog.csdn.net/p942005405/article/details/84644069/), [左值、右值引用](https://blog.csdn.net/p942005405/article/details/84644101), [这是一篇有关类定义的总结](https://blog.csdn.net/zzhongcy/article/details/86747794)
 * [无法构造有atomic类型成员的对象的vector](https://stackoverflow.com/questions/13193484/how-to-declare-a-vector-of-atomic-in-c)
@@ -3413,7 +3413,6 @@ printf("Time (seconds): %f\n\n", (float) (end.tv_usec - start.tv_usec + (end.tv_
 
 #endif // __common_h__
 ```
-
 
 
 
