@@ -245,6 +245,43 @@ Conclusion
   * Int8 
   * PQ
 
+### 粗排
+
+#### COLD : Towards the Next Generation of Pre-Ranking System
+
+阿里定向广告最新突破：面向下一代的粗排排序系统COLD - 萧瑟的文章 - 知乎
+https://zhuanlan.zhihu.com/p/186320100
+
+Computing power cost-aware Online and Lightweight Deep pre-ranking system
+
+小精排支持复杂算法探索
+
+* SENet: 模型训练时获取特征重要性数据
+* 并行化：在取PS之后做模型并行预估，能比论文中的实现更高效
+* 列存：全链路列存
+* fp16
+  * mix precision: fp32 BN + fp16 fully-connected layers
+  * parameter-free normalization
+
+#### Towards a Better Tradeoff between Effectiveness and Efficiency in Pre-Ranking: A Learnable Feature Selection based Approach, SIGIR 2021
+
+Feature Selection method based on feature Complexity and variational Dropout (FSCD)
+
+2.1 FSCD for Pre-Ranking Model，核心思想是 variational dropout
+
+* 特征选取概率与特征复杂度负相关
+* 特征复杂度的因素：特征类型、embedding size、key size (能类比于候选数量)
+* 数学手段：
+  * 公式(3)，损失函数，参数z的正则化
+    * 特征复杂度越大，正则项系数越大
+    * 损失函数及正则化系数的推导（见附录）
+  * 公式(5)，Bernoulli 分布的平滑化
+
+2.2 Fine-Tuning the Pre-Ranking Model
+
+* 用精排模型参数来初始化参数，fine-tune 加速训练
+*  <img src="https://www.zhihu.com/equation?tex=%5Cgamma_3%3D10%5E%7B-7%7D" alt="\gamma_3=10^{-7}" class="ee_img tr_noresize" eeimg="1">  描述候选数量，也是一个衡量特征复杂度的参数
+
 
 
 ### Go+Torch
@@ -373,6 +410,7 @@ https://github.com/awslabs/sagemaker-debugger#run-debugger-locally
   * 集成在 Studio 环境中
 * 实现
   * 训练容器 ---> 存储 ---> Debugger 容器 ---> actions
+    * Actions: [cloudwatch](https://aws.amazon.com/cn/cloudwatch/) + [lambda function](https://aws.amazon.com/cn/lambda/)
   * [smdebug](https://pypi.org/project/smdebug/#description)
   * Profiling
     * 原生框架分析：可能增加 GPU 内存消耗
@@ -398,7 +436,44 @@ custom_collection=CollectionConfig(
 # access tensors
 from smdebug.trials import create_trial
 trial = create_trial("/opt/ml/tensors")
+trial.tensor_names(regex=".*")
+trial.tensor("conv0").value(step)
+
+# monitor tensors
+while not trial.loaded_all_steps:
+  steps = trial.steps(mode=modes.EVAL)
+	t = trial.tensor("conv1").value(steps[-1])
+	plt.hist(t.flatten(), bins=100)
+  
+# analyze tensors
+labels = "CrossEntropyLoss_input_0"
+predictions = "CrossEntropyLoss_input_1"
+inputs = "ResNet_input_0"
+for step in trial.steps():
+  l = trial.tensor(labels).value(step)
+	p = trial.tensor(predictions).value(step)
+	i = trial.tensor(inputs).value(step)
+for prediction, label, img in zip(p,l,i):
+	if prediction != label:
+		plt.imshow(img)
 ```
+
+* Challenges
+  * Scale rule analysis by offloading into separate containers
+  * Reduce overhead when recording and fetching tensors
+    * optimize data retrieval with the help of index files that store metadata such as name, shape, and step along with the location of tensor objects
+  * Separate compute and storage and minimize impact on training
+* Rules
+  * datasets
+  * activation functions: sigmoid's vanishing gradients, dead ReLU
+  * poor initialization: 随机 weights 是保证 independently learn
+
+![debug-rule](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/debug-rule.png)
+
+* Deployment Results and Insights
+  * latent space + [t-SNE]()
+  * Using Debugger for iterative model pruning
+    * Many types of pruning techniques are known, for example, structured versus unstructured prun-ing, randomly removing weights versus removing by size or rank, and iterative pruning versus one-shot pruning (Blalock et al., 2018). In case of CNNs, iterative filter pruning is known to achieve state of the art results
 
 
 

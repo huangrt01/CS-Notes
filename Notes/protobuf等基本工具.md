@@ -1,3 +1,46 @@
+[toc]
+
+### log4j
+
+```properties
+# 业务日志
+log4j.rootLogger=INFO,R
+
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%d %5p %m (%F:%L)%n
+
+log4j.appender.R=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.R.File=/folder/service.log
+log4j.appender.R.DatePattern=.yyyy-MM-dd_HH
+log4j.appender.R.BufferedIO=false
+log4j.appender.R.MaxBackupIndex=36
+log4j.appender.R.Threshold=INFO
+log4j.appender.R.layout=org.apache.log4j.PatternLayout
+log4j.appender.R.layout.ConversionPattern=%d %5p %m%n
+
+# 服务化平台日志
+log4j.logger.RpcCall=TRACE,Call
+
+log4j.appender.Call=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.Call.File=/folder/service.call.log
+log4j.appender.Call.DatePattern=.yyyy-MM-dd_HH
+log4j.appender.Call.BufferedIO=false
+log4j.appender.Call.MaxBackupIndex=36
+log4j.appender.Call.layout=org.apache.log4j.PatternLayout
+log4j.appender.Call.layout.ConversionPattern=%p %d{yyyy-MM-dd HH:mm:ss} %F:%L %m%n
+
+log4j.logger.RpcAccess=TRACE,Access
+
+log4j.appender.Access=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.Access.File=/folder/service.access.log
+log4j.appender.Access.DatePattern=.yyyy-MM-dd_HH
+log4j.appender.Access.BufferedIO=false
+log4j.appender.Access.MaxBackupIndex=36
+log4j.appender.Access.layout=org.apache.log4j.PatternLayout
+log4j.appender.Access.layout.ConversionPattern=%p %d{yyyy-MM-dd HH:mm:ss} %F:%L %m%n
+```
+
 ### google::protobuf
 
 [Language Guide](https://developers.google.com/protocol-buffers/docs/proto3)

@@ -107,6 +107,12 @@ false ; echo "This will always run"
 
 ```
 
+##### [shell中 ${}, ##, %%, :- , :+,  ? 的使用](https://blog.csdn.net/qq_43193797/article/details/90906007)
+
+```shell
+percent=${PERCENT:-50}
+```
+
 ##### [Linux-shell中各种替换的辨析](https://www.cnblogs.com/chengd/p/7803664.html)
 
 * variable substitution：` <img src="https://www.zhihu.com/equation?tex=var%2C%20" alt="var, " class="ee_img tr_noresize" eeimg="1"> {var}`
@@ -134,7 +140,8 @@ done
 * 2>重定向stderr；引申：>&2，重定向到stderr
   * `$command > result 2>&1`，STDOUT、STDERR 均重定向到 result
 * `-ne`，更多的查看man test，比如`-n 文件存在为真 -z 不存在为真`
-* “test command”， \[\[和\[的区别：http://mywiki.wooledge.org/BashFAQ/031 ，[[是compound command，存在special parsing context，寻找reserved words or control operators 
+* “test command”， \[\[和\[的区别：http://mywiki.wooledge.org/BashFAQ/031 ，`[[`是compound command，存在special parsing context，寻找reserved words or control operators 
+  * `if [[ -e  <img src="https://www.zhihu.com/equation?tex=file%20%5D%5D%20%26%26%20%5B%5B%20" alt="file ]] && [[ " class="ee_img tr_noresize" eeimg="1"> var == true]] `
 
 ##### shell globbing 通配
 * wildcard通配符：?和* 	`ls *.sh`
