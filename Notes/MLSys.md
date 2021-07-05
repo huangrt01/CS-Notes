@@ -25,6 +25,27 @@ https://www.tensorflow.org/install/source#ubuntu
 
 
 
+**mask input**
+
+[consumers](https://www.kite.com/python/docs/tensorflow.contrib.graph_editor.SubGraphView.consumers)
+
+```python
+zero_tensor = tf.zeros_like(
+	slice_tensor, name=normalize_tensor_name + "_mask")
+normalize_zero_tensor_name = zero_tensor.name.split(':')[0]
+consumers = [con for con in tensor.consumers() 
+             if con.name != normalize_zero_tensor_name]
+consumers_indices = {}
+for consumer in consumers:
+	consumers_indices[consumer] = [i for i, t in enumerate(consumer.inputs) if t is tensor]
+for consumer in consumers:
+	for i in consumers_indices[consumer]:
+		consumer._update_input(i, zero_tensor)
+```
+
+
+
+
 
 #### TensorFlow: Large-Scale Machine Learning on Heterogeneous Distributed Systems [2015]
 
@@ -860,3 +881,70 @@ ML with bioengineering
 * 模拟(silico)：performant + conform to constraints
 * 模拟(silico) ->现实(vivo)：noise resistance + build filter
 * 目标：见 Object Manipulation 小节
+
+
+#### Practical Lessons from Predicting Clicks on Ads at Facebook, KDD 2014
+
+2.指标
+
+* Normalized Entropy: the average log loss per impression divided by what the average log loss per impression would be if a model predicted the background click through rate (CTR) for every impression. 
+  * 用 background CTR 给 loss 做 normalize
+* RIG (Relative Information Gain) = 1 - NE
+* Calibration: the ratio of the average estimated CTR and empirical CTR
+* AUC(Area-Under-ROC): 衡量排序， 忽略低估与高估
+
+3.Prediction Model Structure
+
+* BOPR(Bayesian online learning scheme for probit regression): 假定高斯分布，在线学习分布的参数
+  * Both SGD-based LR and BOPR described above are stream learners as they adapt to training data one by one.
+  * BOPR相比SGD-based LR的区别在于，梯度下降的 step-size 由 belief uncertainty $\sigma$ 控制，也是在线更新的参数3
+* 3.1 Decision tree feature transforms
+  * bin the feature
+  * build tuple input features
+    *  joint binning, using for example a k-d tree
+    * boosted decision trees
+  * follow the Gradient Boosting Machine (GBM) [5], where the classic L2-TreeBoost algorithm is used
+  * We can understand boosted decision tree based transformation as a supervised feature encoding that converts a real-valued vector into a compact binary-valued vector.
+
+* 3.2 Data freshness
+  * The boosted decision trees can be trained daily or every couple of days, but the linear classifier can be trained in near real-time by using some flavor of online learning.
+
+* Experiment result for different learning rate schmeas for LR with SGD
+  * NE: per weight > global > constant > per weight sqrt > per coordinate
+
+* BOPR 与 LR 对比
+  * LR's model size is half
+  * BOPR provides a full predictive distribution over the probability of click. This can be used to compute percentiles of the predictive distribution, which can be used for explore/exploit learning schemes
+
+4.Online Data Joiner
+
+* length of waiting time window: 定义"no click"，需要 tune
+  * 过长会增加buffer、影响"recency"
+  * 过短会影响"click coverage" => the empirical CTR that is somewhat lower than the ground truth
+
+* 数据结构：HashQueue
+  * consisting of a First-In-First-Out queue as a buffer window and a hash map for fast random access to label impressions.
+  * operations: enqueue, dequeue, lookup
+
+* Anomaly detection mechanisms
+  * 监测到数据剧烈变化，断流训练器
+
+5.Containing Memory and Latency
+
+* number of boosting trees: 500个比较折中
+* boosting feature importance
+  * the cumulative loss reduction attributable to a feature
+  * 对多个 trees 的 reduction 相加
+* features
+  * contextual features: local time of day, day of week, device, current page
+  * historical features: ctr of the ad in lask week, avg ctr of the user
+  * historical features 明显比 contextual features 重要
+  * contextual features 更需要 data freshness
+
+6.Coping with Massive Training Data
+
+* Uniform subsampling: sample rate 10% 
+
+* Negative down sampling: sample rate 2.5%
+
+* Model Re-Calibration: $q=\frac{p}{p+\frac{1-p}{w}}$

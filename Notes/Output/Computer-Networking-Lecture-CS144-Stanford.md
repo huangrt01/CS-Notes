@@ -32,7 +32,6 @@ internet layer: Internet Protocol, IP address, packet's path
   * Rendezvous server
   
   * 如果模式是A -- NAT-- (Internet + Rendezvous server) -- NAT -- B，Skype用Relay来间接传递信息
-  
 
 <img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/003.jpg" alt="Lego TCP/IP" style="zoom:60%;" />
 
@@ -53,7 +52,6 @@ Internet: end-hosts, links and routers
   * ACK(acknowledgement of receipt)，如果发信人没收到就resend
   * 比如视频传输不需要TCP，可以用UDP(User Datagram Protocol),不保证传输
 * Application Layer
-  
 
 two extra things
 * IP is the "thin waist"   ,这一层的选择最少
@@ -348,7 +346,6 @@ end-to-end check
   * 检错能力有局限，受随机性影响，不如CRC，no error detection guarantee
   *  <img src="https://www.zhihu.com/equation?tex=c%3DMAC%28M%2Cs%29" alt="c=MAC(M,s)" class="ee_img tr_noresize" eeimg="1"> ，M + c意味着对方有secret或者replay
   * 对于replay，`ctr++`, 具体见[我的密码学笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Output/Security-Privacy-Cryptography.md)的TLS部分【目前尚未整理】
-  
 ##### 2-6 Finite State Machines
 <img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/012.jpg" alt="HTTP Request" style="zoom:40%;" />
 
@@ -609,32 +606,68 @@ RFC
 * [RFC 6335](https://tools.ietf.org/html/rfc6335): port number
 * RFC 7414: A Roadmap for TCP
 
-[TCP backlog: syns queue and accept queue](https://www.cnblogs.com/Orgliny/p/5780796.html)
+* [TCP backlog: syns queue and accept queue](https://www.cnblogs.com/Orgliny/p/5780796.html)
+
+* [What is a REST API?](https://www.youtube.com/watch?v=Q-BpqyOT3a8)
+  * Representational State Transfer (REST)
+  * Architecture style
+  * Relies on a stateless, client-server protocol, almost alwasys HTTP
+    * GET: retrieve data from a specified resource
+    * POST: submit data to be processed to a specified resource
+    * PUT: update a specified resource
+    * DELETE
+    * HEAD: same as get but does not return a body
+    * OPTIONS: return the supported HTTP methods
+    * PATCH: update partial resources
+  * Treats server objects as resources that can be created or destroyed
+  * GitHub REST API: https://docs.github.com/en/rest
+  * 推荐 Postman 工具
+
+* [AF_INET域与AF_UNIX域socket通信原理对比](https://blog.csdn.net/sandware/article/details/40923491)
+
+```c++
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/un.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <stdlib.h>
+#include <stddef.h>
+
+#define UNIX_SOCK_PATH_MAX_LEN (sizeof(((struct sockaddr_un*)0)->sun_path))
+#define COMMAND_MAX_LEN 64
+//file name format is project_pid.sock
+#define SOCK_PATH_FORMAT "/dev/shm/project_%llu.sock"
+
+char control_sock_path[UNIX_SOCK_PATH_MAX_LEN] = {'\0',};
+
+int main(int argc, char *argv[]) {
+  int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+	if(fd < 0){
+		printf("socket error\n");
+	}
+	snprintf(control_sock_path,
+			UNIX_SOCK_PATH_MAX_LEN,
+			UNIX_SOCK_PATH_FORMAT,
+			(unsigned long long)atoll(argv[1]));
+	printf("%s\n", control_sock_path);
+	struct sockaddr_un un;
+	memset(&un, 0, sizeof(un));
+	strncpy(un.sun_path, control_sock_path, sizeof(un.sun_path));
+	un.sun_family = AF_UNIX;
+	socklen_t len = offsetof(struct sockaddr_un, sun_path) + strlen(un.sun_path);
+	if (connect(fd, (struct sockaddr *)&un, len) < 0){
+		close(fd);
+		printf("connect error\n");
+	}
+	process(fd);
+}
+```
 
 
 
-[What is a REST API?](https://www.youtube.com/watch?v=Q-BpqyOT3a8)
 
-* Representational State Transfer (REST)
-* Architecture style
-* Relies on a stateless, client-server protocol, almost alwasys HTTP
-  * GET: retrieve data from a specified resource
-  * POST: submit data to be processed to a specified resource
-  * PUT: update a specified resource
-  * DELETE
-  * HEAD: same as get but does not return a body
-  * OPTIONS: return the supported HTTP methods
-  * PATCH: update partial resources
-* Treats server objects as resources that can be created or destroyed
-* GitHub REST API: https://docs.github.com/en/rest
-* 推荐 Postman 工具
-
-
-
-
-
-
-##### wireshark: 
+##### wireshark
 [谈谈Linux中的TCP重传抓包分析](https://segmentfault.com/a/1190000019734707)
 
 ```

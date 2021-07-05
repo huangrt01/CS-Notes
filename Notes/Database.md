@@ -37,6 +37,17 @@ select * from service_status order by id desc
 <>
 ```
 
+e.g.
+
+```mysql
+SELECT log.uid, info.source, log.action, sum(log.action) 
+FROM info, log
+WHERE (log.time in LAST_7D) 
+    and (log.id = info.id) 
+    and (log.action=show)
+GROUP by log.uid, info.source
+```
+
 
 
 ALTER TABLE

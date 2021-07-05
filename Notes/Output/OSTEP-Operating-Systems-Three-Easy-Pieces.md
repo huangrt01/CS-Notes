@@ -5,7 +5,16 @@ __主题：virtualization, concurrency, persistence__
 
 [book](http://pages.cs.wisc.edu/~remzi/OSTEP/), [book-code](https://github.com/remzi-arpacidusseau/ostep-code), [projects](https://github.com/remzi-arpacidusseau/ostep-projects), [homework](https://github.com/remzi-arpacidusseau/ostep-homework/) [xxxzz's homework answer](https://github.com/xxyzz/ostep-hw), [my homework answer](https://github.com/huangrt01/ostep-homework)
 
+### Kernel
 
+* Meltdown patch
+
+  * Meltdown patch 之后，Page Table Isolation (PTI)，syscall 会 flush TLB
+  * Linux 4.14 之后，support PCID (process-context id)
+    * Process-Context Identifiers (PCID) enables us to achieve the same goal of isolation much more efficiently by associating some data with each TLB entry which the processor uses to control access to the mappings. By changing the PCID during the mode switch, TLB entries with the kernel’s PCID will not be accessible from user space.
+  * [Linux Meltdown patch: 'Up to 800 percent CPU overhead', Netflix tests show](https://www.zdnet.com/article/linux-meltdown-patch-up-to-800-percent-cpu-overhead-netflix-tests-show/)
+
+  * [Meltdown: What’s the performance impact and how to minimise it?](https://www.opsian.com/blog/meltdown-benchmarks/)
 
 ### jemalloc 等底层组件
 

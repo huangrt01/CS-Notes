@@ -430,7 +430,7 @@ public:
 
 **pointer-to-const == const_iterators**
 
-there’s no portable conversion from a const_iterator to an iterator, not even with a static_cast. Even the semantic sledgehammer known as reinterpret_cast can’t do the job. 
+there’s no portable conversion from a `const_iterator` to an `iterator`, not even with a `static_cast`. Even the semantic sledgehammer known as `reinterpret_cast` can’t do the job. 
 
 ```c++
 std::vector<int> values; // as before ...
@@ -2558,6 +2558,12 @@ inline uint64_t native_to_little(uint64_t in) {
 * 虚析构函数    =>对象内有虚函数表，指向虚函数表的指针：32位系统4字节，64位系统8字节
 * 虚基类偏移量表指针
 
+
+
+##### static
+
+[Why can't I initialize non-const static member or static array in class?](https://stackoverflow.com/questions/9656941/why-cant-i-initialize-non-const-static-member-or-static-array-in-class)
+
 ##### namespace
 
 https://www.runoob.com/cplusplus/cpp-namespaces.html
@@ -2619,6 +2625,10 @@ for (int& ref : vec) {
 ```
 
 It supports arrays, types that provide begin and end member functions, and types for which begin and end functions are found via argument-dependent lookup
+
+
+
+
 
 
 #### C++11
@@ -2903,8 +2913,6 @@ while(_queue.try_pop(tk)){
   * [Thread pool that binds tasks for a given ID to the same thread](https://stackoverflow.com/questions/8162332/thread-pool-that-binds-tasks-for-a-given-id-to-the-same-thread)
   * C++ 有什么好用的线程池？ - neverchanje的回答 - 知乎 https://www.zhihu.com/question/397916107/answer/1253114248
 
-
-
 * 条件变量
 
 ```c++
@@ -2915,11 +2923,12 @@ cond_.notify_one();
 cond_.notify_all();
 ```
 
-
-
 * Shared Store
 
 参考 `shared_store.h`
+
+* Thread Local
+  * [C++11 thread_local用法](https://zhuanlan.zhihu.com/p/340201634) : `thread_local` 作为类成员变量时必须是 `static` 的
 
 
 

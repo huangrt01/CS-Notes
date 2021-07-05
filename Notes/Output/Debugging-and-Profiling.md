@@ -159,7 +159,7 @@ strace -p $PID
 -tt   发生时刻
 -T 		持续时间
 -s 1024 print输入参数的长度限制
--e write=   -e read=     -e trace=file/desc
+-e write=   -e read=     -e trace=file/desc			-e recvfrom
 -f 监控所有子线程   -ff
 
 
@@ -228,14 +228,30 @@ python -m line_profiler sorts.py.lprof
 
 [`perf`](https://www.man7.org/linux/man-pages/man1/perf.1.html) 
 
+[perf的介绍与使用](https://www.cnblogs.com/arnoldlu/p/6241297.html)
+
+[perf documentation](https://android.googlesource.com/kernel/msm/+/android-7.1.0_r0.2/tools/perf/Documentation)
+
 - `perf list` - List the events that can be traced with perf
 - `perf stat COMMAND ARG1 ARG2` - Gets counts of different events related a process or command
 - `perf record COMMAND ARG1 ARG2` - Records the run of a command and saves the statistical data into a file called `perf.data`
 - `perf report` - Formats and prints the data collected in `perf.data`
 
 ```shell
+perf help
+sudo perf top
+perf top --call-graph graph
+
 sudo perf record stress -c 1 # record->stat
 sudo perf report
+
+perf stat -e cache-misses,cache-references,instructions,cycles,faults,branch-instructions,branch-misses,L1-dcache-stores,L1-dcache-store-misses,L1-dcache-loads,L1-dcache-load-misses,LLC-loads,LLC-load-misses,LLC-stores,LLC-store-misses,dTLB-loads,dTLB-load-misses,iTLB-loads,iTLB-load-misses -p $pid
+
+perf record -e cache-misses -p $pid
+perf report --sort comm,dso,symbol
+
+sudo perf kmem --alloc --caller --slab stat
+sudo perf sched script
 ```
 
 **内存泄露问题**

@@ -1,3 +1,10 @@
+* L1 cache
+  * L1D latency 是 4~5 个 cycles，算一下 load/store 指令占所有 instructions 的比例，小于 5 就没办法 hide latency，需要优化访存模式
+* LLC (L3 cache)
+  * 直接走 IMC，llc-load-miss * 64B per load / time elapsed，和内存带宽数据做对比
+
+
+
 [Xeon Gold 5118 - Intel](https://en.wikichip.org/wiki/intel/xeon_gold/5118)
 
 [14 nm lithography process](https://en.wikichip.org/wiki/14_nm_lithography_process)
@@ -46,9 +53,10 @@ https://www.slideshare.net/am_sharifian/intel-hyper-threading-technology/1
 
 
 
-内存拓扑的unbalanced问题
+内存拓扑的 unbalanced 问题
 
 * 可能导致同一物理机上先启动的服务效率高
+* 多 channel 的 64bit DRAM，ddr 频率在 2666 居多，单 channel 可以到 ～20GB/s，4～6 channel 比较常见
 
 ![mem-layout](Computer-Architecture/mem-layout.png)
 
