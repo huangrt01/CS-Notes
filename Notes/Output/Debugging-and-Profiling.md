@@ -282,6 +282,10 @@ sudo perf sched script
 
 If you want to test these tools you can also artificially impose loads on the machine using the [`stress`](https://linux.die.net/man/1/stress) command.
 
+```shell
+cat /etc/network/interfaces | egrep eth0 -A 1 | egrep address | awk '{print $2}' | egrep '^10'
+```
+
 ##### Specialized tools
 
 Sometimes, black box benchmarking is all you need to determine what software to use. Tools like [`hyperfine`](https://github.com/sharkdp/hyperfine) let you quickly benchmark command line programs. For instance, in the shell tools and scripting lecture we recommended `fd` over `find`. We can use `hyperfine` to compare them in tasks we run often. E.g. in the example below `fd` was 20x faster than `find` in my machine.

@@ -23,7 +23,47 @@ https://www.tensorflow.org/install/source#ubuntu
 * 抛开细枝末节： `git checkout -b code-reading`
 * 适可而止，BFS阅读
 
+#### 基本 API 用法
 
+[Understanding variable_scope and name_scope in tensorflow and variable sharing](https://stackoverflow.com/questions/36237427/understanding-variable-scope-and-name-scope-in-tensorflow-and-variable-sharing)
+
+```python
+def forward(inputs):
+    init = tf.random_normal_initializer()
+    w = tf.get_variable("weights", shape=(3,2), initializer=init)
+    return tf.matmul(w, inputs)
+
+with tf.name_scope("group_1"):
+    a = tf.placeholder(tf.float32, shape=(2, 3), name="a")
+    b = tf.placeholder(tf.float32, shape=(2, 3), name="b")
+    c = tf.placeholder(tf.float32, shape=(2, 3), name="c")
+    with tf.variable_scope("foo", reuse=False):
+        aa = forward(a)
+    with tf.variable_scope("foo", reuse=True):
+        bb = forward(b)
+        cc = forward(c)
+
+with tf.name_scope("group_2"):
+    d = tf.placeholder(tf.float32, shape=(2, 3), name="d")
+    with tf.variable_scope("foo", reuse=True):
+        dd = forward(d)
+
+init = tf.initialize_all_variables()
+
+with tf.Session() as sess:
+    sess.run(init)
+    print(bb.eval(feed_dict={b: np.array([[1,2,3],[4,5,6]])}))
+    for var in tf.global_variables():
+        print(var.name)
+        print(var.eval())
+```
+
+```python
+tf.split(
+    value, num_or_size_splits, axis=0, num=None, name='split'
+)
+# num_or_size_splits，既可以传入"N"等分，也可以传入每份的 size list
+```
 
 **mask input**
 
@@ -895,9 +935,9 @@ ML with bioengineering
 
 3.Prediction Model Structure
 
-* BOPR(Bayesian online learning scheme for probit regression): 假定高斯分布，在线学习分布的参数
+* BOPR (Bayesian online learning scheme for probit regression): 假定高斯分布，在线学习分布的参数
   * Both SGD-based LR and BOPR described above are stream learners as they adapt to training data one by one.
-  * BOPR相比SGD-based LR的区别在于，梯度下降的 step-size 由 belief uncertainty  <img src="https://www.zhihu.com/equation?tex=%5Csigma" alt="\sigma" class="ee_img tr_noresize" eeimg="1">  控制，也是在线更新的参数3
+  * BOPR 相比 SGD-based LR 的区别在于，梯度下降的 step-size 由 belief uncertainty  <img src="https://www.zhihu.com/equation?tex=%5Csigma" alt="\sigma" class="ee_img tr_noresize" eeimg="1">  控制，也是在线更新的参数3
 * 3.1 Decision tree feature transforms
   * bin the feature
   * build tuple input features

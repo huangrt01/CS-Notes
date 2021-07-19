@@ -1,5 +1,18 @@
 [toc]
 
+### docker
+
+添加 docker 权限给当前用户 ，使 docker 命令免 sudo
+
+```shell
+# 添加docker group
+sudo groupadd docker
+# 将当前用户添加到docker组
+sudo gpasswd -a ${USER} docker
+# 重启docker服务
+sudo service docker restart
+```
+
 ### log4j
 
 ```properties
@@ -353,4 +366,8 @@ setup(
     packages=find_packages(where='src')
 )
 ```
+
+### Hadoop
+
+Hadoop Shell 命令：https://hadoop.apache.org/docs/r1.0.4/cn/hdfs_shell.html
 

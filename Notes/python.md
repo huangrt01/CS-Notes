@@ -75,9 +75,33 @@ matchObj = re.match(r'', line.strip('\n'), re.M|re.I)
 
 #### 类
 
-[@staticmethod v.s. @classmethod]([https://stackoverflow.com/questions/136097/difference-between-staticmethod-and-classmethod#:~:text=%40staticmethod%20function%20is%20nothing%20more,not%20Parent%20class%2C%20via%20inheritance.](https://stackoverflow.com/questions/136097/difference-between-staticmethod-and-classmethod#:~:text=%40staticmethod function is nothing more,not Parent class%2C via inheritance.))
+* [@staticmethod v.s. @classmethod](https://stackoverflow.com/questions/136097/difference-between-staticmethod-and-classmethod#:~:text=%40staticmethod)
 
+* @property
 
+```python
+class Student(object):
+
+    @property         
+    def birth(self):           # 读写属性
+        return self._birth
+
+    @birth.setter
+    def birth(self, value):
+        self._birth = value
+
+    @property
+    def age(self):            # 只读属性
+        return 2015 - self._birth
+```
+
+* @func 作为类或者函数的修饰符
+  * 当解释器读到@修饰符之后，会先解析@后的内容，直接就把@下一行的函数**或者类**作为@后边的函数的参数，然后将返回值赋值给下一行修饰的函数对象
+  * @func 修饰类，常用于 register
+
+```
+@model_registry.register('model_type')
+```
 
 #### virtualenv
 
@@ -86,6 +110,29 @@ virtualenv .myenv --python=python3.8
 source .myenv/bin/activate
 deactivate
 ```
+
+[virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/)
+
+```shell
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple virtualenvwrapper
+
+# 加入 zshrc
+export WORKON_HOME=~/Envs
+mkdir -p $WORKON_HOME
+source /usr/local/bin/virtualenvwrapper.sh
+# or
+source ~/.local/bin/virtualenvwrapper.sh
+
+mkvirtualenv env1
+ls $WORKON_HOME
+lssitepackages
+workon env1
+
+echo 'pip install sphinx' >> $WORKON_HOME/postmkvirtualenv
+mkvirtualenv env3
+```
+
+
 
 #### conda
 
@@ -172,13 +219,18 @@ from datetime import datetime
 datetime.now()
 ```
 
+#### functools
 
+```python
+from functools import reduce
+nparam = reduce(lambda x, y: int(x) * int(y), shape, 1)
+```
 
 
 #### imp
 
-[What does the first argument of the imp.load_source method do?
-](https://stackoverflow.com/questions/31773310/what-does-the-first-argument-of-the-imp-load-source-method-do)
+[What does the first argument of the imp.load_source method do?](https://stackoverflow.com/questions/31773310/what-does-the-first-argument-of-the-imp-load-source-method-do)
+
 ```python
 import imp
 var_file = imp.load_source('var', file_path)
@@ -237,7 +289,17 @@ random.seed(randnum)
 random.shuffle(train_y)
 ```
 
+#### subprocess
 
+```python
+import subprocess
+
+
+def runCommand(cmd):
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    res = p.stdout.read()
+    return res.strip("\n")
+```
 
 #### 网络
 

@@ -1090,11 +1090,12 @@ Fraction reduceAndCopy(T&& frac) {
 
 Never apply `std::move` or `std::forward` to local objects if they would otherwise be eligible for the return value optimization.
 
+* copy elision
 * RVO 生效的要求
   * 类型一致
-  * the local object is what’s being returned，比如不能是referenced type、或函数参数
+  * the local object is what’s being returned，比如不能是 referenced type、或函数参数
   * unnamed (named->NRVO)
-* 永远无需move的原因："if the conditions for the RVO are met, but compilers choose not to perform copy elision, the object being returned *must be treated as an rvalue*."
+* 永远无需 move 的原因："if the conditions for the RVO are met, but compilers choose not to perform copy elision, the object being returned *must be treated as an rvalue*."
 
 ##### Item 26: Avoid overloading on universal references.
 
@@ -2912,7 +2913,8 @@ while(_queue.try_pop(tk)){
 * ThreadPool
   * [Thread pool that binds tasks for a given ID to the same thread](https://stackoverflow.com/questions/8162332/thread-pool-that-binds-tasks-for-a-given-id-to-the-same-thread)
   * C++ 有什么好用的线程池？ - neverchanje的回答 - 知乎 https://www.zhihu.com/question/397916107/answer/1253114248
-
+  * [Uneven Work Distribution and Oversubscription](https://dzone.com/articles/uneven-work-distribution-and)
+  
 * 条件变量
 
 ```c++
