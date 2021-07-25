@@ -270,29 +270,6 @@ load模型（尤其是对模型进行warmup）导致延迟spike的问题，确�
 
 [美团：基于TensorFlow Serving的深度学习在线预估](https://tech.meituan.com/2018/10/11/tfserving-improve.html)
 
-
-
-#### [Jeff Dean: Achieving Rapid Response Times in Large Online Services](https://storage.googleapis.com/pub-tools-public-publication-data/pdf/44875.pdf)
-
-讨论了分布式服务的通用优化思想，很值得学习！
-
-shared environment 提升资源利用率的同时，也带来不可预测的因素（比如network congestion、background activities、bursts of foreground activity、not just your jobs, but everyone else’s jobs, too），影响服务长尾延时，并且会 exacerbated by large fanout systems
-
-Conclusion
-
-* Tolerating variability
-  * important for large-scale online services
-  * large fanout magnifies importance
-  * makes services more responsive
-  * saves significant computing resources
-* Collection of techniques
-  * general good engineering practices
-    * prioritized server queues, careful management of background activities
-  * cross-request adaptation
-    * load balancing, micro-partitioning
-  * within-request adaptation
-    * backup requests, backup requests w/ cancellation, tainted results
-
 ### 召回
 
 * 索引方式
@@ -988,3 +965,30 @@ ML with bioengineering
 * Negative down sampling: sample rate 2.5%
 
 * Model Re-Calibration: $q=\frac{p}{p+\frac{1-p}{w}}$
+
+#### DCAF: A Dynamic Computation Allocation Framework for Online Serving System, DLP-KDD 2020
+
+* 加强 召回、粗排、精排 的联动，向统一分配算力的方向发展
+* We formulate this resource allocation problem as a knapsack problem and propose a Dynamic Computation Allocation Framework (DCAF).
+
+* 基于背包问题的机制，有限资源最大收益
+  * 理论：https://en.wikipedia.org/wiki/Duality_(optimization)，凸优化，证明了在现实算力约束的条件下（有两个直觉的前提），用二分来找 global optimal lambda 即可获取最优解
+    * construct the Lagrangian
+
+* 系统有 control 能力，能动态响应流量波动
+  * 理论：https://en.wikipedia.org/wiki/PID_controller
+
+* Online Decision Maker
+* Information Collection and Monitoring
+* lambda 离线计算，Qij 在线预估
+* Request Value Estimation.
+* Policy Execution: assign j and PID control，我理解 PID controller 是为了给 lambda 更新慢的的情况来兜底
+* Offline Estimator
+* 感觉是个离线 batch 任务，模型预估不同算力下的ctr
+
+* Experiments：控精排条数，增加条数有明显的边际效益
+* TODO: fairness 问题、全链路算力分配
+
+* 一些引用的论文
+  * Deep Learning Inference in Facebook Data Centers: Characterization, Performance Optimizations and Hardware Implications
+  * RobinHood: Tail latency aware caching–dynamic reallocation from cache-rich to cache-poor

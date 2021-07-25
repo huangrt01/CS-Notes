@@ -483,6 +483,31 @@ src/ray/raylet/scheduling_policy.cc
 
 
 
+#### [Jeff Dean: Achieving Rapid Response Times in Large Online Services](https://storage.googleapis.com/pub-tools-public-publication-data/pdf/44875.pdf)
+
+讨论了分布式服务的通用优化思想，很值得学习！
+
+shared environment 提升资源利用率的同时，也带来不可预测的因素（比如network congestion、background activities、bursts of foreground activity、not just your jobs, but everyone else’s jobs, too），影响服务长尾延时，并且会 exacerbated by large fanout systems
+
+Conclusion
+
+* Tolerating variability
+  * important for large-scale online services
+  * large fanout magnifies importance
+  * makes services more responsive
+  * saves significant computing resources
+* Collection of techniques
+  * general good engineering practices
+    * prioritized server queues, careful management of background activities
+  * cross-request adaptation
+    * load balancing, micro-partitioning
+  * within-request adaptation
+    * backup requests, backup requests w/ cancellation, tainted results
+
+#### RobinHood: Tail Latency Aware Caching — Dynamic Reallocation from Cache-Rich to Cache-Poor, OSDI 2018
+
+
+
 #### 支付架构
 
 ##### 业务架构

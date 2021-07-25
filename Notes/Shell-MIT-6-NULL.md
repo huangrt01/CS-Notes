@@ -726,6 +726,8 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
 * cut
   * 使用 -f 选项提取指定字段：`cut -f2,3 test.txt`
 * cp
+  * [-H vs -L](https://superuser.com/questions/593196/cp-h-vs-cp-l-what-is-a-command-line-symbolic-link), 两者都是 follow symbolic links，区别在于 -r 时表现不同
+
 * cron: a daemon your system already runs to perform scheduled tasks
 #### d
 * d: zsh的特点，可显示最近10个目录，然后`cd -数字`进入
