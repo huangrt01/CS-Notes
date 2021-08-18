@@ -594,9 +594,9 @@ Queues with Random Arrival Processes (Queueing Theory)
 
 
 
-##### potpourri
+### potpourri
 
-RFC
+#### RFC
 
 * RFC 792: ICMP Message
 * RFC 821: SMTP
@@ -606,8 +606,9 @@ RFC
 * [RFC 6335](https://tools.ietf.org/html/rfc6335): port number
 * RFC 7414: A Roadmap for TCP
 
-* [TCP backlog: syns queue and accept queue](https://www.cnblogs.com/Orgliny/p/5780796.html)
 
+
+* [TCP backlog: syns queue and accept queue](https://www.cnblogs.com/Orgliny/p/5780796.html)
 * [What is a REST API?](https://www.youtube.com/watch?v=Q-BpqyOT3a8)
   * Representational State Transfer (REST)
   * Architecture style
@@ -622,7 +623,6 @@ RFC
   * Treats server objects as resources that can be created or destroyed
   * GitHub REST API: https://docs.github.com/en/rest
   * 推荐 Postman 工具
-
 * [AF_INET域与AF_UNIX域socket通信原理对比](https://blog.csdn.net/sandware/article/details/40923491)
 
 ```c++
@@ -664,6 +664,8 @@ int main(int argc, char *argv[]) {
 }
 ```
 
+* [代理，网关，隧道，有什么区别与联系？ - 知乎](https://www.zhihu.com/question/268204483/answer/334644846)
+
 
 
 
@@ -691,7 +693,10 @@ icmp.code == 0
 * VM的第一跳是到laptop，不会decrement the TTL，因此hop 10对应TTL 9
 
 
+#### WiFi 与 路由器
 
+* WIFI5 的连接速度最高 866.7 Mbps，只有开启 WIFI6 模式，并且启用160MHZ，才能突破 866.7 Mbps
+* 路由器 LAN-LAN 级联
 
 
 

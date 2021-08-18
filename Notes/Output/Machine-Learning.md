@@ -28,6 +28,25 @@ Dropout
 
 
 
+#### Optimizer
+
+##### Lookahead Optimizer: k steps forward, 1 step back, NIPS 2019
+
+* 本文是SGD场景，slow weights + 主要提升训练稳定性、减小优化器的variance
+* mini-batch 异步SGD场景也可以应用，提升模型效果
+  * CV、NLP场景可以重复训同一批样本，这样的手段更有意义
+  * 推荐、广告场景，假如照搬，感觉会丢失 fine-grained gradients 信息，但在异步训练场景，多worker更新参数天然构成了slow weights
+
+* Method
+  * Slow weights trajectory: We can characterize the trajectory of the slow weights as an exponential moving average (EMA) of the final fast weights within each inner-loop, regardless of the inner optimizer.
+  * Proposition 1 (Optimal slow weights step size)
+
+* 分析convergence
+  * Proposition 2 (Lookahead steady-state risk): Lookahead has a variance fixed point that is strictly smaller than that of the SGD inner-loop optimizer for the same learning rate
+  * Deterministic quadratic convergence: underdamped系统提升稳定性，overdamped系统略有损收敛
+
+
+
 #### Validation
 
 holdout validation, cross-validation, leave-one-out validation, etc
@@ -59,6 +78,12 @@ model finetune
     * 这种递进的训练技巧在BERT中较常见，论文中也有将长度较短的向量放在第一阶段训练的方法。
 
 
+
+### CV
+
+* group convolution
+  * only the input channels in the same group are used for computing a given output channel. A group convolution with total Ci input, Co output channels and G groups is essentially G independent convolutions each with d=Ci/G input and Co/G output channels. 
+  * depth-wise convolution: Ci=Co=G and consequently group size d=1
 
 ### 特征压缩
 

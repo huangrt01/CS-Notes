@@ -1,10 +1,5 @@
 [toc]
 
-各种资源
-
-* [大神 Andrei Alexandrescu 的 ppt，讲C语言优化](https://www.slideshare.net/andreialexandrescu1/three-optimization-tips-for-c-15708507)
-* https://github.com/miloyip/itoa-benchmark/
-
 
 ### 《Effective Modern C++》, Scott Meyers 
 
@@ -803,7 +798,7 @@ auto objPtr = cache[id].lock();
   if (!objPtr) {
     objPtr = loadWidget(id);
     cache[id] = objPtr;
-}
+	}
   return objPtr;
 }
 
@@ -1504,7 +1499,9 @@ auto func =
 
 ##### Item 33: Use **decltype** on **auto&&** parameters to **std::forward** them.
 
-generic lambdas: operator() in the lambda’s closure class is a template.
+* generic lambdas
+  * Definition: lambdas that use auto in their parameter specifications
+  * Implementation: operator() in the lambda’s closure class is a template.
 
 ```c++
 auto f = [](auto x){ return func(normalize(x)); };
@@ -1520,7 +1517,7 @@ class SomeCompilerGeneratedClassName {
 auto f = [](auto&& x){ return func(normalize(std::forward<decltype(param)>(x))); };
 
 auto f =
-  [](auto&&... x){ 
+  [](auto&&... param){ 
   	return func(normalize(std::forward<decltype(param)...>(x)));
 	};
 ```
@@ -2170,11 +2167,10 @@ std::regex r2(nullptr); // compiles
 
 ### 学习材料
 
-#### C++ Patterns
+* https://cpppatterns.com/，见[cpp-patterns.cpp]
 
-https://cpppatterns.com/
-
-见[cpp-patterns.cpp]
+* [大神 Andrei Alexandrescu 的 ppt，讲C语言优化](https://www.slideshare.net/andreialexandrescu1/three-optimization-tips-for-c-15708507)
+* https://github.com/miloyip/itoa-benchmark/
 
 #### [GoingNative 2013 C++ Seasoning](https://www.youtube.com/watch?v=W2tWOdzgXHA)
 
@@ -2401,79 +2397,34 @@ int main(){
 
 #### 编程习惯
 
-RAII原则：Resource acquisition is initialization，充分利用局部对象的构造和析构特效，常需要与 rule of five, rule of zero 结合
+* RAII原则：Resource acquisition is initialization，充分利用局部对象的构造和析构特效，常需要与 rule of five, rule of zero 结合
 
 * [Google Style](https://google.github.io/styleguide/cppguide.html)
 * [Google: Developer Documentation Style Guide](https://developers.google.com/style)
 * [CppCoreGuidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
 * 用[CppCheck](http://cppcheck.net/)诊断，`make cppcheck`
 
-format
+* format
+  * `/llvm-6.0/bin/clang-format -i *.cpp`
 
-* `/llvm-6.0/bin/clang-format -i *.cpp`
+* rules
+  * ["explicit" should be used on single-parameter constructors and conversion operators](https://rules.sonarsource.com/cpp/RSPEC-1709)
+* 经典案例
+  * [goto fail](https://coolshell.cn/articles/11112.html)
 
-经典案例：[goto fail](https://coolshell.cn/articles/11112.html)
+
+
+
 
 
 
 #### Debug
 
-* 参考我的[Debugging and Profiling笔记]()
+* 参考我的 [Debugging and Profiling笔记]()
 
 #### 编译相关
 
-不同操作系统的编译:
-
-```c++
-#ifdef __APPLE__
-	#include "TargetConditionals.h"
-	#ifdef TARGET_OS_MAC
-		#include <GLUT/glut.h>
-		#include <OpenGL/OpenGL.h>
-	#endif
-#elif defined _WIN32 || defined _WIN64
-	#include <GL\glut.h>
-#elif defined __LINUX__
-	XXX
-#endif
-```
-
-
-
-* Multiple definition报错的讨论：如果在.h文件里定义函数，需要[加inline防止重复定义](https://softwareengineering.stackexchange.com/questions/339486/when-a-function-should-be-declared-inline-in-c)
-  * [inline specifier in C++](https://en.cppreference.com/w/cpp/language/inline)支持重复引用.h内函数
-  * 如果是gcc而非g++编译，会报错
-* 保证只编译一次
-  * 方法一：`#pragma once`
-  * 方法二：
-
-```c++
-#ifdef HEADER_H
-#define HEADER_H
-...
-#endif
-```
-
-* [LD_PRELOAD Trick](https://www.baeldung.com/linux/ld_preload-trick-what-is)
-  * [How to Show All Shared Libraries Used by Executables in Linux?](https://www.baeldung.com/linux/show-shared-libraries-executables)
-  * Alternative: `/etc/ld.so.preload`，系统层面的替换
-
-```shell
-ldd /usr/bin/vim
-objdump -p /usr/bin/vim | grep 'NEEDED'
-awk ' <img src="https://www.zhihu.com/equation?tex=NF%21~/%5C.so/%7Bnext%7D%20%7B" alt="NF!~/\.so/{next} {" class="ee_img tr_noresize" eeimg="1"> 0= <img src="https://www.zhihu.com/equation?tex=NF%7D%20%21a%5B" alt="NF} !a[" class="ee_img tr_noresize" eeimg="1"> 0]++' /proc/1585728/maps
-```
-
-  * LD_PRELOAD的应用
-      * when two libraries export the same symbol and our program links with the wrong one
-      * when an optimized or custom implementation of a library function should be preferred
-      * various profiling and monitoring tools widely use LD_PRELOAD for instrumenting code
-
-```shell
-LD_PRELOAD="/data/preload/lib/malloc_interpose.so:/data/preload/lib/free_interpose.so" ls -lh
-```
-
-
+* 参考我的 [Compiler笔记]()
 
 
 #### C
@@ -2567,6 +2518,16 @@ inline uint64_t native_to_little(uint64_t in) {
 ##### static
 
 [Why can't I initialize non-const static member or static array in class?](https://stackoverflow.com/questions/9656941/why-cant-i-initialize-non-const-static-member-or-static-array-in-class)
+
+```c++
+class Class {
+public:
+    static std::vector<int> & replacement_for_initialized_static_non_const_variable() {
+        static std::vector<int> Static {42, 0, 1900, 1998};
+        return Static;
+    }
+};
+```
 
 ##### namespace
 
@@ -2921,21 +2882,47 @@ while(_queue.try_pop(tk)){
 * 条件变量
 
 ```c++
-std::mutex mutex_;
-std::condition_variable cond_;
+std::mutex mu;
+std::condition_variable cv;
 
-cond_.notify_one();
-cond_.notify_all();
+cv.notify_one();
+cv.notify_all();
+
+void wait_task() {
+  std::unique_lock<std::mutex> lk(mu);
+  cv.wait(lk, [this]() { return ready; });
+}
+
+void finish_task() {
+  std::unique_lock<std::mutex> lk(mu);
+  ready = true;
+  cv.notify_one();
+}
 ```
 
 * Shared Store
 
-参考 `shared_store.h`
-
+  * 参考 `shared_store.h`
+  * `SharedStore<ObjectPool>` 常见用法
 * Thread Local
   * [C++11 thread_local用法](https://zhuanlan.zhihu.com/p/340201634) : `thread_local` 作为类成员变量时必须是 `static` 的
-
-
+* Memory Coherence and Memory Consistency
+  * [如何理解 C++11 的六种 memory order？ - Furion W的回答 - 知乎](https://www.zhihu.com/question/24301047/answer/83422523)
+  * Memory Consistency Model
+    * Sequential consistency model
+    * 在无缓存的体系结构下实现SC
+      * Write buffers with read bypassing
+      * Overlapping writes
+      * Nonblocking reads
+    * 在有缓存的体系结构下实现SC
+      * Cache coherence protocols
+      * Detecting write completion
+      * Maintaining write atomicity
+  * C++ memory order
+    * Synchronized-with 与 happens-before 关系
+    * sequential consistent(memory_order_seq_cst)
+    * relaxed(memory_order_seq_cst)
+    * acquire release(memory_order_consume, memory_order_acquire, memory_order_release, memory_order_acq_rel)
 
 #### DOD
 
@@ -2947,7 +2934,35 @@ cond_.notify_all();
 
 
 
-#### STL
+### 《Effective STL》
+
+#### vector and string
+
+##### Item 16: Know how to pass vector and string data to legacy APIs.
+
+* Cautions
+  * 不要将迭代器视作指针，don't use v.begin() instead of &v[0]
+  * string: 1) 内存不保证连续；2）不保证以 null character 结尾   => c_str() 方法只适于 const char *pString 参数的 C API
+  * vector: 不要做更改长度的操作
+
+```c++
+size_t fillArray(double *pArray, size_t arraySize);
+vector<double> vd(maxNumDoubles);
+vd.resize(fillArray(&vd[0], vd.size()));
+
+size_t fillString(char 'pArray, size_t arraySize);
+vector<char> vc(maxNumChars);
+size_t charsWritten = fillString(&vc[0], vc.size());
+string s(vc.begin(), vc.begin()+charsWritten);
+```
+
+* 引申：[Can raw pointers be used instead of iterators with STL algorithms for containers with linear storage?](https://stackoverflow.com/questions/16445957/can-raw-pointers-be-used-instead-of-iterators-with-stl-algorithms-for-containers)
+
+
+
+
+
+### STL
 
 十三大头文件：\<algorithm>、\<functional>、\<deque>、、\<iterator>、\<array>、\<vector>、\<list>、\<forward_list>、\<map>、\<unordered_map>、\<memory>、\<numeric>、\<queue>、\<set>、\<unordered_set>、\<stack>、\<utility>
 
@@ -2957,7 +2972,7 @@ cond_.notify_all();
 
 ![world_map_of_cpp_STL_algorithms](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/C++/world_map_of_cpp_STL_algorithms.png)
 
-##### queriers
+#### queriers
 
 ```c++
 // numeric algorithms
@@ -3007,7 +3022,7 @@ minmax_element
 
 
 
-##### permutationers
+#### permutationers
 
 heap
 
@@ -3055,7 +3070,7 @@ std::reverse
 
 
 
-##### algos on sets
+#### algos on sets
 
 set in C++: any sorted collection (including sorted vector)
 
@@ -3070,7 +3085,7 @@ std::merge
 
 
 
-##### movers
+#### movers
 
 ```c++
 std::copy(first, last, out);
@@ -3084,7 +3099,7 @@ std::move_backward
 
 
 
-##### value modifiers
+#### value modifiers
 
 ```c++
 std::fill(first, last, 42);
@@ -3095,7 +3110,7 @@ std::replace(first, last, 42, 43);
 
 
 
-##### structure changers
+#### structure changers
 
 ```c++
 auto iter = std::remove(begin(collection), end(collection), 99);
@@ -3106,7 +3121,7 @@ collection.erase(iter, end(collection));
 
 
 
-##### algos of raw memory
+#### algos of raw memory
 
 ```c++
 fill、copy、move -> operator =
@@ -3119,7 +3134,7 @@ uninitilized_value_construct
 
 
 
-##### potpourri
+#### potpourri
 
 Lonely islands
 
@@ -3150,7 +3165,7 @@ std::fill_n(std::back_inserter(v), 5, 42);
 
 
 
-##### \<algorithm>
+#### \<algorithm>
 * sort，自己定义cmp函数，注意cmp的定义：类内静态，传参引用
   * `static bool cmp1(vector<int> &a, vector<int> &b)`
 
@@ -3219,7 +3234,7 @@ inline void reset_1d_tensor_with_slice(
 }
 ```
 
-##### \<chrono>
+#### \<chrono>
 
 5s: C++14’s [duration literal suffixes](http://en.cppreference.com/w/cpp/chrono/duration#Literals)
 
@@ -3250,17 +3265,17 @@ int main()
 ```
 
 
-##### \<deque>
+#### \<deque>
 * deque，两端都能进出，双向队列，[用法详解](https://blog.csdn.net/u011630575/article/details/79923132)
 * [STL之deque实现详解]( https://blog.csdn.net/u010710458/article/details/79540505?depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-6&utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-6)
 * deque的pop_front相当于queue的pop()
 
-##### \<list>
+#### \<list>
 * 参考[LRU cache](https://leetcode-cn.com/problems/lru-cache/)，类似双向链表的实现
   * map<int,list<pair<int,int>>::iterator> m;
 * r.push_front(…), r.begin(), r.back()
 
-##### \<string>
+#### \<string>
 
 * 如何判断string是否以某一字符串开头？
 
@@ -3306,7 +3321,7 @@ unsigned long ul = std::stoul(str,&idx,0);
 
 
 
-##### \<unordered_map>
+#### \<unordered_map>
 
 operator`[]` hasn't a `const` qualifier, you cannot use it directly on a const instance, use `at` instead
 
@@ -3317,7 +3332,7 @@ T&       at(const key_type& x);
 const T& at(const key_type& x) const;
 ```
 
-##### \<vector>
+#### \<vector>
 * 初始化，可以用列表
   
   * 也可以 `int a[10]={…};vector<int> b(a,a+10); `       左闭右开
@@ -3342,14 +3357,14 @@ const T& at(const key_type& x) const;
 
 
 
-#### 其它的库
+### 其它的库
 
-##### \<exception>
+#### \<exception>
 https://blog.csdn.net/qq_37968132/article/details/82431775
 
 `throw invalid_argument("Invalid input.");`
 
-##### \<google::gflags>
+#### \<google::gflags>
 
 [How To Use gflags (formerly Google Commandline Flags)](https://gflags.github.io/gflags/)
 
@@ -3357,14 +3372,14 @@ https://blog.csdn.net/qq_37968132/article/details/82431775
 gflags::SetVersionString(get_version());
 ```
 
-##### \<google::sparse_hash>
+#### \<google::sparse_hash>
 
 [hashmap benchmarks](https://martin.ankerl.com/2019/04/01/hashmap-benchmarks-01-overview/)
 
-##### \<pthread.h>
+#### \<pthread.h>
 * 注意使用封装好的线程操作接口
 
-##### \<random>
+#### \<random>
 
 * Application
 
@@ -3393,7 +3408,7 @@ std::mt19937 engine{seed_seq};
 
 
 
-##### \<sys.h>
+#### \<sys.h>
 
 sche.h
 

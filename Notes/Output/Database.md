@@ -90,5 +90,107 @@ DSL like ES -> (forward/aggregation/post-aggregation) -> view -> physical table
 
 * [滴滴指标体系](https://mp.weixin.qq.com/s/-pLpLD_HMiasyyRxo5oTRQ)
 
+### 论文
+
+##### Spitfire: A Three-Tier Buffer Manager for Volatile and Non-Volatile Memory, SIGMOD 2021
+
+介绍视频：https://www.bilibili.com/video/BV1164y1d7HD
+
+![image-20210808000446554](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Database/hymem.png)
+
+![dram-nvm-ssd](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Database/dram-nvm-ssd.png)
+
+
+
+
+nvm读写性能介于dram和ssd之间，更接近dram
+
+2.Hymem
+
+* 对比Spitfire：Hymem是single-threaded，且是NVM-aware的，对emulation有依赖
+* clock algo逐出nvm、ssd
+* the cache line-grained loading and mini-page optimizations must be tailored for a real NVM device. We also illustrate that the choice of the data migration policy is significantly more important than these auxiliary optimizations.
+* 行为
+  * DRAM admission: 如果没在DRAM中找到，eagerly SSD->DRAM，跳过 SSD->NVM
+  * DRAM eviction: 用是否在 recent queue 中决定是否进 nvm
+  * cache-line-grained page (256 cache lines): resident + dirty bitmap; 指向nvm page的指针
+  * mini page (<16 cache lines): dirty bitmap + slots; count; full page
+
+3.NVM-Aware Data Migration
+
+* 目标：利用NVM提供的数据新通路，minimize the performance impact of NVM and to extend the lifetime of the NVM and SSD devices
+  * lazy data migration from NVM to DRAM ensures that only hot data is promoted to DRAM.
+  * 延续CLOCK策略，引入概率插入来决定migrate到哪一层存储
+* 实现策略
+  * Bypass DRAM during Reads
+    * lazily migrate data from NVM to DRAM
+      while serving read operations.
+    * ensures that warm pages on NVM do not evict hot pages in DRAM
+  * bypass dram during writes
+    * DBMSs use the group commit optimization to reduce this I/O overhead [9]. The DBMS first batches the log records for a group of transactions in the DRAM buffer (❹) and then flushes them together with a single write to SSD
+    * Dw，减少hot pages在DRAM上的eviction
+  * Bypass NVM during read
+    * a lazy policy for migrating data from NVM to DRAM (Dr = 0.01), and a comparatively eager policy while moving data from SSD to NVM (Nr = 0.2). While this scheme increases the number of writes to NVM compared to the lazy policy, it enables Spitfire to deliver higher performance than Hymem (§6.5)
+    * This design reduces data duplication in the NVM buffer.
+  * bypass nvm during writes
+    * 不同于hymem用recent queue，spitfire用随机插入来决定进入nvm的页
+
+4.Adaptive Data Migration
+
+* 相关论文：On multi-level exclusive caching: offline optimality and why promotions are better than demotions, FAST 2008
+* 用模拟退火来搜索参数
+
+5.System Architecture
+
+5.1 Multi-Tier Buffer Management
+
+* When a page is requested, Spitfire performs a table lookup that returns a shared page descriptor containing the locations (if any) of the logical page in the DRAM and NVM buffers.
+
+* 数据结构：
+  * {page_index -> shared_page_descriptor}
+    * shared_page_descriptor: {latch_dram, latch_nvm, latch_ssd, dram_pd, nvm_pd}
+      * dram_pd: {num_of_users, is_dirty, physical_pointer}
+
+5.2 Concurrency Control and Recovery
+
+* To support concurrent operations, we leverage the following data structures and protocols:
+  * a concurrent hash table for managing the mapping from logical page identifiers to shared page descriptors [17]
+  * a concurrent bitmap for the cache replacement policy [40]
+  * multi-versioned timestamp-ordering (MVTO) concurrency control protocol [39]
+  * concurrent B+Tree for indexing with optimistic lock-coupling [24]
+  * lightweight latches for thread-safe page migrations
+    * [数据库中 lock 和 latch 的区别](https://www.zhihu.com/question/309342903/answer/1699205097)
+
+6.Experimental Evaluation
+
+6.1 workload
+
+* YCSB: Zipfian Distribution
+* TPC-C
+
+6.2 Benefits of NVM and App-Direct Mode
+
+* memory-mode requires an upfront NVM capacity at least equal to the size of DRAM. In contrast, with app-direct mode, it could give a higher buffer capacity due to its cost advantage, though the NVM is bit slower. This is especially useful with a large working set.
+* with app-direct mode, Spitfire exploits the persistence property of NVM to reduce the overhead of recovery protocol by eliminating the need to flush modified pages in NVM buffer.
+
+6.3 Data Migration Policies
+
+* With eager policies, more pages are updated in DRAM, and they must be flushed down to lower tiers of the storage system (even when the update is localized to a small chunk of the page). In contrast, with a lazy scheme, Spitfire updates page in NVM, thereby reducing write amplification.
+* impact of storage hierarchy
+  * DRAM/NVM的比例越大，migration probability对吞吐的影响越大。假如DRAM非常小，with the eager policy, the performance improvement brought by adding the comparatively smaller DRAM buffer (1.25 GB) is shadowed by the cost of data migration between DRAM and NVM
+
+6.5 Revisiting Hymem’s Optimizations
+
+* We attribute the 1.1× lower throughput at 64 B granularity (relative to 256B granularity) to the I/O amplification stemming from the mismatch between the device-level block size and loading granularity.
+
+6.6 Storage System Design
+
+* 指标：performance/price numbers
+
+* insights	
+  * To achieve the highest absolute performance, the hierarchy usually consists ofDRAM (since DRAM has the lowest latency).
+  * If the workload is read-intensive, DRAM-NVM-SSD hierarchy is the best choice from a performance/price standpoint, since it is able to ensure the hottest data resides in DRAM.
+  * If the workload is write-intensive, NVM-SSD hierarchy is the best choice from a performance/price standpoint, since NVM is able to reduce the recovery protocol overhead.
+
 
 

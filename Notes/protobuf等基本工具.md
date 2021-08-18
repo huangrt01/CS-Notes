@@ -322,6 +322,31 @@ python动态解析oneof字段
 data = getattr(config, config.WhichOneof('config')).value
 ```
 
+#### C++ 代码阅读
+
+* google/protobuf/repeated_field.h
+
+```c++
+AddAllocatedInternal()
+// arena 一样则 zero copy
+// if current_size < allocated_size，Make space at [current] by moving first allocated element to end of allocated list.
+    
+// DeleteSubgrange，注意性能
+template <typename Element>
+inline void RepeatedPtrField<Element>::DeleteSubrange(int start, int num) {
+  GOOGLE_DCHECK_GE(start, 0);
+  GOOGLE_DCHECK_GE(num, 0);
+  GOOGLE_DCHECK_LE(start + num, size());
+  for (int i = 0; i < num; ++i) {
+    RepeatedPtrFieldBase::Delete<TypeHandler>(start + i);
+  }
+  ExtractSubrange(start, num, NULL);
+}
+
+mutable_obj()->Add()->CopyFrom(*old_objptr);
+mutable_obj()->AddAllocated(old_objptr);
+```
+
 
 
 #### tools

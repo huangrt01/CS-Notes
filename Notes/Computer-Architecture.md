@@ -1,3 +1,5 @@
+[toc]
+
 ### Cache 系列科普
 
 [UEFI和BIOS探秘 —— Zhihu Column](https://www.zhihu.com/column/UEFIBlog)
@@ -72,21 +74,6 @@ The two most common mechanisms of ensuring coherency are *[snooping](https://en.
 
 * synchronization primitives: LOCK PREFIX、XCHG
 
-
-
-Hyper-threading
-
-https://www.semanticscholar.org/paper/Hyper-Threading-Technology-Architecture-and-1-and-Marr-Binns/04b58af4fc0e5c3e8e614e2ddb0c41749cc9166c
-
-https://pdfs.semanticscholar.org/04b5/8af4fc0e5c3e8e614e2ddb0c41749cc9166c.pdf?_ga=2.24705338.1691629142.1553869518-295966427.1553869518
-
-https://www.slideshare.net/am_sharifian/intel-hyper-threading-technology/1
-
-* 实测性能是 -20% ~ +20%，因为可能依赖内存带宽、抢占cache。数值计算任务，用到了AVX、SSE技术的，开Hyper-threading一般都会降性能；访存频繁的CPU任务，建议打开，因为circle、LRU是idle的，会有提升
-* 禁止hyper-threading：offline、isolate
-
-
-
 内存拓扑的 unbalanced 问题
 
 * 可能导致同一物理机上先启动的服务效率高
@@ -114,3 +101,55 @@ Some conclusion and Advices
 * Use the scaling tests to find your bottleneck, and improve the “lock”  components
   * Maybe from DISK I/O, Network layer
   * Rarely from the memory bandwidth layer, LLC cache size for the non-HPC workloads
+
+### Hyper-threading
+
+https://www.semanticscholar.org/paper/Hyper-Threading-Technology-Architecture-and-1-and-Marr-Binns/04b58af4fc0e5c3e8e614e2ddb0c41749cc9166c
+
+https://pdfs.semanticscholar.org/04b5/8af4fc0e5c3e8e614e2ddb0c41749cc9166c.pdf?_ga=2.24705338.1691629142.1553869518-295966427.1553869518
+
+https://www.slideshare.net/am_sharifian/intel-hyper-threading-technology/1
+
+* 实测性能是 -20% ~ +20%，因为可能依赖内存带宽、抢占cache。数值计算任务，用到了AVX、SSE技术的，开Hyper-threading一般都会降性能；访存频繁的CPU任务，建议打开，因为circle、LRU是idle的，会有提升
+* 禁止hyper-threading：offline、isolate
+
+### 指令集
+
+* AVX-512 throttling
+  * [On the dangers of Intel's frequency scaling](https://blog.cloudflare.com/on-the-dangers-of-intels-frequency-scaling/)
+  * [Gathering Intel on Intel AVX-512 Transitions](https://travisdowns.github.io/blog/2020/01/17/avxfreq1.html)
+
+### 存储
+
+* NVMe
+  * [NVMe vs SATA: What’s the difference and which is faster?](https://www.microcontrollertips.com/why-nvme-ssds-are-faster-than-sata-ssds/)
+  * [Bandana: Using Non-volatile Memory for Storing Deep Learning Models, SysML 2019](https://arxiv.org/pdf/1811.05922.pdf)
+    * https://www.youtube.com/watch?v=MSaD8DFsMAg
+  * Persistent Memory
+    * Optane DIMM: https://www.anandtech.com/show/12828/intel-launches-optane-dimms-up-to-512gb-apache-pass-is-here
+      * Optane DC PMMs can be configured in one of these two modes: (1) memory mode and (2) app direct mode. In the former mode, the DRAM DIMMs serve as a hardware-managed cache (i.e., direct mapped write-back L4 cache) for frequently-accessed data residing on slower PMMs. The memory mode enables legacy software to leverage PMMs as a high-capacity volatile main memory device without extensive modifications. However, it does not allow the DBMS to utilize the non-volatility property of PMMs. In the latter mode, the PMMs are directly exposed to the processor and the DBMS directly manages both DRAM and NVM. In this paper, we configure the PMMs in app direct mode to ensure the durability of NVM-resident data.
+      * pmem: https://pmem.io/pmdk/
+      * DWPD: 衡量 SSD 寿命
+      * 《Spitfire: A Three-Tier Buffer Manager for Volatile and Non-Volatile Memory》
+
+### 显示器
+
+一些外设概念
+
+* OSD(On Screen Display) Menu
+* 接口：DC-IN, HDMI 2.0 两个, DisplayPort, 耳机, USB 3.0 两个, Kensington 锁槽
+* 170Hz 刷新率、130%sRGB、96%DCI-P3
+
+### 显卡
+
+[gpu-z 判断锁算力版本](https://zhuanlan.zhihu.com/p/385968761)
+
+### 主板
+
+* [PCI-E x1/x4/x8/x16](https://www.toutiao.com/i6852969617992712715)
+  * PCI-E x16：22（供电）+142（数据）；用于显卡，最靠近 CPU
+  * PCI-E x8：伪装成 x16
+  * PCI-E x4：22+14；通常由主板芯片扩展而来，也有直连 CPU 的，用于安装 PCI-E SSD
+  * PCI-E x1：独立网卡、独立声卡、USB 3.0/3.1扩展卡等
+    * 另外一个形态，一般称为Mini PCI-E插槽，常见于 Mini-ITX 主板以及笔记本电脑上，多数用来扩展无线网卡，但由于其在物理结构上与 mSATA 插槽相同，因此也有不少主板会通过跳线或者 BIOS 设定让 Mini PCI-E 接口在 PCI-E 模式或者 SATA 模式中切换，以实现一口两用的效果。已经被 M.2 接口取代，基本上已经告别主流。
+

@@ -31,7 +31,7 @@
 * 消息重试
 * 幂等（接口支持重入）：数据库唯一键挡重入
 
-#### 《Apache Hadoop YARN: Yet Another Resource Negotiator》
+#### Apache Hadoop YARN: Yet Another Resource Negotiator
 
 [YARN官网](https://hadoop.apache.org/docs/stable/hadoop-yarn/hadoop-yarn-site/YARN.html)
 
@@ -192,7 +192,7 @@ Fragmentation
 
 
 
-#### 《Mesos: A Platform for Fine-Grained Resource Sharing in the Data Center》
+#### Mesos: A Platform for Fine-Grained Resource Sharing in the Data Center
 
 1.Introduction
 
@@ -239,7 +239,7 @@ Mesos 迁移 Yarn 的思路
 
 
 
-#### 《Design patterns for container-based distributed systems》
+#### Design patterns for container-based distributed systems
 
 https://skyscribe.github.io/post/2019/07/21/from-borg-to-kubernetes/
 
@@ -284,7 +284,7 @@ single-container patterns for container management, single-node patterns of clos
 
 
 
-#### 《Borg, Omega, and Kubernetes》
+#### Borg, Omega, and Kubernetes
 
 https://skyscribe.github.io/post/2019/07/21/from-borg-to-kubernetes/
 
@@ -505,6 +505,40 @@ Conclusion
     * backup requests, backup requests w/ cancellation, tainted results
 
 #### RobinHood: Tail Latency Aware Caching — Dynamic Reallocation from Cache-Rich to Cache-Poor, OSDI 2018
+
+https://www.usenix.org/conference/osdi18/presentation/berger
+
+* 常规的长尾延迟优化思路
+  * 负载均衡、动态扩缩容、aggregation server
+    * State-of-the-art caching systems focus on hit ratio, fairness — not the P99
+  * 以上方法无法解决长尾，本质原因是 p99 latency 有以下特点：
+    * 后端间不均衡
+    * 可能与请求属性、cache hit rate无关
+    * 依赖多变的请求结构
+  * 本论文的方法与上述方法是 orthogonal 的
+
+* 常规的cache优化思路倾向于优化hit rate ~ latency avg、miss cost ~ retrieval latency，而本篇论文 Track “request blocking count” (RBC) for each backend，这个 metrics 直接描述长尾 latency p99
+  * RBC: 先选定 request set S (延迟在 P98.5 和 P99.5 之间的请求)，再 per backend 地统计大小
+
+* RobinHood Controller
+  * ingests RBC
+  * calculates / enforces cache allocation
+  * fault tolerance
+    * not on request path
+    * RBC servers store only soft state (aggregated RBC from the last one million requests, in a ring buffer)
+* 其它思路
+  * delay of reallocating cache space
+    * 引申至双层cache：热cache的内存只增不减，概率插入；冷cache有淘汰
+* Measurement
+  * query hit/miss 时的性能都有不小的损失（Section 5.6）
+
+* Discussion
+  * Non-convex miss curves
+  * Scaling RobinHood to more backend systems and higher request rates
+  * Interdependent backends
+  * Multiple webservices with shared backends
+  * Scenarios where cache repartitioning is not effective
+  * Performance goals beyond the P99
 
 
 

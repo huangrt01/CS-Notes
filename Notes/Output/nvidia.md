@@ -835,10 +835,11 @@ Spark 0.2的亮点
   * decoding : 
     * fuse the softmax and top k operations by [online-softmax](https://github.com/NVIDIA/online-softmax)
     * use [CUB](https://nvlabs.github.io/cub/#sec5sec4) to accelerate the reduce operations
-    * [beam search](https://towardsdatascience.com/an-intuitive-explanation-of-beam-search-9b1d744e7a0f)之前要FP16转FP32
+    * [beam search](https://towardsdatascience.com/an-intuitive-explanation-of-beam-search-9b1d744e7a0f) 之前要 FP16 转 FP32
+      * Beam width
     * [effective_transformer by ByteDance](https://github.com/bytedance/effective_transformer): 记录每个sentence的padding前缀和，矩阵计算前移除无用的padding，做attention时再映射回来，本质上是追求tensor的紧致组织。
   * INT8 optimization：QAT + without quantizing residuals => 精度损失少
-
+  
   ![INT8](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/INT8-optimization.png)
 
 
