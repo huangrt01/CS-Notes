@@ -58,6 +58,17 @@ unsigned u64ToAsciiTable(uint64_t value, char* dst) {
 
 ### 数据结构
 
+#### Hash Table
+
+* Open Hashing (Closed Addressing) v.s. Close Hashing (Open Addressing)
+  * https://programming.guide/hash-tables-open-vs-closed-addressing.html
+  * Open Hashing 的缺点：
+    * 读放大
+    * load key 有额外一次 memory read
+    * rehash 时整个结构要重建
+* [Hopscotch hashing](https://en.wikipedia.org/wiki/Hopscotch_hashing)
+* Cuckoo Hashing: https://web.stanford.edu/class/archive/cs/cs166/cs166.1146/lectures/13/Small13.pdf
+
 #### Radix Tree
 
 [radix tree (Linux 内核实现)](https://lwn.net/Articles/175432/)：压缩前缀树，维护 kv 查找
@@ -73,8 +84,9 @@ unsigned u64ToAsciiTable(uint64_t value, char* dst) {
 当 key 有以下特性的时候压缩前缀树比 hashmap 更具优势：
 
 * 当存储的 key 值本身就有很好的 hash 特性，但是又非常稀疏时。比如说网段，地址空间，可以不用设计复杂 hash 函数。每次插入查找没有hash 计算的开销。
+* 大量的 key 有着相同的前缀时，相比于 hashmap 每个节点都要存储完整的 key 值，更具有空间复杂度优势。
 
-* 大量的 key 有着相同的前缀时，相比与 hashmap 每个节点都要存储完整的 key 值，更具有空间复杂度优势。
+应用：[Trie](https://en.wikipedia.org/wiki/Trie)
 
 #### Pairing Heap
 

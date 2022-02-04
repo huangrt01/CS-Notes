@@ -13,6 +13,9 @@ list.append(item)
 list = [x.strip() for x in list_string.split() if x.strip()]
 
 # dict: 同一dict中存储的value类型可以不一样
+
+# 普通dict的default插入方式（类似于C++的[]）
+obj = dict.setdefault(key, default=None)
 ```
 collections.defaultdict(list)、collections.defaultdict(set)
 * defaultdict相比普通dict的区别在于：使用索引时，如果未查找到，会自动插入默认值
@@ -72,8 +75,13 @@ tmp = re.sub("pattern", "", line.strip('\n'))
 matchObj = re.match(r'', line.strip('\n'), re.M|re.I)
 ```
 
+#### module
 
-#### 类
+* [__all](https://zhuanlan.zhihu.com/p/54274339)
+   * 控制 from xxx import 的行为
+   * 为 lint 等代码检查工具提供辅助
+
+#### class
 
 * [@staticmethod v.s. @classmethod](https://stackoverflow.com/questions/136097/difference-between-staticmethod-and-classmethod#:~:text=%40staticmethod)
 

@@ -1,5 +1,14 @@
 ## Debugging and Profiling
 
+[toc]
+
+### Testing
+
+* [Test-driven development(TDD)](https://en.wikipedia.org/wiki/Test-driven_development) 软件开发流程
+  * Fake and mock object methods
+
+
+
 [MIT 6.NULL - Debugging and Profiling](https://missing.csail.mit.edu/2020/debugging-profiling/)
 
 ### Debugging
@@ -65,12 +74,13 @@ gdb：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(ui
 * bt(backtrace), frame X 进帧
 * `watch -l ` 同时监视表达式本身和表达式指向的内容
 * `attach $pid` debug正在运行的进程
-
 * `ptype` 打印变量类型；打印stl使用 [python pretty print](https://lumiera.org/documentation/technical/howto/DebugGdbPretty.html)
 
 ```c++
 //增加print的可读性
 set print pretty on/off
+//显示完整 STL 结构
+set print elements 0
 
 //显示智能指针对象指向的变量
 p ((Object*) my_ptr)->attribute //利用类型转换
@@ -78,7 +88,8 @@ p *(my_ptr._M_ptr)
   
 //显示vector内部值
 p *(my_vec._M_impl._M_start)@my_vec.size()  //打印大小
-p (my_vec._M_impl._M_start+0).attribute
+p *(my_vec._M_impl._M_start+0)
+p (my_vec._M_impl._M_start)[N-1]
 p *(my_vec._M_impl._M_start)@N //打印第N个成员
   
 //pb相关
@@ -89,10 +100,11 @@ p *(std::string*)(X.rep_.elements) //repeated string, 字段X
 [gdb的多线程调试](https://blog.csdn.net/lf_2016/article/details/59741705)
 
 * info threads:显示当前可调试的所有线程,GDB会给每一个线程都分配一个ID。前面有*的线程是当前正在调试的线程。
+* `info reg`
 * thread ID:切换当前调试的线程为指定ID的线程。
 * thread apply all command:让所有被调试的线程都执行command命令。
 * thread apply ID1 ID2 … command:让线程编号是ID1，ID2…等等的线程都执行command命令。
-* set scheduler-locking on|off|step:在使用step或continue命令调试当前被调试线程的时候，其他线程也是同时执行的，如果我们只想要被调试的线程执行，而其他线程停止等待，那就要锁定要调试的线程，只让他运行。
+* `set scheduler-locking on|off|step`:在使用step或continue命令调试当前被调试线程的时候，其他线程也是同时执行的，如果我们只想要被调试的线程执行，而其他线程停止等待，那就要锁定要调试的线程，只让他运行。
   * off:不锁定任何线程，所有线程都执行。
   * on:只有当前被调试的线程会执行。
   * step:阻止其他线程在当前线程单步调试的时候抢占当前线程。只有当next、continue、util以及finish的时候，其他线程才会获得重新运行的
@@ -101,6 +113,43 @@ p *(std::string*)(X.rep_.elements) //repeated string, 字段X
 Gdb 的汇编级别调试
 
 * `ni`, `si`
+
+
+
+打印变量到文件
+
+```c++
+set logging file $file_name
+set logging on
+thread apply all bt
+set logging off
+set logging overwrite on/off
+set logging redirect on/off
+show logging
+```
+
+
+
+Gdb STL support tools: https://sourceware.org/gdb/wiki/STLSupport
+
+
+
+##### 100个gdb小技巧
+
+https://wizardforcel.gitbooks.io/100-gdb-tips/content/index.html
+
+6. 打印
+
+* 打印变量
+  * `p/t` 打印二进制变量
+
+* 打印内存的值
+  * 格式为“`x/nfu addr`”。含义为以`f`格式打印从`addr`开始的`n`个长度单元为`u`的内存值
+    * n：输出单元的个数。
+    * f：是输出格式。比如`x`是以16进制形式输出，`o`是以8进制形式输出，`t`是二进制输出。
+    * u：标明一个单元的长度。`b`是一个`byte`，`h`是两个`byte`（halfword），`w`是四个`byte`（word），`g`是八个`byte`（giant word）
+
+
 
 
 
@@ -194,6 +243,17 @@ For web development, the Chrome/Firefox developer tools are quite handy. They fe
     * `python -m autopep8 -i -r $FOLDER`
 * A complementary tool to stylistic linting are code formatters such as [`black`](https://github.com/psf/black) for Python, `gofmt` for Go, `rustfmt` for Rust or [`prettier`](https://prettier.io/) for JavaScript, HTML and CSS.
 
+#### Dynamic Tracing
+
+* [动态追踪技术](https://blog.openresty.com.cn/cn/dynamic-tracing/)
+  * 动态追踪技术允许我们使用非侵入式的方式，不用去修改我们的操作系统内核，不用去修改我们的应用程序，也不用去修改我们的业务代码或者任何配置，就可以快速高效地精确获取我们想要的信息，第一手的信息，从而帮助定位我们正在排查的各种问题
+  * 调试技术需要贯通各个软件层次的抽象和封装
+  * 火焰图：on-CPU, off-CPU
+* dtrace 和 [systemtap](https://sourceware.org/systemtap/documentation.html)
+* [eBPF](https://www.brendangregg.com/blog/2015-05-15/ebpf-one-small-step.html)、Hardware Performance Counter
+
+
+
 
 ### Profiling
 
@@ -227,6 +287,8 @@ python -m line_profiler sorts.py.lprof
 
 **Event Profiling** 
 
+##### perf
+
 [`perf`](https://www.man7.org/linux/man-pages/man1/perf.1.html) 
 
 [perf的介绍与使用](https://www.cnblogs.com/arnoldlu/p/6241297.html)
@@ -235,13 +297,14 @@ python -m line_profiler sorts.py.lprof
 
 - `perf list` - List the events that can be traced with perf
 - `perf stat COMMAND ARG1 ARG2` - Gets counts of different events related a process or command
+  - [odd definition of L1-dcache-load-misses](https://www.spinics.net/lists/linux-perf-users/msg07969.html)
 - `perf record COMMAND ARG1 ARG2` - Records the run of a command and saves the statistical data into a file called `perf.data`
 - `perf report` - Formats and prints the data collected in `perf.data`
 
 ```shell
 perf help
-sudo perf top
-perf top --call-graph graph
+(sudo) perf top --call-graph graph
+								-t $thread_id
 
 sudo perf record stress -c 1 # record->stat
 sudo perf report
@@ -255,9 +318,29 @@ sudo perf kmem --alloc --caller --slab stat
 sudo perf sched script
 ```
 
+
+
+**Survey of C++ profiling techniques: gprof vs valgrind vs perf vs gperftools**
+
+https://stackoverflow.com/questions/375913/how-can-i-profile-c-code-running-on-linux/378024#378024
+
+##### gprof
+
+http://unix.ba/text/runtime-profiling-with-gprof/
+
+http://sam.zoy.org/writings/programming/gprof.html
+
+
+
 **内存泄露问题**
 
 * [Valgrind](https://valgrind.org/)
+
+```c++
+VALGRIND_LIB=/usr/lib/valgrind valgrind --tool=callgrind --dump-instr=yes --collect-jumps=yes -v --instr-atstart=no ./bin
+# 这条命令暂时还没跑通看到 output
+```
+
 * `gdb`
 * [ps_mem的使用](https://linux.cn/article-8639-1.html)
 
@@ -272,6 +355,7 @@ sudo perf sched script
   - `dstat -nf`，n表示网络，f表示看详细信息
   - `lscpu`
   -  `cat /proc/cpuinfo` 查cpu信息，其中 flags 表示指令集支持
+  -  ` dmidecode | grep "Memory Device$" | wc -l` 查内存条数量
 - **I/O operations** - [`iotop`](https://www.man7.org/linux/man-pages/man8/iotop.8.html) displays live I/O usage information and is handy to check if a process is doing heavy I/O disk operations
 - **Disk Usage** - [`df`](https://www.man7.org/linux/man-pages/man1/df.1.html) displays metrics per partitions and [`du`](http://man7.org/linux/man-pages/man1/du.1.html) displays disk usage per file for the current directory. In these tools the `-h` flag tells the program to print with human readable format. A more interactive version of `du` is [`ncdu`](https://dev.yorhel.nl/ncdu) which lets you navigate folders and delete files and folders as you navigate.
 - **Memory Usage** - [`free`](https://www.man7.org/linux/man-pages/man1/free.1.html) displays the total amount of free and used memory in the system. Memory is also displayed in tools like `htop`.

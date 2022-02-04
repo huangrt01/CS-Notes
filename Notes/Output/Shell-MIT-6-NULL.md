@@ -34,6 +34,7 @@ mcd(){
 	cd "$1"
 }
 ```
+  * if else
   * for特性的实用例子
 ```shell
 POLICIES=("FIFO" "LRU" "OPT" "UNOPT" "RAND" "CLOCK")
@@ -54,21 +55,18 @@ while [ "$#" -gt 0 ]; do
     case $1 in
     -c | --clang)
         clang=1
-        shift
         ;;
     -g | --gcc)
         gcc=1
-        shift
         ;;
     --lto)
         lto=1
-        shift
         ;;
     --thinlto)
         thinlto=1
-        shift
         ;;
     esac
+    shift
 done
 ```
 
@@ -155,6 +153,12 @@ done
 * [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix))line 进行解释，可以利用env命令
   * `#!/usr/bin/env python`
   * ` #!/usr/bin/env -S /usr/local/bin/php -n -q -dsafe_mode=0`
+
+##### shell 引号嵌套
+
+https://zhuanlan.zhihu.com/p/146462733
+
+最简单的方法就是单双引号交替
 
 **shell函数和scripts的区别：**
 
@@ -727,8 +731,8 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
   * 使用 -f 选项提取指定字段：`cut -f2,3 test.txt`
 * cp
   * [-H vs -L](https://superuser.com/questions/593196/cp-h-vs-cp-l-what-is-a-command-line-symbolic-link), 两者都是 follow symbolic links，区别在于 -r 时表现不同
-
 * cron: a daemon your system already runs to perform scheduled tasks
+* c++filt: demangle C++/Java symbols
 #### d
 * d: zsh的特点，可显示最近10个目录，然后`cd -数字`进入
 * date：日期
@@ -873,8 +877,10 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
 
 * top
 
+  * -d 10: 10s采样
   * -H: 显示线程
   * -H -p $pid：显示指定进程下的线程
+  * 按 1 键显示 per cpu core 利用率
 
 * traceroute: -w 1
 

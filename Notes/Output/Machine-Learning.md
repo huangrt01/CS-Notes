@@ -57,6 +57,8 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
 
 ### Bert
 
+Transformer 具有 field reduce 能力，将 N 个 token reduce 成 M 个 token
+
 model finetune
 
 * model finetune是基于BERT预训练模型强大的通用语义能力，使用具体业务场景的训练数据做finetune，从而针对性地修正网络参数，是典型的双阶段方法。（[BERT在美团搜索核心排序的探索和实践](https://zhuanlan.zhihu.com/p/158181085)）
@@ -79,11 +81,47 @@ model finetune
 
 
 
+### Search & NLP
+
+* 概念
+  * [Bag-of-words(BoW) model](https://en.wikipedia.org/wiki/Bag-of-words_model) 可作为一种信息模型，表示句子或图片，用于衡量相似度或别的用途
+  * stop words: 停用词
+  * [Tokenization and text normalization](https://www.analyticsvidhya.com/blog/2021/03/tokenization-and-text-normalization/)
+
+* ElasticSearch
+
+  * denormalization
+  * inverted index
+    * An index is a collection of documents.
+    * index: <word -> [documents]>
+    * document: <field -> [values]>
+
+  * document oriented tool
+
+
 ### CV
 
 * group convolution
   * only the input channels in the same group are used for computing a given output channel. A group convolution with total Ci input, Co output channels and G groups is essentially G independent convolutions each with d=Ci/G input and Co/G output channels. 
   * depth-wise convolution: Ci=Co=G and consequently group size d=1
+* [LBP (local binary patterns)](https://en.wikipedia.org/wiki/Local_binary_patterns)
+  * resize到固定大小：大小越大则越准但有噪声，大小越小则误召回率高
+  * hamming 距离度量
+
+
+
+* [Constrastive Learning: MoCo and SimCLR](https://mp.weixin.qq.com/s/v5p9QA3vDl-WTF3-7shp4g)
+* 
+
+
+
+### Reinforce Learning
+
+[深度强化学习（一）强化学习概述 - iker peng的文章 - 知乎](https://zhuanlan.zhihu.com/p/22542101)
+
+[深度强化学习系列（二）强化学习基础 - iker peng的文章 - 知乎](https://zhuanlan.zhihu.com/p/23436744)
+
+
 
 ### 特征压缩
 

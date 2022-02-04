@@ -188,12 +188,154 @@ Introduction: allocator 性能逐渐成为重点
 
   * 性能瓶颈：cache bin 的 fill、flush，madvise；arena 分配机制（场景：多个线程分配一个静态对象内的内存，单线程操作它，会产生 high fragmentation）
 
-    
+##### 高性能内存分配库 Libhaisqlmalloc 的设计思路
+
+https://zhuanlan.zhihu.com/p/352938740
+
+
 
 #### TLB 研究
 
 * `cat /proc/interrupts | grep "TLB shootdowns"`
   * 文件记录的是 remote TLB flush 事件。本地CPU使用IPI中断通知其他CPU flush TLB时，该节点对应的CPU会计数。
+* `perf stat -e cache-misses,cache-references,instructions,cycles,faults,branch-instructions,branch-misses,L1-dcache-stores,L1-dcache-store-misses,L1-dcache-loads,L1-dcache-load-misses,LLC-loads,LLC-load-misses,LLC-stores,LLC-store-misses,dTLB-loads,dTLB-load-misses,iTLB-loads,iTLB-load-misses -p $PID`
+
+#### 《Put an Elephant into a Fridge: Optimizing Cache Efficiency for In-memory Key-value Stores》
+
+Abstract
+
+现状： Such an extremely low cache-to-memory ratio (less than 0.1%) poses a significant new challenge—the limited CPU cache is becoming a severe performance bottleneck that hinders us from fully exploiting the great potential of high-speed memory-based key-value stores.
+
+问题：cache contention, thrashing, inability to scale,
+https://en.wikipedia.org/wiki/Thrashing_(computer_science)
+
+解决方案：By carefully reorganizing
+
+the data layout in memory, redesigning the hash indexing structure, and offloading garbage collection, we can effectively improve the utilization of the limited cache space.
+
+1.Introduction
+
+1.1 Techinical Trend and Challenges
+
+* CPU cache 贵、重要、对性能影响大、scalable能力有限
+* 利用 CPU cache 的 challenges
+* hardware challenges: 软件很难直接管理cpu cache
+* software challenges: 数据冷热特点；value size比key大，caching a value可能逐出多个key；hash indexing structure很重要
+
+1.2 Making Key-Value Store Cache Aware
+
+software-only solution: best placement of a key-value item according to its temporal locality; key/value分离；新的hash indexing structure
+
+2. Motivations and Challenges
+
+* Issue #1: Disproportional key and value sizes
+* Issue #2: Low cache utilization in hash indexing.
+* Issue #3: Read amplification with key-values.
+
+3.Mechanism
+* page coloring: 本质上给LLC cache做了32个分片
+* Gaining control on cache
+* Mapping with Hugepage: 2-MB page = 16 columns (one column = 32 rows * 64 sets * 64 B)
+* Mapping with pre-allocated pages
+* get_pgcolor
+
+4.Policy
+
+4.1 Handling Hot and Cold Key-value Data
+
+* we desire to see that each row is filled up with both cold and hot data, which compete for the space within the row, and upon eviction, the victims would be the cold ones.
+* 手段：Memcached maintains an LRU list per slab class to track each key-value item’s relatively locality, while Redis maintains a pool of weak-locality (cold) key-values for eviction by sampling the dataset periodically.
+
+4.2 Separating Key and Value Data
+* placing them in separate rows
+* key/value 读写分离的问题：
+* parallel access: 维护两个指针，缺点是需要指针以及内存带宽的浪费
+* concurrent access: 维护两个queue，效果更好
+
+4.3 Cache-friendly Hash Indexing
+
+
+case study 1: Upon inserting a key-value item, a slab from the slab class with the smallest slot size that can accommodate the item is selected.
+
+首先，尽量让hot items（logical position接近的items）集中在某列（physical zone）
+
+其次，每一个physical zone内部的hot item尽量不在同一个row（不同的color）
+
+6. Case Study 1: MEMCACHED
+
+* 6.1 Optimizations
+  * head-to-head allocation比较有趣，在key-value分离的设计下，解决了不知道key and value内存比例的问题
+
+7. Case Study 2: REDIS
+
+* redis和memcached的区别：没有slab -> 不需要 LRU list 来做 repartition，用一个LRU clock，后台线程做eviction
+
+8.Discussion
+
+* 只要cashe sets够用，增加set数量不会有提升
+* huge page由于是system-wide配置，有受到恶意攻击disturb the shared cache的可能
+
+#### MICA: A Holistic Approach to Fast In-Memory Key-Value Storage, NSDI 2014
+
+https://www.usenix.org/conference/nsdi14/technical-sessions/presentation/lim
+
+MICA(Memory-store with Intelligent Concurrent Access) takes a holistic approach that encompasses all aspects of request handling, including parallel data access, network request handling, and data structure design, but makes unconventional choices in each of the three do- mains. First, MICA optimizes for multi-core architectures by enabling parallel access to partitioned data. Second, for efficient parallel data access, MICA maps client re- quests directly to specific CPU cores at the server NIC level by using client-supplied information and adopts a light-weight networking stack that bypasses the kernel. Finally, MICA’s new data structures—circular logs, lossy concurrent hash indexes, and bulk chaining—handle both read- and write-intensive workloads at low overhead.
+
+3. Key Design Choices
+
+3.1 Parallel Data Access
+
+MICA’s parallel data access: MICA partitions data and mainly uses exclusive access to the partitions. MICA exploits CPU caches and packet burst I/O to disproportionately speed more loaded partitions, nearly eliminating the penalty from skewed workloads. MICA can fall back to concurrent reads if the load is extremely skewed, but avoids concurrent writes, which are always slower than exclusive writes. Section 4.1 describes our data access models and partitioning scheme.
+
+3.2 Network Stack
+* socket I/O 比较费，大量的read
+* direct NIC access
+* request direction
+* Flow-level core affinity: 1) Receive-Side Scaling (RSS); 2) Flow Director (FDir)
+* Object-level core affinity
+* MICA's request direction: 利用Flow Director，在client去做object的编码，让NIC能理解
+
+3.3 KV Data Structures
+
+3.3.1 Memory Allocator
+
+* cache mode: log structure
+* store mode: segregated fits
+3.3.2 Indexing: Read-oriented vs. Write-friendly
+* lossy data structures:
+* bulk chaining
+* use memory allocator's eviction support to avoid evicting recently-used items (4.3.2)
+
+4. MICA Design
+  4.1.2 分析CREW(Concurrent Read Exclusive Write)模式 -> 4.3.1
+
+  4.2 Network Stack
+
+  ​	UDP
+  4.2.1 Direct NIC Access
+
+  ​	Intel's DPRK
+
+  4.2.2 Client-Assisted Hardware Request Direction
+
+4.3 Data Structure
+
+MICA, in cache mode, uses circular logs to manage memory for key-value items and lossy concurrent hash indexes to index the stored items. Both data structures exploit cache semantics to provide fast writes and simple memory management. Each MICA partition consists of a single circular log and lossy concurrent hash index. MICA provides a store mode with straightforward extensions using segregated fits to allocate memory for key- value items and bulk chaining to convert the lossy concurrent hash indexes into lossless ones.
+
+Hugepages (2 MiB in x86-64) use fewer TLB entries for the same amount of memory, which significantly reduces TLB misses during request processing.
+
+hugepage必须预先一次分配2M或者1GB的内存空间，并且使用mmap的接口去分配。所以用malloc和free的库来管理大页是合理的（比如jemalloc去支持hugepage配置）。
+
+4.3.2 Lossy Concurrent Hash Index
+
+
+
+#### 杂项
+
+* [Intel Introduces Thread Director For Heterogeneous Multi-Core Workload Scheduling](https://fuse.wikichip.org/news/6123/intel-introduces-thread-director-for-heterogeneous-multi-core-workload-scheduling/)
+  * performance core and efficient core 的概念，OS会aware程序hints（切换core是否有损性能）、core的状态
+
+
 
 
 
@@ -470,6 +612,23 @@ attempt3: better accounting
 
 #### 9.Scheduling: Proportional share
 
+##### 应用： C++ 进程/线程优先级
+
+[实时和非实时调度策略测试总结](https://www.cnblogs.com/mightycode/p/13930352.html)
+
+* Linux内核的三种调度策略：
+  * SCHED_OTHER 分时调度策略
+  * SCHED_FIFO实时调度策略，先到先服务。一旦占用cpu则一直运行。一直运行直到有更高优先级任务到达或自己放弃
+  * SCHED_RR实时调度策略，时间片轮转。当进程的时间片用完，系统将重新分配时间片，并置于就绪队列尾。放在队列尾保证了所有具有相同优先级的RR任务的调度公平
+  * `pthread_setschedparam(id, policy, &param)`
+
+* [nice 可用于设置 Linux 线程优先级](https://stackoverflow.com/questions/7684404/is-nice-used-to-change-the-thread-priority-or-the-process-priority)，因为 Linux Threads do not share a common nice value，violate 了 POSIX.1
+  * `setpriority()`, `nice()`
+  * 提高优先级需要 sudo 权限，有 setcap 的方法绕过，参考 [stackoverflow](https://stackoverflow.com/questions/41562834/linux-set-priority-function-is-not-taking-effect-in-my-test)
+
+
+
+
 ##### CRUX: how to share the CPU proportionally
 
 Basic Concept: Tickets Represent Your Share
@@ -490,7 +649,7 @@ NOTE：
 
 * unfairness metric
 * stride scheduling    — deterministic
-  * lottery scheduling相对于stride的优势：no global state
+  * lottery scheduling 相对于 stride 的优势：no global state
 
 ```c++
 curr = remove_min(queue);   // pick client with min pass

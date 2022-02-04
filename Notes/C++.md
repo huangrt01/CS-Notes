@@ -37,9 +37,7 @@ void f(ParamType param);
 f(expr); // deduce T and ParamType from expr
 ```
 
-* Case 1: **ParamType** is a Reference or Pointer, but not a Universal
-
-  Reference
+* Case 1: **ParamType** is a Reference or Pointer, but not a Universal Reference
 
 * Case 2: **ParamType** is a Universal Reference
   * 右值->右值引用；左值->左值引用
@@ -76,6 +74,12 @@ std::array<int, arraySize(keyVals)> mappedVals; // mappedVals'
 ```
 
 ##### Item 2: Understand **auto** type deduction.
+
+原则：只有明确需要 copy 才使用 auto，其它需要 auto 的情况用 auto*, auto&
+
+* `A& g(); auto a = g(); A a = g();`
+
+
 
 ```c++
 template<typename T> 
@@ -2038,6 +2042,8 @@ valAvailable = true;
 std::atomic<int> y(x.load());
 
 y.store(x.load());
+
+x.fetch_add(1, std::memory_order_release);
 ```
 
 
@@ -2161,9 +2167,36 @@ std::regex r1 = nullptr; // compile error
 std::regex r2(nullptr); // compiles
 ```
 
+### 《More Effective C++》
 
+##### Item 8: Understand the different meanings of new and delete
 
+* the difference between the new operator and operator new
+  * new operator: 分配内存 + 初始化对象，含义定死了
+    * `string *ps = new string("Memory Management");`
+  * operator new: 分配内存
+    * `void * operator new(size_t size);`
+    * `void *rawMemory = operator new(sizeof(string));`
 
+* [placement new](https://stackoverflow.com/questions/222557/what-uses-are-there-for-placement-new)
+  * 自己精细管理内存（析构时需要先手动调用 destructor 再释放内存）
+  * 在 shared memory or memory-mapped I/O 场景比较有用
+
+```c++
+
+class Widget {
+  public:
+		Widget(int widgetSize);
+};
+
+Widget * constructWidgetInBuffer(void *buffer, int widgetSize) {
+	return new (buffer) Widget(widgetSize);
+}
+```
+
+* `operator new` and `operator delete` is the C++ equivalent of `malloc` and `free` 
+
+* array 形式的 `operator new[]`，会分别为每个 object 做构造和析构
 
 ### 学习材料
 
@@ -2384,6 +2417,101 @@ int main(){
 ```
 
 
+#### 性能友好的 C++ 代码 by 张青山
+
+* Static 修饰很关键，告诉编译器变量的可见范围在当前编译单元
+  * const 没有意义，因为可以 [const_cast](https://stackoverflow.com/questions/7311041/const-to-non-const-conversion-in-c)
+  * 也可以打包在结构体栈对象里面，全文传递
+* `std::string_view` v.s. `std::string`
+  * 编译器会有一个编译单元，生成唯一的构造函数，专门初始化所有全局对象
+
+* 普通容器的构造函数通常在cpp文件内定义，编译器无法分析是否有副作用（修改全局变量、操作设备等），所以即使没人使用它们，也需要构造出来
+* 不要在头文件中定义容器对象【非 POD(plain old data) 数据】
+  * 任何 include "xxx.h" 所编译出来的.o 文件里面都会创建这些对象，也就是说链接出来的二进制中有很多份对象
+    * 之所以不得不创建，本质上是因为非POD数据有构造函数，需要动态分配内存，编译器不敢做优化
+    * 非要这样做，可以考虑用 extern
+  * C++标准在推更多 [constexpr容器](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0784r7.html)
+  * Guideline: 能用array用array，放在头文件定义；不能用array的，放在cpp定义
+
+```c++
+"def.h"
+#ifndef MAP
+#define MAP(x, y)
+#endif
+MAP(HELLO, 4)
+MAP(WORLD, 6)
+...
+#undef MAP
+  
+"header.h"
+const std::unordered_map<std::string, int> map = {
+#define MAP(x, y) {#x, y},
+#include "xxx.def"
+};
+
+const std::vector<int> vec = {
+#define MAP(x, y) y,
+#include "xxx.def"
+};
+```
+
+* ANSI aliasing
+
+  * 对 cast 完的指针做 dereference 是个 UB(Undefined Behavior) 行为
+  * strict-aliasing
+    * TBAA(type based alias analysis): 编译器假设不同类型指针指向的内存是不交叉的
+      * O2以上默认开启
+    * 本质上，要保证指针在生产和消费时的类型是一致的
+    * 注意：alias 排除 void * 和char *，可以随便 cast 他们，是为了给比如 `int *p = (int*)malloc(sizeof(int));` 留后门
+
+  * **-fno-strict-aliasing** 来禁掉该优化，但如果关掉 strict-aliasing, 对程序的性能有巨大的影响
+
+* 慎用 C++ 异常
+
+  * 发生异常会两次回溯整个调用栈，代价非常大，不要用来解决控制流切换
+  * 对编译器的影响：1）eh_frame 生成数据，影响代码 size；2）插入代码，影响 icache
+  * -fno-exceptions
+
+* 短函数尽量在头文件实现
+
+  * 如果声明和实现分离，编译器不知道实现里做了什么
+  * 可以用 LTO 优化来解决
+
+```c++
+// "a.h"
+struct A() {
+  A();
+  int buf[1000];
+}
+
+int main() {
+  A a;  // 不会优化成空语句
+  return 0;
+}
+
+// "a.cpp"
+A::A() {}
+```
+
+* 循环条件外提
+  * 这里编译器每次都会算 m.end()
+  * range base for 假设循环不修改容器
+
+```c++
+void bar();
+int foo(const std::vector<int>& m) {
+  int sum = 1;
+  for (auto it = m.begin(); it != m.end(); it++) {
+    bar();
+    sum += *it;
+  }
+  return sum;
+}
+```
+
+
+
+
 
 
 ### C++
@@ -2395,7 +2523,7 @@ int main(){
 * 公共: Code Spell Checker, GitLens, EditorConfig for VSCode, String Manipulation, Visual Studio IntelliCode
 * C++: [cpplint](https://github.com/cpplint/cpplint), C/C++ (by Microsoft), CodeLLDB, Header source switch, Rainbow Brackets, C++ Intellisense
 
-#### 编程习惯
+#### 编码规范
 
 * RAII原则：Resource acquisition is initialization，充分利用局部对象的构造和析构特效，常需要与 rule of five, rule of zero 结合
 
@@ -2441,23 +2569,60 @@ Dijkstra反对goto的[文章](http://www.cs.utexas.edu/users/EWD/ewd02xx/EWD215.
 
 getopt函数处理参数，用法参照[tsh.c](https://github.com/huangrt01/CSAPP-Labs/blob/master/shlab-handout/tsh.c)
 
+##### 基本数据类型
+
+```c
+"/usr/include/stdint.h"
+/* Types for `void *' pointers.  */
+#if __WORDSIZE == 64
+# ifndef __intptr_t_defined
+typedef long int		intptr_t;
+#  define __intptr_t_defined
+# endif
+typedef unsigned long int	uintptr_t;
+#else
+# ifndef __intptr_t_defined
+typedef int			intptr_t;
+#  define __intptr_t_defined
+# endif
+typedef unsigned int		uintptr_t;
+#endif
+```
+
+
+##### 运算优先级
+
+经典例子：`x = a + b & c`，加法更优先
 
 
 ##### 结构体
 
-结构体局部变量要初始化（天坑......）
+* 结构体局部变量要初始化（天坑......）
+* 结构体内存分配问题：内存对齐
+  * 起始地址为该变量的类型所占的整数倍，若不足则不足部分用数据填充至所占内存的整数倍。
+  * 该结构体所占内存为结构体成员变量中最大数据类型的整数倍。
+  * e.g.: 1+4+1+8->4+4+8+8=24
+  * 基于内存对齐特性，可以有一些巧妙的设计，利用上对齐的额外空间，增加新属性而不增加内存
+* [Bit-field in structures](https://leavinel.blogspot.com/2012/06/bit-field-in-structures.html)
 
-结构体内存分配问题：内存对齐
-* 起始地址为该变量的类型所占的整数倍，若不足则不足部分用数据填充至所占内存的整数倍。
-* 该结构体所占内存为结构体成员变量中最大数据类型的整数倍。
-* e.g.: 1+4+1+8->4+4+8+8=24
+
 
 
 ##### 宏
 
 [C++宏编程，不错的一篇blog](http://notes.tanchuanqi.com/language/cpp/cpp_micro.html)
 
+* `__VA_ARGS__` 
+
+```c++
+#define LOGF_AND_PRINT(...) \
+  printf(__VA_ARGS__);      \
+  printf("\n");             \
+  LOGF_ERROR(__VA_ARGS__)   \
+```
+
 * do while(0) 技巧
+  * 宏中可使用局部变量
 
 
 
@@ -2837,6 +3002,7 @@ class LogMessageFatal {
 #### multi-thread programming
 
 * 读写锁
+  * Note: [mutex 和 cv 都没有移动构造函数](https://stackoverflow.com/questions/7557179/move-constructor-for-stdmutex)
 
 ```c++
 #include <boost/thread/thread.hpp>
@@ -2845,11 +3011,11 @@ class LogMessageFatal {
 //读锁
 //灵活使用：用{}包起来，控制释放锁的时机
 {
-	std::shared_lock<boost::shared_mutex> lock(filter_mutex_);
+	std::shared_lock<boost::shared_mutex> lock(mutex_);
 }
 
 //写锁
-std::unique_lock<boost::shared_mutex> lock(filter_mutex_);
+std::unique_lock<boost::shared_mutex> lock(mutex_);
 ```
 
 * 大量读，少量更新，可以用tbb::concurrent_hash_map<key_type, value_type>;
@@ -2875,6 +3041,8 @@ while(_queue.try_pop(tk)){
   * [Thread pool that binds tasks for a given ID to the same thread](https://stackoverflow.com/questions/8162332/thread-pool-that-binds-tasks-for-a-given-id-to-the-same-thread)
   * C++ 有什么好用的线程池？ - neverchanje的回答 - 知乎 https://www.zhihu.com/question/397916107/answer/1253114248
   * [Uneven Work Distribution and Oversubscription](https://dzone.com/articles/uneven-work-distribution-and)
+  * 一些坑：
+    * 同一线程池执行的任务不能有依赖关系，否则可能pending
   
 * 条件变量
 
@@ -3049,6 +3217,8 @@ std::inplace_merge // an incremental step in MergeSort；实现利用了一块�
 
 partitioning
 
+* split vector https://stackoverflow.com/questions/40656792/c-best-way-to-split-vector-into-n-vector
+
 ```c++
 auto it = std::partition(v.begin(), v.end(), [](int i){return i % 2 == 0;});
 std::partition_point // 返回 partition 的返回值
@@ -3100,6 +3270,8 @@ std::move_backward
 
 ```c++
 std::fill(first, last, 42);
+std::uninitalized_fill
+
 std::generate(first, last, [n = 0] () mutable { return n++; });
 std::iota(first, last, 42);
 std::replace(first, last, 42, 43);
@@ -3231,6 +3403,66 @@ inline void reset_1d_tensor_with_slice(
 }
 ```
 
+#### \<array>
+
+* 适合长度在编译时就确定
+
+```c++
+void foo(const std::array<std::string, 5> &arr);
+
+template <std::size_t N>
+void bar(const std::array<std::string, N> &arr);
+
+int main() {
+  std::array<std::string, 5> arr1;
+  foo(arr1); // OK
+  std::array<std::string, 6> arr2;
+  foo(arr2); // ERROR
+  
+  bar(arr1); // OK
+  bar(arr2); // OK
+  return 0;
+}
+
+// c++17 支持不需要指定参数个数的初始化方式（在构造函数自动推导模版类型）
+static const std::array vec = {"Hello", "Kitty"};
+std::string_view foo() {
+  return vec[0]; // 优化成 Hello
+}
+```
+
+
+
+
+
+
+#### \<bitset>
+
+* 用 int 初始化 bitset
+
+```c++
+using BloomFilterStore = uint16_t
+struct BloomFilterStoreItf {
+    static constexpr uint32_t BIT_CAP = 16;
+    static BloomFilterStore INLINE_OR_NOT insert(const BloomFilterStore store, const FID fid) {
+      return neo::MurmurHash64A(reinterpret_cast<const char *>(&fid),
+                                sizeof(FID), 2) | store;
+    }
+    static bool INLINE_OR_NOT contains(BloomFilterStore store, const FID fid) {
+      auto fid_hashes = neo::MurmurHash64A(reinterpret_cast<const char *>(&fid),
+                                sizeof(FID), 2);
+      std::bitset<BIT_CAP> bit_hashes(fid_hashes);
+      std::bitset<BIT_CAP> bit_store(store);
+      for (size_t i = 0; i < BIT_CAP; i++) {
+        if (bit_hashes[i] && !bit_store[i]) {
+          return false;
+        }
+      }
+      return true;
+    }
+}
+```
+
 #### \<chrono>
 
 5s: C++14’s [duration literal suffixes](http://en.cppreference.com/w/cpp/chrono/duration#Literals)
@@ -3267,12 +3499,55 @@ int main()
 * [STL之deque实现详解]( https://blog.csdn.net/u010710458/article/details/79540505?depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-6&utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-6)
 * deque的pop_front相当于queue的pop()
 
+#### \<istream>
+
+```c++
+std::ifstream ifs(filepath.str());
+if (!ifs.fail()) {
+	int i;
+  while (ifs >> i) {
+    if (ifs.peek() == ',') {
+      ifs.ignore();
+    }
+  }
+  ifs.close();
+}
+```
+
+
+
+
+
+
 #### \<list>
 * 参考[LRU cache](https://leetcode-cn.com/problems/lru-cache/)，类似双向链表的实现
   * map<int,list<pair<int,int>>::iterator> m;
 * r.push_front(…), r.begin(), r.back()
 
 #### \<string>
+
+* string_view
+  * 本身不 own 内存，只是维护指针
+  * 适合字符串literal，或者常驻内存的字符串
+
+```c++
+static const std::string_view str = "Hello";
+auto c = str[2];
+```
+
+* [多行字符串](https://www.delftstack.com/zh/howto/cpp/cpp-multiline-string-cpp/)
+
+```c++
+int main(){
+    string s1 = "This string will be printed as the"
+                " one. You can include as many lines"
+                "as you wish. They will be concatenated";
+    copy(s1.begin(), s1.end(),
+         std::ostream_iterator<char>(cout, ""));
+    cout << endl;
+    return EXIT_SUCCESS;
+}
+```
 
 * 如何判断string是否以某一字符串开头？
 
@@ -3320,7 +3595,7 @@ unsigned long ul = std::stoul(str,&idx,0);
 
 #### \<unordered_map>
 
-operator`[]` hasn't a `const` qualifier, you cannot use it directly on a const instance, use `at` instead
+* operator`[]` hasn't a `const` qualifier, you cannot use it directly on a const instance, use `at` instead
 
 ```c++
 T& operator[](const key_type& x);
@@ -3329,7 +3604,18 @@ T&       at(const key_type& x);
 const T& at(const key_type& x) const;
 ```
 
+* [boost::unordered_map<>和std::unordered_map<>支持并发读吗？ - IceBear的回答 - 知乎](https://www.zhihu.com/question/21858686/answer/1722164361)
+  * [cppreference: thread safety of containers](https://en.cppreference.com/w/cpp/container#.E7.BA.BF.E7.A8.8B.E5.AE.89.E5.85.A8)
+    * Container operations that invalidate any iterators modify the container and cannot be executed concurrently with any operations on existing iterators even if those iterators are not invalidated.
+
+
+
+
+
+
+
 #### \<vector>
+
 * 初始化，可以用列表
   
   * 也可以 `int a[10]={…};vector<int> b(a,a+10); `       左闭右开
@@ -3338,7 +3624,7 @@ const T& at(const key_type& x) const;
   * reverse(nums.begin(),nums.end());
   * reserve(size_type n) 预先分配内存
 * [关于vector的内存释放问题](https://www.cnblogs.com/jiayouwyhit/p/3878047.html)
-  * 方法一：clear 
+  * 方法一：`shrink_to_fit(size_t size)`
   * 方法二：`vector<int>().swap(nums);`
   * 方法三：利用代码块和临时变量
   `
@@ -3353,8 +3639,11 @@ const T& at(const key_type& x) const;
 
 
 
-
 ### 其它的库
+
+#### gcc 内嵌
+
+__builtin_clz 返回左起第一个1之前0的个数
 
 #### \<exception>
 https://blog.csdn.net/qq_37968132/article/details/82431775

@@ -122,17 +122,17 @@ nvm读写性能介于dram和ssd之间，更接近dram
   * lazy data migration from NVM to DRAM ensures that only hot data is promoted to DRAM.
   * 延续CLOCK策略，引入概率插入来决定migrate到哪一层存储
 * 实现策略
-  * Bypass DRAM during Reads
+  * Bypass DRAM during reads
     * lazily migrate data from NVM to DRAM
       while serving read operations.
     * ensures that warm pages on NVM do not evict hot pages in DRAM
-  * bypass dram during writes
+  * bypass DRAM during writes
     * DBMSs use the group commit optimization to reduce this I/O overhead [9]. The DBMS first batches the log records for a group of transactions in the DRAM buffer (❹) and then flushes them together with a single write to SSD
     * Dw，减少hot pages在DRAM上的eviction
-  * Bypass NVM during read
+  * Bypass NVM during reads
     * a lazy policy for migrating data from NVM to DRAM (Dr = 0.01), and a comparatively eager policy while moving data from SSD to NVM (Nr = 0.2). While this scheme increases the number of writes to NVM compared to the lazy policy, it enables Spitfire to deliver higher performance than Hymem (§6.5)
     * This design reduces data duplication in the NVM buffer.
-  * bypass nvm during writes
+  * Bypass NVM during writes
     * 不同于hymem用recent queue，spitfire用随机插入来决定进入nvm的页
 
 4.Adaptive Data Migration

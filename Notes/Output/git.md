@@ -110,7 +110,11 @@ def load_reference(name_or_id):
   - `git diff <filename>`: show differences since the last commit
   - `git diff <revision> <filename>`: shows differences in a file between snapshots
   - `git difftool`，图形界面
+  - Diff without dots / with two dots / with three dots: https://matthew-brett.github.io/pydagogue/git_diff_dots.html
 - `git checkout <revision>`: updates HEAD and current branch
+  - `gco <revision> $file_path ` 用于回退特定文件
+- `git revert`
+  - `-m 1或2` 对于有多个上游commit的commit，用来指定具体revert到哪一个commit
 - `git rm file`
   - `git rm --cached`，只删除index，不删除working tree
   - `git rm log/\*.log` ，通配符，注意要加`\`，Git有自己的文件名拓展
@@ -160,7 +164,7 @@ branch的成本极低，instantaneous
 - `git mergetool`: use a fancy tool to help resolve merge conflicts
 - `git rebase`: rebase set of patches onto a new base
   - `git rebase <basebranch> <topicbranch>`
-rebase命令找到共同的祖先节点，然后按顺序replay commits
+  rebase命令找到共同的祖先节点，然后按顺序replay commits
 
 ```shell
 git checkout experiment
@@ -308,8 +312,8 @@ shell prompt ([zsh](https://github.com/olivierverdier/zsh-git-prompt),
 [bash](https://github.com/magicmonty/bash-git-prompt)). Often included in
 frameworks like [Oh My Zsh](https://github.com/ohmyzsh/ohmyzsh).
 - **Editor integration**: similarly to the above, handy integrations with many
-features. [fugitive.vim](https://github.com/tpope/vim-fugitive) is the standard
-one for Vim.
+  features. [fugitive.vim](https://github.com/tpope/vim-fugitive) is the standard
+  one for Vim.
   - `:Gblame`, `:Gbrowse`很方便，需要装[rhubarb.vim](https://github.com/tpope/vim-rhubarb)
   - `:Git`直接打开`hub`
 - **Workflows**: we taught you the data model, plus some basic commands; we
