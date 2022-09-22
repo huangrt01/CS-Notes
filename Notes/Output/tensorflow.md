@@ -6,8 +6,9 @@
 
 #### 环境配置
 
-* python2.7 + tensorflow-gpu==1.15 + cuda10.0
-  * 如果想 python3.7 + tf1.15 + cuda11，使用 [nvidia-tensorflow](https://github.com/NVIDIA/tensorflow)
+* python2.7 + tf1.15.0 + cuda10.0
+  * 如果想 python3.7 + tf1.15.3 + cuda10.1/11，可以使用 [nvidia-tensorflow](https://github.com/NVIDIA/tensorflow)
+  * 常规操作：编译用 cuda10.1，运行用 cuda10.0
 
 ```shell
 export PATH="/usr/local/cuda-10.0/bin:${PATH}"
@@ -19,7 +20,18 @@ import tensorflow as tf
 tf.test.is_gpu_available()
 ```
 
+* 查看机器配置
+
+```shell
+nvidia-smi
+nvcc --version
+```
+
+* 关于 tf 的 ABI
+  * 社区版的 tf 要用 abi=0 的 lib.so；自己编译的默认 abi=1，要用 abi=0 的 lib.so
 * FAQ
+  * unsupported GNU version! gcc versions later than 7 are not supported
+    * cuda 版本要用 10.1 以上的
   * `ValueError: Multiple enum values: 3`
 
 ```shell
@@ -27,6 +39,91 @@ $ pip uninstall enum   # 如果报错则直接下一步
 $ pip install enum34==1.1.10
 ```
 
+#### Perf
+
+##### 浮点运算量
+
+* [Calculate FLOPs and Number of Model Parameters]([https://github.com/anakin1028/Tensorflow-Examples/blob/master/notebooks/basic/Calculate%20FLOPs%20and%20Number%20of%20Model%20Parameters.ipynb](https://github.com/anakin1028/Tensorflow-Examples/blob/master/notebooks/basic/Calculate FLOPs and Number of Model Parameters.ipynb))
+  * `saver = tf.train.import_meta_graph('./tmp/model.ckpt.meta')`
+  * `W = tf.Variable(tf.random_normal([20, 8, 1, 64]))`
+    * python/ops/random_ops.py
+
+```python
+import tensorflow as tf
+tf.reset_default_graph()
+
+# case1 normal save and restore
+# define simple graphs
+a = tf.Variable([3.], dtype=tf.float32, name='a')
+b = tf.placeholder(tf.float32, shape=(), name='input')
+# In this grpah we have three FLOPs
+c = tf.multiply(a, b, name='wawa')
+d = tf.multiply(c, c, name='tata')
+e = tf.multiply(d, d, name='haha')
+# In tf1, we need to initialize variables manually
+init = tf.global_variables_initializer()
+
+# session will bind to the global default graph
+saver = tf.train.Saver()
+with tf.Session() as sess:
+    sess.run(init)
+    print(sess.run(d, feed_dict={b:2}))
+    saver.save(sess, './tmp/model.ckpt')
+# then under the directory ./tmp you will find the two files
+# model.ckpt.meta : The definition of graph
+# model.ckpt.data-00000-of-00001 : The data (the value for the nodes)
+
+# here we want to analyze the floating point opearation numbers
+tf.reset_default_graph()
+saver = tf.train.import_meta_graph('./tmp/model.ckpt.meta')
+# saver = tf.train.Saver()
+with tf.Session() as sess:
+    # The session is binding to the default global graph
+    tf.profiler.profile(
+        sess.graph,
+        options=tf.profiler.ProfileOptionBuilder.float_operation())
+
+with tf.Session() as sess:
+    # The session is binding to the default global graph
+    parameters = tf.profiler.profile(
+        sess.graph,
+        options=tf.profiler.ProfileOptionBuilder
+        .trainable_variables_parameter())
+    print ('total parameters: {}'.format(parameters.total_parameters))
+
+
+
+tf.reset_default_graph()
+
+# for simplicity we consider the first conv layer
+
+# You can think X as 1 example, 32 timestamps, spectral components for 40 mel-bands, and one input channel
+# And typically TF call this as NHWC format
+X = tf.placeholder(tf.float32, [1, 32, 40, 1])
+# H:20, W:8, Input Channel: 1, Output Channel 64
+W = tf.Variable(tf.random_normal([20, 8, 1, 64]))
+b = tf.Variable(tf.random_normal([64]))
+conv1 = tf.nn.conv2d(X, W, strides=[1,1,1,1], padding='VALID')
+conv1 = tf.nn.bias_add(conv1, b)
+conv1 = tf.nn.max_pool(conv1, ksize=[1, 1, 3, 1], strides=[1,1,1,1], padding='VALID')
+
+# now we have defined our graph, we can calculate the FLOPs and number of
+# parameters
+
+with tf.Session() as sess:
+    with tf.Session() as sess:
+        # The session is binding to the default global graph
+        tf.profiler.profile(
+            sess.graph,
+            options=tf.profiler.ProfileOptionBuilder.float_operation())
+        parameters = tf.profiler.profile(sess.graph,
+                                         options=tf.profiler.ProfileOptionBuilder
+                                         .trainable_variables_parameter())
+        print ('total parameters: {}'.format(parameters.total_parameters))
+    
+
+# observe the output of this cell: the counts of parameter is indeed 10.2K!
+```
 
 
 
@@ -45,13 +142,117 @@ TensorFlow: 延迟计算、原子OP、抽象设备（CPU、GPU、ASIC）、抽�
 
 https://www.tensorflow.org/install/source#ubuntu
 
-#### 附录A：代码阅读
+#### 代码阅读
 
 * 发现领域模型
 * 抛开细枝末节： `git checkout -b code-reading`
 * 适可而止，BFS阅读
 
+##### core/platform/refcount.h
+
+```c++
+// Helper class to unref an object when out-of-scope.
+class ScopedUnref {
+ public:
+  explicit ScopedUnref(const RefCounted* o) : obj_(o) {}
+  ~ScopedUnref() {
+    if (obj_) obj_->Unref();
+  }
+
+ private:
+  const RefCounted* obj_;
+
+  ScopedUnref(const ScopedUnref&) = delete;
+  void operator=(const ScopedUnref&) = delete;
+};
+```
+
+
+
+
+
+##### core/platform/default/logging.h
+
+DCHECK_EQ
+
+
+
+
+
+tensor
+
+IsInitialized()
+
+RefCountIsOne()
+
+##### cc/saved_model/loader.cc
+
+```c++
+// We disallow calls to Session::Extend() on the returned session, so we can
+// reduce memory consumption by not storing the original GraphDef.
+rewritten_options.config.mutable_experimental()
+  ->set_optimize_for_static_graph(true);
+```
+
+
+
+
+
 #### 基本 API 用法
+
+##### Import Graph
+
+```python
+graph = tf.Graph()
+with graph.as_default():
+  tf.import_graph_def(graph_def, name='')
+  loss = graph.get_tensor_by_name(loss_name)
+  label = graph.get_tensor_by_name(label_name)
+  pred = graph.get_tensor_by_name(pred_name)
+  _, auc = tf.metrics.auc(label > 0.5, pred)
+	sess = tf.Session(graph=graph)
+	sess.run(tf.local_variables_initializer())
+```
+
+##### option
+
+```python
+tf.config.threading.set_inter_op_parallelism_threads(args.tf_cpu_count)
+tf.config.threading.set_intra_op_parallelism_threads(args.tf_cpu_count)
+
+
+```
+
+##### build tensor and run session
+
+https://www.tensorflow.org/api_docs/python/tf/compat/v1/Session?hl=zh-cn#run
+
+```python
+tensor = tensor_pb2.TensorProto()
+if isinstance(value, str):
+  value = value.encode()
+tensor.ParseFromString(value)
+inputs[name] = tf.make_ndarray(tensor)
+fetch1, fetch2, fetch3, fetch4 = sess.run(fetches, feed_dict=inputs)
+proto_fetch1 = {}
+for name, value in fetch1.items():
+	proto_fetch1[name] = tf.make_tensor_proto(value).SerializeToString()
+```
+
+
+
+##### gradients
+
+```python
+# gradients 返回 grad_ys*dy/dx，ys和xs是tensor
+with tf.name_scope(""):
+        with tf.name_scope("Gradients/%s/" % scope_name):
+            gs = tf.gradients(ys=ys, xs=xs, name=name, colocate_gradients_with_ops=colocate_gradients_with_ops, grad_ys=grad_ys)
+```
+
+[about grad_ys](https://stackoverflow.com/questions/50967885/tf-gradients-how-can-i-understand-grad-ys-and-use-it)
+
+
 
 [Understanding variable_scope and name_scope in tensorflow and variable sharing](https://stackoverflow.com/questions/36237427/understanding-variable-scope-and-name-scope-in-tensorflow-and-variable-sharing)
 

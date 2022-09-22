@@ -559,6 +559,7 @@ class Polynomial {
 * std::mutex和std::atomic都是move-only types，不能copy
   * 如果想定义一个数组，数组中的对象包含atomic类型，不能用vector直接构造（因为会调用复制构造函数），可以构造`vector<shared_ptr<Object>>`
   * atomic适合递增操作，但如果是先运算后赋值，可能出现竞争
+  * mutable 字段，表示“这个成员变量不算对象内部状态”，不禁止const函数修改它
 
 ```c++
 class Widget {
@@ -2014,7 +2015,34 @@ void detect()
 }
 ```
 
+##### Folly::future
 
+https://github.com/facebook/folly/blob/main/folly/docs/Futures.md
+
+```c++
+std::vector<folly::Promise<Input>> pros(inputs.size());
+std::vector<folly::Future<Output>> futs;
+for (auto& p : pros) {
+  auto f = p.getFuture().thenValue([func1](Input input){
+      return folly::makeFuture<Output>(func1(input));
+    })
+    .thenValue([func2](Output output)) {
+        return folly::makeFuture<Output>(func2(output));
+    }
+    .thenValue([func2](Output output)) {
+        return folly::makeFuture<Output>(func2(output));
+    };
+  futs.push_back(std::move(f));
+}
+auto allf = folly::collectAll(futs);
+auto it = ...;
+for (auto& p : pros) {
+  p.setValue(*it);
+  ++it;
+}
+assert(allf.isReady());
+auto& results = allf.value();
+```
 
 ##### Item 40:  Use **std::atomic** for concurrency, **volatile** for special memory.
 
@@ -2045,6 +2073,58 @@ y.store(x.load());
 
 x.fetch_add(1, std::memory_order_release);
 ```
+
+* `exchange`
+  * 返回值是旧值
+
+
+
+* `std::atomic_thread_fence(std::memory_order_release);`
+
+```c++
+//Global
+std::string computation(int);
+void print( std::string );
+ 
+std::atomic<int> arr[3] = { -1, -1, -1 };
+std::string data[1000]; //non-atomic data
+ 
+// Thread A, compute 3 values
+void ThreadA( int v0, int v1, int v2 )
+{
+//assert( 0 <= v0, v1, v2 < 1000 );
+data[v0] = computation(v0);
+data[v1] = computation(v1);
+data[v2] = computation(v2);
+std::atomic_thread_fence(std::memory_order_release);
+std::atomic_store_explicit(&arr[0], v0, std::memory_order_relaxed);
+std::atomic_store_explicit(&arr[1], v1, std::memory_order_relaxed);
+std::atomic_store_explicit(&arr[2], v2, std::memory_order_relaxed);
+}
+ 
+// Thread B, prints between 0 and 3 values already computed.
+void ThreadB()
+{
+int v0 = std::atomic_load_explicit(&arr[0], std::memory_order_relaxed);
+int v1 = std::atomic_load_explicit(&arr[1], std::memory_order_relaxed);
+int v2 = std::atomic_load_explicit(&arr[2], std::memory_order_relaxed);
+std::atomic_thread_fence(std::memory_order_acquire);
+// v0, v1, v2 might turn out to be -1, some or all of them.
+// otherwise it is safe to read the non-atomic data because of the fences:
+if( v0 != -1 ) { print( data[v0] ); }
+if( v1 != -1 ) { print( data[v1] ); }
+if( v2 != -1 ) { print( data[v2] ); }
+}
+```
+
+
+
+```c++
+std::atomic_thread_fence(std::memory_order_release);
+version_.fetch_add(1);
+```
+
+
 
 
 
@@ -2183,6 +2263,7 @@ std::regex r2(nullptr); // compiles
   * 在 shared memory or memory-mapped I/O 场景比较有用
 
 ```c++
+/***/
 
 class Widget {
   public:
@@ -2192,11 +2273,16 @@ class Widget {
 Widget * constructWidgetInBuffer(void *buffer, int widgetSize) {
 	return new (buffer) Widget(widgetSize);
 }
+
+/***/
+
+typename std::aligned_storage<sizeof(MyData), alignof(MyData)>::type data;
+MyData *ptr = new(&data) MyData(2);
 ```
 
 * `operator new` and `operator delete` is the C++ equivalent of `malloc` and `free` 
-
 * array 形式的 `operator new[]`，会分别为每个 object 做构造和析构
+* [Delete this](https://blog.csdn.net/weiwangchao_/article/details/4746969)
 
 ### 学习材料
 
@@ -2455,23 +2541,26 @@ const std::vector<int> vec = {
 };
 ```
 
-* ANSI aliasing
+##### ANSI aliasing
 
-  * 对 cast 完的指针做 dereference 是个 UB(Undefined Behavior) 行为
-  * strict-aliasing
-    * TBAA(type based alias analysis): 编译器假设不同类型指针指向的内存是不交叉的
-      * O2以上默认开启
-    * 本质上，要保证指针在生产和消费时的类型是一致的
-    * 注意：alias 排除 void * 和char *，可以随便 cast 他们，是为了给比如 `int *p = (int*)malloc(sizeof(int));` 留后门
+* 对 cast 完的指针做 dereference 是个 UB(Undefined Behavior) 行为
+* strict-aliasing
+  * TBAA(type based alias analysis): 编译器假设不同类型指针指向的内存是不交叉的
+    * O2以上默认开启
+  * 本质上，要保证指针在生产和消费时的类型是一致的
+  * 注意：alias 排除 void * 和char *，可以随便 cast 他们，是为了给比如 `int *p = (int*)malloc(sizeof(int));` 留后门
+* uint8_t 的 strict aliasing 讨论：https://stackoverflow.com/questions/26297571/how-to-create-an-uint8-t-array-that-does-not-undermine-strict-aliasing
+  * [Is `uint8_t` always an alias for a character type if it exists?](https://software.codidact.com/posts/280966)
+  * [关于 bytes 的讨论](https://gist.github.com/jibsen/da6be27cde4d526ee564), 需要看 CHAR_BIT 是否等于 8（通常是的），所以认为 uint8_t 等同于 unsigned char
+* **-fno-strict-aliasing** 来禁掉该优化，但如果关掉 strict-aliasing, 对程序的性能有巨大的影响
 
-  * **-fno-strict-aliasing** 来禁掉该优化，但如果关掉 strict-aliasing, 对程序的性能有巨大的影响
+
 
 * 慎用 C++ 异常
 
   * 发生异常会两次回溯整个调用栈，代价非常大，不要用来解决控制流切换
   * 对编译器的影响：1）eh_frame 生成数据，影响代码 size；2）插入代码，影响 icache
   * -fno-exceptions
-
 * 短函数尽量在头文件实现
 
   * 如果声明和实现分离，编译器不知道实现里做了什么
@@ -2521,13 +2610,17 @@ int foo(const std::vector<int>& m) {
 开发必备插件
 
 * 公共: Code Spell Checker, GitLens, EditorConfig for VSCode, String Manipulation, Visual Studio IntelliCode
+  * Code Runner
+  * Remote - SSH
 * C++: [cpplint](https://github.com/cpplint/cpplint), C/C++ (by Microsoft), CodeLLDB, Header source switch, Rainbow Brackets, C++ Intellisense
+  * Tabnine：AI加持的自动补全，用GPT
+  * Peacock：不同workspace可以用不同的颜色区分
 
 #### 编码规范
 
 * RAII原则：Resource acquisition is initialization，充分利用局部对象的构造和析构特效，常需要与 rule of five, rule of zero 结合
 
-* [Google Style](https://google.github.io/styleguide/cppguide.html)
+* [Google C++ Style](https://google.github.io/styleguide/cppguide.html)
 * [Google: Developer Documentation Style Guide](https://developers.google.com/style)
 * [CppCoreGuidelines](https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
 * 用[CppCheck](http://cppcheck.net/)诊断，`make cppcheck`
@@ -2619,11 +2712,18 @@ typedef unsigned int		uintptr_t;
   printf(__VA_ARGS__);      \
   printf("\n");             \
   LOGF_ERROR(__VA_ARGS__)   \
+  
+  auto A = (__VA_ARGS__);
 ```
 
 * do while(0) 技巧
   * 宏中可使用局部变量
 
+* roundup
+
+```c++
+block_size = roundup(block_size, ::sysconf(_SC_PAGESIZE));  // 4KB
+```
 
 
 ##### 大小端
@@ -2672,7 +2772,8 @@ inline uint64_t native_to_little(uint64_t in) {
 * 复制构造函数：常引用
 * 析构函数
   * 对象的 destructor 不被 call 的情形：Most stem from abnormal program termination. If an exception propagates out of a thread’s primary function (e.g., main, for the program’s initial thread) or if a noexcept specification is violated (see Item 14), local objects may not be destroyed, and if `std::abort` or an exit function (i.e., `std::_Exit`, `std::exit`, or `std::quick_exit`) is called, they definitely won’t be.
-* 虚析构函数    =>对象内有虚函数表，指向虚函数表的指针：32位系统4字节，64位系统8字节
+* 虚函数   =>对象内有虚函数表，指向虚函数表的指针：32位系统4字节，64位系统8字节
+  * 虚析构函数
 * 虚基类偏移量表指针
 
 
@@ -3016,9 +3117,110 @@ class LogMessageFatal {
 
 //写锁
 std::unique_lock<boost::shared_mutex> lock(mutex_);
+
+lock.unlock(); //临时解锁
+// do sth
+lock.lock(); //继续上锁
+// do sth
 ```
 
-* 大量读，少量更新，可以用tbb::concurrent_hash_map<key_type, value_type>;
+* 自旋锁 (spinlock)
+  * [single bit spinlock](https://news.ycombinator.com/item?id=21930374)
+    * [How do I choose between the strong and weak versions of compare-exchange?](https://devblogs.microsoft.com/oldnewthing/20180330-00/?p=98395)
+  * [Correctly implementing a spinlock in C++](https://rigtorp.se/spinlock/#fn:2)
+    * Test and test-and-set (TTAS) lock
+    * pause的意义，也可以用 [folly::detail::sleeper](https://github.com/facebook/folly/blob/main/folly/synchronization/detail/Sleeper.h)
+
+```c++
+auto old = addr.load(std::memory_order_relaxed);
+while(not addr.compare_exchange_weak(old, old|1)) {};
+
+
+std::atomic<Widget*> cachedWidget;
+
+Widget* GetSingletonWidget()
+{
+ Widget* widget = cachedWidget;
+ if (!widget) {
+  widget = new(std::nothrow) Widget();
+  if (widget) {
+   Widget* previousWidget = nullptr;
+   if (!cachedWidget.compare_exchange_strong(previousWidget, widget)) {
+    // lost the race - destroy the redundant widget
+    delete widget;
+    widget = previousWidget;
+   }
+  }
+ }
+ return widget;
+}
+```
+
+```c++
+struct ttas_lock {
+  ...
+  void lock() {
+    for (;;) {
+      if (!lock_.exchange(true, std::memory_order_acquire)) {
+        break;
+      }
+      while (lock_.load(std::memory_order_relaxed)) {
+        __builtin_ia32_pause();
+      }
+    }
+  }
+  ...
+};
+
+struct spinlock {
+  std::atomic<bool> lock_ = {0};
+
+  void lock() noexcept {
+    for (;;) {
+      // Optimistically assume the lock is free on the first try
+      if (!lock_.exchange(true, std::memory_order_acquire)) {
+        return;
+      }
+      // Wait for lock to be released without generating cache misses
+      while (lock_.load(std::memory_order_relaxed)) {
+        // Issue X86 PAUSE or ARM YIELD instruction to reduce contention between
+        // hyper-threads
+        __builtin_ia32_pause();
+      }
+    }
+  }
+
+  bool try_lock() noexcept {
+    // First do a relaxed load to check if lock is free in order to prevent
+    // unnecessary cache misses if someone does while(!try_lock())
+    return !lock_.load(std::memory_order_relaxed) &&
+           !lock_.exchange(true, std::memory_order_acquire);
+  }
+
+  void unlock() noexcept {
+    lock_.store(false, std::memory_order_release);
+  }
+};
+```
+
+* std::atomic
+
+```c++
+// 让并发函数中的某一global部分不并发
+bool cur = false;
+if (updating_.compare_exchange_weak(cur,true)) {
+  if (timer_ptr_->tick()) {
+    update();
+  }
+  updating_.store(false);
+}
+```
+
+
+
+
+
+* 大量读，少量更新，可以用`tbb::concurrent_hash_map<key_type, value_type>;`
 
 ```c++
 {
@@ -3043,7 +3245,11 @@ while(_queue.try_pop(tk)){
   * [Uneven Work Distribution and Oversubscription](https://dzone.com/articles/uneven-work-distribution-and)
   * 一些坑：
     * 同一线程池执行的任务不能有依赖关系，否则可能pending
-  
+* MemoryPool
+  * [C++ Memory Pool and Small Object Allocator](https://betterprogramming.pub/c-memory-pool-and-small-object-allocator-8f27671bd9ee)
+    * Small-Object Allocation is likely to cause fragmentation
+    * Boost Singleton Pool:
+      * When a block is fully used, the Singleton Pool will *automatically* add a new block by doubling the size
 * 条件变量
 
 ```c++
@@ -3465,6 +3671,12 @@ struct BloomFilterStoreItf {
 
 #### \<chrono>
 
+```c++
+auto server_time = std::chrono::duration_cast<std::chrono::microseconds>(
+                           std::chrono::system_clock::now().time_since_epoch())
+                           .count();
+```
+
 5s: C++14’s [duration literal suffixes](http://en.cppreference.com/w/cpp/chrono/duration#Literals)
 
 ```c++
@@ -3512,9 +3724,19 @@ if (!ifs.fail()) {
   }
   ifs.close();
 }
+
+// read binary file to string
+int read_binary_file_to_string(const std::string &filename, std::string *out) {
+  std::ifstream in(filename, std::ifstream::binary);
+  if (!in.is_open()) {
+    return -1;
+  }
+  out->assign(std::istreambuf_iterator<char>(in),
+              std::istreambuf_iterator<char>());
+  in.close();
+  return 0;
+}
 ```
-
-
 
 
 
@@ -3523,6 +3745,12 @@ if (!ifs.fail()) {
 * 参考[LRU cache](https://leetcode-cn.com/problems/lru-cache/)，类似双向链表的实现
   * map<int,list<pair<int,int>>::iterator> m;
 * r.push_front(…), r.begin(), r.back()
+
+#### \<math>
+
+```c++
+std::isnan(NAN);
+```
 
 #### \<string>
 
@@ -3644,6 +3872,42 @@ const T& at(const key_type& x) const;
 #### gcc 内嵌
 
 __builtin_clz 返回左起第一个1之前0的个数
+
+#### boost::uuid
+
+```c++
+boost::uuids::uuid uuid = boost::uuids::random_generator()();
+auto id = boost::uuids::to_string(uuid);
+```
+
+#### boost::json
+
+```c++
+try {
+  boost::property_tree::ptree data_pt;
+  std::istringstream json(json_result);
+  boost::property_tree::read_json(json, data_pt);
+  auto data1 = data_pt.get_child(KEY1);
+  auto data2 = data1.get_child(KEY2);
+
+  for (auto iter = data2.begin(); iter != data2.end(); iter++) {
+    id1s.push_back(std::stoll(iter->first));
+    std::string id3 = iter->second.get<std::string>(KEY3);
+    id3s.push_back(std::stoll(id3));
+  } 
+} catch (boost::property_tree::json_parser_error e) {
+  return Status::Error(
+    "Parse result error. exception: %s. content: %s",
+    e.message().c_str(), json_result.c_str());
+} catch (boost::property_tree::ptree_bad_path e) {
+  return Status::Error(
+    "Get attributes error. exception: %s. content: %s",
+    e.what(), json_result.c_str());
+} catch (std::invalid_argument e) {
+  return Status::Error("Value format is wrong: %s. content: %s",
+                       e.what(), json_result.c_str());
+}
+```
 
 #### \<exception>
 https://blog.csdn.net/qq_37968132/article/details/82431775

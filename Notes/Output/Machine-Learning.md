@@ -28,7 +28,191 @@ Dropout
 
 
 
+[灾难遗忘现象](https://en.wikipedia.org/wiki/Catastrophic_interference)
+
+
+
 #### Optimizer
+
+##### Optimization Problem
+
+* Total Error = Optimization Error + Representation Error
+*  <img src="https://www.zhihu.com/equation?tex=F%28w_%7Balg%7D%29%20%3D%20F%28w_%7Balg%7D%29-F%28w_%2A%29%20%2B%20F%28w_%2A%29" alt="F(w_{alg}) = F(w_{alg})-F(w_*) + F(w_*)" class="ee_img tr_noresize" eeimg="1"> 
+*  <img src="https://www.zhihu.com/equation?tex=F%28w_%2A%29%20%5Cequiv%20%5Cfrac%7B1%7D%7Bn%7D%20%5Csum_%7Bi%20%5Cin%20%5Bn%5D%7D%20l%28h_%7Bw%7D%28x_i%29%2C%20y_i%29%20" alt="F(w_*) \equiv \frac{1}{n} \sum_{i \in [n]} l(h_{w}(x_i), y_i) " class="ee_img tr_noresize" eeimg="1"> 
+  * 模型预估误差均值，取决于模型结构
+
+##### GD: 1st-order method
+
+* 梯度下降： <img src="https://www.zhihu.com/equation?tex=w_t%20%5Cleftarrow%20w_%7Bt-1%7D%20-%20%5Ceta%20%5Cnabla%20F%28w_%7Bt-1%7D%29" alt="w_t \leftarrow w_{t-1} - \eta \nabla F(w_{t-1})" class="ee_img tr_noresize" eeimg="1"> 
+* Explanation: 一阶泰勒展开
+
+<img src="https://www.zhihu.com/equation?tex=%5Cmu%20%5Cleq%20%5Cfrac%7B%5C%7C%5Cnabla%20f%28a%29%20-%20%5Cnabla%20f%28b%29%5C%7C%7D%7B%5C%7Ca-b%5C%7C%7D%20%5Cleq%20L%2C%20%5Cforall%20a%2Cb%20%5Cin%20%5CR%5Ed" alt="\mu \leq \frac{\|\nabla f(a) - \nabla f(b)\|}{\|a-b\|} \leq L, \forall a,b \in \R^d" class="ee_img tr_noresize" eeimg="1">
+  * 强凸：梯度变化率有下界
+  * Lipchitz continuous gradient：梯度变化率有上界
+* Note:
+  * 令下标趋近，这个上下界本质是Hessian: f''(b) 的上下界
+
+<img src="https://www.zhihu.com/equation?tex=F%28w_%7Bt%2B1%7D%29%20-%20F%28w_%2A%29%20%5Cleq%20%281-%5Cfrac%7B%5Cmu%7D%7BL%7D%29%20%5Cleft%28%20F%28w_t%29%20-%20F%28w_%2A%29%20%5Cright%29%5E1" alt="F(w_{t+1}) - F(w_*) \leq (1-\frac{\mu}{L}) \left( F(w_t) - F(w_*) \right)^1" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=F%28w%29%24%24%20%28there%20are%20other%20types%20of%20convergence%29%0A%0A%23%23%23%23%23%20Newton%27s%20method%3A%202nd-order%20method%0A%0A%2A%20Gradient%20descent%3A%20%24%20%3Cimg%20src%3D%22https%3A//www.zhihu.com/equation%3Ftex%3Dw_t%20%5Cleftarrow%20w_%7Bt-t%7D%20-%20%5Ceta%20%28%5Cnabla%5E2%20F%28w_%7Bt-1%7D%29%29%5E%7B-1%7D%20%5Cnabla%20F%28w_%7Bt-1%7D%29" alt="F(w)" alt="w_t \leftarrow w_{t-t} - \eta (\nabla^2 F(w_{t-1}))^{-1} \nabla F(w_{t-1})" alt="F(w)" class="ee_img tr_noresize" eeimg="1"> $ (there are other types of convergence)
+
+##### Newton's method: 2nd-order method
+
+* Gradient descent: $$w_t \leftarrow w_{t-t} - \eta (\nabla^2 F(w_{t-1}))^{-1} \nabla F(w_{t-1})" class="ee_img tr_noresize" eeimg="1">
+
+
+<img src="https://www.zhihu.com/equation?tex=F%28w%29%20%3D%20%5Cfrac%7B1%7D%7B2%7D%20w%5E%5Ctop%20D%20w%24%24%20%2C%20D%20is%20a%20diagonal%20matrix%20with%20all%20positive%20diagonal%20elements%0A%0A%20%20%2A%20%E4%B8%BE%E4%B8%80%E4%B8%AA%E4%BE%8B%E5%AD%90%EF%BC%8C%E5%AF%B9%E6%AF%94GD%E5%92%8CNewton%E6%B3%95%E7%9A%84%E6%94%B6%E6%95%9B%E9%80%9F%E5%BA%A6%0A%20%20%2A%20GD%3A%20%E8%AE%A1%E7%AE%97%20%24%20%3Cimg%20src%3D%22https%3A//www.zhihu.com/equation%3Ftex%3DF%28w_%7Bt%2B1%7D%29%5Cle%20F%28w_t%29" alt="F(w_{t+1})\le F(w_t)" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%20%E7%9A%84%E6%81%92%E6%88%90%E7%AB%8B%E6%9D%A1%E4%BB%B6%E6%98%AF%20" alt=" 的恒成立条件是 " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%5Ceta%20%5Clt%20%5Cfrac%7B2%7D%7Bmax_iD_%7Bii%7D%7D" alt="F(w) = \frac{1}{2} w^\top D w" alt="\eta \lt \frac{2}{max_iD_{ii}}" alt="F(w) = \frac{1}{2} w^\top D w" class="ee_img tr_noresize" eeimg="1"> $ , D is a diagonal matrix with all positive diagonal elements
+
+  * 举一个例子，对比GD和Newton法的收敛速度
+  * GD: 计算 $ <img src="https://www.zhihu.com/equation?tex=F%28w_%7Bt%2B1%7D%29%5Cle%20F%28w_t%29" alt="F(w_{t+1})\le F(w_t)" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%20%E7%9A%84%E6%81%92%E6%88%90%E7%AB%8B%E6%9D%A1%E4%BB%B6%E6%98%AF%20" alt=" 的恒成立条件是 " class="ee_img tr_noresize" eeimg="1"> $\eta \lt \frac{2}{max_iD_{ii}}" class="ee_img tr_noresize" eeimg="1">
+  * Newton法，在例子中一步收敛了
+  * 类似于在不同维度使用 Adaptive Learning Rate（D^-1，反映gradient的变化率）的效果
+  * Quadratic Convergence
+
+* Convergence
+
+
+<img src="https://www.zhihu.com/equation?tex=%5Cmu%24%20%3Cimg%20src%3D%22https%3A//www.zhihu.com/equation%3Ftex%3D%20and%20Lipschtiz%20hessian%20" alt=" and Lipschtiz hessian " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=H" alt="\mu" alt="H" alt="\mu" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%20and%20Lipschtiz%20hessian%20" alt=" and Lipschtiz hessian " class="ee_img tr_noresize" eeimg="1"> $H" class="ee_img tr_noresize" eeimg="1">
+
+  * Quadratic convergence: 
+
+
+<img src="https://www.zhihu.com/equation?tex=%5C%7Cw_%7Bt%2B1%7D%20-%20w_%2A%5C%7C%20%5Cleq%20%5Cfrac%7BH%7D%7B%5Cmu%7D%20%5C%7Cw_t%20-%20w_%2A%5C%7C%5E2" alt="\|w_{t+1} - w_*\| \leq \frac{H}{\mu} \|w_t - w_*\|^2" class="ee_img tr_noresize" eeimg="1">
+
+
+<img src="https://www.zhihu.com/equation?tex=%5C%7Cw_0-w_%2A%5C%7C%20%5Cleq%20%5Cfrac%7B%5Cmu%7D%7B2H%7D" alt="\|w_0-w_*\| \leq \frac{\mu}{2H}" class="ee_img tr_noresize" eeimg="1">
+
+##### Polyak Momentum
+
+
+<img src="https://www.zhihu.com/equation?tex=w_t%20%5Cleftarrow%20w_%7Bt-1%7D%20-%20%5Ceta%20%5Cnabla%20F%28w_%7Bt-1%7D%29%20%2B%20%5Cbeta%28w_%7Bt-1%7D%20-%20w_%7Bt-2%7D%29" alt="w_t \leftarrow w_{t-1} - \eta \nabla F(w_{t-1}) + \beta(w_{t-1} - w_{t-2})" class="ee_img tr_noresize" eeimg="1">
+* The formula above is equivalent to
+
+<img src="https://www.zhihu.com/equation?tex=v_t%20%5Cleftarrow%20%5Ceta%20%5Cnabla%20F%28w_%7Bt-1%7D%29%20%2B%20%5Cbeta%20v_%7Bt-1%7D%24%20%3Cimg%20src%3D%22https%3A//www.zhihu.com/equation%3Ftex%3D%2C%20" alt=", " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=w_t%20%5Cleftarrow%20w_%7Bt-1%7D%20-%20v_t" alt="v_t \leftarrow \eta \nabla F(w_{t-1}) + \beta v_{t-1}" alt="w_t \leftarrow w_{t-1} - v_t" alt="v_t \leftarrow \eta \nabla F(w_{t-1}) + \beta v_{t-1}" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%2C%20" alt=", " class="ee_img tr_noresize" eeimg="1"> $w_t \leftarrow w_{t-1} - v_t" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=%5Ceta%24%20%3Cimg%20src%3D%22https%3A//www.zhihu.com/equation%3Ftex%3D%20inside%20momentum%20variable%20" alt=" inside momentum variable " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=v" alt="\eta" alt="v" alt="\eta" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%20inside%20momentum%20variable%20" alt=" inside momentum variable " class="ee_img tr_noresize" eeimg="1"> $v" class="ee_img tr_noresize" eeimg="1">
+
+- But we can also put learning rate outside the momentum:
+
+<img src="https://www.zhihu.com/equation?tex=v_t%20%5Cleftarrow%20%5Cnabla%20F%28w_%7Bt-1%7D%29%20%2B%20%5Cbeta%20v_%7Bt-1%7D%24%20%3Cimg%20src%3D%22https%3A//www.zhihu.com/equation%3Ftex%3D%2C%20" alt=", " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=w_t%20%5Cleftarrow%20w_%7Bt-1%7D%20-%20%5Ceta%20v_t" alt="v_t \leftarrow \nabla F(w_{t-1}) + \beta v_{t-1}" alt="w_t \leftarrow w_{t-1} - \eta v_t" alt="v_t \leftarrow \nabla F(w_{t-1}) + \beta v_{t-1}" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%2C%20" alt=", " class="ee_img tr_noresize" eeimg="1"> $w_t \leftarrow w_{t-1} - \eta v_t" class="ee_img tr_noresize" eeimg="1">
+  - Caution: these 2 formulas will be different if the learning rate changes (warmup, decay)
+
+##### Nesterov Momentum
+
+- Concept: **lookahead** to get a better gradient estimation
+
+- 理论上是两步，本方法基于最新model计算gradient，解决半步的staleness
+
+* pytorch实际实现中，保留的是lookhead model
+
+##### SGD: stochastic methods
+
+
+<img src="https://www.zhihu.com/equation?tex=%5Cmin_%7Bt%7D%20E%5Cleft%5B%20%5C%7C%5Cnabla%20F%28w_%7Bt-1%7D%29%5C%7C%5E2%5Cright%5D%20%5Cleq%20%5Cfrac%7B1%7D%7BT%7D%20%5Csum_%7Bt%3D1%7D%5ET%20E%5Cleft%5B%20%5C%7C%5Cnabla%20F%28w_%7Bt-1%7D%29%5C%7C%5E2%20%5Cright%5D%20%5Cleq%20%5Cfrac%7B2E%5BF%28w_%7B0%7D%29%20-%20F%28w_%2A%29%5D%7D%7B%5Ceta%20T%7D%20%2B%20%5Cfrac%7BL%5Ceta%20V_1%7D%7Bb%7D" alt="\min_{t} E\left[ \|\nabla F(w_{t-1})\|^2\right] \leq \frac{1}{T} \sum_{t=1}^T E\left[ \|\nabla F(w_{t-1})\|^2 \right] \leq \frac{2E[F(w_{0}) - F(w_*)]}{\eta T} + \frac{L\eta V_1}{b}" class="ee_img tr_noresize" eeimg="1">
+* 2 parts of error:
+  - Escape from initial point to optimal
+  - Variance (reduced by batch size)
+
+<img src="https://www.zhihu.com/equation?tex=%5Ceta%5Cpropto%5Cfrac%7B1%7D%7B%5Csqrt%7BT%7D%7D" alt="\eta\propto\frac{1}{\sqrt{T}}" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=%5Cfrac%7B1%7D%7BT%7D%20%5Csum_%7Bt%3D1%7D%5ET%20E%5Cleft%5B%20%5C%7C%5Cnabla%20F%28w_%7Bt-1%7D%29%5C%7C%5E2%20%5Cright%5D%20%5Cleq%20O%28%5Cfrac%7B1%7D%7B%5Csqrt%7BT%7D%7D%29" alt="\frac{1}{T} \sum_{t=1}^T E\left[ \|\nabla F(w_{t-1})\|^2 \right] \leq O(\frac{1}{\sqrt{T}})" class="ee_img tr_noresize" eeimg="1">
+
+
+<img src="https://www.zhihu.com/equation?tex=%5Ceta_t%20%5Cpropto%20%5Cfrac%7B1%7D%7B%5Csqrt%7Bt%7D%7D" alt="\eta_t \propto \frac{1}{\sqrt{t}}" class="ee_img tr_noresize" eeimg="1">
+
+
+<img src="https://www.zhihu.com/equation?tex=%5Cnabla%20F%28w%29%20%3D%200%24%24%2C%20could%20be%20a%20saddle%20point%20or%20local%20minimum%2C%20not%20necessarily%20a%20global%20minimum%0A%0A%23%23%23%23%23%20Federated%20Averaging%0A%0A%E3%80%8AAdvances%20and%20open%20problems%20in%20federated%20learning%E3%80%8Bp22%0A%0A%0A%23%23%23%23%23%20AdaGrad%3A%20a%20natural%20learning%20rate%20decay%0A%0A-%20Algorithm%3A%0A%0A%20%20-%20In%20step%20%24%20%3Cimg%20src%3D%22https%3A//www.zhihu.com/equation%3Ftex%3Dt" alt="\nabla F(w) = 0" alt="t" alt="\nabla F(w) = 0" class="ee_img tr_noresize" eeimg="1"> $, could be a saddle point or local minimum, not necessarily a global minimum
+
+##### Federated Averaging
+
+《Advances and open problems in federated learning》p22
+
+
+##### AdaGrad: a natural learning rate decay
+
+- Algorithm:
+
+  - In step $$t" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=g_t%20%5Cequiv%20%5Cnabla%20f%28w_%7Bt-1%7D%29" alt="g_t \equiv \nabla f(w_{t-1})" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=v_t%20%5Cleftarrow%20v_%7Bt-1%7D%20%2B%20g_t%20%5Ccirc%20g_t" alt="v_t \leftarrow v_{t-1} + g_t \circ g_t" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=w_%7Bt%7D%20%5Cleftarrow%20w_%7Bt-1%7D%20-%20%5Ceta%20%5Cfrac%7Bg_t%7D%7B%5Csqrt%7Bv_t%20%2B%20%5Cepsilon%7D%7D%20" alt="w_{t} \leftarrow w_{t-1} - \eta \frac{g_t}{\sqrt{v_t + \epsilon}} " class="ee_img tr_noresize" eeimg="1">
+
+- 本质：
+
+
+<img src="https://www.zhihu.com/equation?tex=%5Cfrac%7B1%7D%7Bt%7D%5Csum_t%20g_t%20%5Ccirc%20g_t%24%24%20to%20estimate%20hessian%20%0A%0A%20%20-%20a%20%2A%2Anaturally%20decay%20learning%20rate%2A%2A%20%24%20%3Cimg%20src%3D%22https%3A//www.zhihu.com/equation%3Ftex%3D%5Cfrac%7B%5Ceta%7D%7B%5Csqrt%7Bt%7D%7D" alt="\frac{1}{t}\sum_t g_t \circ g_t" alt="\frac{\eta}{\sqrt{t}}" alt="\frac{1}{t}\sum_t g_t \circ g_t" class="ee_img tr_noresize" eeimg="1"> $ to estimate hessian 
+
+  - a **naturally decay learning rate** $$\frac{\eta}{\sqrt{t}}" class="ee_img tr_noresize" eeimg="1">
+
+- Note:
+
+  - 工程实现时，手动给 v 设置一个上界
+
+##### FTRL: AdaGrad + L1 reg + L2 reg
+
+* Related Paper: 《Ad Click Prediction: a View from the Trenches, KDD 13》
+
+* Online Learning and Sparsity
+  * FTRL-Proximal(Follow The Proximally Regularized Leader): get both the sparsity provided by RDA and the improved accuracy of OGD
+
+  * [在线学习（Online Learning）导读 - 吴海波的文章](https://zhuanlan.zhihu.com/p/36410780)
+  * FTRL的数学本质：SGD（梯度 + L2）+稀疏性（L1）
+
+  * 李亦锬大佬的机器学习答题集，很精彩，其中介绍了 FTRL 的实践意义
+    https://zhuanlan.zhihu.com/p/20693546
+
+##### FTRL with Group Lasso
+
+* Paper: https://dl.acm.org/doi/pdf/10.1145/3357384.3358114
+  * 注意 Group Lasso 项是 L2 范数的一次幂
+* Lasso: https://en.wikipedia.org/wiki/Lasso_(statistics)
+* 应用：优化 sparse feature embedding layer (fid -> embedding vector layer) 的 model sparsity，将每个特征的 vector 当作一个 group
+
+##### Adam
+
+- Algorithm:
+
+<img src="https://www.zhihu.com/equation?tex=t" alt="t" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=g_t%20%5Cequiv%20%5Cnabla%20f%28w_%7Bt-1%7D%29" alt="g_t \equiv \nabla f(w_{t-1})" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=m_t%20%5Cleftarrow%20%5Cbeta_1%20m_%7Bt-1%7D%20%2B%20%281-%5Cbeta_1%29%20g_t" alt="m_t \leftarrow \beta_1 m_{t-1} + (1-\beta_1) g_t" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=v_t%20%5Cleftarrow%20%5Cbeta_2%20v_%7Bt-1%7D%20%2B%20%281-%5Cbeta_2%29%20g_t%20%5Ccirc%20g_t" alt="v_t \leftarrow \beta_2 v_{t-1} + (1-\beta_2) g_t \circ g_t" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=%5Chat%7Bm%7D_t%20%5Cleftarrow%20%5Cfrac%7Bm_t%7D%7B1-%5Cbeta_1%5Et%7D" alt="\hat{m}_t \leftarrow \frac{m_t}{1-\beta_1^t}" class="ee_img tr_noresize" eeimg="1">
+    - 动机是没有 learning rate decay
+    - 可尝试去掉，等价于learning rate warmup，会有点接近AdaGrad
+
+<img src="https://www.zhihu.com/equation?tex=%5Chat%7Bv%7D_t%20%5Cleftarrow%20%5Cfrac%7Bv_t%7D%7B1-%5Cbeta_2%5Et%7D" alt="\hat{v}_t \leftarrow \frac{v_t}{1-\beta_2^t}" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=w_%7Bt%7D%20%5Cleftarrow%20w_%7Bt-1%7D%20-%20%5Ceta%20%5Cfrac%7B%5Chat%7Bm%7D_t%7D%7B%5Csqrt%7B%5Chat%7Bv%7D_t%7D%20%2B%20%5Cepsilon%7D%20" alt="w_{t} \leftarrow w_{t-1} - \eta \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon} " class="ee_img tr_noresize" eeimg="1">
+  - Note: 
+    - bias correction could be ignored
+    - AdaGrad uses **uniformly weighted** average, while Adam assigns **larger weights for later** items
+      - Intuition: 哪一种近似 Hessian 的方式在模型上更合适，需要考虑旧的 sparse item 的期望更新方式
+    - AdaGrad has learning rate decay, while Adam doesn't have learning rate decay
+      - Intuition: 结合同/异步训练方式思考，动机是训练后期减少lr让模型收敛更稳定（比如 W&D model 的 dense）
+- Intuition
+  - 1st momentum: 类似 Polyak Momentum
+    - Also see SAG: https://arxiv.org/pdf/1309.2388v2.pdf
+  - 2nd momentum
+    - 用外积矩阵近似 Hessian 矩阵
+- 不保证理论收敛
+  - 2 ways to fix:
+
+<img src="https://www.zhihu.com/equation?tex=%5Cmax%5C%7B%5Chat%7Bv%7D_t%2C%20%5Chat%7Bv%7D_%7Bt-1%7D%2C%20%5Cldots%20%5Chat%7Bv%7D_1%5C%7D%24%20%3Cimg%20src%3D%22https%3A//www.zhihu.com/equation%3Ftex%3Dinstead%20of%20" alt="instead of " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%5Chat%7Bv%7D_t" alt="\hat{v}_t" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=to%20guarantee%20decreasing%20" alt="to guarantee decreasing " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%5Cfrac%7B%5Ceta_t%7D%7B%5Csqrt%7B%5Chat%7Bv%7D_t%7D%20%2B%20%5Cepsilon%7D" alt="\frac{\eta_t}{\sqrt{\hat{v}_t} + \epsilon}" class="ee_img tr_noresize" eeimg="1"> $: AMSGrad
+    - Take $ <img src="https://www.zhihu.com/equation?tex=%5Cbeta_2%20%5Cpropto%201-%5Cfrac%7B1%7D%7Bt%7D" alt="\beta_2 \propto 1-\frac{1}{t}" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%2C%20approaches%201%20when%20" alt=", approaches 1 when " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=t" alt="t" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%20approaches%20infinity%2C%20%20" alt=" approaches infinity,  " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=v_t" alt="v_t" class="ee_img tr_noresize" eeimg="1"> $barely changes at the end
+- Note：
+  - sparse 部分不适用 Adam：滑动平均用到了历史信息
+  - 配合 slow start 技术，前期并发数缓慢增大
+
+##### RMSProp
+
+* RMSProp: Adam with $ <img src="https://www.zhihu.com/equation?tex=%5Cbeta_1%3D0" alt="\beta_1=0" class="ee_img tr_noresize" eeimg="1"> $, without any bias correction
 
 ##### Lookahead Optimizer: k steps forward, 1 step back, NIPS 2019
 
@@ -45,7 +229,72 @@ Dropout
   * Proposition 2 (Lookahead steady-state risk): Lookahead has a variance fixed point that is strictly smaller than that of the SGD inner-loop optimizer for the same learning rate
   * Deterministic quadratic convergence: underdamped系统提升稳定性，overdamped系统略有损收敛
 
+##### LAMB
 
+- Algorithm:
+  - In step $ <img src="https://www.zhihu.com/equation?tex=t" alt="t" class="ee_img tr_noresize" eeimg="1"> $:
+  - Compute update based on any optimizer: $ <img src="https://www.zhihu.com/equation?tex=u_t" alt="\max\{\hat{v}_t, \hat{v}_{t-1}, \ldots \hat{v}_1\}" alt="u_t" alt="\max\{\hat{v}_t, \hat{v}_{t-1}, \ldots \hat{v}_1\}" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=instead%20of%20" alt="instead of " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%5Chat%7Bv%7D_t" alt="\hat{v}_t" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=to%20guarantee%20decreasing%20" alt="to guarantee decreasing " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%5Cfrac%7B%5Ceta_t%7D%7B%5Csqrt%7B%5Chat%7Bv%7D_t%7D%20%2B%20%5Cepsilon%7D" alt="\frac{\eta_t}{\sqrt{\hat{v}_t} + \epsilon}" class="ee_img tr_noresize" eeimg="1"> $: AMSGrad
+    - Take $ <img src="https://www.zhihu.com/equation?tex=%5Cbeta_2%20%5Cpropto%201-%5Cfrac%7B1%7D%7Bt%7D" alt="\beta_2 \propto 1-\frac{1}{t}" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%2C%20approaches%201%20when%20" alt=", approaches 1 when " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=t" alt="t" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%20approaches%20infinity%2C%20%20" alt=" approaches infinity,  " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=v_t" alt="v_t" class="ee_img tr_noresize" eeimg="1"> $barely changes at the end
+- Note：
+  - sparse 部分不适用 Adam：滑动平均用到了历史信息
+  - 配合 slow start 技术，前期并发数缓慢增大
+
+##### RMSProp
+
+* RMSProp: Adam with $ <img src="https://www.zhihu.com/equation?tex=%5Cbeta_1%3D0" alt="\beta_1=0" class="ee_img tr_noresize" eeimg="1"> $, without any bias correction
+
+##### Lookahead Optimizer: k steps forward, 1 step back, NIPS 2019
+
+* 本文是SGD场景，slow weights + 主要提升训练稳定性、减小优化器的variance
+* mini-batch 异步SGD场景也可以应用，提升模型效果
+  * CV、NLP场景可以重复训同一批样本，这样的手段更有意义
+  * 推荐、广告场景，假如照搬，感觉会丢失 fine-grained gradients 信息，但在异步训练场景，多worker更新参数天然构成了slow weights
+
+* Method
+  * Slow weights trajectory: We can characterize the trajectory of the slow weights as an exponential moving average (EMA) of the final fast weights within each inner-loop, regardless of the inner optimizer.
+  * Proposition 1 (Optimal slow weights step size)
+
+* 分析convergence
+  * Proposition 2 (Lookahead steady-state risk): Lookahead has a variance fixed point that is strictly smaller than that of the SGD inner-loop optimizer for the same learning rate
+  * Deterministic quadratic convergence: underdamped系统提升稳定性，overdamped系统略有损收敛
+
+##### LAMB
+
+- Algorithm:
+  - In step $ <img src="https://www.zhihu.com/equation?tex=t" alt="t" class="ee_img tr_noresize" eeimg="1"> $:
+  - Compute update based on any optimizer: $$u_t" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=u_t%20%3D%20g_t" alt="u_t = g_t" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=u_t%20%3D%20%5Cfrac%7B%5Chat%7Bm%7D_t%7D%7B%5Csqrt%7B%5Chat%7Bv%7D_t%7D%20%2B%20%5Cepsilon%7D%20" alt="u_t = \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon} " class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=u_t%3D%5Cfrac%7Bg_t%7D%7B%5Csqrt%7Bv_t%20%2B%20%5Cepsilon%7D%7D%20" alt="u_t=\frac{g_t}{\sqrt{v_t + \epsilon}} " class="ee_img tr_noresize" eeimg="1">
+  - Layer-wise normalization:
+
+<img src="https://www.zhihu.com/equation?tex=%5Chat%7Bu%7D_t%20%5Cleftarrow%20%5Cfrac%7B%5C%7Cw_%7Bt-1%7D%5C%7C%7D%7B%5C%7Cu_t%5C%7C%7D%20u_t" alt="\hat{u}_t \leftarrow \frac{\|w_{t-1}\|}{\|u_t\|} u_t" class="ee_img tr_noresize" eeimg="1">
+  - Update model:
+
+<img src="https://www.zhihu.com/equation?tex=w_t%20%5Cleftarrow%20w_%7Bt-1%7D%20-%20%5Ceta%20%5Chat%7Bu%7D_t" alt="w_t \leftarrow w_{t-1} - \eta \hat{u}_t" class="ee_img tr_noresize" eeimg="1">
+
+- Intuition:
+  - In large-batch training:
+
+<img src="https://www.zhihu.com/equation?tex=%5C%7Cu_t%5C%7C%24%24%20is%20unstable%0A%20%20-%20Using%20large%20learning%20rate%3A%20diverge%20for%20large%20%24%20%3Cimg%20src%3D%22https%3A//www.zhihu.com/equation%3Ftex%3D%5C%7Cu_t%5C%7C" alt="\|u_t\|" alt="\|u_t\|" alt="\|u_t\|" class="ee_img tr_noresize" eeimg="1"> $ is unstable
+  - Using large learning rate: diverge for large $$\|u_t\|" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=%5C%7Cu_t%5C%7C" alt="\|u_t\|" class="ee_img tr_noresize" eeimg="1">
+  - LAMB: 
+
+<img src="https://www.zhihu.com/equation?tex=%5Cfrac%7B%5Ceta%20%5C%7Cw_%7Bt-1%7D%5C%7C%7D%7B%5C%7Cu_t%5C%7C%7D" alt="\frac{\eta \|w_{t-1}\|}{\|u_t\|}" class="ee_img tr_noresize" eeimg="1">
+
+<img src="https://www.zhihu.com/equation?tex=%5C%7Cu_t%5C%7C%24%24is%20large%0A%20%20-%20Larger%20when%20%24%20%3Cimg%20src%3D%22https%3A//www.zhihu.com/equation%3Ftex%3D%5C%7Cu_t%5C%7C" alt="\|u_t\|" class="ee_img tr_noresize" eeimg="1"> $is small
+  - Normalize $ <img src="https://www.zhihu.com/equation?tex=%5C%7Cu_t%5C%7C" alt="\|u_t\|" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=to%20the%20same%20scale%20of%20" alt="to the same scale of " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%5C%7Cw%5C%7C" alt="\|u_t\|" alt="\|w\|" alt="\|u_t\|" class="ee_img tr_noresize" eeimg="1"> $is large
+  - Larger when $ <img src="https://www.zhihu.com/equation?tex=%5C%7Cu_t%5C%7C" alt="\|u_t\|" class="ee_img tr_noresize" eeimg="1"> $is small
+  - Normalize $ <img src="https://www.zhihu.com/equation?tex=%5C%7Cu_t%5C%7C" alt="\|u_t\|" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=to%20the%20same%20scale%20of%20" alt="to the same scale of " class="ee_img tr_noresize" eeimg="1"> $\|w\|" class="ee_img tr_noresize" eeimg="1">
+
+- Note:
+  - We can apply LAMB normalization to any base optimizer
+  - But the learning rate must be re-tuned
 
 #### Validation
 
@@ -54,6 +303,43 @@ holdout validation, cross-validation, leave-one-out validation, etc
 ```python
 train_data, validation_data, test_data = np.split(model_data.sample(frac=1, random_state=1729), [int(0.7 * len(model_data)), int(0.9 * len(model_data))])   # Randomly sort the data then split out first 70%, second 20%, and last 10%
 ```
+
+
+
+### Quantization
+
+#### 模型量化介绍
+
+* 神经网络：多函数的嵌套表示
+  * 越来越不规则
+
+Serving 量化
+
+* 用于存储的模型量化：
+  * 传统问题局限性：求解量化误差最小，不面向loss函数，面向策略，不可解
+
+* 用于计算的模型量化
+  * 权重和输入都有delta（预估时认为权重delta为零）
+  * 偏微分公式 -> 每层的输出到下一层的输入很重要
+    * 同样的量化方式，相同量化精度给不同层的输入带来不同的误差
+    * 存储量化 v.s 计算量化，后者更强调在存储约束下求解最优精度
+  * 一种可求闭式解（分层量化模型）：量化标准排序、梯度排序，一一对应，排序不等式证明
+    * e.g. HAWQ-v2
+
+Training 量化
+
+* 量化感知训练的原理：李沐的ps文章《communication efficient distributed machine learning with the parameter server》https://www.cs.cmu.edu/~muli/file/parameter_server_nips14.pdf
+* 结论：控制梯度噪音的范数
+  * 小结论：量化训练完后要恢复全精度进行计算，再用训练后量化手段进行量化
+  * 实现上：量化的正传，量化/全精度的反传，量化的更新
+    * 全精度反传，与自动求导模块的实现有关，可能存在
+
+* 工具：https://github.com/NVIDIA/apex
+
+总结：
+
+* 量化问题本质是NP难问题，部分情况下可转换成指数规划问题
+* 量化训练和预测是两个目标，训练结果应该恢复成全精度再用预测压缩的过程压缩一遍
 
 ### Bert
 

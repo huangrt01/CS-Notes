@@ -2,9 +2,13 @@
 
 [toc]
 
-#### 基础操作
+#### 基础数据
+```python
+bool(int(str(3))) -> True
+bool(int(str(0))) -> False
+```
 
-##### 数据结构
+#### 数据结构
 
 ```python
 list.extend(list)
@@ -16,8 +20,16 @@ list = [x.strip() for x in list_string.split() if x.strip()]
 
 # 普通dict的default插入方式（类似于C++的[]）
 obj = dict.setdefault(key, default=None)
+
+# set operations: https://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html
+
+&, |, -, ^
+
 ```
+#### collections
+
 collections.defaultdict(list)、collections.defaultdict(set)
+
 * defaultdict相比普通dict的区别在于：使用索引时，如果未查找到，会自动插入默认值
 * dict 可以用 tuple 作 key
 
@@ -37,7 +49,17 @@ for k,v in d.items(): # python3.6+
 
 
 
-[浅拷贝与深拷贝](https://zhuanlan.zhihu.com/p/25221086)，[copy.py](https://docs.python.org/3/library/copy.html)
+```python
+class Example(collections.namedtuple('Example', ['aid', 'bid', 'cid', 'did']))
+
+	@classmethod
+	def from_abcd(cls, a, b, c, d):
+    return cls(a, b, c, d)
+```
+
+
+
+##### [浅拷贝与深拷贝](https://zhuanlan.zhihu.com/p/25221086)，[copy.py](https://docs.python.org/3/library/copy.html)
 
 核心思想：
 
@@ -51,6 +73,24 @@ for k,v in d.items(): # python3.6+
 import copy
 copy.deepcopy(dict)
 ```
+
+
+
+##### queue
+
+```python
+# queue.py
+task_done()
+join()
+put(data)
+get()
+
+queue的利用：新线程prefetch内容塞进queue里，可以拿到遍历queue的更快的生成器（yield结尾）
+```
+
+
+
+
 
 
 
@@ -74,6 +114,45 @@ import re
 tmp = re.sub("pattern", "", line.strip('\n'))
 matchObj = re.match(r'', line.strip('\n'), re.M|re.I)
 ```
+
+#### argparse
+
+```python
+import argparse
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--num_xxx', type=int, default=10, help='number of xxx')
+    args = parser.parse_args()
+    
+# 设计模式：可以直接把args传入程序中的各种类作为self._args成员
+
+# subparser
+subparsers = parser.add_subparsers(help='sub-command help')
+#添加子命令 add
+parser_a = subparsers.add_parser('add', help='add help')
+parser_a.add_argument('-x', type=int, help='x value')
+parser_a.add_argument('-y', type=int, help='y value')
+#设置默认函数
+parser_a.set_defaults(func=add)
+#添加子命令 sub
+parser_s = subparsers.add_parser('sub', help='sub help')
+parser_s.add_argument('-x', type=int, help='x value')
+parser_s.add_argument('-y', type=int, help='y value')
+#设置默认函数
+parser_s.set_defaults(func=sub)
+
+args = parser.parse_args()
+args.func(args)
+
+$python subc.py add -x 1 -y 2
+x + y =  3
+$python subc.py sub -x 1 -y 2
+x - y =  -1
+```
+
+
+
+
 
 #### module
 
@@ -110,6 +189,66 @@ class Student(object):
 ```
 @model_registry.register('model_type')
 ```
+
+* [一文让你彻底搞懂Python中\__ str\__和\__repr\__?](https://segmentfault.com/a/1190000022266368)
+
+#### 函数
+
+* callable
+
+```python
+def call_with_retry(fn: Callable,
+                    check_fn: Union[Callable, None] = None,
+                    retry_limit: int = 5,
+                    retry_interval: int = 60):
+    retry = 0
+    while True:
+        try:
+            res = fn()
+            if check_fn:
+                check_fn(res)
+            return res
+        except Exception as e:
+            logging.warning(f'Function `{fn.__name__}` encountered exception: {repr(e)}.')
+            retry += 1
+            if retry >= retry_limit > 0:
+                break
+            logging.warning(f'Retrying {retry} out of {retry_limit} times in {retry_interval} secs.')
+            time.sleep(retry_interval)
+    return None
+```
+
+* @修饰器
+
+```python
+#funA 作为装饰器函数
+def funA(fn):
+    #...
+    fn() # 执行传入的fn参数
+    #...
+    return '...'
+@funA
+def funB():
+    #...
+    
+---> funB = funA(funB)
+
+# 装饰器嵌套参数函数
+def funA(fn):
+    def say(*args,**kwargs):
+        fn(*args,**kwargs)
+    return say
+@funA
+def funB(arc):
+    print("A: ",arc)
+@funA
+def other_funB(name,arc):
+    print(name,arc)
+funB("a")
+other_funB("B: ","b")
+```
+
+* 函数名之前加类名
 
 #### virtualenv
 
@@ -171,6 +310,7 @@ counters = [Counter.remote() for _ in range(10)]  # 创建10个Counter实例
 
 
 [Using the Python zip() Function for Parallel Iteration](https://realpython.com/python-zip-function/)
+
 * python2返回list，python3返回iterator
 	* python2耗内存，可以用`iterator.izip(*iterables)`
 * 支持sorted函数和sort方法
@@ -205,6 +345,7 @@ if __name__ == '__main__':
     print(eval("fib9()"))
 ```
 
+#### os, sys
 
 ```python
 import sys
@@ -220,11 +361,35 @@ sys.path.insert(0,os.getcwd())
 os.path.join(dir,file)
 ```
 
+```python
+os.getenv('ABC', 'abc') # 注意返回值是str
+```
+
+
+
 #### datetime
 
 ```python
 from datetime import datetime
 datetime.now()
+datetime.timedelta(hours=1)
+datetime.timedelta(days=1)
+
+# max datetime (普通调用其timestamp方法可能溢出)
+datetime.max.replace(tzinfo=datetime.timezone.utc).timestamp()
+
+# parse timestamp
+object = datetime.fromtimestamp(timestamp)
+```
+
+#### fstring
+
+https://www.datacamp.com/tutorial/f-string-formatting-in-python
+
+```python
+person = {"name": "John", "age": 19}
+## 双引号套单引号
+print(f"{person['name']} is {person['age']} years old.")
 ```
 
 #### functools
@@ -277,8 +442,6 @@ https://pandas.pydata.org/pandas-docs/stable/index.html
 data['not_working'] = np.where(np.in1d(data['job'], ['student', 'retired', 'unemployed']), 1, 0)
 ```
 
-
-
 #### random
 
 ```python
@@ -296,6 +459,44 @@ random.shuffle(train_x)
 random.seed(randnum)
 random.shuffle(train_y)
 ```
+
+#### schedule
+
+https://stackoverflow.com/questions/15088037/python-script-to-do-something-at-the-same-time-every-day
+
+```python
+pip install schedule
+
+import schedule
+import time
+
+class Scheduler:
+  def job(self, t):
+    logging.info(t)
+    print(t)
+  def func(self):
+    t = 'Done'
+    schedule.every().minutes.at(":17").do(self.job, t) 
+    while True:
+        schedule.run_pending()
+        time.sleep(1) # wait one second
+    
+nohup python2.7 MyScheduledProgram.py &
+```
+
+
+
+#### struct
+
+https://docs.python.org/3/library/struct.html
+
+```shell
+id_size = fd.read(8)
+# id_size = struct.pack('>Q', len(proto))[::-1]
+id_size = struct.unpack('<Q', id_size)[0]
+```
+
+
 
 #### subprocess
 

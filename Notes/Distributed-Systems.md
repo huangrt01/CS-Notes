@@ -24,7 +24,10 @@
 
 最终一致性解决方案
 
-* 两阶段提交
+* 两阶段提交（2PC）
+  * 所有下属节点confirm后才发起操作
+  * 2PC + WAL
+
 * 异步确保（无事务消息）
 * 异步确保（事务消息）
 * [补偿交易 (Compensating Transaction)](https://docs.microsoft.com/en-us/azure/architecture/patterns/compensating-transaction)

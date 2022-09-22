@@ -1,3 +1,5 @@
+[toc]
+
 ## Database
 
 没学过db。。。极速入门满足日常简单需求
@@ -16,15 +18,17 @@ CREATE TABLE Persons (
 );
 ```
 
-NOT NULL
+* NOT NULL
+  * [为什么数据库字段要使用 NOT NULL？](https://mp.weixin.qq.com/s/XyOU6dimeZNjzIYyTv_fPA)
 
-* [为什么数据库字段要使用 NOT NULL？](https://mp.weixin.qq.com/s/XyOU6dimeZNjzIYyTv_fPA)
-
-AUTO INCREMENT
-
+* AUTO INCREMENT
 
 
-SELECT
+
+* SELECT
+  * max, min, avg
+  * GROUP BY
+    * [not a group by expression error](https://learnsql.com/blog/not-a-group-by-expression-error/)
 
 ```mysql
 # 判断范围
@@ -35,22 +39,61 @@ explain select * from  service_status where service_type='abc' and (record_id be
 select * from service_status order by id desc
 # 不等于
 <>
+# 非空
+is NOT NULL
 ```
 
 e.g.
 
 ```mysql
-SELECT log.uid, info.source, log.action, sum(log.action) 
+SELECT log.uid, info.source, log.action, sum(log.action), COUNT(1) AS count
 FROM info, log
 WHERE (log.time in LAST_7D) 
     and (log.id = info.id) 
     and (log.action=show)
 GROUP by log.uid, info.source
+ORDER by log.uid, info.source DESC
+LIMIT 1000
+```
+
+* WITH AS
+* JOIN
+  * https://stackoverflow.com/questions/354070/sql-join-where-clause-vs-on-clause
+
+```mysql
+with temp as(
+	select a,b,c
+  where a=.. AND b=.. AND c=..
+)
+select A.a
+from temp A join temp B
+on A.a = B.a
+group by A.a
+```
+
+```mysql
+# 高级 JOIN 技巧
+# Using the Same Table Twice
+SELECT a.account_id, e.emp_id, b_a.name open_branch, b_e.name emp_branch 
+FROM account AS a 
+INNER JOIN branch AS b_a ON a.open_branch_id = b_a.branch_id 
+INNER JOIN employee AS e ON a.open_emp_id = e.emp_id 
+INNER JOIN branch b_e ON e.assigned_branch_id = b_e.branch_id WHERE a.product_cd = 'CHK';
+
+# Self-Joins
+SELECT e.fname, e.lname, e_mgr.fname mgr_fname, e_mgr.lname mgr_lname
+FROM employee AS e INNER JOIN employee AS e_mgr
+ON e.superior_emp_id = e_mgr.emp_id;
+
+# Non-Equi-Joins
+SELECT e1.fname, e1.lname, 'VS' vs, e2.fname, e2.lname
+FROM employee AS e1 INNER JOIN employee AS e2
+ON e1.emp_id < e2.emp_id WHERE e1.title = 'Teller' AND e2.title = 'Teller';
 ```
 
 
 
-ALTER TABLE
+* ALTER TABLE
 
 ```mysql
 ALTER TABLE
@@ -67,13 +110,53 @@ ALTER TABLE test TABLE (c1 char(1),c2 char(1));
 
 
 
-TIMESTAMP
+* TIMESTAMP
 
 ```mysql
 `record_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录产生时间'
 ```
 
 
+
+### db client
+
+#### Redis 常见接口
+
+- put
+- get key or keys
+- mget
+  - Input: keys
+  - Output: indices, results
+- hset
+  - e.g. Redis: https://redis.io/docs/reference/optimization/memory-optimization/#use-hashes-when-possible
+  - 存储结构化数据
+- remove key or keys
+- zcard
+  - Returns the sorted set cardinality (number of elements) of the sorted set stored at `key`.
+- zremrangebyscore(key, start, end)
+  - Removes all elements in the sorted set stored at `key` with a score between `min` and `max` (inclusive).
+- sadd、zadd、hset
+  - sadd：set
+  - zadd：sorted set (element with score)
+  - hset：https://redis.io/commands/hset/
+
+### Hive
+
+* hadoop 生态下的OLAP引擎，将 SQL 查询翻译为 map reduce 任务，特点是稳定，成功率高，但是查询速度慢
+
+* API v.s. mysql
+
+  * `percentile(a, array(0.5,0.9,0.99))` 求分位数（mysql没有这个函数）
+  * [Hive Aggregate Functions](http://hadooptutorial.info/hive-aggregate-functions/)
+
+* 用 Spark 做 mysql to Hive 的同步
+
+  * ```
+    spark.mysql.remain_delete = true
+    ```
+
+* 细节
+  * p_date和p_hour是hive分区字段
 
 ### 特征工程
 

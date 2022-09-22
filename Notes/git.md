@@ -197,6 +197,7 @@ tracking branch的缩写：`@{u}或@{upstream}`
 - `git push <remote> <local branch>:<remote branch>`: send objects to remote, and update remote reference
   * `git push origin lab1:lab1`
   * `git push --set-upstream origin my-branch`，本地关联远程分支，用来省略上面一行的分支标注
+  * `git push origin --delete my-branch` 删除远程分支
 - `git branch --set-upstream-to=<remote>/<remote branch>`: set up correspondence between local and remote branch
   - 相当于 `-u`
 - `git fetch <remote>`: retrieve objects/references from a remote
@@ -269,6 +270,7 @@ git push origin HEAD --force
 	- `git stash show -p | git apply -R`
 - `git cherry-pick`
   - [利用它只pull request一个特定的commit](https://www.iteye.com/blog/bucketli-2442195)
+  - `git cherry-pick commit1..commit2`
 - `git bisect`: binary search history (e.g. for regressions)
 - [`git ls-files`](https://git-scm.com/docs/git-ls-files)
 - `git submodule add <url> /path`
@@ -338,7 +340,7 @@ git config --global user.email huangrt01@163.com
 # MacOs
 ssh-keygen -t rsa -b 4096 -C "huangrt01@163.com" # 如果rsa已占用，可用ssh-keygen -t ed25519 -C "huangruiteng@xxx.com"
 eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_rsa # MacOS带-K
+ssh-add ~/.ssh/id_rsa # MacOS带--apple-use-keychain (-K)
 pbcopy < ~/.ssh/id_rsa.pub  # MacOS , Linux用xclip
 # 上github添加SSH Key
 ssh -T git@github.com

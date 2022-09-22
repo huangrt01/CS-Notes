@@ -1,16 +1,109 @@
+[toc]
+
+https://godbolt.org
+
 ### Theory
 
 * [Shared Library Symbol Conflicts (on Linux)](https://holtstrom.com/michael/blog/post/437/Shared-Library-Symbol-Conflicts-(on-Linux).html)
   * 从左往右查找：Note that the linker only looks further down the line when looking for symbols used by but not defined in the current lib.
+  
 * [Linux 下 C++so 热更新](https://zhuanlan.zhihu.com/p/162366167)
+
 * ABI (Application Binary Interface)
   * 应用程序的二进制接口，对于一个二进制的动态库或者静态库而言，可以详细描述在其中的函数的调用方式，定义在其中的数据类型的大小，数据结构的内存布局方式等信息
   * ABI 信息 对不同操作系统、不同编译链版本、不同二进制库对应源码版本 有或大或小的差异，从而造成预编译二进制库的兼容性问题，导致 compile error 或 执行时coredump
+  
 * 编译器有能力让不同 target 的 cpp 文件的不同编译选项，有区分地生效。但无法控制其它cpp文件对头文件的使用，因此头文件为主体的开源项目，经常不得不很小心地去处理各种使用情况。
-* LTO (Link Time Optimization)
+
+#### LTO (Link Time Optimization)
+
   * 本质想解决的问题：编译 a.cpp 的时候看不到 b.cpp，编译器做不了优化
   * 解决方法：翻译 a.cpp 代码成中间语言 (LLVM IR Bitcode)，放到 a.o 里；链接阶段把它们都放在一起，一个大文件来做优化
   * 运行方式：linker调用编译器提供的plugin
+  * 开启方式：`-flto`
+
+##### GTC2022 - Automated Performance Improvement Using CUDA Link Time Optimization [S41595]
+
+* CUDA 5.0：separate compilation
+
+![nvcc-lto](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Compiling/nvcc-lto.jpg)
+
+![use-lto](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Compiling/use-cuda-lto.png)
+
+* LTO
+  * how to use 如上图
+  * Partial LTO，需要 execuable 支持 LTO
+* JIT LTO (just in time LTO)
+  * linking is performed at runtime
+  * Generation of LTO IR is either offline with nvcc, or at runtime with nvrtc
+
+![jit-lto](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Compiling/jit-lto.png)
+
+* Use JIT LTO
+  * 用法见下图
+  * The CUDA math libraries (cuFFT, cuSPARSE, etc) are starting to use JIT LTO; see [GTC Fall 2021 talk “JIT LTO Adoption in cuSPARSE/cuFFT: Use Case Overview](https://www.nvidia.com/en-us/on-demand/session/gtcfall21-a31155?playlistId=playList-ead11304-9931-4e91-9d5a-fb0e1ef27014)”
+    * indirect user callback 转化为 JIT LTO callback
+    * another use case: configure the used kernels ---> minimal library size
+
+```c++
+// Use nvrtc to generate the LTOIR (“input” is CUDA C++ string):
+nvrtcProgram prog;
+nvrtcCreateProgram(&prog, input, name, 0, nullptr, nullptr);
+const char *options[2] = {"-dlto", "-dc"};
+const nvrtcResult result = nvrtcCompileProgram(prog, 2, options);
+size_t irSize;
+nvrtcGetNVVMSize(prog, &irSize);
+char *ltoIR = (char*)malloc(irSize);
+nvrtcGetNVVM(prog, ltoIR); // returns LTO IR
+
+// LTO inputs are then passed to cuLink* driver APIs, so linking is performed at runtime
+CUlinkState state;
+CUjit_option jitOptions[] = {CUjit_option::CU_JIT_LTO};
+void *jitOptionValues[] = {(void*) 1};
+cuLinkCreate(1, jitOptions, jitOptionValues, &state);
+cuLinkAddData(state, CUjitInputType::CU_JIT_INPUT_NVVM,
+ltoIR, irSize, name, 0, NULL, NULL);
+cuLinkAddData( /* another input */);
+size_t size;
+void *linkedCubin;
+cuLinkComplete(state, linkedCubin, &size);
+cuModuleLoadData(&mod, linkedCubin);
+
+// Math libraries hide the cuLink details in their CreatePlan APIs.
+```
+
+* LTO WITH REFERENCE INFORMATION
+  * Starting in CUDA 11.7, nvcc will track host references to device code, which LTO can use to remove unused code. 
+  * JIT LTO needs user to tell it this information, so new cuLinkCreate options:
+    * CU_JIT_REFERENCED_KERNEL_NAMES
+    * CU_JIT_REFERENCED_VARIABLE_NAMES
+    * CU_JIT_OPTIMIZE_UNUSED_DEVICE_VARIABLES
+    * The *NAMES strings use implicit wildcards, so “foo” will match a mangled name like “Z3fooi”.
+
+```c++
+__device__ int array1[1024];
+__device__ int array2[256];
+__global__ void kernel1 (void) {
+… array1[i]…
+}
+__global__ void kernel2 (void) {
+… array2[i]…
+}
+….
+kernel2<<<1,1>>>(); // host code launches kernel2
+```
+
+* 收益来源
+  * Much of the speedup comes from cross-file inlining, which then helps keep the data in registers. 
+  * Seeing the whole callgraph also helps to remove any dead code.
+* References:
+  * https://developer.nvidia.com/blog/improving-gpu-app-performance-with-cuda-11-2-device-lto/ -- offline LTO
+  * https://developer.nvidia.com/blog/discovering-new-features-in-cuda-11-4/ -- JIT LTO
+  * https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#optimization-of-separate-compilation -- nvcc
+  * https://docs.nvidia.com/cuda/nvrtc/index.html -- nvrtc
+  * https://docs.nvidia.com/cuda/nvrtc/index.html -- cuLink APIs
+  * https://docs.nvidia.com/cuda/nvrtc/index.html -- compatibility guarantees
+  * [Application paper](https://www.osti.gov/biblio/1798430-enhancements-supporting-ic-usage-pem-libraries-next-gen-platforms)
 
 ### C++
 
@@ -151,7 +244,17 @@ readelf -sW my_bin |grep LOCAL|grep OBJECT | grep -v __PRETTY_FUNCTION__|grep -v
 
 
 
+#### pragma
 
+* `pack` pragma
+  * https://docs.microsoft.com/en-us/cpp/preprocessor/pack?view=msvc-170
+
+```c++
+#pragma pack( show )
+#pragma pack( push [ , identifier ] [ , n ] )
+#pragma pack( pop [ , { identifier | n } ] )
+#pragma pack( [ n ] )
+```
 
 
 
@@ -161,10 +264,39 @@ readelf -sW my_bin |grep LOCAL|grep OBJECT | grep -v __PRETTY_FUNCTION__|grep -v
 gcc -D ABC     # 定义宏
 ```
 
+#### Blade
+
+https://github.com/chen3feng/blade-build/blob/master/doc/en/command_line.md
+
 ```shell
-blade build :target --toolchain=x86_64-gcc830 --bundle=debug --cxxflags="-D ABC"
-blade query :target --deps --output-tre
+blade build (folder):target --toolchain=x86_64-gcc830 --bundle=debug --cxxflags="-D ABC"
 
 --generate-dynamic
 ## cc_library可以通过--generate-dynamic来生成动态库，不要用这种方式来生成动态库作为终端产物，推荐使用cc_plugin，cc_library一般作为cc_binary的前置依赖存在
+-p debug/release
+# debug：关闭配置在BUILD文件，或者BLADE_ROOT文件中的所有optimize参数，并且追加诸                              如-g类型的编译参数
+# release：默认打开配置在BUILD文件等配置文件中的optimize参数
+
+
+blade query :target --deps --output-tre
 ```
+
+BUILD文件怎么写
+
+```python
+# BUILD
+load("//workspace/BUILD.share", "*")
+
+# BUILD.share
+def_keys = ['a', 'b', 'c']
+for key in def_keys:
+    if os.getenv(key):
+        defs.append(key)
+```
+
+过滤链接系统库的so
+
+```python
+--filterflags="-lssl -lcrypto -lcrypt -levent -lz -lbz2 -lmsgpack"
+```
+

@@ -150,6 +150,7 @@ int howManyBits(int x) {
   * 0 00000 0000000001 = 2−24 ≈ 5.96046 × 10−8  (min half precision)
   * 0 11110 1111111111 = 65504  (max half precision)
 * [Bf16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) S(1) E(8) M(7)
+* 学到个很 tricky 的操作，比如要存储一个 int64，可以用 8 个 fp16 来存（本质上是fp16有10个fraction bit位，可以作为有效存储）
 
 
 ##### floatScale2(uf)

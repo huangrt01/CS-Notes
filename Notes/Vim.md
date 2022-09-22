@@ -50,6 +50,7 @@
   * `？{regex}`向前搜索
   * 退出查找高亮状态：`:nohl`
   * `:set ic`忽略大小写；`:set hls is`; 选项前加no可关闭选项`:set noic`
+    * `/\cword`不区分大小写查找
 
 **Selection**：Visual modes 
 
@@ -136,6 +137,12 @@ A: 先`grep -nr $target $FILE`获取行号，然后`vim $FILE +N`进入定位所
 
 
 
+* 缩进操作：
+  * 先 `v` 进入visual模式选定要缩进的内容，再 `shift + </>` 进行整体的左右缩进
+  * 对齐缩进：`v`选中第二、三行，然后`=`，与第一行对齐缩进
+
+
+
 buffer操作：` :ls,:b num, :bn（下一个）, :bp（前一个）, :b#(上次的buffer) `
 
 window操作： `:sp / :vsp` split window，`C-w + hjkl`切换
@@ -164,6 +171,8 @@ tab操作：`gt`切换tab
 * 外部命令：`:!`
 
 Advanced Text Objects - Text objects like searches can also be composed with vim commands. E.g. `d/<pattern>` will delete to the next match of said pattern or `cgn` will change the next occurrence of the last searched string.
+
+
 
 
 
@@ -234,3 +243,9 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 - [Vi/Vim Stack Exchange](https://vi.stackexchange.com/)
 - [Vim Screencasts](http://vimcasts.org/)
 - [Practical Vim](https://pragprog.com/book/dnvim2/practical-vim-second-edition) (book)
+
+### Sublime Text
+
+Ctrl + M 括号匹配
+
+Shift + Ctrl + M 选中该级括号内容

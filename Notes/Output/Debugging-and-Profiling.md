@@ -45,6 +45,9 @@ done
 
 #### Third party logs
 
+* 一个简化版 Google's logging
+  * https://github.com/google/re2/blob/main/util/logging.h
+
 * UNIX系统中第三方库的log常存在`/var/log`
   * the [NGINX](https://www.nginx.com/) webserver places its logs under `/var/log/nginx`
 * `systemd`, a system daemon that controls many things in your system such as which services are enabled and running 
@@ -391,6 +394,29 @@ Summary
 ```
 
 As it was the case for debugging, browsers also come with a fantastic set of tools for profiling webpage loading, letting you figure out  where time is being spent (loading, rendering, scripting, &c). More info for [Firefox](https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler) and [Chrome](https://developers.google.com/web/tools/chrome-devtools/rendering-tools).
+
+##### C++ profiling functions
+
+* print memory
+
+```c++
+std::pair<size_t, size_t> MemoryUsage() {
+  uint32_t size = 0, resident = 0, share = 0;
+  std::ifstream buffer("/proc/self/statm");
+  buffer >> size >> resident >> share;
+  buffer.close();
+
+  uint32_t page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024;
+  return std::make_pair(resident * page_size_kb / 1024,
+                        share * page_size_kb / 1024);
+}
+```
+
+
+
+
+
+
 
 
 ### Exercises

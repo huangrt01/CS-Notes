@@ -68,6 +68,7 @@ unsigned u64ToAsciiTable(uint64_t value, char* dst) {
     * rehash 时整个结构要重建
 * [Hopscotch hashing](https://en.wikipedia.org/wiki/Hopscotch_hashing)
 * Cuckoo Hashing: https://web.stanford.edu/class/archive/cs/cs166/cs166.1146/lectures/13/Small13.pdf
+* GeoHash
 
 #### Radix Tree
 
@@ -142,3 +143,6 @@ function merge-pairs(list: List[PairingTree[Elem]]) -> PairingHeap[Elem]
     return merge(merge(list[0], list[1]), merge-pairs(list[2..]))
 ```
 
+#### BloomFilter
+
+https://en.wikipedia.org/wiki/Bloom_filter

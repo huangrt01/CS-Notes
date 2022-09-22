@@ -64,9 +64,12 @@ constexpr size_t CACHE_LINE_SIZE =
   * 1 socket ~ 4 CCX ~ 8 memory controller(~ memory channel)
     * Up to 2 DIMMs per channel
   * With this architecture, all cores on a single CCD are closest to 2 memory channels. The rest of the memory channels are across the IO die, at differing distances from these cores. Memory interleaving allows a CPU to efficiently spread memory accesses across multiple DIMMs. This allows more memory accesses to execute without waiting for one to complete, maximizing performance. 
-
   * Nodes Per Socket (NPS)
   * For additional tuning details, please refer to the Tuning Guides shared by AMD [here](For additional tuning details, please refer to the Tuning Guides shared by AMD here. For detailed discussions around the AMD memory architecture, and memory configurations, please refer to the Balanced Memory Whitepaper). For detailed discussions around the AMD memory architecture, and memory configurations, please refer to the [Balanced Memory Whitepaper](https://downloads.dell.com/Manuals/Common/dellemc-balanced-memory-2ndgen-amd-epyc-poweredge.pdf)
+
+#### AMD 课程
+
+ROCm：https://developer.amd.com/resources/rocm-learning-center/
 
 ### Cache 系列科普
 
@@ -201,6 +204,7 @@ https://www.slideshare.net/am_sharifian/intel-hyper-threading-technology/1
   * 点积 + 转换
 * [The x86 Advanced Matrix Extension (AMX) Brings Matrix Operations; To Debut with Sapphire Rapids](https://fuse.wikichip.org/news/3600/the-x86-advanced-matrix-extension-amx-brings-matrix-operations-to-debut-with-sapphire-rapids/)
   * AMX introduces a new matrix register file with eight rank-2 tensor (matrix) registers called “tiles”.
+* CLZ 等指令：https://en.wikipedia.org/wiki/Find_first_set
 
 ### 存储
 

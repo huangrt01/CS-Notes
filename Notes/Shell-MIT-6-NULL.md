@@ -702,6 +702,14 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
 * ag
   * Flags 含义与 grep 相似
   * http://conqueringthecommandline.com/book/ack_ag
+* alias
+  * `alias pip3="python3 -m pip"`
+  * 非交互模式下启用 alias 扩展
+```shell
+shopt -s expand_aliases
+shopt expand_aliases # show current status
+```
+
 * awk: 一种控制台编程工具，寻找和处理pattern
   * 入门[wiki](https://zh.wikipedia.org/wiki/AWK)
   * 数据统计：
@@ -736,6 +744,18 @@ Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](h
 #### d
 * d: zsh的特点，可显示最近10个目录，然后`cd -数字`进入
 * date：日期
+* declare
+  * https://www.runoob.com/linux/linux-comm-declare.html
+
+```shell
+declare -a NAMES=(
+	a \
+	b \
+	c \
+	d \
+)
+```
+
 * df: disk情况
 * disown
 * diff：[Linux中diff的渊源](https://www.cnblogs.com/moxiaopeng/articles/4853352.html)
@@ -831,6 +851,15 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
 * netstat 
   * `netstat -anp | grep tcp6` 查 ipv6 监听
 * nohup
+  * [如何优雅地让Python程序在后台运行](https://atomlab.org/post/code/python-background/)
+```shell
+# 将标准输出放到name.log中，并且记录该进程的pid到run.pid中
+nohup python -u scripts.py > name.log 2>&1 & echo $! > run.pid
+
+# 若存在run.pid文件，则加载它并杀掉该进程
+[[ -f run.pid ]] && kill $(cat run.pid)
+```
+
 #### o 
 
 * open: -n用来多开，比如``
@@ -848,39 +877,106 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
   *`pkill -9 -f 100` 
 * pmap: Displays the memory map of a process.
 * ps aux
+* pstree
 * pwd: print cwd
 #### q
 #### r
 #### s
+* scp
+
+```shell
+scp $file user@ip:/home/$folder
+scp -r $folder
+```
+
 * script
+  
   * 记录终端操作记录，按`C-d`退出
   * 可用于demo演示终端操作
+  
 * sha1sum:  `printf 'hello' | sha1sum`  
+
+* source
+
+```shell
+# "." 等价于 source
+# import envs from process
+. <(xargs -0 bash -c 'printf "export %q\n" "$@"' -- < /proc/${MAIN_PID}/environ)
+```
+
+
+
+* strings
+
+  * https://www.howtogeek.com/427805/how-to-use-the-strings-command-on-linux/
+
+  * ```
+    sudo strings /dev/mem | less
+    ```
 
 #### t
 * tac: 反向
+* tar
+
+```shell
+tar cvzf 压缩文件名.tar.gz 被压缩文件夹 # gz文件
+tar xv(z)f 压缩文件名.tar.gz -C 目标文件夹
+```
+
+
 
 * tail
   * `ls -l | tail -n1`
   * -f：不断读最新内容，实时监视
-  
 * tee: Read from standard input and write to standard output and files (or commands).
   * 和`xargs`有相似之处，都是转化stdin用于他用
   * `echo "example" | tee /dev/tty | xargs printf "[%s]"`
-  
 * tig
   * tig是一个基于ncurses的git文本模式接口。它的功能主要是作为一个Git存储库浏览器，但也可以帮助在块级别上分段提交更改，并充当各种Git命令输出的分页器
-
 * time
-
 * tmux 
-
 * top
 
   * -d 10: 10s采样
   * -H: 显示线程
   * -H -p $pid：显示指定进程下的线程
   * 按 1 键显示 per cpu core 利用率
+  * 按 f 键增加显示项目
+
+
+##### top 指标含义
+
+VIRT：virtual memory usage 虚拟内存
+
+1、进程“需要的”虚拟内存大小，包括进程使用的库、代码、数据等
+
+2、假如进程申请100m的内存，但实际只使用了10m，那么它会增长100m，而不是实际的使用量
+
+RES：resident memory usage 常驻内存
+
+1、进程当前使用的内存大小，但不包括swap out
+
+2、包含其他进程的共享
+
+3、如果申请100m的内存，实际使用10m，它只增长10m，与VIRT相反
+
+4、关于库占用内存的情况，它只统计加载的库文件所占内存大小
+
+SHR：shared memory 共享内存
+
+1、除了自身进程的共享内存，也包括其他进程的共享内存
+
+2、虽然进程只使用了几个共享库的函数，但它包含了整个共享库的大小
+
+3、计算某个进程所占的物理内存大小公式：RES – SHR
+
+4、swap out后，它将会降下来
+
+DATA
+
+1、数据占用的内存。如果top没有显示，按f键可以显示出来。
+
+2、真正的该程序要求的数据空间，是真正在运行中要使用的。
 
 * traceroute: -w 1
 
@@ -893,12 +989,14 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
 #### w
 * wait：`wait pid`，不加pid则等待所有进程
 * `watch -n 5 $cmd`
+* wc: -l
 * which：找到程序路径
 * [wget](https://blog.csdn.net/wangshuminjava/article/details/79916655): 断点续传-c    后台-b
 
 #### x
 * xargs：[解决命令的输入来源问题](https://blog.csdn.net/vanturman/article/details/84325846)：命令参数有标准输入和命令行参数两大来源，有的命令只接受命令行参数，需要xargs来转换标准输入
   * e.g. ` ls | xargs rm`
+  * `-0`: 分隔符用NULL
 #### y
 * youget
   * 自动补全：`curl -fLo ~/.zplug/repos/zsh-users/zsh-completions/src/_youget https://raw.githubusercontent.com/soimort/you-get/develop/contrib/completion/_you-get`

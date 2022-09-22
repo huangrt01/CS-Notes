@@ -7,7 +7,8 @@ plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, 
 * 100TB model = 50万亿参数
   * 1万亿=1000B=1T，参数存储用 fp16
 
-* [Google Research: Themes from 2021 and Beyond](https://ai.googleblog.com/2022/01/google-research-themes-from-2021-and.html)
+#### [Google Research: Themes from 2021 and Beyond](https://ai.googleblog.com/2022/01/google-research-themes-from-2021-and.html)
+
   * Trend 1: More Capable, General-Purpose ML Models
     * CoTrain models: PolyViT https://arxiv.org/abs/2111.12993
     * Pathways: https://blog.google/technology/ai/introducing-pathways-next-generation-ai-architecture/
@@ -29,9 +30,75 @@ plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, 
     * Use of Sparsity
       * Switch Transformer
   * Trend 3: ML Is Becoming More Personally and Communally Beneficial
+    * 从 ML+产品（Pixel手机） 到 联邦学习 
+    * phone cameras
+    * live translate/caption
+    * [federated analytics](https://ai.googleblog.com/2020/05/federated-analytics-collaborative-data.html) and federated learning
+      * 复用 FL 的 evaluating 能力 (without the learning part)
+      * Now Playing: on-device database
+      * https://arxiv.org/pdf/1902.01046.pdf
+      * secure aggregation protocol
+  * Trend 4: Growing Impact of ML in Science, Health and Sustainability
+      * Large-Scale Application of Computer Vision for New Insights
+          * [large-scale study of synaptic connectivity in the human cortex](https://ai.googleblog.com/2021/06/a-browsable-petascale-reconstruction-of.html)
+          * [deep-learning–based approach to weather forecasting](https://ai.googleblog.com/2021/11/metnet-2-deep-learning-for-12-hour.html)
+    * Automated Design Space Exploration
+      * a Transformer-based variational autoencoder learns to [create aesthetically-pleasing and useful document layouts](https://ai.googleblog.com/2021/06/using-variational-transformer-networks.html)
+      * [automates the exploration of the huge design space of tweaks for computer game rules](https://ai.googleblog.com/2021/03/leveraging-machine-learning-for-game.html)
+    * Application to Health
+      * Our [ML-based phenotyping](https://www.sciencedirect.com/science/article/pii/S0002929721001889) method improves the scalability of converting large imaging and text datasets into phenotypes usable for genetic association studies, and our [DeepNull](https://www.biorxiv.org/content/10.1101/2021.05.26.445783v2) method better leverages large phenotypic data for genetic discovery. We are happy to release both as [open-source methods](https://github.com/Google-Health/genomics-research) for the scientific community.
+    * ML Applications for the Climate Crisis
+      * [eco-friendly routing in Google Maps](https://blog.google/products/maps/3-new-ways-navigate-more-sustainably-maps/)
+      * making our [Maps products smarter about electric vehicles](https://ai.googleblog.com/2021/01/addressing-range-anxiety-with-smart.html) can help alleviate range anxiety, encouraging people to switch to emissions-free vehicles
+        * the fear that the car will run out of power before reaching a charging station
+        * the charging time can be a significant fraction of the total travel time and can vary widely by station, vehicle model, and battery level. In addition, the charging time is non-linear — e.g., it takes longer to charge a battery from 90% to 100% than from 20% to 30%.
+        * this high density implies that a trip between two stations that are relatively far apart will undoubtedly pass through multiple other stations. In this case, maintaining information about the long edge is redundant, making it possible to simply add the smaller edges (*[spanners](https://en.wikipedia.org/wiki/Geometric_spanner)*) in the graph, resulting in sparser, more computationally feasible, graphs.
+      * On a longer time scale, **fusion** holds promise as a game-changing renewable energy source. In a long-standing collaboration with TAE Technologies, we have [used ML to help maintain stable plasmas](https://ai.googleblog.com/2021/11/another-step-towards-breakeven-fusion.html) in their fusion reactor by suggesting settings of the more than 1000 relevant control parameters. With our collaboration, TAE achieved their major goals for their [Norman](https://en.wikipedia.org/wiki/TAE_Technologies#C-2W/Norman) reactor, which brings us a step closer to the goal of [breakeven fusion](https://en.wikipedia.org/wiki/Fusion_energy_gain_factor#Breakeven). The machine maintains a stable plasma at 30 million Kelvin (don’t touch!) for 30 milliseconds, which is the extent of available power to its systems. They have completed a design for an even more powerful machine, which they hope will demonstrate the conditions necessary for breakeven fusion before the end of the decade.
+      * [wildfire boundary map](https://blog.google/products/search/mapping-wildfires-with-satellite-data/)
+        * https://arxiv.org/abs/2111.02780
+      * carbon neutral
+        * https://arxiv.org/abs/2104.10350
 
-
-
+* Trend 5: Deeper and Broader Understanding of ML
+  * [Marian Croak’s vision for responsible AI at Google](https://blog.google/technology/ai/marian-croak-responsible-ai/)
+  * RecSys
+    * [Recent work has helped to better understand these relationships of the individual components](https://research.google/pubs/pub49284/)
+    * [learn in an unbiased manner](https://storage.googleapis.com/pub-tools-public-publication-data/pdf/54a3b73ea1e85e94e5d5bb5a9df821a1f32aa783.pdf)
+  * Political Correctness
+    *  [reducing gender bias in our translation systems](https://ai.googleblog.com/2020/04/a-scalable-approach-to-reducing-gender.html)
+    *   [designing for digital wellbeing](https://design.google/library/designing-for-digital-wellbeing/#normalizing-compassion) and [addressing racial equity issues in ML systems](https://design.google/library/racial-equity-everyday-products/), including [improving our understanding of the experience of Black Americans using ASR systems](https://www.frontiersin.org/articles/10.3389/frai.2021.725911/full?&utm_source=Email_to_authors_&utm_medium=Email&utm_content=T1_11.5e1_author&utm_campaign=Email_publication&field=&journalName=Frontiers_in_Artificial_Intelligence&id=725911)
+  * distributional shift
+    * [Deep Bootstrap framework](https://ai.googleblog.com/2021/03/a-new-lens-on-understanding.html)
+  * [data cascades in ML](https://ai.googleblog.com/2021/06/data-cascades-in-machine-learning.html)
+	  * [PAIR Guidebook](https://pair.withgoogle.com/guidebook/)
+		* ![img](MLSys/data-cascades.png)
+	* [Know Your Data](https://knowyourdata.withgoogle.com/)
+	  *  [finding and investigating anomalous data](https://ai.googleblog.com/2021/09/discovering-anomalous-data-with-self.html)
+	  * [methods to better understand the influence that particular training examples](https://ai.googleblog.com/2021/02/tracin-simple-method-to-estimate.html) can have on an ML model
+	  * a [case study of how to use the Know Your Data tool](https://ai.googleblog.com/2021/08/a-dataset-exploration-case-study-with.html) to explore issues like gender bias and age bias in a dataset.
+	* more inclusive and less biased public datasets
+	  * [Dataset Search](https://datasetsearch.research.google.com/)
+	  * [Perspective API](https://www.perspectiveapi.com/case-studies/) tool
+	* we introduced a comprehensive taxonomy to reason about [the changing landscape of online hate and harassment](https://research.google/pubs/pub49786/). We also investigated [how to detect covert forms of toxicity](https://aclanthology.org/2021.hcinlp-1.3), such as microaggressions, that are often ignored in online abuse interventions, studied how conventional approaches to deal with disagreements in data annotations of such subjective concepts might [marginalize minority perspectives](https://arxiv.org/abs/2110.05699), and proposed a new [disaggregated modeling approach that uses a multi-task framework](https://arxiv.org/abs/2110.05719) to tackle this issue
+	* 可解释性
+	  * [understanding the acquisition of human chess concepts](https://arxiv.org/abs/2111.09259)
+	  * [Language Interpretability Tool](https://pair-code.github.io/lit/)
+	* Sociotechnical aspects
+	  * [supporting family caregiving.](https://research.google/pubs/pub49916/)
+	* ML and privacy
+	  * highlighting that[ training data can sometimes be extracted from large models](https://www.usenix.org/system/files/sec21-carlini-extracting.pdf) and pointing to how privacy can be achieved in large models, e.g., as in[ differentially private BERT](https://arxiv.org/abs/2108.01624).
+	  * federated learning and analytics
+	  * other techniques: [ private clustering](https://ai.googleblog.com/2021/10/practical-differentially-private.html),[ private personalization](https://proceedings.neurips.cc/paper/2021/hash/f8580959e35cb0934479bb007fb241c2-Abstract.html),[ private matrix completion](http://proceedings.mlr.press/v139/chien21a/chien21a.pdf),[ private weighted sampling](http://proceedings.mlr.press/v130/cohen21b.html),[ private quantiles](http://proceedings.mlr.press/v139/gillenwater21a.html),[ private robust learning of halfspaces,](http://proceedings.mlr.press/v130/ghazi21a.html) and in general,[ sample-efficient private PAC learning](https://dl.acm.org/doi/10.1145/3406325.3451028)
+	  * privacy notions: [label privacy](https://proceedings.neurips.cc/paper/2021/file/e3a54649aeec04cf1c13907bc6c5c8aa-Paper.pdf) and[ user](https://proceedings.neurips.cc/paper/2021/file/67e235e7f2fa8800d8375409b566e6b6-Paper.pdf) versus[ item level privacy](https://proceedings.neurips.cc/paper/2021/file/a89cf525e1d9f04d16ce31165e139a4b-Paper.pdf).
+	* Other Work
+	  * Quantun AI: https://blog.google/technology/research/2021-year-review-google-quantum-ai/、https://quantumai.google/learn/map
+	    * the Noisy, Intermediate Scale Quantum (NISQ) computing era
+	    * Qubit 和 Bit 的区别，在于前者的不确定性，给存储、计算、算法的形式都带来剧变
+	    * 100 qubits to build a prototype of a error-corrected **logical qubit**
+	      * 1000 qubits make a logical qubit long-live
+	      * 10000 qubits => complex softwares requires significant work on fabrication technology, control software, and more
+	      * 100000 qubits ~ 100 logical qubits: a quantum computer
+	    * TFQ: https://www.tensorflow.org/quantum
 
 
 ### 召回
@@ -141,19 +208,6 @@ OneFlow架构
 * node placement: consistent view
   * SBP, 在op层面实现数据和模型并行 
   ![SBP](MLSys/SBP.jpg)
-
-
-### GPU 相关知识
-
-共享卡 —— 如何实现算力和显存隔离
-* 隔离方式：时间片 vs 空间
-* 隔离级别：不隔离 vs 强隔离 vs 弹性
-* 几种隔离技术对比：
-  * vGPU(Grid)(Nvidia)：虚拟化；容器化支持不好，license
-  * vCuda(腾讯)：cuda hook；性能损耗严重
-  * cGPU(Alibaba)：ioctl；损耗小，硬隔离，侵入内核（机器容易坏）
-  * MPS(Nvidia)：thread；显存隔离，故障隔离不好
-  * MIG(~A100)：sm/global memory；硬件层面隔离
 
 ### MLOps
 
@@ -293,6 +347,66 @@ for prediction, label, img in zip(p,l,i):
       * 《Observational data for heterogeneous treatment effects with application to recommender systems》
       * People with higher correlation gain more value from that specific event, as long as we make this method incremental and control for potential confounding variables.
     * pass 2: 混排，contextual features, such as content-type diversity rules
+
+#### DataFunTalk：广告推荐系统专场
+
+#### 快手
+
+* sim 基于embedding聚类
+
+* ppnet：base网络不bp，gate独立网络独立学，不影响base embedding
+
+* 互动特征稀疏怎么办：mmoe由时长主导，改进比较传统，主要方向是稀疏样本加权、task网络设计
+
+* log时间戳 也是 positon embedding 离散化
+
+#### 美团
+
+* 美团优选 张亚峰：推荐系统结合因果推断
+
+#### 微软新闻
+
+* msnews.github.io
+  * MIND acl2020
+
+* bert noisytune 大模型finetune
+* responsible的目标
+  * [cprs: objective beyond click](https://www.ijcai.org/proceedings/2020/0418.pdf)
+* fairness：fairrec 学习一个serving用的无偏网络，比如让模型估不出来性别
+
+
+
+#### DeepRec
+
+[Github](https://github.com/alibaba/DeepRec)
+
+[Doc入口](https://deeprec.readthedocs.io/zh/latest/)
+
+* 稀疏功能
+  * 自适应动态弹性特征
+  * 特征淘汰及准入
+  * 基于特征频率的动态弹性维度（FAE）
+
+* 异步训练框架 StarServer
+  * 通信协议、zerocopy
+  * 基于图拓扑序的图Fusion
+  * Run To Completion and Lockless Graph Execution
+
+* 同步训练框架 hybridbackend
+  * embedding层：大的fc用alltoallv，小的fc用allreduce
+    * 小=稠密="dense sparse"，dense emb table = tf原生variable
+    * 思路参考 https://chowdera.com/2022/03/202203260952140771.html
+
+* prmalloc
+  * 池子共享，不再用 TLS cache，因为op可能是不同线程运行
+
+* 业务相关优化
+  * user特征优化
+
+* 图优化-smartstage
+* embedding store
+  * embedding多级混合存储：cpu cache dram pmem ssd
+    * 多级混合存储能支持单机serving，主要从ssd读
 
 
 
@@ -445,7 +559,7 @@ boundary erosion, entanglement, hidden feedback loops, undeclared consumers, dat
 #### Ad Click Prediction: a View from the Trenches, KDD 13
 2. Brief System Overview：Google 场景是搜索广告
 
-3.Online Learning and Sparsity
+3. Online Learning and Sparsity
 
 * FTRL-Proximal(Follow The Proximally Regularized Leader): get both the sparsity provided by RDA and the improved accuracy of OGD
 
@@ -455,7 +569,7 @@ boundary erosion, entanglement, hidden feedback loops, undeclared consumers, dat
 * 李亦锬大佬的机器学习答题集，很精彩，其中介绍了 FTRL 的实践意义
   https://zhuanlan.zhihu.com/p/20693546
 
-4.Saving Memory at Massive Scale
+4. Saving Memory at Massive Scale
 
 进一步节省PS内存的方式
 
@@ -473,24 +587,24 @@ boundary erosion, entanglement, hidden feedback loops, undeclared consumers, dat
 
 * Subsampling Training Data: 然后给负样本的 loss 增加权重，保证“期望上”目标函数的一致性
 
-5.Evaluating Model Performance
+5. Evaluating Model Performance
 
 * Progressive Validation: online loss, relative changes
 
-6.Confidence Estimates
+6. Confidence Estimates
 
 * 定义并估出了不确定度的 upper bound: 学习率向量点乘输入向量
 
-7.Calibrating Predictions
+7. Calibrating Predictions
 
 * 有 Poisson regression、isotonic regression 等手段
 * 系统的 inherent feedback loop 不保证理论准确性
 
-8.Automated Feature Management
+8. Automated Feature Management
 
 * 特征平台化
 
-9.Unsuccessful Experiments
+9. Unsuccessful Experiments
 
 * Feature Hashing, Dropout, Feature Bagging, Feature Vector Normalization
 

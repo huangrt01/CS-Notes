@@ -6,6 +6,23 @@
 
 
 
+### GPU 相关知识
+
+![h100](nvidia/h100.png)
+
+#### 共享卡 —— 如何实现算力和显存隔离
+
+* 隔离方式：时间片 vs 空间
+* 隔离级别：不隔离 vs 强隔离 vs 弹性
+* 几种隔离技术对比：
+  * vGPU(Grid)(Nvidia)：虚拟化；容器化支持不好，license
+  * vCuda(腾讯)：cuda hook；性能损耗严重
+  * cGPU(Alibaba)：ioctl；损耗小，硬隔离，侵入内核（机器容易坏）
+  * MPS(Nvidia)：thread；显存隔离，故障隔离不好
+  * MIG(~A100)：sm/global memory；硬件层面隔离
+
+
+
 3 ways to accelerate applications:
 
 1.Libraries    
@@ -21,6 +38,30 @@ CPU: latency-optimized low latency processor
 GPU: throughput-optimized high throughput processor
 
 ![CPU-GPU](nvidia/CPU-GPU.png)
+
+#### DCGM
+
+https://developer.nvidia.com/dcgm
+
+https://on-demand.gputechconf.com/gtc/2018/presentation/s8505-gpu-monitoring-and-management-with-nvidia-data-center-gpu-manager-dcgm-v2.pdf
+
+* Note:
+  * 监控 PCIE-RX ---> H2D 带宽
+  * Health Check
+
+#### OAM
+
+* OAM是一种异构计算设备的接口协议，对标nvlink.   nvlink是封闭的协议，OAM是若干大厂共建的一个开放协议。
+  * 目的：避免每一种卡都有自己的卡间通信标准，尽量做到 （除了NV的卡之外）任何厂家的计算卡都兼容
+  * 技术层面， OAM 和 NVSWITCH （对应A100 这代） 基本是对等的 
+    - OAM：是 full connect 模式， 各卡独享约 ~80GB/s 带宽 
+      - full connect 的结构更为简单，有一些散热和能耗的优势
+    - NV switch: 整个switch提供 600GB/s 带宽 
+    - 单机八卡时，OAM 和 NV switch 差不多；卡数少时 nvsiwtch 效率高
+
+
+
+### Nvidia Lectures
 
 #### 1.Course: Accelerating Applications with CUDA C/C++
 

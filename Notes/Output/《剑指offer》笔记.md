@@ -1,3 +1,5 @@
+### 设计模式
+
 ### 《剑指offer——名企面试官精讲典型编程题》，何海涛，电子工业出版社，2017
 
 动态规划与分治的区别：前者自底向上，后者自顶向下
@@ -275,12 +277,12 @@ vector<int> spiralOrder(vector<vector<int>>& matrix) {
   * 方法一：clear 
   * 方法二：`vector<int>().swap(nums);`
   * 方法三：利用代码块和临时变量
-`
-{
+  `
+  {
     vector<int> tmp = curLevel;   
     curLevel.swap(tmp); 
-}
-`
+  }
+  `
 
   * clear虽然不会deallocate释放空间，但是会destroy执行析构函数，所以可以用同一个空间构造节点，如果swap了就要重新分配空间再构造节点。由于本题是对同一个vector的重复利用，可以直接用clear();，空间复杂度是单层最大节点数。
   * 如果要每次都释放空间，也可以用`res.emplace_back(std::move(curLevel))`，涉及[emplace_back](https://www.cnblogs.com/ChrisCoder/p/9919646.html), [std::move](https://blog.csdn.net/p942005405/article/details/84644069/), [左值、右值引用](https://blog.csdn.net/p942005405/article/details/84644101), [这是一篇有关类定义的总结](https://blog.csdn.net/zzhongcy/article/details/86747794)
@@ -455,7 +457,6 @@ push_heap(min.begin(),min.end(),greater<int>());
 ```
 
 * 字节后端开发终面：变式题，在本题基础上增加erase功能，需要把堆改成BST（即set），保证删除性能
-
 
 
 

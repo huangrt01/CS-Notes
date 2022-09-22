@@ -18,6 +18,41 @@ __主题：virtualization, concurrency, persistence__
 
 ### jemalloc 等底层组件
 
+#### 内存分配器
+
+* 栈内存的生命周期是函数，堆内存可能是进程
+  * [Stack-based allocation](https://en.wikipedia.org/wiki/Stack-based_memory_allocation)：基于栈的堆分配，参见sbrk
+* 系统调用细节
+  * C++14 开始支持 sized free，要求 size 和指针对应内存申请时的大小相同
+* size classes
+  * 4KB逻辑页 -> "small" 小于 16KB 
+
+#### je 接口与参数
+
+##### 非标准接口
+
+* mallocx / rallocx 返回已分配的内存指针，null表示没有符合条件的内存
+  * `realloc(), rallocx, xallocx` : in-place resizing
+
+* xallocx 返回 ptr resized 结果
+* sallocx 返回已经分配的 ptr 的真实大小
+* nallocx 返回 mallocx 可以成功的试算大小
+* mallctl、mallctlnametomib 和 mallctlbymib 控制 jemalloc 内部状态
+* dallocx= free
+* sdallocx = sized free
+
+##### 调参
+
+http://jemalloc.net/jemalloc.3.html#TUNING
+
+* opt_dss（用法  MALLOC_CONF=dss:primary ）: primary 表示主要使用brk，seconday 表示优先mmap，默认是 seconday
+
+##### 内存泄漏分析
+
+https://zhuanlan.zhihu.com/p/138886684
+
+gdb `call malloc_stats_print(0, 0, 0)`
+
 #### jemalloc 多篇论文介绍
 
 [“Understanding glibc malloc” by Sploitfun. February, 2015.” ](https://sploitfun.wordpress.com/2015/02/10/understanding-glibc-malloc/) 
@@ -80,7 +115,7 @@ Introduction: allocator 性能逐渐成为重点
     * thread caches
     * unused dirty page caching delays page run coalescing
 * Clockless purging history
-  * jemalloc 不进行异步调用，all work must be hooked into [de]allocation event
+  * jemalloc 不进行异步调用，all work must be hooked into deallocation event
   * side effect: conflict between speed and memory usage optimization
   * Aggressive (2006): immediately purge, disabled by default, MADV_FREE-only
   * Spare Arena Chunk (2007):
@@ -174,19 +209,25 @@ Introduction: allocator 性能逐渐成为重点
   * 小内存会抢占大内存，切割大内存的 extent；分配完也会合并成大内存 extent
   
 * kernal
-  * 内存地址空间的分配 [mmap](https://man7.org/linux/man-pages/man2/mmap.2.html)：`mmap()<---os_pages_map()<---pages_map()<---extent_alloc_mmap()`
+  * 内存地址空间的分配 [mmap](https://man7.org/linux/man-pages/man2/mmap.2.html)
+    * linux虚地址空间是由task_struct对应的mm_struct指向的vm_struct链表管理的。mmap系统调用在虚地址空间查找一段满足length长度的连续空间后，创建一个vm_struct并插入链表。mmap返回的指针被程序访问时将触发缺页中断，操作系统分配物理页到vm_struct中，物理内存的增加体现在rss上。
+    * `mmap()<---os_pages_map()<---pages_map()<---extent_alloc_mmap()`
     * extents_retained 只存虚拟地址空间，没有物理页
     * `pages_map()` 的逻辑主要在处理内存 alignment
   * 内存清理，认为 unmap 有开销，于是只清理物理内存，不清理虚拟地址空间
     * 代码详见 `base_unmap()`
     * extents_dirty ---> extents_muzzy 调用 `madvise(MADV_FREE)`，轻量操作，将内存给其它内存
+      * `pages_can_purge_lazy`
     * extents_muzzy ---> extents_retained 调用 `madvise(MADV_DONTNEED)` ，将内存拿走，可能发生ipi中断，再次访问会产生缺页中断
+      * `pages_can_purge_forced`
     * Facebook 优化：`mmap(...MAP_UNINITIALIZED)`
   * 透明巨页的分配：从mmap出来的extern，`pages_huge_impl()`调用` madvise(MADV_HUGEPAGE)`
+  * `opt_dss`支持`brk`方式申请
   
 * 其它
 
   * 性能瓶颈：cache bin 的 fill、flush，madvise；arena 分配机制（场景：多个线程分配一个静态对象内的内存，单线程操作它，会产生 high fragmentation）
+  * `jemalloc_internal_defs.h.in`: 一串 undef + 宏的含义注释
 
 ##### 高性能内存分配库 Libhaisqlmalloc 的设计思路
 
@@ -279,7 +320,7 @@ case study 1: Upon inserting a key-value item, a slab from the slab class with t
 
 https://www.usenix.org/conference/nsdi14/technical-sessions/presentation/lim
 
-MICA(Memory-store with Intelligent Concurrent Access) takes a holistic approach that encompasses all aspects of request handling, including parallel data access, network request handling, and data structure design, but makes unconventional choices in each of the three do- mains. First, MICA optimizes for multi-core architectures by enabling parallel access to partitioned data. Second, for efficient parallel data access, MICA maps client re- quests directly to specific CPU cores at the server NIC level by using client-supplied information and adopts a light-weight networking stack that bypasses the kernel. Finally, MICA’s new data structures—circular logs, lossy concurrent hash indexes, and bulk chaining—handle both read- and write-intensive workloads at low overhead.
+MICA(Memory-store with Intelligent Concurrent Access) takes a holistic approach that encompasses all aspects of request handling, including parallel data access, network request handling, and data structure design, but makes unconventional choices in each of the three do- mains. First, MICA optimizes for multi-core architectures by enabling parallel access to partitioned data. Second, for efficient parallel data access, MICA maps client requests directly to specific CPU cores at the server NIC level by using client-supplied information and adopts a light-weight networking stack that bypasses the kernel. Finally, MICA’s new data structures—circular logs, lossy concurrent hash indexes, and bulk chaining—handle both read- and write-intensive workloads at low overhead.
 
 3. Key Design Choices
 
@@ -307,7 +348,7 @@ MICA’s parallel data access: MICA partitions data and mainly uses exclusive ac
 * use memory allocator's eviction support to avoid evicting recently-used items (4.3.2)
 
 4. MICA Design
-  4.1.2 分析CREW(Concurrent Read Exclusive Write)模式 -> 4.3.1
+    4.1.2 分析CREW(Concurrent Read Exclusive Write)模式 -> 4.3.1
 
   4.2 Network Stack
 
@@ -327,6 +368,32 @@ Hugepages (2 MiB in x86-64) use fewer TLB entries for the same amount of memory,
 hugepage必须预先一次分配2M或者1GB的内存空间，并且使用mmap的接口去分配。所以用malloc和free的库来管理大页是合理的（比如jemalloc去支持hugepage配置）。
 
 4.3.2 Lossy Concurrent Hash Index
+
+#### MEMC3: Compact and concurrent memcache with dumber caching and smarter hashing, NSDI 2013
+
+* MemC3—Memcached with CLOCK and Concurrent Cuckoo hashing
+  * optimistic cuckoo hashing, a compact LRU-approximating eviction algorithm based upon CLOCK, and comprehensive implementation of optimistic locking
+  * cuckoo hashing: https://web.stanford.edu/class/archive/cs/cs166/cs166.1146/lectures/13/Small13.pdf
+
+3. Optimistic Concurrent Cuckoo Hashing
+
+* An optimistic version of cuckoo hashing that supports multiple-reader/single writer concurrent access, while preserving its space benefits;
+  * 记录version，version不对（比如是奇数）就retry
+  * 利用了 the atomic read/write for 64-bit aligned pointers on 64-bit machines 的特点，参考 APPENDIX
+* A technique using a short summary of each key to improve the cache locality of hash table operations; 
+  * An optimization for cuckoo hashing insertion that improves throughput
+  * CLOCK-based approximate LRU，clock算法可以增强thread的scale能力（消除LRU synchronization的瓶颈）
+
+#### Full-stack architecting to achieve a billion-requests-per-second throughput on a single key-value store server platform, 2016
+![network-with-kv](OSTEP-Operating-Systems-Three-Easy-Pieces/network-with-kv.png)
+
+
+
+* DDIO
+  * https://www.intel.com/content/www/us/en/io/data-direct-i-o-technology.html
+  * https://www.intel.com/content/www/us/en/io/data-direct-i-o-technology-brief.html
+
+
 
 
 
@@ -765,11 +832,10 @@ NOTE:
 * invalid frees
 * strcat的参数内存区域重复    ###
 * （###：valgrind可检测的）
-
 * 用[purify](https://www.cnblogs.com/Leo_wl/p/7699489.html)和valgrind检查内存泄漏
-
 * 底层基础：
-  * brk，sbrk    不要用
+  * [C++ Memory Allocation/Deallocation for Data Processing](https://towardsdatascience.com/c-memory-allocation-deallocation-for-data-processing-1b204fb8a9c)
+  * [brk](https://man7.org/linux/man-pages/man2/brk.2.html), sbrk: adjusting the Program Break which is the current heap limit, 不要自己调用
   * mmap 内存映射
 
 HW:

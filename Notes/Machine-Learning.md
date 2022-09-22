@@ -28,7 +28,163 @@ Dropout
 
 
 
+[灾难遗忘现象](https://en.wikipedia.org/wiki/Catastrophic_interference)
+
+
+
 #### Optimizer
+
+##### Optimization Problem
+
+* Total Error = Optimization Error + Representation Error
+* $F(w_{alg}) = F(w_{alg})-F(w_*) + F(w_*)$
+* $F(w_*) \equiv \frac{1}{n} \sum_{i \in [n]} l(h_{w}(x_i), y_i) $
+  * 模型预估误差均值，取决于模型结构
+
+##### GD: 1st-order method
+
+* 梯度下降：$w_t \leftarrow w_{t-1} - \eta \nabla F(w_{t-1})$
+* Explanation: 一阶泰勒展开
+* 性质：$$\mu \leq \frac{\|\nabla f(a) - \nabla f(b)\|}{\|a-b\|} \leq L, \forall a,b \in \R^d$$
+  * 强凸：梯度变化率有下界
+  * Lipchitz continuous gradient：梯度变化率有上界
+* Note:
+  * 令下标趋近，这个上下界本质是Hessian: f''(b) 的上下界
+  * "linear convergence" means: $$F(w_{t+1}) - F(w_*) \leq (1-\frac{\mu}{L}) \left( F(w_t) - F(w_*) \right)^1$$
+  * This convergence is for the function value $$F(w)$$ (there are other types of convergence)
+
+##### Newton's method: 2nd-order method
+
+* Gradient descent: $$w_t \leftarrow w_{t-t} - \eta (\nabla^2 F(w_{t-1}))^{-1} \nabla F(w_{t-1})$$
+
+* $$ F(w) = \frac{1}{2} w^\top D w$$ , D is a diagonal matrix with all positive diagonal elements
+
+  * 举一个例子，对比GD和Newton法的收敛速度
+  * GD: 计算 $$F(w_{t+1})\le F(w_t)$$ 的恒成立条件是 $$\eta \lt \frac{2}{max_iD_{ii}}$$
+  * Newton法，在例子中一步收敛了
+  * 类似于在不同维度使用 Adaptive Learning Rate（D^-1，反映gradient的变化率）的效果
+  * Quadratic Convergence
+
+* Convergence
+
+  * Strong convexity $$\mu$$ and Lipschtiz hessian $$H$$
+
+  * Quadratic convergence: 
+
+    * $$\|w_{t+1} - w_*\| \leq \frac{H}{\mu} \|w_t - w_*\|^2$$
+
+    - Also needs a "good" initial value: $$\|w_0-w_*\| \leq \frac{\mu}{2H}$$
+
+##### Polyak Momentum
+
+* $$w_t \leftarrow w_{t-1} - \eta \nabla F(w_{t-1}) + \beta(w_{t-1} - w_{t-2})$$
+* The formula above is equivalent to
+  - $$v_t \leftarrow \eta \nabla F(w_{t-1}) + \beta v_{t-1}$$, $$w_t \leftarrow w_{t-1} - v_t$$
+  - learning rate $$\eta$$ inside momentum variable $$v$$
+
+- But we can also put learning rate outside the momentum:
+  - $$v_t \leftarrow \nabla F(w_{t-1}) + \beta v_{t-1}$$, $$w_t \leftarrow w_{t-1} - \eta v_t$$
+  - Caution: these 2 formulas will be different if the learning rate changes (warmup, decay)
+
+##### Nesterov Momentum
+
+- Concept: **lookahead** to get a better gradient estimation
+
+- 理论上是两步，本方法基于最新model计算gradient，解决半步的staleness
+
+* pytorch实际实现中，保留的是lookhead model
+
+##### SGD: stochastic methods
+
+* $$\min_{t} E\left[ \|\nabla F(w_{t-1})\|^2\right] \leq \frac{1}{T} \sum_{t=1}^T E\left[ \|\nabla F(w_{t-1})\|^2 \right] \leq \frac{2E[F(w_{0}) - F(w_*)]}{\eta T} + \frac{L\eta V_1}{b}$$
+* 2 parts of error:
+  - Escape from initial point to optimal
+  - Variance (reduced by batch size)
+* Typically, we take $$\eta\propto\frac{1}{\sqrt{T}}$$
+  - so that $$\frac{1}{T} \sum_{t=1}^T E\left[ \|\nabla F(w_{t-1})\|^2 \right] \leq O(\frac{1}{\sqrt{T}})$$
+
+- Implies learning rate **decay** for convergence: $$\eta_t \propto \frac{1}{\sqrt{t}}$$
+
+- Converges to a point where $$\nabla F(w) = 0$$, could be a saddle point or local minimum, not necessarily a global minimum
+
+##### Federated Averaging
+
+《Advances and open problems in federated learning》p22
+
+
+##### AdaGrad: a natural learning rate decay
+
+- Algorithm:
+
+  - In step $$t$$
+  - Compute gradient: $$g_t \equiv \nabla f(w_{t-1})$$
+  - Update "2nd moment": $$v_t \leftarrow v_{t-1} + g_t \circ g_t$$
+  - Update model: $$w_{t} \leftarrow w_{t-1} - \eta \frac{g_t}{\sqrt{v_t + \epsilon}} $$
+
+- 本质：
+
+  - using the average $$\frac{1}{t}\sum_t g_t \circ g_t$$ to estimate hessian 
+
+  - a **naturally decay learning rate** $$\frac{\eta}{\sqrt{t}}$$
+
+- Note:
+
+  - 工程实现时，手动给 v 设置一个上界
+
+##### FTRL: AdaGrad + L1 reg + L2 reg
+
+* Related Paper: 《Ad Click Prediction: a View from the Trenches, KDD 13》
+
+* Online Learning and Sparsity
+  * FTRL-Proximal(Follow The Proximally Regularized Leader): get both the sparsity provided by RDA and the improved accuracy of OGD
+
+  * [在线学习（Online Learning）导读 - 吴海波的文章](https://zhuanlan.zhihu.com/p/36410780)
+  * FTRL的数学本质：SGD（梯度 + L2）+稀疏性（L1）
+
+  * 李亦锬大佬的机器学习答题集，很精彩，其中介绍了 FTRL 的实践意义
+    https://zhuanlan.zhihu.com/p/20693546
+
+##### FTRL with Group Lasso
+
+* Paper: https://dl.acm.org/doi/pdf/10.1145/3357384.3358114
+  * 注意 Group Lasso 项是 L2 范数的一次幂
+* Lasso: https://en.wikipedia.org/wiki/Lasso_(statistics)
+* 应用：优化 sparse feature embedding layer (fid -> embedding vector layer) 的 model sparsity，将每个特征的 vector 当作一个 group
+
+##### Adam
+
+- Algorithm:
+  - In step $$t$$
+  - Compute gradient: $$g_t \equiv \nabla f(w_{t-1})$$
+  - Update 1st moment: $$m_t \leftarrow \beta_1 m_{t-1} + (1-\beta_1) g_t$$
+  - Update 2nd moment: $$v_t \leftarrow \beta_2 v_{t-1} + (1-\beta_2) g_t \circ g_t$$
+  - Bias-corrected 1st moment: $$\hat{m}_t \leftarrow \frac{m_t}{1-\beta_1^t}$$
+    - 动机是没有 learning rate decay
+    - 可尝试去掉，等价于learning rate warmup，会有点接近AdaGrad
+  - Bias-corrected 2nd moment: $$\hat{v}_t \leftarrow \frac{v_t}{1-\beta_2^t}$$
+  - Update model: $$w_{t} \leftarrow w_{t-1} - \eta \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon} $$
+  - Note: 
+    - bias correction could be ignored
+    - AdaGrad uses **uniformly weighted** average, while Adam assigns **larger weights for later** items
+      - Intuition: 哪一种近似 Hessian 的方式在模型上更合适，需要考虑旧的 sparse item 的期望更新方式
+    - AdaGrad has learning rate decay, while Adam doesn't have learning rate decay
+      - Intuition: 结合同/异步训练方式思考，动机是训练后期减少lr让模型收敛更稳定（比如 W&D model 的 dense）
+- Intuition
+  - 1st momentum: 类似 Polyak Momentum
+    - Also see SAG: https://arxiv.org/pdf/1309.2388v2.pdf
+  - 2nd momentum
+    - 用外积矩阵近似 Hessian 矩阵
+- 不保证理论收敛
+  - 2 ways to fix:
+    - Use $$\max\{\hat{v}_t, \hat{v}_{t-1}, \ldots \hat{v}_1\}$$instead of $$\hat{v}_t$$to guarantee decreasing $$\frac{\eta_t}{\sqrt{\hat{v}_t} + \epsilon}$$: AMSGrad
+    - Take $$\beta_2 \propto 1-\frac{1}{t}$$, approaches 1 when $$t$$ approaches infinity,  $$v_t$$barely changes at the end
+- Note：
+  - sparse 部分不适用 Adam：滑动平均用到了历史信息
+  - 配合 slow start 技术，前期并发数缓慢增大
+
+##### RMSProp
+
+* RMSProp: Adam with $$\beta_1=0$$, without any bias correction
 
 ##### Lookahead Optimizer: k steps forward, 1 step back, NIPS 2019
 
@@ -45,7 +201,33 @@ Dropout
   * Proposition 2 (Lookahead steady-state risk): Lookahead has a variance fixed point that is strictly smaller than that of the SGD inner-loop optimizer for the same learning rate
   * Deterministic quadratic convergence: underdamped系统提升稳定性，overdamped系统略有损收敛
 
+##### LAMB
 
+- Algorithm:
+  - In step $$t$$:
+  - Compute update based on any optimizer: $$u_t$$
+    - SGD: $$u_t = g_t$$
+    - Adam: $$u_t = \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon} $$
+    - RMSProp: $$u_t=\frac{g_t}{\sqrt{v_t + \epsilon}} $$
+  - Layer-wise normalization:
+    - $$\hat{u}_t \leftarrow \frac{\|w_{t-1}\|}{\|u_t\|} u_t$$
+  - Update model:
+    - $$w_t \leftarrow w_{t-1} - \eta \hat{u}_t$$
+
+- Intuition:
+  - In large-batch training:
+    - $$\|u_t\|$$ is unstable
+  - Using large learning rate: diverge for large $$\|u_t\|$$
+  - Using small learning rate: slow convergence for small $$\|u_t\|$$
+  - LAMB: 
+    - Adaptive learning rate: $$ \frac{\eta \|w_{t-1}\|}{\|u_t\|}$$
+  - Smaller when $$\|u_t\|$$is large
+  - Larger when $$\|u_t\|$$is small
+  - Normalize $$\|u_t\|$$to the same scale of $$\|w\|$$
+
+- Note:
+  - We can apply LAMB normalization to any base optimizer
+  - But the learning rate must be re-tuned
 
 #### Validation
 
@@ -54,6 +236,43 @@ holdout validation, cross-validation, leave-one-out validation, etc
 ```python
 train_data, validation_data, test_data = np.split(model_data.sample(frac=1, random_state=1729), [int(0.7 * len(model_data)), int(0.9 * len(model_data))])   # Randomly sort the data then split out first 70%, second 20%, and last 10%
 ```
+
+
+
+### Quantization
+
+#### 模型量化介绍
+
+* 神经网络：多函数的嵌套表示
+  * 越来越不规则
+
+Serving 量化
+
+* 用于存储的模型量化：
+  * 传统问题局限性：求解量化误差最小，不面向loss函数，面向策略，不可解
+
+* 用于计算的模型量化
+  * 权重和输入都有delta（预估时认为权重delta为零）
+  * 偏微分公式 -> 每层的输出到下一层的输入很重要
+    * 同样的量化方式，相同量化精度给不同层的输入带来不同的误差
+    * 存储量化 v.s 计算量化，后者更强调在存储约束下求解最优精度
+  * 一种可求闭式解（分层量化模型）：量化标准排序、梯度排序，一一对应，排序不等式证明
+    * e.g. HAWQ-v2
+
+Training 量化
+
+* 量化感知训练的原理：李沐的ps文章《communication efficient distributed machine learning with the parameter server》https://www.cs.cmu.edu/~muli/file/parameter_server_nips14.pdf
+* 结论：控制梯度噪音的范数
+  * 小结论：量化训练完后要恢复全精度进行计算，再用训练后量化手段进行量化
+  * 实现上：量化的正传，量化/全精度的反传，量化的更新
+    * 全精度反传，与自动求导模块的实现有关，可能存在
+
+* 工具：https://github.com/NVIDIA/apex
+
+总结：
+
+* 量化问题本质是NP难问题，部分情况下可转换成指数规划问题
+* 量化训练和预测是两个目标，训练结果应该恢复成全精度再用预测压缩的过程压缩一遍
 
 ### Bert
 
