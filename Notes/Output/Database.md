@@ -91,7 +91,45 @@ FROM employee AS e1 INNER JOIN employee AS e2
 ON e1.emp_id < e2.emp_id WHERE e1.title = 'Teller' AND e2.title = 'Teller';
 ```
 
+* OVER PARTITON BY
+  * https://learnsql.com/blog/partition-by-with-over-sql/
 
+```mysql
+SELECT
+    car_make,
+    car_model,
+    car_price,
+    AVG(car_price) OVER() AS "overall average price",
+    AVG(car_price) OVER (PARTITION BY car_type) AS "car type average price"
+FROM car_list_prices
+```
+
+```mysql
+WITH year_month_data AS (
+  SELECT DISTINCT
+       EXTRACT(YEAR FROM scheduled_departure) AS year,
+       EXTRACT(MONTH FROM scheduled_departure) AS month,
+       SUM(number_of_passengers)
+              OVER (PARTITION BY EXTRACT(YEAR FROM scheduled_departure),
+                                  EXTRACT(MONTH FROM scheduled_departure)
+                   ) AS passengers
+   FROM  paris_london_flights
+  ORDER BY 1, 2
+)
+SELECT  year,
+        month,
+     passengers,
+     LAG(passengers) OVER (ORDER BY year, month) passengers_previous_month,
+     passengers - LAG(passengers) OVER (ORDER BY year, month) AS passengers_delta
+FROM year_month_data;
+```
+
+```mysql
+AVG(month_delay) OVER (PARTITION BY aircraft_model, year
+                               ORDER BY month
+                               ROWS BETWEEN 3 PRECEDING AND CURRENT ROW
+                           ) AS rolling_average_last_4_months
+```
 
 * ALTER TABLE
 

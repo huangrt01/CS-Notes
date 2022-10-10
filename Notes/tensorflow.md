@@ -144,9 +144,20 @@ https://www.tensorflow.org/install/source#ubuntu
 
 #### 代码阅读
 
+[tensorflow源码解析-阿里云文章](https://developer.aliyun.com/profile/x6ehajer74kvo/highScore_1?spm=a2c6h.13262185.profile.4.139d6b06roaEa7)
+
+[tensorflow源码解析-cnblogs](https://www.cnblogs.com/jicanghai/default.html?page=3)
+
 * 发现领域模型
 * 抛开细枝末节： `git checkout -b code-reading`
 * 适可而止，BFS阅读
+
+
+##### 代码风格
+
+* TF_GUARDED_BY、TF_EXCLUSIVE_LOCKS_REQUIRED
+  * tsl/platform/thread_annotations.h
+  * [现代C++开发之线程安全注解 by 陈硕](https://zhuanlan.zhihu.com/p/47837673)
 
 ##### core/platform/refcount.h
 
@@ -166,8 +177,6 @@ class ScopedUnref {
   void operator=(const ScopedUnref&) = delete;
 };
 ```
-
-
 
 
 
@@ -192,6 +201,28 @@ RefCountIsOne()
 // reduce memory consumption by not storing the original GraphDef.
 rewritten_options.config.mutable_experimental()
   ->set_optimize_for_static_graph(true);
+```
+
+
+
+#### allocator
+
+https://www.cnblogs.com/jicanghai/p/9535808.html
+
+参考 cpu_allocator_impl.c 注册
+
+`REGISTER_MEM_ALLOCATOR("DefaultCPUAllocator", 100, CPUAllocatorFactory);`
+
+##### tsl/framework/allocator_registry.*
+
+* AllocatorFactoryRegistry
+
+```c++
+// 宏的写法，用到了 __COUNTER__，保证register时命名不重复
+// CPUAllocator的priority是100，可以设一个大于它的值覆盖默认项
+#define REGISTER_MEM_ALLOCATOR(name, priority, factory)                     \
+  REGISTER_MEM_ALLOCATOR_UNIQ_HELPER(__COUNTER__, __FILE__, __LINE__, name, \
+                                     priority, factory)
 ```
 
 

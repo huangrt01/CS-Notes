@@ -21,8 +21,10 @@ list = [x.strip() for x in list_string.split() if x.strip()]
 # 普通dict的default插入方式（类似于C++的[]）
 obj = dict.setdefault(key, default=None)
 
-# set operations: https://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html
+# set
+unique_elements = list(set([2,1,2])) # Remove duplicates
 
+# set operations: https://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html
 &, |, -, ^
 
 ```
@@ -156,9 +158,31 @@ x - y =  -1
 
 #### module
 
-* [__all](https://zhuanlan.zhihu.com/p/54274339)
+* [__all\_](https://zhuanlan.zhihu.com/p/54274339)_
    * 控制 from xxx import 的行为
    * 为 lint 等代码检查工具提供辅助
+
+#### 关键词
+
+##### for else
+
+* https://book.pythontips.com/en/latest/for_-_else.html
+
+```python
+for item in container:
+    if search_something(item):
+        # Found it!
+        process(item)
+        break
+else:
+    # Didn't find anything..
+    not_found_in_container()
+```
+
+
+##### with
+
+* [with 的用法和原理](https://www.cnblogs.com/sddai/p/14411906.html)
 
 #### class
 
@@ -428,6 +452,33 @@ ax.tick_params(labelsize=12)
 plt.show()
 ```
 
+#### multiprocessing
+
+* 关于spawn：https://superfastpython.com/multiprocessing-start-method/
+
+```python
+import multiprocessing as mp
+mp.set_start_method('spawn')
+queue = mp.Queue(num_parallel*2)
+producer_proc = mp.Process(name="Producer-0", target=producer, args=(args, queue, sys.stdin.fileno()), daemon=True)
+
+p = mp.Process(...)
+# p.setDaemon(True),守护进程，如果主进程结束，则强行让p结束
+p.start()
+while True:
+  if not p.is_alive():
+    if p.exitcode != 0:
+      raise RuntimeError(...)
+    else:
+      break
+  time.sleep(0.1)
+
+# p.join()
+
+```
+
+
+
 #### pandas
 
 https://pandas.pydata.org/pandas-docs/stable/index.html
@@ -509,6 +560,22 @@ def runCommand(cmd):
     res = p.stdout.read()
     return res.strip("\n")
 ```
+
+#### unittest
+
+```python
+import unittest
+
+class MyTestCase(unittest.TestCase):
+  def testFunction(self):
+    a= 1
+    b= 2 
+    self.assertEqual(a, b)
+
+if __name__ == '__main__':
+	unittest.main()
+```
+
 
 #### 网络
 

@@ -45,8 +45,13 @@
   * Fingerprinting and probabilistic matching
     * [关于 IPUA](https://www.ichdata.com/ios-app-tracks-attribution-challenges.html)，ichdata这个网站有许多跟踪匹配方向的文章
       * User Agent https://whatmyuseragent.com/
+    * IPUA 局限性
+      * IPUA在用户维度不具有唯一性
+      * IPUA具有时效性
+    * probabilistic matching: IPUA -- PM model --> user
+      * FL下的PM归因，和普通PM归因有明显差异
   * Privacy-preserving attribution with supply-side consent
-    * **All these suggestions rely on Apple accepting the concept of single-side consent and assume that supply-side consent is sufficient for attributing user-level installs on the demand-side.** 
+    * All these suggestions rely on Apple accepting the concept of single-side consent and assume that supply-side consent is sufficient for attributing user-level installs on the demand-side. 
 * 归因服务
   * [Cryptographically Secure Bloom-Filters](https://dzlp.mk/sites/default/files/255.pdf)
 
@@ -90,6 +95,8 @@
   
 
 #### 《Advances and open problems in federated learning》
+
+略读：Chapter 4、5
 
 ##### 1.Introduction
 
@@ -214,8 +221,212 @@
   * Debugging and Interpretability for FL
   
 * Communication and Compression
-  * 
+  * compression objects
+    * Gradient compression: 最现实，因为1）client的upload速率比download慢；2）averaging提供了更多lossy的可能
+      * 高斯噪声和量化手段有些冲突
+      * We note that several recent works allow biased estimators and would work nicely
+        with Laplacian noise [435], however those would not give differential privacy, as they break independence between rounds.
   
+    * Model broadcast compression
+    * Local computation reduction
+  
+  * wireless-FL co-design
+    * to leverage the unique characteristics of wireless channels (e.g. broadcast and superposi- tion) as natural data aggregators, in which the simultaneously transmitted analog-waves by different workers are superposed at the server and weighed by the wireless channel coefficients [4]
+    * in sharp contrast with the traditional orthogonal frequency division multiplexing (OFDM) paradigm, whereby workers upload their models over orthogonal frequencies whose performance degrades with increasing number of workers [174]
+  
+* Application To More Types of Machine Learning Problems and Models
+  * Bayesian neural networks [419] 提高神经网络的预估准确度，针对小数据集的场景
+  
+##### 4. Preserving the Privacy of User Data
+
+* FL 架构特点
+
+  * decomposing the overall machine learning work-flow into the approachable modular units we desire.
+  * model updates 的信息量可能少；不泄漏user信息；云端只需要短暂持有model updates
+* Actors, Threat Models, and Privacy in Depth
+
+  * Table 7: Various threat models for different adversarial actors.
+    * clients: TEE (secure enclaves)
+    * server
+    * output models
+    * deployed models
+  * 安全假定
+    * DP
+      * a fraction γ of the clients
+      * cryptographic mechanisms instantiated at a particular security level σ.
+    * honest-but-curious(HBC) security
+  * 手段
+    * running portions of a Secure Multi-Party Computation (MPC) protocol inside a Trusted Execution Environment (TEE) to make it harder for an adversary to sufficiently compromise that component
+    * using MPC to protect the aggregation of model updates, then using Private Disclosure
+      techniques before sharing the aggregate updates beyond the server
+  * graceful degradation as “Privacy in Depth,”
+    * in analogy to the well-established network security principle of defense in depth[361]
+* Tools and Technologies
+
+  * Secure Computations
+    * Secure Multi-Party Computation (MPC) is a subfield of cryptography
+      concerned with the problem of having a set of parties compute an agreed-upon function of their private inputs in a way that only reveals the intended output to each of the parties.
+    * 量化到finite fields，确保over(under)flows可控 [194, 10, 206, 84]
+    * 确保函数securely computed的现实手段，Table 8
+      * Differential Privacy (local, cen- tral, shuffled, aggregated, and hybrid models)
+      * Homomorphic encryption (HE): 问题在于谁持有key
+        * a trusted non-colluding party is not standard in the FL setting
+        * most HE schemes require that the secret keys be renewed often (due to e.g. susceptibility to chosen ciphertext attacks [117])
+        * Another way around this issue is relying on distributed (or threshold) encryption schemes [392] [398]
+    * TEE (secure enclaves) [437]
+      * Features
+        * Confidentiality: The state of the code’s execution remains secret, unless the code explicitly publishes a message;
+        * Integrity: The code’s execution cannot be affected, except by the code explicitly receiving an input;
+        * Measurement/Attestation: The TEE can prove to a remote party what code (binary) is executing and what its starting state was, defining the initial conditions for confidentiality and integrity
+      * TEEs have been instantiated in many forms, including Intel’s SGX-enabled CPUs [241, 134], Arm’s TrustZone [28, 22], and Sanctum on RISC-V [135], each varying in its ability to systematically offer the above facilities.
+      * TEE on GPU [447]
+      * necessary to structure the code running in the enclave as a data oblivious procedure, such that its runtime and memory access patterns do not reveal information about the data upon which it is computing (see for example [73]).
+      * TEE 和 FL 的结合：只计算 aggregate 等关键函数
+    * Secure computation problems of interest
+      * Secure aggregation
+      * Secure shuffling
+      * Private information retrieval: PIR is a functionality for one client and
+        one server. It enables the client to download an entry from a server-hosted database such that the server gains zero information about which entry the client requested
+        * cPIR, itPIR
+        * use of lattice-based cryptosystems
+  * Privacy-Preserving Disclosures
+
+<img src="https://www.zhihu.com/equation?tex=P%28A%28D%29%5Cin%20S%29%5Cle%20e%5E%7B%5Cepsilon%7DP%28A%28D%5E%7B%27%7D%29%5Cin%20S%29%2B%5Cdelta" alt="P(A(D)\in S)\le e^{\epsilon}P(A(D^{'})\in S)+\delta" class="ee_img tr_noresize" eeimg="1">
+    * LDP(local DP): 常用于中心服务analysis
+    * distributed DP
+      * Distributed DP via secure aggregation: 给梯度加noise
+      * Distributed DP via secure shuffling: Encode-Shuffle-Analyze (ESA) framework, LDP + secure shuffling
+        * the Prochlo system [73]
+    * Hybrid differential privacy
+  * Verifiability
+    * various terms: checking computations [42], certified computation [343], delegating computations [210], as well as verifiable computing [195].
+    * Zero-knowledge proofs (ZKPs)
+      * [369] Nowadays, ZKP protocols can achieve proof sizes of hundred of bytes and verifications of the order of milliseconds regardless of the size of the statement being proved.
+  
+    * Trusted execution environment and remote attestation
+  
+* Protections Against External Malicious Actors
+  * Auditing the Iterates and Final Model
+  * Training with Central Differential Privacy
+    * With this technique, the server clips the L2 norm of individual updates, aggregates the clipped updates, and then adds Gaussian noise to the aggregate.
+    * Sources of randomness (adapted from [336])
+    * Auditing differential privacy implementations
+
+  * Concealing the Iterates
+  * Repeated Analyses over Evolving Data
+  * Preventing Model Theft and Misuse
+    * 使用MPC方法的问题在于inference时没有合适的第三方
+
+* Protections Against an Adversarial Server
+  * Challenges: Communication Channels, Sybil Attacks, and Selection
+  * Limitations of Existing Solutions
+  * Training with Distributed Differential Privacy
+  * Preserving Privacy While Training Sub-Models
+    * Is it possible to achieve communication-efficient sub-model federated learning while also keeping the client’s sub-model choice private? One promising approach is to use PIR for private sub-model download, while aggregating model updates using a variant of secure aggregation optimized for sparse vectors
+    * 加噪声可能让sparse的梯度变成dense的
+
+  * User Perception
+    * Understanding Privacy Needs for Particular Analysis Tasks
+    * Behavioral Research to Elicit Privacy Preferences
+
+
+##### 5. Defending Against Attacks and Failures
+
+* Adversarial Attacks on Model Performance
+  * on model performance, not on data inference
+  * These attacks can be broadly classified into training-time attacks (poi-soning attacks) and inference-time attacks (evasion attacks).
+  * Goals and Capabilities of an Adversary (Table 11)
+    * untargeted attacks (model downgrade) and targeted attacks (backdoor)
+  * Model Update Poisoning
+    * Untargeted and Byzantine attacks
+    * Byzantine-resilient defenses
+    * Targeted model update attacks
+  * Data Poisoning Attacks
+    * Data poisoning and Byzantine-robust aggregation
+    * Data sanitization and network pruning
+  * Inference-Time Evasion Attacks
+  * Defensive Capabilities from Privacy Guarantees
+    * The service provider can bound the contribution of any individual client to the overall model by (1) enforcing a norm constraint on the client model update (e.g. by clipping the client updates), (2) aggregating the clipped updates, (3) and adding Gaussian noise to the aggregate.
+* Non-Malicious Failure Modes
+  * Client reporting failures: unresponsive clients --> Secure Agg
+    * select more devices than required within each round.
+    * improve the efficiency of SecAgg
+    * More speculatively, it may be possible to perform versions of SecAgg that aggregate over multiple computation rounds. This would allow straggler nodes to be included in subsequent rounds, rather than dropping out of the current round altogether.
+  * Data pipeline failures
+    * GAN 生成 debug 数据
+  * Noisy model updates
+    * noisy features[350] and noisy labels[356]
+
+* Exploring the Tension between Privacy and Robustness
+  * SLSGD: Secure and Efficient Distributed On-device Machine Learning
+
+##### 6. Ensuring Fairness and Addressing Sources of Bias
+individual fairness、demographic fairness、counterfactual fairness
+
+* Bias in Training Data
+  * e.g. minorities, day-shift vs night-shift work schedules
+  * 《Fair resource allocation in federated learning》“a more fair distribution of the model performance across devices”, is employed in [302].
+* Fairness Without Access to Sensitive Attributes
+  * distributionally-robust optimization (DRO) which optimizes for the worst- case outcome across all individuals during training [225], and via multicalibration, which calibrates for fairness across subsets of the training data [232].
+* Fairness, Privacy, and Robustness
+  * the ideal of fairness seems to be in tension with the notions of privacy for which FL seeks to provide guarantees: differentially-private learning typically seeks to obscure individually-identifying characteristics, while fairness often requires knowing individuals’ membership in sensitive groups in order to measure or ensure fair predictions are being made.
+* Leveraging Federation to Improve Model Diversity
+* Federated Fairness: New Opportunities and Challenges
+  * 设备特征进模型：For example, federated learning can introduce new sources of bias through the decision of which clients to sample based on considerations such as connection type/quality, device type, location, activity patterns, and local dataset size [81] 
+  * centralized方法引入FL
+    * Fairness without demograph- ics in repeated loss minimization, ICML 2018
+
+##### 7. Addressing System Challenges
+
+* Platform Development and Deployment Challenges
+  * Code Deployment
+  * Monitoring and Debugging
+    * 端上debug麻烦，主要是log要求严格、不能访问原始input、难以追踪aggregate前的特定设备
+    * 用federated analysis技术debug
+* System Induced Bias
+  * Device Availability Profiles
+  * Examples of System Induced Bias
+    * selection bias
+      * In effect, devices active only at either fleet-wide availability peaks or troughs may be under-represented.
+    * survival bias
+      * biased towards devices with better network connections, faster processors, lower CPU load, and less data to process
+      * For instance, language models may over-represent demographics that have high quality internet connections or high end devices; and ranking models may not incorporate enough contributions from high engagement users who produce a lot of training data and hence longer training times
+  * Open Challenges in Quantifying and Mitigating System Induced Bias
+    * A useful proxy metric for bias is to study the expected rate of contribution of a device to federated learning
+    * device model, network connectivity, location 影响 contribution rate ---> post- stratification[312] or stratified sampling
+    * base the weight of a contribution solely on a device’s past contribution profile
+      * checkin不频繁的场景需要考虑clustering
+* System Parameter Tuning
+  * Goals
+    * Model Performance
+    * Convergence speed
+    * Throughput (e.g. number of rounds, amount of data, or number of devices)
+    * Model fairness, privacy and robustness (see section 6.3)
+    * Resource use on server and clients
+  * Various controls
+    * Clients per round
+    * Server-side scheduling
+      * ideal resource assignment should be fair, avoid starvation, minimize wait times, and support relative priorities all at once.
+    * Device-side scheduling
+      * One extreme is to connect to the server and run computations as often as possible, leading to high load and resource use on both server and devices. Another choice are fixed intervals, but they need to be adjusted to reflect external factors such as number of devices overall and per round
+      * pace steering [81]
+* On-Device Runtime
+  * tf作为device runtime的缺点
+    * It offers no easy path to devices for alternative front ends such as PyTorch [370], JAX [86] or CNTK [410].
+    * The runtime is not developed or optimized for resource constrained environments, incurring a large binary size, high memory use and comparatively low performance.
+    * The intermediate representation GraphDef used by TensorFlow is not standardized or stable, and version skew between the frontend and older on-device backends causes frequent compatibility chal- lenges.
+* The Cross-Silo Setting
+  * allowing for authentication and verification, accounting, and contractually enforced penalties for misbehavior
+  * 难点：
+    * How data is generated, pre-processed and labeled.
+    * Which software at which version powers training.
+    * The approval process for how data may or may not be used.
+      * establish data annotations: limiting the use of certain data to specific models, or encoding minimum aggregation requirements such as “require at least M clients per round
+  * vertical partitioning
+    * Learning with feature-partitioned data may require different communication patterns and additional processing steps e.g. for entity alignment and dealing with missing features
+
+
+
 
 #### Papers
 

@@ -8,21 +8,26 @@
 
 #### 分布式基础
 
-[讲最终一致性的知乎文章](https://zhuanlan.zhihu.com/p/25933039)
+* 最终一致性：系统中的所有分散在不同节点的数据，经过一定时间后，最终能够达到符合业务定义的一致的状态
 
-最终一致性：系统中的所有分散在不同节点的数据，经过一定时间后，最终能够达到符合业务定义的一致的状态
+  * 一致性指数据一致性，不是事务一致性（ACID 是事务一致性）
 
-* 一致性指数据一致性，不是事务一致性（ACID 是事务一致性）
 
-* 存在条件：多个节点/系统
+  * 存在条件：多个节点/系统
 
-* 不一致可能是暂时的，最终要一致
 
-[CAP theorem](https://en.wikipedia.org/wiki/CAP_theorem)
+  * 不一致可能是暂时的，最终要一致
+  * [讲最终一致性的知乎文章](https://zhuanlan.zhihu.com/p/25933039)
 
-[PACELC theorem](https://en.wikipedia.org/wiki/PACELC_theorem)
 
-最终一致性解决方案
+* [CAP theorem](https://en.wikipedia.org/wiki/CAP_theorem)
+  * consistency: Every read receives the most recent write or an error.
+  * availability: Every request receives a (non-error) response, without the guarantee that it contains the most recent write.
+  * partition tolerance: The system continues to operate despite an arbitrary number of messages being dropped (or delayed) by the network between nodes.
+
+* [PACELC theorem](https://en.wikipedia.org/wiki/PACELC_theorem)
+
+##### 最终一致性解决方案
 
 * 两阶段提交（2PC）
   * 所有下属节点confirm后才发起操作
@@ -33,6 +38,348 @@
 * [补偿交易 (Compensating Transaction)](https://docs.microsoft.com/en-us/azure/architecture/patterns/compensating-transaction)
 * 消息重试
 * 幂等（接口支持重入）：数据库唯一键挡重入
+
+#### Kafka
+
+##### Kafka 核心设计原理
+
+* kafka架构
+  * distributed high throughput message system (version 0.10), distributed streaming platform
+  * 特点
+    * 低延迟：O(1)，TB级
+    * 高吞吐：单机qps 10w，虚拟机6个节点，单条消息1KB，打满1GB带宽
+    * 水平扩展：broker消息分区，支持在线水平扩展
+    * 顺序性：partition内部的局部顺序性
+    * 多场景：离线/实时，延迟ms级
+  * 架构
+    * producer：app/web/mysql
+      * 内存内部队列，push失败3次抛异常
+      * 如果希望不丢数据，可以用flush方法
+    * broker：服务器 kafka server
+      * 数据存进本地磁盘不用担心内存被打爆
+      * producer--push-->broker<--pull--consumer
+      * pull的好处是避免consumer消费不过来，缺点是有一定延迟
+        * long pulling 长轮训：有数据再返回
+        * 不用push方法可以让broker的功能更简单，不需要知道consumer的信息，方便水平扩展
+    * consumer：hadoop/spark/flink/other kafka
+      * 能处理多少数据拿多少
+    * zookeeper：管理broker集群相关的元信息、领导选举
+      * 以前producer会连zk，后来直连broker
+      * broker和zk有长连接，并且本地缓存元信息
+  * Time & Partition & Segment
+    * Record
+      * Key-Value
+      * Timestamp: for streaming Kafka
+    * Topic: 逻辑概念，用于发布-订阅
+    * Partition：物理上对应文件夹（可以认为是文件），均匀分布在broker间；一个topic对应多个partition
+      * 理解为数组，有offset的概念
+    * Segment：segment对应文件，partition对应文件夹
+  * 机制
+    * 写数据：append-only，机械磁盘顺序读写性能还不错，甚至比内存随机读写更快
+    * 删数据：文件过大、磁盘满，直接删最老的segment
+  * consumer
+    * 两种consumer API
+      * low level (assign):
+        * Input: partition, offset, length
+        * 缺点在于当consumer和partition动态变化时，如何给consumers分配partitions
+      * high level (subscribe):
+        * consumer group顺序消费某个topic
+        * offset存于zk或kafka或自定义存储
+        * 实现了rebalance机制
+  * producer
+    * 异步：batch.size, linger.ms, flush()
+    * 保证顺序性：Queue与retry机制
+      * retry.backoff.ms
+      * retries
+      * max.in.flight.requests.per.connection 设为1提升顺序性
+    * partitioner.class
+      * 无key的情形：round-robin，无法保证同user数据进同一个partition
+      * 通常用uid做key
+      * 能引入cluster信息（比如broker和producer距离）
+
+```java
+public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
+  List partitions = cluster.partitionsForTopic(topic);
+  int numPartitions = partitions.size();
+  if (keyBytes == null) {
+    int nextValue = nextValue(topic);
+    List availablePartitions = cluster.availablePartitionsForTopic(topic);
+    if (availablePartitions.size() > 0) {
+      int part = Utils.toPositive(nextValue) % availablePartitions.size();
+      return availablePartitions.get(part).partition();
+    } else { // no partitions are available, give a non-available partition
+      return Utils.toPositive(nextValue) % numPartitions;
+    }
+  } else { // hash the keyBytes to choose a partition
+    return Utils.toPositive(Utils.murmur2(keyBytes)) % numPartitions;
+  }
+}
+```
+
+* kafka consumer rebalance机制演进
+  * 一个partition只分配给一个consumer
+    * 简单+保证一个consumer能顺序处理partition的数据
+    * 一个consumer可消费多个partition
+  * rebalance的完整过程
+  * 自治式rebalance
+    * zk注册/consumers/[consumer group]/ids/[consumer id] watch
+    * /brokers/id也注册watch
+    * 每个consumer去watch这个状态，自己做决定
+    * 坏处
+      * Herd Effect：任何broker/consumer的增减会触发所有consumer的rebalance
+      * Split Brain：同一时刻不同consumer从zk看到的状态可能不一样
+      * 调整结果不可控（虽然可能有最终一致性）
+  * 集中式rebalance
+    * coordinator监听topic、partition
+    * 接收consumer注册，选取leader
+    * leader SyncGroup -> coordinator
+    * 其它member SyncGroup获取结果
+* kafka高可用原理
+  * topic的replication factor：10个partition变成30个partition
+  * 数据复制
+    * 每个partition有一个broker作为leader
+      * producer->leader, follower<-leader
+
+    * in-sync replica (ISR): a broker that has the latest data for a given partition.
+      * 只有所有ISR commit了，才认为producer发送成功，允许consumer消费
+
+    * 参数控制：落后时间、落后消息个数
+      * Server: 
+        * replication.lag.time.max.ms=10000
+        * replication.lag.max.messages=4000
+
+      * Topic: min.insync.replicas=1
+      * Producer: request.require.acks=1
+      * 备份太慢，则从ISR里踢掉，不用担心像同步复制有慢节点问题
+
+    * 领导选举：各自选举、基于controller的选举
+      * 目前实现是选新leader从ISR里随机选
+
+  * 处理replicas全部失败
+    * 策略1:等ISR中任一replica恢复
+      * 降低可用性，极端情况下partition永久不可用 
+
+    * 策略2:等任一replica恢复 （default，默认高可用方案）
+      * 可能丢数据
+
+  * 拓展
+    * 常用一致性算法（commit策略）：WNR、Quorum、Paxos及其变种
+
+* kafka exactly once
+  * consumer exactly once
+
+    * 两阶段提交（0.1之后）
+      * 耗时长，不适用低延时场景
+      * 需要参与两阶段提交的所有系统皆实现XA接口
+
+    * At lease once + 下游幂等处理
+      * 实现简单
+      * 要求下游系统提供幂等处理接口
+      * auto.commit.interval.ms=5000
+
+    * Offset更新与数据处理放在同一事务中
+      * 要求下游处理系统可回滚
+      * 需要提供事务功能的系统参与
+      * e.g. offset和消息一起存进mysql；读到内存但还未消费的数据持久化到hdfs
+      * syncCommit
+
+  * producer exactly once
+    * enable.idempotence=true
+    * producer生成一个PID
+    * broker维护每个partition来自每个PID的当前最大序号，来判断接受/重复/乱序
+
+
+##### 操作
+
+* Debug lag
+  * 数据生成、样本消费
+
+  * lag是否持续、container/application cpu/mem是否正常
+
+  * partition lag情况
+
+  * 多topic是否消费均匀
+
+  * flink资源情况
+
+* consumer lag
+  * 用户侧
+    * 消费能力不足
+      * Topic的单partition入流增加
+      * 业务逻辑耗时长
+    * consumer在不断重启
+    * 处理消息时间长，影响fetch数据
+  * Kafka侧
+    * Broker压力大
+    * Broker磁盘故障
+  * [Kafka的Lag计算误区及正确实现](https://blog.51cto.com/u_15127513/2682807)
+    * Lag = HW - ConsumerOffset
+
+#### Flink 
+
+* streaming依赖kafka的exactly once 保障。用的是water mark机制来确定消费进度
+* Per Message VS. MicroBatch
+  * MicroBatch
+    * Spark StructStreaming MicroBatch
+    * 一致性语义：at-least once, exactly once
+    * 吞吐高
+
+  * Per Message
+    * Flink, SparkStreaming Continuous Mode
+    * Partition数据消费节点稳定性强
+    * 数据倾斜处理能力强
+    * 一致性语义：at-least once(barrier不对齐), exactly once
+    * 低延迟
+    * 吞吐中高
+
+* FLIP
+  * [FLIP-150: Introduce Hybrid Source](https://cwiki.apache.org/confluence/display/FLINK/FLIP-150%3A+Introduce+Hybrid+Source)
+
+
+##### 《Serving Machine Learning Models》chpt 4
+
+http://kb.sites.apiit.edu.my/files/2018/12/ebook-serving-machine-learning-models.pdf
+
+* 介绍了flink的特点：scalabality、checkpointing、state support、window semantics
+* Process Function -> basic building blocks
+  * Events (individual records within a stream)
+  * State (fault-tolerant, consistent)
+  * Timers (event time and processing time)
+* Flink provides two ways of implementing low-level joins, key-based joins implemented by **CoProcessFunction**, and partition-based joins implemented by **RichCoFlatMapFunction**
+  * Key-based Joins：类似于按模型分组
+  * Partition-Based Joins：一个instance能serving所有model
+    * 一个任务多个instances执行该任务的不同input data subset
+
+
+
+```java
+// Partition-Based Joins
+public class DataProcessMap extends AbstractRichFunction implements CoFlatMapFunction<byte[], ModelConfig, Double> {
+  
+  public double map(byte[] rawValue) throws RuntimeException {
+    
+  }
+  
+  @Override
+  public void flatMap1(byte[] bytes, Collector<double> collector) throws RuntimeException {
+    readLock.lock();
+    double score = map(bytes);
+    readLock.unlock();
+    collector.collect(score);
+  }
+  
+  @Override
+  public void flatMap2(ModelConfig modelConfig, Collector<double> collector) {
+    writeLock.lock();
+    this.modelConfig = modelConfig;
+    logger.info("Use new model config: " + modelConfig.toString());
+    writeLock.unlock();
+  }
+}
+
+DataStream<byte[]> kafkaInstanceStream = env.addSource(kafka_source);
+DataStream<double> myStream = kafkaInstanceStream.connect(configDataStream.broadcast())
+                .flatMap(new DataProcessMap(curConfig));
+
+
+```
+
+
+
+
+
+```java
+// DataStream.class
+StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.getConfig().setGlobalJobParameters(params);
+FlinkKafkaConsumer010<byte[]> kafka_source = Kafka010Utils.customFlinkKafkaConsumer010(
+                cluster, topic, groupId, properties, new ByteArraySchema());
+kafka_source.setXXX(...);
+...
+DataStream<byte[]> kafkaInstanceStream = env.addSource(kafka_source);
+
+```
+
+
+
+```java
+// source function
+import my_config.Config
+import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
+import org.apache.flink.streaming.api.functions.source.SourceFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class ConfigSource implements SourceFunction<Config>, CheckpointedFunction {
+  private static final Logger logger = LoggerFactory.getLogger(ConfigSource.class);
+  private Config config;
+  private volatile boolean isRunning = true;
+  private transient ListState<Config> checkpointed;
+  public ConfigSource(Config config) {
+    this.config = config;
+  }
+  
+  @Override
+  public void run(SourceContext<Config> sourceContext) {
+    while (isRunnning) {
+      // this synchronized block ensures that state checkpointing,
+      // internal state updates and emission of elements are an atomic operation
+      synchronized (sourceContext.getCheckpointLock()) {
+				Set<Long> oldList = null;
+        if (config.XXX() != null) {
+          oldList = new HashSet<>(config.XXX());
+        }
+        boolean changed = false;
+        Set<Long> list = GetXXX();
+        if (!list.equals(oldList)) {
+          changed = true;
+        }
+        if (changed) {
+          sourceContext.collect(config);
+        }
+        
+      }
+      try {
+        Thread.sleep(60000);
+      } catch (InterruptedException e) {
+        logger.error("Sleep interrupted: " + e);
+      }
+    }
+  }
+  
+  @Override
+  public void cancel() {
+    isRunning = false;
+  }
+  
+  @Override
+  public void snapshotState(FunctionSnapshotContext functionSnapshotContext) throws Exception {
+    this.checkpointed.clear();
+    this.checkpointed.add(config);
+  }
+  
+  @Override
+  public void initializeState(FunctionInitializationContext functionInitializationContext) throws Exception {
+    this.checkpointed = functionInitializationContext
+      .getOperatorStateStore()
+      .getListState(new ListStateDescriptor<>("config", Config.class));
+
+    if (functionInitializationContext.isRestored()) {
+      for (Config config: this.checkpointed.get()) {
+        logger.info("Old config: " + config.toString());
+      }
+    }
+  }
+}
+```
+
+
+
+##### 踩坑
+
+* Compile error: error: scala.reflect.internal.MissingRequirementError: object java.lang.Object in compiler mirror not found.
+  * solution: scala版本2.11，需要使用jdk8
+  * Idea scale compiler: https://www.jetbrains.com/help/idea/compile-and-build-scala-projects.html
 
 #### Apache Hadoop YARN: Yet Another Resource Negotiator
 

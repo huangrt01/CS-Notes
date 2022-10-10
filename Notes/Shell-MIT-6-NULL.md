@@ -854,7 +854,7 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
   * [如何优雅地让Python程序在后台运行](https://atomlab.org/post/code/python-background/)
 ```shell
 # 将标准输出放到name.log中，并且记录该进程的pid到run.pid中
-nohup python -u scripts.py > name.log 2>&1 & echo $! > run.pid
+nohup python -u main.py > name.log 2>&1 & echo $! > run.pid
 
 # 若存在run.pid文件，则加载它并杀掉该进程
 [[ -f run.pid ]] && kill $(cat run.pid)
@@ -984,12 +984,19 @@ DATA
 #### u
 
 * `uname -a` 查内核版本
+* `ulimit -a`
+  * `ulimit -s xxx` 修改线程栈大小
+
 
 #### v
 #### w
 * wait：`wait pid`，不加pid则等待所有进程
 * `watch -n 5 $cmd`
 * wc: -l
+  * [source code](https://www.gnu.org/software/cflow/manual/html_node/Source-of-wc-command.html#Source-of-wc-command)
+    * 这段代码只将连续的字母作为一个字，连续的数字等不作为word
+    * isword用来判断当前字符是否处于一个字，isword实现的功能不完善
+
 * which：找到程序路径
 * [wget](https://blog.csdn.net/wangshuminjava/article/details/79916655): 断点续传-c    后台-b
 

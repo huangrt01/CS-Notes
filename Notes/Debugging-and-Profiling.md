@@ -6,6 +6,8 @@
 
 * [Test-driven development(TDD)](https://en.wikipedia.org/wiki/Test-driven_development) 软件开发流程
   * Fake and mock object methods
+* 也可参考【C++笔记】《The Art of Writing Readable Code》- chpt 14
+* 也可参考【protobuf等基本工具笔记】gtest
 
 
 

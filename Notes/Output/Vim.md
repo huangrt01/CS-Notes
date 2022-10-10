@@ -1,3 +1,5 @@
+[toc]
+
 ### Vim
 
 [Editor War](https://en.wikipedia.org/wiki/Editor_war)
@@ -140,6 +142,7 @@ A: 先`grep -nr  <img src="https://www.zhihu.com/equation?tex=target%20" alt="ta
 * 缩进操作：
   * 先 `v` 进入visual模式选定要缩进的内容，再 `shift + </>` 进行整体的左右缩进
   * 对齐缩进：`v`选中第二、三行，然后`=`，与第一行对齐缩进
+* 补全：连续按 `Ctrl-P`
 
 
 

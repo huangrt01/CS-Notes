@@ -2725,6 +2725,16 @@ typedef unsigned int		uintptr_t;
 block_size = roundup(block_size, ::sysconf(_SC_PAGESIZE));  // 4KB
 ```
 
+* Note
+  * C 的预处理程序也可能引起某些意想不到的结果。例如，宏UINT_MAX 定义在limit.h中，但假如在程序中忘了include 这个头文件，下面的伪指令就会无声无息地失败，因为预处理程序会把预定义的UINT_MAX 替换成0：
+
+```c++
+#if UINT_MAX > 65535u
+......
+#endif
+```
+
+
 
 ##### 大小端
 
@@ -3009,6 +3019,10 @@ public:
 #### 输入输出
 
 ##### 文件
+
+* [Read_file_to_string](https://www.delftstack.com/howto/cpp/read-file-into-string-cpp/)
+  * istreambuf_iterator
+  * rdbuf
 
 ```c++
 static std::string read_file(const std::string& file_name) {
@@ -3305,6 +3319,852 @@ void finish_task() {
 
 
 
+### 《The Art of Readable Code》 by Dustin Boswell and Trevor Foucher. Copyright 2012 Dustin Boswell and Trevor Foucher, 978-0-596-80229-5
+
+#### chpt 1 Code Should Be Easy to Understand
+
+* Code should be written to minimize the time it would take for someone else to understand it.
+
+#### Part I: Surface Level Improvements
+
+#### chpt 2 Packing Information into Names
+
+* Word Alternatives
+  * send: deliver, dispatch, announce, distribute, route
+  * find: search, extract, locate, recover
+  * start: launch, create, begin, open
+  * make: create, set up, build, generate, compose, add, new
+* Avoid Generic Names Like tmp and retval
+  * `sum_squares += v[i] * v[i];`
+  * The name tmp should be used only in cases when being short-lived and temporary is the most important fact about that variable
+    * `tmp_file`
+  * loop iterators: ci, mi, ui
+* Prefer Concrete Names over Abstract Names
+  * ServerCanStart() -> CanListenOnPort()
+  * `#define DISALLOW_COPY_AND_ASSIGN(ClassName) ...`
+* Attaching Extra Information to a Name
+  * delay_secs, size_mb, max_kbps, degrees_cw (cw means clockwise)
+  * untrustedUrl, **plaintext_**password, **unescaped_**comment, html**_utf8**, data**_urlenc**
+  * 拓展：Hungarian notation
+    * pszbuffer, z(zero-terminated)
+* How Long Should a Name Be?
+  * Shorter Names Are Okay for Shorter Scope
+  * `ConvertToString()->ToString()`
+
+* Use Name Formatting to Convey Meaning
+  * kMaxOpenFile 方便和宏区分
+  * 私有成员加下划线后缀
+
+```c++
+static const int kMaxOpenFiles = 100;
+class LogReader {
+  public:
+		void OpenFile(string local_file);
+	private:
+		int offset_;
+  	DISALLOW_COPY_AND_ASSIGN(LogReader);
+};
+```
+
+* about HTML/CSS
+  * use underscores to separate words in IDs and dashes to separate words in classes
+  * `<div id="middle_column" class="main-content">`
+
+#### chpt 3 Names That Can’t Be Misconstrued
+
+* `filter()` -> `select()` or `exclude()`
+* `Clip(text, length)`  -> `truncate(text, max_chars)`
+* The clearest way to name a limit is to put `max_` or `min_` in front of the thing being limited.
+* when considering ranges
+  * Prefer first and last for Inclusive Ranges
+  * Prefer begin and end for Inclusive/Exclusive Ranges
+* when using bool
+  * `read_password` -> `need_password` or `user_is_authenticated`
+  * avoid *negated* terms
+  * `HasSpaceLeft()` , use `is` or `has`
+* Matching Expectations of Users, users may expect `get()` or `size()` to be lightweight methods.
+  * `get_mean` -> `compute_mean()`
+  * `list::size()`不一定是O(1)
+* Example: Evaluating Multiple Name Candidates
+  * `inherit_from_experiment_id:` or `copy_experiment:`
+
+#### chpt 4 Aesthetics
+
+* principles
+  * Use consistent layout, with patterns the reader can get used to.
+  * Make similar code look similar.
+  * Group related lines of code into blocks.
+
+* Rearrange Line Breaks to Be Consistent and Compact
+
+```java
+public class PerformanceTester {
+        // TcpConnectionSimulator(throughput, latency, jitter, packet_loss)
+        //                            [Kbps]   [ms]    [ms]    [percent]
+        public static final TcpConnectionSimulator wifi =
+        		new TcpConnectionSimulator(500, 	80, 		200, 			1);
+        public static final TcpConnectionSimulator t3_fiber =
+        		new TcpConnectionSimulator(45000, 10, 			0, 			0);
+        public static final TcpConnectionSimulator cell =
+        		new TcpConnectionSimulator(100,  400, 		250, 			5);
+}
+```
+
+* Use Methods to Clean Up Irregularity
+  * If multiple blocks of code are doing similar things, try to give them the same silhouette.
+
+```c++
+void CheckFullName(string partial_name,
+                   string expected_full_name,
+									 string expected_error) {
+  // database_connection is now a class member
+  string error;
+  string full_name = ExpandFullName(database_connection, partial_name, &error); 			assert(error == expected_error);
+  assert(full_name == expected_full_name);
+}
+```
+
+* Use Column Alignment When Helpful
+* Pick a Meaningful Order, and Use It Consistently
+  * Match the order of the variables to the order of the `input` fields on the corresponding HTML form.
+  * Order them from “most important” to “least important.”
+  * Order them alphabetically.
+* Organize Declarations into Blocks
+* Break Code into “Paragraphs”
+
+```python
+def suggest_new_friends(user, email_password):
+  # Get the user's friends' email addresses.
+  friends = user.friends()
+  friend_emails = set(f.email for f in friends)
+
+  # Import all email addresses from this user's email account.
+  contacts = import_contacts(user.email, email_password)
+  contact_emails = set(c.email for c in contacts)
+
+  # Find matching users that they aren't already friends with.
+  non_friend_emails = contact_emails - friend_emails
+  suggested_friends = User.objects.select(email__in=non_friend_emails)
+  
+	# Display these lists on the page.
+  display['user'] = user
+	display['friends'] = friends
+  display['suggested_friends'] = suggested_friends
+
+	return render("suggested_friends.html", display)
+```
+
+* Personal Style versus Consistency
+  * Consistent style is more important than the “right” style.
+
+#### chpt 5 Knowing What to Comment
+
+The purpose of commenting is to help the reader know as much as the writer did.
+
+* What NOT to Comment
+  * Don’t comment on facts that can be derived quickly from the code itself.
+  * Don’t Comment Just for the Sake of Commenting
+  * Don’t Comment Bad Names—Fix the Names Instead
+
+```python
+# remove everything after the second '*'
+name = '*'.join(line.split('*')[:2])
+```
+
+```c++
+// Find a Node with the given 'name' or return NULL.
+// If depth <= 0, only 'subtree' is inspected.
+// If depth == N, only 'subtree' and N levels below are inspected.
+Node* FindNodeInSubtree(Node* subtree, string name, int depth);
+```
+
+```c++
+// Make sure 'reply' meets the count/byte/etc. limits from the 'request'
+void EnforceLimitsFromRequest(Request request, Reply reply);
+
+void ReleaseRegistryHandle(RegistryKey* key);
+```
+
+* Recording Your Thoughts
+  * Include “Director Commentary”
+  * Comment the Flaws in Your Code
+  * Comment on Your Constants
+
+```c++
+// Surprisingly, a binary tree was 40% faster than a hash table for this data.
+// The cost of computing a hash was more than the left/right comparisons.
+
+// This heuristic might miss a few words. That's OK; solving this 100% is hard.
+
+// This class is getting messy. Maybe we should create a 'ResourceNode' subclass to
+// help organize things.
+```
+
+```c++
+// TODO: use a faster algorithm
+// TODO(dustin): handle other image formats besides JPEG
+
+// FIXME
+// HACK
+// XXX: Danger! Major problem here!
+
+// todo: (lower case) or maybe-later:
+```
+
+```c++
+NUM_THREADS = 8; // as long as it's >= 2 * num_processors, that's good enough.
+
+// Impose a reasonable limit - no human can read that much anyway.
+const int MAX_RSS_SUBSCRIPTIONS = 1000;
+
+image_quality = 0.72; // users thought 0.72 gave the best size/quality tradeoff
+```
+
+* Put Yourself in the Reader’s Shoes
+  * Anticipating Likely Questions
+  * Advertising Likely Pitfalls
+  * “Big Picture” Comments
+  * Summary Comments
+
+```c++
+// Force vector to relinquish its memory (look up "STL swap trick")
+vector<float>().swap(data);
+```
+
+```c++
+// Calls an external service to deliver email.  (Times out after 1 minute.)
+void SendEmail(string to, string subject, string body);
+
+// Runtime is O(number_tags * average_tag_depth), so watch out for badly nested inputs.
+def FixBrokenHtml(html): ...
+```
+
+```c++
+// This file contains helper functions that provide a more convenient interface to
+// our file system. It handles file permissions and other nitty-gritty details.
+```
+
+```python
+def GenerateUserReport():
+  # Acquire a lock for this user
+  ...
+  # Read user's info from the database
+  ...
+  # Write info to a file
+  ...
+  # Release the lock for this user
+```
+
+* Final Thoughts—Getting Over Writer’s Block
+
+```c++
+// Oh crap, this stuff will get tricky if there are ever duplicates in this list.
+--->
+// Careful: this code doesn't handle duplicates in the list (because that's hard to do)
+```
+
+#### chpt 6 Making Comments Precise and Compact
+
+**Comments should have a high information-to-space ratio.**
+
+* Keep Comments Compact
+
+```c++
+// CategoryType -> (score, weight)
+typedef hash_map<int, pair<float, float> > ScoreMap;
+```
+
+* Avoid Ambiguous Pronouns
+
+```c++
+// Insert the data into the cache, but check if it's too big first.
+--->
+// Insert the data into the cache, but check if the data is too big first.
+--->
+// If the data is small enough, insert it into the cache.
+```
+
+* Polish Sloppy Sentences
+  * e.g.  Give higher priority to URLs we've never crawled before.
+
+* Describe Function Behavior Precisely
+  * e.g. Count how many newline bytes ('\n') are in the file.
+* Use Input/Output Examples That Illustrate Corner Cases
+
+```c++
+// ...
+// Example: Strip("abba/a/ba", "ab") returns "/a/"
+String Strip(String src, String chars) { ... }
+
+// Rearrange 'v' so that elements < pivot come before those >= pivot;
+// Then return the largest 'i' for which v[i] < pivot (or -1 if none are < pivot)
+// Example: Partition([8 5 9 8 2], 8) might result in [5 2 | 8 9 8] and return 1
+int Partition(vector<int>* v, int pivot);
+```
+
+* State the Intent of Your Code
+
+```c++
+void DisplayProducts(list<Product> products) {
+  products.sort(CompareProductByPrice);
+  // Display each price, from highest to lowest
+  for (list<Product>::reverse_iterator it = products.rbegin(); it != products.rend(); ++it)
+    DisplayPrice(it->price);
+		... 
+	}
+```
+
+* “Named Function Parameter” Comments
+
+```c++
+void Connect(int timeout, bool use_encryption) { ... }
+
+// Call the function with commented parameters
+Connect(/* timeout_ms = */ 10, /* use_encryption = */ false);
+```
+
+* Use Information-Dense Words
+  * // This class acts as a **caching layer** to the database.
+  * // **Canonicalize** the street address (remove extra spaces, "Avenue" -> "Ave.", etc.)
+
+#### Part II: Simplifying Loops and Logic
+
+#### chpt 7 Making Control Flow Easy to Read
+
+* The Order of Arguments in Conditionals
+  * `while (bytes_received < bytes_expected)`
+* The Order of if/else Blocks
+  * Prefer dealing with the *positive* case first instead of the negative—e.g., if (debug) instead of if (!debug).
+  * Prefer dealing with the *simpler* case first to get it out of the way. This approach might also allow both the if and the else to be visible on the screen at the same time, which is nice.
+  * Prefer dealing with the more *interesting* or conspicuous case first.
+* The ?: Conditional Expression (a.k.a. “Ternary Operator”)
+  * By default, use an if/else. The ternary ?: should be used only for the simplest cases.
+* Avoid do/while Loops
+
+```java
+public boolean ListHasNode(Node node, String name, int max_length) {
+  while (node != null && max_length-- > 0) {
+    if (node.name().equals(name)) return true;
+    node = node.next();
+  }
+  return false;
+}
+```
+
+```c++
+do {
+  continue;
+} while (false);
+// loop just once
+```
+
+* Returning Early from a Function
+  * cleanup code
+    * C++: destructor
+    * Java, Python: try finally
+      * [Do it with a Python decorator](https://stackoverflow.com/questions/63954327/python-is-there-a-way-to-make-a-function-clean-up-gracefully-if-the-user-tries/63954413#63954413)
+    * Python: with
+    * C#: using
+
+```c++
+struct StateFreeHelper {
+  state* a;
+  StateFreeHelper(state* a) : a(a) {}
+  ~StateFreeHelper() { free(a); }
+};
+
+void func(state* a) {
+  StateFreeHelper(a);
+  if (...) {
+    return;
+  } else {
+    ...
+  }
+}
+```
+
+```python
+def do_stuff(self):
+  self.some_state = True
+  try:
+    # do stuff which may take some time - and user may quit here
+  finally:
+    self.some_state = False
+```
+
+* The Infamous goto
+  * 问题在于滥用，比如多种goto混合、goto到前面的代码
+* Minimize Nesting
+  * Removing Nesting by Returning Early
+  * Removing Nesting Inside Loops: use continue for independent iterations
+
+* Can You Follow the Flow of Execution?
+
+![flow](C++/flow_of_execution.png)
+
+#### chpt 8 Breaking Down Giant Expressions
+
+* Explaining Variables
+
+```python
+username = line.split(':')[0].strip()
+if username == "root":
+	...
+```
+
+* Summary Variables
+
+```java
+final boolean user_owns_document = (request.user.id == document.owner_id);
+if (user_owns_document) {
+}
+...
+if (!user_owns_document) {
+  // document is read-only...
+}
+```
+
+* Using De Morgan’s Laws
+* Abusing Short-Circuit Logic
+  * There is also a newer idiom worth mentioning: in languages like Python, JavaScript, and Ruby, the “or” operator returns one of its arguments (it doesn’t convert to a boolean), so code like: x = a || b || c, can be used to pick out **the first “truthy” value** from a, b, or c.
+
+```c++
+assert((!(bucket = FindBucket(key))) || !bucket->IsOccupied());
+--->
+bucket = FindBucket(key);
+if (bucket != NULL) assert(!bucket->IsOccupied());
+```
+
+* Example: Wrestling with Complicated Logic
+
+```c++
+struct Range {
+	int begin;
+	int end;
+  // For example, [0,5) overlaps with [3,8)
+  bool OverlapsWith(Range other);
+};
+
+bool Range::OverlapsWith(Range other) {
+  return (begin >= other.begin && begin < other.end) ||
+         (end > other.begin && end <= other.end) ||
+         (begin <= other.begin && end >= other.end);
+}
+
+bool Range::OverlapsWith(Range other) {
+  if (other.end <= begin) return false;  // They end before we begin
+  if (other.begin >= end) return false;  // They begin after we end
+  return true;  // Only possibility left: they overlap
+}
+```
+
+* Breaking Down Giant Statements
+
+* Another Creative Way to Simplify Expressions
+
+```c++
+ void AddStats(const Stats& add_from, Stats* add_to) {
+   #define ADD_FIELD(field) add_to->set_##field(add_from.field() + add_to->field())
+   ADD_FIELD(total_memory);
+   ADD_FIELD(free_memory);
+   ADD_FIELD(swap_memory);
+   ADD_FIELD(status_string);
+   ADD_FIELD(num_processes);
+   ...
+   #undef ADD_FIELD
+ }
+```
+
+#### chpt 9 Variables and Readability
+
+* Eliminating Variables
+  * Useless Temporary Variables
+  * Eliminating Intermediate Results
+  * Eliminating Control Flow Variables
+* Shrink the Scope of Your Variables
+  * Another way to restrict access to class members is to **make as many methods static as possible**. Static methods are a great way to let the reader know “these lines of code are isolated from those variables.”
+  * break the large class into smaller classes
+  * if Statement Scope in C++
+  * Creating “Private” Variables in JavaScript
+  * JavaScript Global Scope
+    * always define variables using the var keyword (e.g., var x = 1)
+  * No Nested Scope in Python and JavaScript
+    * 在最近祖先手动定义 xxx = None
+  * Moving Definitions Down
+
+```c++
+if (PaymentInfo* info = database.ReadPaymentInfo()) {
+  cout << "User paid: " << info->amount() << endl;
+}
+```
+
+```javascript
+var submit_form = (function () {
+	var submitted = false; // Note: can only be accessed by the function below
+	return function (form_name) {
+    if (submitted) {
+      return;  // don't double-submit the form
+    }
+		...
+		submitted = true;
+  };
+}());
+```
+
+* Prefer Write-Once Variables
+  * The more places a variable is manipulated, the harder it is to reason about its current value.
+* A Final Example
+
+```javascript
+var setFirstEmptyInput = function (new_value) {
+  for (var i = 1; true; i++) {
+    var elem = document.getElementById('input' + i);
+    if (elem === null)
+      return null;  // Search Failed. No empty input found.
+    if (elem.value === '') {
+      elem.value = new_value;
+      return elem;
+    }
+  }
+};
+```
+
+#### Part III: Reorganizing Your Code
+
+#### chpt 10 Extracting Unrelated Subproblems
+
+* Introductory Example: findClosestLocation()
+* Pure Utility Code
+  * read file to string
+* Other General-Purpose Code
+
+```javascript
+var format_pretty = function (obj, indent) {
+  // Handle null, undefined, strings, and non-objects.
+  if (obj === null) return "null";
+  if (obj === undefined) return "undefined";
+  if (typeof obj === "string") return '"' + obj + '"';
+  if (typeof obj !== "object") return String(obj);
+  if (indent === undefined) indent = "";
+  // Handle (non-null) objects.
+  var str = "{\n";
+  for (var key in obj) {
+    str += indent + "  " + key + " = ";
+    str += format_pretty(obj[key], indent + " ") + "\n";
+  }
+  return str + indent + "}";
+};
+```
+
+* Create a Lot of General-Purpose Code
+
+* Project-Specific Functionality
+
+```python
+CHARS_TO_REMOVE = re.compile(r"['\.]+")
+CHARS_TO_DASH = re.compile(r"[^a-z0-9]+")
+
+def make_url_friendly(text):
+  text = text.lower()
+  text = CHARS_TO_REMOVE.sub('', text)
+  text = CHARS_TO_DASH.sub('-', text)
+  return text.strip("-")
+
+business = Business()
+business.name = request.POST["name"]
+business.url = "/biz/" + make_url_friendly(business.name)
+business.date_created = datetime.datetime.utcnow()
+business.save_to_database()
+```
+
+* Simplifying an Existing Interface
+* Reshaping an Interface to Your Needs
+
+```python
+def url_safe_encrypt(obj):
+  obj_str = json.dumps(obj)
+  cipher = Cipher("aes_128_cbc", key=PRIVATE_KEY, init_vector=INIT_VECTOR, op=ENCODE)
+  encrypted_bytes = cipher.update(obj_str)
+  encrypted_bytes += cipher.final() # flush out the current 128 bit block
+  return base64.urlsafe_b64encode(encrypted_bytes)
+```
+
+* Taking Things Too Far
+
+#### chpt 11 One Task at a Time
+
+* Tasks Can Be Small
+  * e.g. 分解 old vote 和 new vote
+* Extracting Values from an Object
+
+```javascript
+var first_half, second_half;
+
+if (country === "USA") {
+  first_half = town || city || "Middle-of-Nowhere";
+  second_half = state || "USA";
+} else {
+  first_half = town || city || state || "Middle-of-Nowhere";
+  second_half = country || "Planet Earth";
+}
+
+return first_half + ", " + second_half;
+```
+
+* A Larger Example
+
+#### chpt 12 Turning Thoughts into Code
+
+* Describing Logic Clearly
+  *  “rubber ducking”
+  * You do not really understand something unless you can explain it to your grandmother. —Albert Einstein
+
+```php
+if (is_admin_request()) {
+  // authorized
+} elseif ($document && ($document['username'] == $_SESSION['username'])) {
+  // authorized
+} else {
+  return not_authorized();
+}
+// continue rendering the page ...
+```
+
+* Knowing Your Libraries Helps
+* Applying This Method to Larger Problems
+
+```python
+def PrintStockTransactions():
+  stock_iter = ...
+	price_iter = ...
+  num_shares_iter = ...
+
+  while True:
+    time = AdvanceToMatchingTime(stock_iter, price_iter, num_shares_iter)
+    if time is None:
+      return
+
+    # Print the aligned rows.
+    print "@", time,
+    print stock_iter.ticker_symbol,
+    print price_iter.price,
+    print num_shares_iter.number_of_shares
+
+    stock_iter.NextRow()
+    price_iter.NextRow()
+    num_shares_iter.NextRow()
+    
+def AdvanceToMatchingTime(row_iter1, row_iter2, row_iter3):
+  while row_iter1 and row_iter2 and row_iter3:
+    t1 = row_iter1.time
+    t2 = row_iter2.time
+    t3 = row_iter3.time
+
+    if t1 == t2 == t3:
+      return t1
+
+    tmax = max(t1, t2, t3)
+
+    # If any row is "behind," advance it.
+    # Eventually, this while loop will align them all.
+    if t1 < tmax: row_iter1.NextRow()
+    if t2 < tmax: row_iter2.NextRow()
+    if t3 < tmax: row_iter3.NextRow()
+
+  return None  # no alignment could be found
+```
+
+#### chpt 13 Writing Less Code
+
+* Don’t Bother Implementing That Feature—You Won’t Need It
+* Question and Break Down Your Requirements
+  * Example: A Store Locator ---- For any given user’s latitude/longitude, find the store with the closest latitude/longitude.
+    * When the locations are on either side of the International Date Line
+    * When the locations are near the North or South Pole
+    * Adjusting for the curvature of the Earth, as “longitudinal degrees per mile” changes
+  * Example: Adding a Cache
+* Keeping Your Codebase Small
+
+* Be Familiar with the Libraries Around You
+  * Example: Lists and Sets in Python
+* Example: Using Unix Tools Instead of Coding
+  * When a web server frequently returns 4xx or 5xx HTTP response codes, it’s a sign of a potential problem (4xx being a client error; 5xx being a server error). 
+
+#### PART IV Selected Topics
+
+#### chpt 14 Testing and Readability
+
+* Make Tests Easy to Read and Maintain
+* What’s Wrong with This Test?
+
+```c++
+void CheckScoresBeforeAfter(string input, string expected_output) {
+  vector<ScoredDocument> docs = ScoredDocsFromString(input);
+  SortAndFilterDocs(&docs);
+  string output = ScoredDocsToString(docs);
+  assert(output == expected_output);
+}
+
+vector<ScoredDocument> ScoredDocsFromString(string scores) {
+  vector<ScoredDocument> docs;
+  replace(scores.begin(), scores.end(), ',', ' ');
+  // Populate 'docs' from a string of space-separated scores.
+  istringstream stream(scores);
+  double score;
+  while (stream >> score) {
+    AddScoredDoc(docs, score);
+  }
+  return docs;
+}
+string ScoredDocsToString(vector<ScoredDocument> docs) {
+  ostringstream stream;
+  for (int i = 0; i < docs.size(); i++) {
+    if (i > 0) stream << ", ";
+    stream << docs[i].score;
+  }
+  return stream.str();
+}
+```
+
+* Making Error Messages Readable
+  * Python `import unittest`
+
+```c++
+BOOST_REQUIRE_EQUAL(output, expected_output)
+```
+
+* Choosing Good Test Inputs
+  * In general, you should pick the simplest set of inputs that completely exercise the code.
+  * Simplifying the Input Values
+    * -1e100、-1
+    * it’s more effective to construct large inputs programmatically, constructing a large input of (say) 100,000 values
+* Naming Test Functions
+* What Was Wrong with That Test?
+
+* Test-Friendly Development
+  * Test-driven development (TDD)
+  * Table 14.1: Characteristics of less testable code
+    * Use of global variables ---> gtest set_up()
+    * Code depends on a lot of external components
+    * Code has nondeterministic behavior
+
+* Going Too Far
+  * Sacrificing the readability of your real code, for the sake of enabling tests.
+  * Being obsessive about 100% test coverage.
+  * Letting testing get in the way of product development.
+
+#### chpt 15 Designing and Implementing a “Minute/Hour Counter”
+
+* Defining the Class Interface
+
+```c++
+// Track the cumulative counts over the past minute and over the past hour.
+// Useful, for example, to track recent bandwidth usage.
+class MinuteHourCounter {
+  // Add a new data point (count >= 0).
+  // For the next minute, MinuteCount() will be larger by +count. 
+  // For the next hour, HourCount() will be larger by +count.
+  void Add(int count);
+
+  // Return the accumulated count over the past 60 seconds.
+  int MinuteCount();
+  
+  // Return the accumulated count over the past 3600 seconds.
+  int HourCount();
+};
+```
+
+* Attempt 1: A Naive Solution
+  * list, reverse_iterator，效率低
+* Attempt 2: Conveyor Belt Design
+  * 两个传送带，内存消耗大，拓展成本高
+* Attempt 3: A Time-Bucketed Design
+  * 本质利用了统计精度可牺牲的特点，离散化实现
+
+```c++
+// A class that keeps counts for the past N buckets of time.
+class TrailingBucketCounter {
+  public:
+    // Example: TrailingBucketCounter(30, 60) tracks the last 30 minute-buckets of time.
+    TrailingBucketCounter(int num_buckets, int secs_per_bucket);
+    void Add(int count, time_t now);
+    // Return the total count over the last num_buckets worth of time
+    int TrailingCount(time_t now);
+};
+class ConveyorQueue;
+```
+
+
+
+
+
+#### 拓展
+
+* 《Writing Solid Code》, [douban摘要](https://book.douban.com/review/6430114/)
+  * 消除所做的隐式假定
+  * 一种debug方式，填充内存块的默认值
+  * 指针溢出
+    * [溢出问题：数组溢出，整数溢出，缓冲区溢出，栈溢出，指针溢出](https://www.cnblogs.com/fengxing999/p/11101089.html)
+
+```c++
+#define bGarbage 0xA3
+bool fNewMemory(void** ppv, size_t size)
+{
+  char** ppb = (char**)ppv;
+  ASSERT(ppv!=NULL && size!=0);
+  *ppb = (char*)malloc(size);
+  #ifdef DEBUG
+  {
+    if( *ppb != NULL )
+      memset(*ppb, bGarbage, size);
+  }
+  #endif
+  return(*ppb != NULL);
+}
+
+ void FreeMemory(void* pv)
+ {
+   ASSERT(pv != NULL);
+   #ifdef DEBUG
+   {
+     memset(pv, bGarbage, sizeofBlock(pv) );
+   }
+   #endif
+   free(pv);
+ }
+```
+
+```c++
+void* memchr( void *pv, unsigned char ch, size_t size )
+{
+    unsigned char *pch = ( unsigned char * )pv;
+    unsigned char *pchEnd = pch + size;  // 可能溢出
+    while( pch < pchEnd )
+    {
+        if( *pch == ch )
+            return ( pch );
+        pch ++ ;
+    }
+    return( NULL );
+}
+--->
+void *memchr( void *pv, unsigned char ch, size_t size )
+{
+    unsigned char *pch = ( unsigned char * )pv;
+    while ( size-- > 0)
+    {
+        if( *pch == ch )
+            return( pch );
+        pch ++;
+    }
+    return( NULL );
+}
+```
+
+
+
+
+
 ### 《Effective STL》
 
 #### vector and string
@@ -3313,7 +4173,7 @@ void finish_task() {
 
 * Cautions
   * 不要将迭代器视作指针，don't use v.begin() instead of &v[0]
-  * string: 1) 内存不保证连续；2）不保证以 null character 结尾   => c_str() 方法只适于 const char *pString 参数的 C API
+  * string: 1) 内存不保证连续；2）不保证以 null character 结尾   => c_str() 方法只适于 `const char *pString` 参数的 C API
   * vector: 不要做更改长度的操作
 
 ```c++
@@ -3640,6 +4500,25 @@ std::string_view foo() {
 
 
 
+#### \<assert.h>
+
+* [Assert.h considered harmful](https://ftp.gnu.org/old-gnu/Manuals/nana-1.14/html_node/nana_toc.html#TOC3)
+
+```c
+# ifndef NDEBUG
+# define _assert(ex)	{if (!(ex)) \
+                         {(void)fprintf(stderr, \
+                           "Assertion failed: file \"%s\", line %d\n", \
+                           __FILE__, __LINE__);exit(1);}}
+# define assert(ex)	_assert(ex)
+# else
+# define _assert(ex)
+# define assert(ex)
+# endif
+```
+
+
+
 
 
 #### \<bitset>
@@ -3954,6 +4833,22 @@ std::mt19937 engine{seed_seq};
 ```
 
 * glibc的 [random](https://github.com/lattera/glibc/blob/master/stdlib/random.c) 函数涉及一个锁性能问题，使用的[锁](https://github.com/lattera/glibc/blob/895ef79e04a953cac1493863bcae29ad85657ee1/sysdeps/nptl/lowlevellock.h#L88)相比[pthread_mutex](https://github.com/lattera/glibc/blob/master/nptl/pthread_mutex_lock.c#L63)，没有spin的实现，性能有差距
+
+#### \<stdarg.h>
+
+```c++
+void va_start(va_list ap, last_arg);
+
+/* Print error message and exit with error status. */
+static void
+errf (char *fmt, ...)
+{
+  va_list ap;
+  va_start (ap, fmt);
+  error_print (0, fmt, ap);
+  va_end (ap);
+}
+```
 
 
 

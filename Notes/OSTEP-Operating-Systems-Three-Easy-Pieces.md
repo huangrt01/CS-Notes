@@ -457,8 +457,17 @@ I hear and I forget. I see and I remember. I do and I understand.    其实是�
 <img src="OSTEP-Operating-Systems-Three-Easy-Pieces/001.jpg" alt="进程状态转移" style="zoom:50%;" />
 
 * final态（在UNIX称作zombie state）等待子进程return 0，parent进程 wait()子进程
+```shell
+# 查找僵尸进程
+ps -aux|grep Z
+ps -ef|grep 子进程pid
+kill -9 父进程pid
+```
+
+
 
 * xv6 process structure
+
 ```c++
 // the registers xv6 will save and restore
 // to stop and subsequently restart a process
@@ -568,6 +577,29 @@ int main(int argc, char *argv[])
 * 5.6 waitpid()    [wait和waitpid的区别](https://www.cnblogs.com/yusenwu/p/4655286.html)
   * The pid parameter specifies the set of child processes for which to wait. If pid is -1, the call waits for any child process.  If pid is 0, the call waits for any child process in the process group of the caller.  If pid is greater than zero, the call waits for the process with process id pid.  If pid is less than -1, the call waits for any process whose process group id equals the absolute value of pid.
 * 5.8    [注意子进程返回0](https://blog.csdn.net/beautysleeper/article/details/52585224)
+
+##### 管道
+
+* [stdio buffering](https://www.pixelbeat.org/programming/stdio_buffering/)
+  * It should be noted here that changing the buffering for a stream can have unexpected effects. For example glibc (2.3.5 at least) will do a read(blksize) after every fseek() if buffering is on.
+  * 期望环境变量控制
+    * `tail -f access.log | BUF_1_=1 cut -d' ' -f1 | uniq`
+    * 风险：Denial Of Service possibilities
+* `fcntl(fileno(stdin), F_SETPIPE_SZ, pipe_page_num * 4096);`
+  * 16MB is system max value by default for socket
+
+```python
+import fcntl
+import platform
+
+try:
+    if platform.system() == 'Linux':
+        fcntl.F_SETPIPE_SZ = 1031
+        fcntl.fcntl(fd, fcntl.F_SETPIPE_SZ, size)
+except IOError:
+    print('can not change PIPE buffer size')
+```
+
 
 #### 6.Mechanism: Limited Direct Execution
 ##### CRUX: how to efficiently virtualize the cpu with control
@@ -1266,6 +1298,11 @@ Other Security Problems: Meltdown And Spectre
 
 概念：thread, multi-threaded, thread control blocks (TCBs)
   * thread-local: 栈不共用，在进程的栈区域开辟多块栈，不是递归的话影响不大
+    * [关于线程栈和进程栈](https://www.cnblogs.com/luosongchao/p/3680312.html)
+      * 线程栈是固定大小的（默认8KB），可以使用`ulimit -a` 查看，使用`ulimit -s` 修改
+      * 进程栈大小时执行时确定的，与编译链接无关
+      * 进程栈大小是随机确认的，至少比线程栈要大，但不会超过2倍
+
   * thread的意义：1) parallelism, 2) 适应于I/O阻塞系统、缺页中断（需要KLT），这一点类似于multiprogramming的思想，在server-based applications中应用广泛。
 
 <img src="OSTEP-Operating-Systems-Three-Easy-Pieces/015.jpg" alt="015" style="zoom:50%;" />
