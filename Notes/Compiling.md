@@ -260,9 +260,18 @@ readelf -sW my_bin |grep LOCAL|grep OBJECT | grep -v __PRETTY_FUNCTION__|grep -v
 
 ### 基本工具
 
+#### gcc
+
 ```shell
 gcc -D ABC     # 定义宏
 ```
+
+* flags
+  * -std=c++17
+  * -g: 保留调试符号信息
+  * -pedantic
+* warning options:  https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
+  * -Wall: 显示所有错误警告
 
 #### Blade
 

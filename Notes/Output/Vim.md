@@ -33,7 +33,7 @@
   * :help {topic}   open help，`Ctrl-D`显示补全命令列表
   * `:r`提取和合并文件；`:r !ls`可读取存放外部命令输出
 
-##### Vim’s interface is a programming language
+#### Vim’s interface is a programming language
 **Movement**：也称作“nouns”，因为指代chunks of text
 
 * Basic movement: `hjkl`左下上右
@@ -98,7 +98,7 @@
 - `da'` delete a single-quoted string, including the surrounding single quotes
 - `d2a` 删除到a之前
 
-##### Vim拓展
+#### Vim拓展
 ./vimrc: [课程推荐config](https://missing.csail.mit.edu/2020/files/vimrc), instructors’ Vim configs ([Anish](https://github.com/anishathalye/dotfiles/blob/master/vimrc), [Jon](https://github.com/jonhoo/configs/blob/master/editor/.config/nvim/init.vim) (uses [neovim](https://neovim.io/)), [Jose](https://github.com/JJGO/dotfiles/blob/master/vim/.vimrc))
 
 plugin: [推荐网站](https://vimawesome.com/)，git clone到`~/.vim/pack/vendor/start/`
@@ -120,7 +120,7 @@ plugin: [推荐网站](https://vimawesome.com/)，git clone到`~/.vim/pack/vendo
   * `:ALESymbolSearch`
 
 
-##### Vim-mode的其它应用
+#### Vim-mode的其它应用
 * Shell：If you’re a Bash user, use `set -o vi`. If you use Zsh, `bindkey -v`. For Fish, `fish_vi_key_bindings`. Additionally, no matter what shell you use, you can `export EDITOR=vim`. This is the environment variable used to decide which editor is launched when a program wants to start an editor. For example, `git` will use this editor for commit messages.
 
 * Readline: Many programs use the [GNU Readline](https://tiswww.case.edu/php/chet/readline/rltop.html) library for their command-line interface. 
@@ -131,7 +131,7 @@ plugin: [推荐网站](https://vimawesome.com/)，git clone到`~/.vim/pack/vendo
 
   There are even vim keybinding extensions for web [browsers](http://vim.wikia.com/wiki/Vim_key_bindings_for_web_browsers), some popular ones are [Vimium](https://chrome.google.com/webstore/detail/vimium/dbepggeogbaibhgnhhndojpepiihcmeb?hl=en) for Google Chrome and [Tridactyl](https://github.com/tridactyl/tridactyl) for Firefox. You can even get Vim bindings in [Jupyter notebooks](https://github.com/lambdalisue/jupyter-vim-binding).
 
-##### Vim的其它特性积累
+#### Vim的其它特性积累
 
 Q: 如果文件太大打不开怎么办？
 
@@ -179,7 +179,7 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 
 
 
-##### Macros
+#### Macros
 - `q{character}` to start recording a macro in register `{character}`
 
 - `q` to stop recording
@@ -236,7 +236,7 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 <img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Vim/vim.png" alt="vim" style="zoom:100%;" />
 
 
-##### Resources
+#### Resources
 
 - `vimtutor` is a tutorial that comes installed with Vim
 - [Vim Adventures](https://vim-adventures.com/) is a game to learn Vim
@@ -246,6 +246,27 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 - [Vi/Vim Stack Exchange](https://vi.stackexchange.com/)
 - [Vim Screencasts](http://vimcasts.org/)
 - [Practical Vim](https://pragprog.com/book/dnvim2/practical-vim-second-edition) (book)
+
+
+
+### VSCode
+
+#### 快捷键
+
+* 头文件和源文件切换：`option + O`
+  * 搜索switch获知快捷键
+
+#### 开发必备插件
+
+* 公共: Code Spell Checker, GitLens, EditorConfig for VSCode, String Manipulation, Visual Studio IntelliCode
+  * Code Runner
+  * Remote - SSH
+* C++: [cpplint](https://github.com/cpplint/cpplint), C/C++ (by Microsoft), Cod
+  eLLDB, Header source switch, Rainbow Brackets, C++ Intellisense
+  * Tabnine：AI加持的自动补全，用GPT
+  * Peacock：不同workspace可以用不同的颜色区分
+
+
 
 ### Sublime Text
 

@@ -14,7 +14,9 @@ bool(int(str(0))) -> False
 list.extend(list)
 list.append(item)
 
+# split不加参数，默认为所有的空字符，包括空格、换行(\n)、制表符(\t)等
 list = [x.strip() for x in list_string.split() if x.strip()]
+list = filter(lambda x: x != 2, iterable)
 
 # dict: 同一dict中存储的value类型可以不一样
 
@@ -206,6 +208,12 @@ class Student(object):
         return 2015 - self._birth
 ```
 
+* [一文让你彻底搞懂Python中\__ str\__和\__repr\__?](https://segmentfault.com/a/1190000022266368)
+
+
+
+#### 函数修饰decorator
+
 * @func 作为类或者函数的修饰符
   * 当解释器读到@修饰符之后，会先解析@后的内容，直接就把@下一行的函数**或者类**作为@后边的函数的参数，然后将返回值赋值给下一行修饰的函数对象
   * @func 修饰类，常用于 register
@@ -214,7 +222,18 @@ class Student(object):
 @model_registry.register('model_type')
 ```
 
-* [一文让你彻底搞懂Python中\__ str\__和\__repr\__?](https://segmentfault.com/a/1190000022266368)
+* `@functools.wraps(func)` : https://stackoverflow.com/questions/308999/what-does-functools-wraps-do
+  * 主要作用是继承一些函数信息
+  * kwargs要自己拿
+
+```python
+@functools.wraps(func)
+def wrapper(*args, **kwargs):
+	arg1 = kwargs.get('arg1')
+  nonlocal arg1
+  ...
+  return func(*args, **kwargs)
+```
 
 #### 函数
 
@@ -394,16 +413,24 @@ os.getenv('ABC', 'abc') # 注意返回值是str
 #### datetime
 
 ```python
-from datetime import datetime
-datetime.now()
-datetime.timedelta(hours=1)
-datetime.timedelta(days=1)
+import datetime as dt
+dt.datetime.now()
+dt.timedelta(hours=1)
+dt.timedelta(days=1)
 
 # max datetime (普通调用其timestamp方法可能溢出)
-datetime.max.replace(tzinfo=datetime.timezone.utc).timestamp()
+dt.datetime.max.replace(tzinfo=datetime.timezone.utc).timestamp()
 
 # parse timestamp
-object = datetime.fromtimestamp(timestamp)
+object = dt.datetime.fromtimestamp(timestamp)
+
+# timezone
+import pytz
+a = dt.datetime(2022,1,1,tzinfo=pytz.timezone('UTC'))
+b = a.tzinfo.localize(
+            dt.datetime.combine(object2.date(), dt.time.min)
+        )
+assert(a == b)
 ```
 
 #### fstring
@@ -477,6 +504,47 @@ while True:
 
 ```
 
+#### 多线程编程
+
+```python
+class PeriodicRunner(object):
+    def __init__(self, name, cond, callback, interval=5, daemon=True):
+        self._mutex = threading.Lock()
+        self._name = name
+        self._cond = cond
+        self._callback = callback
+        self._interval = interval
+        self._running = True
+        if not callable(cond) or not callable(callback):
+            self._running = False
+            return
+        self._thread = threading.Thread(target=self.run, name=name, args=(), daemon=daemon)
+        self._thread.start()
+
+    def is_alive(self):
+        return self._thread.is_alive()
+
+    def run(self):
+        try:
+            while True:
+                with self._mutex:
+                    if not self._running:
+                        return
+                if self._cond():
+                    self._callback()
+                time.sleep(self._interval)
+        except Exception as e:
+            logging.info('PeriodicRunner[{}] caught exception[{}]'.format(self._name, repr(e)))
+        finally:
+            logging.info('PeriodicRunner[{}] exit!'.format(self._name))
+
+    def stop(self):
+        logging.info('PeriodicRunner[{}] stop!'.format(self._name))
+        with self._mutex:
+            self._running = False
+        self._thread.join()
+```
+
 
 
 #### pandas
@@ -492,6 +560,19 @@ https://pandas.pydata.org/pandas-docs/stable/index.html
 ```python
 data['not_working'] = np.where(np.in1d(data['job'], ['student', 'retired', 'unemployed']), 1, 0)
 ```
+
+#### pdb
+
+https://docs.python.org/zh-cn/3/library/pdb.html
+
+```python
+import pdb
+
+pdb.set_trace()
+```
+
+
+
 
 #### random
 
@@ -575,6 +656,18 @@ class MyTestCase(unittest.TestCase):
 if __name__ == '__main__':
 	unittest.main()
 ```
+
+```python
+# mock sth
+import contextlib
+self._exit_stack = contextlib.ExitStack()
+# context_manager: contextlib.AbstractContextManager
+self._exit_stack.enter_context(context_manager)
+
+mock_sleep = self._exit_stack.enter_context(mock.patch('time.sleep'))
+mock_sleep.return_value = True
+```
+
 
 
 #### 网络

@@ -2598,23 +2598,7 @@ int foo(const std::vector<int>& m) {
 }
 ```
 
-
-
-
-
-
-### C++
-
-#### VSCode 
-
-开发必备插件
-
-* 公共: Code Spell Checker, GitLens, EditorConfig for VSCode, String Manipulation, Visual Studio IntelliCode
-  * Code Runner
-  * Remote - SSH
-* C++: [cpplint](https://github.com/cpplint/cpplint), C/C++ (by Microsoft), CodeLLDB, Header source switch, Rainbow Brackets, C++ Intellisense
-  * Tabnine：AI加持的自动补全，用GPT
-  * Peacock：不同workspace可以用不同的颜色区分
+### C++ Potpourri
 
 #### 编码规范
 
@@ -2632,10 +2616,6 @@ int foo(const std::vector<int>& m) {
   * ["explicit" should be used on single-parameter constructors and conversion operators](https://rules.sonarsource.com/cpp/RSPEC-1709)
 * 经典案例
   * [goto fail](https://coolshell.cn/articles/11112.html)
-
-
-
-
 
 
 
@@ -3039,6 +3019,15 @@ static std::string read_file(const std::string& file_name) {
   return str;
 }
 ```
+
+* 关于linux阻塞/非阻塞读
+  * 返回非零值：实际read到的字节数
+  * 返回-1
+    * errno != EAGAIN (或!= EWOULDBLOCK) read 出错
+    * errno == EAGAIN (或== EWOULDBLOCK) 设置了非阻塞读，并且没有数据到达
+  * 返回0：读到文件末尾
+  * 工程实践
+    * cs144/sponge 的 eventloop 设计
 
 
 

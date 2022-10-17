@@ -188,8 +188,13 @@ public int partition(String topic, Object key, byte[] keyBytes, Object value, by
     * producer生成一个PID
     * broker维护每个partition来自每个PID的当前最大序号，来判断接受/重复/乱序
 
-
 ##### 操作
+
+* consumer 介绍
+  * https://docs.confluent.io/platform/current/clients/consumer.html#ak-consumer
+  * `auto.offset.reset` = earliest/latest/none
+    * https://issues.apache.org/jira/browse/KAFKA-3370
+    * 触发的两种场景：1）指定的timestamp过早，数据没了；2）consumer group没有commit过offset，挂了
 
 * Debug lag
   * 数据生成、样本消费
@@ -231,6 +236,20 @@ public int partition(String topic, Object key, byte[] keyBytes, Object value, by
     * 一致性语义：at-least once(barrier不对齐), exactly once
     * 低延迟
     * 吞吐中高
+
+* Storm数据模型与group type
+  * Storm
+    * spout代表一个storm拓扑中的数据入口，连接到数据源，将数据转化为一个个tuple，并发射tuple。
+  
+    * stream是由无限制个tuple组成的序列。tuple为storm的核心数据结构，是包含了一个或多个键值对的列表。
+
+    * bolt可以理解为计算程序中的运算或者函数，bolt的上游是输入流，经过bolt实施运算后，可输出一个或者多个输出流。
+      * bolt可以订阅多个由spout或者其他bolt发射的数据流，用以构建复杂的数据流转换网络。
+  
+  * GroupType主要用于Extractor+Joiner（Spout+Bolt）模式时，上下游之间交互方式；
+    - keyby为按照key做hash，然后发给下游Joiner节点，单条数据会跨节点发送；
+    - forward是保证spout和bolt在相同container里面执行，不跨节点发送数据；
+    - shuffle是按照random(key)方式下发，单条数据会随机下发给下游节点
 
 * FLIP
   * [FLIP-150: Introduce Hybrid Source](https://cwiki.apache.org/confluence/display/FLINK/FLIP-150%3A+Introduce+Hybrid+Source)
@@ -633,20 +652,17 @@ single-container patterns for container management, single-node patterns of clos
 * Service-oriented architectures (SOA)
 
 
-
-
-
 #### Ray: 动态可编程分布式计算框架
 
 1.Ray是一个动态可编程的分布式计算框架，支持分布式训练，主要体现在以下几方面：
 
-丰富的本地训练场景（清晰指派local/remote的任务/角色，task无状态，actor有状态）
+* 丰富的本地训练场景（清晰指派local/remote的任务/角色，task无状态，actor有状态）
 
-灵活训练规划pipeline（用户可以在Actor里自定义逻辑，包括循环、计时器等）
+* 灵活训练规划pipeline（用户可以在Actor里自定义逻辑，包括循环、计时器等）
 
-灵活数据源（流批处理融合，支持简单的数据处理chain）
+* 灵活数据源（流批处理融合，支持简单的数据处理chain）
 
-One-off system：针对RL任务的特化，1）training, serving, simulation一体化，2）dynamic execution。推荐系统不一定需要，可能跟粗排联系更紧密 3）model serving的时候，更强调client and server colocate的情形，不适合我们的精排场景
+* One-off system：针对RL任务的特化，1）training, serving, simulation一体化，2）dynamic execution。推荐系统不一定需要，可能跟粗排联系更紧密 3）model serving的时候，更强调client and server colocate的情形，不适合我们的精排场景
 
 2.目前工业界主要使用Ray的方式分两种，一是用Ray的上游生态lib，二是用Ray的底层能力深入自研框架
 
@@ -680,7 +696,6 @@ Ray是用户友好的分布式计算框架，具体体现在
 官方doc：https://docs.ray.io/en/latest/installation.html
 
 开源史海钩沉系列 [1] Ray：分布式计算框架 - 高策的文章 - 知乎 https://zhuanlan.zhihu.com/p/104022670
-
 
 
 **读论文**： 《Ray: A Distributed Framework for Emerging AI Applications》, OSDI 18

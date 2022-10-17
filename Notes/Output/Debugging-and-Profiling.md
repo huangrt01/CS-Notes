@@ -195,6 +195,17 @@ https://wizardforcel.gitbooks.io/100-gdb-tips/content/index.html
 }
 ```
 
+#### Sanitizers
+
+* [ASan](https://en.wikipedia.org/wiki/AddressSanitizer)
+  * `-fsanitize=address`
+
+*  [UBSan](https://developers.redhat.com/blog/2014/10/16/gcc-undefined-behavior-sanitizer-ubsan/)
+  * `-fsanitize=undefined`
+
+* [ThreadSan](https://github.com/google/sanitizers/wiki/ThreadSanitizerCppManual)
+  * `-fsanitize=thread`
+
 #### Specialized Tools
 
 Even if what you are trying to debug is a black box binary there are tools that can help you with that. Whenever programs need to perform actions that only the kernel can, they use [System Calls](https://en.wikipedia.org/wiki/System_call). There are commands that let you trace the syscalls your program makes. In Linux there’s [`strace`](https://www.man7.org/linux/man-pages/man1/strace.1.html) and macOS and BSD have [`dtrace`](http://dtrace.org/blogs/about/). `dtrace` can be tricky to use because it uses its own `D` language, but there is a wrapper called [`dtruss`](https://www.manpagez.com/man/1/dtruss/) that provides an interface more similar to `strace` (more details [here](https://8thlight.com/blog/colin-jones/2015/11/06/dtrace-even-better-than-strace-for-osx.html)).

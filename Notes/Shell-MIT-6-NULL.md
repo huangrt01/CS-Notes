@@ -142,6 +142,10 @@ done
 * `-ne`，更多的查看man test，比如`-n 文件存在为真 -z 不存在为真`
 * “test command”， \[\[和\[的区别：http://mywiki.wooledge.org/BashFAQ/031 ，`[[`是compound command，存在special parsing context，寻找reserved words or control operators 
   * `if [[ -e $file ]] && [[ $var == true]] `
+* `--`
+  *  to signify the end of command options
+  * `grep -- -v file`
+  
 
 ##### shell globbing 通配
 * wildcard通配符：?和* 	`ls *.sh`
@@ -167,6 +171,64 @@ https://zhuanlan.zhihu.com/p/146462733
 - Functions are executed in the current shell environment whereas  scripts execute in their own process. Thus, functions can modify environment variables, e.g. change your current directory, whereas scripts can’t. Scripts will be passed by value environment variables  that have been exported using [`export`](http://man7.org/linux/man-pages/man1/export.1p.html)
   * 比如cd只能在function中影响到外界shell
 - As with any programming language functions are a powerful  construct to achieve modularity, code reuse and clarity of shell code.  Often shell scripts will include their own function definitions.
+
+##### 实用技巧
+
+* `alias ll='ls -aGhlt'`
+
+* marco记录directory，polo前往
+
+```shell
+#!/bin/bash
+marco(){
+        foo=$(pwd)
+        export MARCO=$foo
+}
+polo(){
+        cd "$MARCO" || echo "cd error"
+}
+```
+
+* 实用小工具，比如可以抢实验室GPU（实现的功能相对原题有改动）
+
+```shell
+#!/usr/bin/env bash
+debug(){
+        echo "start capture the program failure log"
+        cnt=-1
+        ret=0
+        while [[ $ret -eq 0 ]]; do
+                sh "$1" 2>&1
+                ret=$?
+                cnt=$((cnt+1))
+                # let cnt++
+                if [[ $# -eq 2 ]];then
+                        sleep "$2"
+                fi
+        done
+        echo "succeed after ${cnt} times"
+}
+```
+
+* `fd -e html -0 | xargs -0 zip output.zip`
+
+* 返回文件夹下最近修改的文件：
+
+    * `fd . -0 -t f | xargs -0 stat -f '%m%t%Sm %N' | sort -n | cut -f2- | tail -n 1` (设成了我的fdrecent命令)
+    * [stackoverflow讨论](https://stackoverflow.com/questions/5566310/how-to-recursively-find-and-list-the-latest-modified-files-in-a-directory-with-s)
+
+    * `find . -exec stat -f '%m%t%Sm %N' {} + | sort -n | cut -f2- | tail -n 1`
+
+    * `find . -type f -print0 | xargs -0 stat -f '%m%t%Sm %N' | sort -n | cut -f2- | tail -n 1`
+
+* import envs from main process
+
+  * `. <(xargs -0 bash -c 'printf "export %q\n" "$@"' -- < /proc/${MAIN_PID}/environ)`
+    * [关于`%q`](https://github.com/progrium/bashstyle/issues/20#issuecomment-68955878)，"causes printf to output the corresponding argument in a format that can be reused as shell input"
+      * Prints `''` for the null/empty string.
+      * Prints the string normally if it has no spaces, using backslashes to escape shell-recognized characters like quotes or semicolons.
+      * Prints the string in single-quotes ("shell quoting") if it has spaces, using `'\''` to escape single-quotes.
+      * Prints the string in a `$'...'` "ANSI C" style string, with backslashed-escaped command sequences, if it has special/non-printing characters like newlines.
 
 ##### shell tools
 
@@ -211,54 +273,12 @@ rg --stats PATTERN
   * [autojump](https://www.baidu.com/link?url=mmPr58MUREjyOpep_Bjba3FyOvqmlUlHSjwpit3kmUPWMWCrvvrUjx1-MKzWeBCsFBiJoXKF-A3Qk23C07rCTa&wd=&eqid=c4204f66000031cb000000065ebf6b15)
   * More complex tools exist to quickly get an overview of a directory structure [`tree`](https://linux.die.net/man/1/tree), [`broot`](https://github.com/Canop/broot) or even full fledged file managers like [`nnn`](https://github.com/jarun/nnn) or [`ranger`](https://github.com/ranger/ranger)
 
-**Shell编辑**
-* `Ctrl-a`光标移动到行前
-* ESC进入Vim-mode，ESC-v进入Vim直接编辑
+* Shell编辑
 
+  * `Ctrl-a`光标移动到行前
 
-**Exercises**
+  * ESC进入Vim-mode，ESC-v进入Vim直接编辑
 
-1. `alias ll='ls -aGhlt'`
-
-2. marco记录directory，polo前往
-```shell
-#!/bin/bash
-marco(){
-        foo=$(pwd)
-        export MARCO=$foo
-}
-polo(){
-        cd "$MARCO" || echo "cd error"
-}
-```
-
-3. 实用小工具，比如可以抢实验室GPU（实现的功能相对原题有改动）
-```shell
-#!/usr/bin/env bash
-debug(){
-        echo "start capture the program failure log"
-        cnt=-1
-        ret=0
-        while [[ $ret -eq 0 ]]; do
-                sh "$1" 2>&1
-                ret=$?
-                cnt=$((cnt+1))
-                # let cnt++
-                if [[ $# -eq 2 ]];then
-                        sleep "$2"
-                fi
-        done
-        echo "succeed after ${cnt} times"
-}
-```
-
-4.`fd -e html -0 | xargs -0 zip output.zip`
-
-5.返回文件夹下最近修改的文件：`fd . -0 -t f | xargs -0 stat -f '%m%t%Sm %N' | sort -n | cut -f2- | tail -n 1` (设成了我的fdrecent命令)
-
-  * [stackoverflow讨论](https://stackoverflow.com/questions/5566310/how-to-recursively-find-and-list-the-latest-modified-files-in-a-directory-with-s)
-  *  `find . -exec stat -f '%m%t%Sm %N' {} + | sort -n | cut -f2- | tail -n 1`
-  *  `find . -type f -print0 | xargs -0 stat -f '%m%t%Sm %N' | sort -n | cut -f2- | tail -n 1`
 
 ##### zsh
 * [oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh)
@@ -570,6 +590,8 @@ pidwait(){
 [ubuntu无sudo权限以及非root的用户apt安装软件](https://blog.csdn.net/qq_24406903/article/details/88376829)
 
 **Keyboard remapping**
+
+Mac-os karabiner，right command -> escape
 
 **Daemons**
 
@@ -900,8 +922,6 @@ scp -r $folder
 
 ```shell
 # "." 等价于 source
-# import envs from process
-. <(xargs -0 bash -c 'printf "export %q\n" "$@"' -- < /proc/${MAIN_PID}/environ)
 ```
 
 

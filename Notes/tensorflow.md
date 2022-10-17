@@ -274,6 +274,8 @@ for name, value in fetch1.items():
 
 ##### gradients
 
+* [about grad_ys](https://stackoverflow.com/questions/50967885/tf-gradients-how-can-i-understand-grad-ys-and-use-it)
+
 ```python
 # gradients 返回 grad_ys*dy/dx，ys和xs是tensor
 with tf.name_scope(""):
@@ -281,11 +283,23 @@ with tf.name_scope(""):
             gs = tf.gradients(ys=ys, xs=xs, name=name, colocate_gradients_with_ops=colocate_gradients_with_ops, grad_ys=grad_ys)
 ```
 
-[about grad_ys](https://stackoverflow.com/questions/50967885/tf-gradients-how-can-i-understand-grad-ys-and-use-it)
+* replace_gradients_zero
+
+```python
+@tf.custom_gradient
+def replace_gradient_zero(tensor, gradient):
+    def grad(dy):
+        return tf.cast(gradient, tensor.dtype), None
+    return tf.cast(tf.zeros_like(tensor), tf.float32), grad
+```
 
 
 
-[Understanding variable_scope and name_scope in tensorflow and variable sharing](https://stackoverflow.com/questions/36237427/understanding-variable-scope-and-name-scope-in-tensorflow-and-variable-sharing)
+
+
+
+
+* [Understanding variable_scope and name_scope in tensorflow and variable sharing](https://stackoverflow.com/questions/36237427/understanding-variable-scope-and-name-scope-in-tensorflow-and-variable-sharing)
 
 ```python
 def forward(inputs):
