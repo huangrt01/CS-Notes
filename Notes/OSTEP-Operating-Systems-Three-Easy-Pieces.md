@@ -1,5 +1,4 @@
 [toc]
-## OSTEP-Operating-Systems-Three-Easy-Pieces
 
 __主题：virtualization, concurrency, persistence__
 

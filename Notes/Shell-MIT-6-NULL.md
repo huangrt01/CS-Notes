@@ -242,24 +242,10 @@ debug(){
 **shell中的查找**
 
 * 查找文件：find, fd, locate，见底部命令解释
-* 查找代码：grep, [ack](https://beyondgrep.com/), [ag](https://github.com/ggreer/the_silver_searcher) and [rg](https://github.com/BurntSushi/ripgrep)
-  * grep -R can be improved in many ways, such as ignoring .git folders, using multi CPU support, &c
-  * 代码行数统计工具 [cloc](https://github.com/AlDanial/cloc)
-  * [C++阅码神器cpptree.pl和calltree.pl的使用 - satanson的文章 - 知乎](https://zhuanlan.zhihu.com/p/339910341)
-
-```shell
-# Find all python files where I used the requests library
-rg -t py 'import requests'
-# Find all files (including hidden files) without a shebang line
-rg -u --files-without-match "^#!"
-# Find all matches of foo and print the following 5 lines
-rg foo -A 5
-# Print statistics of matches (# of matched lines and files )
-rg --stats PATTERN
-```
-
+* 查找代码：见【code-reading】笔记
 * 查找shell指令
-  * `history | grep find`
+
+	* `history | grep find`
   
   * Ctrl-r，可结合[fzf](https://github.com/junegunn/fzf/wiki/Configuring-shell-key-bindings#ctrl-r)，[教程](https://www.jianshu.com/p/d64553a37d69)：高效查找，手动选择
   
@@ -267,7 +253,7 @@ rg --stats PATTERN
   
   * [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)：键盘右键快速键入
   * 如果输入命令有leading space，不会记入历史数据；如果不慎记入，可修改`.bash_history`或`.zsh_history`
-
+  
 * 查找目录
   * [fasd](https://github.com/clvv/fasd): 用[frecency](https://developer.mozilla.org/en/The_Places_frecency_algorithm)(frequency+recency)这个指标排序，这一指标最早用于火狐浏览器
   * [autojump](https://www.baidu.com/link?url=mmPr58MUREjyOpep_Bjba3FyOvqmlUlHSjwpit3kmUPWMWCrvvrUjx1-MKzWeBCsFBiJoXKF-A3Qk23C07rCTa&wd=&eqid=c4204f66000031cb000000065ebf6b15)
@@ -766,6 +752,20 @@ shopt expand_aliases # show current status
 #### d
 * d: zsh的特点，可显示最近10个目录，然后`cd -数字`进入
 * date：日期
+* dd
+
+  * you have *very* large devices to copy, so that experimenting to determine the best block-size is worthwhile.
+  * you have to copy only part of a disk. You can specify `count` to limit how many blocks are copied.
+
+  * you want to resume an interrupted copy. You can't do so with `cp`, but you can try with `dd`, by using the `seek` and `skip` options.
+
+  * you want to pipe it to the standard input of something (admittedly, `cat` will work here too):
+
+    ```
+    dd if=/dev/sda bs=10M | ssh host dd of=/dev/sdb
+    ```
+
+  * `dd` usefulness is very well discussed in this Unix and Linux post: [dd vs cat — is dd still relevant these days?](https://unix.stackexchange.com/q/12532/70524)
 * declare
   * https://www.runoob.com/linux/linux-comm-declare.html
 
@@ -865,6 +865,7 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
   * 也可查看端口占用，接 grep 即可 
 #### m
 * man: q退出
+  * `fork(2)` -> `man 2 fork`
 * mkdir
 * mv
 #### n
@@ -917,6 +918,8 @@ scp -r $folder
   * 可用于demo演示终端操作
   
 * sha1sum:  `printf 'hello' | sha1sum`  
+
+* sha256sum
 
 * source
 

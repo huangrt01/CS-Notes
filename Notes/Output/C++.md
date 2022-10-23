@@ -730,14 +730,16 @@ std::shared_ptr<Widget> spw(new Widget, loggingDel);
   * 正确写法：
 
 ```c++
-std::shared_ptr<Widget> spw1(new Widget, // direct use of new loggingDel);
+std::shared_ptr<Widget> spw1(new Widget);
 std::shared_ptr<Widget> spw2(spw1);
 ```
 
 * 类似地，不要用this指针创建shared_ptr
 
   * 正确写法：*The Curiously Recurring Template Pattern (CRTP)*
-  * 为了防止process一个不存在shared_ptr的对象，常把ctors设成private
+  * 注意 shared_from_this() 必须在对象生成 shared_ptr 后调用
+    * 为了防止process一个不存在shared_ptr的对象，常把ctors设成private
+    * shared_from_this() 不能在构造函数里调用，在构造时它还没有交给 shared_ptr 接管
 
 ```c++
 class Widget: public std::enable_shared_from_this<Widget> {
@@ -798,8 +800,8 @@ std::unique_ptr<const Widget> loadWidget(WidgetID id);
 
 ```c++
 std::shared_ptr<const Widget> fastLoadWidget(WidgetID id) {
-static std::unordered_map<WidgetID, std::weak_ptr<const Widget>> cache;
-auto objPtr = cache[id].lock();
+	static std::unordered_map<WidgetID, std::weak_ptr<const Widget>> cache;
+	auto objPtr = cache[id].lock();
   if (!objPtr) {
     objPtr = loadWidget(id);
     cache[id] = objPtr;
@@ -860,7 +862,7 @@ auto spw1(std::make_shared<Widget>());   //能用auto
 
 
 
-`make_shared`优点
+**`make_shared`优点**
 
 * 不用的话，有潜在的内存泄漏风险，和异常安全性有关
   * 先new再创建shared_ptr，如果在这中间computePriority抛出异常，则内存泄漏
@@ -871,7 +873,9 @@ processWidget(std::shared_ptr<Widget>(new Widget), computePriority());
 
 * `make_shared`更高效，一次分配对象和control block的内存
 
-`make_shared`的缺点
+
+
+**`make_shared`的缺点**
 
 * deleter
 * `make_shared`的perfect forwarding code用`()`，而非`{}`; `{}`只能用new，除非参考Item 2
@@ -883,9 +887,12 @@ auto spv = std::make_shared<std::vector<int>>(initList);
 ```
 
 * using make functions to create objects of types with class-specific versions of operator new and operator delete is typically a poor idea. 因为只能new/delete本对象长度的内存，而非加上control block的
-* shared_ptr的场景，必须要所有相关weak_ptr全destroy，这块内存才会释放
+* shared_ptr的场景，必须要所有相关weak_ptr全destroy，指针控制块的内存才会释放
+
+
 
 因为上述原因，想用new
+
 ```c++
 std::shared_ptr<Widget> spw(new Widget, cusDel);
 processWidget(std::move(spw), computePriority()); // both efficient and exception safe
@@ -3109,7 +3116,12 @@ class LogMessageFatal {
 #### multi-thread programming
 
 * 读写锁
+  * unique_lock和lock_guard的区别
+    * 是否可move
+    * 是否可和条件变量配合
+
   * Note: [mutex 和 cv 都没有移动构造函数](https://stackoverflow.com/questions/7557179/move-constructor-for-stdmutex)
+
 
 ```c++
 #include <boost/thread/thread.hpp>
@@ -4626,6 +4638,8 @@ std::isnan(NAN);
 ```
 
 #### \<string>
+
+* `auto str = "abc"s;` 后缀s初始化string
 
 * string_view
   * 本身不 own 内存，只是维护指针

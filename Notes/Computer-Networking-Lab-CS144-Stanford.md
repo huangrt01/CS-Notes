@@ -230,11 +230,39 @@ sponge网络库的设计，TCP的测试中利用到状态判断，但具体到se
 
 `bool inbound =  (seq_start>=win_start&& seq_start<=win_end) ||  (payload_end>=win_start && seq_end<=win_end);`
 
-receive的条件是数据片段和receiver的窗有重合，这个实现看似很简单，只需要写出数据的begin和end，窗的begin和end，然后做判断。具体来说，判断数据的begin是否在窗里，再判断数据的end是否在窗里即可。但在TCPReceiver的具体实现中，在判断数据的end是否在窗里时，需要用两个普通的end：代码中的`payload_end`是原先的`seq_end`经过处理得到的，需要把syn和fin占的位置排除掉，这样处理是因为receiver内部的`_reassembler`类只处理data，不处理syn和fin。
+receive的条件是数据片段和receiver的窗有重合，这个实现看似很简单，只需要写出数据的begin和end，窗的begin和end，然后做判断。具体来说，判断数据的begin是否在窗里，再判断数据的end是否在窗里即可。但在TCPReceiver的具体实现中，在判断数据的end是否在窗里时，需要用两个不同的end：代码中的`payload_end`是原先的`seq_end`经过处理得到的，需要把syn和fin占的位置排除掉，这样处理是因为receiver内部的`_reassembler`类只处理data，不处理syn和fin。
 
 综合来说，需要对基础的窗的判断条件做修改，具体实现中不是一个uniform的形式，只有这样才能过最后几个tests。
 
+#### lab5: down the stack (the network interface)
 
+* 用处：传输TCP、router
+
+* 一些传输TCP Segment的方式
+  * TCP-in-UDP-in-IP
+    * kernel API，确保 isolation、exclusive combination of local and remote addresses and port numbers
+  * TCP-in-IP
+    * linux TUN device: application supply an entire Internet datagram, and the kernel takes care of the rest (writing the Ethernet header, and actually sending via the physical Ethernet card, etc.). But now the application has to construct the full IP header itself, not just the payload
+  * TCP-in-IP-in-Ethernet
+    * Network inferfaces: eth0, eth1, wlan0，将IP datagram转成raw Etherne frames传给TAP device
+* Address Resolution Protocol (ARP)
+  * looking up (and caching) the Ethernet address for each next-hop IP address
+  * https://en.wikipedia.org/wiki/Address_Resolution_Protocol
+    * Example
+    * ARP probe
+    * ARP announcements
+  * rfc: https://www.rfc-editor.org/rfc/rfc826
+    * A protocol is needed to dynamically distribute the correspondences between a <protocol, address> pair and a 48.bit Ethernet address.
+    * assumes a reply is only provoked by a request -> 不用检查op_code::reply，直接插入translation table
+    * The driver consults the Address Resolution module to convert <ET(IP),
+    IPA(Y)> into a 48.bit Ethernet address, but because X was just
+    started, it does not have this information.
+    * 讨论了table aging and/or timeouts的条件：建连失败、收包超时
+      * the only bad information that can exist is in a machine that doesn't know that some other machine has changed its 48.bit Ethernet address.  Perhaps manually resetting (or clearing) the address mapping table will suffice.
+
+#### lab6: building an IP router
+
+#### lab7: put it all together
 
 #### 工程细节
 

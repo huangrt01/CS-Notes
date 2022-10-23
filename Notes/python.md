@@ -431,6 +431,10 @@ b = a.tzinfo.localize(
             dt.datetime.combine(object2.date(), dt.time.min)
         )
 assert(a == b)
+
+# local timezone
+from tzlocal import get_localzone # $ pip install tzlocal
+local_tz = get_localzone() 
 ```
 
 #### fstring

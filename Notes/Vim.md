@@ -255,6 +255,7 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 
 * 头文件和源文件切换：`option + O`
   * 搜索switch获知快捷键
+* 历史打开文件切换：`ctrl + TAB`
 
 #### 开发必备插件
 
@@ -265,6 +266,15 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
   eLLDB, Header source switch, Rainbow Brackets, C++ Intellisense
   * Tabnine：AI加持的自动补全，用GPT
   * Peacock：不同workspace可以用不同的颜色区分
+
+#### json配置
+
+##### launch.json
+
+##### task.json
+
+改args
+
 
 
 

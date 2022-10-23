@@ -311,6 +311,10 @@ python -m line_profiler sorts.py.lprof
 
 [perf documentation](https://android.googlesource.com/kernel/msm/+/android-7.1.0_r0.2/tools/perf/Documentation)
 
+```shell
+sudo apt-get install linux-tools-$(uname -r) linux-tools-generic -y
+```
+
 - `perf list` - List the events that can be traced with perf
 - `perf stat COMMAND ARG1 ARG2` - Gets counts of different events related a process or command
   - [odd definition of L1-dcache-load-misses](https://www.spinics.net/lists/linux-perf-users/msg07969.html)
@@ -345,6 +349,8 @@ https://stackoverflow.com/questions/375913/how-can-i-profile-c-code-running-on-l
 http://unix.ba/text/runtime-profiling-with-gprof/
 
 http://sam.zoy.org/writings/programming/gprof.html
+
+编译参数 `-Og -pg`，前者是debug mode，后者是动态trace
 
 
 

@@ -111,6 +111,7 @@ def load_reference(name_or_id):
   - `git diff <revision> <filename>`: shows differences in a file between snapshots
   - `git difftool`，图形界面
   - Diff without dots / with two dots / with three dots: https://matthew-brett.github.io/pydagogue/git_diff_dots.html
+  - `git diff > tmp.diff` 编辑器可显示syntax
 - `git checkout <revision>`: updates HEAD and current branch
   - `gco <revision> $file_path ` 用于回退特定文件
 - `git revert`

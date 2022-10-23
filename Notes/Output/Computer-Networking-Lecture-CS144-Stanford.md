@@ -594,16 +594,38 @@ Queues with Random Arrival Processes (Queueing Theory)
 
 ##### Congestion Control
 
+* Why
+  * What if the receiver’s window size is really big?
+    * Sender transmits too many segments. Most overflow router’s queue and are dropped. We call this “congestion.”
+    * Sender must resend the same bytes again and again. Eventually, stream comes out of receiver’s TCP correctly
+  * The problem with unlimited sending: collapse and fairness
+  * In networking, almost any problem that involves decentralized resource allocation = congestion control.
+* What
+  *  a **second and tighter** window maintained by sender
+    * receiver’s window (advertised from receiver to sender)
+    * “congestion window” cwnd (maintained by sender)
+  * How much data can be “on the link” at any moment?
+    * (5 Mbit/s) x (100 ms) = 62.5 kilobytes
+  * Ideal total number of bytes outstanding = bandwidth x delay product (BDP).
+  * “No loss” window: anything less than BDP + max queue size.
+  * Note: 用 window 不用 rate，误差小
+* How
+  * “Additive Increase, Multiplicative Decrease” algorithm (AIMD)
+  * One possibility: increase on success, decrease on loss
+  * Start with cwnd at small value (e.g. 3 segments)
+  * On success (segment fully acknowledged), increase by 1 segment per RTT
+    * On each byte acknowledged: cwnd += (segment size)/cwnd
+  * On loss, assume congestion. Cut cwnd in half!
+    * Loss inferred when:
+      * segment was sent a long time ago, still not acknowledged
+      * or several later-sent segments have been acknowledged
+  * Slow-start: exponential growth at the beginning
+    * On each byte acknowledged: cwnd++
+    * On first loss, cut cwnd in half and revert to AIMD
+
 
 
 ### potpourri
-
-#### 网络编程相关
-
-* [signal(SIGPIPE, SIG_IGN)](https://blog.csdn.net/weiwangchao_/article/details/38901857)
-  * 在linux下写socket的程序的时候，如果尝试send到一个disconnected socket上，就会让底层抛出一个SIGPIPE信号。这个信号的缺省处理方法是退出进程，大多数时候这都不是我们期望的。因此我们需要重载这个信号的处理方法。
-
-    
 
 #### RFC
 
