@@ -435,6 +435,12 @@ assert(a == b)
 # local timezone
 from tzlocal import get_localzone # $ pip install tzlocal
 local_tz = get_localzone() 
+
+# datetime format
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+str1 = obj1.strftime(DATETIME_FORMAT)
+str2 = '20001231000000'
+obj2 = dt.datetime.strptime(dt, '%Y%m%d%H%M%S').strftime(DATETIME_FORMAT)
 ```
 
 #### fstring

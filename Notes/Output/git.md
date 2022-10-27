@@ -268,7 +268,13 @@ git push origin HEAD --force
 - `git blame`: show who last edited which line
   - `git blame -L :collection _config.yml`
 - `git stash`: temporarily remove modifications to working directory
+	- `git stash pop [--index][stash@{id}]`
+	    - `git stash pop` 恢复最新的进度到工作区
+	    - `git stash pop --index` 恢复最新的进度到工作区和暂存区
+	    - `git stash pop stash@{1}` 恢复指定的进度到工作区。stash_id是通过git stash list命令得到的。通过git stash pop命令恢复进度后，会删除当前进度
+	
 	- `git stash show -p | git apply -R`
+	
 - `git cherry-pick`
   - [利用它只pull request一个特定的commit](https://www.iteye.com/blog/bucketli-2442195)
   - `git cherry-pick commit1..commit2`
@@ -276,6 +282,7 @@ git push origin HEAD --force
 - [`git ls-files`](https://git-scm.com/docs/git-ls-files)
 - `git submodule add <url> /path`
     * clone之后初始化：`git submodule update --init --recursive`
+      * 仅初始化一个特定的submodule：`git submodule update <specific path to submodule>`
     * 更新：`git submodule update --remote & ga . & gc -m "commit message"  `
     * 如果报错already exists in the index ，用`git rm -r --cached /path`解决此问题 
     * 这个特性很适合和[dotfiles](https://github.com/huangrt01/dotfiles)搭配，但如果用在项目里可能[出现问题](https://codingkilledthecat.wordpress.com/2012/04/28/why-your-company-shouldnt-use-git-submodules/)，尤其是需要commit模块代码的时候

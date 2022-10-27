@@ -253,6 +253,8 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 
 #### 快捷键
 
+* `ctrl + P`: 查文件，@追加符号，冒号追加行
+
 * 头文件和源文件切换：`option + O`
   * 搜索switch获知快捷键
 * 历史打开文件切换：`ctrl + TAB`

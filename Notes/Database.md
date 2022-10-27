@@ -156,6 +156,15 @@ ALTER TABLE test TABLE (c1 char(1),c2 char(1));
 
 
 
+* [SQL Injection 注入攻击](https://www.w3schools.com/sql/sql_injection.asp)
+  * SQL Injection Based on 1=1 is Always True
+  * SQL Injection Based on ""="" is Always True
+  * SQL Injection Based on Batched SQL Statements
+    * 在输入中用分号分隔语句
+  * Use SQL Parameters for Protection
+
+
+
 ### db client
 
 #### Redis 常见接口
@@ -213,7 +222,7 @@ DSL like ES -> (forward/aggregation/post-aggregation) -> view -> physical table
 
 ### 论文
 
-##### Spitfire: A Three-Tier Buffer Manager for Volatile and Non-Volatile Memory, SIGMOD 2021
+#### Spitfire: A Three-Tier Buffer Manager for Volatile and Non-Volatile Memory, SIGMOD 2021
 
 介绍视频：https://www.bilibili.com/video/BV1164y1d7HD
 

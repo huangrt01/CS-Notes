@@ -412,6 +412,16 @@ setup(
 )
 ```
 
+### grafana
+
+* 如何在同一个panel中使用不同的纵轴
+  * 设置 Left Y 和 Right Y
+    *  `Percent (0.0-1.0)`
+    * `time: YYYY-MM-DD HH`
+  * 设置 Series overrides
+    * Alias or regex: `/MyMetric.*/`
+      * `Y-axis: 2`
+
 ### gtest
 
 https://google.github.io/googletest/primer.html

@@ -2084,8 +2084,6 @@ x.fetch_add(1, std::memory_order_release);
 * `exchange`
   * 返回值是旧值
 
-
-
 * `std::atomic_thread_fence(std::memory_order_release);`
 
 ```c++
@@ -2290,6 +2288,13 @@ MyData *ptr = new(&data) MyData(2);
 * `operator new` and `operator delete` is the C++ equivalent of `malloc` and `free` 
 * array 形式的 `operator new[]`，会分别为每个 object 做构造和析构
 * [Delete this](https://blog.csdn.net/weiwangchao_/article/details/4746969)
+
+### Abseil C++ Tips
+
+#### Tip of the Week #108: Avoid `std::bind`
+
+* Applying std::bind() to a type you don’t control is always a bug.
+* 用 bind_front
 
 ### 学习材料
 
@@ -2856,12 +2861,6 @@ It supports arrays, types that provide begin and end member functions, and types
 
 
 
-#### C++11
-`void DUMMY_CODE(Targs &&... /* unused */) {}`的[应用](https://blog.csdn.net/xs18952904/article/details/85221921)
-
-`std::optional<>`
-
-* 方法：has_value(), value(), value_or(XX)
 
 #### 操作符重载
 **特点**
@@ -3117,6 +3116,8 @@ class LogMessageFatal {
     * 是否可move
     * 是否可和条件变量配合
 
+  * [A shared recursive mutex in standard C++](https://stackoverflow.com/questions/36619715/a-shared-recursive-mutex-in-standard-c)
+    
   * Note: [mutex 和 cv 都没有移动构造函数](https://stackoverflow.com/questions/7557179/move-constructor-for-stdmutex)
 
 
@@ -3304,11 +3305,12 @@ void finish_task() {
       * Cache coherence protocols
       * Detecting write completion
       * Maintaining write atomicity
-  * C++ memory order
+  * C++11 memory order
     * Synchronized-with 与 happens-before 关系
-    * sequential consistent(memory_order_seq_cst)
-    * relaxed(memory_order_seq_cst)
-    * acquire release(memory_order_consume, memory_order_acquire, memory_order_release, memory_order_acq_rel)
+    * 顺序一致次序 sequential consistent(memory_order_seq_cst)
+    * 松弛次序 relaxed(memory_order_relaxed)
+      * 在 relaxed ordering 中唯一的要求是在同一线程中，对同一原子变量的访问不可以被重排
+    * 获取-释放次序 acquire release(memory_order_consume, memory_order_acquire, memory_order_release, memory_order_acq_rel)
 
 #### DOD
 
@@ -3317,6 +3319,29 @@ void finish_task() {
 [CppCon 2014: Mike Acton "Data-Oriented Design and C++"](https://www.youtube.com/watch?v=rX0ItVEVjHc)
 
 [CppCon 2018: Stoyan Nikolov “OOP Is Dead, Long Live Data-oriented Design”](https://www.youtube.com/watch?v=yy8jQgmhbAU)
+
+#### C++20
+
+* Concept
+* Coroutine: 可暂停和恢复的函数
+  * 概念：只有并发的概念，没有并行的概念，协作式多任务；和 thread 是并列的关系
+  * 分类：stack full, stackless
+  * e.g. A调B，B可以随时主动suspend/resume，和A混着执行，控制权可以由用户决定
+  * 场景：
+    * IO Bound: 用同步样式的代码写异步逻辑
+    * Ordered Tasks：性能更好
+  * How to write: 有以下任一关键字的函数是coroutine
+    * co_await
+    * co_yield
+    * co_return
+  * Promise & coroutine_handle
+  * co_await
+  * co_yield
+  * 
+
+
+
+
 
 
 

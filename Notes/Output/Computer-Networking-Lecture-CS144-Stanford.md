@@ -625,6 +625,16 @@ Queues with Random Arrival Processes (Queueing Theory)
 
 
 
+* rpc框架congestion control可能和tcp congestion control相结合
+  *  https://capnproto.org/news/2020-04-23-capnproto-0.8.html
+  * it queries the send buffer size of the underlying network socket, and sets that as the “window size” for each stream.
+  * But, the TCP socket buffer size only approximates the BDP of the first hop. A better solution would measure the end-to-end BDP using an algorithm like [BBR](https://queue.acm.org/detail.cfm?id=3022184).
+* [Oracle STREAMS's Flow Control](https://docs.oracle.com/cd/E37838_01/html/E61060/frmkern7-sect1-flow.html)
+  * 状态从后往前propagation的设计，`canputnext()`
+  * 阻塞则 `putbq`
+
+
+
 ### potpourri
 
 #### RFC

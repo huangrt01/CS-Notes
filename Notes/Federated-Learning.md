@@ -426,6 +426,11 @@ individual fairness、demographic fairness、counterfactual fairness
 
 
 
+#### Async FL
+
+* [Asynchronous Federated Learning](https://medium.com/@sukanya.me/asynchronous-federated-learning-3c52c5b1a409)
+  * [Federated learning with Buffered Asynchronous aggregation](https://arxiv.org/pdf/2106.06639.pdf)
+* 
 
 #### Papers
 

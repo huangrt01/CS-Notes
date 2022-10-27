@@ -105,6 +105,10 @@ kernel2<<<1,1>>>(); // host code launches kernel2
   * https://docs.nvidia.com/cuda/nvrtc/index.html -- compatibility guarantees
   * [Application paper](https://www.osti.gov/biblio/1798430-enhancements-supporting-ic-usage-pem-libraries-next-gen-platforms)
 
+#### PGO (Profile Guided Optimization)
+
+* 
+
 ### C++
 
 * 常用编译宏

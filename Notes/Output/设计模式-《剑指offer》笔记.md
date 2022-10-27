@@ -1,5 +1,44 @@
 ### 设计模式
 
+#### refactoring.guru
+
+https://refactoring.guru/
+
+* Design Patterns
+
+  * Creational Patterns
+
+  * Structural Patterns
+
+  * Behavioral Patterns
+
+    * [visitor](https://refactoring.guru/design-patterns/visitor): 让 server 接受 client 作为输入
+
+      * *Visitor lets you define a new operation without changing the classes of the elements on which it operates.*
+
+      * visitor and double dispatch
+
+      * ```java
+        // Client code
+        foreach (Node node in graph)
+            node.accept(exportVisitor)
+        
+        // City
+        class City is
+            method accept(Visitor v) is
+                v.doForCity(this)
+            // ...
+        
+        // Industry
+        class Industry is
+            method accept(Visitor v) is
+                v.doForIndustry(this)
+            // ...
+        ```
+
+
+#### Others
+
 * IOC(Inversion of Control，控制反转): 面向对象编程中的一种设计原则，可以用来减低计算机代码之间的耦合度。其中最常见的方式叫做依赖注入（Dependency Injection，简称DI），还有一种方式叫“依赖查找”（Dependency Lookup）
   * 依赖注入和依赖查找，两者的区别在于，前者是被动的接收对象，在类A的实例创建过程中即创建了依赖的B对象，通过类型或名称来判断将不同的对象注入到不同的属性中，而后者是主动索取相应类型的对象，获得依赖对象的时间也可以在代码中自由控制。
 

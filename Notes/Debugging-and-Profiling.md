@@ -67,6 +67,8 @@ journalctl --since "1m ago" | grep Hello
 
 #### Debuggers
 
+##### gdb
+
 **C++**: [`gdb`](https://www.gnu.org/software/gdb/) (and its quality of life modification [`pwndbg`](https://github.com/pwndbg/pwndbg)) and [`lldb`](https://lldb.llvm.org/)
 
 [Debugging with GDB 教程](https://www.sourceware.org/gdb/current/onlinedocs/gdb.html)
@@ -80,6 +82,7 @@ gdb：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(ui
 * `watch -l ` 同时监视表达式本身和表达式指向的内容
 * `attach $pid` debug正在运行的进程
 * `ptype` 打印变量类型；打印stl使用 [python pretty print](https://lumiera.org/documentation/technical/howto/DebugGdbPretty.html)
+* `gcore` attach后制造core文件
 
 ```c++
 //增加print的可读性
@@ -107,13 +110,15 @@ p *(std::string*)(X.rep_.elements) //repeated string, 字段X
 * info threads:显示当前可调试的所有线程,GDB会给每一个线程都分配一个ID。前面有*的线程是当前正在调试的线程。
 * `info reg`
 * thread ID:切换当前调试的线程为指定ID的线程。
-* thread apply all command:让所有被调试的线程都执行command命令。
-* thread apply ID1 ID2 … command:让线程编号是ID1，ID2…等等的线程都执行command命令。
+* `thread apply all command`:让所有被调试的线程都执行command命令。
+  * `thread apply all bt` 把各个线程的调用栈打出来
+
+* `thread apply ID1 ID2 … command`:让线程编号是ID1，ID2…等等的线程都执行command命令。
 * `set scheduler-locking on|off|step`:在使用step或continue命令调试当前被调试线程的时候，其他线程也是同时执行的，如果我们只想要被调试的线程执行，而其他线程停止等待，那就要锁定要调试的线程，只让他运行。
   * off:不锁定任何线程，所有线程都执行。
   * on:只有当前被调试的线程会执行。
   * step:阻止其他线程在当前线程单步调试的时候抢占当前线程。只有当next、continue、util以及finish的时候，其他线程才会获得重新运行的
-* show scheduler-locking：查看当前锁定线程的模式。
+* `show scheduler-locking`：查看当前锁定线程的模式。
 
 Gdb 的汇编级别调试
 
@@ -206,36 +211,13 @@ https://wizardforcel.gitbooks.io/100-gdb-tips/content/index.html
 * [ThreadSan](https://github.com/google/sanitizers/wiki/ThreadSanitizerCppManual)
   * `-fsanitize=thread`
 
+* Note
+  * 在程序里使用 Pthreads 库有一个额外的好处: 分析工具认得它们，懂得其语意。 线程分析工具如 Intel Thread Checker 和 Valgrind-Helgrind 等能识别 Pthreads 调 用，并依据 [happens-before](https://lamport.azurewebsites.net/pubs/time-clocks.pdf) (TODO) 关系分析程序有无 data race。
+
+
+
 #### Specialized Tools
 
-Even if what you are trying to debug is a black box binary there are tools that can help you with that. Whenever programs need to perform actions that only the kernel can, they use [System Calls](https://en.wikipedia.org/wiki/System_call). There are commands that let you trace the syscalls your program makes. In Linux there’s [`strace`](https://www.man7.org/linux/man-pages/man1/strace.1.html) and macOS and BSD have [`dtrace`](http://dtrace.org/blogs/about/). `dtrace` can be tricky to use because it uses its own `D` language, but there is a wrapper called [`dtruss`](https://www.manpagez.com/man/1/dtruss/) that provides an interface more similar to `strace` (more details [here](https://8thlight.com/blog/colin-jones/2015/11/06/dtrace-even-better-than-strace-for-osx.html)).
-
-* [strace入门](https://blogs.oracle.com/linux/strace-the-sysadmins-microscope-v2)
-
-```shell
-# On Linux
-strace git status 2>&1 >/dev/null | grep index.lock
-sudo strace [-e lstat] ls -l > /dev/null
-
-# 多线程 strace，要显示 PPID
-ps -efl | grep $task_name # 显示 PPID、PID
-strace -p $PID
-
-# 一些 flag
--tt   发生时刻
--T 		持续时间
--s 1024 print输入参数的长度限制
--e write=   -e read=     -e trace=file/desc			-e recvfrom
--f 监控所有子线程   -ff
-
-
-# On macOS
-sudo dtruss -t lstat64_extended ls -l > /dev/null
-
-# 与之配合的技术
-readlink /proc/22067/fd/3
-lsof | grep /tmp/foobar.lock
-```
 Under some circumstances, you may need to look at the network packets to figure out the issue in your program. Tools like [`tcpdump`](https://www.man7.org/linux/man-pages/man1/tcpdump.1.html) and [Wireshark](https://www.wireshark.org/) are network packet analyzers that let you read the contents of network packets and filter them based on different criteria.
 
 For web development, the Chrome/Firefox developer tools are quite handy. They feature a large number of tools, including:
@@ -265,7 +247,37 @@ For web development, the Chrome/Firefox developer tools are quite handy. They fe
   * 动态追踪技术允许我们使用非侵入式的方式，不用去修改我们的操作系统内核，不用去修改我们的应用程序，也不用去修改我们的业务代码或者任何配置，就可以快速高效地精确获取我们想要的信息，第一手的信息，从而帮助定位我们正在排查的各种问题
   * 调试技术需要贯通各个软件层次的抽象和封装
   * 火焰图：on-CPU, off-CPU
-* dtrace 和 [systemtap](https://sourceware.org/systemtap/documentation.html)
+* dtrace
+  * Even if what you are trying to debug is a black box binary there are tools that can help you with that. Whenever programs need to perform actions that only the kernel can, they use [System Calls](https://en.wikipedia.org/wiki/System_call). There are commands that let you trace the syscalls your program makes. In Linux there’s [`strace`](https://www.man7.org/linux/man-pages/man1/strace.1.html) and macOS and BSD have [`dtrace`](http://dtrace.org/blogs/about/). `dtrace` can be tricky to use because it uses its own `D` language, but there is a wrapper called [`dtruss`](https://www.manpagez.com/man/1/dtruss/) that provides an interface more similar to `strace` (more details [here](https://8thlight.com/blog/colin-jones/2015/11/06/dtrace-even-better-than-strace-for-osx.html)).
+  * [strace入门](https://blogs.oracle.com/linux/strace-the-sysadmins-microscope-v2)
+
+```shell
+# On Linux
+strace git status 2>&1 >/dev/null | grep index.lock
+sudo strace [-e lstat] ls -l > /dev/null
+
+# 多线程 strace，要显示 PPID
+ps -efl | grep $task_name # 显示 PPID、PID
+strace -p $PID
+
+# 一些 flag
+-tt   发生时刻
+-T 		持续时间
+-s 1024 print输入参数的长度限制
+-e write=   -e read=     -e trace=file/desc			-e recvfrom
+-f 监控所有子线程   -ff
+
+
+# On macOS
+sudo dtruss -t lstat64_extended ls -l > /dev/null
+
+# 与之配合的技术
+readlink /proc/22067/fd/3
+lsof | grep /tmp/foobar.lock
+```
+
+
+* [systemtap](https://sourceware.org/systemtap/documentation.html)
 * [eBPF](https://www.brendangregg.com/blog/2015-05-15/ebpf-one-small-step.html)、Hardware Performance Counter
 
 
