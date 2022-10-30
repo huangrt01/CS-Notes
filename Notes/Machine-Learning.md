@@ -12,19 +12,29 @@ Materials
 
 #### Algorithms
 
-XGBoost: gradient boosted trees works by combining predictions from many simple models, each of which tries to address the weaknesses of the previous models. By doing this the collection of simple models can actually outperform large, complex models.
+* crossentropy、KL散度、logistic regression、softmax
+  * KL散度 ---> CE loss: [看得见的信息论-为什么用交叉熵作为逻辑回归的代价函数](https://zhuanlan.zhihu.com/p/31207556)
+  * logistic regression ---> softmax
+  * CE loss + softmax ---> 极其简洁的梯度形式
+    * [求导推导](https://zhuanlan.zhihu.com/p/27223959)
+    * $\frac{\partial l_{CE}}{\partial a_j}=y_j -t_j$
+
+* XGBoost: gradient boosted trees works by combining predictions from many simple models, each of which tries to address the weaknesses of the previous models. By doing this the collection of simple models can actually outperform large, complex models.
 
 
 
-Feature Bagging
+* Feature Bagging
 
-* offering a potentially useful way of managing the bias-variance tradeoff
-* We were also interested in this as a potentially useful way to further parallelize training
-* 《An experimental comparison of three methods for constructing ensembles of decision trees: Bagging, boosting, and randomization》
+  * offering a potentially useful way of managing the bias-variance tradeoff
 
-Dropout
+  * We were also interested in this as a potentially useful way to further parallelize training
 
-* In the dense setting, dropout serves to separate effects from strongly correlated features, resulting in a more robust classifier. But in our sparse, noisy setting adding in dropout appears to simply reduce the amount of data available for learning. 《Ad Click Prediction: a View from the Trenches》
+  * 《An experimental comparison of three methods for constructing ensembles of decision trees: Bagging, boosting, and randomization》
+
+
+* Dropout
+  * 保证training/serving一致性：training或serving时scale
+  * In the dense setting, dropout serves to separate effects from strongly correlated features, resulting in a more robust classifier. But in our sparse, noisy setting adding in dropout appears to simply reduce the amount of data available for learning. 《Ad Click Prediction: a View from the Trenches》
 
 
 

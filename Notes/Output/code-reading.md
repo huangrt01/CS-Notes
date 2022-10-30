@@ -23,11 +23,33 @@ rg --stats PATTERN
 
 
 
-### sponge (CS144 Lab, a TCP implementation)
+### sponge (CS144 TCP Lab)
 
 原理和细节参考我的【Computer-Networking-Lab-CS144-Stanford.md】笔记
 
 https://github.com/huangrt01/TCP-Lab
+
+#### abstract
+
+* shared_ptr的使用
+  * 只有FDWrapper（event_loop传入多个duplicate）和Buffer用了shared_ptr
+  * muduo库作为对比，只有TcpConnection用了shared_ptr
+  
+* O_NONBLOCK的使用
+  
+  * writev系统调用只check以下情形，因为写入失败会返回-1，能handle：
+  
+  * ```c++
+    const ssize_t bytes_written = SystemCall("writev", ::writev(fd_num(), iovecs.data(), iovecs.size()));
+    if (bytes_written == 0 and buffer.size() != 0) {
+      throw runtime_error("write returned 0 given non-empty input buffer");
+    }
+    
+    if (bytes_written > ssize_t(buffer.size())) {
+      throw runtime_error("write wrote more than length of input buffer");
+    }
+    ```
+  
 
 #### apps
 
@@ -42,7 +64,6 @@ linux中一切即文件的思想
     * 调用`fcntl`设置，几个util类都有set_blocking的方法
 * tcp_sponge_socket
   * 重要方法都会调用`_tcp_loop(...)`，_abort强行结束loop，`timestamp_ms()`推动时间
-
     * `std::atomic_bool _abort{false};  //!< Flag used by the owner to force the TCPConnection thread to shut down`
 
   * data_socket_pair is a pair of connected AF_UNIX SOCK_STREAM sockets
@@ -197,7 +218,7 @@ linux中一切即文件的思想
       * `using TCPOverIPv4OverEthernetSpongeSocket = TCPSpongeSocket<TCPOverIPv4OverEthernetAdapter>;`
       
 
-#### test
+#### shell
 
 ```shell
 sudo apt install tshark
@@ -211,8 +232,6 @@ sudo tshark -Pw /tmp/debug.raw -i tun144
 
 * 测试 clean shutdown：先关一下client，再关server，再观察client是否linger 10s
 * 测试 window_size=1：`-w 1`
-
-
 
 * 借助 router + network interface 通信
 
@@ -232,118 +251,219 @@ sha256sum /tmp/big.txt
 sha256sum /tmp/big-received.txt
 ```
 
-
+* tcpcopy压力测试
 
 ### muduo
 
 https://github.com/chenshuo/muduo
 
+
+
+
+
+#### shell
+
+```shell
+# 找到长连接的client，grep tcp6查ipv6监听
+netstat -tp(n)a | grep :port
+
+```
+
+
+
+### muduo-protorpc
+
+https://github.com/chenshuo/muduo-protorpc
+
+* examples
+  * zurg
+    * slave/ChildManager: 用signalfd处理SIGCHLD，调用wait4，`onExit` enqueue callback函数
+
+
 ### recipes
 
-https://github.com/chenshuo/recipes
+https://github.com/chenshuo/recipes https://github.com/huangrt01/recipes
 
-https://github.com/huangrt01/recipes
+#### datetime
 
-* thread
+* TimeZone
 
-  * Atomic
+  * ```c++
+    class TimeZone
+    {
+      public:
+        explicit TimeZone(const char* zonefile);
+        struct tm toLocalTime(time_t secondsSinceEpoch) const;
+        time_t fromLocalTime(const struct tm&) const;
+        // default copy ctor/assignment/dtor are okay.
+        // ...
+    };
+    const TimeZone kNewYorkTz("/usr/share/zoneinfo/America/New_York");
+    const TimeZone kLondonTz("/usr/share/zoneinfo/Europe/London");
+    time_t now = time(NULL);
+    struct tm localTimeInNY = kNewYorkTz.toLocalTime(now);
+    struct tm localTimeInLN = kLondonTz.toLocalTime(now);
+    ```
+
+#### thread
+
+* Atomic
+
+  * boost::detail::AtomicIntegerT<int32_t>
+
+* Mutex.h
+
+  * MutexLock
+
+    * `isLockedByThisThread()`
+    * `MutexLockGuard guard(mutex)`
+
+  * 这段代码没有达到工业强度:
+    * mutex 创建为 `PTHREAD_MUTEX_DEFAULT` 类型，而不是我们预想的 `PTHREAD_MU- TEX_NORMAL` 类型(实际上这二者很可能是等同的)，严格的做法是用 mutexattr 来显示指定 mutex 的类型。
+    * 没有检查返回值。这里不能用 `assert()` 检查返回值，因为 `assert()` 在 release build 里是空语句。我们检查返回值的意义在于防止 `ENOMEM` 之类的资源不足情况，这一般只可能在负载很重的产品程序中出现。一旦出现这种错误，程序必须立刻清理现场并主动退出，否则会莫名其妙地崩溃，给事后调查造成困难。 这里我们需要 non-debug 的 assert，或许 google-glog 的 `CHECK()` 宏是个不错的思路。
+    
+  * 没有 try_lock
+    * trylock 的一个用途是用来观察 lock contention，见 [RWC] “Consider using nonblocking synchroniza- tion routines to monitor contention. ”
+
+  * [why mutable mutex](https://stackoverflow.com/questions/4127333/should-mutexes-be-mutable)
+    
+
+* Conditional.h
+
+  * 区分 signal 和 broadcast
+  * `waitForSeconds` 接口
+
+* BlockingQueue
+
+  * ```c++
+    // always use a while-loop, due to spurious wakeup
+    while (queue_.empty()) {
+      notEmpty_.wait();
+    }
+    ```
+
+* BoundedBlockingQueue
+
+  * 两个条件变量empty和full
   
-    * boost::detail::AtomicIntegerT<int32_t>
+  * boost::circular_buffer 作为数据结构
   
-  * Mutex.h
-  
-    * MutexLock
-  
-      * `isLockedByThisThread()`
-      * `MutexLockGuard guard(mutex)`
-  
-    * 这段代码没有达到工业强度:
-      * mutex 创建为 `PTHREAD_MUTEX_DEFAULT` 类型，而不是我们预想的 `PTHREAD_MU- TEX_NORMAL` 类型(实际上这二者很可能是等同的)，严格的做法是用 mutexattr 来显示指定 mutex 的类型。
-      * 没有检查返回值。这里不能用 `assert()` 检查返回值，因为 `assert()` 在 release build 里是空语句。我们检查返回值的意义在于防止 `ENOMEM` 之类的资源不足情况，这一般只可能在负载很重的产品程序中出现。一旦出现这种错误，程序必须立刻清理现场并主动退出，否则会莫名其妙地崩溃，给事后调查造成困难。 这里我们需要 non-debug 的 assert，或许 google-glog 的 `CHECK()` 宏是个不错的思路。
-      
-    * 没有 try_lock
-      * trylock 的一个用途是用来观察 lock contention，见 [RWC] “Consider using nonblocking synchroniza- tion routines to monitor contention. ”
-  
-    * [why mutable mutex](https://stackoverflow.com/questions/4127333/should-mutexes-be-mutable)
-      
-  
-  * Conditional.h
-  
-    * 区分 signal 和 broadcast
-    * `waitForSeconds` 接口
-  
-  * BlockingQueue
-  
-    * ```c++
-      // always use a while-loop, due to spurious wakeup
-      while (queue_.empty()) {
-        notEmpty_.wait();
-      }
-      ```
-  
-    * [spurious wakeup](https://en.wikipedia.org/wiki/Spurious_wakeup): spurious wakeups can happen whenever there's a race and possibly even in the absence of a race or a signal
-  
-  * CountDownLatch
-  
-    * `notifyAll`
-  
-  * Thread.*
-  
-    * CurrentThread 利用 `__thread` 线程局部存储关键字标识当前线程tid和名字
-    * ThreadData 存一个 weak_ptr 的 wkTid 对象作为回调，往外传 tid
-    * `ThreadNameInitializer init;` 全局变量初始化，为了调用 `pthread_atfork`
-  
-  * SignalSlotTrival.h
-  
-  * SignalSlot.h: 
-    * 线程安全的 Signal/Slots，并且在 Slot 析构时自动 unregister
-    * SignalImpl的实现：Copy-on-write，多个shared_ptr指向一份 SlotList，保证 clean 操作的线程安全
-  
-  * Singleton.h
-  
-    * 利用 `PTHREAD_ONCE_INIT`
-  
-    * 这个 Singleton 只能调用默认构造函数，如果用户想要指定 T 的构造方式， 我们可以用模板特化(template specialization)技术来提供一个定制点，这需要引入 另一层间接(another level of indirection)。
-  
-    * `::atexit(destroy);` 聊胜于无
-  
-  * WeakCallback.h:
-    * 利用variadic template和weak_ptr实现弱回调
-  
-  * test/Observer_safe.cc:
-    *  用weak_ptr + enable_shared_from_this()实现observer设计模式
-  
-  * test/Factory.cc: 对象池的迭代
-    * 释放对象：weak_ptr
-    * 解决内存泄漏：shared_ptr初始化传入delete函数
-    * this指针线程安全问题：enable_shared_from_this
-    * Factory生命周期延长：弱回调
-  
-  * 讨论一下对象池的实现：
-    * 一种实现是只增不减，维护一个pool存裸指针，shared_ptr传入deleter，deleter将裸指针塞回pool
-  
-  * test/一些死锁的例子
-  
-    * NonRecursiveMutex_test.cc
-    * SelfDeadLock.cc
-    * MutualDeadLock.cc
-  
-  * test/CopyOnWrite 的例子
-  
-    * CopyOnWrite_test.cc
-    * RequestInventory_test.cc
-      * 解决 Request 的析构问题：析构利用智能指针，process完立刻unregister
-  
-    * Customer.cc
-      * 这里实际上是一个非常特殊的场景（写入量太少了），分布式kv不能这样搞，会增加绝对计算量影响性能
-      * 本质上是read-intensive、写入操作少的业务（比如交易业务），可以用CopyOnWrite范式。延伸来说，也可以将读多写少的业务抽象为类似的模型，将写入操作按分钟级聚合为batch。比如借鉴progressive rehash的思路，维护两份hashtable，一份存近期增量，一份存旧数据，新的查找来临时先查bloom filter决定是否查新table，再查旧table。但这样会增加写入的cpu消耗（多查一次hashtable），不一定划算。
-  
+* CountDownLatch
+
+  * `notifyAll`
+
+* Exception
+
+  * `backtrace`，没有demangle
+
+* Thread
+
+  * CurrentThread 利用 `__thread` 线程局部存储关键字标识当前线程tid和名字
+    * 万一程序执行了 fork(2)，那么子进程会不会看到 stale 的缓存结果呢? 解决办法是用 `pthread_atfork()` 注册一个回调，用于清空缓存的线程 id。
+    * 对比`boost::this_thread::get_id()`
+  * ThreadData 存一个 weak_ptr 的 wkTid 对象作为回调，往外传 tid
+  * `ThreadNameInitializer init;` 全局变量初始化，为了调用 `pthread_atfork`
+
+* ThreadLocal
+
+  * `pthread_key_create` `pthread_key_delete` `pthread_getspecific` `pthread_setspecific`
+
+* ThreadLocalSingleton
+
+  * See muduo/base/ThreadLocalSingleton.h for how to delete it automatically.
+  * 显式初始化static变量  `template<typename T> __thread T* ThreadLocalSingleton<T>::t_value_ = 0;`
+
+* ThreadPool
+
+  * 简洁，很像BlockingQueue，融入了 [Github ThreadPool](https://github.com/progschj/ThreadPool/blob/master/ThreadPool.h) 的实现
+  * 捕获异常，`#include "Exception.h"`
+  * 如何stop ThreadPool: 用户传进去latch任务主动感知threadpool内的任务是否结束，再调用stop接口
+  * 一些可迭代的地方：
+    * 加一个`parallel_for`接口，增加任务并行度的参数，融入CountDownLatch的逻辑
+    * 增加返回 future 的接口
+    * `wait_all_done`，记录在跑的线程数，弄一个conditional
+    * 绑核、调度优先级
+
+* SignalSlotTrival.h
+
+* SignalSlot.h: 
+  * 线程安全的 Signal/Slots，并且在 Slot 析构时自动 unregister
+  * SignalImpl的实现：Copy-on-write，多个shared_ptr指向一份 SlotList，保证 clean 操作的线程安全
+
+* Singleton.h
+
+  * 利用 `PTHREAD_ONCE_INIT`
+
+    * 现代C++写法：
+
+      * ```c++
+        std::shared_ptr<Object> object() {
+          static std::shared_ptr<Object> object(
+              new Object);
+          static std::once_flag init_flag;
+          std::call_once(init_flag, define_object, object);
+          return object;
+        }
+        
+        void define_object(std::shared_ptr<Object> object) {
+          ...
+        }
+        ```
+
+      * 
+
+  * 这个 Singleton 只能调用默认构造函数，如果用户想要指定 T 的构造方式， 我们可以用模板特化(template specialization)技术来提供一个定制点，这需要引入另一层间接(another level of indirection)。
+
+  * `::atexit(destroy);` 聊胜于无
+
+* WeakCallback.h:
+  * 利用variadic template和weak_ptr实现弱回调
+
+* test/Observer_safe.cc:
+  *  用weak_ptr + enable_shared_from_this()实现observer设计模式
+
+* test/Factory.cc: 对象池的迭代
+  * 释放对象：weak_ptr
+  * 解决内存泄漏：shared_ptr初始化传入delete函数
+  * this指针线程安全问题：enable_shared_from_this
+  * Factory生命周期延长：弱回调
+
+* 讨论一下对象池的实现：
+  * 一种实现是只增不减，维护一个pool存裸指针，shared_ptr传入deleter，deleter将裸指针塞回pool
+
+* test/一些死锁的例子
+
+  * NonRecursiveMutex_test.cc
+  * SelfDeadLock.cc
+  * MutualDeadLock.cc
+
+* test/CopyOnWrite 的例子
+
+  * CopyOnWrite_test.cc
+  * RequestInventory_test.cc
+    * 解决 Request 的析构问题：析构利用智能指针，process完立刻unregister
+
+  * Customer.cc
+    * 这里实际上是一个非常特殊的场景（写入量太少了），分布式kv不能这样搞，会增加绝对计算量影响性能
+    * 本质上是read-intensive、写入操作少的业务（比如交易业务），可以用CopyOnWrite范式。延伸来说，也可以将读多写少的业务抽象为类似的模型，将写入操作按分钟级聚合为batch。比如借鉴progressive rehash的思路，维护两份hashtable，一份存近期增量，一份存旧数据，新的查找来临时先查bloom filter决定是否查新table，再查旧table。但这样会增加写入的cpu消耗（多查一次hashtable），不一定划算。
 
 ### boost
 
 https://github.com/boostorg/boost
 
+Documentation: https://www.boost.org/doc/libs/1_80_0/
+
 [Getting Started](https://www.boost.org/doc/libs/1_80_0/more/getting_started/unix-variants.html)
+
+#### thread
+
+* 如何实现 `this_thread::get_id`
+  * `thread/include/boost/thread/detail/thread.hpp`
+    * `get_id()`
+    * 用 `thread::id` 存 `detail::thread_data_ptr`，id类对指针做比较操作
+  * `thread/src/pthread/thread.cpp`
+    * 用`pthread_getspecific`实现ThreadLocal对象存储
+    * `make_external_thread_data()`
 
 #### smart_ptr
 
@@ -669,12 +789,48 @@ https://illumos.org/
 
 * uts/common/os/kmem.c
   
+  
   * https://www.cs.dartmouth.edu/~sergey/cs108/2015/solaris_kernel_memory.pdf
-  * For example, the Solaris kernel memory allocator has per-CPU caches of memory buffers. When a CPU exhausts its per-CPU caches, it must obtain a new series of buffers from a global pool. Instead of simply acquiring a lock in this case, the code [*attempts* to acquire the lock](https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/common/os/kmem.c#L2090), incrementing a counter when this fails (and then acquiring the lock through the blocking entry point). If the counter reaches a predefined threshold, the size of the per-CPU caches is increased, thereby dynamically reducing contention.
-	  * `int kmem_depot_contention = 3;`
-	  * `if (cp->cache_chunksize < cp->cache_magtype->mt_maxbuf && (int)(cp->cache_depot_contention - cp->cache_depot_contention_prev) > kmem_depot_contention) {need_magazine_resize = 1;}`
-	  * 
 	
+	* For example, the Solaris kernel memory allocator has per-CPU caches of memory buffers. When a CPU exhausts its per-CPU caches, it must obtain a new series of buffers from a global pool. Instead of simply acquiring a lock in this case, the code [*attempts* to acquire the lock](https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/common/os/kmem.c#L2090), incrementing a counter when this fails (and then acquiring the lock through the blocking entry point). If the counter reaches a predefined threshold, the size of the per-CPU caches is increased, thereby dynamically reducing contention.
+	  * `int kmem_depot_contention = 3;`
+	
+	  * `if (cp->cache_chunksize < cp->cache_magtype->mt_maxbuf && (int)(cp->cache_depot_contention - cp->cache_depot_contention_prev) > kmem_depot_contention) {need_magazine_resize = 1;}`
+	
+	    
+	
+### tinyflow
+
+#### abstract
+
+#### examples
+
+* softmax
+
+  * ```python
+    def softmax(x):
+        x = x - np.max(x, axis=1, keepdims=True)
+        x = np.exp(x)
+        x = x / np.sum(x, axis=1, keepdims=True)
+        return x
+    ```
+
+  * 
+
+
+
+### tensorflow
+
+#### abstract
+
+[一篇很好的回答，梳理tf的核心框架思路](https://www.zhihu.com/question/51216952/answer/124708405) MUSTDO
+
+#### Ops
+
+* dropout
+  * keras/layers/core.py: `Class Dropout(Layer)` -> `nn.dropout`
+  * ops/nn_ops.py: _dropout()
+    * 注意是在training时进行scale，推理时忽略
 
 
 

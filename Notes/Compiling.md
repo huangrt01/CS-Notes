@@ -112,9 +112,10 @@ kernel2<<<1,1>>>(); // host code launches kernel2
 ### C++
 
 * 常用编译宏
-  * 编译器基本无视普通的 inline 关键字，根据自己的决策来做
+  * inline
     * inline 的坏处：代码变多了，变量变多了，可能寄存器不够分配了，只能偷内存，性能变差，尤其是发生在 loop 中
-    * 编译器内部有 cost model 评判 inline 是否有收益
+    * 编译器基本无视普通的 inline 关键字，根据自己的决策来做，内部有 cost model 评判 inline 是否有收益
+    * [如果一个inline会在多个源文件中被用到，那么必须把它定义在头文件中](https://gist.github.com/hongyangqin/a7638016a78610f318d00d9a421ad6c9)，否则会找不到符号
 
 ```c
 #pragma once

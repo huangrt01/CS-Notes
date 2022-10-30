@@ -1886,7 +1886,7 @@ Reacting 代码的问题：
 * If the detecting task notifies the condvar before the reacting task waits, the reacting task will hang.
 * The wait statement fails to account for spurious wakeups.
 
-`cv.wait(lk, []{ return whether the event has occurred; });`
+---> `cv.wait(lk, []{ return whether the event has occurred; });`
 
 <=>
 
@@ -4616,10 +4616,11 @@ int main()
 ```
 
 
-#### \<deque>
+#### \<deque> / \<queue\>
 * deque，两端都能进出，双向队列，[用法详解](https://blog.csdn.net/u011630575/article/details/79923132)
 * [STL之deque实现详解]( https://blog.csdn.net/u010710458/article/details/79540505?depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-6&utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-6)
 * deque的pop_front相当于queue的pop()
+* [Do I have to lock std::queue when getting size?](https://stackoverflow.com/a/45879082)
 
 #### \<istream>
 
@@ -4843,7 +4844,9 @@ gflags::SetVersionString(get_version());
 
 #### \<random>
 
-* Application
+* 应用
+  * 注意 `thread_local` 关键字，避免多个thread在相同的时间节点产生一样的随机数
+
 
 ```c++
 // Choose a random element

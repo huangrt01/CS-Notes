@@ -271,13 +271,90 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 
 #### json配置
 
+##### tasks.json
+
+```
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++ 生成活动文件",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${fileDirname}/../a.cc",
+                "${fileDirname}/../b.cc",
+                "${fileDirname}/../c.cc",
+                "${file}",
+                "-o",
+                " <img src="https://www.zhihu.com/equation?tex=%7BfileDirname%7D/" alt="{fileDirname}/" class="ee_img tr_noresize" eeimg="1"> {fileBasenameNoExtension}",
+                "-lpthread"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "编译器: /usr/bin/g++"
+        }
+    ],
+    "version": "2.0.0"
+}
+```
+
 ##### launch.json
 
-##### task.json
+* VSCode with GDB
 
-改args
+  * sourceFileMap 解决找不到源文件的问题
+  * `gdb --directory`
 
-
+```
+{  
+    "version": "0.2.0",
+    "configurations": [
+        {   //出现在vscode界面上的名字
+            "name": "(gdb) 启动",
+            // debugger类型 这是gdb
+            "type": "cppdbg",
+            "request": "launch",
+             //可执行文件位置
+            "program": "/home/huangruiteng/../workspace/program",
+            "args": ["--arg1=abc", "--directory=/home/huangruiteng/.../workspace"],
+            //是否进入后暂停
+            "stopAtEntry": false,
+            //工作目录
+            "cwd": "/home/huangruiteng/.../workspace",
+            "environment": [],
+             //是否使用外部终端
+            "externalConsole": false,
+             // dubug之前要运行的任务
+            //"preLaunchTask": "Build Fortran", 
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "为 gdb 启用整齐打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description":  "将反汇编风格设置为 Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "sourceFileMap": {
+                "/.../bazel-buildfarm/default/operations/.../abc.cpp": "/home/huangruiteng/.../workspace/.../abc.cpp"
+            }
+            // debug程序位置 gdb的位置
+            "miDebuggerPath": "/usr/bin/gdb", 
+        },
+    ]
+}
+```
 
 
 ### Sublime Text

@@ -81,7 +81,7 @@ gdb：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(ui
 * bt(backtrace), frame X 进帧
 * `watch -l ` 同时监视表达式本身和表达式指向的内容
 * `attach $pid` debug正在运行的进程
-* `ptype` 打印变量类型；打印stl使用 [python pretty print](https://lumiera.org/documentation/technical/howto/DebugGdbPretty.html)
+* `ptype` 打印变量类型；打印stl使用 [python pretty print](https://gist.github.com/daverigby/99dae6997bced43a8fcdbfcb15e36116)
 * `gcore` attach后制造core文件
 
 ```c++
@@ -97,8 +97,8 @@ p *(my_ptr._M_ptr)
 //显示vector内部值
 p *(my_vec._M_impl._M_start)@my_vec.size()  //打印大小
 p *(my_vec._M_impl._M_start+0)
-p (my_vec._M_impl._M_start)[N-1]
-p *(my_vec._M_impl._M_start)@N //打印第N个成员
+p (my_vec._M_impl._M_start)[N-1] //打印第N个成员
+p *(my_vec._M_impl._M_start)@N  //打印前N个成员
   
 //pb相关
 p *(std::string*)(X.rep_.elements) //repeated string, 字段X
@@ -158,6 +158,9 @@ https://wizardforcel.gitbooks.io/100-gdb-tips/content/index.html
     * n：输出单元的个数。
     * f：是输出格式。比如`x`是以16进制形式输出，`o`是以8进制形式输出，`t`是二进制输出。
     * u：标明一个单元的长度。`b`是一个`byte`，`h`是两个`byte`（halfword），`w`是四个`byte`（word），`g`是八个`byte`（giant word）
+
+* gdb with Gtest
+  * `--gtest_break_on_failure`
 
 
 

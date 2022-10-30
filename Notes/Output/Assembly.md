@@ -8,10 +8,6 @@
 
   * %retq: [What is the difference between retq and ret?](https://stackoverflow.com/questions/42653095/what-is-the-difference-between-retq-and-ret)
 
-
-
-
-
 * DCL(DoubleCheckedLocking) 的例子
 
   * ```java

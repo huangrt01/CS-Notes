@@ -504,7 +504,120 @@ for prediction, label, img in zip(p,l,i):
   * embedding多级混合存储：cpu cache dram pmem ssd
     * 多级混合存储能支持单机serving，主要从ssd读
 
+### MLSys Courses
 
+[cs294-2022](https://ucbrise.github.io/cs294-ai-sys-sp22/)
+
+[cs294-2019](https://ucbrise.github.io/cs294-ai-sys-fa19/)
+
+
+
+
+
+MUSTDO
+
+autodiff相关
+
+https://openreview.net/pdf?id=BJJsrmfCZ
+
+https://arxiv.org/pdf/1810.11530.pdf
+
+tvm
+
+https://arxiv.org/abs/1802.04799
+
+#### CSE 599W: Systems for ML
+
+http://dlsys.cs.washington.edu/schedule
+
+##### Lecture 1: Introduction to Deep Learning
+
+* Ingredients in DL
+  * 模型、目标函数、技巧、数据
+  * 技巧包括Regularization, initialization (coupled with modeling)
+    * Dropout: Overfitting prevention
+    * Xavier Initialization
+* 模型结构
+  * Fully Connected Layer
+  * Convolution = Spatial Locality + Sharing
+    * Convolution with Multiple Channels
+  * Pooling Layer: Can be replaced by strided convolution
+  * LeNet, AlexNet
+  * Why ReLU?
+    * Cheap to compute
+    * It is roughly linear..
+  * Dropout
+    * Randomly zero out neurons with probability 0.5
+    * During prediction, use expectation value (keep all neurons but scale output by 0.5)
+  * GoogleNet: Multiple Pathways, Less Parameters
+    * Inception Module
+    * [1*1 卷积减小channel维数，用于channel融合，减少计算量](https://stats.stackexchange.com/questions/194142/what-does-1x1-convolution-mean-in-a-neural-network)
+* Vanishing and Explosive Value Problem
+  * In ConvNets, the weight are not tied, but their magnitude matters; Deep nets training was initialization sensitive
+  * Batch Normalization: Stabilize the Magnitude
+    * Subtract mean -> Divide by standard deviation -> Output is invariant to input scale! -> Scale input by a constant –> Output of BN remains the same
+    * Impact: Easy to tune learning rate, less sensitive initialization
+    * The Scale Normalization (Assumes zero mean)
+  * ResNet: F(x) + x
+* [lab1_mnist.ipynb](http://dlsys.cs.washington.edu/pdf/lab1_mnist.ipynb): MXNet入门，包括Gluon API、写模型、训练推理api
+
+##### Lecture 3: Overview of Deep Learning System
+
+![dlsys-stack](MLSys/dlsys-stack.png)
+
+* softmax in numpy
+  * softmax内蕴了logistic regression
+  * 手算梯度 + SGD
+    * 梯度推导见【Machine-Learning笔记】
+* softmax in tinyflow
+* The Declarative Language: Computation Graph
+  * Nodes represents the computation (operation)
+  * Edge represents the data dependency between operations
+
+![computational-graph](MLSys/computational-graph.png)
+
+* Computation Graph Optimization
+  * Deadcode elimination
+  * Memory planning and optimization
+  * Parallel Scheduling
+    * Code need to run parallel on multiple devices and worker threads
+    * Detect and schedule parallelizable patterns
+  * GPU Acceleration
+* Hardware backend
+  * Each Hardware backend requires a software stack
+  * New Trend: Compiler based Approach
+
+##### Lecture 4: Backpropagation and Automatic Differentiation
+
+* Symbolic Differentiation
+  * For complicated functions, the resultant expression can be exponentially large
+  * Wasteful to keep around intermediate symbolic expressions if we only need a numeric value of the gradient in the end
+  * Prone to error
+* Numerical Differentiation
+  * Bad: rounding error, and slow to compute
+  * A powerful tool to check the correctness of implementation, usually use h = 1e-6
+* Backpropogation
+  * Problems of backpropagation
+    * You always need to keep intermediate data in the memory during the forward pass in case it will be used in the backpropagation.
+    * Lack of flexibility, e.g., compute the gradient of gradient.
+* Automatic Differentiation (autodiff)
+  * Create computation graph for gradient computation
+
+
+
+
+
+### MLSys in the Cloud
+
+https://outerbounds.com/blog/modern-data-stack-mlops/ MUSTDO
+
+cs294的三篇推荐论文：MUSTDO
+
+https://arxiv.org/abs/2205.07147
+
+https://arxiv.org/abs/2006.07512
+
+https://www.usenix.org/system/files/osdi21-qiao.pdf
 
 
 ### ToB
@@ -530,6 +643,7 @@ for prediction, label, img in zip(p,l,i):
 #### Wide & Deep learning for Recommender Systems, RecSys 17
 
 1.Introduction
+
 * Wide ~ Memorization: 模型直接学习并利用历史数据中物品或者特征的“共现频率”的能力
 * Deep ~ Generalization: 模型传递特征的相关性，以及发掘稀疏甚至从未出现过的稀有特征与最终标签相关性的能力
 * Generalized linear models with nonlinear feature transformations

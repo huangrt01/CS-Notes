@@ -426,12 +426,6 @@ individual fairness、demographic fairness、counterfactual fairness
 
 
 
-#### Async FL
-
-* [Asynchronous Federated Learning](https://medium.com/@sukanya.me/asynchronous-federated-learning-3c52c5b1a409)
-  * [Federated learning with Buffered Asynchronous aggregation](https://arxiv.org/pdf/2106.06639.pdf)
-* 
-
 #### Papers
 
 ##### 《Federated Evaluation and Tuning for On-Device Personalization: System Design & Applications》, Apple
@@ -590,3 +584,9 @@ FL plan:
 * Device Scheduling: device上训练哪个具体train session，考虑结合app相关的信息
 * Bandwidth
 * Federated Computation
+
+##### Async FL
+
+[Asynchronous Federated Learning](https://medium.com/@sukanya.me/asynchronous-federated-learning-3c52c5b1a409)
+
+* [Federated learning with Buffered Asynchronous aggregation](https://arxiv.org/pdf/2106.06639.pdf)

@@ -871,8 +871,7 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
 #### n
 * [nc(netcat)](https://zhuanlan.zhihu.com/p/83959309): TCP/IP 的瑞士军刀
   * 端口测试
-* netstat 
-  * `netstat -anp | grep tcp6` 查 ipv6 监听
+* netstat
 * nohup
   * [如何优雅地让Python程序在后台运行](https://atomlab.org/post/code/python-background/)
 ```shell
@@ -885,7 +884,10 @@ nohup python -u main.py > name.log 2>&1 & echo $! > run.pid
 
 #### o 
 
-* open: -n用来多开，比如``
+* open:
+  * -n用来多开
+  * `open -a "sublime text" ~/temp.diff`
+
 
 #### p
 * [pandoc](https://github.com/jgm/pandoc)
