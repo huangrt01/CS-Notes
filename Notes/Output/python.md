@@ -22,6 +22,7 @@ list = filter(lambda x: x != 2, iterable)
 
 # 普通dict的default插入方式（类似于C++的[]）
 obj = dict.setdefault(key, default=None)
+dict.get(key, 'default')
 
 # set
 unique_elements = list(set([2,1,2])) # Remove duplicates
@@ -652,7 +653,9 @@ def runCommand(cmd):
     return res.strip("\n")
 ```
 
-#### unittest
+#### 测试
+
+##### unittest
 
 ```python
 import unittest
@@ -677,6 +680,13 @@ self._exit_stack.enter_context(context_manager)
 mock_sleep = self._exit_stack.enter_context(mock.patch('time.sleep'))
 mock_sleep.return_value = True
 ```
+##### nosetests
+
+```shell
+# sudo pip install nose
+nosetests -v autodiff_test.py --pdb
+```
+
 
 
 

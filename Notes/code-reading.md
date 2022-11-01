@@ -805,17 +805,25 @@ https://illumos.org/
 
 #### examples
 
-* softmax
+* ```python
+  def softmax(x):
+      x = x - np.max(x, axis=1, keepdims=True) # 防溢出
+      x = np.exp(x)
+      x = x / np.sum(x, axis=1, keepdims=True)
+      return x
+    
+  def sum_node_list(node_list):
+      """Custom sum function in order to avoid create redundant nodes in Python sum implementation."""
+      from operator import add
+      from functools import reduce
+      return reduce(add, node_list)
+  ```
 
-  * ```python
-    def softmax(x):
-        x = x - np.max(x, axis=1, keepdims=True)
-        x = np.exp(x)
-        x = x / np.sum(x, axis=1, keepdims=True)
-        return x
-    ```
-
-  * 
+* autodiff
+  * ad.gradients() 是在构图，倒序遍历topology
+    * node.op.gradient(self, node, output_grad): op级别的后向，输出一个新op
+  * Executor.run() 是在运行图，顺序遍历topology
+    * node.op.compute(self, node, input_vals): op级别的前向，输出value
 
 
 
@@ -841,6 +849,10 @@ https://illumos.org/
 配合经典的tbb实现阅读：https://oneapi-src.github.io/oneTBB/main/tbb_userguide/concurrent_hash_map.html
 
 https://github.com/oneapi-src/oneTBB/blob/master/include/oneapi/tbb/concurrent_hash_map.h
+
+
+
+
 
 
 

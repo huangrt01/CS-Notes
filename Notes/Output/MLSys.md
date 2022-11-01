@@ -597,13 +597,81 @@ http://dlsys.cs.washington.edu/schedule
   * Bad: rounding error, and slow to compute
   * A powerful tool to check the correctness of implementation, usually use h = 1e-6
 * Backpropogation
-  * Problems of backpropagation
+  * Easy to understand and implement
+  * Bad for memory use and schedule optimization
     * You always need to keep intermediate data in the memory during the forward pass in case it will be used in the backpropagation.
     * Lack of flexibility, e.g., compute the gradient of gradient.
 * Automatic Differentiation (autodiff)
-  * Create computation graph for gradient computation
+  * Generate gradient computation to **entire** computation graph，计算过程全图化
+  * Better for system optimization
+  * 具体算法见【code-reading笔记】-- Tinyflow -- autodiff
 
+![autodiff](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/autodiff.png)
 
+##### Paper: 《Automatic differentiation in PyTorch》
+
+* Features:
+
+  * Dynamic, define-by-run execution; Immediate, eager execution
+  * In-place operations; No tape; Core logic in C++
+    * PyTorch (and Chainer) eschew this tape; instead, every intermediate result records only the subset of the computation graph that was relevant to their computation.
+
+* ```python
+  torch.autograd.grad(f(x, y, z), (x, y))
+  
+  from torch.autograd import Variable
+  x, prev_h = Variable(torch.randn(1, 10)), Variable(torch.randn(1, 20))
+  W_h, W_x = Variable(torch.randn(20, 20)), Variable(torch.randn(20, 10))
+  i2h = torch.matmul(W_x, x.t())
+  h2h = torch.matmul(W_h, prev_h.t())
+  (i2h + h2h).tanh().sum().backward()
+  ```
+
+* API
+
+  * “requires grad” and “volatile” flags
+  * hooks:`x.register_hook(lambda grad: print(grad))`
+  * Extensions
+
+* Implementation
+
+  * Variable
+
+    * a wrapper around a Tensor
+    * holds a reference to a graph of Function objects
+    * mutated when an in-place operation occurs
+
+  * Graph: immutable, purely functional representation of the derivative of computed function
+
+  * Function: a closure that has all context necessary to compute vector-Jacobian products
+
+  * 内存管理：PyTorch’s Variable and Function must be designed to work well in a reference counted regime.
+
+    * a Function records pointers to the Function which consumes its result
+
+    * Another challenge is avoiding reference cycles. A naıve implementation of automatic differentiation can easily introduce such cycles (e.g. when a differentiable function would like to save a reference to its output). PyTorch breaks them by recording not a full-fledged variable, but instead a [“saved variable”](https://github.com/pytorch/pytorch/blob/master/torch/csrc/autograd/saved_variable.cpp), which omits a pointer to the Function in such cases.
+
+      * ```c++
+        // We want grad_fn here to provide the most helpful debug message to the user
+        // if versions don't match
+        
+        auto grad_fn = is_inplace_on_view_ ? weak_grad_fn_.lock()
+          : !hooks_ ? saved_original_ ? data_.grad_fn() : nullptr
+            : grad_fn_;
+        ```
+
+    * Supporting in-place operations：不兼容Invalidation和Aliasing这两种情况
+
+      * Invalidation: Every underlying storage of a variable is associated with a version counter, which tracks how many in-place operations have been applied to the storage.
+      * Aliasing: the in-place addition to x also causes some elements of y to be updated; thus, y’s computational history has changed as well.
+
+##### Paper: 《Automatic differentiation in ML: Where we are and where we should be going》
+
+* Introduction
+  * 现状：operator overloading (OO) and source transformation (ST) used for AD
+  * drawing insights from functional languages, graph-based IRs, and AD
+* Background
+  * Forward mode has constant memory requirements and its runtime complexity scales with the number of inputs. Reverse mode’s runtime complexity scales with the number of outputs, and its memory complexity grows with the number of intermediate variables. In principle, forward and reverse mode can be mixed, but finding the optimal way of doing so is NP-complete [27].
 
 
 

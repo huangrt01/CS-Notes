@@ -75,6 +75,7 @@ journalctl --since "1m ago" | grep Hello
 
 gdb：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(uit), watch
 
+* up, down
 * 特有：start, finish, cond, disable, where
 * `cond 3 this==0xXXX`
 * `gdb --args sleep 20` debug带参数的binary

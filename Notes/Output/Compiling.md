@@ -261,7 +261,21 @@ readelf -sW my_bin |grep LOCAL|grep OBJECT | grep -v __PRETTY_FUNCTION__|grep -v
 #pragma pack( [ n ] )
 ```
 
+#### 坑
 
+* ```C++
+  Foo f(1);
+  int main() {
+      std::cout << f.x << std::endl;
+      Foo f = (f);
+      std::cout << f.x << std::endl;
+      return 0;
+  }
+  // 1 0
+  ```
+
+  * 太坑了。。。clang有warning，gcc8的会导致f的值随机 https://godbolt.org/z/Wr4oTbWbz
+  * warning: variable 'f' is uninitialized when used within its own initialization [-Wuninitialized]
 
 ### 基本工具
 
