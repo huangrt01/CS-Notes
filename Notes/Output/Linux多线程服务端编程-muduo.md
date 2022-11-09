@@ -700,3 +700,79 @@ muduo 是一个基于非阻塞 IO 和事件驱动的现代 C++ 网络库，原�
 * Note
   * 在多 CPU 机器上，假设主板上两个物理 CPU 的距离为 15cm，CPU 主频是 2.4GHz，电信号在电路中 的传播速度按 2 × 108m/s 估算，那么在 1 个时钟周期(0.42ns)之内，电信号不能从一个 CPU 到达另一个 CPU。因此对于每个 CPU 自己这个观察者来说，它看到的事件发生的顺序没有全局一致性
   * 在现代 Linux glibc 中，fork(3) 不是直接使用 fork(2) 系统调用，而是使用 clone(2) syscall
+
+
+
+#### chpt 5 高效的多线程日志
+
+* logging
+
+  * 诊断日志(diagnostic log) 即 log4j、logback、slf4j、glog、g2log、log4cxx、 log4cpp、log4cplus、Pantheios、ezlogger 等常用日志库提供的日志功能
+  * 交易日志(transaction log) 即数据库的 write-ahead log、文件系统的 journaling 等，用于记录状态变更，通过回放日志可以逐步恢复每一次修改之后的状态
+  * 前端风格
+    * C/Java 的 printf(fmt, ...) 风格
+      * printf(fmt, ...) 风格在 C++ 中也可以做到类型安全，但是在 C++11 引入 variadic template 之前很费 劲。因为 C++ 不允许把 non-POD 对象通过可变参数(...)传入函数。Pantheios 日志库用的是重载函数模板的办法(http://www.pantheios.org)
+    * C++ 的 stream << 风格
+      * 用起来更自然，不必费心保持格式字符串与参数类型的一致性，可以随用随写，而且是类型安全的
+      * stream 风格的另一个好处是当输出的日志级别高于语句的日志级别时，打印日志是个空操作，运行时开销接近零
+
+* 功能需求
+
+  * 调整日志的输出级别不需要重新编译，也不需要重启进程，只要调用`muduo::Logger::setLogLevel()` 就能即时生效
+
+  * 对于分布式系统中的服务进程而言，日志的目的地(destination)只有一个: 本地文件。往网络写日志消息是不靠谱的，因为诊断日志的功能之一正是诊断网络故障，比如连接断开(网卡或交换机故障)、网络暂时不通(若干秒之内没有收到心跳 消息)、网络拥塞(消息延迟明显加大)等等
+
+  * 日志rolling
+
+    * 条件通常有两个:文件大小(例如每写满 1GB 就换下一个文件)和时间(例如每天零点新建一个日志文件，不论前一个文件有没有写满)
+
+  * 日志文件压缩与归档 (archive)不是日志库应有的功能，而应该交给专门的脚本去做，这样 C++ 和 Java 的服务程序可以共享这一基础设施
+
+  * 磁盘空间监控也不是日志库的必备功能：磁盘报警人工干预
+
+  * 往文件写日志的一个常见问题是，万一程序崩溃，那么最后若干条日志往往就丢失了，因为日志库不能每条消息都 flush 硬盘，更不能每条日志都 open/close 文件，这样性能开销太大。muduo 日志库用两个办法来应对这一点，其一是定期(默认 3 秒)将缓冲区内的日志消息 flush 到硬盘;其二是每条内存中的日志消息都带有 cookie(或者叫哨兵值/sentry)，其值为某个函数的地址，这样通过在 core dump 文件中查找 cookie 就能找到尚未来得及写入磁盘的消息。
+
+    * 可以用 gdb 的 find 命令。用 strings(1) 命令也能从 core 文件里找到不少有用的信息
+
+  * 日志每行带上线程号
+
+  * 时间戳精确到微秒。每条消息都通过 gettimeofday(2) 获得当前时间，这么做不会有什么性能损失。因为在 x86-64 Linux 上，gettimeofday(2) 不是系统调用，不会陷入内核 (可用 strace(1) 验证 muduo/base/tests/Timestamp_unittest.cc)
+
+    * [On vsyscalls and the vDSO](https://lwn.net/Articles/446528/)：the kernel allows the page containing the current time to be mapped read-only into user space; that page also contains a fast `gettimeofday()` implementation
+
+    * ```shell
+      $ cat /proc/self/maps
+      ...
+      7fffcbcb7000-7fffcbcb8000 r-xp 00000000 00:00 0            [vdso]
+      ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0    [vsyscall]
+      ```
+
+    * 内核代码和数据总是可寻址，随时准备处理中断和系统调用。与此相反，用户模式地址空间的映射随进程切换的发生而不断变化，Address-space layout randomization is a form of defense against security holes。
+
+    * 但vsyscall的地址是固定的，可能被攻击 ---> The result is a kernel system call emulating a virtual system call which was put there to avoid the kernel system call in the first place ---> `CONFIG_UNSAFE_VSYSCALLS`
+
+    * One useful point from that discussion is that the static vsyscall page is not, in fact, a security vulnerability; it's simply a resource which can make it easier for an attacker to exploit a vulnerability elsewhere in the system.
+
+  * 始终使用 GMT 时区
+
+  * 应该避免在日志格式(特别是消息 id )中出现正则表达式的元字符(meta character)，例如 '[' 和 ']' 等等，这样在用 less(1) 查看日志文件的时候查找字符串更加便捷。
+
+    * 对于 Base64 编码的消息 id，可以将其中的 '+' 替换为 '-'，见 RFC 4648 第 5 节
+
+* 性能需求
+
+  * 1GB/min, 上万qps
+  * 磁盘带宽约是 110MB/s，日志库应该能瞬时写满这个带宽
+  * 假如每条日志消息的平均长度是 110 字节，这意味着 1 秒要写 100 万条日志
+  * 性能优化见【code-reading笔记】
+
+* 多线程异步日志
+
+  * 在多线程服务程序中，异步日志(叫“非阻塞日志”似乎更准确)是必需的，因为如果在网络 IO 线程或业务线程中直接往磁盘写数据的话，写操作偶尔可能阻塞长达数秒之久(原因很复杂，可能是磁盘或磁盘控制器复位)。这可能导致请求方超时， 或者耽误发送心跳消息，在分布式系统中更可能造成多米诺骨牌效应，例如误报死锁引发自动 failover 等。因此，在正常的实时业务处理流程中应该彻底避免磁盘 IO，这在使用 one loop per thread 模型的非阻塞服务端程序中尤为重要，因为线程是复用的，阻塞线程意味着影响多个客户连接。
+
+### Part II: muduo 网络库
+
+#### chpt 6 muduo 网络库简介
+
+
+

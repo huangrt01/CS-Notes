@@ -4,11 +4,26 @@
 
 [Cuda-C-Best-Practices](https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#who-should-read-this-guide)
 
+https://docs.nvidia.com/cuda/cuda-c-programming-guide/
+
 
 
 ### GPU 相关知识
 
 ![h100](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/h100.png)
+
+#### CPU vs GPU
+
+* CPU: latency-optimized low latency processor
+  * 前端消耗大
+
+* GPU: throughput-optimized high throughput processor
+
+![CPU-GPU](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/CPU-GPU.png)
+
+![image-20221103003942622](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/CPU-GPU-2.png)
+
+
 
 #### 共享卡 —— 如何实现算力和显存隔离
 
@@ -23,21 +38,12 @@
 
 
 
-3 ways to accelerate applications:
-
-1.Libraries    
-
-2.OpenACC    	(add directive, for applications like HPC)
-
-3.Programming Languages
+* 3 ways to accelerate applications:
+  * Libraries    
+  * OpenACC (add directive, for applications like HPC)
+  * Programming Languages
 
 
-
-CPU: latency-optimized low latency processor
-
-GPU: throughput-optimized high throughput processor
-
-![CPU-GPU](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/CPU-GPU.png)
 
 #### DCGM
 
@@ -69,9 +75,9 @@ https://on-demand.gputechconf.com/gtc/2018/presentation/s8505-gpu-monitoring-and
 
 ##### Writing Application Code for the GPU
 
- CUDA accelerates applications drastically with little effort, has an ecosystem of highly optimized libraries for [DNN](https://developer.nvidia.com/cudnn), [BLAS](https://developer.nvidia.com/cublas), [graph analytics](https://developer.nvidia.com/nvgraph), [FFT](https://developer.nvidia.com/cufft), and more, and also ships with powerful [command line](http://docs.nvidia.com/cuda/profiler-users-guide/index.html#nvprof-overview) and [visual profilers](http://docs.nvidia.com/cuda/profiler-users-guide/index.html#visual).
+* CUDA accelerates applications drastically with little effort, has an ecosystem of highly optimized libraries for [DNN](https://developer.nvidia.com/cudnn), [BLAS](https://developer.nvidia.com/cublas), [graph analytics](https://developer.nvidia.com/nvgraph), [FFT](https://developer.nvidia.com/cufft), and more, and also ships with powerful [command line](http://docs.nvidia.com/cuda/profiler-users-guide/index.html#nvprof-overview) and [visual profilers](http://docs.nvidia.com/cuda/profiler-users-guide/index.html#visual).
 
-CUDA supports many, if not most, of the [world's most performant applications](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=58,59,60,293,98,172,223,227,228,265,487,488,114,389,220,258,461&search=) in, [Computational Fluid Dynamics](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=10,12,16,17,19,51,53,71,87,121,124,156,157,195,202,203,204,312,339,340,395,407,448,485,517,528,529,541,245,216,104,462,513,250,492,420,429,490,10,12,16,17,19,51,53,71,87,121,124,156,157,195,202,203,204,312,339,340,395,407,448,485,517,528,529,541,245,216,104,462,513,250,492,420,429,490,10,12,16,17,19,51,53,71,87,121,124,156,157,195,202,203,204,312,339,340,395,407,448,485,517,528,529,541,245,216,104,462,513,250,492,420,429,490&search=), [Molecular Dynamics](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519&search=), [Quantum Chemistry](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519&search=), [Physics](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281&search=) and HPC.
+* CUDA supports many, if not most, of the [world's most performant applications](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=58,59,60,293,98,172,223,227,228,265,487,488,114,389,220,258,461&search=) in, [Computational Fluid Dynamics](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=10,12,16,17,19,51,53,71,87,121,124,156,157,195,202,203,204,312,339,340,395,407,448,485,517,528,529,541,245,216,104,462,513,250,492,420,429,490,10,12,16,17,19,51,53,71,87,121,124,156,157,195,202,203,204,312,339,340,395,407,448,485,517,528,529,541,245,216,104,462,513,250,492,420,429,490,10,12,16,17,19,51,53,71,87,121,124,156,157,195,202,203,204,312,339,340,395,407,448,485,517,528,529,541,245,216,104,462,513,250,492,420,429,490&search=), [Molecular Dynamics](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519&search=), [Quantum Chemistry](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519&search=), [Physics](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281&search=) and HPC.
 
 ```c++
 nvidia-smi
@@ -81,7 +87,8 @@ cudaDeviceSynchronize()
 nvcc -arch=sm_70 -o hello-gpu 01-hello/01-hello-gpu.cu -run
 ```
 
-code executed on the CPU is referred to as **host** code, and code running on the GPU is referred to as **device** code
+* code executed on the CPU is referred to as **host** code, and code running on the GPU is referred to as **device** code
+  * [cudaDeviceSynchronize只需要在使用cudaStream时使用](https://stackoverflow.com/questions/11888772/when-to-call-cudadevicesynchronize)，平时“Although CUDA kernel launches are asynchronous, all GPU-related tasks placed in one stream (which is the default behavior) are executed sequentially.”
 
 ```c++
 void CPUFunction()
@@ -115,10 +122,20 @@ At a high level, execution configuration allows programmers to specify the **thr
 
 ##### CUDA Thread Hierarchy
 
-三层抽象：grid, block, thread
-* kernel execution configuration ~ grid
+* Programming model: SIMT
+  * 三层抽象：grid, block, thread
 
-CUDA-Provided Thread Hierarchy Variables，可以在`__global__`函数里直接用，作为标识来实现并行
+* Kernel Execution
+
+  * configuration ~ grid
+  * Each block is executed by one SM and does not migrate.
+
+  * Several concurrent blocks can reside on one SM depending on block’s memory requirement and the SM’s memory resources.
+
+![SIMT](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/SIMT.png)
+
+* CUDA-Provided Thread Hierarchy Variables，可以在`__global__`函数里直接用，作为标识来实现并行
+
 * 并行是无序的
 * `threadIdx.x + blockIdx.x * blockDim.x`
 
@@ -129,7 +146,32 @@ blockIdx.x: block index
 threadIdx.x: thread index
 ```
 
-如果不同的线程在不同的Warp里，他们的执行顺序会有所不同（但如果执行的操作非常简单，那么它们执行的先后时间也相差非常小），因为硬件（SM）是以Warp为单位调度线程运行的，每个Warp有32个线程
+```c++
+// e.g.
+__global__ void vecAddKernel(const float* A, const float* B, float* C, int n) {
+ int i = blockDim.x * blockIdx.x + threadIdx.x;
+ if (i < n) {
+ 	C[i] = A[i] + B[i];
+ }
+}
+
+#define THREADS_PER_BLOCK 512
+void vecAdd(const float* A, const float* B, float* C, int n) {
+ float *d_A, *d_B, *d_C;
+ int size = n * sizeof(float);
+ cudaMalloc((void **) &d_A, size);
+ cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
+ cudaMalloc((void **) &d_B, size);
+ cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
+ cudaMalloc((void **) &d_C, size);
+ int nblocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+ vecAddKernel<<<nblocks, THREADS_PER_BLOCK>>>(d_A, d_B, d_C, n);
+ cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
+ cudaFree(d_A); cudaFree(d_B); cudaFree(d_C);
+}
+```
+
+* 如果不同的线程在不同的Warp里，他们的执行顺序会有所不同（但如果执行的操作非常简单，那么它们执行的先后时间也相差非常小），因为硬件（SM）是以Warp为单位调度线程运行的，每个Warp有32个线程
 
 ##### Allocating Memory to be accessed on the GPU and the CPU
 ```c++
@@ -158,7 +200,7 @@ cudaMallocManaged(&a, size);
 cudaFree(a);
 ```
 
- 这个地址在统一的内存空间里，GPU和CPU都可以使用，但物理上数据可以不在它被访问的设备里，这时会产生page fault（缺页错误），对这个错误的处理就是把数据拷贝到需要访问它的设备或主机内存里，这个操作是透明的（自动执行）。
+* 这个地址在统一的内存空间里，GPU和CPU都可以使用，但物理上数据可以不在它被访问的设备里，这时会产生page fault（缺页错误），对这个错误的处理就是把数据拷贝到需要访问它的设备或主机内存里，这个操作是透明的（自动执行）。
 
 https://on-demand.gputechconf.com/gtc/2018/presentation/s8430-everything-you-need-to-know-about-unified-memory.pdf
 https://developer.nvidia.com/blog/unified-memory-cuda-beginners/
@@ -166,12 +208,18 @@ https://developer.nvidia.com/blog/unified-memory-cuda-beginners/
 
 ##### Grid Size Work 
 
-Amount Mismatch
-`size_t number_of_blocks = (N + threads_per_block - 1) / threads_per_block;`
+* Amount Mismatch
 
-* threads_per_bloack最大为1024
+  * `size_t number_of_blocks = (N + threads_per_block - 1) / threads_per_block;`
 
-Grid-Stride Loops
+  * threads_per_block最大为1024
+
+
+* [Grid-Stride Loops](https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-stride-loops/)
+
+  * By using a loop with stride equal to the grid size, we ensure that all addressing within warps is unit-stride, so we get [maximum memory coalescing](https://developer.nvidia.com/blog/parallelforall/how-access-global-memory-efficiently-cuda-c-kernels/), just as in the monolithic version.
+  * 所有warp同步寻址都是在一个grid里，这是最大显存聚合
+
 
 ```cpp
 __global__ void kernel(int *a, int N)
@@ -263,32 +311,59 @@ nvcc -o single-thread-vector-add 01-vector-add/01-vector-add.cu -run
 nsys profile --stats=true -o output-report ./single-thread-vector-add
 ```
 
-##### Streaming Multiprocessors and Querying the Device
+##### SM(Streaming Multiprocessors) and Querying the Device
 
-GPU内部很多functional units: SMs(Streaming Multiprocessors)，一个SM可以schedule多个block，但同一时间只能执行一个
+**GPU and Programming Model**
 
-GPU and Programming Model
+* GPU内部很多functional units: SMs(Streaming Multiprocessors)，一个SM可以schedule多个block，但同一时间只能执行一个
 
 * A set of CUDA cores
   * Tensor core相比CUDA core，实现了MMA operations，支持2:4 sparsity，支持in8和int4，更高效
   
-  * CUDA Core和Thread在抽象层次上对应; SM <-> Thread Block; Device <-> Grid
-* Warp is successive 32 threads in a block
-  * 一个SM有64个warp，一个warp scheduler 16个warp
-  * 如果不能整除，余数占据one more warp
-  * 一个warp中的线程执行同一指令（Volta架构之后，可以执行不同指令，但不同时）
+  * CUDA Core<->Thread --> registers&local memory
+  
+  * SM <-> Thread Block pool ---> shared memory
+  
+  * Device <-> Grid ---> global memory
+  
+  * 白框：subpartition
+* A warp is the basic schedule unit in kernel execution
+  * 一个warp是successive 32 threads in a block
+    * thread如果不能被32整除，余数占据one more warp
+  
+  * 一个SM有一个thread block pool，一个thread block有多个warp，一个warp scheduler 16个warp
+    * [How to choose how many threads/blocks to have?](https://forums.developer.nvidia.com/t/how-to-choose-how-many-threads-blocks-to-have/55529)
+    * The only thing that really matters for occupancy and if performance depends on occupancy is warps. You want to have as close to 64 active warps as possible, all other factors being equal.
+    * very small block sizes (e.g. 32 threads per block) may limit performance due to occupancy. Very large block sizes for example 1024 threads per block, may also limit performance, if there are resource limits (e.g. registers per thread usage, or shared memory usage) which prevent 2 threadblocks (in this example of 1024 threads per block) from being resident on a SM
+    * 推荐值：one thread block, 128~512 threads
+  
+  * Instructions are SIMD synchronous within a warp
+    * 一个warp中的线程执行同一指令（Volta架构之后，可以执行不同指令，但不同时）
+      * e.g. 【code/reduce.cu】`reduce3()`
+        * 各种优化技巧，包括unrolling、algorithm cascading
+        * each thread should sum O(log n) elements
+    * 对于control flow，可能是周期T一半的线程执行if语句，周期T+1另一半的线程执行else语句
   * Instructions will be issued to execution units by warp.
+    * warp scheduler: Decode and schedule the next instructions
   * Latency is caused by not able to issue next instruction to execution unit
   * warp's context switching is free -> 通过大量warp来hide memory latency
+  * 一些单元
+    * SFU: special function unit
+    * Load/Store memory
+  
 * Registers / Shared Memory / L1 Cache
 * SMs share Global Memory 
 * PCIe / NVLINk 与CPU Chipset交互
 
 ![SM](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/SM.png)
 
-* 白框：subpartition
-
 ![memory-hierarchy](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/memory-hierarchy.png)
+
+![memory-hierarchy-1](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/memory-hierarchy-1.png)
+
+* More registers than L1 cache
+
+![gpu-memory-latency](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/gpu-memory-latency.png)
 
 * SM片上单元比L2快3倍，比Global Memory快几十倍 
 
@@ -363,23 +438,42 @@ int main()
 
 
 
-
 #### 3.Course: Optimization Workflow
 
 unmanaged memory allocation and migration; pinning, or page-locking host memory; and non-default concurrent CUDA streams.
 
 ![optimization-workflow](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/optimization-workflow.png)
 
-优化工具：
+优化思路：
 
 * NVVP & nvprof (legacy)
 * Nsight System & Nsight Compute
+* Use existing libraries, which are highly optimized, e.g. cublas, cudnn. 
+* Use high level language to write GPU kernels.
 
 
 
-prefetch: 减少HtoD耗时（因为larger chunks），大幅减少kernel耗时（不再page fault）
+* Choose the right metric:
+  * GFLOP/s: for compute-bound kernels
+  * Bandwidth: for memory-bound kernels
+    * Will use G80 GPU for this example
+    * 384-bit memory interface（数据总线位数）, 900 MHz DDR
+    * 384 * 1800 / 8 = 86.4 GB/s
+      * 由于DDR的时钟脉冲上升沿和下降沿都传输数据，因此倍增系数为2
 
-init-kernel: 不再有HtoD，OS耗时也没了
+
+
+* Understand CUDA performance characteristics
+  * Memory coalescing
+  * Divergent branching
+  * Bank conflicts
+  * Latency hiding
+
+
+
+* prefetch: 减少HtoD耗时（因为larger chunks），大幅减少kernel耗时（不再page fault）
+
+* init-kernel: 不再有HtoD，OS耗时也没了
 
 https://developer.nvidia.com/blog/maximizing-unified-memory-performance-cuda/
 
@@ -412,9 +506,8 @@ cudaDeviceSynchronize();
 
 
 
-Exericise: Accelerate and Optimize an N-Body Simulator
-
-nbody-raw.cu -> nbody-optimized.cu
+* Exericise: Accelerate and Optimize an N-Body Simulator
+  * nbody-raw.cu -> nbody-optimized.cu
 
 
 
@@ -432,11 +525,19 @@ nbody-raw.cu -> nbody-optimized.cu
 
 ![stencil](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/stencil.png)
 
-Shared memory应用于矩阵乘法：global read次数除以BATCH_SIZE
+* Shared memory应用于矩阵乘法，见【code/gemm.cu】
+  * 双buffer的思路：prefetch和计算并行
+* Reduction优化，见【code/reduction.pdf】
+  * Parallel Reduction
+  * Problem: Global Synchronization
+    * Solution: decompose into multiple kernels Kernel launch serves as a global synchronization point
+    * Kernel launch has negligible HW overhead, low SW overhead
+  * Solution: Kernel Decomposition
+    * Recursive kernel invocation
 
 ![warp](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/warp-sharing.png)
 
-Manual Device Memory Allocation and Copying
+* Manual Device Memory Allocation and Copying
 
 ```c++
 int *host_a, *device_a;        // Define host-specific and device-specific arrays.

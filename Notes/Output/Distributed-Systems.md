@@ -886,6 +886,13 @@ https://www.usenix.org/conference/osdi18/presentation/berger
 * 二阶段异步化：高峰期对xts二阶段降级
 * 合并支付优化：将拆单工作移动到了xts二阶段进行
 
+#### SRE
+
+* [Log Everything All Time](http://highscalability.com/log-everything-all-time)
+  * Req id、线上修改log等级
+  * 一些logger库优化技巧
+  * Map software components to subsystems that are individually controllable, cross application trace levels aren't useful.
+
 
 
 #### 基础架构与人 —— Haiping Zhao

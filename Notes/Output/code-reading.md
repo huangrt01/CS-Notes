@@ -258,8 +258,114 @@ sha256sum /tmp/big-received.txt
 https://github.com/chenshuo/muduo
 
 
+#### 日志
+* base
 
+  * Mutex
 
+    * ThreadAnnotation
+
+  * Logging: 日志前端
+  
+    * 每次LOG_INFO都是一个新的Logging对象，对象析构时finish()添加换行符，然后g_output、g_flush
+  
+    * enum最后加一个NUM_LOG_LEVEL，便于定义定长数组给编译器做优化
+  
+    * SourceFile：每行日志消息的源文件名部分采用了编译期计算来获得 basename，避免运行期 strrchr(3) 开销。这里利用了 gcc 的内置函数。
+  
+      * ```c++
+        template<int N>
+        SourceFile(const char (&arr)[N]) : data_(arr), size_(N-1) {}
+        
+        SourceFile(__FILE__)
+        ```
+  
+    * helper class T: for known string length at compile time，定义了LogStream的<<
+    * `Impl::formatTime()`: snprintf
+      * 时间戳字符串中的日期和时间两部分是缓存的，一秒之内的多条日志只需重新格式化微秒部分，利用了`__thread`
+    * Fatal log会core在logger析构里，有改进空间
+    * 在线调整日志级别：gdb内 `call (void)'muduo::Logger::setLogLevel'(3)`
+  
+  * LogFile: 日志后端
+  
+    * append, flush, RollFile
+  
+      * `append->append_unlocked->AppendFile::append,`
+      * 3s flush一次，24h rollfile一次
+  
+    * ```c++
+      char name[256] = { '\0' };
+      strncpy(name, argv[0], sizeof name - 1);
+      g_logFile.reset(new muduo::LogFile(::basename(name), 200*1000));
+      ```
+  
+    * FileUtil::AppendFile
+  
+      * `::setbuffer(fp_, buffer_, sizeof buffer_)`
+      * `::fwrite_unlocked`
+      
+    * FileUtil::ReadSmallFile, `::fstat` , `::read`
+  
+  * LogStream
+  
+    * muduo 没有用标准库中的 iostream，这主要是出于性能原因(§ 11.6.6)
+  
+    * FixedBuffer
+  
+      * `typedef detail::FixedBuffer<detail::kSmallBuffer> Buffer;`
+      * LogStream用4KB，AsyncLogging用4MB (至少1k条日志)
+  
+    * convert, formatSI, formatIEC
+  
+    * 支持 `LogStream& operator<<(LogStream& s, const Fmt& fmt);`
+  
+    * ```C
+      // TODO: better itoa.
+      #if defined(__clang__)
+      #pragma clang diagnostic ignored "-Wtautological-compare"
+      #else
+      #pragma GCC diagnostic ignored "-Wtype-limits"
+      #endif
+      ```
+  
+  * AsyncLogging: 将日志数据从多个前端高效地传输到后端
+  
+    * 后台线程，用latch确保启动
+    * [double buffering技术](https://en.wikipedia.org/wiki/Multiple_buffering)
+      * `currentBuffer_`满了再notify后端做IO
+      * 默认后端3s写一次，非常规的 condition variable 用法，没有使用 while 循环，而且等待时间有上限
+      * `buffers_`和`BuffersToWrite`指针交换，持有锁的时间很短
+      * `nextBuffer_`和`currentBuffer_`的创建都由后台线程做
+      * 考虑Page_fault，后端尽量将最早的Buffer归还给前端
+  
+    * 拥塞控制
+      * 如果前端很忙，也可能给`currentBuffer_`分配内存；拥塞控制由后端进行，保证后台线程循环速度，间接减轻前端压力
+      * 处理日志堆积的方法很简单:直接丢掉多余的日志 buffer，以腾出内存
+  
+    * 优化相关：
+      * 前后端copy日志比传递日志指针要快，不用每次内存分配
+      * 锁：改进方向可以像 Java 的 ConcurrentHashMap 那样用多个桶子(bucket)，前端写日志的时候再按线程 id 哈希到 不同的 bucket 中，以减少 contention
+      * 拥塞控制：`nextBuffer_` 替换为`emptyBuffers_`
+      * Make the logging thread a lower priority so it won't starve the main application thread.
+      * 另可参考 http://highscalability.com/log-everything-all-time
+  
+* tests
+
+  * LogFile_test：使用示例
+  * Logging_test.cc：测试性能
+
+* 优化相关
+
+  * 日志消息的前 4 个字段是定长的，因此可以避免在运行期求字符串长度，`Logging::operator<<(LogStream& s, T v)`
+    * 编译器认识 memcpy() 函数，对于定长的内存复制， 会在编译期把它 inline 展开为高效的目标代码
+
+  * 线程 id 预先格式化为字符串，`CurrentThread::tidString()`
+
+#### 使用
+
+```shell
+sudo apt install g++ cmake make libboost-dev
+```
 
 #### shell
 
@@ -801,9 +907,22 @@ https://illumos.org/
 	
 ### tinyflow
 
+https://github.com/huangrt01/tinyflow
+
+* [MXNet专栏 | 陈天奇：NNVM打造模块化深度学习系统](https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&mid=2650719529&idx=3&sn=6992a6067c79349583762cb28eecda89)
+* [Build your own TensorFlow with NNVM and Torch](https://www.r-bloggers.com/2016/09/build-your-own-tensorflow-with-nnvm-and-torch/)
+
+* [评价 nnvm 和 tf 的文章](https://www.zhihu.com/question/51216952/answer/124708405)
+  * 正方（chentianqi）：直接讨论一下设计，目前TF采取了单一的动态执行模式，使得本身执行特别依赖于动态内存分配以及threading。而这并非是大部分场景下的最优方案。大部分场景下基于对于有限的图进行的静态分配，可以更大的缓解这个问题，实际情况如MX本身的[内存损耗](https://www.zhihu.com/search?q=内存损耗&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"answer"%2C"sourceId"%3A124740328})可以做的更好。为什么目前TF不会出现多种执行模式呢，是因为TF本身Op的接口还是过于一般地针对的动态，而如果要更好的优化需要更细化的Op接口（分开内存分配和计算的部分），这就考虑到一个Op甚至可能有多种接口的可能性。
+  * 反方（wangpengfei）：monolithic 的框架重构相对方便，会有更加旺盛的生命力。而 NNVM 的理想，恐怕跟现实还是有一定差距的。目前更有价值的，我觉得并不在图表示层，而是各种 Operator 的 kernels. 每个设备的 kernel 都需要专业人员定制，工作量大，难度高。cudnn 解决了 CUDA 设备上的大部分问题，但仍然有很多 Operator 需要自己实现。lowbit 目前也并没有特别可用的实现。如果能有一个统一的库，定义每个 Operator 在各种设备上的最优运行代码，应该对社区更有帮助。
+  * 补充（lv-yafei）：在MxNet中，对于变长lstm和attention等网络，图的构建和销毁开销还是比较大的，虽然nnvm优化了建图的时间，但是还是无法做到可以被忽略不计，nnvm以后是否会提供类似于tensorflow的动态流图的构建。对于NLP等任务，动态流图可能无法做到显存最优，但是却可以避免反复构建图的开销。
+    * Response(chentianqi)：未来考虑子图结构组合吧，这样子图可以避免反复拷贝构建
+
+
+
 #### abstract
 
-#### examples
+#### examples/autodiff-graph-executor-with-tvm
 
 * ```python
   def softmax(x):
@@ -819,26 +938,197 @@ https://illumos.org/
       return reduce(add, node_list)
   ```
 
-* autodiff
+* Autodiff
   * ad.gradients() 是在构图，倒序遍历topology
     * node.op.gradient(self, node, output_grad): op级别的后向，输出一个新op
   * Executor.run() 是在运行图，顺序遍历topology
     * node.op.compute(self, node, input_vals): op级别的前向，输出value
+  * test: 支持grad_of_grad
+  
+* Graph_executor_with_tvm
+
+```shell
+export PYTHONPATH="${PYTHONPATH}:/path/to/python"
+pip3 install --upgrade pip
+pip3 install apache-tvm
+
+nosetests -v tests/test_tvm_op.py --nocapture [--match=test_softmax_cross_entropy]
+
+# see cmd options with 
+# python tests/mnist_dlsys.py -h
+
+# run logistic regression on numpy
+python tests/mnist_dlsys.py -l -m logreg
+# run MLP on numpy
+python tests/mnist_dlsys.py -l -m mlp
+```
+
+### tvm
+
+![tvm-arch](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/code-reading/tvm-arch.png)
+
+* 参考资料：[从零开始学习深度学习编译器](http://giantpandacv.com/project/%E9%83%A8%E7%BD%B2%E4%BC%98%E5%8C%96/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%BC%96%E8%AF%91%E5%99%A8/TVM%20%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/)
+  * 这个资料好全，深坑。。。 列为TODO吧
+
+* 内存管理
+
+  * executor结构简单，Grab saved optimization plan from graph
+
+    * ```c++
+      // apps/bundle_deploy.c
+      TVM_DLL void tvm_runtime_get_output(void* executor, int32_t index, DLTensor* tensor) {
+        TVMGraphExecutor* graph_executor = (TVMGraphExecutor*)executor;
+        TVMGraphExecutor_GetOutput(graph_executor, index, tensor);
+      }
+      
+      // src/runtime/ctr/graph_executor.c
+      struct TVMGraphExecutor
+      int TVMGraphExecutor_SetupStorage()
+      ```
+
+    * `attrs->storage_id` 
+    * ndarray的view接口
+
+  * 内存管理算法：`src/relay/backend/graph_plan_memory.cc`
+
+  * graph_executor_codegen 调用 GraphPlanMemory
+
+    * 核心是对图按toposort遍历，visit op，给每块内存分配storage id。visit时调用StorageAllocator (只维护每个storage的元信息，不实际管理内存)，先 CreateToken 再CheckForRelease
+
+    * class StorageAllocaBaseVisitor : public transform::DeviceAwareExprVisitor
+
+      * `DeviceAwareVisitExpr_` 输入是 FunctionNode，不处理 sub functions、primitive functions
+      * `std::unordered_map<const ExprNode*, std::vector<StorageToken*>> token_map_;`
+      * GetToken 方法
+      * `virtual void CreateTokenOnDevice(const ExprNode* op, const VirtualDevice& virtual_device, bool can_realloc) = 0;`
+
+    * class StorageAllocaInit : protected StorageAllocaBaseVisitor
+
+      * `DeviceAwareVisitExpr_`: create token for the call node, and for each input, visit argument token.
+
+    * class StorageAllocator : public StorageAllocaBaseVisitor
+
+      * `prototype_ = StorageAllocaInit(&arena_).GetInitTokenMap(func);`
+      * `StorageInfo(std::vector<int64_t> storage_ids, std::vector<VirtualDevice> virtual_devices, std::vector<int64_t> storage_sizes_in_bytes);`
+      * DeviceAwareVisitExpr_(CallNode) final
+
+    * ```c++
+      class StorageAllocator {
+        // allocator
+        support::Arena arena_;
+        /*! \brief internal prototype token map */
+        std::unordered_map<const ExprNode*, std::vector<StorageToken*>> prototype_;
+        /*! \brief token allocator for optimizing 1d and 2d token alloc requests */
+        TokenAllocator allocator_;
+      }
+      
+      class TokenAllocator2D {
+      	std::unordered_map<int64_t, MemBlock> blocks_;
+        std::unordered_set<int64_t> free_list_;
+      }
+      
+      class TokenAllocator1D {
+        // scale used for rough match
+        const size_t match_range_{16};
+        // free list of storage entry
+        std::multimap<size_t, StorageToken*> free_;
+        // all the storage resources available
+        std::vector<StorageToken*> data_;
+      }
+      ```
+
+* 内存管理相关RFC
+
+  * https://discuss.tvm.apache.org/t/rfc-unified-static-memory-planning/10099
+  * [issue: symbolic shape runtime](https://github.com/apache/tvm/issues/2451)
+  * [rfc: relay dynamic runtime](https://github.com/apache/tvm/issues/2810), converged in VM design
+
+* tests
+  * tests/python/relay/test_backend_graph_executor.py: test_plan_2d_memory()
+* tvm and tf: [TVMDSOOp RFC](https://discuss.tvm.apache.org/t/add-the-document-for-tvmdsoop/6622), [PR](https://github.com/apache/tvm/pull/4459/files)
+  * src/contrib/tf_op/tvm_dso_op_kernels.cc
+    * 如果不align到64，需要 `EnsureAlignment` 分配内存然后 `input.CopyFromOrigin()` 做memcpy
+
+
+
+#### tvm turorial
+
+##### How To Guides
+
+* [Work With Tensor Expression and Schedules](https://tvm.apache.org/docs/how_to/work_with_schedules/index.html)
+
+  * [reduction](https://tvm.apache.org/docs/how_to/work_with_schedules/reduction.html)
+
+  * cross thread reduction
+
+  * `Reductions are only allowed at the top level of compute. Please create another tensor for further composition.`
+
+  * ```python
+    n = te.var("n")
+    m = te.var("m")
+    A = te.placeholder((n, m), name="A")
+    k = te.reduce_axis((0, m), "k")
+    B = te.compute((n,), lambda i: te.sum(A[i, k], axis=k), name="B")
+    
+    s = te.create_schedule(B.op)
+    ko, ki = s[B].split(B.op.reduce_axis[0], factor=16)
+    
+    # Reduction Factoring and Parallelization
+    BF = s.rfactor(B, ki)
+    
+    xo, xi = s[B].split(B.op.axis[0], factor=32)
+    s[B].bind(xo, te.thread_axis("blockIdx.x"))
+    s[B].bind(xi, te.thread_axis("threadIdx.x"))
+    print(tvm.lower(s, [A, B], simple_mode=True))
+    ```
+
+* [Optimize Tensor Operators](https://tvm.apache.org/docs/how_to/optimize_operators/index.html)
+  * [optimize conv2d](https://tvm.apache.org/docs/how_to/optimize_operators/opt_conv_cuda.html)
+  * [optimize using TensorCores](https://tvm.apache.org/docs/how_to/optimize_operators/opt_conv_tensorcore.html)
+
+##### User Tutorial
+
+* Working with Operators Using Tensor Expression
+
+  * We can do more specializations. For example, we can write `n = tvm.runtime.convert(1024)` instead of `n = te.var("n")`, in the computation declaration. The generated function will only take vectors with length 1024.
+
+  * Example 2: Manually Optimizing Matrix Multiplication with TExample 2: Manually Optimizing Matrix Multiplication with TE
+
+    * ```python
+      bn = 32
+      
+      # Blocking by loop tiling
+      xo, yo, xi, yi = s[C].tile(C.op.axis[0], C.op.axis[1], bn, bn)
+      (k,) = s[C].op.reduce_axis
+      ko, ki = s[C].split(k, factor=4)
+      
+      # Hoist reduction domain outside the blocking loop
+      s[C].reorder(xo, yo, ko, ki, xi, yi)
+      ```
+
+    * Make Iterations Row-friendly: `s[C].reorder(xo, yo, ko, xi, ki, yi)`
+
+      * `ki` 是reduce axis的切片，对每列`xi`的切片运算是行级别的
+
+    * Array Packing
+
+      * By reordering a `[16][16]` array to a `[16/4][16][4]` array the access pattern of B will be sequential when grabbing the corresponding value from the packed array.
+      * ![array-packing](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/code-reading/array-packing.png)
+
+* [Optimizing Operators with Schedule Templates and AutoTVM](https://tvm.apache.org/docs/tutorial/autotvm_matmul_x86.html#install-dependencies)
+
+* testing
+  * `np.testing.assert_allclose()`
+
+
+
+### 
 
 
 
 ### tensorflow
 
-#### abstract
-
-[一篇很好的回答，梳理tf的核心框架思路](https://www.zhihu.com/question/51216952/answer/124708405) MUSTDO
-
-#### Ops
-
-* dropout
-  * keras/layers/core.py: `Class Dropout(Layer)` -> `nn.dropout`
-  * ops/nn_ops.py: _dropout()
-    * 注意是在training时进行scale，推理时忽略
+见【tensorflow】笔记
 
 
 

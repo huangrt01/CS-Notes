@@ -84,6 +84,10 @@ gdb：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(ui
 * `attach $pid` debug正在运行的进程
 * `ptype` 打印变量类型；打印stl使用 [python pretty print](https://gist.github.com/daverigby/99dae6997bced43a8fcdbfcb15e36116)
 * `gcore` attach后制造core文件
+* `call`
+  *  `call (void)'xxx::Logger::setLogLevel'(3)` 注意引号让gdb不会因为找不到符号而报错
+  * [how does gdb call functions](https://jvns.ca/blog/2018/01/04/how-does-gdb-call-functions/)
+
 
 ```c++
 //增加print的可读性
@@ -142,6 +146,12 @@ show logging
 
 
 Gdb STL support tools: https://sourceware.org/gdb/wiki/STLSupport
+
+
+
+##### [gdb-watchpoint](https://undo.io/resources/gdb-watchpoint) MUSTDO
+
+[How to search memory for a byte sequence with GDB command find?](https://undo.io/resources/gdb-watchpoint/how-search-byte-sequence-memory-gdb-command-find/)
 
 
 
@@ -245,6 +255,20 @@ For web development, the Chrome/Firefox developer tools are quite handy. They fe
     * `python -m autopep8 -i -r $FOLDER`
 * A complementary tool to stylistic linting are code formatters such as [`black`](https://github.com/psf/black) for Python, `gofmt` for Go, `rustfmt` for Rust or [`prettier`](https://prettier.io/) for JavaScript, HTML and CSS.
 
+#### Coredump 相关
+
+* Linux 默认会把 core dump 写到当前目录，而且文件名是固定的 core。为了不让新的 core dump 文件冲掉旧的，我们可以通过 sysctl 设置 kernel.core_pattern 参数(也可以修改 /proc/sys/kernel/core_pattern)，让每次 core dump 都产生不同的文件
+  * core_pattern: `|/usr/share/apport/apport %p %s %c %d %P`
+  * https://wiki.ubuntu.com/Apport
+  * 修改core位置
+    * `echo "/data/coredump/core.%e.%p" > /proc/sys/kernel/core_pattern`
+    * %E：程序文件的完整路径（路径中的/会被!替代）
+    * %p：进程 ID
+    * %t：进程奔溃的时间戳
+    * %s：哪个信号让进程奔溃
+  * `ulimit -c unlimited`
+  * 判断是否是core文件：`readelf -h core`
+
 #### Dynamic Tracing
 
 * [动态追踪技术](https://blog.openresty.com.cn/cn/dynamic-tracing/)
@@ -270,8 +294,9 @@ strace -p $PID
 -s 1024 print输入参数的长度限制
 -e write=   -e read=     -e trace=file/desc			-e recvfrom
 -f 监控所有子线程   -ff
+```
 
-
+```shell
 # On macOS
 sudo dtruss -t lstat64_extended ls -l > /dev/null
 

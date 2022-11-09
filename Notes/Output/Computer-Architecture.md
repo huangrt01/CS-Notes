@@ -71,9 +71,11 @@ constexpr size_t CACHE_LINE_SIZE =
 
 ROCm：https://developer.amd.com/resources/rocm-learning-center/
 
-### Cache 系列科普
+### Cache 系列科普 ~ Latency
 
 [UEFI和BIOS探秘 —— Zhihu Column](https://www.zhihu.com/column/UEFIBlog)
+
+[interactive latency numbers](https://colin-scott.github.io/personal_website/research/interactive_latency.html)
 
 数据基于 Skylake 架构
 
@@ -83,7 +85,7 @@ ROCm：https://developer.amd.com/resources/rocm-learning-center/
   * 算一下 load/store 指令占所有 instructions 的比例，小于 5 就没办法 hide latency，需要优化访存模式
 * L2 cache
   * 512KB
-  * ~12 cycles, ~3ns
+  * ~12 cycles, ~4ns
 * LLC (L3 cache)
   * 32MB
   * ~38 cycles, ~12ns
@@ -91,6 +93,9 @@ ROCm：https://developer.amd.com/resources/rocm-learning-center/
   * 直接走 IMC，1.5MB/core
   * 分析：llc-load-miss * 64B per load / time elapsed，和内存带宽数据做对比
 * L4: eDRAM，可作显存
+* DRAM
+  * ~100ns
+
 * [L1，L2，L3 Cache究竟在哪里？](https://zhuanlan.zhihu.com/p/31422201)
   * [CPU Die and Socket](https://zhuanlan.zhihu.com/p/51354994): Intel Xeon 是一个 CPU Die 一个 Socket；而 AMD ECPY 的一个 Socket 由 4 个 CPU Die 组成。因此 AMD 8 个逻辑核共享 LLC，而 Intel 全部核心共享
   * [为什么Intel CPU的Die越来越小了？](https://zhuanlan.zhihu.com/p/31903866)

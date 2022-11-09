@@ -833,6 +833,9 @@ grep -E "key1|key2"
 grep -E "key1.*key2"
 # 颜色
 --color
+
+grep -o '^20120603 08:02:..' $file | sort | uniq -c
+
 ```
 
 * gunzip
@@ -966,6 +969,7 @@ tar xv(z)f 压缩文件名.tar.gz -C 目标文件夹
   * -H: 显示线程
   * -H -p $pid：显示指定进程下的线程
   * 按 1 键显示 per cpu core 利用率
+  * 按 e/E 切换内存单位
   * 按 f 键增加显示项目
 
 

@@ -174,7 +174,7 @@ plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, 
   * Flink ML
     * 难以描述复杂的多角色拓扑关系
 
-  * Ray: 参考【Distributed-Systems】笔记
+  * Ray: 参考【Distributed-Systems笔记】
 
 ```java
 // Flink ML
@@ -247,7 +247,13 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 * 用精排模型参数来初始化参数，fine-tune 加速训练
 *  <img src="https://www.zhihu.com/equation?tex=%5Cgamma_3%3D10%5E%7B-7%7D" alt="\gamma_3=10^{-7}" class="ee_img tr_noresize" eeimg="1">  描述候选数量，也是一个衡量特征复杂度的参数
 
+### PyTorch
 
+* 训练
+  * 如果追求性能，可以用torch.fx改一下图，把手写op改进去
+  * torch.fx symbolic_trace可以变成静态图
+* 部署
+  * 静态图，会用torchscript trace出来整个图，然后在ir上做一些编译优化
 
 ### Go+Torch
 
@@ -512,20 +518,6 @@ for prediction, label, img in zip(p,l,i):
 
 
 
-
-
-MUSTDO
-
-autodiff相关
-
-https://openreview.net/pdf?id=BJJsrmfCZ
-
-https://arxiv.org/pdf/1810.11530.pdf
-
-tvm
-
-https://arxiv.org/abs/1802.04799
-
 #### CSE 599W: Systems for ML
 
 http://dlsys.cs.washington.edu/schedule
@@ -670,8 +662,598 @@ http://dlsys.cs.washington.edu/schedule
 * Introduction
   * 现状：operator overloading (OO) and source transformation (ST) used for AD
   * drawing insights from functional languages, graph-based IRs, and AD
-* Background
+* Background:
   * Forward mode has constant memory requirements and its runtime complexity scales with the number of inputs. Reverse mode’s runtime complexity scales with the number of outputs, and its memory complexity grows with the number of intermediate variables. In principle, forward and reverse mode can be mixed, but finding the optimal way of doing so is NP-complete [27].
+  * Since the number of inputs is significantly larger than the number of outputs, reverse mode AD is to be preferred
+  * Automatic differentiation: Two methods
+    * Operator overloading (OO): record a tape
+      * downside: Having an embedded interpreter inside of the host language can complicate debugging and performance analysis.
+      * PyTorch, Autograd, and Chainer
+    * source transformation (ST)
+      * explicitly construct a program with a reversed control flow, which means that it needs transformation rules for function calls and control flow statements such as loops and conditionals 偏静态
+      * still ensure that intermediate variables from the forward pass are accessible by the adjoint
+        * Tape-based
+          * The tape used in ST stores only the intermediate variables, whereas the tape in OO is a program trace that stores the executed primitives as well.
+        * Closure-based
+          * no AD-specific compiler passes are needed: a functional language compiler will recognize the non-local use of the intermediate variables by the fact that they are free variables in the generated closure or continuation.
+  * Dataflow programming
+    * Theano, TensorFlow, and MXNet
+    * follow the dataflow program- ming paradigm [21] and use computation graphs as their **intermediate representation**
+    * These graph representations do not have scoping or recursive function calls, which means that AD is much easier to implement with ST
+    * 设计取舍
+      * Function Calls: TensorFlow and Theano implement a type of subroutine through their Defun and OpFromGraph constructs, but these must be explicitly constructed by the user and don’t support recursion.
+      * Scoping: TensorFlow has a concept it refers to as ‘scoping’, but these scopes are not lexical and can be reentered at any time, so the lifetime of a value is not affected by its scope.
+  * Programming languages and compilers
+    * The dataflow graph is an intermediate representation which is optimized using a series of compiler passes. The resulting program is compiled (e.g., XLA) and/or interpreted (e.g., the TensorFlow/Theano runtimes). Similarly, PyTorch has started optimizing its traced Python programs using just-in-time (JIT) compiler approaches.
+    * Python because of its flexibility with the need for high performance and speed is an open question. ML frameworks have focused on metaprogramming and using C extensions, but other approaches are possible. For example, Cython [6] is a superset
+      performance and speed is an open question.
+* Graph-based direct intermediate representation
+  * graph based, purely functional, closure representation, strongly typed
+  * IR specification
+    * Concretely, our representation represents a function as a graph object with a list of parameter nodes and a single return node (multiple return values are supported through tuples). A node represents a function application and has an ordered list of incoming edges. The first incoming edge is a pointer to the function to apply, and the rest point to the arguments. Constants are represented as nodes with no incoming edges and a value field. Links between nodes are bidirectional, so that graphs can be traversed in either direction. Each non-constant node belongs to a single graph.
+  * Source transformation
+    * In order to ensure that our transformation can be applied again on the transformed program (so we can use reverse-over-reverse to compute second-order derivatives), it must be able to handle functions with free variables.
+* Myia
+  * Myia is a functioning proof of concept of a toolchain that uses the proposed graph representation
+  * Python front end
+    * Myia uses Python’s inspect module to parse the function into an abstract syntax tree (AST), and converts that AST into the graph representation we previously described
+  * Type inference
+  * Optimization
+
+##### Lecture 5: GPU Programming
+
+* 内容融入【nvidia笔记】
+
+##### Lecture 6: Optimize for Hardware Backends
+
+* Where are we: gap between computation graph and hardware
+  * Goal: High Level Program to Bare Metal Code
+  * What are the tricks you can do to make your program run faster on CUDA/x86/any backend?
+* Cache Line Aware Tiling
+  * Output-tiled
+  * cache line aware
+  * 收益来源于memory reuse，减少load dram time cost
+
+```c++
+dram float A[n/b1][b1][n];
+dram float B[n/b2][b2][n];
+dram float C[n/b1][n/b2][b1][b2];
+for (int i = 0; i < n/b1; ++i) {
+  l1cache float a[b1][n] = A[i];
+  for (int j = 0; j < n/b2; ++j) {
+    l1cache b[b2][n] = B[j];
+		for (int x = 0; x < b/v1; ++x) {
+     for (int y = 0; x < b/v1; ++y) {
+       register float c[v1][v2] = 0;
+       for (int k = 0; k < n; ++k) {
+         register float ar[v1] = a[x][k];
+         register float br[v1] = b[y][k];
+         C += dot(ar, br)
+       }
+ 	    }
+    }
+  }
+}
+```
+
+* operator fusion
+* Optimizations = Too Many Variant of Operators
+  * Different tiling patterns
+  * Different fuse patterns
+  * Different data layout
+  * Different hardware backends
+
+##### Lecture 7: Automatic Code Generation --- TVM Stack
+
+https://tvm.apache.org/
+
+https://github.com/apache/tvm
+
+* Computational Graph as IR
+  * Approach taken by: TensorFlow XLA, Intel NGraph, Nvidia TensorRT
+  * XLA: Tensorflow Compiler
+  * TensorRT: Rule based Fusion
+    * relu+bias+conv --> CBR
+    * Simple Graph-based Element-wise Kernel Generator: Fusion Pass + CodeGen Pass
+
+![xla](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/xla.png)
+
+* The Remaining Gap of "Computational Graph as IR"
+  * need to build and optimize operators for each hardware, variant of layout, precision, threading pattern …
+  * hardware backend越多，手工优化op的成本越高
+* Emerging Tools Using Tensor Expression Language
+  * Halide: Image processing language
+  * Loopy: python based kernel generator
+  * TACO: sparse tensor code generator
+  * Tensor Comprehension
+
+* TVM
+  * Tensor Level Optimizations (Tensor Expression Language)
+    * `C = t.compute((m, n), lambda i, j: t.sum(A[i, k] * B[j, k], axis=k))`
+  * Tensor Index Expression
+
+```python
+# tvm
+# Compute C = dot(A, B.T)
+import tvm
+m, n, h = tvm.var('m'), tvm.var('n'), tvm.var('h')
+A = tvm.placeholder((m, h), name='A')
+B = tvm.placeholder((n, h), name=‘B')
+
+k = tvm.reduce_axis((0, h), name=‘k')
+C = tvm.compute((m, n), lambda i, j: tvm.sum(A[i, k] * B[j, k], axis=k))
+                    
+# Convolution
+out = tvm.compute((c, h, w), lambda i, x, y: tvm.sum(data[kc,x+kx,y+ky] * w[i,kx,ky], [kx,ky,kc]))
+                    
+# ReLU
+out = tvm.compute(shape, lambda *i: tvm.max(0, out(*i))
+```
+
+* Schedule: Tensor Expression to Code
+  * 核心思路：Separation of Compute and Schedule, introduced by Halide
+* Key Challenge: Good Space of Schedule
+  * Should contain any knobs that produces a logically equivalent program that runs well on backend models
+  * Must contain the common manual optimization patterns
+  * Need to actively evolve to incorporate new techniques
+
+```python
+# Example Schedule Transformation
+C = tvm.compute((n,), lambda i: A[i] + B[i])
+s = tvm.create_schedule(C.op)
+xo, xi = s[C].split(s[C].axis[0], factor=32)  # 
+s[C].recorder(xi, xo)
+s[C].bind(xo, tvm.thread_axis(“blockIdx.x”)
+s[C].bind(xi, tvm.thread_axis(“threadIdx.x”)
+```
+
+* TVM Schedule Primitives
+  * Loop Transformations, Thread Bindings, Cache Locality, Thread Cooperation, Tensorization, Latency Hiding
+  * Schedule Space Exploration --> AutoTuner tune多个kernel
+
+```python
+# Extending Compute Primitives
+# Symbolic Loop: Y = cumsum(X)
+import tvm
+m = tvm.var("m")
+n = tvm.var("n")
+X = tvm.placeholder((m, n), name="X")
+s_state = tvm.placeholder((m, n))
+s_init = tvm.compute((1, n), lambda _, i: X[0, i])
+s_update = tvm.compute((m, n), lambda t, i: s_state[t-1, i] + X[t, i])
+Y = tvm.scan(s_init, s_update, s_state, inputs=[X])
+```
+
+* Hardware designer: declare tensor instruction interface
+
+```python
+w, x = t.placeholder((8, 8)), t.placeholder((8, 8))
+k = t.reduce_axis((0, 8))
+y = t.compute((8, 8), lambda i, j: t.sum(w[i, k] * x[j, k], axis=k))
+def gemm_intrin_lower(inputs, outputs):
+ ww_ptr = inputs[0].access_ptr(“r")
+ xx_ptr = inputs[1].access_ptr("r")
+ zz_ptr = outputs[0].access_ptr("w")
+ compute = t.hardware_intrin("gemm8x8", ww_ptr, xx_ptr, zz_ptr)
+ reset = t.hardware_intrin("fill_zero", zz_ptr)
+ update = t.hardware_intrin("fuse_gemm8x8_add", ww_ptr, xx_ptr, zz_ptr)
+ return compute, reset, update
+
+gemm8x8 = t.decl_tensor_intrin(y.op, gemm_intrin_lower)
+```
+
+* High Level Compilation Frontend
+
+```python
+import tvm
+import nnvm.frontend
+import nnvm.compiler
+graph, params = nnvm.frontend.from_keras(keras_resnet50)
+target = tvm.target.cuda()
+graph, lib, params = nnvm.compiler.build(graph, target) 
+
+module = runtime.create(graph, lib, tvm.gpu(0))
+module.set_input(**params)
+module.run(data=data_array)
+output = tvm.nd.empty(out_shape, ctx=tvm.gpu(0))
+module.get_output(0, output)
+```
+
+![tvm-remote](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/tvm-remote.png)
+
+##### Paper: 《TVM: An Automated End-to-End Optimizing Compiler for Deep Learning》
+
+* Abstract/Conclusion
+  * TVM solves optimization chal-lenges specific to deep learning, such as high-level operator fusion, mapping to arbitrary hardware primitives, and memory latency hiding.
+* Introduction
+  * TVM, a compiler that takes a high-level specification of a deep learning program from existing frameworks and generates low-level optimized code for a diverse set of hardware back-ends.
+  * Leveraging Specific Hardware Features and Abstractions.
+  * Large Search Space for Optimization
+    * tensor expression language
+    * automated program optimization framework
+      * autotune与手工优化，后者解决通用问题，前者解决长尾问题并优化后者参数
+    * graph rewriter
+
+![tvm-1](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/tvm-1.png)
+
+* Optimizing Computational Graphs
+  * 和IR的区别：the intermediate data items are large, multi-dimensional tensors.
+  * Operator Fusion：给op分了四类，不同类型能以不同形式fusion
+  * Data Layout Transformation.
+  * constant-folding
+  * static memory planning pass
+* 核心思想：分离compute和schedule，通过各种调度变换搜索出最高效的实现
+* Generating Tensor Operations
+  * Tensor Expression and Schedule Space
+    * Internally, TVM uses a data structure to keep track of the loop structure and other information as we apply schedule transformations. This information can then help generate low-level code for a given final schedule.
+  * Nested Parallelism with Cooperation
+    * in addition to being useful to GPUs, memory scopes let us tag special memory
+      buffers and create special lowering rules when targeting specialized DL accelerators.
+  * Tensorization
+    * 对普通张量程序（一般就是循环嵌套程序），调用硬件加速器提供的特定指令函数（ intrinsic）进行加速。比如 GPU 里的 Tensor Core 提供的一些 intrinsic 可以直接处理特定大小矩阵的运算
+    * We make tensorization extensible by separating the target hardware intrinsic from the schedule with a mechanism for tensor-intrinsic declaration.
+  * Explicit Memory Latency Hiding
+
+![tvm-primitives](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/tvm-primitives.png)
+
+* Automating Optimization
+  * Schedule Space Specification
+  * ML-Based Cost Model
+    * GDBT, 特征包括 the memory access count and reuse ratio of each memory buffer at each loop level, as well as a one-hot encoding of loop annotations such as “vectorize”, “un-roll”, and “parallel.”
+  * Schedule Exploration
+    * a parallel simulated annealing algorithm
+* Evaluation
+* Related Work
+  * 重申graph-based approach的缺点：serving多种hardware backends耗费人力
+  * More importantly, we provide an end-to-end stack that can take descriptions directly from DL frameworks and jointly optimize together with the graph-level stack.
+* 更多tvm后续论文：
+  * [Ansor : Generating High-Performance Tensor Programs for Deep Learning](https://arxiv.org/abs/2006.06762)
+  * [NIMBLE: EFFICIENTLY COMPILING DYNAMIC NEURAL NETWORKS FOR MODEL INFERENCE](https://arxiv.org/pdf/2006.03031.pdf)
+
+
+
+##### Lecture 8: Hardware Specialization in Deep Learning
+
+* Hardware Specialization
+  * • Idea: tailor your chip architecture to the characteristics of a **stable** workload
+
+![evolution](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/evolution.png)
+
+* Specialization Challenge
+  * Tape-out costs for ASICs is exorbitant
+    * 10x cost gap between 16nm and 65nm
+    * 5nm ~ 800M$
+  * Risky bet to design hardware accelerators for ever-changing applications
+    * Flexibility vs. Efficiency Tradeoffs
+    * Microprocessors(0.1) -> DSPs(1) -> Decicated HW(100)   (MOPS/mW)
+* TPU: Google’s Entry in the Deep Learning Acceleration Race
+  * Highlights (In-Datacenter Performance Analysis of a Tensor Processing Unit, ISCA 2017)
+    * Custom ASIC deployed in datacenters since 2015
+    * 65k 8-bit matrix multiply that offers peak throughput of 92 TOPS
+    * Targets mainstream NN applications (MLPs, CNNs, and LSTMs)
+    * Shows 30-80x improved TOPS/Watt over K80
+  * Why Efficient
+    * Integer inference (saves 6-30x energy over 16bit FP)
+    * Large amount of MACs (25x over K80)
+    * Large amount of on-chip memory (3.5x over K80)
+  * TPU Roofline
+    * 1350 Operations per byte of weight memory fetched
+    * TPU的内存带宽太小了，34GB/s
+
+![tpu](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/tpu-block-diagram.png)
+
+* HW/SW Co-Design - #1 Tensorization
+* HW/SW Co-Design - #2 Memory Architecting
+
+![memory-architecting](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/memory-architecting.png)
+
+* HW/SW Co-Design - #3 Data Type
+
+* VTA: Versatile Tensor Accelerator
+  * a versatile and extendable deep learning accelerator for software codesign research and the development of next architectures
+  * Features
+    * Customizable tensor core, memory subsystem and data types based on bandwidth, storage and accuracy needs
+    * Flexible CISC/RISC ISA for expressive and compact code
+      * Goal: Provide the right tradeoff between expressiveness and code compactness 
+      * Use CISC-ness to describe high-level operation (LD, ST, GEMM, ALU)
+      * Use RISC-ness to describe low-level memory access patterns
+      * Micro-op kernels are stored in a local micro op cache to implement different operators
+    * Access-execute decoupling for memory latency hiding
+
+* Latency Hiding: GEMM hide load latency
+  * We want to enforce read-after-write (RAW) dependences
+  * AND we want to enforce write-after-read (WAR) dependences
+  * Takeaway: work partitioning and explicit dependence graph execution (EDGE) unlocks pipeline parallelism to hide the latency of memory accesses
+
+![vta-design](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/vta-design.png)
+
+
+
+* VTA Design	
+  * Instruction fetch stage fetches high-level instructions from DRAM, decodes them, and pushes commands to the relevant queue (LD, EX, ST)
+  * The load stage executes load commands to populate activation & kernel memories, the micro-op cache, and a load buffer for loading in values for the register file
+  * Compute stage executes compute commands to perform vector ALU operations or GEMM operations to update the register file according to micro-coded kernels
+  * Memory store stage executes store commands to store flushed register file values back to DRAM from the store buffer
+  * Stages communicate via dependence token queues to indicate that they may proceed to execute the command they’re about to work on
+  * Memories that connect pipeline stages follow a strict single producer, single consumer rule (fan-in=1, fan-out=1). This enables data flow execution, and makes this design modular
+* TVM DSL allows for separation of schedule and algorithm
+
+![vta-primitives](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/vta-primitives.png)
+
+* Virtual Threading
+  * How do we take advantage of pipeline parallelism with virtual threading?
+  * Hardware-centric view: pipeline execution
+  * Software-centric view: threaded execution
+  * Final step: virtual thread lowering into a single instruction stream
+    * Push and pop commands dictate how to interact with the hardware dependence queues
+
+![virtual-threading](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/virtual-threading.png)
+
+* Programming for VTA in TVM
+
+  * How do we partition work and explicitly manage on-chip memories?
+
+    * ```python
+      // Tile
+      yo, xo, yi, xi = s[OUT].tile(y, x, 4, 4)
+      // Cache read
+      INP_L = s.cache_read(INP, vta.act, [OUT])
+      s[INP_L].compute_at(s[OUT], xo)
+      ```
+
+  * How do we take advantage of tensorization?
+
+    * ```python
+      // Tensorize
+      s[OUT_L].tensorize(ni)
+      ```
+
+  * How do we take advantage of virtual threading?
+
+    * ```python
+      // Virtual Threading
+      tx, co = s[OUT_L].split(co, factor=2)
+      s[OUT_L].bind(tx, thread_axis(“cthread”))
+      ```
+
+
+
+##### Lecture 9: Memory Optimization
+
+* DL stack 中的 Computational Graph Optimization and Execution 环节
+* Question for this lecture:
+  * Why do we need automatic differentiation that extends the graph instead of backprop in graph?
+* Executor的构建，中间节点分配临时内存，Temporary space linear to number of ops
+  * Dynamic Memory Allocation
+  * Static Memory Planning
+    * Analog: register allocation algorithm in compiler
+    * Inplace store the result in the input
+      * We can only do inplace if result op is the only consumer of the current value
+    * Normal Sharing reuse memory that are no longer needed
+* Memory Allocation and Scheduling
+  * Memory Planning Algorithm: 维护内存tag，一种实现见【code-reading笔记】-- tvm -- 内存管理
+  * Concurrency aware Heuristics:
+    * Restrict memory reuse in the same colored path
+    * color通过不断地找最长路径生成，比如第一条最长路径用一个颜色
+  * Introduces implicit control flow dependencies between ops
+    * Solutions:
+      * Explicitly add the control flow dependencies
+        * Needed in TensorFlow
+      * Enable mutation in the scheduler, no extra job needed
+        * Both operation “mutate” the same memory, supported in MXNet
+
+![mlp-memory-opt](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/mlp-memory-opt.png)
+
+* We are still Starved
+  * For training, cost is still linear to the number of layers
+  * Need to book-keep results for the gradient calculation
+* Trade Computation with Memory
+  * Only store a few of the intermediate result
+  * Recompute the value needed during gradient calculation
+  * tf中需要显示添加 control dependency（指向希望执行的op前的节点）
+  * **Sublinear Memory Complexity**
+    * O(K) + O(N/K) ---> sqrt(N) memory cost plan
+
+![memory-opt-recursion](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/memory-opt-recursion.png)
+
+
+
+##### Lecture 10: Parallel Scheduling
+
+* Questions to be answered
+  * What are common patterns of parallelization
+  * How can we easily achieve these patterns
+  * What about dynamic style program 
+* Model Parallel Training
+  * Map parts of workload to different devices
+  * Require special dependency patterns (wave style)
+    * e.g. LSTM
+
+* Data Parallelism
+  * Train replicated version of model in each machine
+  * Synchronize the gradient
+    * control dependency: weight更新指向device forward（提前load data）
+* Goal of Scheduler Interface
+  * 串行的方式写程序，内部尽可能并行，有点像 C++ 编译器，只要没有更高层次的并行即可work
+  * Schedule any resources
+    * Data
+    * Random number generator
+    * Network communicator
+* DAG Graph based scheduler
+  * `engine.push(lambda op, deps=[])`
+  * tf使用，Useful when all results are immutable
+* Discussion: How to schedule the following ops
+  * Random number generator
+  * Memory recycling，类似的还有 Write After Read Mutation
+  * Cross device copy
+  * Send data over network channel
+* Mutation aware scheduler: solve these problems much easier than DAG based scheduler
+  * Tag each Resource
+  * Push Operation: 记录read/mutate的资源
+* Queue based Implementation of scheduler
+  * Like scheduling problem in OS
+  * Maintain a pending operation queue，再给每个资源维护一个queue
+  * Schedule new operations with event update
+
+##### Lecture 11: Distributed Training and Communication Protocols
+
+* Recap: Parallel Scheduling Engine
+* How to do Synchronization over Network
+  * Distributed Gradient Aggregation, Local Update
+
+![all-reduce](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/all-reduce.png)
+
+```python
+grad = gradient(net, w)
+for epoch, data in enumerate(dataset):
+  g = net.run(grad, in=data)
+  gsum = comm.allreduce(g, op=sum)
+  w -= lr * gsum / num_workers 
+```
+
+![network-topology](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/network-topology.png)
+
+* How to implement AllReduce
+  * Tree-Shape
+    * Logically form a reduction tree between nodes
+    * Aggregate to root then broadcast
+  * Ring
+    * Form a logical ring between nodes
+    * Streaming aggregation
+    * 算法：
+      * 先 reduce_scatter：Each node have correctly reduced result of one segment!
+      * 再 all_gather
+* with TF: TFOptimizer 的 ApplyGradient 方法更新梯度，易于直接使用TF原生与layerwise的Optimizer
+
+* AllReduce Libraries
+  * MPI offers efficient CPU allreduce
+  * dmlc/rabit: fault tolerant variant
+  * facebookincubator/gloo
+  * Parameter Hub: from UW
+  * NCCL: Nvidia’ efficient multiGPU collective
+* GPUDirect and RMDA
+  * 前者不经过网卡
+* NCCL: Nvidia’s Efficient Multi-GPU Collective
+  * Uses unified GPU direct memory accessing
+  * Each GPU launch a working kernel, cooperate with each other to do ring based reduction
+  * A single C++ kernel implements intra GPU synchronization and Reduction
+* Schedule Allreduce Asynchronously
+  * `B = comm.allreduce(A)`
+  * `engine.push( lambda: B.data=allreduce(A.data), read=[A.var], mutate=[B.var, comm.var])`
+* PS Interface for Data Parallel Training
+  * Synchronous: bulk synchronous parallel (BSP)
+  * Asynchronous
+    * gradient staleness
+  * Integrate Schedule with Networking using Events
+    * Use the callback to notify engine that data receive is finished
+
+```python
+grad = gradient(net, w)
+for epoch, data in enumerate(dataset):
+  g = net.run(grad, in=data)
+  ps.push(weight_index, g)
+  w = ps.pull(weight_index)
+```
+
+* The Cost of PS Model: All to All Pattern
+  * Each worker talks to all servers
+  * Shard the parameters over different servers
+* Discussion: What’s Special about Communication Requirements for Model Parallel Training?
+  * Track dependency correctly
+  * Resolve resource contention and allocation
+  * Some special requirement on channel
+    * Allreduce: ordered call
+
+```python
+for i in range(num_layers):
+  for t in range(num_time_stamp):
+    out, state = layer[i].forward(data[i][t], state)
+    data[i+1][t] = out.copyto(device[i])
+```
+
+
+
+##### Lecture 12: Model Serving
+
+* Model Compression
+  * Tensor decomposition
+    * Matrix decompostion
+    * "Compression of deep convolutional neural networks for fast and low power mobile applications." ICLR (2016)
+      * finetune减小效果损失
+  * Network pruning
+    * "Deep Compression: Compressing Deep Neural Networks with Pruning, Trained Quantization and Huffman Coding." ICLR (2016)
+    * ![network-pruning](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/network-pruning.png)
+    * ![network-pruning-2](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/network-pruning-2.png)
+  * Quantization
+    * pruning + quantization 效果最好（相比两者的单独使用以及SVD），大道至简？
+    * XNOR-Net: binary weights/binary input and weights
+    * quantize during training
+  * Smaller model
+    * Knowledge distillation: "Fitnets: Hints for thin deep nets." ICLR (2015)
+  * Others
+    * Specialized hardware for sparse models
+      * Song Han, et al. “EIE: Efficient Inference Engine on Compressed Deep Neural Network.” ISCA 2016
+    * Accuracy and resource trade-off
+      * Han, Seungyeop, et al. "MCDNN: An Approximation-Based Execution Framework for Deep Stream Processing Under Resource Constraints." MobiSys (2016).
+
+* Serving system
+
+  *  Goals:
+
+    * High flexibility for writing applications
+    * High efficiency on GPUs
+    * Satisfy latency SLA
+
+  * Challenges
+
+    * Provide common abstraction for different frameworks
+    * Achieve high efficiency
+      * Sub-second latency SLA that limits the batch size
+      * Model optimization and multi-tenancy causes long tail
+
+  * "Nexus: efficient neural network serving system"
+
+    * Frontend runtime library allows arbitrary app logic
+
+    * Packing models to achieve higher utilization
+
+    * A GPU scheduler allows new batching primitives
+
+    * A batch-aware global scheduler allocates GPU cycles for each model
+
+      * For high request rate, high latency SLA workload, saturate GPU efficiency by using large batch size
+
+    * ```python
+      class ModelHandler:
+        # return output future
+        def Execute(input)
+      class AppBase:
+        # return ModelHandler，传入SLA应该是为了方便调度
+        def GetModelHandler(framework, model, version, latency_sla)
+        # Load models during setup time, implemented by developer
+        def Setup()
+        # Process requests, implemented by developer
+        def Process(request)
+      ```
+
+  * 按model类型分类：
+
+    * 高SLA高QPS：large batch size
+    * 低SLA高QPS：optimized split batching
+      * 每个op可以有不一样的batch size...... 优化最大吞吐。这样不会增加内存带宽消耗么？   GDR可以减少到一次
+    * 高SLA低QPS：execute multiple models on one GPU
+      * Execute multiple models in round-robin fashion，可最小化等batch的latency
+    * 低SLA低QPS：Solution depends
+      * If saturate GPU in temporal domain due to low latency: allocate dedicated GPU(s)
+      * If not: can use multi-batching to share GPU cycles with other models
+
+    * ![split-batching](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/split-batching.png)
+
+    * Prefix batching for model specialization：类似于sparse/dense op分离的思路
+
+  * Meet Latency SLA: Global scheduler
+
+    * Best-fit decreasing algorithms
 
 
 

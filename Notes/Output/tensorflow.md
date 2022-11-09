@@ -1,8 +1,6 @@
-## TensorFlow
-
 [toc]
 
-### Op 学习
+### 使用相关
 
 #### 环境配置
 
@@ -28,7 +26,7 @@ nvcc --version
 ```
 
 * 关于 tf 的 ABI
-  * 社区版的 tf 要用 abi=0 的 lib.so；自己编译的默认 abi=1，要用 abi=0 的 lib.so
+  * 社区版的 tf 要用 abi=0 的 lib.so；自己编译的默认 abi=1，要用 abi=1 的 lib.so
 * FAQ
   * unsupported GNU version! gcc versions later than 7 are not supported
     * cuda 版本要用 10.1 以上的
@@ -125,24 +123,7 @@ with tf.Session() as sess:
 # observe the output of this cell: the counts of parameter is indeed 10.2K!
 ```
 
-
-
-### TensorFlow Internals
-
-#### chpt1: 介绍
-
-概念：数据流图、DAG、本地设备集
-
-DistBelief: 异步SGD（model replicas），主从结构
-
-TensorFlow: 延迟计算、原子OP、抽象设备（CPU、GPU、ASIC）、抽象任务（基于任务的PS）
-
-
-#### chpt2: 编程环境
-
-https://www.tensorflow.org/install/source#ubuntu
-
-#### 代码阅读
+### 代码阅读
 
 [tensorflow源码解析-阿里云文章](https://developer.aliyun.com/profile/x6ehajer74kvo/highScore_1?spm=a2c6h.13262185.profile.4.139d6b06roaEa7)
 
@@ -153,13 +134,37 @@ https://www.tensorflow.org/install/source#ubuntu
 * 适可而止，BFS阅读
 
 
-##### 代码风格
+#### 代码风格
 
 * TF_GUARDED_BY、TF_EXCLUSIVE_LOCKS_REQUIRED
   * tsl/platform/thread_annotations.h
   * [现代C++开发之线程安全注解 by 陈硕](https://zhuanlan.zhihu.com/p/47837673)
 
-##### core/platform/refcount.h
+#### python
+
+* dropout
+
+  * keras/layers/core.py: `Class Dropout(Layer)` -> `nn.dropout`
+
+  * ops/nn_ops.py: _dropout()
+    * 注意是在training时进行scale，推理时忽略
+* clip_by_global_norm
+  * https://stackoverflow.com/questions/44796793/difference-between-tf-clip-by-value-and-tf-clip-by-global-norm-for-rnns-and-how
+
+
+#### core/grappler/optimizers
+
+* meta_optimizer
+  * https://web.stanford.edu/class/cs245/slides/TFGraphOptimizationsStanford.pdf MUSTDO
+
+
+```c++
+```
+
+
+
+
+#### core/platform/refcount.h
 
 ```c++
 // Helper class to unref an object when out-of-scope.
@@ -180,7 +185,7 @@ class ScopedUnref {
 
 
 
-##### core/platform/default/logging.h
+#### core/platform/default/logging.h
 
 DCHECK_EQ
 
@@ -194,7 +199,12 @@ IsInitialized()
 
 RefCountIsOne()
 
-##### cc/saved_model/loader.cc
+#### core/util/cuda_solvers.cc
+
+* GpuSolverHandle
+  * 显存不够直接挂
+
+#### cc/saved_model/loader.cc
 
 ```c++
 // We disallow calls to Session::Extend() on the returned session, so we can
@@ -213,7 +223,7 @@ https://www.cnblogs.com/jicanghai/p/9535808.html
 
 `REGISTER_MEM_ALLOCATOR("DefaultCPUAllocator", 100, CPUAllocatorFactory);`
 
-##### tsl/framework/allocator_registry.*
+#### tsl/framework/allocator_registry.*
 
 * AllocatorFactoryRegistry
 
@@ -225,11 +235,77 @@ https://www.cnblogs.com/jicanghai/p/9535808.html
                                      priority, factory)
 ```
 
+### 总体介绍
 
+[一篇很好的回答，梳理tf的核心框架思路](https://www.zhihu.com/question/51216952/answer/124708405) MUSTDO
+
+
+
+tf.data: A Machine Learning Data Processing Framework https://arxiv.org/pdf/2101.12127.pdf MUSTDO
+
+
+
+#### 图优化相关
+
+计算图中的每个节点->对应一个tensorflow op->在不同的device上对应不同kernel->gpu kernel调用cuda/cudnn/cublas进行gpu计算
+
+![constant_folding](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/constant_folding.png)
+
+
+
+* [XLA](https://www.tensorflow.org/xla)
+  * 优化内容
+    * 设备无关优化
+      * Common expression elimination等
+      * Op fusion
+      * Memory allocation
+    * 设备相关优化和代码生成
+  * `TF_XLA_FLAGS="--tf_xla_auto_jit=2"`
+  * jit编译：`XlaCompile Op` --> `XlaRun Op` ，warmup缓存以输入shape为key的图
+* Tvm
+  * tf与tvm的协同：用custom_op加载tvm生成的子图
+  * tvm schedule严格安排了多线程的利用，如果引入inter_op并行，会破坏schedule的安排，所以思路是做单个op的充分并行
+
+* [Inter-op/Intra-op parallelism](https://stackoverflow.com/questions/41233635/meaning-of-inter-op-parallelism-threads-and-intra-op-parallelism-threads)
+  * Intra是单个op并行；inter是多个无相互依赖的op共享thread pool并行
+
+
+
+### TensorFlow Internals
+
+#### chpt1: 介绍
+
+概念：数据流图、DAG、本地设备集
+
+DistBelief: 异步SGD（model replicas），主从结构
+
+TensorFlow: 延迟计算、原子OP、抽象设备（CPU、GPU、ASIC）、抽象任务（基于任务的PS）
+
+
+#### chpt2: 编程环境
+
+https://www.tensorflow.org/install/source#ubuntu
 
 
 
 #### 基本 API 用法
+
+##### 写模型
+
+```python
+# Create the model
+x = tf.placeholder(tf.float32, [None, 784]) 
+W = tf.Variable(tf.zeros([784, 10]))
+y = tf.nn.softmax(tf.matmul(x, W))
+
+# Define loss and optimizer
+y_ = tf.placeholder(tf.float32, [None, 10])
+cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * tf.log(y), reduction_indices=[1]))
+
+learning_rate = 0.5
+W_grad = tf.gradients(cross_entropy, [W])[0]
+train_step = tf.assign(W, W - learning_rate * W_grad)
+```
 
 ##### Import Graph
 
@@ -250,8 +326,6 @@ with graph.as_default():
 ```python
 tf.config.threading.set_inter_op_parallelism_threads(args.tf_cpu_count)
 tf.config.threading.set_intra_op_parallelism_threads(args.tf_cpu_count)
-
-
 ```
 
 ##### build tensor and run session

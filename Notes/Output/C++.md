@@ -65,12 +65,10 @@ constexpr std::size_t arraySize(T (&)[N]) noexcept // below on
 	return N; // and
 }// noexcept
 
-int keyVals[] = { 1, 3, 7, 9, 11, 22, 35 };      // keyVals has
-                                                    // 7 elements
-int mappedVals[arraySize(keyVals)]; // so does // mappedVals
+int keyVals[] = { 1, 3, 7, 9, 11, 22, 35 };      // keyVals has 7 elements
+int mappedVals[arraySize(keyVals)]; // so does mappedVals
 
-std::array<int, arraySize(keyVals)> mappedVals; // mappedVals' 
-																								// size is 7
+std::array<int, arraySize(keyVals)> mappedVals; // mappedVals' size is 7
 ```
 
 ##### Item 2: Understand **auto** type deduction.

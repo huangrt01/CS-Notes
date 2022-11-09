@@ -11,6 +11,8 @@ bool(int(str(0))) -> False
 #### 数据结构
 
 ```python
+range和xrange的区别：xrange返回生成器，可以转化成list
+
 list.extend(list)
 list.append(item)
 
@@ -26,10 +28,11 @@ dict.get(key, 'default')
 
 # set
 unique_elements = list(set([2,1,2])) # Remove duplicates
+myset.remove(elem)
+if not myset: # 判断set是否空
 
 # set operations: https://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html
 &, |, -, ^
-
 ```
 #### collections
 
@@ -461,6 +464,13 @@ from functools import reduce
 nparam = reduce(lambda x, y: int(x) * int(y), shape, 1)
 ```
 
+#### future
+
+https://python-future.org/quickstart.html: python2到python3的迁移
+
+```python
+from __future__ import absolute_import, division, print_function
+```
 
 #### imp
 
@@ -582,7 +592,9 @@ import pdb
 pdb.set_trace()
 ```
 
-
+```python
+p dir(var)
+```
 
 
 #### random
@@ -684,7 +696,9 @@ mock_sleep.return_value = True
 
 ```shell
 # sudo pip install nose
-nosetests -v autodiff_test.py --pdb
+nosetests -v autodiff_test.py --pdb --nocapture
+
+--nocapture # print output
 ```
 
 
