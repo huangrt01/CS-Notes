@@ -2,6 +2,20 @@
 
 [toc]
 
+### chpt 3 File I/O
+
+* 3.3 open and openat functions
+  * `openat`: 多一个参数fd，能相对路径打开文件
+    * fd=AT_FDCWD，相对当前路径
+    * it provides a way to avoid time-of-check- to-time-of-use (TOCTTOU) errors
+  * Filename and Pathname Truncation
+    * Most modern file systems support a maximum of 255 characters for filenames.
+    * If `_POSIX_NO_TRUNC` is in effect, errno is set to `ENAMETOOLONG`, and an error status is returned if any filename component of the pathname exceeds `NAME_MAX`.
+
+
+
+
+
 * [signal(SIGPIPE, SIG_IGN)](https://blog.csdn.net/weiwangchao_/article/details/38901857)
 
   * 在linux下写socket的程序的时候，如果尝试send到一个disconnected socket上，就会让底层抛出一个SIGPIPE信号。这个信号的缺省处理方法是退出进程，大多数时候这都不是我们期望的。因此我们需要重载这个信号的处理方法。

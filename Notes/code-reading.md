@@ -5,6 +5,13 @@
 
 * 代码行数统计工具 [cloc](https://github.com/AlDanial/cloc)
 
+* 树形文件结构
+
+```shell
+tree --charset=ascii -I "bin|unitTest" -P "*.[ch]|*.[ch]pp"
+tree -d
+```
+
 * grep, [ack](https://beyondgrep.com/), [ag](https://github.com/ggreer/the_silver_searcher) and [rg](https://github.com/BurntSushi/ripgrep)
   * grep -R can be improved in many ways, such as ignoring .git folders, using multi CPU support, &c
 
@@ -19,7 +26,39 @@ rg foo -A 5
 rg --stats PATTERN
 ```
 
+#### cpptree & calltree
+
 * [C++阅码神器cpptree.pl和calltree.pl的使用 - satanson的文章 - 知乎](https://zhuanlan.zhihu.com/p/339910341)
+  * https://github.com/satanson/cpp_etudes/blob/master/calltree.pl
+  * 代码阅读的切入点不一，应该视系统的开发动机和workload而定. 比如：
+    * 严格存储系统: 搜fsync, fdatasync, sync_file_range, wal, prepare, commit；
+    * 基于volcano的执行引擎：搜ExecNode， processor， fragment；
+    * JIT的源码：搜optimize， phi， compile， interrupt， jit, vm, virtualmachine, x86, x86_64；
+    * SQL分析器：搜parse， rewrite， plan，analyze, ast;
+    * 网络库： 搜epoll，reuse_port, listen, accept, write, read, off/in-eventloop.
+    * 推荐系统：搜fetch、inference
+  
+
+```shell
+cpptree '\w+' '' 1 3
+cpptree '(?i)\w+' '(?i)poll' 1 4
+
+calltree '(?i)(dispatch|submit|queue|put|push)' '' 1 1 1
+```
+
+* [如何查看大型工程的源代码？- satanson的回答 - 知乎](https://www.zhihu.com/question/21499539/answer/1958299570)
+  * 几条关键原则
+    * 方法很重要, 但是看大型项目的代码, 态度+意愿+决心更加重要. 学习非线性, 突破在刹那. 学习方法都是ok的，学习结果的差异有赖于非理性因素. 学习本身和实践不同，是一个很唯心的过程. 
+    * 把代码手动编译, 手动部署起来，跑起来.  手动编译可以帮助后面添加日志打印观察输出；手动部署而非官方提供的一键部署, 这样做的好处是，可以感知系统架构, 感知每个组件角色和职责, 感知彼此之间的交互关系.  
+    * 找一个经典的workload让系统执行. 比如tpc-h的Q5用来研究OLAP系统的代码就是一个很好例子. 在源码中添加日志打印, 查看线程, 用perf工具看栈，用`gdb -q -batch -ex "thread apply all bt"`看栈, 看栈的方法比较多.  看配置文件的生效方式用`strace -e 'open' -e 'openat'`; 在/proc/pid/下面多看看, 可以发现不少关键信息.  用tree命令看看系统的数据, 元数据, 日志目录的组织形式.  形成自己的使用偏好.
+      * 看栈：我的【dotfiles】-aliases-pstack[full]，`sudo pstack[full] -p $pid`
+    * 添加日志是一个屡试不爽的好方法，添加backtrace. C++项目的backtrace,  笔者曾经在看arangodb的时候，编写过，主要用backtrace, bactrace_symbols和demangle.
+      * TODO：试用backtrace代码
+  * 看代码myth
+    * 学习代码的最好的方式，就是找一个磨刀石同学，拉到小黑板面前, 你讲他听，他攻你守
+    * 看代码是一种认知行为. 什么是认知，记忆+识别+重现，就是你记住了一个东西，当完全一样或者相似物出现的时候，可以识别并且归纳为一类，你可以通过语言文字把这个东西转述给别人. 评价是高于认知的，实践是高于评价的. 因此还需要评价和实践夯实学习，还需要咀嚼反刍修正认知.
+  * 看代码的方法学
+    * demo系统、增量学习、实践试错、磨刀石
 
 
 
@@ -258,97 +297,346 @@ sha256sum /tmp/big-received.txt
 https://github.com/chenshuo/muduo
 
 
-#### 日志
-* base
 
-  * Mutex
+#### 代码结构
 
-    * ThreadAnnotation
+* `**` 表示用户不可见的内部类
+* 对于使用 muduo 库而言，只需要掌握 5 个关键类:Buffer、 EventLoop、TcpConnection、TcpClient、TcpServer
+  * 用户不可见类通过前向声明技术隐藏，比如 TcpClient.h 前向声明 Connector
 
-  * Logging: 日志前端
+```
+// 主体
+muduo 
+\-- net
+      |** Acceptor.{h,cc}                 接受器，用于服务端接受连接
+      |-- Buffer.{h,cc}                   缓冲区，非阻塞IO必备
+      |-- Callbacks.h
+      |-- Channel.{h,cc}                  用于每个Socket连接的事件分发
+      |-- CMakeLists.txt
+      |** Connector.{h,cc}                连接器，用于客户端发起连接
+			|-- Endian.h                        网络字节序与本机字节序的转换
+      |-- EventLoop.{h,cc}                事件分发器
+      |-- EventLoopThread.{h,cc}          新建一个专门用于EventLoop的线程
+      |-- EventLoopThreadPool.{h,cc}      muduo默认多线程IO模型
+      |-- InetAddress.{h,cc}              IP地址的简单封装
+      |** Poller.{h,cc}                   IO multiplexing的基类接口
+			|** poller                          IO multiplexing的实现
+      |   |-- DefaultPoller.cc            根据环境变量MUDUO_USE_POLL选择后端
+      |   |-- EPollPoller.{h,cc}          基于epoll(4)的IO multiplexing后端
+      |   \-- PollPoller.{h,cc}           基于poll(2)的IO multiplexing后端
+      |** Socket.{h,cc}                   封装Sockets描述符，负责关闭连接
+      |** SocketsOps.{h,cc}               封装底层的Sockets API
+      |-- TcpClient.{h,cc}                TCP客户端
+      |-- TcpConnection.{h,cc}            最大的一个类，有300多行
+      |-- TcpServer.{h,cc}                TCP服务端
+			|-- tests                           简单测试
+      |** Timer.{h,cc}                    以下几个文件与定时器回调相关
+      |-- TimerId.h
+      \** TimerQueue.{h,cc}
+
+// 网络附属库，使用的时候需要链接相应的库，例如 -lmuduo_http、-lmuduo_inspect 等等
+// HttpServer 和 Inspector 暴露出一个 http 界面，用于监控进程的状态，类似于 Java JMX(§9.5)
+
+muduo 
+`-- net
+    |-- http         不打算做成通用的HTTP服务器，这只是简陋而不完整的HTTP协议实现
+    |   |-- HttpContext.h
+    |   |-- HttpRequest.h
+    |   |-- HttpResponse.h
+    |   |-- HttpServer.h
+    |   `-- tests              示范如何在程序中嵌入HTTP服务器
+    |-- inspect                基于HTTP协议的窥探器，用于报告进程的状态
+    |   |-- Inspector.h
+    |   |-- PerformanceInspector.h
+    |   |-- ProcessInspector.h
+    |   |-- SystemInspector.h
+    |   `-- tests
+    |-- protobuf
+    |   |-- BufferStream.h
+    |   `-- ProtobufCodecLite.h
+    |-- protorpc               简单实现Google Protobuf RPC
+    |   |-- google-inl.h
+    |   |-- RpcChannel.h
+    |   |-- RpcCodec.h
+    |   `-- RpcServer.h
+```
+
+```shell
+cpptree '(?i)\w+' '' 1 3
+
+# 找epoll调用、EventLoop的创建
+calltree '(?i)epoll' '' 1 1 3
+calltree '(?i)(create|new|make)\w*(poller|eventloop)' '' 1 1 
+cpptree '(?i)EventLoop' '' 1 4
+
+# off-EventLoop处理
+calltree '(?i)loop' '' 1 1 1
+calltree '(?i)in.*loop' '' 1 1 1
+calltree '(?i)(dispatch|submit|queue|put|push)' '' 1 1 1
+calltree 'read' '' 1 1 2
+calltree '(?i)handleRead' '' 1 1 2
+calltree '(?i)handleRead' '' 0 1 1
+
+ag 'TcpConnection::handleRead'
+vim net/TcpConnection.cc +54
+
+# 找callback
+ag 'messageCallback_'
+calltree '(?i)^set(\w+)callback' '' 1 1 1
+# 找callback触发点
+calltree '(?i)callback_' '' 1 1 2
+
+# 是否支持多个Acceptor
+calltree '(?i)reuse.*port' '' 1 1 3
+```
+
+
+
+
+
+#### net's interface
+
+* Buffer 仿 Netty ChannelBuffer 的 buffer class，数据的读写通过 buffer 进行。 用户代码不需要调用 read(2)/write(2)，只需要处理收到的数据和准备好要发 送的数据(§ 7.4)。
+  * findCRLF(): `const char Buffer::kCRLF[] = "\r\n";` , `std::search`
+
+* InetAddress 封装 IPv4 地址(end point)
+  * 注意，它不能解析域名，只认 IP 地址。因为直接用 gethostbyname(3) 解析域名会阻塞 IO 线程
+  * static函数resolve
+* EventLoop 事件循环(反应器 Reactor)，每个线程只能有一个 EventLoop 实体， 它负责 IO 和定时器事件的分派。
+  * 用 eventfd(2) 来异步唤醒，这有别于传统的用一对 pipe(2) 的办法。
+  * 用 TimerQueue 作为计时器管理，用 Poller 作为 IO multiplexing。
+* EventLoopThread 启动一个线程，在其中运行 EventLoop::loop()。
+  * getNextLoop: round-robin给connection分配loop
+
+* TcpConnection 整个网络库的核心，封装一次 TCP 连接，注意它不能发起连接
+  * `boost::any context_;`
+  * `HttpContext* context = boost::any_cast<HttpContext>(conn->getMutableContext());`
+
+* TcpClient 用于编写网络客户端，能发起连接，并且有重试功能
+* TcpServer 用于编写网络服务器，接受客户的连接。
+
+##### Note
+
+* TcpConnection 的生命期依靠 `shared_ptr` 管理(即用户和库共同控制)。Buffer 的生命期由 TcpConnection 控制。其余类的生命期由用户控制
+* Buffer 和 InetAddress 具有值语义，可以拷贝;其他 class 都是对象语义，不可以拷贝
+
+#### net's internal
+
+- Channel 是 selectable IO channel，负责注册与响应 IO 事件，注意它不拥有 file descriptor。它是 Acceptor、Connector、EventLoop、TimerQueue、TcpConnection 的成员，生命期由后者控制。
+- Socket是一个RAIIhandle，封装一个filedescriptor，并在析构时关闭fd。它是 Acceptor、TcpConnection 的成员，生命期由后者控制。EventLoop、TimerQueue 也拥有 fd，但是不封装为 Socket class。
+- SocketsOps 封装各种 Sockets 系统调用。
+- Poller 是 PollPoller 和 EPollPoller 的基类，采用“电平触发”的语意。它是 EventLoop 的成员，生命期由后者控制。
+  - 维护channels，注意hasChannel的条件，考虑了fd channel变化
+  - interface: poll, updateChannel, removeChannel
+    - poll: set_revents
+      - poll和epoll的逻辑区别：
+        - epoll的event里存了channel指针
+        - poll用channel的idx维护其在pollfds中的index
+
+  - Internal 
+    - `Timestamp now(Timestamp::now()); ... return now;`
+    - `update(): event.events = channel->events(); event.data.ptr = channel;` 
+
+* PollPoller 和 EPollPoller 封装 poll(2) 和 epoll(4) 两种 IO multiplexing 后端。poll 的存在价值是便于调试，因为 poll(2) 调用是上下文无关的，用 strace(1) 很容易知道库的行为是否正确。
+
+- Connector 用于发起 TCP 连接，它是 TcpClient 的成员，生命期由后者控制。
+- Acceptor 用于接受 TCP 连接，它是 TcpServer 的成员，生命期由后者控制。
+  - TcpServer::kReusePort 控制 Acceptor 的 reuse port 开启
+
+- TimerQueue 用 timerfd 实现定时，这有别于传统的设置 poll/epoll_wait 的等待时长的办法。TimerQueue 用 std::map 来管理 Timer，常用操作的复杂度是 O(log N )，N 为定时器数目。它是 EventLoop 的成员，生命期由后者控制。
+- EventLoopThreadPool 用于创建 IO 线程池，用于把 TcpConnection 分派到某个 EventLoop 线程上。它是 TcpServer 的成员，生命期由后者控制。
+
+##### Note
+
+* 关于callback
+  * 从read事件触发，到一路回调下来，在回调里把消息给工作线程池处理. 工作线程池处理完成后, 把响应给回到EventLoop，然后发出去
+
+#### 网络附属库
+
+* net/http
+  * `void defaultHttpCallback(const HttpRequest&, HttpResponse* resp)`
+
+#### examples
+
+```
+examples
+|-- ace
+|   |-- logging
+|   `-- ttcp
+|-- asio            从 Boost.Asio 移植的例子
+|   |-- chat          多人聊天的服务端和客户端，示范打包和拆包(codec) 
+|   `-- tutorial    一系列 timers
+|-- cdns            基于 c-ares 的异步 DNS 解析
+|-- curl            基于 curl 的异步 HTTP 客户端
+|-- fastcgi
+|-- filetransfer    简单的文件传输，示范完整发送 TCP 数据
+|   `-- loadtest
+|-- hub             一个简单的 pub/sub/hub 服务，演示应用级的广播
+|-- idleconnection  踢掉空闲连接
+|-- maxconnection   控制最大连接数
+|-- memcached
+|   |-- client
+|   `-- server
+|-- multiplexer     1:n 串并转换服务
+|-- netty           从 JBoss Netty 移植的例子
+|   |-- discard        可用于测试带宽，服务器可多线程运行
+|   |-- echo           可用于测试带宽，服务器可多线程运行
+|   `-- uptime         带自动重连的 TCP 长连接客户端
+|-- pingpong        pingpong 协议，用于测试消息吞吐量
+|-- procmon
+|-- protobuf        Google Protobuf 的网络传输示例
+|   |-- codec       	自动反射消息类型的传输方案
+|   |-- resolver			RPC 示例，实现 Sudoku 服务
+|   |-- rpc
+|   |-- rpcbalancer
+|   `-- rpcbench
+|-- roundtrip				测试两台机器的网络延时与时间差
+|-- shorturl				简单的短址服务
+|-- simple					5 个简单网络协议的实现
+|   |-- allinone
+|   |-- chargen				RFC 864，可测试带宽
+|   |-- chargenclient
+|   |-- daytime				RFC 867
+|   |-- discard				RFC 863
+|   |-- echo					RFC 862
+|   |-- time					RFC 868
+|   `-- timeclient
+|-- socks4a					Socks4a 代理服务器，示范动态创建 TcpClient
+|-- sudoku					数独求解器，示范 muduo 的多线程模型
+|-- twisted					从 Python Twisted 移植的例子
+|   `-- finger
+|-- wordcount
+`-- zeromq					从 ZeroMQ 移植的性能(消息延迟)测试
+
+# http://github.com/chenshuo/muduo-udns:基于 UDNS 的异步 DNS 解析
+# http://github.com/chenshuo/muduo-protorpc:新的 RPC 实现，自动管理对象生命期
+```
+
+* ping_pong：击鼓传花，书 6.5.2
+  * `server.setThreadNum(threadCount);`
+  * Client多线程：`threadPool_.getNextLoop()`
+    * 每个Session配一个TcpClient，Session存Client指针方便回调
+  * on_disconnect: `conn->getLoop()->queueInLoop(std::bind(&Client::quit, this));`
+  * `bench.cc`: run_once, 然后调用channel的disableAll()和remove()方法
+  * 为了运行测试
+    * 调高每个进程能打开的文件数，比如设为 256000
+    * `conn->setTcpNoDelay(true);`
   
-    * 每次LOG_INFO都是一个新的Logging对象，对象析构时finish()添加换行符，然后g_output、g_flush
-  
-    * enum最后加一个NUM_LOG_LEVEL，便于定义定长数组给编译器做优化
-  
-    * SourceFile：每行日志消息的源文件名部分采用了编译期计算来获得 basename，避免运行期 strrchr(3) 开销。这里利用了 gcc 的内置函数。
-  
-      * ```c++
-        template<int N>
-        SourceFile(const char (&arr)[N]) : data_(arr), size_(N-1) {}
-        
-        SourceFile(__FILE__)
-        ```
-  
-    * helper class T: for known string length at compile time，定义了LogStream的<<
-    * `Impl::formatTime()`: snprintf
-      * 时间戳字符串中的日期和时间两部分是缓存的，一秒之内的多条日志只需重新格式化微秒部分，利用了`__thread`
-    * Fatal log会core在logger析构里，有改进空间
-    * 在线调整日志级别：gdb内 `call (void)'muduo::Logger::setLogLevel'(3)`
-  
-  * LogFile: 日志后端
-  
-    * append, flush, RollFile
-  
-      * `append->append_unlocked->AppendFile::append,`
-      * 3s flush一次，24h rollfile一次
-  
+* shorturl: SO_REUSEPORT
+
+* simple/echo
+
+  * EchoServer不需要继承任何类，在构造函数里给TcpServer注册几个回调函数
+
+  * ```shell
+    ./echoserver_unittest
+    ./echoclient_unittest 0.0.0.0
+    ```
+
+* sudoku：详解muduo多线程模型
+
+  * server_basic.cc: 方案5
+  * server_threadpool.cc：方案8
+  * server_multiloop.cc: 方案9
+    * `EventLoopThreadPool`
+    * 方案5 + `server_.setThreadNum(numThreads);` 
+  * 方案11: 方案8 + `server_.setThreadNum(numThreads);` 
+
+* twisted/finger: 若干个基础例子
+
+
+
+#### logging
+base文件夹中
+
+* Mutex
+
+  * ThreadAnnotation
+
+* Logging: 日志前端
+
+  * 每次LOG_INFO都是一个新的Logging对象，对象析构时finish()添加换行符，然后g_output、g_flush
+
+  * enum最后加一个NUM_LOG_LEVEL，便于定义定长数组给编译器做优化
+
+  * SourceFile：每行日志消息的源文件名部分采用了编译期计算来获得 basename，避免运行期 strrchr(3) 开销。这里利用了 gcc 的内置函数。
+
     * ```c++
-      char name[256] = { '\0' };
-      strncpy(name, argv[0], sizeof name - 1);
-      g_logFile.reset(new muduo::LogFile(::basename(name), 200*1000));
-      ```
-  
-    * FileUtil::AppendFile
-  
-      * `::setbuffer(fp_, buffer_, sizeof buffer_)`
-      * `::fwrite_unlocked`
+      template<int N>
+      SourceFile(const char (&arr)[N]) : data_(arr), size_(N-1) {}
       
-    * FileUtil::ReadSmallFile, `::fstat` , `::read`
-  
-  * LogStream
-  
-    * muduo 没有用标准库中的 iostream，这主要是出于性能原因(§ 11.6.6)
-  
-    * FixedBuffer
-  
-      * `typedef detail::FixedBuffer<detail::kSmallBuffer> Buffer;`
-      * LogStream用4KB，AsyncLogging用4MB (至少1k条日志)
-  
-    * convert, formatSI, formatIEC
-  
-    * 支持 `LogStream& operator<<(LogStream& s, const Fmt& fmt);`
-  
-    * ```C
-      // TODO: better itoa.
-      #if defined(__clang__)
-      #pragma clang diagnostic ignored "-Wtautological-compare"
-      #else
-      #pragma GCC diagnostic ignored "-Wtype-limits"
-      #endif
+      SourceFile(__FILE__)
       ```
-  
-  * AsyncLogging: 将日志数据从多个前端高效地传输到后端
-  
-    * 后台线程，用latch确保启动
-    * [double buffering技术](https://en.wikipedia.org/wiki/Multiple_buffering)
-      * `currentBuffer_`满了再notify后端做IO
-      * 默认后端3s写一次，非常规的 condition variable 用法，没有使用 while 循环，而且等待时间有上限
-      * `buffers_`和`BuffersToWrite`指针交换，持有锁的时间很短
-      * `nextBuffer_`和`currentBuffer_`的创建都由后台线程做
-      * 考虑Page_fault，后端尽量将最早的Buffer归还给前端
-  
-    * 拥塞控制
-      * 如果前端很忙，也可能给`currentBuffer_`分配内存；拥塞控制由后端进行，保证后台线程循环速度，间接减轻前端压力
-      * 处理日志堆积的方法很简单:直接丢掉多余的日志 buffer，以腾出内存
-  
-    * 优化相关：
-      * 前后端copy日志比传递日志指针要快，不用每次内存分配
-      * 锁：改进方向可以像 Java 的 ConcurrentHashMap 那样用多个桶子(bucket)，前端写日志的时候再按线程 id 哈希到 不同的 bucket 中，以减少 contention
-      * 拥塞控制：`nextBuffer_` 替换为`emptyBuffers_`
-      * Make the logging thread a lower priority so it won't starve the main application thread.
-      * 另可参考 http://highscalability.com/log-everything-all-time
-  
+
+  * helper class T: for known string length at compile time，定义了LogStream的<<
+  * `Impl::formatTime()`: snprintf
+    * 时间戳字符串中的日期和时间两部分是缓存的，一秒之内的多条日志只需重新格式化微秒部分，利用了`__thread`
+  * Fatal log会core在logger析构里，有改进空间
+  * 在线调整日志级别：gdb内 `call (void)'muduo::Logger::setLogLevel'(3)`
+
+* LogFile: 日志后端
+
+  * append, flush, RollFile
+
+    * `append->append_unlocked->AppendFile::append,`
+    * 3s flush一次，24h rollfile一次
+
+  * ```c++
+    char name[256] = { '\0' };
+    strncpy(name, argv[0], sizeof name - 1);
+    g_logFile.reset(new muduo::LogFile(::basename(name), 200*1000));
+    ```
+
+  * FileUtil::AppendFile
+
+    * `::setbuffer(fp_, buffer_, sizeof buffer_)`
+    * `::fwrite_unlocked`
+    
+  * FileUtil::ReadSmallFile, `::fstat` , `::read`
+
+* LogStream
+
+  * muduo 没有用标准库中的 iostream，这主要是出于性能原因(§ 11.6.6)
+
+  * FixedBuffer
+
+    * `typedef detail::FixedBuffer<detail::kSmallBuffer> Buffer;`
+    * LogStream用4KB，AsyncLogging用4MB (至少1k条日志)
+
+  * convert, formatSI, formatIEC
+
+  * 支持 `LogStream& operator<<(LogStream& s, const Fmt& fmt);`
+
+  * ```C
+    // TODO: better itoa.
+    #if defined(__clang__)
+    #pragma clang diagnostic ignored "-Wtautological-compare"
+    #else
+    #pragma GCC diagnostic ignored "-Wtype-limits"
+    #endif
+    ```
+
+* AsyncLogging: 将日志数据从多个前端高效地传输到后端
+
+  * 后台线程，用latch确保启动
+  * [double buffering技术](https://en.wikipedia.org/wiki/Multiple_buffering)
+    * `currentBuffer_`满了再notify后端做IO
+    * 默认后端3s写一次，非常规的 condition variable 用法，没有使用 while 循环，而且等待时间有上限
+    * `buffers_`和`BuffersToWrite`指针交换，持有锁的时间很短
+    * `nextBuffer_`和`currentBuffer_`的创建都由后台线程做
+    * 考虑Page_fault，后端尽量将最早的Buffer归还给前端
+
+  * 拥塞控制
+    * 如果前端很忙，也可能给`currentBuffer_`分配内存；拥塞控制由后端进行，保证后台线程循环速度，间接减轻前端压力
+    * 处理日志堆积的方法很简单:直接丢掉多余的日志 buffer，以腾出内存
+
+  * 优化相关：
+    * 前后端copy日志比传递日志指针要快，不用每次内存分配
+    * 锁：改进方向可以像 Java 的 ConcurrentHashMap 那样用多个桶子(bucket)，前端写日志的时候再按线程 id 哈希到 不同的 bucket 中，以减少 contention
+    * 拥塞控制：`nextBuffer_` 替换为`emptyBuffers_`
+    * Make the logging thread a lower priority so it won't starve the main application thread.
+    * 另可参考 http://highscalability.com/log-everything-all-time
+
 * tests
 
   * LogFile_test：使用示例
@@ -361,13 +649,37 @@ https://github.com/chenshuo/muduo
 
   * 线程 id 预先格式化为字符串，`CurrentThread::tidString()`
 
-#### 使用
+#### Scripts
 
 ```shell
-sudo apt install g++ cmake make libboost-dev
+# 依赖，参考.travis.yml
+sudo apt-get install g++ cmake make 
+sudo apt-get install libboost-dev libboost-test-dev libboost-program-options-dev libboost-system-dev
+sudo apt-get install libcurl4-openssl-dev libc-ares-dev
+sudo apt-get install protobuf-compiler libprotobuf-dev libprotoc-dev libgoogle-perftools-dev
+
+
+mkdir build
+cd build
+BUILD_TYPE=debug ../build.sh -j4
+# 编译 muduo 库和它自带的例子，生成的可执行文件和静态库文件，分别位于 ../build/release-cpp11/{bin,lib}
+
+../build.sh install
+# 以上命令将 muduo 头文件和库文件安装到 ../build/release-install-cpp11/{include,lib}， 以便 muduo-protorpc 和 muduo-udns 等库使用
 ```
 
-#### shell
+```shell
+./release-cpp11/bin/inspector_test
+curl localhost:12345
+
+# finger
+./bin/twisted_finger07
+
+telnet localhost 1079
+# ctrl + ] 呼出telnet命令行
+```
+
+
 
 ```shell
 # 找到长连接的client，grep tcp6查ipv6监听
@@ -410,6 +722,12 @@ https://github.com/chenshuo/recipes https://github.com/huangrt01/recipes
     struct tm localTimeInNY = kNewYorkTz.toLocalTime(now);
     struct tm localTimeInLN = kLondonTz.toLocalTime(now);
     ```
+
+
+
+#### python
+
+* echo_*.py: muduo书 chpt6 6.6
 
 #### thread
 
@@ -920,7 +1238,7 @@ https://github.com/huangrt01/tinyflow
 
 
 
-#### abstract
+#### 代码结构
 
 #### examples/autodiff-graph-executor-with-tvm
 

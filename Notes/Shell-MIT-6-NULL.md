@@ -78,6 +78,7 @@ done
   * `$0` - Name of the script
   * `$1 to \$9` - Arguments to the script. $1 is the first argument and so on.
   * `$@` - All the arguments
+      * `$*` 同义，[区别是它在“”包围下会当成一个参数](http://c.biancheng.net/view/807.html)
   * `$#` - Number of arguments
       * 最后一个参数：`${!#}`
   * `$?` - Return code of the previous command
@@ -718,6 +719,18 @@ shopt -s expand_aliases
 shopt expand_aliases # show current status
 ```
 
+* apt
+```shell
+sudo apt update # 更新源
+sudo apt dist-upgrage
+
+sudo apt install
+sudo apt remove
+sudo apt autoremove
+```
+
+
+
 * awk: 一种控制台编程工具，寻找和处理pattern
   * 入门[wiki](https://zh.wikipedia.org/wiki/AWK)
   * 数据统计：
@@ -730,6 +743,7 @@ shopt expand_aliases # show current status
     * `*!a[$0]++*` is an *awk* trick to [remove duplicate lines](https://www.baeldung.com/linux/uniq-by-column)
   * `find . -name "*@to_be_deleted" | awk -F"@to_be_deleted" '{print "mv " $0 " " $1}'|sh`：将文件夹内文件名中的某个pattern删掉
   * 循环打印：`awk 'BEGIN { for (i=0; i<10; i++) printf("%02d ", i) }'`
+
 #### b
 * `bash -x run.sh` 显示shell脚本执行过程中的实际命令
 * bg: resume后台暂停的命令

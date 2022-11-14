@@ -362,6 +362,8 @@ nsys profile --stats=true -o output-report ./single-thread-vector-add
 ![memory-hierarchy-1](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/memory-hierarchy-1.png)
 
 * More registers than L1 cache
+  * half gemm用32位寄存器做累加，input/output用16位寄存器
+
 
 ![gpu-memory-latency](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/nvidia/gpu-memory-latency.png)
 

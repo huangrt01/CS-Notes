@@ -932,8 +932,27 @@ static (software-based) relocation: loader，不安全，难以再次换位
 * malloc
 * manage free space 
   * 问题：external fragmentation
-  * 方案1: compaction： 消耗大；makes requests to grow existing segments hard to serve
+  * 方案1: compaction
+    * 消耗大
+    * makes requests to grow existing segments hard to serve
   * 方案2：free-list：best-fit，worst-fit，first-fit(address-based ordering，利于coalesce)，[buddy algorithm](https://blog.csdn.net/wan_hust/article/details/12688017) (块链表，合并) 
+
+
+
+* [What is memory fragmentation?](https://stackoverflow.com/questions/3770457/what-is-memory-fragmentation)
+  * virtual memory下的memory fragmentation问题没那么严重
+  * 自己维护内存池可能还是有必要的，相当于利用了业务先验知识（某些内存块是一起分配一起释放的、以及能感知locality）
+  * It's when you have mixtures of short-lived and long-lived objects that you're most at risk, but even then `malloc` will do its best to help.
+
+* [How to solve Memory Fragmentation](https://stackoverflow.com/questions/60871/how-to-solve-memory-fragmentation)
+  * perf **free** blocks in the heap的情况
+  * logically divide the heap into sub arenas where the lifetimes are more similar
+  * to attempt to make the allocation sizes more similar or identical
+    * **unnecessary** because the allocator will already be doing a power of two size bucketing scheme
+
+
+
+
 
 #### 17.Free-Space Management
 ##### CRUX: how to manage free space

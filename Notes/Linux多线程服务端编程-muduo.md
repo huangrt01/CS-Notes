@@ -774,5 +774,158 @@ muduo 是一个基于非阻塞 IO 和事件驱动的现代 C++ 网络库，原�
 
 #### chpt 6 muduo 网络库简介
 
+* 见【code-reading笔记】--muduo--Usage
+
+* muduo 是静态链接的 C++ 程序库
+
+  * 原因是在分布式系统中正确安全地发布动态库的成本很高，见第 11 章
+  * 使用 muduo 库的时候，只需要设置好头文件路径(例如 ../build/debug-install/include)和库文件路径(例如 ../build/debug-install/lib)并链接相应的静态库文件(-lmuduo_net -lmuduo_base)即可
+
+* 介绍了一下目录结构
+
+* 使用教程
+
+  * TCP 网络编程本质论：处理三个半事件
+
+    * 连接的建立，包括服务端接受(accept)新连接和客户端成功发起(connect) 连接。TCP 连接一旦建立，客户端和服务端是平等的，可以各自收发数据。
+    * 连接的断开，包括主动断开(close、shutdown)和被动断开(read(2)返回0)。
+    * 消息到达，文件描述符可读。这是最为重要的一个事件，对它的处理方式决定 了网络编程的风格(阻塞还是非阻塞，如何处理分包，应用层的缓冲如何设计，等等)。
+    * 消息发送完毕，这算半个。对于低流量的服务，可以不必关心这个事件;另外，这里的“发送完毕”是指将数据写入操作系统的缓冲区，将由 TCP 协议栈负责数据的发送与重传，不代表对方已经收到数据。
+
+  * 网络编程难点：
+
+    * 如果要主动关闭连接，如何保证对方已经收到全部数据?如果应用层有缓冲(这 在非阻塞网络编程中是必需的，见下文)，那么如何保证先发送完缓冲区中的数据， 然后再断开连接?直接调用 close(2) 恐怕是不行的
+
+    * 如果主动发起连接，但是对方主动拒绝，如何定期(带 back-off 地)重试?
+
+    * 非阻塞网络编程该用边沿触发(edge trigger)还是电平触发(level trigger)? 
+
+      * 如果是电平触发，那么什么时候关注 EPOLLOUT 事件？会不会造成 busy-loop？
+      * 如果是边沿触发，如何防止漏读造成的饥饿？epoll(4) 一定比 poll(2) 快吗？
+
+    * 非阻塞网络编程中，为什么要使用应用层发送缓冲区？
+
+    * 在非阻塞网络编程中，为什么要使用应用层接收缓冲区？
+
+      * 假如一次读到的数据不够一个完整的数据包，那么这些已经读到的数据是不是应该先暂存在某个地方， 等剩余的数据收到之后再一并处理?见 [lighttpd 关于 \r\n\r\n 分包的 bug](https://redmine.lighttpd.net/issues/2105)。
+
+      * 假如数据是一个字节一个字节地到达，间隔 10ms，每个字节触发一次文件描述符可读
+
+        (readable)事件，程序是否还能正常工作? lighttpd 在这个问题上出过[安全漏洞](https://download.lighttpd.net/lighttpd/security/lighttpd_sa_2010_01.txt)
+
+    * 非阻塞网络编程中，如何设计并使用缓冲区？
+
+      * muduo 用 readv(2) 结合栈上空间巧妙地解决了这个问题
+
+    * 如果使用发送缓冲区，万一接收方处理缓慢，数据会不会一直堆积在发送方，造
+      成内存暴涨?如何做应用层的流量控制?
+
+    * 如何设计并实现定时器? 并使之与网络 IO 共用一个线程，以避免锁
+
+* 性能评测
+  * 擅长TCP长连接
+  * example/ping_pong 击鼓传花
+  * v.s. libevent2:
+    * 每次从socket最大读取字节数
+    * `epoll_ctl(fd, EPOLL_CTL_ADD, ...) ` 更新event_watcher
+
+* 详解 muduo 多线程模型
+
+  * 协议带上id，以支持parallel pipelining：响应中会回显请求中的 id，client可以不假设response的顺序性
+  * 常见的并发网络服务程序设计方案
+    * ![scalable-server](Linux多线程服务端编程-muduo/scalable-server.jpeg)
+    * benchmark数据：
+      * fork()+exit(): 534.7μs。
+      * pthread_create()+pthread_join(): 42.5μs，其中创建线程用了 26.1μs。
+      * push/pop a blocking queue : 11.5μs。
+      * Sudoku resolve: 100us (根据题目难度不同，浮动范围 20~200μs)。
+    * 突发请求 和 顺序性，似乎是一对矛盾
+  * 方案0
+    * recipes/python/echo-iterative.py
+    * 适合 daytime 这种 write-only 短连接服务
+  * 方案1：echo-fork.py
+    * process-per-connection
+    * `ForkingTCPServer`
+    * 适合长连接 + “计算响应的工作量远大于 fork() 的开销”
+  * 方案2：`ThreadingTCPServer`
+  * TCP是全双工通信协议，如何实现？
+    * 思路1：两个线程，例子 [python pinhole](https://code.activestate.com/recipes/114642/)
+    * 思路2：IO multiplexing，也就是 select/poll/epoll/kqueue 这一 列的“多路选择器”，让一个 thread of control 能处理多个连接。
+      * 非阻塞编程、设计应用层buffer（7.4）
+      * echo_poll.py
+      * 对于 listening fd，接受(accept)新连接，并注册到 IO 事件关注列表(watch list)，然后把连接添加到 connections 字典中(L18~L23)
+    * Doug Schmidt 指出，其实网络编程中有很多是事务性(routine)的工作，可以提取为公用的框架或库，而用户只需要填上关键的业务逻辑代码，并将回调注册到框架中，就可以实现完整的网络服务，这正是 Reactor 模式的主要思想。
+  * 方案5：单线程reactor
+    * 比方案2多一次系统调用
+    * 不适合CPU密集
+    * `server_basic.cc`, `recipe/echo-reactor.py`
+    * 注意在使用非阻塞 IO +事件驱动方式编程的时候，一定要注意避免在事件回调中执行耗时的操作，包括阻塞 IO 等，否则会影响程序的响应
+  * 方案6：过渡方案
+  * 方案7：每个连接固定一个计算线程
+    * 相比方案6，有顺序性（连接级别的）；对突发请求处理不好
+  * 方案8：server_threadpool.cc
+    * 另外也可以用线程池来调用一些阻塞的 IO 函数，例如 fsync(2)/fdatasync(2)，这两个函数没有非阻塞的版本
+      * [fsync() on a different thread: apparently a useless trick](http://oldblog.antirez.com/post/fsync-different-thread-useless.html)
+      * fsync: slow(几十ms)，redis APPEND ONLY mode（fsync never、fsync everysec、fsync always）
+  
+  * 方案9：one loop per thread
+    * 与方案 8 的线程池相比，方案 9 减少了进出 thread pool 的两次上下文切换，在把多个连接分散到多个 Reactor 线程之后，小规模计算可以在当前 IO 线程完成并发回结果，从而降低响应的延迟
+    
+    * 优化突发请求考虑方案11
+  
+    * 框架：muduo、netty
+    
+  * 方案10：reactors in processes
+    * 框架：nginx
+    
+    * 如果连接之间无交互，这种方案也是很好的选择。
+  
+    * 工作进程之间相互独立，可以热升级。
+    
+  * 方案11：混合方案8和方案9
+    
+  * 关于event loop个数
+    * [**What is the optimal number of I/O threads for best performance?**](http://wiki.zeromq.org/area:faq#toc3)
+    
+    * The basic heuristic is to allocate 1 I/O thread in the context for every gigabit per second of data that will be sent and received (aggregated). Further, the number of I/O threads should **not exceed** (number_of_cpu_cores - 1).
+  
+    * 如果 TCP 连接有优先级之分，那么单个 event loop 可能不适合，正确的做法是把高优先级的连接用单独的 event loop 来处理
+      * 在 muduo 中，属于同一个 event loop 的连接之间没有事件优先级的差别。这么设计的原因是为了防止优先级反转
+    
+  * 一些web server编程材料
+    * https://gee.cs.oswego.edu/dl/cpjslides/nio.pdf
+    * http://www.kegel.com/c10k.html
+    * http://bulk.fefe.de/scalable-networking.pdf
 
 
+
+#### chpt 7 muduo 编程示例
+
+
+
+
+
+
+
+
+
+### Part IV: 附录
+
+* 网络编程学习经验
+  * 计算机网络是个 big topic，涉及很多人物和角色，既有开发人员，也有运维人员。比方说:公司内部两台机器之间 ping 不通，通常由网络运维人员解决，看看是 布线有问题还是路由器设置不对;两台机器能 ping 通，但是程序连不上，经检查是 本机防火墙设置有问题，通常由系统管理员解决;两台机器能连上，但是丢包很严重，发现是网卡或者交换机的网口故障，由硬件维修人员解决;两台机器的程序能连上，但是偶尔发过去的请求得不到响应，通常是程序 bug，应该由开发人员解决。
+  * 面向业务的网络编程的特点
+    * 不一定需要遵循公认的通信协议标准：如果用短连接 TCP 协议，为了优化性能通常要精心设计 accept 新连接的机制，避免惊群并减少上下文切换。但是如果改用长连接， 用最简单的单线程 accept 就行了
+    * 现在的机器上，简单的并发长连接 echo 服务程序不用特别优化就做到十多万 qps，但是如果每个业务请求需要 1ms 密集计算，在 8 核机器上充其量能达到 8 000 qps，优化 IO 不如去优化业务计算(如果投入产出合算的话)。
+  * 几个术语
+    * 在 TCP 网络编程中，客户端和服务端很容易区分，主动发起连接的是客户端，被动接受连接的是服务端。当然，这个“客户端”本身也可能是个后台服务程序，HTTP proxy 对 HTTP server 来说就是个客户端。
+  * 7 × 24 重要吗，内存碎片可怕吗
+    * allocator很成熟了
+    * 普通 PC 服务器的年故障率约为 3% ~ 5%
+  * 协议设计是网络编程的核心
+    * 关闭连接。在传统的网络服务中(特别是短连接服务)，不少是服务端主动关闭连接，比如 daytime、HTTP 1.0。也有少部分是客户端主动关闭连接，通常是些长连接服务，比如 echo、chargen 等。我们自己的业务系统该如何设计连接关闭协议呢?
+      * 服务端主动关闭连接的缺点之一是会多占用服务器资源。服务端主动关闭连接之后会进入TCP的TIME_WAIT 状态，在一段时间之内持有(hold)一些内核资源。如果并发访问量很高，就会影响服务端的处理能力。这似乎暗示我们应该把协议设计为客户端主动关闭，让 TIME_WAIT 状态分散到多台客户机器上，化整为零。
+    * 消息设计，一个消息应该包含哪些内容?
+      * 多个程序相互通信如何避免 race condition?（p. 348）
+      * 外部事件发生时，网络消息应该发 snapshot 还是 delta?
+      * 新增功能时，各个组件如何平滑升级?
+    * end-to-end principle 和 happens-before relationship

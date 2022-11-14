@@ -191,16 +191,30 @@ tracking branch的缩写：`@{u}或@{upstream}`
 
 - `git remote`: list remotes
   - `-v` 
+  
 - `git remote add <name> <url>`: add a remote
   - name本质上是reference 
+  
 - `git remote show/rename/rm <remote>`
   - `git ls-remote <remote>` 
+  
+- 如何更新fork仓库的代码
+  
+  - ```shell
+    git remote -v
+    git remote add upstream git@github.com:xxx/yyy.git
+    git fetch upstream
+    git merge upstream/master
+    ```
+  
 - `git push <remote> <local branch>:<remote branch>`: send objects to remote, and update remote reference
   * `git push origin lab1:lab1`
   * `git push --set-upstream origin my-branch`，本地关联远程分支，用来省略上面一行的分支标注
   * `git push origin --delete my-branch` 删除远程分支
+
 - `git branch --set-upstream-to=<remote>/<remote branch>`: set up correspondence between local and remote branch
   - 相当于 `-u`
+
 - `git fetch <remote>`: retrieve objects/references from a remote
   - `git fetch origin` 
 ```shell

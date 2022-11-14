@@ -292,6 +292,72 @@ gcc -D ABC     # 定义宏
 * warning options:  https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
   * -Wall: 显示所有错误警告
 
+#### clang
+
+* Clang 线程安全注解 https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
+  * 以 muduo 库为例：[介绍文章](https://zhuanlan.zhihu.com/p/47837673)
+    * [Enable Clang Thread Safety Analysis. · chenshuo/muduo@4cc25e6](https://link.zhihu.com/?target=https%3A//github.com/chenshuo/muduo/commit/4cc25e67a0384fa4332ed49d2a5c73eceb002716) 
+    * 需要自己包一个Mutex类，加上注解
+      * `GUARDED_BY(mutex_);`
+      * 对于 MutexLock:`CAPABILITY("mutex")`
+      * 对于 MutexLockGuard: `SCOPED_CAPABILITY`
+  * `clang -Wthread-safety`
+
+##### 《C/C++ thread safety analysis》
+
+* The annotations can be written using either GNU-style attributes (e.g., attribute ((...)) ) or C++11-style attributes (e.g., [[...]] ). For portability, the attributes are typically hidden behind macros that are disabled when not compiling with Clang.
+  * 也可用于 Thread Role 的 annotation
+* Basic Concepts
+  * Capabilities can be either unique or shared.
+  * Background: Uniqueness and Linear Logic
+    * 编译器的概念，许多对象是linear的，例子如 string stream
+    * Functions that use the object without consuming it must be written using a hand-off protocol
+  * Clang thread safety analysis tracks capabilities as unnamed objects that are passed implicitly.
+    * `Cap<mu>`
+* THREAD SAFETY ANNOTATIONS
+  * GUARDED BY(...) and PT_GUARDED_BY(...) GUARDED
+  * REQUIRES(...) and REQUIRES_SHARED(...) REQUIRES
+    * a function takes the given capability as an implicit argument and hands it back to the caller when it returns, as an implicit result.
+  * ACQUIRE(...) and RELEASE(...)
+  * CAPABILITY(...)
+  * TRY_ACQUIRE(b, ...) and TRY_ACQUIRE_SHARED(b, ...)
+  * NO_THREAD_SAFETY_ANALYSIS
+  * Negative Requirements
+    * REQUIRE(!mu)
+
+```c++
+class CAPABILITY(”mutex”) Mutex {
+  public :
+  	void lock() ACQUIRE( this );
+		void readerLock() ACQUIRE_SHARED( this );
+  	void unlock() RELEASE( this );
+		void readerUnlock() RELEASE_SHARED( this );
+}
+```
+
+* Implementation
+  * Clang
+    * Clang initially parses a C++ input file to an abstract syntax tree (AST), which is an accurate representation of the original source code, down to the location of parentheses. In contrast, many compilers, including GCC, lower to an intermediate language during parsing. The accuracy of the AST makes it easier to emit quality diagnostics, but complicates the analysis in other respects.
+    * The Clang semantic analyzer (Sema) decorates the AST with semantic information. Name lookup, function overloading, operator overloading, template instantiation, and type checking are all performed by Sema when constructing the AST. Clang inserts special AST nodes for implicit C++ operations, such as automatic casts, LValue-to-RValue conversions, implicit destructor calls, and so on, so the AST provides an accurate model of C++ program semantics.
+    * Finally, the Clang analysis infrastructure constructs a control flow graph (CFG) for each function in the AST. This is not a lowering step; each statement in the CFG points back to the AST node that created it. The CFG is shared infrastructure; the thread safety analysis is only one of its many clients.
+  * Analysis Algorithm
+    * performing a topological sort of the CFG, and identifying back edges
+    * Requiring that capability sets be the same:
+      *  a joint point
+      * back edges (like loops)
+  * Intermediate Representation
+    * A dependent type system must be able to compare expres-sions for semantic (not syntactic) equality. The analyzer im-plements a simple compiler intermediate representation (IR), and lowers Clang expressions to the IR for comparison. It
+      also converts the Clang CFG into single static assignment (SSA) form so that the analyzer will not be confused by local variables that take on different values in different places.
+  * Limitations
+    * No attributes on types.
+      * it was deemed infeasible for C++ because it would require invasive changes to the C++ type system that could potentially affect core C++ semantics in subtle ways, such as template instantiation and function overloading.
+    * No dependent type parameters.
+    * No alias analysis.
+      * Pointer aliasing -> false negatives
+* Google’s philosophy is that incorrect annotations are “bugs in the documentation.”
+
+
+
 #### Blade
 
 https://github.com/chen3feng/blade-build/blob/master/doc/en/command_line.md
@@ -328,3 +394,7 @@ for key in def_keys:
 --filterflags="-lssl -lcrypto -lcrypt -levent -lz -lbz2 -lmsgpack"
 ```
 
+#### make
+
+* make install
+  * https://superuser.com/questions/360178/what-does-make-install-do

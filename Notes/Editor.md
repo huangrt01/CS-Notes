@@ -233,7 +233,7 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
     - Manually remove last `,` and add `[` and `]` delimiters
   - [在vimrc中存宏](https://stackoverflow.com/questions/2024443/saving-vim-macros) 
 
-<img src="Vim/vim.png" alt="vim" style="zoom:100%;" />
+<img src="Editor/vim.png" alt="vim" style="zoom:100%;" />
 
 
 #### Resources
@@ -264,46 +264,110 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 * 公共: Code Spell Checker, GitLens, EditorConfig for VSCode, String Manipulation, Visual Studio IntelliCode
   * Code Runner
   * Remote - SSH
-* C++: [cpplint](https://github.com/cpplint/cpplint), C/C++ (by Microsoft), Cod
-  eLLDB, Header source switch, Rainbow Brackets, C++ Intellisense
+* C++: [cpplint](https://github.com/cpplint/cpplint), CodeLLDB, Header source switch, Rainbow Brackets, C++ Intellisense
+  * CMake, CMake Tools
+    * cmake插件需要cmake3.9.4以上版本的cmake的支持，ubuntu16.04以下的用户可能需要手动安装新版本的cmake
+  * Clangd
+    * [VSCode C/C++ 开发环境和调试配置：Clangd+Codelldb](https://zhangjk98.xyz/vscode-c-and-cpp-develop-and-debug-setting/)
+      * 阅读超大型项目源码的注意事项
+        * 关闭 editor.formatOnSave, clang-tidy, all-scopes-completion
+        * codeLLDB 使用（TODO）
+    
+    * 有clangd之后，不需要 C/C++ (by Microsoft) 了
+    
   * Tabnine：AI加持的自动补全，用GPT
   * Peacock：不同workspace可以用不同的颜色区分
+  * 调大C++插件的可用内存：
+    * ![c++](Editor/vscode-c++.png)
+  * [如何优雅的用 VScode 编写 C++ 大型项目？](https://www.zhihu.com/question/353722203/answer/2564104885)
+    * lsp(language service provider): vscode clangd
+    * 依赖 compile_commands.json
+      * 自动构建
+      * 手动生成：`mkdir build && cd build && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..`
+    * 如果linux的glibc版本较旧，需要给clangd打补丁（patchelf），链接向新版glibc
+  
+
+#### clang系列
+
+* clang-format: https://clang.llvm.org/docs/ClangFormat.html
+  * style-options: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+  * `clang-format -style=llvm -dump-config > .clang-format`
+* clang-tidy: https://clang.llvm.org/extra/clang-tidy/
+* clangd插件：https://clangd.llvm.org/installation
+  * `sudo apt install clangd-13`
+  * ctrl-p # 跳转符号
+
+```yaml
+---
+Checks: >
+  -*,
+  bugprone-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-pro-type-cstyle-cast,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-type-union-access,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-special-member-functions,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  hicpp-*,
+  -hicpp-avoid-c-arrays,
+  -hicpp-use-auto,
+  -hicpp-vararg,
+  -hicpp-no-array-decay,
+  -hicpp-signed-bitwise,
+  -hicpp-special-member-functions,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -modernize-avoid-c-arrays,
+  -modernize-pass-by-value,
+  -modernize-avoid-bind,
+  -modernize-use-auto,
+  performance-*,
+  -performance-no-int-to-ptr,
+  portability-*,
+  readability-*,
+  -readability-magic-numbers,
+  -readability-redundant-access-specifiers,
+  -readability-convert-member-functions-to-static,
+  -readability-implicit-bool-conversion,
+  -readability-identifier-length
+
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+FormatStyle: none
+InheritParentConfig: true
+User: gycherish
+CheckOptions:
+  - { key: readability-identifier-naming.AbstractClassPrefix, value: I }
+  - { key: readability-identifier-naming.AbstractClassCase, value: CamelCase }
+  - { key: readability-identifier-naming.ClassCase, value: CamelCase }
+  - { key: readability-identifier-naming.ClassMemberCase, value: camelBack }
+  - { key: readability-identifier-naming.ClassMemberPrefix, value: m_ }
+  - { key: readability-identifier-naming.FunctionCase, value: camelBack }
+  - { key: readability-identifier-naming.EnumCase, value: CamelCase }
+  - { key: readability-identifier-naming.EnumConstantCase, value: CamelCase }
+  - { key: readability-identifier-naming.GlobalConstantCase, value: UPPER_CASE }
+  - { key: readability-identifier-naming.NamespaceCase, value: lower_case }
+  - { key: readability-identifier-naming.ProtectedMemberCase, value: camelBack }
+  - { key: readability-identifier-naming.ProtectedMemberPrefix, value: m_ }
+  - { key: readability-identifier-naming.PrivateMemberCase, value: camelBack }
+  - { key: readability-identifier-naming.PrivateMemberPrefix, value: m_ }
+  - { key: readability-identifier-naming.StructCase, value: CamelCase }
+  - { key: readability-identifier-naming.TemplateParameterCase, value: CamelCase }
+  - { key: readability-identifier-naming.VariableCase, value: camelBack }
+...
+```
+
+
+
+
 
 #### json配置
-
-##### tasks.json
-
-```
-{
-    "tasks": [
-        {
-            "type": "cppbuild",
-            "label": "C/C++: g++ 生成活动文件",
-            "command": "/usr/bin/g++",
-            "args": [
-                "-fdiagnostics-color=always",
-                "-g",
-                "${fileDirname}/../a.cc",
-                "${fileDirname}/../b.cc",
-                "${fileDirname}/../c.cc",
-                "${file}",
-                "-o",
-                "${fileDirname}/${fileBasenameNoExtension}",
-                "-lpthread"
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build",
-            "detail": "编译器: /usr/bin/g++"
-        }
-    ],
-    "version": "2.0.0"
-}
-```
 
 ##### launch.json
 
@@ -356,9 +420,93 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 }
 ```
 
+#### c_cpp_properties.json
+
+##### 安装clang
+
+```shell
+wget https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.1/clang+llvm-13.0.1-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+tar xvf clang+llvm-13.0.1-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+
+sudo ln -s xxx/bin/clang /usr/bin/clang-13.0
+```
+
+* 配置 compile_commands.json
+  * https://www.zhihu.com/question/353722203/answer/945067523
+
+
+```JSON
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/../**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang-13.0",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-clang-x64",
+            "compileCommands": "/home/cs144/muduo/build/compile_commands.json",
+            "compilerArgs": [
+                "-O3"
+            ],
+            "configurationProvider": "ms-vscode.cmake-tools"
+        }
+    ],
+    "version": 4
+}
+```
+
+![cmake-tool](Editor/cmake-tool.png)
+
+##### tasks.json（禁用c++/c后，不需要此文件）
+
+```
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++ 生成活动文件",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${fileDirname}/../a.cc",
+                "${fileDirname}/../b.cc",
+                "${fileDirname}/../c.cc",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}",
+                "-lpthread"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "编译器: /usr/bin/g++"
+        }
+    ],
+    "version": "2.0.0"
+}
+```
+
+
 
 ### Sublime Text
 
-Ctrl + M 括号匹配
+* Ctrl + M 括号匹配
 
-Shift + Ctrl + M 选中该级括号内容
+* Shift + Ctrl + M 选中该级括号内容
+
+### Typora
+
+* command + /  切换编辑模式
+* shift + command + L 打开边栏
+* control + command + 1/2/3 切换边栏类型
+

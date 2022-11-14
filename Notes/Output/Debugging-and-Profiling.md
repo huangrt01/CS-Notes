@@ -76,9 +76,16 @@ journalctl --since "1m ago" | grep Hello
 gdb：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(uit), watch
 
 * up, down
+  * `up n`
+  * `up-silently n`
+
 * 特有：start, finish, cond, disable, where
-* `cond 3 this==0xXXX`
-* `gdb --args sleep 20` debug带参数的binary
+  * `cond 3 this==0xXXX`
+
+* 参数
+  * `gdb --args sleep 20` debug带参数的binary
+  * `-q`  quiet模式
+
 * bt(backtrace), frame X 进帧
 * `watch -l ` 同时监视表达式本身和表达式指向的内容
 * `attach $pid` debug正在运行的进程
@@ -110,7 +117,11 @@ p *(std::string*)(X.rep_.elements) //repeated string, 字段X
 
 ```
 
-[gdb的多线程调试](https://blog.csdn.net/lf_2016/article/details/59741705)
+##### [gdb的多线程调试](https://blog.csdn.net/lf_2016/article/details/59741705)
+
+* info frame
+* info args
+* info locals
 
 * info threads:显示当前可调试的所有线程,GDB会给每一个线程都分配一个ID。前面有*的线程是当前正在调试的线程。
 * `info reg`
@@ -124,6 +135,17 @@ p *(std::string*)(X.rep_.elements) //repeated string, 字段X
   * on:只有当前被调试的线程会执行。
   * step:阻止其他线程在当前线程单步调试的时候抢占当前线程。只有当next、continue、util以及finish的时候，其他线程才会获得重新运行的
 * `show scheduler-locking`：查看当前锁定线程的模式。
+
+
+
+* `gdb -q --batch --ex "set height 0" -ex "thread apply all bt full" [可执行文件] [core文件]`
+  * -q: 不打印gdb的版权消息
+  * --batch: 执行批处理，不进入交互模式
+  * --ex: 执行gdb 命令
+  * "set height 0": 不对输出进行分页
+    
+
+
 
 Gdb 的汇编级别调试
 
@@ -250,6 +272,7 @@ For web development, the Chrome/Firefox developer tools are quite handy. They fe
   * English也有静态分析！
   * 静态分析可以融入编辑器, vim:[`ale`](https://vimawesome.com/plugin/ale) or [`syntastic`](https://vimawesome.com/plugin/syntastic) 
 * [Static Analysis仓库整理](https://github.com/analysis-tools-dev/static-analysis#go)
+* 《C/C++ thread safety analysis》，见【compiling笔记】，clang线程安全注解
 * [awesome linters整理](https://github.com/caramelomartins/awesome-linters#go)
   * Python:  [`pylint`](https://github.com/PyCQA/pylint) and [`pep8`](https://pypi.org/project/pep8/) 是stylistic linters，[`bandit`](https://pypi.org/project/bandit/) 可查security问题
     * `python -m autopep8 -i -r $FOLDER`

@@ -449,6 +449,61 @@ Active opener and Passive opener
 
 <img src="https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Networking-Lecture-CS144-Stanford/018.jpg" alt="Clean Teardown" style="zoom:45%;" />
 
+* [为什么 TCP 协议有 TIME_WAIT 状态](https://draveness.me/whys-the-design-tcp-time-wait/)
+  * `TIME_WAIT` 仅在主动断开连接的一方出现，被动断开连接的一方会直接进入 `CLOSED` 状态，进入 `TIME_WAIT` 的客户端需要等待 2 MSL 才可以真正关闭连接
+  * 不直接关闭连接的原因：
+    * 防止延迟的数据段被其他使用相同源地址、源端口、目的地址以及目的端口的 TCP 连接收到
+      * RFC 793
+      * `#define TCP_TIMEWAIT_LEN (60*HZ) /* how long to wait to destroy TIME-WAIT state, about 60 seconds	*/`
+			* 但是如果主机在过去一分钟时间内与目标主机的特定端口创建的 TCP 连接数超过 28,232，那么再创建新的 TCP 连接就会发生错误，也就是说如果我们不调整主机的配置，那么每秒能够建立的最大 TCP 连接数为 ~470
+    * 保证 TCP 连接的远程被正确关闭，即等待被动关闭连接的一方收到 `FIN` 对应的 `ACK` 消息
+      * 防止TIME-WAIT 较短导致的握手终止，服务端发送`RST`
+  * 处理方案：除了上图的两者，还可以：
+    * 修改 `net.ipv4.ip_local_port_range` 选项中的可用端口范围，增加可同时存在的 TCP 连接数上限；
+
+* [Scaling Techniques for Servers with High Connection Rates](https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf)
+  * problems
+    * Servers with high connection/transaction rates
+      * TCP servers, e.g. web server
+      * UDP servers, e.g. DNS server
+    * On multi-core systems, using multiple servicing threads, e.g. one thread per servicing core.
+      * The single server socket becomes bottleneck
+      * Cache line bounces
+      * Hard to achieve load balance
+      * Things will only get worse with more cores
+  * Single TCP Server Socket
+    * solution 1: Use a listener thread to dispatch established connections to server threads
+      * The single listener thread becomes bottleneck due to high connection rate
+      * Cache misses of the socket structure
+      * Load balance is not an issue here
+    * solution 2: All server threads accept() on the single server socket
+      * Lock contention on the server socket
+      * Cache line bouncing of the server socket
+      * Loads (number of accepted connections per thread) are usually not balanced 
+        * Larger latency on busier CPUs
+        * It can almost be achieved by accept() at random intervals, but it is hard to decide the interval value, and may introduce latency
+  * Single UDP Server Socket
+  * New Socket Option - SO_REUSEPORT
+    * Allow multiple sockets bind()/listen() to the same local address and TCP/UDP port 
+      * Every thread can have its own server socket
+      * No locking contention on the server socket
+    * Every thread can have its own server socket No locking contention on the server socket
+    * Load balance is achieved by kernel - kernel randomly picks a socket to receive the TCP connection or UDP request
+    * For security reason, all these sockets must be opened by the same user, so other users can not "steal" packets
+  * How to enable?
+    * sysctl net.core.allow_reuseport=1
+    * Before bind(), setsockopt SO_REUSEADDR and SO_REUSEPORT
+    * Then the same as a normal socket - bind()/listen() /accept()
+  * Known Issues
+    * Hash
+    * Have not solved the cache line bouncing problem completely
+      * Solved: The accepting thread is the processing thread
+      * Unsolved: The processed packets can be from another CPU
+        * Instead of distribute randomly, deliver to the thread/socket on the same CPU （input queue和server thread一一对应）
+        * But hardware may not support as many RxQs as CPUs
+    * Some scheduler mechanism may harm the performance
+      * Affine wakeup - too aggressive in certain conditions, causing cache misses
+
 
 
 

@@ -207,9 +207,31 @@ https://www.slideshare.net/am_sharifian/intel-hyper-threading-technology/1
   * [Gathering Intel on Intel AVX-512 Transitions](https://travisdowns.github.io/blog/2020/01/17/avxfreq1.html)
 * [AVX-512_BF16 Extension](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-deep-learning-boost-new-instruction-bfloat16.html)
   * 点积 + 转换
-* [The x86 Advanced Matrix Extension (AMX) Brings Matrix Operations; To Debut with Sapphire Rapids](https://fuse.wikichip.org/news/3600/the-x86-advanced-matrix-extension-amx-brings-matrix-operations-to-debut-with-sapphire-rapids/)
-  * AMX introduces a new matrix register file with eight rank-2 tensor (matrix) registers called “tiles”.
 * CLZ 等指令：https://en.wikipedia.org/wiki/Find_first_set
+
+#### AMX
+
+* AMX: [The x86 Advanced Matrix Extension (AMX) Brings Matrix Operations; To Debut with Sapphire Rapids](https://fuse.wikichip.org/news/3600/the-x86-advanced-matrix-extension-amx-brings-matrix-operations-to-debut-with-sapphire-rapids/)
+  * AMX introduces a new matrix register file with eight rank-2 tensor (matrix) registers called “tiles”.
+  * 独立单元，支持bf16，intel oneAPI DNNL指令集接口
+* 功能：单元相比avx512、vnni，支持了reduce操作
+* 实现：
+  - 输入8位/16位，计算用32位（防溢出）
+  - 扩展了tile config、tile data寄存器，内核支持（XFD，eXtended Feature Disable）, allos os to add states to thread on demand
+* 测试：减少内存带宽，增频了（重计算指令减少）
+  - 配合tf有automix策略，op可能为bf16+fp32混合计算
+  - matmul相关运算全bf16
+  - tf2.9合入intel大量patch, TF_ENABLE_ONEDNN_OPTS=1，检测cpuid自动打开；oneDNN 2.7
+    - TF_ONEDNN_USE_SYSTEM_ALLOCATOR
+    - jemalloc: MALLOC_CONF="oversize_threshold:96000000,dirty_decay_ms:30000,muzzy_decay_ms:30000"), mitigate page_fault, which benefit fp32 in addition
+    - TF_ONEDNN_PRIM_CACHE_SIZE=8192 (for mix models deployment)
+    - TF2.9 SplitV performance issue
+* 其它SPR独立单元：
+  - Intel DSA(data streaming accelerator): batched memcpy/memmove，减少CPU cycles
+    - https://01.org/blogs/2019/introducing-intel-data-streaming-accelerator
+  - Intel IAA(in-memory analytics accelerator): compress/decompress/scan/filter，也是offload cpu cores
+    - https://www.intel.com/content/www/us/en/analytics/in-memory-data-and-analytics.html
+    - 场景如presto：https://engineering.fb.com/2019/06/10/data-infrastructure/aria-presto/
 
 ### 存储
 

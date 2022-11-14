@@ -96,7 +96,9 @@ get()
 queue的利用：新线程prefetch内容塞进queue里，可以拿到遍历queue的更快的生成器（yield结尾）
 ```
 
+##### namedtuple
 
+https://realpython.com/python-namedtuple/
 
 
 
