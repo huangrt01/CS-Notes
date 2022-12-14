@@ -137,4 +137,8 @@
       * When all AIO control blocks are in use, we wait for an operation to complete by calling aio_suspend.
       * 这个例子有特殊性，由于read和write的字节数相等，每个aio操作的offset是互不影响的，能简化程序
 
-  
+
+* 14.6 readv and writev Functions
+  * 性能：user态合并buffer调用write对比直接使用writev，在数据copy量小的时候更有优势
+  * muduo: ReadFd
+  * Sponge: BufferViewList::as_iovecs()

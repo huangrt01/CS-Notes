@@ -15,6 +15,17 @@ https://godbolt.org
   
 * 编译器有能力让不同 target 的 cpp 文件的不同编译选项，有区分地生效。但无法控制其它cpp文件对头文件的使用，因此头文件为主体的开源项目，经常不得不很小心地去处理各种使用情况。
 
+#### Linking
+
+linking with libraries: -lXXX
+
+* statically-linked library:  libXXX.a(lib)
+* dynamically-linked library : libXXX.so(dll)   
+* -I /foo/bar : 头文件路径 compile line 
+* -L 库文件路径: link line
+
+Separate Compilation: -c, 只产生object file, 不link, 后面联合link-editor
+
 #### LTO (Link Time Optimization)
 
   * 本质想解决的问题：编译 a.cpp 的时候看不到 b.cpp，编译器做不了优化
@@ -237,7 +248,7 @@ public:
 };
 ```
 
-
+* `(void)n;` 的用处：消除编译器对无用变量的报警
 
 
 
@@ -281,16 +292,30 @@ readelf -sW my_bin |grep LOCAL|grep OBJECT | grep -v __PRETTY_FUNCTION__|grep -v
 
 #### gcc
 
-```shell
-gcc -D ABC     # 定义宏
-```
+* libc: Linux 下的 ANSI C 函数库
+
+* gcc
+
+  * cpp文件预处理相关的# $\longrightarrow$ cc1: 由C到汇编 $\longrightarrow$ ac：assembler $\longrightarrow$ ld: linker
 
 * flags
-  * -std=c++17
-  * -g: 保留调试符号信息
+
+  * -o：output
+  * -Wall：better warnings，显示所有错误警告
+    *  https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
+  * -g：保留调试符号信息，开-g的时候不要开-O
+  * -O     optimization
+  * `-D ABC` 定义宏
+  * -E  寻找所有依赖
   * -pedantic
-* warning options:  https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
-  * -Wall: 显示所有错误警告
+  * -std=c++17
+  * One issue with mem.c is that address space randomization is usually on by default. To turn it off: Just compile/link as follows: gcc -o mem mem.c -Wall -Wl,-no_pie
+  * -march=native
+    * https://gcc.gnu.org/onlinedocs/gcc-4.5.3/gcc/i386-and-x86_002d64-Options.html
+    * will enable all instruction subsets supported by the local machine (hence the result might not run on different machines)
+  * -m32
+  
+  * `FLAGS = -Wall -pthread, INCLUDES = ../include, gcc -I $(INCLUDES) -o t0 t0.c $(FLAGS)`
 
 #### clang
 
@@ -358,7 +383,249 @@ class CAPABILITY(”mutex”) Mutex {
 
 
 
-#### Blade
+#### bazel
+
+* https://bazel.build/?hl=en
+  * 构建快。支持增量编译。对依赖关系进行了优化，从而支持并发执行。
+  * 可构建多种语言。bazel可用来构建Java C++ Android ios等很多语言和框架，并支持mac windows linux等不同平台
+  * 可伸缩。可处理任意大小的代码库，可处理多个库，也可以处理单个库
+  * 可扩展。使用bazel扩展语言可支持新语言和新平台。
+
+```
+wget https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-installer-linux-x86_64.sh && \
+  mkdir -p  /opt/abc/bazel && \
+  chmod +x bazel-3.1.0-installer-linux-x86_64.sh && \
+  ./bazel-3.1.0-installer-linux-x86_64.sh --prefix=/opt/abc/bazel && \
+  rm bazel-3.1.0-installer-linux-x86_64.sh
+export PATH=/opt/abc/bazel/bin:$PATH
+```
+
+* Basilisk:
+  * https://github.com/bazelbuild/bazelisk
+  * https://stackoverflow.com/questions/65656165/how-do-you-install-bazel-using-bazelisk
+
+```shell
+> wget https://github.com/bazelbuild/bazelisk/releases/download/v1.15.0/bazelisk-linux-amd64
+> chmod +x bazelisk-linux-amd64
+> sudo mv bazelisk-linux-amd64 /usr/local/bin/bazel
+     
+# make sure you get the binary available in $PATH
+> which bazel
+bazel is /usr/local/bin/bazel
+```
+
+* Ide integration
+  * vscode bazel插件
+  * intellisense: https://github.com/hedronvision/bazel-compile-commands-extractor
+
+
+
+* 官方tutorial（没有写动态静态链接库so怎么生成）
+  * https://bazel.build/start/cpp?hl=en
+  * https://bazel.build/docs/bazel-and-cpp
+  * To keep focusing on C++, read about common [C++ build use cases](https://bazel.build/tutorials/cpp-use-cases).
+  * To get started with building other applications with Bazel, see the tutorials for [Java](https://bazel.build/tutorials/java), [Android application](https://bazel.build/tutorials/android-app), or [iOS application](https://bazel.build/tutorials/ios-app).
+  * To learn more about working with local and remote repositories, read about [external dependencies](https://bazel.build/docs/external).
+  * To learn more about Bazel’s other rules, see this [reference guide](https://bazel.build/rules).
+
+```
+git clone https://github.com/bazelbuild/examples
+cd cpp-tutorial/stage1
+bazel build //main:hello-world
+```
+
+```bazel
+# src/BUILD
+cc_library(
+    name = "mylib",
+    srcs = ["mylib.cc"],
+    hdrs = ["mylib.h"],
+    deps = [":lower-level-lib"]
+)
+
+cc_test(
+    name = "mylib_test",
+    srcs = ["mylib_test.cc"],
+    deps = [":mylib"]
+)
+
+cc_library(
+    name = "hello-time",
+    srcs = ["hello-time.cc"],
+    hdrs = ["hello-time.h"],
+    visibility = ["//main:__pkg__"],
+)
+```
+
+* 动态库使用
+
+```
+# src/BUILD
+cc_library(
+    name = "hello-time.so",
+    srcs = ["hello-time.cc"],
+    hdrs = ["hello-time.h"],
+    linkshared=True,//设置为生成动态库
+    visibility = ["//main:__pkg__"],
+)
+
+# main/BUILD
+
+cc_import(                             
+    name = "hello-time",
+    hdrs = ["hello-time.h"],
+    shared_library = "hello-time.so",//链接src中生成的so文件
+)
+
+cc_binary(
+    name = "hello-demo",//目标二进制文件名
+    srcs = [
+        "hello-demo.c",
+        "hello-time.h",
+    ],//源文件
+    deps = [
+        "//src:hello-time",
+    ],//依赖，必须先完成cc_import，才能完成cc_binary
+    copts = ["-lm"],//附加选项，需要math库
+)
+```
+
+
+
+
+
+* Concepts: https://bazel.build/concepts/build-ref
+
+  * 项目结构：Workspace, packages, targets
+    * BUILD file 对应 target
+    * 给target引入依赖的两种方式：rule、src file
+    * Package groups are sets of packages whose purpose is to limit accessibility of certain rules. Package groups are defined by the `package_group` function. They have three properties: the list of packages they contain, their name, and other package groups they include. The only allowed ways to refer to them are from the `visibility` attribute of rules or from the `default_visibility` attribute of the `package` function; they do not generate or consume files. For more information, refer to the [`package_group` documentation](https://bazel.build/reference/be/functions#package_group).
+  * Label
+    * 同一个包下，标签可以省略包名部分，如:app_binary表示同一个包下的目标。不同包之间，则千万不能省略包名。
+
+* Follow these guidelines for include paths:
+
+  - Make all include paths relative to the workspace directory.
+
+  - Use quoted includes (`#include "foo/bar/baz.h"`) for non-system headers, not angle-brackets (`#include <foo/bar/baz.h>`).
+
+  - Avoid using UNIX directory shortcuts, such as `.` (current directory) or `..` (parent directory).
+
+  - For legacy or `third_party` code that requires includes pointing outside the project repository, such as external repository includes requiring a prefix, use the [`include_prefix`](https://bazel.build/reference/be/c-cpp#cc_library.include_prefix) and [`strip_include_prefix`](https://bazel.build/reference/be/c-cpp#cc_library.strip_include_prefix) arguments on the `cc_library` rule target.
+
+* C/C++ rules：https://bazel.build/reference/be/c-cpp#rules
+  * cc_binary 生成二进制文件
+    * [select语法](https://bazel.build/docs/configurable-attributes)
+  * cc_import 导入链接库
+  * cc_library 生成链接库
+* Command Line Ref: https://bazel.build/reference/command-line-reference
+  * [清除build结果](https://bazel.build/docs/user-manual#cleaning-build-outputs)(from User Manual)
+    * `bazel clean --expunge` 清除编译链
+  * `--override_repository=xxx=$(pwd)/third_party/xxx`
+  * `--output_filter=IGNORE_LOGS`
+* Workspace 规则: https://bazel.build/docs/external
+  * 在需要**远程依赖**的支持或导入**本地非当前目录下的依赖**需要使用
+  * Depending on other Bazel projects
+    * `@coworkers_project//foo:bar`
+  * Depending on non-Bazel projects
+    * new_http_archive: 下载文件，然后解压它，然后和其中包含的build_file一起创建bazel目录
+    * https://bazel.build/reference/be/workspace#new_local_repository
+  * bazel fetch, bazel sync
+  * Prefer [`http_archive`](https://bazel.build/rules/lib/repo/http#http_archive) to `git_repository` and `new_git_repository`.
+  * Tf serving的例子：
+    * https://github.com/tensorflow/serving/blob/master/WORKSPACE
+    * https://github.com/tensorflow/serving/blob/master/tensorflow_serving/repo.bzl
+
+```bazel
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+```
+
+```
+""" TensorFlow Http Archive
+Modified http_archive that allows us to override the TensorFlow commit that is
+downloaded by setting an environment variable. This override is to be used for
+testing purposes.
+Add the following to your Bazel build command in order to override the
+TensorFlow revision.
+build: --action_env TF_REVISION="<git commit hash>"
+  * `TF_REVISION`: tensorflow revision override (git commit hash)
+"""
+
+_TF_REVISION = "TF_REVISION"
+
+def _tensorflow_http_archive(ctx):
+    git_commit = ctx.attr.git_commit
+    sha256 = ctx.attr.sha256
+    patch = getattr(ctx.attr, "patch", None)
+
+    override_git_commit = ctx.os.environ.get(_TF_REVISION)
+    if override_git_commit:
+        sha256 = ""
+        git_commit = override_git_commit
+
+    strip_prefix = "tensorflow-%s" % git_commit
+    urls = [
+        "https://mirror.bazel.build/github.com/tensorflow/tensorflow/archive/%s.tar.gz" % git_commit,
+        "https://github.com/tensorflow/tensorflow/archive/%s.tar.gz" % git_commit,
+    ]
+    ctx.download_and_extract(
+        urls,
+        "",
+        sha256,
+        "",
+        strip_prefix,
+    )
+    if patch:
+        ctx.patch(patch, strip = 1)
+
+tensorflow_http_archive = repository_rule(
+    implementation = _tensorflow_http_archive,
+    attrs = {
+        "git_commit": attr.string(mandatory = True),
+        "sha256": attr.string(mandatory = True),
+        "patch": attr.label(),
+    },
+)
+```
+
+* bazel远程构建 https://zhuanlan.zhihu.com/p/266510840
+
+```python
+write_to_bazelrc("\n".join([
+      "# Bazel building cluster",
+      "build --spawn_strategy=remote,local",
+      "build --jobs %s --remote_executor=grpc://%s:%d" %
+      (best_cluster.jobs, best_cluster.host, best_cluster.port),
+  ]))
+```
+
+* 以 tensorflow/cc/BUILD 为例
+  * 为多个编译目标target指定一个名字，glob是一个帮助函数，指定了目录中哪些文件会include，哪些会exclude。visibility指定了target的可见性，也就是可以被哪些package调用
+
+```
+native.filegroup(
+		name = "all_files",
+    srcs = glob(
+        ["**/*"],
+        exclude = [
+            "**/METADATA",
+            "**/OWNERS",
+        ],
+    ),
+    visibility = ["//tensorflow:__subpackages__"],
+)
+```
+
+
+
+* 坑
+  * [bazel: protobuf依赖](https://zhuanlan.zhihu.com/p/488199658)
+    * pb冲突: `build --sandbox_block_path=/usr/local`
+    * bazel4: `build --incompatible_blacklisted_protos_requires_proto_info=false`
+
+
+
+#### blade
 
 https://github.com/chen3feng/blade-build/blob/master/doc/en/command_line.md
 

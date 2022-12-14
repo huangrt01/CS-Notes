@@ -2,7 +2,20 @@
 
 [toc]
 
+####  安装 Python3
+
+```shell
+wget https://www.python.org/ftp/python/3.6.2/Python-3.6.2.tar.xz
+sudo tar -xvf Python-3.6.2.tar.xz
+./configure
+make
+make install
+```
+
+
+
 #### 基础数据
+
 ```python
 bool(int(str(3))) -> True
 bool(int(str(0))) -> False
@@ -110,6 +123,23 @@ https://realpython.com/python-namedtuple/
 
 * 运行文件乱码问题，在文件开头加 `# coding=utf-8`
 
+#### dataclasses
+
+```python
+import dataclasses
+
+@dataclasses.dataclass
+class InventoryItem:
+    """Class for keeping track of an item in inventory."""
+    name: str
+    unit_price: float
+    quantity_on_hand: int = 0
+    name_set: set = dataclasses.field(default_factory=set)
+
+    def total_cost(self) -> float:
+        return self.unit_price * self.quantity_on_hand
+```
+
 
 
 
@@ -191,12 +221,17 @@ else:
 ##### with
 
 * [with 的用法和原理](https://www.cnblogs.com/sddai/p/14411906.html)
+  * 使用with后不管with中的代码出现什么错误，都会进行对当前对象进行清理工作。
+  * 在with语句结束后，as的对象仍然可见
+
 
 #### class
 
 * [@staticmethod v.s. @classmethod](https://stackoverflow.com/questions/136097/difference-between-staticmethod-and-classmethod#:~:text=%40staticmethod)
 
 * @property
+  * [Property function](https://www.tutorialsteacher.com/python/property-function)
+
 
 ```python
 class Student(object):
@@ -212,9 +247,46 @@ class Student(object):
     @property
     def age(self):            # 只读属性
         return 2015 - self._birth
+      
+class person:
+    def __init__(self):
+        self.__name=''
+    def setname(self, name):
+        print('setname() called')
+        self.__name=name
+    def getname(self):
+        print('getname() called')
+        return self.__name
+    name=property(getname, setname)
 ```
 
 * [一文让你彻底搞懂Python中\__ str\__和\__repr\__?](https://segmentfault.com/a/1190000022266368)
+
+#### abc
+
+* https://python-course.eu/oop/the-abc-of-abstract-base-classes.php
+
+```python
+from abc import ABC, abstractmethod
+ 
+class AbstractClassExample(ABC):
+    
+    @abstractmethod
+    def do_something(self):
+        # print("Some implementation!")
+        pass
+        
+class AnotherSubclass(AbstractClassExample):
+
+    def do_something(self):
+        super().do_something()
+        print("The enrichment from AnotherSubclass")
+        
+x = AnotherSubclass()
+x.do_something()
+```
+
+
 
 
 
@@ -328,6 +400,11 @@ echo 'pip install sphinx' >> $WORKON_HOME/postmkvirtualenv
 mkvirtualenv env3
 ```
 
+* 坑
+  * `Error while finding module specification for 'virtualenvwrapper.hook_loader' (ImportError: No module named 'virtualenvwrapper')
+    virtualenvwrapper.sh: There was a problem running the initialization hooks`
+    * 查看PATH，找错了python
+
 
 
 #### conda
@@ -413,8 +490,6 @@ os.path.join(dir,file)
 ```python
 os.getenv('ABC', 'abc') # 注意返回值是str
 ```
-
-
 
 #### datetime
 

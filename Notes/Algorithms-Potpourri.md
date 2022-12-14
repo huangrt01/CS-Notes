@@ -1,12 +1,15 @@
 ## Algorithms-Potpourri
 
-[格林公式在面积并问题中的应用](https://trinkle23897.github.io/posts/calc-circle-area-union) --- by n+e
+* [格林公式在面积并问题中的应用](https://trinkle23897.github.io/posts/calc-circle-area-union) --- by n+e
 
-[Three Optimization Tips for C](https://www.slideshare.net/andreialexandrescu1/three-optimization-tips-for-c-15708507)
+* [Three Optimization Tips for C](https://www.slideshare.net/andreialexandrescu1/three-optimization-tips-for-c-15708507)
 
-* You can't improve what you can't measure
-* Reduce strength
-* Minimize array writes
+  * You can't improve what you can't measure
+
+  * Reduce strength
+
+  * Minimize array writes
+
 
 ```c++
 uint32_t digits10(uint64_t v) {
@@ -69,6 +72,15 @@ unsigned u64ToAsciiTable(uint64_t value, char* dst) {
 * [Hopscotch hashing](https://en.wikipedia.org/wiki/Hopscotch_hashing)
 * Cuckoo Hashing: https://web.stanford.edu/class/archive/cs/cs166/cs166.1146/lectures/13/Small13.pdf
 * GeoHash
+
+#### LRU cache
+
+* [linked-list based LRU cache](https://krishankantsinghal.medium.com/my-first-blog-on-medium-583159139237)
+  * hashmap的value存双向链表节点的指针
+* array-list based LRU cache
+  * hashmap的value存array-list的index
+    * Array-list的value存pre-index + post-index + entry
+  * e.g. Persia
 
 #### Radix Tree
 

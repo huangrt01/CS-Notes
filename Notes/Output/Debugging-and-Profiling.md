@@ -87,6 +87,7 @@ gdb：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(ui
   * `-q`  quiet模式
 
 * bt(backtrace), frame X 进帧
+* `info b`
 * `watch -l ` 同时监视表达式本身和表达式指向的内容
 * `attach $pid` debug正在运行的进程
 * `ptype` 打印变量类型；打印stl使用 [python pretty print](https://gist.github.com/daverigby/99dae6997bced43a8fcdbfcb15e36116)
@@ -266,7 +267,6 @@ For web development, the Chrome/Firefox developer tools are quite handy. They fe
 
 #### Static Analysis
 * [Static Analysis介绍](https://en.wikipedia.org/wiki/Static_program_analysis)
-  
   * formal methods 
   * Python: [`pyflakes`](https://pypi.org/project/pyflakes) , [`mypy`](http://mypy-lang.org/), [`shellcheck`](https://www.shellcheck.net/)
   * English也有静态分析！

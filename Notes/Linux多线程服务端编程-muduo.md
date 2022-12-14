@@ -12,6 +12,8 @@ muduo 是一个基于非阻塞 IO 和事件驱动的现代 C++ 网络库，原�
   * 无论操作系统如何调度这些线程，无论这些线程的执行顺序如何交织(interleaving)。
   * 调用端代码无须额外的同步或其他协调动作。
 * 对象创建：不要在构造函数泄漏this指针，最后一行也不行（因为接着可能执行派生类的代码）
+  * 不要在构造函数中注册任何回调
+
 * 析构函数
   * 作为数据成员的 mutex 不能保护析构
   * 同时读写一个 class 的两个对象，有潜在的死锁可能
@@ -333,9 +335,9 @@ muduo 是一个基于非阻塞 IO 和事件驱动的现代 C++ 网络库，原�
           if (h == 0) {
             h = computeHashCode();
             cachedHashCode = h;
-            }
-          return h;
           }
+          return h;
+        }
         // other functions and members...
       }
       ```
@@ -583,6 +585,7 @@ muduo 是一个基于非阻塞 IO 和事件驱动的现代 C++ 网络库，原�
 
     * 有些影响全局状态或者有副作用的函数可以通过加锁来实现线程安全，例如malloc/free、printf、fread/fseek 等等。
 
+      * printf线程安全、cout不线程安全
       * 非线程安全的性能更好的版本：fread_unlocked、fwrite_unlocked 等等，见 `man unlocked_stdio`
       * 例如 fseek() 和 fread() 都是安全的，但是对某个文件“先 seek 再 read”这两步操作中间有可能 会被打断，其他线程有可能趁机修改了文件的当前位置，让程序逻辑无法正确执行。 在这种情况下，我们可以用 flockfile(FILE*) 和 funlockfile(FILE*) 函数来显式地 加锁。并且由于 FILE* 的锁是可重入的，加锁之后再调用 fread() 不会造成死锁。
       * 如果程序直接使用 lseek(2) 和 read(2) 这两个系统调用来随机读取文件，也存 在“先 seek 再 read”这种 race condition，但是似乎我们无法高效地对系统调用加 锁。解决办法是改用 pread(2) 系统调用，它不会改变文件的当前位置。
@@ -901,31 +904,178 @@ muduo 是一个基于非阻塞 IO 和事件驱动的现代 C++ 网络库，原�
 
 #### chpt 7 muduo 编程示例
 
+* 五个简单TCP示例
+  * echo(RFC 862)、discard(RFC 863)、chargen(RFC 864)、daytime(RFC 867)、time(RFC 868)
+  * 以上几个协议的消息格式都非常简单，没有涉及 TCP 网络编程中常见的分包处理，在后文 §7.3 讲 Boost.Asio 的聊天服务器时我们再来讨论这个问题。
+* 文件传输
+  * 在网络编程中，应用程序发送数据往往比接收数据简单(实现非阻塞网络库正相反，发送比接收难)
+* Boost.Asio 的聊天服务器
+  * 长连接的分包：长度字段
+* muduo Buffer 类的设计与使用
+  * muduo 的 IO 模型
+    * 在 event handler 中，程序要尽快交出控制权，返回窗口的事件循环
+  * 为什么 non-blocking 网络编程中应用层 buffer 是必需的
+    * output buffer: 核心是不阻塞带来的约束
+    * input buffer: 数据的不完整性
+  * muduo EventLoop 采用的是 epoll(4) level trigger，而不是 edge trigger。一是 为了与传统的 poll(2) 兼容，因为在文件描述符数目较少，活动文件描述符比例较高时，epoll(4) 不见得比 poll(2) 更高效，必要时可以在进程启动时切换 Poller。 二是 level trigger 编程更容易，以往 select(2)/poll(2) 的经验都可以继续用，不可能发生漏掉事件的 bug。三是读写的时候不必等候出现 EAGAIN，可以节省系统调用次数，降低延迟
+    * [What is the purpose of epoll's edge triggered option?](https://stackoverflow.com/questions/9162712/what-is-the-purpose-of-epolls-edge-triggered-option)  
+    * edge trigger 灵活度更高，可以在收到信号后自己决策read/write时机
+    * level trigger，用户只需要感知 input/output buffer，不用自己操作read/write
+  * Buffer 的功能需求
+  * 关于性能
+    * 如果确实在内存带宽方面遇到问题，说明你做的应用实在太 critical，或许应该 考虑放到 Linux kernel 里边去，而不是在用户态尝试各种优化。毕竟只有把程序做到 kernel 里才能真正实现 zero copy;否则，核心态和用户态之间始终是有一次内存拷贝的。如果放到 kernel 里还不能满足需求，那么要么自己写新的 kernel，或者直接用 FPGA 或 ASIC 操作 network adapter 来实现你的“高性能服务器”。
 
+* 一种自动反射消息类型的 Protobuf 网络传输方案
 
+  * 网络编程中使用 Protobuf 的两个先决条件
 
+    * 自己处理长度信息+类型信息
+    * “山寨”做法：类型信息用唯一的typeid表示或者以name作key用全局的lookup table
 
+  * reflection：根据 type name 反射自动创建 Message 对象
 
+  * Protobuf 传输格式
 
+    * ```c++
+      struct ProtobufTransportFormat __attribute__ ((__packed__))
+      {
+        int32_t  len;
+        int32_t  nameLen;
+        char     typeName[nameLen];
+        char     protobufData[len-nameLen-8];
+        int32_t  checkSum; // adler32 of nameLen, typeName and protobufData
+      };
+      ```
 
+    * signed int。消息中的长度字段只使用了 signed 32-bit int，而没有使用 unsigned int，这是为了跨语言移植性，因为 Java 语言没有 unsigned 类型。另外，Protobuf 一般用于打包小于 1MB 的数据，unsigned int 也没用。
+
+    * check sum。虽然 TCP 是可靠传输协议，虽然 Ethernet 有 CRC-32 校验，但是 网络传输必须要考虑数据损坏的情况，对于关键的网络应用，check sum 是必不可少的。见 § A.1.13 “TCP 的可靠性有多高”。对于 Protobuf 这种紧凑的二进 制格式而言，肉眼看不出数据有没有问题，需要用 check sum。
+
+    * adler32 算法。我没有选用常见的 CRC-32，而是选用了 adler32，因为它的计算 量小、速度比较快，强度和 CRC-32 差不多。另外，zlib 和 java.unit.zip 都直接支持这个算法，不用我们自己实现。
+
+    * type name 以 '\0' 结束。这是为了方便 troubleshooting，比如通过 tcpdump 抓下来的包可以用肉眼很容易看出 type name，而不用根据 nameLen 去一个个数字节。同时，为了方便接收方处理，加入了 nameLen，节省了 strlen()，这 是以空间换时间的做法。
+
+    * 没有版本号。Protobuf Message 的一个突出优点是用 optional fields 来避免协议的版本号
+
+* 在 muduo 中实现 Protobuf 编解码器与消息分发器
+
+  * 为什么 Protobuf 的默认序列化格式没有包含消息的长度与类型
+
+    * rpc/tcp port均能判断消息类型
+    * `service SudokuService { rpc Solve (SudokuRequest) returns (SudokuResponse);`
+    * 只有在使用 TCP 长连接，且在一个连接上传递不止一种消息的情况下(比方同时发 Heartbeat 和 Request/Response，见9.3)，才需要我前文提到的那种打包方案。这时候我们需要一个分发器 dispatcher，把不同类型的消息分给各个消息处理函数
+
+  * 什么是编解码器(codec): encode+decode
+
+    * 传输格式 <-> Buffer
+
+  * example/protobuf/codec*
+
+  * 消息分发器(dispatcher)有什么用
+
+    * ProtobufCodec 与 ProtobufDispatcher 的综合运用
+    * 在构造函数中，通过注册回调函数把四方(TcpConnection、codec、dispatcher、
+
+    QueryServer)结合起来
+
+  * ProtobufDispatcher 的两种实现
+
+  * ProtobufCodec 和 ProtobufDispatcher 有何意义
+
+    * §9.7 “分布式程序的自动化回归测试”会介绍利用 Protobuf 的跨语言特性，采用 Java 为 C++ 服务程序编写 test harness。
+    * 这种编码方案的 Java Netty 示例代码见 http://github.com/chenshuo/muduo-protorpc 中的 com.chenshuo.muduo.codec package。
+
+* 限制服务器的最大并发连接数
+
+  * 
 
 ### Part IV: 附录
 
-* 网络编程学习经验
-  * 计算机网络是个 big topic，涉及很多人物和角色，既有开发人员，也有运维人员。比方说:公司内部两台机器之间 ping 不通，通常由网络运维人员解决，看看是 布线有问题还是路由器设置不对;两台机器能 ping 通，但是程序连不上，经检查是 本机防火墙设置有问题，通常由系统管理员解决;两台机器能连上，但是丢包很严重，发现是网卡或者交换机的网口故障，由硬件维修人员解决;两台机器的程序能连上，但是偶尔发过去的请求得不到响应，通常是程序 bug，应该由开发人员解决。
-  * 面向业务的网络编程的特点
-    * 不一定需要遵循公认的通信协议标准：如果用短连接 TCP 协议，为了优化性能通常要精心设计 accept 新连接的机制，避免惊群并减少上下文切换。但是如果改用长连接， 用最简单的单线程 accept 就行了
-    * 现在的机器上，简单的并发长连接 echo 服务程序不用特别优化就做到十多万 qps，但是如果每个业务请求需要 1ms 密集计算，在 8 核机器上充其量能达到 8 000 qps，优化 IO 不如去优化业务计算(如果投入产出合算的话)。
-  * 几个术语
-    * 在 TCP 网络编程中，客户端和服务端很容易区分，主动发起连接的是客户端，被动接受连接的是服务端。当然，这个“客户端”本身也可能是个后台服务程序，HTTP proxy 对 HTTP server 来说就是个客户端。
-  * 7 × 24 重要吗，内存碎片可怕吗
-    * allocator很成熟了
-    * 普通 PC 服务器的年故障率约为 3% ~ 5%
-  * 协议设计是网络编程的核心
-    * 关闭连接。在传统的网络服务中(特别是短连接服务)，不少是服务端主动关闭连接，比如 daytime、HTTP 1.0。也有少部分是客户端主动关闭连接，通常是些长连接服务，比如 echo、chargen 等。我们自己的业务系统该如何设计连接关闭协议呢?
-      * 服务端主动关闭连接的缺点之一是会多占用服务器资源。服务端主动关闭连接之后会进入TCP的TIME_WAIT 状态，在一段时间之内持有(hold)一些内核资源。如果并发访问量很高，就会影响服务端的处理能力。这似乎暗示我们应该把协议设计为客户端主动关闭，让 TIME_WAIT 状态分散到多台客户机器上，化整为零。
-    * 消息设计，一个消息应该包含哪些内容?
-      * 多个程序相互通信如何避免 race condition?（p. 348）
-      * 外部事件发生时，网络消息应该发 snapshot 还是 delta?
-      * 新增功能时，各个组件如何平滑升级?
-    * end-to-end principle 和 happens-before relationship
+#### 网络编程学习经验
+
+* 计算机网络是个 big topic，涉及很多人物和角色，既有开发人员，也有运维人员。比方说:公司内部两台机器之间 ping 不通，通常由网络运维人员解决，看看是 布线有问题还是路由器设置不对;两台机器能 ping 通，但是程序连不上，经检查是 本机防火墙设置有问题，通常由系统管理员解决;两台机器能连上，但是丢包很严重，发现是网卡或者交换机的网口故障，由硬件维修人员解决;两台机器的程序能连上，但是偶尔发过去的请求得不到响应，通常是程序 bug，应该由开发人员解决。
+* 面向业务的网络编程的特点
+  * 不一定需要遵循公认的通信协议标准：如果用短连接 TCP 协议，为了优化性能通常要精心设计 accept 新连接的机制，避免惊群并减少上下文切换。但是如果改用长连接， 用最简单的单线程 accept 就行了
+  * 现在的机器上，简单的并发长连接 echo 服务程序不用特别优化就做到十多万 qps，但是如果每个业务请求需要 1ms 密集计算，在 8 核机器上充其量能达到 8 000 qps，优化 IO 不如去优化业务计算(如果投入产出合算的话)。
+* 几个术语
+  * 在 TCP 网络编程中，客户端和服务端很容易区分，主动发起连接的是客户端，被动接受连接的是服务端。当然，这个“客户端”本身也可能是个后台服务程序，HTTP proxy 对 HTTP server 来说就是个客户端。
+* 7 × 24 重要吗，内存碎片可怕吗
+  * allocator很成熟了
+  * 普通 PC 服务器的年故障率约为 3% ~ 5%
+* 协议设计是网络编程的核心
+  * 关闭连接。在传统的网络服务中(特别是短连接服务)，不少是服务端主动关闭连接，比如 daytime、HTTP 1.0。也有少部分是客户端主动关闭连接，通常是些长连接服务，比如 echo、chargen 等。我们自己的业务系统该如何设计连接关闭协议呢?
+    * 服务端主动关闭连接的缺点之一是会多占用服务器资源。服务端主动关闭连接之后会进入TCP的TIME_WAIT 状态，在一段时间之内持有(hold)一些内核资源。如果并发访问量很高，就会影响服务端的处理能力。这似乎暗示我们应该把协议设计为客户端主动关闭，让 TIME_WAIT 状态分散到多台客户机器上，化整为零。
+  * 消息设计，一个消息应该包含哪些内容?
+    * 多个程序相互通信如何避免 race condition?（p. 348）
+    * 外部事件发生时，网络消息应该发 snapshot 还是 delta?
+    * 新增功能时，各个组件如何平滑升级?
+  * end-to-end principle 和 happens-before relationship
+
+* 网络编程的三个层次
+  * 熟悉Linux 的 TCP/IP 协议栈的脾气
+    * 有可能出现 TCP 自连接(self-connection)，程序应该有所准备
+      * 见8.11和[《学之者生，用之者死——ACE 历史与简评》](https://blog.csdn.net/solstice/article/details/5364096) 
+      * 三个硬伤：sleep < 2ms、Linux TCP self-connection、timeval on 64-bit
+    * 内核可能有bug
+    * 写可靠的网络程序的关键是熟悉各种场景下的 error code (文件描述符用完了如何?本地 ephemeral port 暂时用完，不能发起新连接怎么办?服务端新建并发连接太快，backlog 用完了，客户端 connect 会返回什么错误?)
+* 最主要的三个例子
+  * echo、chat、proxy
+  * proxy 的作用:连接的管理更加复杂:既要被动接受连接，也要主动发起连接; 既要主动关闭连接，也要被动关闭连接。还要考虑两边速度不匹配(§ 7.13)
+* 学习 Sockets API 的利器:IPython
+  * 在编写 muduo 的时候，我一般会开四个命令行窗口，其一看 log，其二看 strace， 其三用 netcat/tempest/ipython 充作通信对方，其四看 tcpdump
+
+```python
+$ ipython
+In [1]: import socket, select
+In [2]: s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+In [3]: s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+In [4]: s.bind(('', 5000))
+In [5]: s.listen(5) # backlog queue len == 5
+In [6]: client, address = s.accept()  # client.fileno()
+In [7]: client.recv(1024) # 此处会阻塞 Out[7]: 'Hello\n'
+In [8]: epoll = select.epoll()
+In [9]: epoll.register(client.fileno(), select.EPOLLIN) # 试试省略第二个参数
+In [10]: epoll.poll(60) # 此处会阻塞
+Out[10]: [(4, 1)] # 表示第 4 号文件可读(select.EPOLLIN == 1)
+In [11]: client.recv(1024) # 已经有数据可读，不会阻塞了 Out[11]: 'World\n'
+In [12]: client.setblocking(0) # 改为非阻塞方式
+In [13]: client.recv(1024) # 没有数据可读，立刻返回，错误码 EAGAIN == 11 error: [Errno 11] Resource temporarily unavailable
+In [14]: epoll.poll(60) # epoll_wait() 一下 Out[14]: [(4, 1)]
+In [15]: client.recv(1024) # 再去读数据，立刻返回结果 Out[15]: 'Bye!\n'
+In [16]: client.close()
+
+$ nc localhost 5000
+Hello <enter>
+World <enter>
+Bye! <enter>
+```
+
+* TCP 的可靠性有多高
+
+  * Realize That TCP Is a Reliable Protocol, Not an Infallible Protocol.
+  * IP header 和 TCP header 的 checksum 是一种非常弱的 16-bit check sum 算法
+    * 比如没法检查出两个16-bit整数的交换
+    * 以太网的 CRC32 只能保证同一个网段上的通信不会出错(两台机器的网线插到同一个交换机上，这时候以太网的 CRC 是有用的)。但是，如果两台机器之间经过了多级路由器呢?
+      * NAT会替换源地址，这是TCP payload无法通过TCP header checksum校验
+  * 路由器可能出现硬件故障，比方说它的内存故障(或偶然错误)导致收发 IP 报文出现多 bit 的反转或双字节交换，这个反转如果发生在 payload 区，那么无法用链路层、网络层、传输层的 check sum 查出来，只能通过应用层的 check sum 来检测。
+  * 另外一个例证:下载大文件的时候一般都会附上 MD5，这除了有安全方面的考虑(防止篡改)，也说明应用层应该自己设法校验数据的正确性。这是 end-to-end principle 的一个例证
+  * 相关资料：
+    * 《When the CRC and TCP checksum disagree》
+    * [《The Limitations of the Ethernet CRC and TCP/IP checksums for error detection》](http://noahdavids.org/self_published/CRC_and_checksum.html)
+      * 1 in 16 million and 1 in 10 billion TCP segments
+      * 33.91 hours on a gigabit network
+      * 建议：zip、md5
+
+* 书籍推荐
+
+  * 《TCP/IP Illustrated, Vol. 1: The Protocols》TCPv1
+
+  * 《Unix Network Programming, Vol. 1: Networking API》UNP
+
+  * 《Effective TCP/IP Programming》
+
+  * 《TCP/IP Illustrated, Vol. 2: The Implementation》TCPv2
+
+  * 《Pattern-Oriented Software Architecture Volume 2: Patterns for Concurrent
+
+    and Networked Objects》POSA2

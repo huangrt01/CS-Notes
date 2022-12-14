@@ -2,39 +2,44 @@
 
 #### refactoring.guru
 
-https://refactoring.guru/
+https://refactoring.guru/ Design Patterns
 
-* Design Patterns
+* Creational Patterns
 
-  * Creational Patterns
+  * [prototype](https://refactoring.guru/design-patterns/prototype): 由对象创建同类对象
+    * The **Concrete Prototype** class implements the cloning method. In addition to copying the original object’s data to the clone, this method may also handle some edge cases of the cloning process related to cloning linked objects, untangling recursive dependencies, etc.
 
-  * Structural Patterns
+    * 一个用处：register一些通用的subclass instance
 
-  * Behavioral Patterns
+    * 实现细节：CopyFrom() 和 New() 方法
 
-    * [visitor](https://refactoring.guru/design-patterns/visitor): 让 server 接受 client 作为输入
+* Structural Patterns
 
-      * *Visitor lets you define a new operation without changing the classes of the elements on which it operates.*
+* Behavioral Patterns
 
-      * visitor and double dispatch
+  * [visitor](https://refactoring.guru/design-patterns/visitor): 让 server 接受 client 作为输入
 
-      * ```java
-        // Client code
-        foreach (Node node in graph)
-            node.accept(exportVisitor)
-        
-        // City
-        class City is
-            method accept(Visitor v) is
-                v.doForCity(this)
-            // ...
-        
-        // Industry
-        class Industry is
-            method accept(Visitor v) is
-                v.doForIndustry(this)
-            // ...
-        ```
+    * *Visitor lets you define a new operation without changing the classes of the elements on which it operates.*
+
+    * visitor and double dispatch
+
+    * ```java
+      // Client code
+      foreach (Node node in graph)
+          node.accept(exportVisitor)
+      
+      // City
+      class City is
+          method accept(Visitor v) is
+              v.doForCity(this)
+          // ...
+      
+      // Industry
+      class Industry is
+          method accept(Visitor v) is
+              v.doForIndustry(this)
+          // ...
+      ```
 
 
 #### Others

@@ -1188,7 +1188,7 @@ HW:
 * vmstat 1 显示每秒状态
 1. 运行多个，user time变大，idle time 变少
 2. 运行1024MB，swpd不变，free减少，exit之后还原
-3. 4.  cat /proc/meminfo 可用内存132GB，运行巨量mem会core dumped，       in(中断时间)明显增加    偶尔会有sy(system time)
+3. cat /proc/meminfo 可用内存132GB，运行巨量mem会core dumped，in(中断时间)明显增加，偶尔会有sy(system time)
 5. swapon -s，显示可供swap的大小 ，相当于 cat /proc/swaps
 
 #### 22.Beyond Physical Memories: Policies
@@ -2194,48 +2194,27 @@ manual stack management => use an old programming language construct known as a 
 
 
 
+### Appendix
+
+#### Linux 系统文件
+
+* `/etc/fstab` file is a system configuration *file* that contains all available disks, disk partitions and their options
+
+* `cat /proc/interrupts | grep "TLB shootdowns"`
+* /proc/meminfo 可用内存
+* /proc/swaps 可swap内存
+
+* /proc/pid/fd/ 查找持有的fd，查文件泄漏
+  * `/proc/ <img src="https://www.zhihu.com/equation?tex=tid%60%20%E6%88%96%20%60/prod/" alt="tid` 或 `/prod/" class="ee_img tr_noresize" eeimg="1"> pid/task/$tid` 内核任务调度id
+  * /proc/pid/status 线程数目
+* /proc/self/maps
+* /proc/version 查看系统版本
 
 
 
 
 
-
-
-
-
-
-
-
-#### Appendix
-
-##### 编译相关的知识
-* libc: Linux 下的 ANSI C 函数库
-* gcc
-  * cpp文件预处理相关的#  <img src="https://www.zhihu.com/equation?tex=%5Clongrightarrow" alt="\longrightarrow" class="ee_img tr_noresize" eeimg="1">  cc1: 由C到汇编  <img src="https://www.zhihu.com/equation?tex=%5Clongrightarrow" alt="\longrightarrow" class="ee_img tr_noresize" eeimg="1">  ac：assembler  <img src="https://www.zhihu.com/equation?tex=%5Clongrightarrow" alt="\longrightarrow" class="ee_img tr_noresize" eeimg="1">  ld: linker
-
-* gcc参数 
-  * -o：output
-	* -Wall：better warnings
-  * -g：debug，开-g的时候不要开-O
-	* -O     optimization
-  * -E  寻找所有依赖
-  * One issue with mem.c is that address space randomization is usually on by default. To turn it off: Just compile/link as follows: gcc -o mem mem.c -Wall -Wl,-no_pie
-  * -m32
-
-`FLAGS = -Wall -pthread, INCLUDES = ../include, gcc -I  <img src="https://www.zhihu.com/equation?tex=%28INCLUDES%29%20-o%20t0%20t0.c%20" alt="(INCLUDES) -o t0 t0.c " class="ee_img tr_noresize" eeimg="1"> (FLAGS)`
-
-linking with libraries: -lXXX
-* statically-linked library:  libXXX.a(lib)
-* dynamically-linked library : libXXX.so(dll)   
-*  -I /foo/bar : 头文件路径 compile line 
-* -L 库文件路径: link line
-
-Separate Compilation: -c, 只产生object file, 不link, 后面联合link-editor
-
-
-
-inbox：
-* hm5.8    g++ hm5.8.cpp -o hm5.8 -Wall && "/Users/huangrt01/Desktop/OSTEP/ostep-code/cpu-api/“hm5.8  同一个命令，用coderunner输出六行，用terminal输出五行 
+TODO：
 * 19.physically-indexed cache
 * [Linux堆内存管理深入分析]([https://introspelliam.github.io/2017/09/10/Linux%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E6%B7%B1%E5%85%A5%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%8A%EF%BC%89/](https://introspelliam.github.io/2017/09/10/Linux堆内存管理深入分析（上）/))
 

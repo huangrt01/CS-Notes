@@ -892,8 +892,25 @@ https://www.usenix.org/conference/osdi18/presentation/berger
   * Req id、线上修改log等级
   * 一些logger库优化技巧
   * Map software components to subsystems that are individually controllable, cross application trace levels aren't useful.
-
-
+* [That Couldn't Happen To Us... Could It? --- Google SRE](https://catonmat.net/wp-content/uploads/2008/11/thatcouldnthappentous.pdf)
+  * machines:admins > 4000:1
+  * Example: Powering disks off
+    * 机器运维导致数据under replicated
+    * But GFS chunk replication ensures no data loss
+  * Example: Protecting data with checksums
+  * The implementation is important
+    * IP checksum protects only the header
+    * TCP checksums are only 16 bits
+    * If Ethernet frames are modified as they pass through a device, the CRC is recomputed
+    * What about the possibility of data corruption while in the network device?
+  * Both of our example problems feature interactions between hardware and software design
+    * double-bit flips
+  * Lessons Learned
+    * Devise testing strategies that cut across every type of variability
+    * Automation saves a lot of manual effort, but it's a bigger hammer
+      * It hurts more when you whack your thumb with it
+    * Redundancy prevented data loss and end-user impact in each case
+      * Redundancy and transparent fail-over at (or above) every level is essential
 
 #### 基础架构与人 —— Haiping Zhao
 

@@ -295,7 +295,7 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 * clang-tidy: https://clang.llvm.org/extra/clang-tidy/
 * clangd插件：https://clangd.llvm.org/installation
   * `sudo apt install clangd-13`
-  * ctrl-p # 跳转符号
+  * command-p # 跳转符号
 
 ```yaml
 ---
@@ -420,7 +420,7 @@ CheckOptions:
 }
 ```
 
-#### c_cpp_properties.json
+##### c_cpp_properties.json
 
 ##### 安装clang
 
@@ -449,7 +449,7 @@ sudo ln -s xxx/bin/clang /usr/bin/clang-13.0
             "cStandard": "c11",
             "cppStandard": "c++14",
             "intelliSenseMode": "linux-clang-x64",
-            "compileCommands": "/home/cs144/muduo/build/compile_commands.json",
+            "compileCommands": "xxx/build/compile_commands.json",
             "compilerArgs": [
                 "-O3"
             ],
@@ -495,7 +495,11 @@ sudo ln -s xxx/bin/clang /usr/bin/clang-13.0
     "version": "2.0.0"
 }
 ```
+#### issues
 
+* [remote ssh can't connect - Server installation process already in progress](https://github.com/microsoft/vscode-remote-release/issues/2507)
+	* remove the hardlink `/home/sma/.vscode-server/bin/78a4c91400152c0f27ba4d363eb56d2835f9903a/vscode-remote-lock.sma.78a4c91400152c0f27ba4d363eb56d2835f9903a'`
+	
 
 
 ### Sublime Text

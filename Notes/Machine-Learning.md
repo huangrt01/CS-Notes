@@ -8,8 +8,6 @@ Materials
 
 ### ML Basics
 
-[为什么过多的特征（feature）导致过拟合（over-fitting)？ - Dr.Shiki的回答 - 知乎](https://www.zhihu.com/question/47375421/answer/306771331)
-
 #### Algorithms
 
 * crossentropy、KL散度、logistic regression、softmax
@@ -35,10 +33,13 @@ Materials
 * Dropout
   * 保证training/serving一致性：training或serving时scale
   * In the dense setting, dropout serves to separate effects from strongly correlated features, resulting in a more robust classifier. But in our sparse, noisy setting adding in dropout appears to simply reduce the amount of data available for learning. 《Ad Click Prediction: a View from the Trenches》
+* 过拟合
+  
+  * 过拟合问题存在其他更深刻的原因。例如，将 28 × 28 的图片实施扁平化操作，将其变换为一个长度为 784 的一维向量，这将完全丢失了像素的空间排列信息
 
-
-
-[灾难遗忘现象](https://en.wikipedia.org/wiki/Catastrophic_interference)
+  * [为什么过多的特征（feature）导致过拟合（over-fitting)？ - Dr.Shiki的回答 - 知乎](https://www.zhihu.com/question/47375421/answer/306771331)
+  
+* [灾难遗忘现象](https://en.wikipedia.org/wiki/Catastrophic_interference)
 
 
 
@@ -286,9 +287,12 @@ Training 量化
 
 ### Bert
 
-Transformer 具有 field reduce 能力，将 N 个 token reduce 成 M 个 token
+* Transformer 具有 field reduce 能力，将 N 个 token reduce 成 M 个 token
+* [GELU](https://paperswithcode.com/method/gelu)
+  * GELUs are used in [GPT-3](https://paperswithcode.com/method/gpt-3), [BERT](https://paperswithcode.com/method/bert), and most other Transformers.
 
-model finetune
+
+#### model finetune
 
 * model finetune是基于BERT预训练模型强大的通用语义能力，使用具体业务场景的训练数据做finetune，从而针对性地修正网络参数，是典型的双阶段方法。（[BERT在美团搜索核心排序的探索和实践](https://zhuanlan.zhihu.com/p/158181085)）
 * 在BERT预训练模型结构相对稳定的情况下，算法工程师做文章的是模型的输入和输出。首先需要了解BERT预训练时输入和输出的特点，BERT的输入是词向量、段向量、位置向量的特征融合（embedding相加或拼接），并且有[CLS]开头符和[SEP]结尾符表示句间关系；输出是各个位置的表示向量。finetune的主要方法有双句分类、单句分类、问答QA、单句标注，区别在于输入是单句/双句；需要监督的输出是 开头符表示向量作为分类信息 或 结合分割符截取部分输出做自然语言预测。
@@ -327,8 +331,27 @@ model finetune
 
   * document oriented tool
 
-
 ### CV
+
+#### 卷积网络
+
+* 基础定义
+
+  * 过滤器常使用一个 4 维的张量表示，前两维表示过滤器的大小，第三维表示输入的通道数，第四维表示输出的通道数
+
+* 特点
+
+  * 局部连接
+
+  * 权值共享：所有神经元共享filter的参数，filters可以有多个
+
+  * 下采样
+    * L2 pooling
+    * Local Contrast Normalization
+
+![image-20221209232135219](Machine-Learning/conv-downsampling.png)
+
+
 
 * group convolution
   * only the input channels in the same group are used for computing a given output channel. A group convolution with total Ci input, Co output channels and G groups is essentially G independent convolutions each with d=Ci/G input and Co/G output channels. 
@@ -337,10 +360,7 @@ model finetune
   * resize到固定大小：大小越大则越准但有噪声，大小越小则误召回率高
   * hamming 距离度量
 
-
-
 * [Constrastive Learning: MoCo and SimCLR](https://mp.weixin.qq.com/s/v5p9QA3vDl-WTF3-7shp4g)
-* 
 
 
 
@@ -351,6 +371,13 @@ model finetune
 [深度强化学习系列（二）强化学习基础 - iker peng的文章 - 知乎](https://zhuanlan.zhihu.com/p/23436744)
 
 
+### AutoML
+
+* [为什么基于Bayesian Optimization的自动搜参没有大规模运用？](https://www.zhihu.com/question/33711002)
+  * 无法并行化
+  * automl的收益问题
+  * 不太适合离散输入
+* [AutoTVM 探秘（二）](https://reku1997.gitee.io/2019/12/31/autotvm-2/)
 
 ### 特征压缩
 

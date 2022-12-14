@@ -298,6 +298,7 @@ git push origin HEAD --force
     * clone之后初始化：`git submodule update --init --recursive`
       * 仅初始化一个特定的submodule：`git submodule update <specific path to submodule>`
     * 更新：`git submodule update --remote & ga . & gc -m "commit message"  `
+    * 移除submodule：https://stackoverflow.com/questions/1260748/how-do-i-remove-a-submodule/36593218#36593218
     * 如果报错already exists in the index ，用`git rm -r --cached /path`解决此问题 
     * 这个特性很适合和[dotfiles](https://github.com/huangrt01/dotfiles)搭配，但如果用在项目里可能[出现问题](https://codingkilledthecat.wordpress.com/2012/04/28/why-your-company-shouldnt-use-git-submodules/)，尤其是需要commit模块代码的时候
     * [使用时可能遇到的坑的集合](https://blog.csdn.net/a13271785989/article/details/42777793)

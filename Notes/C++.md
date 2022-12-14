@@ -1361,6 +1361,10 @@ fwd(length); // forward the copy
 * Runtime: closure
   * A *closure* is the runtime object created by a lambda. Depending on the capture mode, closures hold copies of or references to the captured data.
 
+* Note
+  * The **`mutable`** specification enables the body of a lambda expression to modify variables that are captured by value.
+    * [ref](https://learn.microsoft.com/en-us/cpp/cpp/lambda-expressions-in-cpp?view=msvc-170)
+
 ##### Item 31: Avoid default capture modes
 
 There are two default capture modes in C++11: by-reference and by-value. Default by-reference capture can lead to dangling references. Default by-value capture lures you into thinking you’re immune to that problem (you’re not), and it lulls you into thinking your closures are self-contained (they may not be).
@@ -2284,10 +2288,87 @@ MyData *ptr = new(&data) MyData(2);
 ```
 
 * `operator new` and `operator delete` is the C++ equivalent of `malloc` and `free` 
+
 * array 形式的 `operator new[]`，会分别为每个 object 做构造和析构
+
 * [Delete this](https://blog.csdn.net/weiwangchao_/article/details/4746969)
 
+* 这个stackoverflow讨论了alignment：https://stackoverflow.com/questions/506518/is-there-any-guarantee-of-alignment-of-address-return-by-cs-new-operation
+
+  * The pointer returned from the allocation function `operator new[]()` is well aligned. But `new T[n]` is not required to, and usually does not, return `operator new[](n * sizeof (T))`. Almost every compiler adds metadata in front to track the number of elements (so that the right number of destructors are called), and sticking a header in front obviously changes the alignment.
+  * The other thing is that minimal correct alignment which you get from `new[]` is not the same as optimal alignment. For performance reasons you want certain structures aligned to the cache. As such, even if you update your answer to cite the correct section of the Standard, it still doesn't address the question asked. Also, some instructions (notably SSE) *require* more stringent alignment.
+
+  * 其实x86下的内存对齐对性能影响不大，不对齐的主要负面作用是：
+    * 踩到一些库的坑，比如内存不对齐则走入冷门分支，性能差（e.g. TVM C++ input tensor）
+    * 跨平台踩坑，arm主要是atomic指令，要求对齐
+  * std的alignment
+    * https://en.cppreference.com/w/cpp/language/object#Alignment
+    * https://en.cppreference.com/w/cpp/types/max_align_t
+    * operator new 的参数 [std::align_val_t](http://en.cppreference.com/w/cpp/memory/new/align_val_t)
+
 ### Abseil C++ Tips
+
+#### Tip of the Week #93: using `absl::Span`
+
+*  It provides a read-only interface to the elements of the vector, but it can also be constructed from non-vector types (like arrays and initializer lists) without incurring the cost of copying the elements.
+* The caller can pass a slice of the original vector, or pass a plain array. It is also compatible with other array-like containers, like ...
+* examples
+  * basic usage
+  * Safer memcpy
+  * Const Correctness for Vector of Pointers
+
+```c++
+void TakesVector(const std::vector<int>& ints);
+void TakesSpan(absl::Span<const int> ints);
+
+void PassOnlyFirst3Elements() {
+  std::vector<int> ints = MakeInts();
+  // We need to create a temporary vector, and incur an allocation and a copy.
+  TakesVector(std::vector<int>(ints.begin(), ints.begin() + 3));
+  // No copy or allocations are made when using Span.
+  TakesSpan(absl::Span<const int>(ints.data(), 3));
+}
+
+void PassALiteral() {
+  // This creates a temporary std::vector<int>.
+  TakesVector({1, 2, 3});
+  // Span does not need a temporary allocation and copy, so it is faster.
+  TakesSpan({1, 2, 3});
+}
+void IHaveAnArray() {
+  int values[10] = ...;
+  // Once more, a temporary std::vector<int> is created.
+  TakesVector(std::vector<int>(std::begin(values), std::end(values)));
+  // Just pass the array. Span detects the size automatically.
+  // No copy was made.
+  TakesSpan(values);
+}
+```
+
+```c++
+// Good code
+class DoThisInstead {
+ public:
+  absl::Span<const Foo* const> foos() const { return foos_; }
+
+ private:
+  std::vector<Foo*> foos_;
+};
+
+void Caller(const DoThisInstead& my_class) {
+  // This one doesn't compile.
+  // my_class.foos()[0]->SomeNonConstOp();
+}
+```
+
+```c++
+absl::Span<float> GetMutableNum(void* ctx) const {
+  float* ctx_float = static_cast<float*>(ctx);
+  return absl::MakeSpan(ctx_float, ctx_float + dim_size_);
+}
+```
+
+
 
 #### Tip of the Week #108: Avoid `std::bind`
 
@@ -2681,11 +2762,13 @@ typedef unsigned int		uintptr_t;
 ##### 结构体
 
 * 结构体局部变量要初始化（天坑......）
-* 结构体内存分配问题：内存对齐
+* 结构体内存分配问题：[内存对齐](https://www.cnblogs.com/zyk1113/p/14356984.html)
   * 起始地址为该变量的类型所占的整数倍，若不足则不足部分用数据填充至所占内存的整数倍。
   * 该结构体所占内存为结构体成员变量中最大数据类型的整数倍。
   * e.g.: 1+4+1+8->4+4+8+8=24
   * 基于内存对齐特性，可以有一些巧妙的设计，利用上对齐的额外空间，增加新属性而不增加内存
+  * 属性设置
+    * 字节对齐：`__attribute__ ((__packed__))`
 * [Bit-field in structures](https://leavinel.blogspot.com/2012/06/bit-field-in-structures.html)
 
 
@@ -2792,7 +2875,7 @@ public:
 };
 ```
 
-##### namespace
+##### using / namespace
 
 https://www.runoob.com/cplusplus/cpp-namespaces.html
 
@@ -2806,6 +2889,17 @@ using XXX::object;
 //可嵌套
 using namespace namespace_name1::namespace_name2;
 ```
+
+* 匿名命名空间：写在cpp文件里
+  * 编译器在内部会为这个命名空间生成一个唯一的名字，而且还会为这个匿名的命名空间生成一条using指令
+  * 具有internal属性，不会被外部文件声明extern链接
+  * 不要在头文件中使用匿名命名空间，提倡在cpp/cc文件中使用匿名命名空间来代替static关键字。
+    * 会在每个引用他的cpp文件中生成大量数据
+
+* [派生类中使用 using::父类::函数名](https://blog.csdn.net/qq_33154343/article/details/101381793)
+  * “隐藏”是指派生类的函数屏蔽了与其同名的基类函数，规则如下：
+    * 如果派生类的函数与基类的函数同名，但是参数不同。此时，不论有无virtual关键字，基类的函数将被隐藏（注意别与重载混淆）。
+    * 如果派生类的函数与基类的函数同名，并且参数也相同，但是基类函数没有virtual关键字。此时，基类的函数被隐藏（注意别与覆盖混淆）
 
 
 
@@ -4723,6 +4817,20 @@ std::cout << "Enter an unsigned number: ";
 std::getline(std::cin,str);
 size_t idx = 0;
 unsigned long ul = std::stoul(str,&idx,0);
+```
+
+
+
+#### \<map>
+
+* std::piecewise_construct
+  * e.g. tensorflow/core/lib/monitoring/gauge.h
+
+```c++
+const LabelArray& label_array = {{labels...}};
+cells_.emplace(std::piecewise_construct,
+							 std::forward_as_tuple(label_array),
+               std::forward_as_tuple(ValueType()))
 ```
 
 

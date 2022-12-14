@@ -145,7 +145,9 @@ int howManyBits(int x) {
 
 #### Float
 
-[32位浮点数（很好的资料，认真复习）](https://www.runoob.com/w3cnote/32-float-storage.html)：S(1位) E(8位) M(23位)，exponent要减127做偏移，且需要讨论exponent全0或全1的情形
+* [32位浮点数（很好的资料，认真复习）](https://www.runoob.com/w3cnote/32-float-storage.html)：S(1位) E(8位) M(23位)，exponent要减127做偏移，且需要讨论exponent全0或全1的情形
+  * ieee754 标准下，内存全零是最小的float
+  * 嵌入式上的compiler不一定符合标准
 
 ##### floatScale2(uf)
 ```c++

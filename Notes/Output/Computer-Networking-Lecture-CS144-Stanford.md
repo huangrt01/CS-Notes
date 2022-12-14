@@ -231,8 +231,19 @@ SIP的应用场景
 **The TCP Service Model**
 
 * reliable, end-to-end, bi-directional, in-sequence, bytestream service
-* Peer TCP layers communicate: connection
+  * Positive acknowledgement with retransmission
+  * Peer TCP layers communicate: connection
+  * 传输层方面，由于链路层带宽大增，TCP window scale option 被普遍使用，另外 TCP timestamps option 和 TCP selective ack option 也很常用
+
+* Flow control using sliding window (包括 Nagle 算法等)
+  * 提高吞吐量，充分利用链路层带宽
+  * tcp connection互不感知，缺少对网卡带宽的统筹安排
+  * 原来设计 TCP 的时候，人们认为丢包通常是拥塞造成的，这时应该放慢发送速度，减轻拥塞；无线网中，丢包可能是信号太弱造成的，这时反而应该快速重试，以保证性能
+
 * congestion control
+  * 防止过载造成丢包
+  * 包括 slow start、congestion avoidance、fast retransmit 等
+
 
 **过程**：三次握手和四次挥手（参考2-6的状态转移图理解）
 
@@ -337,6 +348,7 @@ end-to-end check
   * fast and cheap even in software
   * IP, UDP, TCP use one's complement算法：16-bit word packet求和，进位加到底部，再取反码（特例：0xffff -> 0xffff，因为在TCP，checksum field 为 0 意味着没有 checksum）
 * CRC: computes remainder of a polynomial (Ethernet)，见[通信与网络笔记](https://github.com/huangrt01/CS-Notes/blob/master/Notes/%E9%80%9A%E4%BF%A1%E4%B8%8E%E7%BD%91%E7%BB%9C.md)
+  * 通常是由网卡硬件完成的，在发包的时候由硬件填充 CRC，在收包的时候网卡自动丢弃 CRC 不合格的包
   * 虽然more expensive，但支持硬件计算
   * 可对抗2 bits error、奇数error、小于c bits的突发错(burst)
   * 可incrementally计算
@@ -688,7 +700,24 @@ Queues with Random Arrival Processes (Queueing Theory)
   * 状态从后往前propagation的设计，`canputnext()`
   * 阻塞则 `putbq`
 
+* [TCP_NODELAY 和 Nagle 算法](https://www.zhihu.com/question/42308970)
 
+  * tcp协议栈默认关闭nodelay的
+  
+  * ```
+    if there is new data to send
+      if the window size >= MSS and available data is >= MSS
+        send complete MSS segment now
+      else
+        if there is unconfirmed data still in the pipe
+          enqueue data in the buffer until an acknowledge is received
+        else
+          send data immediately
+        end if
+      end if
+    end if
+    ```
+  
 
 ### potpourri
 
@@ -793,6 +822,13 @@ icmp.code == 0
 
 * WIFI5 的连接速度最高 866.7 Mbps，只有开启 WIFI6 模式，并且启用160MHZ，才能突破 866.7 Mbps
 * 路由器 LAN-LAN 级联
+
+#### TCP 吞吐研究
+
+* 千兆以太网的裸吞吐量是 125MB/s，应用层的吞吐率大约在 117MB/s 上下
+  * 【2022年】普遍机器带宽是25or100GB/s了，量级和内存带宽接近，极限情况下的包相关memcpy不可忽略
+  * 在不考虑 jumbo frame 的情况下，计算过程是: 对于千兆以太网，每秒能传输 1000Mbit 数据，即 125000000B/s，每个以太网 frame 的固定开销有:preamble(8B)、MAC(12B)、type(2B)、payload (46B ~ 1500B)、CRC(4B)、gap(12B)，因此最小的以太网帧是 84B，每秒可发送约 1488000 帧(换言之，对于一问一答的 RPC、其 qps 上限约是 700k/s)，最大的以太网帧是 1538B，每秒可发送 81 274 帧。 
+  * 再来算 TCP 有效载荷:一个 TCP segment 包含 IP header(20B)和 TCP header(20B)，还有 Timestamp option(12B)，因此 TCP 的最大吞吐量是 81274 × (1500-52) = 117MB/s，合 112MiB/s。
 
 
 

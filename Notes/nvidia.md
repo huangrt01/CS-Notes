@@ -34,6 +34,7 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
   * vCuda(腾讯)：cuda hook；性能损耗严重
   * cGPU(Alibaba)：ioctl；损耗小，硬隔离，侵入内核（机器容易坏）
   * MPS(Nvidia)：thread；显存隔离，故障隔离不好
+    * 进程级别，进程数量会受限于显存
   * MIG(~A100)：sm/global memory；硬件层面隔离
 
 
@@ -724,6 +725,13 @@ Support:
   * Libraries and directive: cuBLAS, cuDNN, OpenACC
 * Graphics
   * Vulkan, OpenGL, DX11, DX12, DXR, V-sync
+
+
+
+* nvtx记录kernel信息
+  * "//tensorflow/core/profiler:nvtx_utils"
+  * nvtxDomainRangeStartEx 和 nvtxDomainRangeEnd
+  * export TF_ENABLE_NVTX_RANGES=1、export TF_ENABLE_NVTX_RANGES_DETAILED=1
 
 
 

@@ -195,7 +195,17 @@ pipeline.fit(trainingData)
 val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
 ```
 
+### 特征工程
 
+* 参考【tensorflow笔记】的python/data部分
+* 特征转换
+  * 无转换，适用于**int、float**或者对应类型的**定长列表**的特征，可以直接输入神经网络。为了保持统一，我们将这一类命名为PretrainEmbedding。
+  * 转换为ont-hot或者multi-hot类型，适用于**int、string**，或对应定类型的**定长、变长列表**的特征。这种转换方式适合处理小规模类别型特征，其特征转换后的可理解性，以及不同特征值之间的差异都是可衡量的，在训练数据不够大时，是可以优先考虑的类型。这种转换方式，我们命名为Encoding。
+  * 转换为embedding类型，适用于**int、string**，或对应定类型的**定长、变长列表**的特征。这种方式适合大规模的id类特征，需要通过大规模的样本训练来找出当前特征值的最优空间位置。这种转换方式，我们命名为Embedding。
+    * 还有一些诸如embedding加权、多值embedding聚合，共享embedding table等等更细节的优化方式
+* 多次哈希：不论是Encoding还是Embedding，都可能需要对特征值进行哈希，而这就面临哈希冲突的问题，常见有两种处理手段
+  * 增加哈希空间大小。哈希空间大小的配置首先必然受特征值空间的影响，如果哈希空间小于特征值空间，则哈希冲突概率很大；如果远远大于特征值空间，则会产生内存浪费。因此，在合理范围内，通过增加哈希空间来减少哈希冲突概率是非常直觉的做法。
+  * 多次哈希。即一个特征值由多个不同哈希种子的结果来表达，这样只需要任意一种哈希的结果不冲突，则最终哈希结果不会冲突。但是多次哈希会显著提升计算量，因此也也需要在合理范围内选择哈希次数。
 
 ### 召回
 
@@ -254,33 +264,60 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
   * torch.fx symbolic_trace可以变成静态图
 * 部署
   * 静态图，会用torchscript trace出来整个图，然后在ir上做一些编译优化
+* 读数据
+  * https://zhuanlan.zhihu.com/p/376974245
+  * Dataset 每次获取一个Part的Dataframe，外部再进行batch_size的划分，这样在整个迭代期间，最多只会有num_worker个Dataset被实例化，事实上也确实不再有内存溢出的问题
+
+
+```python
+class ExpDataset2(Dataset):
+    def __init__(self, filenames, features_config): 
+        self._filenames = filenames
+        
+    def __getitem__(self, idx):
+        path = self._filenames[idx]
+        return preprocess(read_csv(path)
+        
+def load_data(paths, features_config, num_workers, batch_size):
+    dataset = ExpDataset2(paths, features_config)
+    data = DataLoader(
+        dataset,
+        num_workers=num_workers,
+        batch_size=1,
+        collate_fn=collate_fn2
+    )
+    for df in data:
+        for idx_from in range(0, df.shape[0], batch_size):
+            yield examples[idx_from : idx_from + batch_size]
+```
+
+
 
 ### Go+Torch
 
 https://github.com/wangkuiyi/gotorch
 
-Q: TensorFlow为什么需要引入图这个概念？
+* Q: TensorFlow为什么需要引入图这个概念？
 
-A: 
+  * A1: backward自动求导，需要定义前向的数据结构
+  * A2: python执行速度慢，决定执行效率的是图的解释器。图是python代码的另一种表示形式，开始包括前向计算过程，通过调用TensorFlow API，加入其它op包括反向计算过程和模型更新过程。构造图本质上是在编译。
 
-1.backward自动求导，需要定义前向的数据结构
+  * [TFRT](https://github.com/tensorflow/runtime)
 
-2.python执行速度慢，决定执行效率的是图的解释器。图是python代码的另一种表示形式，开始包括前向计算过程，通过调用TensorFlow API，加入其它op包括反向计算过程和模型更新过程。构造图本质上是在编译。
 
-* [TFRT](https://github.com/tensorflow/runtime)
+* 调用libtorch内部的native function类比tf的op，但native function是函数，而不是一个class，每一个function可以用HLO（一种古老的适用于数值计算的语言）写一遍。gotorch调libtorch调pytorch XLA里的HLO程序，翻译成特定设备优化的代码
 
-调用libtorch内部的native function类比tf的op，但native function是函数，而不是一个class，每一个function可以用HLO（一种古老的适用于数值计算的语言）写一遍。gotorch调libtorch调pytorch XLA里的HLO程序，翻译成特定设备优化的代码
+  * native function有YAML描述，可自动生成Go Wrapper
 
-* native function有YAML描述，可自动生成Go Wrapper
-* torchscripts：用到的python语法的子集 => python高层api可翻译成torchscripts再翻译
+  * torchscripts：用到的python语法的子集 => python高层api可翻译成torchscripts再翻译
 
-如果 Go+Torch 在未来一年里孕育成熟，有望优化以下核心 应用场景:
 
-1. 统一训练和预测系统(目前训练用 Python 写，预测用 C++)
-2. 统一云和端系统(目前云上用 TensorFlow，端上比如 xNN 调用 TensorFlow Lite)
-3. 统一训练和预测时的数据处理流程(目前需要用 Python和C++分别做两套，开销大，而且容易出错)
-4. 统一搜索、推荐、广告、金融核心、移动智能和端智能、无人驾驶等多个领域的基础架构
-5. 能支持新的机器学习模式——online learning、GAN、reinforcement learning、imitation learning等。
+* 如果 Go+Torch 在未来一年里孕育成熟，有望优化以下核心应用场景:
+  * 统一训练和预测系统(目前训练用 Python 写，预测用 C++)
+  * 统一云和端系统(目前云上用 TensorFlow，端上比如 xNN 调用 TensorFlow Lite)
+  * 统一训练和预测时的数据处理流程(目前需要用 Python和C++分别做两套，开销大，而且容易出错)
+  * 统一搜索、推荐、广告、金融核心、移动智能和端智能、无人驾驶等多个领域的基础架构
+  * 能支持新的机器学习模式——online learning、GAN、reinforcement learning、imitation learning等。
 
 ### OneFlow: 大规模分布式深度学习框架
 
@@ -466,6 +503,120 @@ for prediction, label, img in zip(p,l,i):
 
 * 美团优选 张亚峰：推荐系统结合因果推断
 
+##### [TensorFlow 在推荐系统中的分布式训练优化实践](https://tech.meituan.com/2021/12/09/meituan-tensorflow-in-recommender-systems.html)
+
+* tf原生架构的挑战
+  * 所有参数都是用 Variable 表达， 对于百亿以上的稀疏参数开辟了大量的内存，造成了资源的浪费；
+  * 只支持百级别 Worker 的分布式扩展，对上千 Worker 的扩展性较差；
+  * 由于不支持大规模稀疏参数动态添加、删除，增量导出，导致无法支持 Online Learning；
+  * 大规模集群运行时，会遇到慢机和宕机；由于框架层不能处理，会导致任务运行异常
+* 核心问题：无法一直横向扩PS
+  * 增加扇出带来的链路延迟损失超过了加PS算力并发的收益
+  * 优化的核心难点在于：**如何在有限的PS实例下，进行分布式计算的优化**。
+* 自研HashTable
+  * HashTable的大小可以在训练过程中自动伸缩，避免了开辟冗余的存储空间，同时用户无需关注申请大小，从而降低了使用成本。
+  * 针对HashTable方案实施了一系列定制优化，训练速度相比Variable有了很大的提高，可以进行千亿规模模型的训练，扩展性较好。
+  * 得益于稀疏参数的动态伸缩，我们在此基础上支持了Online Learning。
+  * API设计上保持与社区版本兼容，在使用上几乎与原生Variable一致，对接成本极低。
+  * 优化
+    * 稀疏域参数聚合：emb、momentum、v、cnt共用一张表
+    * 在千亿规模下TBBConcurrentHashTable比原生MutableDenseHashTable训练速度上快了3倍
+    * HashTable BucketPool
+* 分布式负载均衡优化
+  * 把所有稀疏参数和大的稠密参数自动、均匀的切分到每个PS上
+  * 原生Adam优化器，实现导致PS负载不均衡
+* 通信优化（RDMA）
+  * https://github.com/tensorflow/networking/pull/38/files
+  * Memory Registration优化
+    * 在RDMA传输数据时，需要提前开辟内存空间并将其注册到网卡设备上（Memory Registration过程，下称MR），使得这片空间可以被网卡直接操作
+    * 10MB ~ 2ms
+    * 问题：社区版Tensorflow RDMA实现，Tensor创建依旧沿用了统一的BFC Allocator，并将所有创建的Tensor都注册到MR上
+    * 优化：仅对这些跨节点通信的Tensor进行MR注册
+  * RDMA静态分配器
+    * req间复用MR
+    * shape和tensor打包协议，避免了原生实现中因Tensor的Shape变化而产生的多次协商过程
+    * Allocation Analysis模块
+      * 在训练开始的一段时间，我们会对分配的历史数据进行分析，以得到一个实际预开辟MR大小以及各个Tensor的预留空间大小。然后我们会暂停训练的进程，启动Allocator的构造过程，包括MR的创建以及通信双端的信息同步。利用相关信息构造MR Info Map，这个Map的Key是传输Tensor的唯一标记（ParsedKey，计算图切图时确定），Info结构体中包含了本地地址指针、offset大小、ibv_send_wr相关信息等。然后恢复训练。
+  * Multi RequestBuffer与CQ负载均衡
+  * Send-Driven & Rendezvous-Bypass
+
+![图10 MR静态分配器](https://p1.meituan.net/travelcube/bc3415b2740a70d030c6464715676f4562230.png)
+
+* Embedding Pipeling
+  * 这个设计有点厉害。。。完全隐藏embedding fetch的相关延时
+  * 前提是staleness损失可控
+
+![图16 Embedding流水线架构流程图](https://p0.meituan.net/travelcube/e4b982ebcaa8b98f1bf370fb43af4cda237614.png)
+
+* Unique&DynamicPartition算子融合
+  * unique算子的缺点：内部使用的内存分配策略较为低效。使用了两倍输入参数（Embedding ID）的大小进行内存分配，但由于输入参数较大，而且重复率高，导致HashTable创建过大且非常稀疏。几乎每次插入都会产生一次minor_page_fault，导致HashTable性能下降
+  * Unique和Dynamic Partition算子存在冗余数据遍历
+
+
+
+##### [TensorFlow在美团外卖推荐场景的GPU训练优化实践](https://tech.meituan.com/2022/03/24/tensorflow-gpu-training-optimization-practice-in-meituan-waimai-recommendation-scenarios.html)
+
+* **GPU服务器特点**
+  - **GPU卡算力很强，但显存仍有限**：如果要充分发挥GPU算力，需要把GPU计算用到的各种数据提前放置到显存中。而从2016年~2020年，NVIDIA Tesla GPU卡[5]计算能力提升了10倍以上，但显存大小只提升了3倍左右。
+  - **其它维度资源并不是很充足**：相比GPU算力的提升速度，单机的CPU、网络带宽的增长速度较慢，如果遇到这两类资源负荷较重的模型，将无法充分发挥GPU的能力，GPU服务器相比CPU服务器的性价比不会太高。
+
+* 挑战
+  * **数据流系统**：如何利用好多网卡、多路CPU，实现高性能的数据流水线，让数据的供给可以跟上GPU的消费速度。
+  * **混合参数计算**：对于大规模稀疏参数，GPU显存直接装不下的情况，如何充分利用GPU高算力、GPU卡间的高带宽，实现一套大规模稀疏参数的计算，同时还需要兼顾稠密参数的计算。
+* 系统的设计与实现
+  * setting：单机多卡、支持100G模型
+  * 减少参数的思路
+    * **去交叉特征**：交叉特征由单特征间做笛卡尔积产生，这会生成巨大的特征ID取值空间和对应Embedding参数表。深度预估模型发展至今，已经有大量的方法通过模型结构来建模单特征间的交互，避免了交叉特征造成的Embedding规模膨胀，如FM系列[16]、AutoInt[17]、CAN[18]等。
+    * **精简特征**：特别是基于NAS的思路，以较低的训练成本实现深度神经网络自适应特征选择，如Dropout Rank[19]和FSCD[20]等工作。
+    * **压缩Embedding向量数**：对特征取值进行复合ID编码和Embedding映射，以远小于特征取值空间的Embedding向量数，来实现丰富的特征Embedding表达，如Compositional Embedding[14]、Binary Code Hash Embedding[21]等工作。
+    * **压缩Embedding向量维度**：一个特征Embedding向量的维度决定了其表征信息的上限，但是并非所有的特征取值都有那么大的信息量，需要Embedding表达。因此，可以每一个特征值自适应的学习精简Embedding维度，从而压缩参数总量，如AutoDim[22]和AMTL[23]等工作。
+    * **量化压缩**：使用半精度甚至int8等更激进的方式，对模型参数做量化压缩，如DPQ[24]和MGQE[25]。
+
+![图1 系统架构](https://p0.meituan.net/travelcube/8efcb9ba1bb1a0f72f6b35366130192c907575.png)
+
+![图2 进程内部执行逻辑](https://p1.meituan.net/travelcube/d5213c915f8d3e192e8e9987736c8bd2933367.png)
+
+* 系统实现
+  * tf + horovod原生
+  * 数据、计算、通信解耦
+* embedding层：
+  * 大的fc用alltoallv
+    * 前向时两次卡间alltoall
+  * 梯度：小的fc AllGather，dense allreduce
+    * 小=稠密="dense sparse"，dense sparse emb table = tf原生variable
+  * 在cuCollections的GPU HashTable基础上实现了特殊接口（find_or_insert），对大规模读写性能进行了优化，然后封装到了TensorFlow中，并在其上实现了低频过滤的功能，能力上对齐CPU版本的稀疏参数存储模块
+* 数据层优化
+  * 样本拉取优化：per numa、多网卡、多卡独立shared memory
+  * 特征解析优化：SIMD优化protobuf::CodedInputStream::ReadVarint64Fallback
+  * MemcpyH2D流水线：
+    * PipelineDataset
+    * CPU内存需要使用Pinned Memory
+  * 硬件调优
+    * 在网络传输方面，为了减少网络协议栈处理开销，提高数据拷贝的效率，我们通过优化网卡配置，开启LRO（Large-Receive-Offload）、TC Flower的硬件卸载、Tx-Nocache-Copy等特性，最终网络带宽提升了17%。
+    * 在CPU性能优化方面，经过性能profiling分析，发现内存延迟和带宽是瓶颈。于是我们尝试了3种NPS配置，综合业务场景和NUMA特性，选择了NPS2。此外，结合其他BIOS配置（例如APBDIS，P-state等），可以将内存延迟降低8%，内存带宽提升6%。
+* 计算层优化
+  * Embedding Pipeline
+    * 在GPU场景中，EG、MG是在同一个GPU Stream上执行CUDA Kernel的，我们尝试过EG、MG分别在独立的GPU Stream上执行，性能会变差，深层原因与CUDA底层实现有关，这个问题本身还在等待解决
+  * 算子优化及XLA
+    * 以Unique算子为例，原生TensorFlow的Unique算子要求输出元素的顺序与输入元素的顺序一致，而在实际场景中，我们并不需要这个限制，我们修改了Unique算子的GPU实现，减少了因输出有序导致的额外执行的GPU Kernel
+    * 缓解XLA对动态shape的支持问题
+      * **局部优化**：对于我们手动引入的动态shape算子（如Unique），我们进行了子图标记，不执行XLA编译，XLA只优化可以稳定加速的子图。
+      * **OOM兜底**：XLA会根据算子的type、input type、shape等信息，缓存编译中间结果，避免重复编译。然而由于稀疏场景以及GPU架构实现的特殊性，天然存在Unique、DynamicPartition等Output shape是动态的算子，这就导致这些算子以及连接在这些算子之后的算子，在执行XLA编译时无法命中XLA缓存而重新编译，新的缓存越来越多，而旧的缓存不会被释放，最终导致CPU内存OOM。我们在XLA内部实现了LRUCache，主动淘汰掉旧的XLA缓存，避免OOM的问题。
+      * **Const Memcpy消除**：XLA在使用TF_HLO重写TensorFlow算子时，对一些编译期已固定的数据会打上Const标记，然而这些Const算子的Output只能定义在Host端，为了将Host端的Output送给Device端需要再加一次MemcpyH2D，这就占用了TensorFlow原有的H2D Stream，影响样本数据提前拷贝到GPU端。由于XLA的Const Output在编译期已经固化，因此没有必要每一步都做一次MemcpyH2D，我们将Device端的Output缓存下来，后续使用该Output时，直接从缓存中读取，避免多余的MemcpyH2D。
+* 通信层优化
+  * 发现卡间通信（AllToAll、AllReduce、AllGather等）协商的时间远远高于数据传输的时间
+  * 怀疑不同卡上算子调度的不一致性，导致了各张卡发起通信的时刻不同，并最终导致了通信协商时间过长
+  * 解决方案
+    * 合并相同dim size的hashtable，减少卡间通信次数
+    * Variable Fusion
+      * 需要注意的是，TensorFlow的Variable分为两种，一种是每个Step全部参数值都参与训练的Dense Variable，如MLP的Weight；另一种是专门用于embedding_lookup的Variable，每个Step只有部分值参与训练，我们称之为Sparse Variable。对于前者，做Variable合并不会影响到算法效果。而对于后者，它反向梯度是IndexedSlices对象，卡间同步默认走的是AllGather通信，如果业务模型中对于Sparse Variables的优化采用的是Lazy优化器，即每个Step只优化更新Variable中的某些行，此时对Sparse Variables做合并，会导致其反向梯度从IndexedSlices对象转为Tensor对象，卡间同步变成AllReduce过程，就可能会影响到算法效果。对于这种情况，我们提供了一个开关，由业务去控制是否合并Sparse Variables。经过我们的实测，在某推荐模型上合并Sparse Variables会提高5～10%的训练性能，而对实际业务效果的影响在一个千分点以内。
+* 训练效果
+  * 大Batch下训练超参调优的问题[26,27]：在保证Epoch不变的前提下，扩大Batch Size会导致参数有效更新次数减少，可能导致模型训练的效果变差
+  * Linear Scaling Rule[28]的原则指导调整学习率
+  * 使用学习率Warmup等更复杂的训练策略[29]
+
+
+
 #### 微软新闻
 
 * msnews.github.io
@@ -497,7 +648,7 @@ for prediction, label, img in zip(p,l,i):
 * 同步训练框架 hybridbackend
   * embedding层：大的fc用alltoallv，小的fc用allreduce
     * 小=稠密="dense sparse"，dense emb table = tf原生variable
-    * 思路参考 https://chowdera.com/2022/03/202203260952140771.html
+    * 思路参考meituan https://discuss.tf.wiki/t/topic/2341
 
 * prmalloc
   * 池子共享，不再用 TLS cache，因为op可能是不同线程运行
@@ -510,13 +661,22 @@ for prediction, label, img in zip(p,l,i):
   * embedding多级混合存储：cpu cache dram pmem ssd
     * 多级混合存储能支持单机serving，主要从ssd读
 
+#### Others
+
+* [当我们在设计推荐场景训练系统](https://zhuanlan.zhihu.com/p/376974245) 讨论了推荐系统标准化的思路
+  * 配置驱动与代码驱动，期望尽量结合上述两种方案的优点，即：
+    * 工作流整体还是通过配置文件驱动，系统会将解析好的配置文件，根据不同的处理模块，将对应部分的配置传递给过去
+    * 对于大部分的任务，基本逻辑都是通用的，如下图中的黄色模块，对于这一部分提供通用的实现。当然，由于代码是内部开源的，即便有少量特殊需求也可以自行开发提交
+    * 对于自由度较高的模块，主要指的是上面说的“模型构建”部分，则系统提供抽象父类，包含基础的功能。自定义模型时，通过继承父类，并重写“前向传播”等方法即可
+  * 训练环境docker化
+
+
+
 ### MLSys Courses
 
 [cs294-2022](https://ucbrise.github.io/cs294-ai-sys-sp22/)
 
 [cs294-2019](https://ucbrise.github.io/cs294-ai-sys-fa19/)
-
-
 
 #### CSE 599W: Systems for ML
 
@@ -1065,7 +1225,7 @@ module.get_output(0, output)
   * How can we easily achieve these patterns
   * What about dynamic style program 
 * Model Parallel Training
-  * Map parts of workload to different devices
+  * Map parts of workload to different devices，主要是解决GPU显存不足的问题
   * Require special dependency patterns (wave style)
     * e.g. LSTM
 
@@ -1270,13 +1430,8 @@ https://arxiv.org/abs/2006.07512
 https://www.usenix.org/system/files/osdi21-qiao.pdf
 
 
-### ToB
 
-[Palantir](https://www.palantir.com/)
-
-[C3.ai](https://c3.ai/#null)
-
-[一篇分析 ToB 与 ToC 技术上区别的文章](https://zhuanlan.zhihu.com/p/341358485)
+https://www2.eecs.berkeley.edu/Pubs/TechRpts/2009/EECS-2009-28.pdf
 
 
 
@@ -1284,11 +1439,247 @@ https://www.usenix.org/system/files/osdi21-qiao.pdf
 
 ### 论文阅读
 
-已读，待整理：
-
 #### MLSys: The New Frontier of Machine Learning Systems
 
+#### Monolith: Real Time Recommendation System With Collisionless Embedding Table, RecSys 22
+
+* Abstract & Conclusion
+  * a collisionless embedding table with optimizations such as expirable embeddings and frequency filtering to reduce its memory footprint
+  * we provide an production-ready online training architecture with high fault-tolerance
+  * we proved that system reliability could be traded-off for real-time learning.
+  * [BytePlus](https://www.byteplus.com/en/product/recommend)，参考【非技术知识笔记】
+* Intro
+  * 推荐场景特点
+    * The features are mostly sparse, categorical and dynamically
+      changing;
+    * The underlying distribution of training data is non-stationary, a.k.a. Concept Drift [8].
+  * Sparsity and Dynamism
+    * embedding多且持续增长
+    * Low-collision hashing不合适（Youtube Recommendations论文）
+  * Non-stationary Distribution
+    * 解释实时性的收益
+* Design
+  * HashTable
+    * tf.variable的局限性：不好支持动态add/delete variable，不支持指定新variable复用旧variable
+    * cuckoo hashmap
+    * 优化内存的手段
+      * ouccurency/probabilistic filter
+      * expire embeddings
+  * Online Training
+    * The online joiner concatenates features with labels from user actions and produces training examples, which are then written to a Kafka queue.
+    * a unique key for each request so that user action and features could correctly pair up
+      * 解决样本回流慢的问题：先查in-memory cache再查kv
+      * negative sampling：sample bias (log odds correction [19] during serving)
+  * Parameter Sync：分钟级sync sparse、天级别dense
+    * Sparse parameters are dominating the size of recommendation models;
+    * Given a short range of time window, only a small subset of IDs gets trained and their embeddings updated;
+    * Dense variables move much slower than sparse embeddings. This is because in momentum-based optimizers, the accumu- lation of momentum for dense variables is magnified by the gigantic size of recommendation training data, while only a few sparse embeddings receives updates in a single data batch.
+      * 参考【Machine Learning笔记】-- AdaGrad 的 naturally decaying learning rate本质
+  * Fault Tolerance：天级dump
+* Evaluation
+  * 内部推荐系统workload
+    * Each model has around 1000 embedding tables, and distribution of size of embedding tables are very uneven
+    * a hashing trick by decomposing to curb the size of embedding table
+      * conflict的损失可以缩小为“冷的emb用到了热emb的一部分“，这个对冷的emb学习的影响可能是有限的
+  * 实验结论：
+    * collisonless提升auc
+    * online auc > batch auc （serving auc提升14%？），正常情况training auc大概提升千分位
+      * 在线学习的收益看场景：特征实时性的影响、新发文占比
+    * 减少sync interval提升auc
+  * 分布式PS容错讨论：丢失的sparse有限，机器loss ～ 等比例dau受影响
+* Related work：
+  * 自研PS：Youtube、Instagram、Grubhub
+  * TF's PS：XDL、[美团](https://tech.meituan.com/2021/12/09/meituan-tensorflow-in-recommender-systems.html)、Kraken、AIBox
+  * online training：XDL、Persia
+
+#### Persia: A Hybrid System Scaling Deep Learning Based Recommenders up to 100 Trillion Parameters
+
+* 写在前面：关于同步训练和异步训练
+  * 同步训练无gradient staleness，可以用更大的batch size
+
+* Intro & Conclusion
+  * 100trillion ~ 100万亿参数，fp16下就是200TB
+  * 能在google cloud platform运行：https://github.com/PersiaML/tutorials/blob/main/src/kubernetes-integration/index.md
+
+![persia-overall](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/persia-overall.png)
+
+* Preliminaries
+  * dense同步 sparse异步
+  * It is worth mentioning that while the W_nn involved computation can be 1e7x more than the W_emb involved computation, the size of W_emb can be 1e7× larger than that of W_nn, especially when W_emb contains many cross features
+  * [Distributed Learning Systems with First-order Methods](https://arxiv.org/pdf/2104.05245.pdf)
+
+* Hybrid Training Algorithm
+  * 权衡sparse access模式下的async update的efficiency和staleness
+  * 支持异构资源
+  * 算法：
+    * W_emb相关的forward和backward不阻塞
+    * dense的forward和backward阻塞
+      * input: buffered embeddings from W_emb
+      * output: activations' gradients
+
+![persia-hybrid](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/persia-hybrid.png)
+
+* System Design and Implementation
+  * 架构
+    * Embedding Worker: async, PS paradigm
+    * NN Worker: AllReduce paradigm
+  * Design Goals
+    * Fill the Async/Sync Gap
+      * NN worker buffer mechanism：缓存dense input + label
+      * Embedding worker buffer mechanism: 缓存样本
+    * Persia Memory Management: array-list based LRU cache
+      * hashmap的value存array-list的index
+        * Array-list的value存pre-index + post-index + entry
+      * 多线程get/put，有锁
+    * Communication Optimization
+      * Optimized communication among NN workers: hiding communication overhead within the backward computation
+        * BAGUA by 快手：《BAGUA: Scaling up Distributed Learning with System Relaxations》
+      * Optimized remote procedure call：zero-copy serialization and deserialization mechanism targeting for tensors TODO
+      * Workload balance of embedding PS: 对每个feature group内的embedding做shuffle，然后平均分布在PS shards上
+      * Communication compression
+        * 无损压缩：unique fids + uint16 index的表示
+        * 有损压缩：fp32to16
+          * Non-uniform mapping: 压缩前scale by  <img src="https://www.zhihu.com/equation?tex=%5Cfrac%7BK%7D%7B%5ClVert%20v%5CrVert%20_%7B%5Cinfty%7D%7D" alt="\frac{K}{\lVert v\rVert _{\infty}}" class="ee_img tr_noresize" eeimg="1"> 
+    * Fault Tolerance
+      * insight：ps能丢梯度，重视实时响应；dense不能丢梯度
+      * ps存shared-memory方便拉起process
+
+![image-20221121215329176](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/persia-system.png)
+
+![image-20221121224430506](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/persia-PS.png)
+
+* Theory Analysis
+  * Assumptions
+    * The assumptions of existence of global minimum, bounded variance,
+      and bounded staleness are commonly used ones.
+    * Bounded staleness: 经验值为5
+  * THEOREM 1: id类特征的低频特性 --> 收敛接近同步训练
+
+![image-20221121234602852](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/persia-theory.png)
+
+* Evaluation
+  * 内部cluster set-up：100 * V100 + 100 * 50 CPU cores
+  * GCP:
+    * 8 a2-highgpu-8g instances (each with 8 Nvidia A100 GPUs) as NN workers;
+    * 100 c2-standard-30 instances (each with 30vCPUs, 120GB RAM) as embedding workers;
+    * 30 m2-ultramem-416 instances (each with 416vCPUs, 12TB RAM) as embedding PS
+  * auc diff
+    * sync/hybrid/async: base/-0.1%/-0.5%
+  * Throughput diff
+    * sync/hybrid/async: 1/2.6/3.1
+* Related Work
+  * xdl将构造tensor的任务交给cpu nodes，大厂经典设计
+  * 百度给ps分层，热的embedding存gpu上，冷的embedding存在ssd里（DeepRec是类似的设计）
+    * 《Distributed hierarchical gpu parameter server for massive scale deep learning ads systems》
+  * HET: Scaling out Huge Embedding Model Training via Cache-enabled Distributed Framework.
+    * GPU cache 热的embedding
+  * AWS SageMaker: model parallelism
+    * https://arxiv.org/abs/2111.05972
+
+#### Core Modeling at Instagram
+
+https://instagram-engineering.com/core-modeling-at-instagram-a51e0158aa48
+
+* Features
+  * N-grams: We select the features by feature importance and smoothness of distribution, because rough distributions are harder to quantize
+* Embeddings: 获取embeddings的方式
+  * Word2Vec: 社交互动关系学习user embedding，(user1, [user2, user3])，本质类似GNN
+  * DL
+    * 向量化召回库：https://github.com/facebookresearch/faiss
+* Pooling and Hashing
+  * pooling的含义：对历史兴趣pooling的结果是兴趣的centroid，推送的新兴趣越靠近越好
+  * hashing: a better hashing strategy which took frequency into account，高热embedding均摊
+  * dimensionality: automatically perform dimensionality reductions on the learned embeddings , and alert if we are off in terms of dimensionality or hash size.
+  * Pooling: bayesian optimization优化pooling超参（max/avg/sum/attention）
+* Cold start and bootstrapping
+  * At Instagram we monitor feature coverage fed into a model and if it is lower than a threshold we have fallback options that are less accurate but only use high fidelity features
+  * user聚类embedding
+  * Coming up we will be baking this into our training pipelines where each feature will have a “reliability” score and we will automatically produce fallback models for every model trained.
+* Offline vs Online vs Recurring
+  * Recurring: 每天重训一个训练前N天数据的模型
+    * We usually evaluate against a fixed golden set, and a changing test set, as a good practice
+  * model validation：检测不同snapshot之间的预估差异
+* Mixture of experts and sub-models
+  * 人群差异问题：[Sparse MoE](https://arxiv.org/pdf/1701.06538.pdf)
+* Offline analysis and backtesting
+  * We have built a cohesive tool that replays past traffic using control and test treatments, and computes a panel of ecosystem and model metrics to help engineers with their project. This allows an engineer to quickly check that the expected results are moving in the intended fashion.
+* Ranking-specific practices
+  * Multi-stage Ranking
+    * LambdaRank
+  * Loss function and inverse propensity weighting
+    * When the ranked list of items doesn’t have a human-generatable ideal relevant ranking (unlike most information theory cases), most pipelines default to point-wise models instead of Learning-To-Rank framework.
+    * For instance, one might rank the Instagram stories by computing P[tapping on the story] for each available medias and sorting by the probability. This works pretty well, albeit the loss function becomes an issue, because in most ranking use-cases the top items are much more impactful than the rest.
+    * inverse propensity weighting: weight training examples by their positions
+  * Position Bias: 最简单的方法，training时加position feature，serving用默认值全零，会有离在线不一致
+
+
+
 #### Deep Neural Networks for Youtube Recommendations, RecSys 16
+
+* Intro: three major perspectives
+
+  * scale
+  * freshness: reponsive, exploitation
+  * noise
+
+  * DL在推荐系统中的应用：recommending news or music, citations, review ratings, collaborative filtering, autoencoders
+
+* System Overview
+  * candidate generation + ranking，一个two-staged的机制，本质上是对数据和用户行为细粒度做分层
+  * 训练时利用offline信息，但测试是用A/B testing
+
+* Candidate generation：Figure 2.
+
+  * Recommendation as Classification
+    * collaborative filtering
+    * a non-linear generalization of factorization techniques，用分类的方法做推荐
+      * 输出经过softmax处理，输入的是video向量和user向量的内积
+      * user向量的学习：利用implicit feedback
+    * 对类别数过多的处理
+      * sample负样本再correct via importance weighting[10]，损失函数只涉及true label和sampled negative classes
+      * hierachical softmax效果不好
+      * serving阶段
+        * approximate scoring scheme sublinear in the number of classes 
+        * softmax对serving没用，转化为nearest neighbor search问题
+  * Model Architecture：Figure 3.
+    * watch和search vector是对variable-length vectors求平均
+
+  * Heterogeneous Signals
+    * DL的优势是能方便地cat各种信息，性别、登入状态、年龄等作为[0,1]变量输入
+    * 输入"Example Age" Feature，用来fresh信息，用户喜欢，可能有viral效应[11]
+  * Label and Context Selection 
+    * generate a fixed number of training examples per user，每个user的权重一致
+    * training examples包括用户看的所有视频，而不仅仅是推荐给用户的视频
+    * withhold information from the classifier，问题的来源：推荐用户刚搜索的视频很蠢 => 
+      discarding sequence information and representing search queries with an unordered bag of tokens
+      * 感觉更多地适用于搜索+推荐综合场景（用户主动+被动接受信息）
+    * asymmetric consumption patterns => Figure 5. predicting future watch
+    * 总结：There is more art than science in selecting the surrogate problem for recommendations
+
+  * Experiements with Features and Depth
+
+* Ranking
+  * The primary role of ranking is to use impression data to specialize and calibrate candidate predictions for the particular user interface.
+  * Feature Representation
+    * 引入univalent和multivalent的概念对变量分类
+    * whether they describe properties of the item (“impression”) or properties of the user/context (“query”), Query features are computed once per request while impres- sion features are computed for each item scored.
+  * feature engineering
+    * 主要的挑战是1）时序动作 2）与impression相关的时序动作如何处理
+  * Embedding Categorical Features
+    * 维度压缩，对数关系
+    * categorical features in the same ID space also share underlying emeddings
+    * 占据了模型大部分参数
+  * Normalizing Continuous Features Neural
+    * 线性插值估算CDF来归一化
+    * 输入x的次方和开方，获取非线性特性
+  * Modeling Expected Watch Time
+    * logistic regression
+
+* 思考
+  * 特征长度的可变性：在输入特征之前再加可变长的神经网络？
+
+* 资料
+  * [Youtube推荐系统的变迁](http://www.datagrand.com/blog/youtube.html)
 
 #### Wide & Deep learning for Recommender Systems, RecSys 17
 
@@ -1330,8 +1721,6 @@ Appendix
 * 资源：
   * 这个大佬的专栏很实用，讲解tensorflow和推荐系统，https://zhuanlan.zhihu.com/learningdeep
 * 思考：可否联系到IRLS方法，最优化稀疏矩阵的秩，用一个类似的矩阵学习秩的表示
-
-
 
 **改进：Deep&Cross模型 (DCN)**
 
@@ -1483,15 +1872,15 @@ MPI (All Reduce) 和 PS，两种分布式计算的发展方向
 
 Sparse + Dense
 
-* SparseNet: Representa-tion learning which captures information from high-dimensional sparse input and embeds them into a low-dimensional space
+* SparseNet: Representation learning which captures information from high-dimensional sparse input and embeds them into a low-dimensional space
 
-* DenseNet: Function fitting which models the relationship between dense em- bedding representation and supervised label
+* DenseNet: Function fitting which models the relationship between dense embedding representation and supervised label
 
-In order to facilitate deployment on various computing platforms,
-XDL can be scheduled by multiple resource management platform, like Yarn, and provides data I/O interfaces to various data storage systems, like HDFS and Kafka.
+In order to facilitate deployment on various computing platforms, XDL can be scheduled by multiple resource management platform, like Yarn, and provides data I/O interfaces to various data storage systems, like HDFS and Kafka.
 
 * I/O
   * Hierarchical sample compression: prefix tree
+    * 用户在同一屏的多条曝光记录，item不同，但是user特征是相同的。基于这个特点，XDL采用多级前缀树来构造训练样本，压缩样本中user特征、ad特征的量（ad特征的压缩是否有必要？）
 
 ![prefix-tree](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/prefix-tree.png)
 

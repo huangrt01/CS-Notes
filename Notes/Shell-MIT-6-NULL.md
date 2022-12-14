@@ -750,8 +750,15 @@ sudo apt autoremove
 #### c
 * cat
 * cd
-* chmod：sudo chmod 777 文件修改为可执行
+* chmod：
+  * `sudo chmod 777 -R` 文件修改为可执行
   * `Permissions 0644 for ‘~/.ssh/id_rsa’ are too open` => `chmod 0600 ~/.ssh/id_rsa`
+* chown: 用于设置文件所有者和文件关联组的命令
+```shell
+HOST_PERM="$(id -u):$(id -g)"
+chown $HOST_PERMS $file
+```
+
 * cloc: 代码行数统计
 * curl
   * -I/--head: 只显示传输文档，经常用于测试连接本身
@@ -763,6 +770,7 @@ sudo apt autoremove
   * [-H vs -L](https://superuser.com/questions/593196/cp-h-vs-cp-l-what-is-a-command-line-symbolic-link), 两者都是 follow symbolic links，区别在于 -r 时表现不同
 * cron: a daemon your system already runs to perform scheduled tasks
 * c++filt: demangle C++/Java symbols
+
 #### d
 * d: zsh的特点，可显示最近10个目录，然后`cd -数字`进入
 * date：日期
@@ -887,7 +895,7 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
 * mv
 #### n
 * [nc(netcat)](https://zhuanlan.zhihu.com/p/83959309): TCP/IP 的瑞士军刀
-  * 端口测试
+  * 端口测试：`nc localhost $port`
 * netstat
 * nohup
   * [如何优雅地让Python程序在后台运行](https://atomlab.org/post/code/python-background/)
@@ -915,6 +923,8 @@ nohup python -u main.py > name.log 2>&1 & echo $! > run.pid
 * pgrep: 配合jobs
   * `pgrep -f 100` 全命令行匹配
 * ping
+* pip
+  * `pip install package==` 显示可安装的版本
 * pkill = pgrep + kill
   *`pkill -9 -f 100` 
 * pmap: Displays the memory map of a process.
@@ -959,10 +969,13 @@ scp -r $folder
 #### t
 * tac: 反向
 * tar
+  * 报错可能需要sudo
+
 
 ```shell
 tar cvzf 压缩文件名.tar.gz 被压缩文件夹 # gz文件
-tar xv(z)f 压缩文件名.tar.gz -C 目标文件夹
+tar xvzf 压缩文件名.tar.gz -C 目标文件夹
+tar xvf  压缩文件名.tar.xz
 ```
 
 

@@ -9,7 +9,7 @@
 
 ```shell
 tree --charset=ascii -I "bin|unitTest" -P "*.[ch]|*.[ch]pp"
-tree -d
+tree -d -L 2
 ```
 
 * grep, [ack](https://beyondgrep.com/), [ag](https://github.com/ggreer/the_silver_searcher) and [rg](https://github.com/BurntSushi/ripgrep)
@@ -46,6 +46,8 @@ cpptree '(?i)\w+' '(?i)poll' 1 4
 calltree '(?i)(dispatch|submit|queue|put|push)' '' 1 1 1
 ```
 
+#### 方法论
+
 * [如何查看大型工程的源代码？- satanson的回答 - 知乎](https://www.zhihu.com/question/21499539/answer/1958299570)
   * 几条关键原则
     * 方法很重要, 但是看大型项目的代码, 态度+意愿+决心更加重要. 学习非线性, 突破在刹那. 学习方法都是ok的，学习结果的差异有赖于非理性因素. 学习本身和实践不同，是一个很唯心的过程. 
@@ -60,6 +62,24 @@ calltree '(?i)(dispatch|submit|queue|put|push)' '' 1 1 1
   * 看代码的方法学
     * demo系统、增量学习、实践试错、磨刀石
 
+* [Build complex system: 讨论复杂工程系统设计和掌控能力的帖子](https://www.zhihu.com/question/394259343/answer/1222164855)
+
+* [程序员阅读源码是一种什么心态？](https://www.zhihu.com/question/29765945/answer/47723971)
+  * 先阅读high-level设计文档，再假想，再explore code，以验证/推翻假想
+  * Top-down的方式，先思考类的职责，再看接口，再看实现，以验证/推翻假想
+
+* 如何读代码 —— Tensorflow Internals 附录
+
+  * 发现领域模型
+
+  ![image-20221126011810119](code-reading/internal-graph.png)
+
+  * 挖掘系统架构
+    * 对于 TensorFlow，C API 是衔接前后端系统的桥梁。理解 C API 的设计，基本能够猜测前后端系统的行为
+  * 抛开细枝末节： `git checkout -b code-reading`
+  * 适可而止，BFS阅读
+
+
 
 
 ### sponge (CS144 TCP Lab)
@@ -67,6 +87,9 @@ calltree '(?i)(dispatch|submit|queue|put|push)' '' 1 1 1
 原理和细节参考我的【Computer-Networking-Lab-CS144-Stanford.md】笔记
 
 https://github.com/huangrt01/TCP-Lab
+
+* 这是用户态的TCP/IP stack
+  * 对比内核中的实现：内核 TCP/IP stack 下接网卡驱动、软中断;上承 inode 转发来的系统调用操作;中间还要与平级的进程文件描述符管理子系统打交道。
 
 #### abstract
 
@@ -296,8 +319,6 @@ sha256sum /tmp/big-received.txt
 
 https://github.com/chenshuo/muduo
 
-
-
 #### 代码结构
 
 * `**` 表示用户不可见的内部类
@@ -390,35 +411,85 @@ calltree '(?i)callback_' '' 1 1 2
 calltree '(?i)reuse.*port' '' 1 1 3
 ```
 
+#### base
 
-
-
+* CurrentThread 支持 stackTrace，做了demangle
+* Thread: 用latch确保线程启动
 
 #### net's interface
 
-* Buffer 仿 Netty ChannelBuffer 的 buffer class，数据的读写通过 buffer 进行。 用户代码不需要调用 read(2)/write(2)，只需要处理收到的数据和准备好要发 送的数据(§ 7.4)。
+* Buffer 仿 Netty ChannelBuffer 的 buffer class，数据的读写通过 buffer 进行。 用户代码不需要调用 read(2)/write(2)，只需要处理收到的数据和准备好要发送的数据(§ 7.4)。
+  * 预留8个字节，方便长度字段读取时 prepend，简化客户端代码，尤其是在parse的过程中可能还不知道长度
+  * peek时需要考虑endian问题，调 net/endian.h
+  * readFd: readv写入buffer以及栈上内存，巧妙解决给每个连接分配读写缓冲区的初始overhead问题
+    * extrabuf可用栈上或thread local
+  * 线程安全性：EventLoop::assertInLoopThread() 保证了只有同一个thread操作buffer
+  * 客户端代码手动shrink vector
   * findCRLF(): `const char Buffer::kCRLF[] = "\r\n";` , `std::search`
-
+  * 一些提升方向：
+    * circular_buffer 避免内部腾挪
+    * 分段连续的 zero copy buffer 再配合 gather scatter IO
+      * libevent 2.0.x 的设计方案。TCPv2 介绍的 BSD TCP/IP 实现中的 mbuf 也是类似的方 案，Linux 的 sk_buff 估计也差不多
 * InetAddress 封装 IPv4 地址(end point)
   * 注意，它不能解析域名，只认 IP 地址。因为直接用 gethostbyname(3) 解析域名会阻塞 IO 线程
   * static函数resolve
 * EventLoop 事件循环(反应器 Reactor)，每个线程只能有一个 EventLoop 实体， 它负责 IO 和定时器事件的分派。
   * 用 eventfd(2) 来异步唤醒，这有别于传统的用一对 pipe(2) 的办法。
   * 用 TimerQueue 作为计时器管理，用 Poller 作为 IO multiplexing。
-* EventLoopThread 启动一个线程，在其中运行 EventLoop::loop()。
+  * 一个loop可以对多个tcpserver（多端口监听，例子是 httpd 同时侦听 80 端口和 443 端口）/ tcpclient（和多个后端交互），功能强大
+* EventLoopThread 启动一个线程，在其中运行 EventLoop::loop()，loop和线程生命周期一致。
   * getNextLoop: round-robin给connection分配loop
-
 * TcpConnection 整个网络库的核心，封装一次 TCP 连接，注意它不能发起连接
-  * `boost::any context_;`
-  * `HttpContext* context = boost::any_cast<HttpContext>(conn->getMutableContext());`
+  * send的三种接口，支持StringPiece
+    * send是线程安全、原子、无交织的
+    * 核心函数sendInLoop，先尝试直接写socket，再尝试写入buffer（写入buffer后即开启channel->enableWriting()）
+    * highWatermarkCallback，可能直接断开连接
 
+  * 建连和destroy连接都会调用connectionCallback_
+    * connectDestroyed, connectEstablished
+
+  * 持有Channel，给Channel设置四种callback handle
+  * forceCloseWithDelay 使用了 WeakCallback
+  * getTcpInfo
+  * `boost::any context_;` 存储用户上下文信息
+    * `HttpContext* context = boost::any_cast<HttpContext>(conn->getMutableContext());`
 * TcpClient 用于编写网络客户端，能发起连接，并且有重试功能
+  * 类的职责：建立连接，包括给连接设置三种callback函数、给connector设置newConnectionCallback
+    * client析构的callback直接是detail::removeConnection -> TcpConnection::connectDestroyed，逻辑少
+    * connection的closecallback是TcpClient::removeConnection，除了destroy TcpConnection，还考虑了retry、connection的所有权释放
+    * Retry: connector重新建连，成功后callback执行 TcpClient::newConnection
+
+  * 线程安全性：直接用bool成员，有点像double-checked locking的技巧，不确定正确性，可能和平台有关？
+    * 用锁处理了建连时间过长时的析构，stop然后延时1s removeConnector（这也是为什么`connector_`用shared_ptr的原因，connector析构晚于TcpClient析构）
+
+  * Usage (timeclient): 
+    * onConnection时，如果连接断开，就quit loop
+    * onMessage需要自己处理no enough data的情况，tcpconnection可能一次发送数据不全？ TODO
 * TcpServer 用于编写网络服务器，接受客户的连接。
+  * 和Client一样，监听连接，设置三种基本callback，acceptor cb执行newConnection，外加了 ThreadInitCallback
+    * 一个池子维护connections_
+    * newConnectionCallback: getNextLoop，round-robin给connection分配loop
+
+  * 持有一个EventLoopThreadPool，0/1/N三种情况控制I/O+计算模型
+  * 销毁连接较简单，遍历即可
+  * TcpServer::kReusePort控制Acceptor的reuse port开启
+  * 线程安全性：started用了atomic
+
 
 ##### Note
 
 * TcpConnection 的生命期依靠 `shared_ptr` 管理(即用户和库共同控制)。Buffer 的生命期由 TcpConnection 控制。其余类的生命期由用户控制
-* Buffer 和 InetAddress 具有值语义，可以拷贝;其他 class 都是对象语义，不可以拷贝
+  * TcpConnection的销毁：TcpClient->queueInLoop（给connection设置CloseCallback），而TcpServer是直接runInLoop，因为TcpClient持有的connection可以被用户拿到，而TcpServer不行？
+
+* Buffer 和 InetAddress 具有值语义，可以拷贝；其他 class 都是对象语义，不可以拷贝
+* 关闭连接
+  * 主动关闭连接（half close）：TcpConnection::shutdown
+    * muduo 这种关闭连接的方式对对方也有要求，那就是对方 read() 到 0 字节之后会主动关闭连接(无论 shutdownWrite() 还是 close())，一般的网络程序都会这样， 不是什么问题。当然，这么做有一个潜在的安全漏洞，万一对方故意不关闭连接，那么 muduo 的连接就一直半开着，消耗系统资源
+
+  * 被动关闭连接：handleRead在readFd返回0时调用handleClose
+
+
+![muduo-shutdown](code-reading/muduo-shutdown.png)
 
 #### net's internal
 
@@ -465,7 +536,7 @@ examples
 |   `-- ttcp
 |-- asio            从 Boost.Asio 移植的例子
 |   |-- chat          多人聊天的服务端和客户端，示范打包和拆包(codec) 
-|   `-- tutorial    一系列 timers
+|   `-- tutorial      一系列 timers
 |-- cdns            基于 c-ares 的异步 DNS 解析
 |-- curl            基于 curl 的异步 HTTP 客户端
 |-- fastcgi
@@ -512,7 +583,36 @@ examples
 # http://github.com/chenshuo/muduo-protorpc:新的 RPC 实现，自动管理对象生命期
 ```
 
+* asio/chat
+  
+  * 解决的问题：连接之间的互动、防止fd重用
+  * codec: 打包
+    * 利用了 Buffer prepend 8个字节
+  
+    * L32 有潜在的问题，在某些不支持非对齐内存访问的体系结构上会造成 SIGBUS core dump，读取消息长度应该改用 Buffer::peekInt32()
+  
+    * 数据一次就全部到达，这时必须用 while 循环来读出两条消息，否则消息会堆积在 Buffer 中
+    * LengthHeaderCodec: 编解码器，“一个简单的间接层”，介于TcpConnection和ChatServer之间，onMessage在应用层加了一层回调，自然地处理好分包
+    * server_.start() 绝对不能在构造函数里调用，这么做将来会有线程安全 的问题，见 §1.2 的论述
+  
+  * client: 用了EventLoopThread
+    * write和onConnection要加锁，保护shared_ptr
+  * server_threaded.cc 使用多线程 TcpServer，并用 mutex 来保护共享数据 connections_
+  * server_threaded_efficient.cc 对共享数据以 §2.8 “借 shared_ptr 实现 copy-on-write” 的手法来降低锁竞争。
+  * server_threaded_highperformance.cc 采用 thread local 变量，实现多线程高效转发。
+    * 利用了 ThreadInitCallback 生成 thread local 变量
+    * 每个 io thread 持有 thread local 的 connections，并只负责自己connection的send操作
+  
+* file_transfer
+
+  * 这里展示的版本更加健壮，比方说发送 100MB 的文件，支持上万个并发客户连接;内存消耗只与并发连接数有关，跟文件大小无关;任何连接可以在任何时候断开，程序不会有内存泄漏或崩溃。
+
+  * download2.cc 这个版本也存在一个问题，如果客户端故意只发起连接，不接收数据，那么要么 把服务器进程的文件描述符耗尽，要么占用很多服务端内存(因为每个连接有 64KiB 的发送缓冲区)。解决办法可参考后文 § 7.7 “限制服务器的最大并发连接数”和 § 7.10 “用 timing wheel 踢掉空闲连接”。
+
+  * download3.cc 用 RAII 管理 fd
+
 * ping_pong：击鼓传花，书 6.5.2
+
   * `server.setThreadNum(threadCount);`
   * Client多线程：`threadPool_.getNextLoop()`
     * 每个Session配一个TcpClient，Session存Client指针方便回调
@@ -521,16 +621,90 @@ examples
   * 为了运行测试
     * 调高每个进程能打开的文件数，比如设为 256000
     * `conn->setTcpNoDelay(true);`
-  
+
+* protobuf
+
+  * Codec: `assert(buf->readableBytes() == sizeof nameLen + nameLen + byte_size + sizeof checkSum);`
+
+    * fillEmptyBuffer()
+      * c_str() 与 size()+1
+
+      * protobuf::message::ByteSizeLong()
+
+      * SerializeWithCachedSizesToArray
+
+  * ProtobufDispatcher
+
+    * lite版本，用户自己down-cast
+    * 模版版本：
+      * 模版派生类  `CallbackT<T>`
+      * `std::is_base_of<google::protobuf::Message, T>::value`
+      * down_pointer_cast -> ::std::static_pointer_cast
+
+  * ProtobufCodec 与 ProtobufDispatcher 的综合运用
+
+    * 在构造函数中，通过注册回调函数把四方(TcpConnection、codec、dispatcher、
+
+      QueryServer)结合起来
+
+
+```c++
+QueryServer(EventLoop* loop,
+              const InetAddress& listenAddr)
+  : server_(loop, listenAddr, "QueryServer"),
+    dispatcher_(std::bind(&QueryServer::onUnknownMessage, this, _1, _2, _3)),
+    codec_(std::bind(&ProtobufDispatcher::onProtobufMessage, &dispatcher_, _1, _2, _3))
+    {
+      dispatcher_.registerMessageCallback<muduo::Query>(
+        std::bind(&QueryServer::onQuery, this, _1, _2, _3));
+      dispatcher_.registerMessageCallback<muduo::Answer>(
+        std::bind(&QueryServer::onAnswer, this, _1, _2, _3));
+      server_.setConnectionCallback(
+        std::bind(&QueryServer::onConnection, this, _1));
+      server_.setMessageCallback(
+        std::bind(&ProtobufCodec::onMessage, &codec_, _1, _2, _3));
+    }
+
+template<typename To, typename From>
+inline ::std::shared_ptr<To> down_pointer_cast(const ::std::shared_ptr<From>& f) {
+  if (false)
+  {
+    implicit_cast<From*, To*>(0);
+  }
+
+#ifndef NDEBUG
+  assert(f == NULL || dynamic_cast<To*>(get_pointer(f)) != NULL);
+#endif
+  return ::std::static_pointer_cast<To>(f);
+}
+```
+
+
+
 * shorturl: SO_REUSEPORT
 
-* simple/echo
+* simple
+
+  * allinone: one loop shared by multiple servers
 
   * EchoServer不需要继承任何类，在构造函数里给TcpServer注册几个回调函数
+
+  * TimeClient
+
+  * Echo: 有一点数据就发送一点数据。这样可以避免客户端恶意地不发送换行字符，而服务端又必须缓存已经收到的数据，导致服务器内存暴涨
+
+    * SetTcpNoDelay
+
+  * ChargenServer
+
+    * onWriteComplete
 
   * ```shell
     ./echoserver_unittest
     ./echoclient_unittest 0.0.0.0
+    
+    ./simple_allinone
+    nc 127.0.0.1 2013 # localhost
     ```
 
 * sudoku：详解muduo多线程模型
@@ -608,14 +782,13 @@ base文件夹中
   * 支持 `LogStream& operator<<(LogStream& s, const Fmt& fmt);`
 
   * ```C
-    // TODO: better itoa.
     #if defined(__clang__)
     #pragma clang diagnostic ignored "-Wtautological-compare"
     #else
     #pragma GCC diagnostic ignored "-Wtype-limits"
     #endif
     ```
-
+  
 * AsyncLogging: 将日志数据从多个前端高效地传输到后端
 
   * 后台线程，用latch确保启动
@@ -648,6 +821,12 @@ base文件夹中
     * 编译器认识 memcpy() 函数，对于定长的内存复制， 会在编译期把它 inline 展开为高效的目标代码
 
   * 线程 id 预先格式化为字符串，`CurrentThread::tidString()`
+
+* [C++如何写一个简单Logger?](https://www.zhihu.com/question/293863155/answer/576148854)
+  * backtrace
+  * 日志参数的校验，防止传递参数错误导致宕机
+
+
 
 #### Scripts
 
@@ -696,6 +875,702 @@ https://github.com/chenshuo/muduo-protorpc
 * examples
   * zurg
     * slave/ChildManager: 用signalfd处理SIGCHLD，调用wait4，`onExit` enqueue callback函数
+
+### protobuf
+
+#### usage
+
+[Language Guide](https://developers.google.com/protocol-buffers/docs/proto3)
+
+[API Reference](https://developers.google.com/protocol-buffers/docs/reference/overview)
+
+![protobuf-type](code-reading/protobuf-type.png)
+
+```shell
+protoc -I=$SRC_DIR --python_out=$DST_DIR $SRC_DIR/addressbook.proto
+```
+
+```protobuf
+syntax = "proto3";
+
+message SearchRequest {
+  string query = 1;
+  int32 page_number = 2;
+  int32 result_per_page = 3;
+  enum Corpus {
+    UNIVERSAL = 0;
+    WEB = 1;
+    IMAGES = 2;
+    LOCAL = 3;
+    NEWS = 4;
+    PRODUCTS = 5;
+    VIDEO = 6;
+  }
+  Corpus corpus = 4;
+}
+
+message MyMessage1 {
+  enum EnumAllowingAlias {
+    option allow_alias = true;
+    UNKNOWN = 0;
+    STARTED = 1;
+    RUNNING = 1;
+  }
+}
+
+enum Foo {
+  reserved 2, 15, 9 to 11, 40 to max;
+  reserved "FOO", "BAR";
+}
+```
+
+* 一种常见使用方式：protoc提前编译好.proto文件
+
+* 不常见的方式：codex读取.proto文件在线解析message
+
+  * https://cxwangyi.blogspot.com/2010/06/google-protocol-buffers-proto.html
+
+  * 自己实现 GetMessageTypeFromProtoFile，由 .proto 获取 FileDescriptorProto
+
+```c++
+const int kMaxRecieveBufferSize = 32 * 1024 * 1024;  // 32MB
+static char buffer[kMaxRecieveBufferSize];
+...
+google::protobuf::DescriptorPool pool;
+const google::protobuf::FileDescriptor* file_desc = pool.BuildFile(file_desc_proto);
+const google::protobuf::Descriptor* message_desc = file_desc->FindMessageTypeByName(message_name);
+
+google::protobuf::DynamicMessageFactory factory;
+const google::protobuf::Message* prototype_msg = factory.GetPrototype(message_desc);
+mutable_message = prototype->New();
+...
+input_stream.read(buffer, proto_msg_size);
+mutable_msg->ParseFromArray(buffer, proto_msg_size)
+```
+
+
+
+* CreateMessage
+
+```c++
+::google::protobuf::ArenaOptions arena_opt;
+arena_opt.start_block_size = 8192;
+arena_opt.max_block_size = 8192;
+google::protobuf::Arena local_arena(arena_opt);
+auto* mini_batch_proto = google::protobuf::Arena::CreateMessage<myProto>(&local_arena);
+```
+
+* Note
+
+  * scalar type有默认值
+
+  * 对于新增的optional type，需要注意加`[default = value]`或者用has方法判断是否存在
+
+  * allow_alias: 允许alias，属性的数字相同
+
+  * reserved values
+
+* Importing Definitions
+
+  * 允许import proto2，但不能直接在proto3用proto2 syntax
+
+  * import public允许pb的替换
+
+
+```protobuf
+// old.proto
+// This is the proto that all clients are importing.
+import public "new.proto";
+import "other.proto";
+```
+
+* Nested Types
+
+```protobuf
+message SearchResponse {
+  message Result {
+    string url = 1;
+    string title = 2;
+    repeated string snippets = 3;
+  }
+  repeated Result results = 1;
+}
+
+message SomeOtherMessage {
+  SearchResponse.Result result = 1;
+}
+```
+
+* Any Type
+
+```c++
+import "google/protobuf/any.proto";
+
+message ErrorStatus {
+  string message = 1;
+  repeated google.protobuf.Any details = 2;
+}
+
+// Storing an arbitrary message type in Any.
+NetworkErrorDetails details = ...;
+ErrorStatus status;
+status.add_details()->PackFrom(details);
+// Reading an arbitrary message from Any.
+ErrorStatus status = ...;
+for (const Any& detail : status.details()) {
+  if (detail.Is<NetworkErrorDetails>()) {
+    NetworkErrorDetails network_error;
+    detail.UnpackTo(&network_error);
+    ... processing network_error ...
+  }
+}
+```
+
+* Oneof Type
+
+  * Changing a single value into a member of a new oneof is safe and binary compatible. Moving multiple fields into a new oneof may be safe if you are sure that no code sets more than one at a time. Moving any fields into an existing oneof is not safe.
+
+  * 小心oneof出core，设了另一个field会把原先的删掉，不能再设原先的内部field
+
+  * [Backwards-compatibility issues](https://developers.google.com/protocol-buffers/docs/proto3#backwards-compatibility_issues)
+
+
+* Map Type
+
+  * When parsing from the wire or when merging, if there are duplicate map keys the last key seen is used. When parsing a map from text format, parsing may fail if there are duplicate keys.
+
+  * Backwards compatibility
+
+```protobuf
+message MapFieldEntry {
+  key_type key = 1;
+  value_type value = 2;
+}
+
+repeated MapFieldEntry map_field = N;
+```
+
+* Packages
+
+  * 相当于C++的namespace
+
+  * `foo.bar.Open`，从后往前搜索，先搜索bar再搜索foo，如果是`.foo.bar.Open`，则从前往后搜索
+
+```protobuf
+package foo.bar;
+message Open { ... }
+
+message Foo {
+  ...
+  foo.bar.Open open = 1;
+  ...
+}
+```
+
+* **RPC Service**
+  * 定义
+
+
+```protobuf
+service SearchService {
+  rpc Search(SearchRequest) returns (SearchResponse);
+}
+```
+
+```c++
+// client code
+using google::protobuf;
+
+protobuf::RpcChannel* channel;
+protobuf::RpcController* controller;
+SearchService* service;
+SearchRequest request;
+SearchResponse response;
+
+void DoSearch() {
+  // You provide classes MyRpcChannel and MyRpcController, which implement
+  // the abstract interfaces protobuf::RpcChannel and protobuf::RpcController.
+  channel = new MyRpcChannel("somehost.example.com:1234");
+  controller = new MyRpcController;
+
+  // The protocol compiler generates the SearchService class based on the
+  // definition given above.
+  service = new SearchService::Stub(channel);
+
+  // Set up the request.
+  request.set_query("protocol buffers");
+
+  // Execute the RPC.
+  service->Search(controller, request, response, protobuf::NewCallback(&Done));
+}
+
+void Done() {
+  delete service;
+  delete channel;
+  delete controller;
+}
+```
+
+```c++
+// service code
+using google::protobuf;
+
+class ExampleSearchService : public SearchService {
+ public:
+  void Search(protobuf::RpcController* controller,
+              const SearchRequest* request,
+              SearchResponse* response,
+              protobuf::Closure* done) {
+    if (request->query() == "google") {
+      response->add_result()->set_url("http://www.google.com");
+    } else if (request->query() == "protocol buffers") {
+      response->add_result()->set_url("http://protobuf.googlecode.com");
+    }
+    done->Run();
+  }
+};
+
+int main() {
+  // You provide class MyRpcServer.  It does not have to implement any
+  // particular interface; this is just an example.
+  MyRpcServer server;
+
+  protobuf::Service* service = new ExampleSearchService;
+  server.ExportOnPort(1234, service);
+  server.Run();
+
+  delete service;
+  return 0;
+}
+```
+
+* Options
+
+`google/protobuf/descriptor.proto`
+
+```proto
+option optimize_for = CODE_SIZE; //SPEED(DEFAULT), LITE_RUNTIME
+option cc_enable_arenas = true;
+int32 old_field = 6 [deprecated = true];
+```
+
+
+
+#### Python API
+
+[Python API](https://googleapis.dev/python/protobuf/latest/), [Python Tutorial](https://developers.google.com/protocol-buffers/docs/pythontutorial), [Python Pb Guide](https://www.datascienceblog.net/post/programming/essential-protobuf-guide-python/)
+
+```python
+import addressbook_pb2
+person = addressbook_pb2.Person()
+person.id = 1234
+person.name = "John Doe"
+person.email = "jdoe@example.com"
+phone = person.phones.add()
+phone.number = "555-4321"
+phone.type = addressbook_pb2.Person.HOME
+```
+
+* Wrapping protocol buffers is also a good idea if you don't have control over the design of the `.proto` file
+* You should never add behaviour to the generated classes by inheriting from them
+
+```python
+# serialize proto object
+import os
+out_dir = "proto_dump"
+with open(os.path.join(out_dir, "person.pb"), "wb") as f:
+    # binary output
+    f.write(person.SerializeToString())
+with open(os.path.join(out_dir, "person.protobuf"), "w") as f:
+    # human-readable output for debugging
+    # by default, entries with a value of 0 are never printed
+    f.write(str(person))
+```
+
+
+
+python动态解析oneof字段
+
+```python
+data = getattr(config, config.WhichOneof('config')).value
+```
+
+* tools
+
+```python
+import pathlib
+import os
+from subprocess import check_call
+
+def generate_proto_code():
+    proto_interface_dir = "./src/interfaces"
+    generated_src_dir = "./src/generated/"
+    out_folder = "src"
+    if not os.path.exists(generated_src_dir):
+        os.mkdir(generated_src_dir)
+    proto_it = pathlib.Path().glob(proto_interface_dir + "/**/*")
+    proto_path = "generated=" + proto_interface_dir
+    protos = [str(proto) for proto in proto_it if proto.is_file()]
+    check_call(["protoc"] + protos + ["--python_out", out_folder, "--proto_path", proto_path])
+    
+from setuptools.command.develop import develop
+from setuptools import setup, find_packages
+
+class CustomDevelopCommand(develop):
+    """Wrapper for custom commands to run before package installation."""
+    uninstall = False
+
+    def run(self):
+        develop.run(self)
+
+    def install_for_development(self):
+        develop.install_for_development(self)
+        generate_proto_code()
+
+setup(
+    name='testpkg',
+    version='1.0.0',
+    package_dir={'': 'src'},
+    cmdclass={
+        'develop': CustomDevelopCommand, # used for pip install -e ./
+    },
+    packages=find_packages(where='src')
+)
+```
+
+
+
+#### internals
+
+* C++程序路径是 src/google/protobuf
+
+* 箭头描述了根据 type name 反射创建具体 Message 对象的过程
+  * 【设计模式】中的prototype pattern
+  * 获取instance：MessageFactory::GetPrototype (const Descriptor*)
+  * 拿到Descriptor*: DescriptorPool 中根据 type name 查到 Descriptor
+  * 相关不变式：chenshuo/recipes/protobuf/descriptor_test.cc
+
+![protobuf](code-reading/protobuf.png)
+
+* message.*
+  * MessageLite
+    * ByteSizeLong()
+  
+    * SerializeWithCachedSizesToArray() 内部使用上次调用的 ByteSizeLong 结果
+  * Message
+    * prototype->New()
+  * MessageFactory
+    * GetPrototype: 线程安全性依赖于实现
+    * 但是 MessageFactory::generated_factory() 获取的 factroy 是 100% 线程安全的
+* Descriptor：主要是对 Message 进行描述，包括 message 的名字、所有字段的描述、原始 proto 文件内容等
+  * `FieldDescriptor* field(int index)`和`FieldDescriptor* FindFieldByNumber(int number)`这个函数中`index`和`number`的含义是不一样的
+    * 某个例子：index为2、number为5是tag number
+  
+  * `Descriptor::DebugString()`
+  
+* FieldDescriptor：要是对 Message 中单个字段进行描述，包括字段名、字段属性、原始的 field 字段等
+
+```c++
+const std::string & name() const; // Name of this field within the message.
+const std::string & lowercase_name() const; // Same as name() except converted to lower-case.
+const std::string & camelcase_name() const; // Same as name() except converted to camel-case.
+CppType cpp_type() const; //C++ type of this field.
+
+enum FieldDescriptor::Type;
+  
+bool is_required() const; // 判断字段是否是必填
+bool is_optional() const; // 判断字段是否是选填
+bool is_repeated() const; // 判断字段是否是重复值
+
+const FieldOptions & FieldDescriptor::options() const
+```
+
+
+
+* dynamic_message.*
+  * use Reflection to implement our reflection interface
+  * Any Descriptors used with a particular factory must outlive the factory.
+  * DynamicMessage
+    * 构造时 type_info->prototype = this;，处理cyclic dependency
+    * CrossLinkPrototypes: allows for fast reflection access of unset message fields. Without it we would have to go to the MessageFactory to get the prototype, which is a much more expensive operation.
+    * Line427: 似乎认为map的label是repeated
+
+  * DynamicMessageFactory
+    * GetPrototypeNoLock
+      * 调用 DynamicMessage(DynamicMessageFactory::TypeInfo* type_info, bool lock_factory);
+      * !type->oneof_decl(i)->is_synthetic() --> real_oneof
+      * 建立reflection
+
+  * Note:
+    * This module often calls "operator new()" to allocate untyped memory, rather than calling something like "new uint8_t[]". 主要考虑是aligned问题，参考【C++笔记】《More Effective C++》 item 8
+
+
+```c++
+// 内存对齐
+inline int DivideRoundingUp(int i, int j) { return (i + (j - 1)) / j; }
+
+static const int kSafeAlignment = sizeof(uint64_t);
+
+inline int AlignTo(int offset, int alignment) {
+  return DivideRoundingUp(offset, alignment) * alignment;
+}
+
+// Rounds the given byte offset up to the next offset aligned such that any
+// type may be stored at it.
+inline int AlignOffset(int offset) { return AlignTo(offset, kSafeAlignment); }
+```
+
+* CodedStream
+  * CodedInputStream::ReadString，优化 string 的 initialize
+    * [相关 C++ proposal](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1072r1.html)
+    * `absl::strings_internal::STLStringResizeUninitialized(buffer, size);`
+    * __resize_default_init is provided by libc++ >= 8.0
+  * [ZeroCopyInputStream](https://groups.google.com/g/protobuf/c/IzGj73Jk14I)
+    * All of the SerializeTo*() methods simply construct a ZeroCopyOutputStream of the desired type and then call SerializeToZeroCopyStream(). 
+    * 核心是避免在parse之前stream copy的开销
+  * SIMD优化protobuf::CodedInputStream::ReadVarint64Fallback
+    * https://tech.meituan.com/2022/03/24/tensorflow-gpu-training-optimization-practice-in-meituan-waimai-recommendation-scenarios.html
+
+* repeated_field.h
+
+```c++
+AddAllocatedInternal()
+// arena 一样则 zero copy
+// if current_size < allocated_size，Make space at [current] by moving first allocated element to end of allocated list.
+    
+// DeleteSubgrange，注意性能
+template <typename Element>
+inline void RepeatedPtrField<Element>::DeleteSubrange(int start, int num) {
+  GOOGLE_DCHECK_GE(start, 0);
+  GOOGLE_DCHECK_GE(num, 0);
+  GOOGLE_DCHECK_LE(start + num, size());
+  for (int i = 0; i < num; ++i) {
+    RepeatedPtrFieldBase::Delete<TypeHandler>(start + i);
+  }
+  ExtractSubrange(start, num, NULL);
+}
+
+mutable_obj()->Add()->CopyFrom(*old_objptr);
+mutable_obj()->AddAllocated(old_objptr);
+```
+
+* Reflection：message.h + generated_message_reflection.cc
+  * [讲解pb的反射](https://zhuanlan.zhihu.com/p/302771012)，提供了动态读、写 message 中单个字段能力
+  * modify the fields of the Message dynamically, in other words, without knowing the message type at compile time
+  * 使用时要求API的精准使用，并没有一个general的Field抽象，主要是考虑性能问题
+    * Set/Get Int32/String/Message/Repeated...
+    * AddInt32/String/... for repeated field
+    * `void Reflection::ListFields(const Message & message, std::vector< const FieldDescriptor * > * output) const`
+
+  * 场景：
+    * 获取pb中所有非空字段
+    * 将字段校验规则放在proto中
+    * 基于 PB 反射的前端页面自动生成方案
+    * 通用存储系统：快速加字段。。pb存到非关系型数据库
+
+
+```protobuf
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.FieldOptions {
+  optional uint32 attr_id              = 50000; //字段id
+  optional bool is_need_encrypt        = 50001 [default = false]; // 字段是否加密,0代表不加密，1代表加密
+  optional string naming_conventions1  = 50002; // 商户组命名规范
+  optional uint32 length_min           = 50003  [default = 0]; // 字段最小长度
+  optional uint32 length_max           = 50004  [default = 1024]; // 字段最大长度
+  optional string regex                = 50005; // 该字段的正则表达式
+}
+
+message SubMerchantInfo {
+  // 商户名称
+  optional string merchant_name = 1 [
+    (attr_id) = 1,
+    (is_encrypt) = 0,
+    (naming_conventions1) = "company_name",
+    (length_min) = 1,
+    (length_max) = 80,
+    (regex.field_rules) = "[a-zA-Z0-9]"
+  ];
+}
+
+#include <google/protobuf/descriptor.h>
+#include <google/protobuf/message.h>
+
+std::string strRegex = FieldDescriptor->options().GetExtension(regex);
+uint32 dwLengthMinp = FieldDescriptor->options().GetExtension(length_min);
+bool bIsNeedEncrypt = FieldDescriptor->options().GetExtension(is_need_encrypt);
+```
+
+```c++
+#include "pb_util.h"
+
+#include <sstream>
+
+namespace comm_tools {
+int PbToMap(const google::protobuf::Message &message,
+            std::map<std::string, std::string> &out) {
+#define CASE_FIELD_TYPE(cpptype, method, valuetype)                            \
+  case google::protobuf::FieldDescriptor::CPPTYPE_##cpptype: {                 \
+    valuetype value = reflection->Get##method(message, field);                 \
+    std::ostringstream oss;                                                    \
+    oss << value;                                                              \
+    out[field->name()] = oss.str();                                            \
+    break;                                                                     \
+  }
+
+#define CASE_FIELD_TYPE_ENUM()                                                 \
+  case google::protobuf::FieldDescriptor::CPPTYPE_ENUM: {                      \
+    int value = reflection->GetEnum(message, field)->number();                 \
+    std::ostringstream oss;                                                    \
+    oss << value;                                                              \
+    out[field->name()] = oss.str();                                            \
+    break;                                                                     \
+  }
+
+#define CASE_FIELD_TYPE_STRING()                                               \
+  case google::protobuf::FieldDescriptor::CPPTYPE_STRING: {                    \
+    std::string value = reflection->GetString(message, field);                 \
+    out[field->name()] = value;                                                \
+    break;                                                                     \
+  }
+
+  const google::protobuf::Descriptor *descriptor = message.GetDescriptor();
+  const google::protobuf::Reflection *reflection = message.GetReflection();
+  for (int i = 0; i < descriptor->field_count(); i++) {
+    const google::protobuf::FieldDescriptor *field = descriptor->field(i);
+    bool has_field = reflection->HasField(message, field);
+
+    if (has_field) {
+      if (field->is_repeated()) {
+        return -1; // 不支持转换repeated字段
+      }
+
+      const std::string &field_name = field->name();
+      switch (field->cpp_type()) {
+        CASE_FIELD_TYPE(INT32, Int32, int);
+        CASE_FIELD_TYPE(UINT32, UInt32, uint32_t);
+        CASE_FIELD_TYPE(FLOAT, Float, float);
+        CASE_FIELD_TYPE(DOUBLE, Double, double);
+        CASE_FIELD_TYPE(BOOL, Bool, bool);
+        CASE_FIELD_TYPE(INT64, Int64, int64_t);
+        CASE_FIELD_TYPE(UINT64, UInt64, uint64_t);
+        CASE_FIELD_TYPE_ENUM();
+        CASE_FIELD_TYPE_STRING();
+      default:
+        return -1; // 其他异常类型
+      }
+    }
+  }
+
+  return 0;
+}
+} // namespace comm_tools
+```
+
+```protobuf
+syntax = "proto2";
+
+package student;
+
+import "google/protobuf/descriptor.proto";
+
+message FieldRule{
+    optional uint32 length_min = 1; // 字段最小长度
+    optional uint32 id         = 2; // 字段映射id
+}
+
+extend google.protobuf.FieldOptions{
+    optional FieldRule field_rule = 50000;
+}
+
+message Student{
+    optional string name   =1 [(field_rule).length_min = 5, (field_rule).id = 1];
+    optional string email = 2 [(field_rule).length_min = 10, (field_rule).id = 2];
+}
+```
+
+#### encode/decode
+
+* varint
+  * int32的变长编码算法如下，负数编码位数高，建议用sint32
+  * sint32的变长编码，通过Zigzag编码将有符号整型映射到无符号整型
+
+```java
+const maxVarintBytes = 10 // maximum length of a varint
+
+func EncodeVarint(x uint64) []byte {
+        var buf [maxVarintBytes]byte
+        var n int
+        for n = 0; x > 127; n++ {
+                // 首位记 1, 写入原始数字从低位始的 7 个 bit
+                buf[n] = 0x80 | uint8(x&0x7F)
+                // 移走记录过的 7 位
+                x >>= 7
+        }
+        // 剩余不足 7 位的部分直接以 8 位形式存下来，故首位为 0
+        buf[n] = uint8(x)
+        n++
+        return buf[0:n]
+}
+
+func Zigzag64(x uint64) uint64 {
+        // 左移一位 XOR (-1 / 0 的 64 位补码)，正负数映射到无符号的奇偶数
+  			// 若 x 为负数，XOR 左边为 -x 的补码左移一位
+        return (x << 1) ^ uint64(int64(x) >> 63)
+}
+```
+
+* float 5 byte，double 9 byte
+* fixed64: 大于 2^56 的数，用 fixed64，因为varint有浪费
+* map/list v.s. embedded message
+  * embedded message: 显式在字段内将key穷举，用optional
+  * map/list：自己
+* 字段号对存储的影响
+  * message 的二进制流中使用字段号（field's number 和 wire_type -- 3bit）作为 key。同时key采用varint编码方式
+  * Tag: (field_num << 3) | wire_type
+* 对标准整数repeated类型开packed=true（proto3默认开）
+  *  tag + length + content + content + content，tag只出现一次
+  * python/google/protobuf/internal/wire_type.py
+  * WIRETYPE_LENGTH_DELIMITED: key + length + context
+    * string,byted,embedded messages, packed repeated fields
+
+```python
+WIRETYPE_VARINT = 0
+WIRETYPE_FIXED64 = 1
+WIRETYPE_LENGTH_DELIMITED = 2
+WIRETYPE_START_GROUP = 3
+WIRETYPE_END_GROUP = 4
+WIRETYPE_FIXED32 = 5
+_WIRETYPE_MAX = 5
+
+# Maps from field type to expected wiretype.
+FIELD_TYPE_TO_WIRE_TYPE = {
+    _FieldDescriptor.TYPE_DOUBLE: wire_format.WIRETYPE_FIXED64,
+    _FieldDescriptor.TYPE_FLOAT: wire_format.WIRETYPE_FIXED32,
+    _FieldDescriptor.TYPE_INT64: wire_format.WIRETYPE_VARINT,
+    _FieldDescriptor.TYPE_UINT64: wire_format.WIRETYPE_VARINT,
+    _FieldDescriptor.TYPE_INT32: wire_format.WIRETYPE_VARINT,
+    _FieldDescriptor.TYPE_FIXED64: wire_format.WIRETYPE_FIXED64,
+    _FieldDescriptor.TYPE_FIXED32: wire_format.WIRETYPE_FIXED32,
+    _FieldDescriptor.TYPE_BOOL: wire_format.WIRETYPE_VARINT,
+    _FieldDescriptor.TYPE_STRING:
+      wire_format.WIRETYPE_LENGTH_DELIMITED,
+    _FieldDescriptor.TYPE_GROUP: wire_format.WIRETYPE_START_GROUP,
+    _FieldDescriptor.TYPE_MESSAGE:
+      wire_format.WIRETYPE_LENGTH_DELIMITED,
+    _FieldDescriptor.TYPE_BYTES:
+      wire_format.WIRETYPE_LENGTH_DELIMITED,
+    _FieldDescriptor.TYPE_UINT32: wire_format.WIRETYPE_VARINT,
+    _FieldDescriptor.TYPE_ENUM: wire_format.WIRETYPE_VARINT,
+    _FieldDescriptor.TYPE_SFIXED32: wire_format.WIRETYPE_FIXED32,
+    _FieldDescriptor.TYPE_SFIXED64: wire_format.WIRETYPE_FIXED64,
+    _FieldDescriptor.TYPE_SINT32: wire_format.WIRETYPE_VARINT,
+    _FieldDescriptor.TYPE_SINT64: wire_format.WIRETYPE_VARINT,
+    }
+```
+
+
+
 
 
 ### recipes
