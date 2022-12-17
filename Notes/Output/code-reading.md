@@ -1271,6 +1271,13 @@ setup(
 * FieldDescriptor：要是对 Message 中单个字段进行描述，包括字段名、字段属性、原始的 field 字段等
 
 ```c++
+OneofDescriptor* type = descriptor->FindOneofByName("type");
+FieldDescriptor* type_field = reflection->GetOneofFieldDescriptor(*conf, type);
+
+FindFieldByName
+```
+
+```c++
 const std::string & name() const; // Name of this field within the message.
 const std::string & lowercase_name() const; // Same as name() except converted to lower-case.
 const std::string & camelcase_name() const; // Same as name() except converted to camel-case.
@@ -1488,6 +1495,14 @@ message Student{
     optional string email = 2 [(field_rule).length_min = 10, (field_rule).id = 2];
 }
 ```
+
+```c++
+Message* msg = reflection->MutableMessage(original_msg, my_field);
+FieldDescriptor* target_field = XXX;
+msg->GetReflection()->SetInt32(msg, target_field, value)
+```
+
+
 
 #### encode/decode
 

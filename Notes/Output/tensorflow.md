@@ -963,6 +963,165 @@ server.join()
     * SymbolicGradientBuilder::SumGradients
       * TensorFlow adds a SumGradients op as required by the chain rule.
 
+##### op_kernel —— 如何写一个Op
+
+* [Extending TensorFlow with Custom C++ Operations](https://www.gresearch.co.uk/blog/article/extending-tensorflow-with-custom-c-operations/)
+  * Motivation
+    * the op’s outputs are dependent only on its inputs and not influenced by any of the subsequent operations. One instance where **this greedy strategy can lead to poor performance is computation involving many elementwise operations on the GPU** (as in the case of the [Gaussian Error Linear Unit](https://arxiv.org/abs/1606.08415) mentioned in our previous post).
+  * 基础版本 tf_cdist，耗时长
+  * tf_cdist_vectorized，显存使用多，O(mnp)
+
+```python
+@tf.function
+def tf_cdist(x, y):
+    n, p = x.shape
+    m, p = y.shape
+    rows = []
+    for i in range(n):
+      row_elems = []
+      for j in range(m):
+        manhattan_dist_ij = tf.math.reduce_sum(tf.abs(x[i, :] - y[j, :]))
+        row_elems.append(manhattan_dist_ij)
+      rows.append(tf.stack(row_elems, axis=0))
+    return tf.stack(rows, axis=0)
+
+@tf.function
+def tf_cdist_vectorised(x, y):
+    n, p = tf.shape(x)
+    m, p = tf.shape(y)
+    z = tf.abs(tf.reshape(x, (n, 1, -1)) - tf.reshape(y, (1, m, -1)))
+    return tf.sum(z, axis=-1)
+```
+
+
+
+
+
+* Op Registration Defines
+  * input tensors
+  * output tensors
+  * allowable types of the tensors
+  * shape checking functionality (to ensure inputs and outputs conform to the shapes required by the computation)
+* OpKernelContext
+  * The context object simply allows the op access to basic functionality such as querying the device, fetching the op’s inputs, and allocating space for new tensors.
+  * `ctx->GetAttr("config", &config_serialized_)` 类型是string
+
+```c++
+// tensorflow/core/ops/pairwise_manhattan_distance_ops.cc
+REGISTER_OP("PairwiseManhattanDistance")
+    .Input("x: T")
+    .Input("y: T")
+    .Output("z: T")
+    .Attr("T: {float, double}")
+    .SetShapeFn([](InferenceContext* c) {
+      ShapeHandle x, y;
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 2, &x));
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 2, &y));
+      DimensionHandle n_x = c->Dim(x, 0);
+      DimensionHandle n_y = c->Dim(y, 0);
+      c->set_output(0, c->Matrix(n_x, n_y));
+      return tensorflow::Status::OK();
+    })
+
+namespace functor {
+  void Compute(OpKernelContext* ctx) override {
+      const Tensor* x_tensor = nullptr;
+      const Tensor* y_tensor = nullptr;
+      // Retrieve all of the inputs
+      OP_REQUIRES_OK(ctx, ctx->input("x", &x_tensor));
+      OP_REQUIRES_OK(ctx, ctx->input("y", &y_tensor));
+      const int64 n = x_tensor->dim_size(0);
+      const int64 m = y_tensor->dim_size(0);
+      const int64 p = x_tensor->dim_size(1);
+			
+      // Allocate space for the output
+      Tensor* z_tensor = nullptr;
+      OP_REQUIRES_OK(
+          ctx, ctx->allocate_output("z", TensorShape({n, m}),
+                                    &z_tensor));
+    
+    	const Device& device = ctx->eigen_device<Device>();
+      // Call a device specific implementation to fill the output
+      functor::ManhattanDistance<Device, T>(n, m, p)(
+          ctx, device,
+          x_tensor->matrix<T>(), y_tensor->matrix<T>(),
+          z_tensor->matrix<T>());
+  }
+  
+  template <typename T>
+  void ManhattanDistance(
+      OpKernelContext* ctx, const CPUDevice& d,
+      typename TTypes<T>::ConstMatrix x,
+      typename TTypes<T>::ConstMatrix y,
+      typename TTypes<T>::Matrix z) {
+    auto n = x.dimension(0);
+    auto m = y.dimension(0);
+    auto p = y.dimension(1);
+    T diff;
+    T dist;
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < m; j++) {
+        dist = static_cast<T>(0);
+        for (int k = 0; k < p; k++) {
+          diff = x(i, k) - y(j, k);
+          dist += Eigen::numext::abs(diff);
+        }
+        z(i, j) = dist;
+      }
+    }
+  }
+}
+```
+
+
+
+* 用op管理ResouceBase
+
+```c++
+void Compute(OpKernelContext* ctx) override {
+  absl::MutexLock l(&mu_);
+  if (my_resource_ == nullptr) {
+    ResourceMgr* rmgr = ctx->resource_manager();
+    OP_REQUIRES_OK(ctx, cinfo_.Init(rmgr, def()));
+    auto creator = [this, ctx](MyResource** out_resource) {
+      *out_resource = ...;
+      return Status::OK();
+    };
+    OP_REQUIRES_OK(
+          ctx, rmgr->LookupOrCreate<MyResource>(
+                   cinfo_.container(), cinfo_.name(),
+            			 &my_resource_, creator));
+  }
+  OP_REQUIRES_OK(
+    ctx, MakeResourceHandleToOutput(
+      ctx, 0, cinfo_.container(), cinfo_.name(),
+      TypeIndex::Make<MyResource>()));
+}
+
+private:
+  std::string config_serialized_;
+  absl::Mutex mu_;
+  MyResource* my_resource_ ABSL_GUARDED_BY(mu_) = nullptr;
+  ContainerInfo cinfo_ ABSL_GUARDED_BY(mu_);
+
+REGISTER_OP("MyResource")
+    .Input("dependent_resource: resource")
+    .Output("handle: resource")
+    .Attr("config: string")
+    .Attr("container: string = ''")
+    .Attr("shared_name: string = ''")
+    .SetIsStateful()
+    .SetShapeFn(shape_inference::ScalarShape);
+
+class MyResource : public ResourceBase {
+  
+};
+```
+
+
+
+
+
 ##### tensor
 
 * shape and type metadata --> 支持 Indexing、Slicing
@@ -1068,6 +1227,46 @@ TF_CALL_POD_STRING_TYPES(REGISTER_SLICE);
 TF_CALL_QUANTIZED_TYPES(REGISTER_SLICE);
 #undef REGISTER_SLICE
 ```
+
+##### resource_mgr
+
+* resource_mgr
+
+  * A ResourceMgr instance keeps track of named and typed resources
+
+    grouped into containers.
+
+  * Each resource must be represented as a sub-class of ResourceBase, which is reference counted explicitly.  Each named resource is registered with ResourceMgr under a named "container" name. At any time, there is at most one instance of a resource given the container name, the resource type and the resource name.
+
+  * All resources for a given container can be dropped by one call of Cleanup().
+
+```c++
+struct MyVar : public ResourceBase {
+  mutex mu;
+  Tensor val;
+}
+
+ResourceMgr rm;
+
+// Create a var.
+MyVar* my_var = new MyVar;
+my_var->val = Tensor(DT_FLOAT, my_shape);
+my_var->val.flat<float>().setZeros();   // 0 initialized.
+ctx->SetStatus(rm.Create("my_container", "my_name", my_var));
+
+// += a variable.
+MyVar* my_var = nullptr;
+Status s = rm.Lookup("my_container", "my_name", &my_var);
+if (s.ok()) {
+  my_var->val.flat<float>() += grad;
+}
+my_var->Unref();   // Or use ScopedUnref().
+ctx->SetStatus(s);
+```
+
+
+
+
 
 #### grappler
 

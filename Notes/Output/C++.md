@@ -2366,6 +2366,12 @@ absl::Span<float> GetMutableNum(void* ctx) const {
   float* ctx_float = static_cast<float*>(ctx);
   return absl::MakeSpan(ctx_float, ctx_float + dim_size_);
 }
+
+auto span = GetMutableNum(ctx);
+std::memcpy(span.data(), ...);
+
+absl::Span<const float> a;
+auto* mutable_a = const_cast<float*>(a.data());
 ```
 
 
@@ -2374,6 +2380,24 @@ absl::Span<float> GetMutableNum(void* ctx) const {
 
 * Applying std::bind() to a type you don’t control is always a bug.
 * 用 bind_front
+
+#### Use Absl
+
+* https://github.com/abseil/abseil-cpp/blob/master/absl/algorithm/container.h
+
+```c++
+template <typename InputSequence, typename OutputIterator>
+OutputIterator c_copy(const InputSequence& input, OutputIterator output) {
+  return std::copy(container_algorithm_internal::c_begin(input),
+                   container_algorithm_internal::c_end(input), output);
+}
+
+absl::c_copy(absl::Span<const float>, proto2::RepeatedFieldBackInserter(proto.mutable_num()));
+```
+
+
+
+
 
 ### 学习材料
 
