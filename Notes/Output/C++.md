@@ -4829,7 +4829,7 @@ strcpy(buf, str.c_str());//strncpy(buf, str.c_str(), 10);
   * 截取子串
     * s.substr(pos, n) 截取s中从pos开始（包括0）的n个字符的子串，并返回
     * s.substr(pos) 截取s中从从pos开始（包括0）到末尾的所有字符的子串，并返回
-  * 替换子串
+  * [替换子串](https://www.scaler.com/topics/replace-in-python/)
     * s.replace(pos, n, s1)    用s1替换s中从pos开始（包括0）的n个字符的子串
   * 查找子串
     * s.find(s1) 查找s中第一次出现s1的位置，并返回（包括0）
