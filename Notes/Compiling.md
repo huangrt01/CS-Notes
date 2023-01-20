@@ -272,6 +272,22 @@ readelf -sW my_bin |grep LOCAL|grep OBJECT | grep -v __PRETTY_FUNCTION__|grep -v
 #pragma pack( [ n ] )
 ```
 
+* `#pragma once`
+  * https://stackoverflow.com/questions/3246803/why-use-ifndef-class-h-and-define-class-h-in-h-file-but-not-in-cpp
+
+```c++
+#ifndef FILE_H
+#define FILE_H
+
+/* ... Declarations etc here ... */
+
+#endif
+```
+
+
+
+
+
 #### 坑
 
 * ```C++
@@ -457,6 +473,28 @@ cc_library(
 )
 ```
 
+```
+cc_library(
+    name = "xxx",
+    hdrs = ["xxx.h"],
+    deps = [
+        "@com_google_glog//:glog",
+    ],
+)
+
+tf_cc_test(
+    name = "xxx_test",
+    srcs = ["xxx_test.cc"],
+    deps = [
+        ":xxx",
+        "@com_google_googletest//:gtest_main",
+        "@org_tensorflow//tensorflow/core:test",
+    ]
+)
+```
+
+
+
 * 动态库使用
 
 ```
@@ -622,6 +660,21 @@ native.filegroup(
   * [bazel: protobuf依赖](https://zhuanlan.zhihu.com/p/488199658)
     * pb冲突: `build --sandbox_block_path=/usr/local`
     * bazel4: `build --incompatible_blacklisted_protos_requires_proto_info=false`
+
+##### bazel ide (for tensorflow 2.4.0)
+
+* 参考[这篇](https://medium.datadriveninvestor.com/tensorflow-internals-how-to-build-tensorflow-from-source-for-development-and-usage-855792a312e0)
+  * https://github.com/vincent-picaud/Bazel_and_CompileCommands
+
+```shell
+git clone https://github.com/vincent-picaud/Bazel_and_CompileCommands
+mv Bazel_and_CompileCommands/* .
+sudo apt install -y protobuf-compiler
+./setup_compile_commands.sh -f
+./create_compile_commands.sh //tensorflow/tools/pip_package:build_pip_package --config=opt -c opt
+```
+
+* 失败：https://github.com/hedronvision/bazel-compile-commands-extractor
 
 
 

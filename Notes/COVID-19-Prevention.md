@@ -1,3 +1,5 @@
+[toc]
+
 ### 日常行为
 
 #### 核心逻辑
@@ -6,10 +8,41 @@
   * nonpharmaceutical interventions (NPIs): 非药物干预
 
 * 时刻关注自己的“手”
-  * 清晰定义“健康”、“污染”这两种状态，当手处于污染状态（接触了潜在污染源），随时消毒
+  * 清晰定义“清洁”、“污染”这两种状态，当手处于污染状态（接触了潜在污染源），随时消毒
   * **Sanitizer is everywhere.**
 * 避开“三密“：密闭空间、密集场所、密切接触
 * 不同场合的防护措施及应对细节：形成肌肉记忆
+
+#### “清洁”与“污染”
+
+[Ref](https://zhuanlan.zhihu.com/p/592242161)
+
+* 清洁的
+  * 用流水+抑菌皂液充分规范洗过的手和物件，是清洁的。
+  * 用免洗消毒液充分涂抹过、还没摸任何东西的手，是清洁的。用酒精胡乱喷两下不算，要满手抹匀才算。
+  * 口罩内侧对着自己的一面是清洁的。
+  * 用清洁的手取出的刚开封的餐巾纸是清洁的。
+  * 用合格消毒液消杀过的环境是清洁的。
+* 污染的
+  * 戴上之后的口罩的外面是污染的。
+  * 用过的口罩摘下来以后，如果里面被摸过了，或者**如果折叠放进兜里，那么口罩外侧、内侧、兜里，全都污染了。**
+  * **已经取下来的口罩，你自己都不记得它用没用过，摸没摸过里面的，一律都是污染的。**
+  * 任何其他人有机会接触的外界的环境和物品，包括各种公共界面比如地面、桌面、座椅、把手、扶手、按钮、公用的触摸屏键盘鼠标，都是污染的。
+  * 如果你的手机被未清洁的手摸过，或者随便放在了公共桌面上等等，是污染的。
+  * 感染者用过的衣物、床上用品等，以及所居住的小环境，是污染的。
+  * 你外出去过公共场合以后，你的外套、裤子、鞋子是污染的。
+  * 纸币是污染的。
+* 核心个人用品，必须保持清洁，例如手机、真无线耳机、没用过的口罩，例如裤兜衣兜，例如女士的随身包的内容。摸之前要保证手是清洁的。
+* 不可污染的区域，指绝对不能用污染的东西去触碰甚至靠近的。
+  - 眼睛、鼻子、嘴，及其附近的皮肤。
+  - 伤口、破损的皮肤。
+  - 你的餐具。
+  - 床上用品。
+  - 婴儿。
+* 半洁净区与半污染区（defined by 荷铭）
+  * 半洁净区是会偶尔摘下口罩的地方，半污染区是我把口罩焊死在脸上的地方
+  * 同一个地方在不同时期也可能属于不同区，例如在疫情高峰期我会将我的工位划为半污染区，而在疫情低谷期我的工位被我列为半洁净区
+
 
 #### 场合应对
 
@@ -25,29 +58,30 @@
   * 开窗通风（本质是室内应尽量通风，由于开了暖气，应抓紧离开房间的时间通风）
 * 家居
   * 整体思路：[避免室内负压](https://mp.weixin.qq.com/s?__biz=MzU0MTA3ODA4NQ==&mid=2247493220&idx=1&sn=93c1ca17e8ecdf8a249e6d827e5a866e)，搞定各种门窗孔洞
-    * [Free liFe的知乎回答](https://www.zhihu.com/question/568850755/answer/2800885837)
-    * [关于防止遭受病毒气溶胶沿楼宇垂直系统入侵的一些措施建议-1.4版-2022.12.13](https://zhuanlan.zhihu.com/p/587386873)
-    * 单元内，有可能上下连通的空气通道包括（有些通道可能有液封或止逆阀）：
-      - 厨房的烟道，洗菜池下水管。
-      - 卫生间的排风道，洗衣机/淋浴地漏，坐便下水管，洗脸池下水管。同层左右连通的空气通道。
-      - 入户门（关门后的门缝）
   * 卫生间：[卫生间如何“防新冠”？ - 装修院长的文章 - 知乎](https://zhuanlan.zhihu.com/p/108054711)
     * 下属管道：U形、往里灌84
     * 地漏：U形、注意水封（勤注水）、往里灌84、可以用保鲜膜覆盖
     * 换气扇：止逆阀
       * 无阳性，开换气扇；有阳性，关换气扇
       * **万一水封状态不确定，不要打开换气扇**
+        * 这一条亲测非常关键，我家开着换气扇的时候，VOC(*volatile organic compounds*) 含量是 2mg/m^3，是不开的50倍。。。
     * 洗手盆：不宜用盆塞，防止拔开盆塞放水自虹吸效应导致水封损失
     * 开窗
     * **冲水时和冲水后，均关闭马桶盖**
+    * 卫生间门：如果有吸油烟机造成的室内负压，建议始终关闭
     * [警惕住宅楼内卫生间新冠病毒气溶胶传播 - 朱博说空气的文章 - 知乎](https://zhuanlan.zhihu.com/p/500731940)
       * 出现气溶胶病毒大量且快速传播的建筑主要特征：有通风竖井；同单元同户型传播；自下而上传播；（采暖季，存在热浮升气流）
-    * 卫生间门：如果有吸油烟机造成的室内负压，建议始终关闭
+      * [相关文献](https://weekly.chinacdc.cn/en/article/doi/10.46234/ccdcw2022.108)
   * 烟道
     * 安装止逆阀
     * 抽油烟机常开
+  * 冰箱
+    * 臭氧消毒机
+    * 食物进入冰柜的流程：先在冰箱内消毒，再进冰柜
   * 室外消毒：给自己的门、门把手、门地板定期喷洒消毒剂
   * 开入户门的时候，别开窗，关上厨房和厕所的门，减少和楼道对流
+* 楼道
+  * 如果有条件，主动给楼道通风
 * 电梯
   * 一次性用品来按，比如用纸
   * 带一支弹出式的圆珠笔
@@ -60,18 +94,24 @@
   * 菜的话就不单独消毒了，清洗就行
 * 就餐
   * 一般不下馆子
+  * “户外”吃饭是最好的稀释病毒的方式
   * 食堂：
     * 取餐前先消毒手，以后多拿几张餐巾纸，在餐桌上铺一个小的干净区域给我自己
     * 拿一张餐巾纸放桌上的远处，口罩外面向下放在那个纸上，吃完饭就把口罩戴上
     * 硬核细节。。小孩去学校带上三明治，摘一次口罩吃一大口，再戴上口罩慢慢嚼
+* 办公室
+  * 中央空调出风口：PM2.5静电防尘网
+  * 办公桌隔离
+  * 小空气消毒机
 * 外出回家
   * 地垫摩擦给鞋子消毒，换拖鞋
-  * 脱外衣裤悬挂（紫外线衣柜）
+    * 考虑 9930 消毒液，不挥发
+  * 掏衣服口袋、脱外衣外裤（紫外线衣柜）、摘口罩
+    * 每个步骤做完给手部消毒
   * 免洗消毒液消毒手部、手机、门把手
   * 洗手（最好直接洗澡）
   * 若接触了严重污染源：盐水洗鼻、漱口
     * [盐水洗鼻的预防原理](https://zhuanlan.zhihu.com/p/514625834)，奥密克戎主要在上呼吸道繁殖（鼻腔、气管、支气管、咽喉），洗鼻可能有帮助。个人觉得预防的作用大于治疗。
-
 * 旅行
   * 飞机火车戴n95，不吃飞机餐，带消毒湿巾随时擦
 
@@ -115,8 +155,15 @@
     * 口罩+隔离+空气质量+检测+接种+风险评估
     * https://docs.google.com/document/d/1Syp8-kXkyTGgdnOPPfWS1rpq-CoOqVIawImaade1gNE/edit
 
+![image-20230116155917933](COVID-19-Prevention/multiple-layers.png)
+
+
+
 * [新冠还没阳的同学需要注意什么 - 李主任在露营的小红书笔记](https://www.xiaohongshu.com/discovery/item/639c8f3f000000001b02411f)
   * 融入【日常行为】章节
+* [共存区往事5：将个人防护融入日常生活的场景流程12.18](https://zhuanlan.zhihu.com/p/592242161) TODO
+  * 融入【日常行为】章节
+
 
 #### 医生指导
 
@@ -133,7 +180,18 @@
   * 可能有 甲流、乙流、新冠、呼吸道合胞病毒 合并感染的情况
   * 单一亚型毒株的重复感染：一大家人最多在两周内就会结束，能保3-6个月的免疫
 
-#### 公共卫生
+#### 公共卫生政策
+
+* [柯观：疫情防控政策调整的“实事求是”](https://www.guancha.cn/keguan/2022_12_31_673588.shtml)
+  * 首先是“实事”，由于社会主体的利益多元、认知多元和表达多元，每个人的“实事”，实际上只是个人对什么是“实事”的认知，而这种认知显然是受其所持立场、利益诉求、信息来源的影响。
+  * 其次是“求是”，至少有两种“是”，一是疫情发展的规律及其对经济社会产生的实际和潜在影响，二是社会不同利益方对疫情的认知以及行为，这两种“是”相互交织，都会对政策选择产生影响。
+  * 对公共部门来说，防疫政策制定需要考虑全社会全局利益，需要同时包含**公众健康、经济发展、社会稳定**三重目标，并根据疫情的发展在三重目标之间进行权衡和优先序调整。
+  * 手段：
+    * 主动向公众提供关键、权威的信息
+    * 扩大公共政策制定过程中的社会参与
+    * 快速的响应和行动
+    * 积极主动沟通：双方在共同目标下，需要以包容的方式对待具体观点和认知的差异，理解各自的困难，汲取重要的信息，发现新的机会，寻找共识。
+  * 目前的政策调整，并不是什么都不管，而是工作重点发生了变化，包括通过扩大生产以及引进国外药物等方式加强用药保障、增加ICU床位的供应、调动医疗体系力量保障高风险人群的救治需要等。
 
 * [即将来临的大创新：软件定义城市](https://mp.weixin.qq.com/s?__biz=MzAwNzY1NTYwMA==&mid=2453901290&idx=1&sn=751945e808303e7a36668a7780d490b3)
   * 科技克服霍乱疫情（1817年开始的100年）
@@ -144,7 +202,7 @@
     * 霍乱的治疗方法和疫苗
   * 展望了一些防疫管理、民生保障的思路
 
-* [同事在4月份对公共卫生的一些思考](https://mp.weixin.qq.com/s/jJR2xP5pgxQoMlayl3xk5w)
+* [某愤青同事在4月份对公共卫生的一些思考](https://mp.weixin.qq.com/s/jJR2xP5pgxQoMlayl3xk5w)
   * 信息公开
     * 1）政府应该明确告诉群众当前辉瑞mrna/灭活疫苗一些关键的流行病学数据：不同r0毒株需要疫苗接种率达到多少才能实现群体免疫；当前各地区一针/三针疫苗接种率；不同群体在0针/一针/三针疫苗基础上的死亡率/重症率/抗感染力。
     * 2）政府应该明确告诉群众包括连花清瘟胶囊在内的各种治疗手段当前的功效/成本等，承诺兜底基本医疗保障
@@ -182,6 +240,27 @@
     * 安装新风系统；
     * 在室内2.4米以上的空间安装室内上层紫外线杀菌设备(UVGI，Upper-Room Ultraviolet Germicidal Irradiation)，人在房间的净高2.4米以下活动，2.4米以上持续杀菌消毒，同时防止房间内人员直接受到紫外线照射。
     * 有输入新风的中央空调，再使用高速排气扇，室内有害微粒降低96%
+* [mckinsey分析劳动力损失](https://www.mckinsey.com/industries/healthcare-systems-and-services/our-insights/one-billion-days-lost-how-covid-19-is-hurting-the-us-workforce)
+  * Stated differently, the cumulative impact of lost time due to COVID-19 is equivalent to a 0.8 to 2.6 percent reduction in the availability of the US workforce.
+  * A billion workdays lost to COVID-19 is enough to have a substantial impact on the economy. Even the midpoint scenario of roughly 600 million workdays lost represents nearly a week missed per worker on average, more than doubling the prepandemic number of sick days taken by Americans.
+    * 估算：600-2000 million workdays ~ 每个劳动力损失1-3周的工作时间
+
+  * Four ways
+    * *Missed work due to acute illness.*
+      * 25%-30%: 坚持工作
+      * 剩下的休假
+        * 35%: 休全假
+        * 40%, working from home is not an option, and about five days of work are lost.
+        * For those able to work from home, we assume that about 50 percent of their productive capacity is lost, representing some combination of working at half capacity for five days or taking around 2.5 sick days.
+    * *Productivity loss due to long COVID.*  
+      * the [affordability challenge](https://www.mckinsey.com/industries/healthcare-systems-and-services/our-insights/the-gathering-storm-the-affordability-challenge-of-endemic-covid-19) that it places on the nation’s healthcare system.[10](javascript:void(0);) 
+
+    * *Missed work due to isolation based on COVID-19 protocol.*
+    * *Productivity loss while caregiving for a dependent family member.* 
+
+  * 劳动力影响
+    * The impact is asymmetric across industries; those sectors whose workers are unable to be productive remotely bear a greater burden.
+
 
 
 #### 国内情况
@@ -190,6 +269,18 @@
   * 定义“**超额发烧搜索指数累计面积**”
   * 香港、台湾和日本这三个地区，当**疫情达到顶峰时，这个“超额发烧搜索指数累计面积”的数值全部刚好达到80**。这两个地区第一波疫情结束时，香港特别行政区的面积达到了160，台湾地区的面积达到了200，日本的最终面积是250
   * 过峰阈值是80，第一轮疫情结束时的阈值是250
+* [预估北京Rt的论文](https://www.medrxiv.org/content/10.1101/2022.12.15.22283522v1)
+  * 11月20号Rt最高，约为3.5
+  
+* 医疗挤兑
+  * 病床数：千人6.51张
+  * 重症：0.3-0.5%，万人中30-50人
+
+* 地方政府债务
+  * [负债接近100万亿元](https://redian.news/wxnews/206796)
+  * [一篇分析地方负债的文章](https://www.zhihu.com/question/574998085/answer/2825036732)
+    * [或有债务](http://www.szse.cn/aboutus/research/secuities/documents/P020180328493781450374.pdf)
+
 
 ### 病
 
@@ -200,6 +291,39 @@
 * [重复感染的危害](https://zhuanlan.zhihu.com/p/590659479)
   * 无论是否接种疫苗，重复感染都增加了死亡以及患各种后遗症的额外风险，且这种风险随感染次数的增加而增加。
   * Nature论文：https://www.nature.com/articles/s41591-022-02051-3
+  
+* 传播原理 [Ref](https://zhuanlan.zhihu.com/p/592242161)
+  * 飞沫传播。通常距离不会超过1米。但是打喷嚏等动作也可以将飞沫抛射到最远数米的距离。
+  * 接触传播。粘在物体表面的新冠病毒被人触摸以后，病毒不会从皮肤直接进入人体，而是因为触摸者又摸了自己的眼口鼻附近，或者摸了个人物品（例如口罩内侧），然后导致病毒进入人体。这个传播方式非常关键。
+    * Omicron BA.2在塑料表面的存活时间可以延长到近200小时 = 8天零8小时，非常恐怖。甚至低温环境下可能还能进一步延长
+
+  * 气溶胶传播。小颗粒可以在空气中悬浮形成气溶胶，在空气中漂浮，还可以跟随气流进入风道。气溶胶不仅可以从感染者的呼吸道排出，也可以在下水道冲水中产生。在患者使用呼吸机等情况下可以产生大量的气溶胶。
+
+![img](COVID-19-Prevention/transimission.png)
+
+![img](COVID-19-Prevention/detection.png)
+
+* [一篇很全面的综述科普文章](https://www.zhihu.com/question/576922951/answer/2833137649)
+  * 免疫原理、防感染靠体液免疫、防重症靠细胞免疫
+    * 新冠病毒的表面分布着许多刺突蛋白（S蛋白），其顶部为RBD区域（受体结合域），**RBD可以与人体细胞表面的ACE2受体结合**，从而进入细胞，就**如同用一把钥匙将锁打开**。病毒进入细胞后“劫持”细胞成为自己的生产车间并大量复制，最终细胞裂解死亡，**释放出大量病毒，开始攻击更多的细胞**。同时，免疫细胞会发现异常，浆细胞生产出大量抗体与病毒的S蛋白结合，使之失去与ACE2结合的能力；T细胞也会通过残留在细胞外壳上的病毒碎片识别出被感染的细胞并将其杀死。而我们接种的**疫苗没有复制能力**，因此能在不会伤害人体的同时激活免疫反应，产生抗体和人记忆细胞。**抗体与抗原的结合是高度特异性的**，就像是为钥匙量身定制了钥匙套，使其开不了锁。但当这个**钥匙的外形变化，钥匙套可能就套不上去了**——这就是所谓“**免疫逃逸**”。Omicron的S蛋白变异速度非常快，这使得既往感染产生的抗体的效果不断下降。人体的[特异性免疫](https://www.zhihu.com/search?q=特异性免疫&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"answer"%2C"sourceId"%3A2833137649})包括了体液免疫（抗体）和细胞免疫，体液中存在的抗体能防止感染相应的病毒，而免疫细胞的激活需要时间，细胞免疫主要在防止症状严重、完全清除病毒方面做出贡献。
+    * 不过幸运的是，**免疫细胞识别抗原的过程没那么苛刻**，这个过程更像是**盲人摸象**——一个摸到了象腿，一个摸到了象鼻子，一个摸到了象耳朵……它们都说：“原来这就是新冠病毒”。接种疫苗后，当病毒再次入侵时，**尽管病毒S蛋白的个别位点发生了变异，但免疫细胞仍然能通过病毒不变的地方识别出“这是新冠病毒”**，从而更快激活免疫反应，产生抗体和消灭被病毒感染的细胞。此外，mRNA疫苗仅针对S蛋白，更具针对性的同时被逃逸的风险也更大，而**灭活疫苗诱导的T细胞反应更广泛**，包括了N蛋白等变异较少的部位。同时，第三针灭活疫苗也能大幅增加RBD特异性记忆B细胞（MBC）。这些都**对感染后减轻症状、防止重症有重要作用**
+
+#### 毒株
+
+* XBB
+  * 更擅长躲过抗体的追杀，但是却不善于结合受体进入人体细胞，导致传播优势不及BQ.1。
+* XBB1.5
+  * [XBB 1.5访谈手打笔记+翻译 - Dr. Eric Feigl-Ding, Dr. David Berger](https://zhuanlan.zhihu.com/p/597055343)
+    * https://www.youtube.com/watch?v=c2FvLm0Hc2o
+  
+  * 高免疫逃逸
+  * 获得了关键RBD突变，ACE2受体亲和力远强于XBB初始变异株
+    * 趋向性（tropism）增加
+    * **Long COVID比例可能增加**，主要原因来自XBB对低ACE2组织/更新缓慢的细胞可能有更好的亲和力（ACE2受体遍布全身的很多细胞）
+  
+  * XBB1.5到野生毒株的**差别类同于野生毒株到SARS1（非典）的差别**。
+    * extremely immune evasive
+  * 用sales volume类比病毒的contagious能力
   
 
 #### 症状
@@ -314,16 +438,24 @@
 #### 新冠特效药
 
 * Paxlovid及其印度仿制药
+  * 原理：其活性成分nirmatrelvir并不能直接在血液中与新冠病毒结合，而是在新冠病毒进入细胞后，**作用于其3CL蛋白酶，抑制新冠病毒的复制**。**该位点相对保守**，不像S蛋白突变如此频繁。
   * 在共存区最常见是给到达急诊或者家庭医生看过的，有很明确症状，阳性的病人的，发病早期病人的（对应国内应该算轻型和普通型的患者）。尤其是有进展风险的高风险患者
   * 主要是在很早期的感染阶段服用能够降低重症率和死亡率，和联合其他支持治疗降低死亡率，也另有研究认为会减少一些新冠后遗症率
   * 该药副作用不小，例如胃肠道反应，且有一些禁忌症，所以请在专业人员指导下决策。
   * [如何看待Paxlovid，Luxenius的回答](https://www.zhihu.com/question/572106846/answer/2799933500)
-
+  
+* XBB已经逃逸了几乎所有单抗，**唯独SA55+SA58硕果仅存**——这一抗体来源于北京大学生物医学前沿创新中心、北京昌平实验室曹云龙研究员/谢晓亮教授课题组。研究人员在28名接种了新冠疫苗的SARS康复者身上提取了上万个B细胞，通过[高通量筛选](https://www.zhihu.com/search?q=高通量筛选&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"answer"%2C"sourceId"%3A2833137649})技术，最终选定了SA55和SA58这两种抗体联合使用。预期在当下**免疫压力集中化**（后面会解释）的背景下，这个抗体组合可以**广谱高效**地中和各种omicron变异株。([Ref](https://www.zhihu.com/question/576922951/answer/2833137649))
+  
 * [Nature 新研究发现熊去氧胆酸可关闭新冠感染受体，有望预防新冠，这可能带来多大的改变？ - 赵泠的回答 - 知乎](https://www.zhihu.com/question/570771866/answer/2791342830)
   * 在以**治疗剂量**使用熊去氧胆酸的少量[肝移植](https://www.zhihu.com/search?q=肝移植&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"answer"%2C"sourceId"%3A2791342830})接受者身上，熊去氧胆酸似乎降低了新冠病毒感染率和重症率，防止住院和死亡的效果不到 Paxlovid 的四分之一
   * 还是对肝有副作用的，不建议长期服用预防新冠，目前看这个药意义不大
 
 #### 各大用药目录
+
+* [第十版诊疗方案](http://www.nhc.gov.cn/cms-search/downFiles/460b0e7b19bd42f3bba00c1efb9b6811.pdf)
+  * 重症
+    * 西医：吸氧、插管子、ecmo
+    * 中医：早期用宣肺败毒方排痰排毒
 
 * 新冠用药目录第一版
 
@@ -384,7 +516,6 @@
 ##### 口罩
 
 * 医用外科口罩：符合YY 0469-2011国家标准
-
 * N95口罩
   * 高标准的带有“医用防护口罩”字样，我买的是 3M 1860
   * 使用时间
@@ -393,12 +524,12 @@
     * 如果头带不紧了，则更换
   * [医用防护口罩佩戴和密合性测试整理](http://www.beijing.gov.cn/ywdt/zwzt/yqfk/kpzs/202206/t20220620_2745629.html)
 * KN95口罩：普通人因为处于非医疗场景，通常不需要考虑口罩被感染性液体浸润的问题，能将就用
-
 * 口罩使用
   * 放置：铺卫生纸，口罩外侧朝下放置在卫生纸上
+  * 脱：一定要慢慢脱、好好脱，避免病毒弹射到面部
   * 取戴口罩的时候都只摸带子不摸外面里面，摸完了要消毒手
 
-
+* 口罩消毒文献：https://jamanetwork.com/journals/jama/fullarticle/2777342
 
 * 医用面罩、医用护目镜、医用鞋套
 
@@ -416,8 +547,19 @@
     * 身上：便携免洗洗手液（带挂钩）
     * 包包：消毒湿巾
 
-* 家用的**空气净化消毒一体机**，5000元，作用面积20平米
-  * 注意，要带有「消字号」的产品
+* 净化器
+  * 家用的**空气净化消毒一体机**，5000元，作用面积20平米
+    * 注意，要带有「消字号」的产品
+  
+  * CADR (Clean Air Delivery Rate)
+  * [空气净化器和口罩降低感染率的能力差不多](https://www.cdc.gov/mmwr/volumes/70/wr/mm7027e1.htm#:~:text=The%20use%20of%20masks%20without,exposure%20by%20up%20to%2065%25.)
+    * A simulated infected meeting participant who was exhaling aerosols was placed in a room with two simulated uninfected participants and a simulated uninfected speaker. Using two HEPA air cleaners close to the aerosol source reduced the aerosol exposure of the uninfected participants and speaker by up to 65%. A combination of HEPA air cleaners and universal masking reduced exposure by up to 90%.
+  
+* 紫外线消毒灯
+  * IoT、智能感应
+  * 安装在高危区域：厨房、入户缓冲区
+  * 数据：18W灯，消杀时间 1m 15min，0.5m 4min，0.25m 1min
+
 
 ##### CR Box
 
@@ -463,8 +605,15 @@
   * 备这个的主要意义其实是缓解焦虑
   * 没阳的家人需要知道自己的状态
 
-* 二氧化碳检测仪
+* 核酸检测
+  * 原理：S gene dropout
+  
+  * 对xbb1.5可能无效
+
+* CO2检测仪
+  * 检查通风情况
   * 便携式
+
 
 
 ![image](COVID-19-Prevention/CO2-detection-2.png)
@@ -505,7 +654,9 @@
 * 海淀区急救专线：82468499
 * “ 朝阳区16家发热门诊，3家高端私立，2家急诊抢救，1家新冠定点，1家儿科专科，其他的也有几家看起来不那么靠谱的民办。实际上我看这里面有用的就是：中日、安贞、朝阳、306 ”
 
+### 段子
 
+* https://www.zhihu.com/question/572303476/answer/2841066800
 
 ### Rumours
 

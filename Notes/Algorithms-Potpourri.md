@@ -72,6 +72,9 @@ unsigned u64ToAsciiTable(uint64_t value, char* dst) {
 * [Hopscotch hashing](https://en.wikipedia.org/wiki/Hopscotch_hashing)
 * Cuckoo Hashing: https://web.stanford.edu/class/archive/cs/cs166/cs166.1146/lectures/13/Small13.pdf
 * GeoHash
+* Key的均衡性
+  * [MurmurHash](https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp)
+
 
 #### LRU cache
 

@@ -7,6 +7,7 @@
 ```shell
 wget https://www.python.org/ftp/python/3.6.2/Python-3.6.2.tar.xz
 sudo tar -xvf Python-3.6.2.tar.xz
+cd Python-3.6.2
 ./configure
 make
 make install
@@ -288,6 +289,31 @@ x.do_something()
 
 
 
+#### context manager
+
+* [context manager](https://www.geeksforgeeks.org/context-manager-in-python/): [use decorator](https://www.geeksforgeeks.org/context-manager-using-contextmanager-decorator/)
+
+```python
+from contextlib import contextmanager
+ 
+@contextmanager
+def ContextManager():
+     
+    # Before yield as the enter method
+    print("Enter method called")
+    yield
+     
+    # After yield as the exit method
+    print("Exit method called")
+ 
+with ContextManager() as manager:
+    print('with statement block')
+```
+
+
+
+
+
 
 
 #### 函数修饰decorator
@@ -370,6 +396,12 @@ other_funB("B: ","b")
 ```
 
 * 函数名之前加类名
+* function signature
+
+```py
+def multiply(x: int, y: int) -> int:
+    return x*y
+```
 
 #### virtualenv
 
@@ -540,6 +572,26 @@ print(f"{person['name']} is {person['age']} years old.")
 from functools import reduce
 nparam = reduce(lambda x, y: int(x) * int(y), shape, 1)
 ```
+
+```python
+from functools import singledispatch
+
+@singledispatch
+def do_sth():
+  raise NotImplementedError("Not implemented do_sth")
+  
+@do_sth.register(Type1)
+def _(input: Type1, ...):
+  ...
+  
+@do_sth.register(Type2)
+def _(input: Type2, ...):
+  ...
+```
+
+
+
+
 
 #### future
 
@@ -807,7 +859,7 @@ python -m autopep8 -i -r $folder
 
 * Flake8
   * `pip install yapf`
-  * VSCode setting.json 添加以下字段，文件页面 `Alt+Shift+F` 自动格式化代码
+  * VSCode setting.json 添加以下字段，文件页面
 
 ```json
 "python.linting.flake8Enabled": true,

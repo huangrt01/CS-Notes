@@ -4,6 +4,7 @@
 ### Code Reading Tools
 
 * 代码行数统计工具 [cloc](https://github.com/AlDanial/cloc)
+  * `cloc . --fullpath --not-match-d $folder`
 
 * 树形文件结构
 
@@ -1760,6 +1761,11 @@ https://github.com/chenshuo/recipes https://github.com/huangrt01/recipes
   * Customer.cc
     * 这里实际上是一个非常特殊的场景（写入量太少了），分布式kv不能这样搞，会增加绝对计算量影响性能
     * 本质上是read-intensive、写入操作少的业务（比如交易业务），可以用CopyOnWrite范式。延伸来说，也可以将读多写少的业务抽象为类似的模型，将写入操作按分钟级聚合为batch。比如借鉴progressive rehash的思路，维护两份hashtable，一份存近期增量，一份存旧数据，新的查找来临时先查bloom filter决定是否查新table，再查旧table。但这样会增加写入的cpu消耗（多查一次hashtable），不一定划算。
+
+### absl
+
+* [hash.h](https://github.com/abseil/abseil-cpp/blob/master/absl/hash/hash.h)
+  * 
 
 ### boost
 

@@ -258,6 +258,8 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 * 头文件和源文件切换：`option + O`
   * 搜索switch获知快捷键
 * 历史打开文件切换：`ctrl + TAB`
+* 跳转前一次/后一次光标位置：`ctrl + - ` / `shift + ctrl + -`
+* Format： `Option + Shift + F` 
 
 #### 开发必备插件
 
@@ -287,7 +289,38 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
     * 如果linux的glibc版本较旧，需要给clangd打补丁（patchelf），链接向新版glibc
   
 
+#### Format
+
+* Yapf
+  * `pip install yapf`
+  *  `Option + Shift +F` 自动格式化代码
+  * .vscode/settings.json
+
+```
+{
+	"python.linting.enabled": true,
+	"python.linting.pylintPath": "pylint",
+	"editor.formatOnSave": false,
+	"python.formatting.provider": "yapf", // or "black" here
+	"python.linting.pylintEnabled": false,
+	"python.formatting.yapfArgs": [
+		"--style={based_on_style: google, indent_width: 2}" // column_limit: 80
+	]
+}
+```
+
+
+
 #### clang系列
+
+##### 安装clang
+
+```shell
+wget https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.1/clang+llvm-13.0.1-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+tar xvf clang+llvm-13.0.1-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+
+sudo ln -s xxx/bin/clang /usr/bin/clang-13.0
+```
 
 * clang-format: https://clang.llvm.org/docs/ClangFormat.html
   * style-options: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
@@ -420,16 +453,24 @@ CheckOptions:
 }
 ```
 
-##### c_cpp_properties.json
+##### settings.json
 
-##### 安装clang
-
-```shell
-wget https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.1/clang+llvm-13.0.1-x86_64-linux-gnu-ubuntu-18.04.tar.xz
-tar xvf clang+llvm-13.0.1-x86_64-linux-gnu-ubuntu-18.04.tar.xz
-
-sudo ln -s xxx/bin/clang /usr/bin/clang-13.0
+```json
+{
+	"python.linting.enabled": true,
+	"python.linting.pylintPath": "pylint",
+	"editor.formatOnSave": false,
+	"python.formatting.provider": "yapf", // or "black" here
+	"python.linting.pylintEnabled": false,
+	"python.formatting.yapfArgs": [
+		"--style={based_on_style: google, indent_width: 2}" // column_limit: 80
+	]
+}
 ```
+
+
+
+##### c_cpp_properties.json
 
 * 配置 compile_commands.json
   * https://www.zhihu.com/question/353722203/answer/945067523

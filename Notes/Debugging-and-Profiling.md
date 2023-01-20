@@ -497,7 +497,9 @@ std::pair<size_t, size_t> MemoryUsage() {
 
 
 
+##### [Intel® RDT(Resource Director Technology)](https://www.intel.com/content/www/us/en/architecture-and-technology/resource-director-technology.html)
 
+* 通过硬件实现任务组(tasks group)级的L3 Cache（LLC）和内存带宽（MBM）的监控和隔离限制的技术
 
 
 

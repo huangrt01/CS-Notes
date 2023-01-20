@@ -128,6 +128,10 @@ log4j.appender.Access.layout.ConversionPattern=%p %d{yyyy-MM-dd HH:mm:ss} %F:%L 
     * Alias or regex: `/MyMetric.*/`
       * `Y-axis: 2`
 
+### glog
+
+https://github.com/google/glog
+
 ### gtest
 
 https://google.github.io/googletest/primer.html
@@ -390,10 +394,21 @@ void __tsan_on_report() {
 }  // extern "C"
 ```
 
+#### 使用技巧
 
+* 用std::cerr输出信息
 
 * DCHECK
   * [DCHECK只在debug模式生效，用于先验知道生效的CHECK](https://groups.google.com/a/chromium.org/g/chromium-dev/c/LU6NWiaSSRc)
+  * 配合bazel的 `-c dbg`
+
+* capture stdout
+
+```cpp
+testing::internal::CaptureStdout();
+std::cout << "My test";
+std::string output = testing::internal::GetCapturedStdout();
+```
 
 ### Hadoop
 

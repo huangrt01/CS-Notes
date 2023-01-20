@@ -487,7 +487,16 @@ for prediction, label, img in zip(p,l,i):
       * People with higher correlation gain more value from that specific event, as long as we make this method incremental and control for potential confounding variables.
     * pass 2: 混排，contextual features, such as content-type diversity rules
 
-#### DataFunTalk：广告推荐系统专场
+#### Facebook
+
+##### Tech Stack
+
+* 网站，移动端app -- Product
+* Thrift Web API -- Product Infra
+* 数据库，消息队列，流批数据系统，文件系统，音视频转码存储 -- Generic Infra
+* Ads Ranking，推荐系统
+* 机器学习平台（PyTorch）-- Generic Infra
+* 虚拟现实，加密货币（Oculus，Libra）-- Cutting Edge, Future Product
 
 #### 快手
 

@@ -2,6 +2,8 @@
 
 ## Database
 
+### mysql
+
 没学过db。。。极速入门满足日常简单需求
 
 https://www.runoob.com/sql/sql-tutorial.html
@@ -162,6 +164,14 @@ ALTER TABLE test TABLE (c1 char(1),c2 char(1));
   * SQL Injection Based on Batched SQL Statements
     * 在输入中用分号分隔语句
   * Use SQL Parameters for Protection
+
+
+
+#### 函数
+
+* Count、Sum
+  * count是行数、sum是求和
+* `log(greatest(val,1e-6))`
 
 
 

@@ -320,7 +320,6 @@ Training 量化
   * [Bag-of-words(BoW) model](https://en.wikipedia.org/wiki/Bag-of-words_model) 可作为一种信息模型，表示句子或图片，用于衡量相似度或别的用途
   * stop words: 停用词
   * [Tokenization and text normalization](https://www.analyticsvidhya.com/blog/2021/03/tokenization-and-text-normalization/)
-
 * ElasticSearch
 
   * denormalization
@@ -330,6 +329,33 @@ Training 量化
     * document: <field -> [values]>
 
   * document oriented tool
+* [OpenAI Embedding Model](https://openai.com/blog/new-and-improved-embedding-model/)
+  * text search, code search, sentence similarity, text classification
+  * Unification of capabilities
+  * **Longer context.** The context length of the new model is increased by a factor of four, from 2048 to 8192, making it more convenient to work with long documents.
+  * **Smaller embedding size.** The new embeddings have only 1536 dimensions, one-eighth the size of `davinci-001` embeddings, making the new embeddings more cost effective in working with vector databases.
+  * **Reduced price.** We have reduced the price of new embedding models by 90% compared to old models of the same size. The new model achieves better or similar performance as the old Davinci models at a 99.8% lower price.
+
+
+#### ChatGPT TODO
+
+* https://openai.com/blog/chatgpt/
+* Reinforcement Learning from Human Feedback (RLHF), using the same methods as [InstructGPT](https://openai.com/blog/instruction-following/), but with slight differences in the data collection setup
+  * supervised fine-tuning: human AI trainers provided conversations in which they played both sides—the user and an AI assistant
+  * reward model: 人工打分
+    * prompt dataset
+    * fine-tune the model using [Proximal Policy Optimization](https://openai.com/blog/openai-baselines-ppo/)
+
+![img](Machine-Learning/ChatGPT_Diagram.svg)
+
+* limitations
+  * Correctness: 模型不是全知的，一本正经地胡说八道
+  * sensitive to rephrase
+  * verbose
+  * No asking clarifying questions，而是猜
+  * it will sometimes respond to harmful instructions or exhibit biased behavior
+*  [Iterative deployment](https://openai.com/blog/language-model-safety-and-misuse/)
+
 
 ### CV
 
@@ -362,7 +388,11 @@ Training 量化
 
 * [Constrastive Learning: MoCo and SimCLR](https://mp.weixin.qq.com/s/v5p9QA3vDl-WTF3-7shp4g)
 
+* [物理改变图像生成：扩散模型启发于热力学，比它速度快10倍的挑战者来自电动力学](https://zhuanlan.zhihu.com/p/599013984)
 
+### AIGC
+
+* 2018年英伟达可以生成图片的StyleGAN模型、2019年DeepMind可以自动生成连续视频的DVD-GAN模型和2022年OpenAI聊天机器人ChatGPT是AIGC在应用层面的三个重要节点。
 
 ### Reinforce Learning
 

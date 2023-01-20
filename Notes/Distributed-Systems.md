@@ -888,10 +888,25 @@ https://www.usenix.org/conference/osdi18/presentation/berger
 
 #### SRE
 
+##### 方法论
+
+* [运维的核心能力有哪些？](https://www.zhihu.com/question/434646531/answer/2330010074)
+  * 站在公司全局角度对资源利用和成本控制的管理
+  * 跨应用甚至跨部门的问题排查和梳理，进而带来的架构整理
+  * 运维规范的制定
+
+##### Techniques
+
 * [Log Everything All Time](http://highscalability.com/log-everything-all-time)
   * Req id、线上修改log等级
   * 一些logger库优化技巧
   * Map software components to subsystems that are individually controllable, cross application trace levels aren't useful.
+
+##### 运维案例
+
+* [b站崩溃复盘](https://mp.weixin.qq.com/s/nGtC5lBX_Iaj57HIdXq3Qg)
+  * lua的gcd实现，动态类型语言，输入"0"
+
 * [That Couldn't Happen To Us... Could It? --- Google SRE](https://catonmat.net/wp-content/uploads/2008/11/thatcouldnthappentous.pdf)
   * machines:admins > 4000:1
   * Example: Powering disks off

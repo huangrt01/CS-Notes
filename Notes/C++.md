@@ -2296,8 +2296,9 @@ MyData *ptr = new(&data) MyData(2);
 * 这个stackoverflow讨论了alignment：https://stackoverflow.com/questions/506518/is-there-any-guarantee-of-alignment-of-address-return-by-cs-new-operation
 
   * The pointer returned from the allocation function `operator new[]()` is well aligned. But `new T[n]` is not required to, and usually does not, return `operator new[](n * sizeof (T))`. Almost every compiler adds metadata in front to track the number of elements (so that the right number of destructors are called), and sticking a header in front obviously changes the alignment.
+    * 通常padding T的size，以确保数组中每个T的内存是对齐的
   * The other thing is that minimal correct alignment which you get from `new[]` is not the same as optimal alignment. For performance reasons you want certain structures aligned to the cache. As such, even if you update your answer to cite the correct section of the Standard, it still doesn't address the question asked. Also, some instructions (notably SSE) *require* more stringent alignment.
-
+  
   * 其实x86下的内存对齐对性能影响不大，不对齐的主要负面作用是：
     * 踩到一些库的坑，比如内存不对齐则走入冷门分支，性能差（e.g. TVM C++ input tensor）
     * 跨平台踩坑，arm主要是atomic指令，要求对齐
@@ -2972,7 +2973,13 @@ for (int& ref : vec) {
 
 It supports arrays, types that provide begin and end member functions, and types for which begin and end functions are found via argument-dependent lookup
 
+##### [RTTI (Run-Time Type Information)](https://en.wikibooks.org/wiki/C%2B%2B_Programming/RTTI)
 
+* dynamic_cast
+  * 会返回nullptr
+* typeid
+  * `const std::type_info& info = typeid(object_expression);`
+  * does not support reference types.
 
 
 
@@ -2981,7 +2988,8 @@ It supports arrays, types that provide begin and end member functions, and types
 #### 操作符重载
 **特点**
 * 既不能改变原运算符的运算优先级和结合性，也不能改变操作数的个数
-*“.”、“.*”(成员指针运算符)、“::”（作用域分辨符）、“ ? : ”（三目运算符） 、sizeof 以及typeid这6个操作符不能重载。否则会带来难以琢磨的问题
+  * *“.”、“.*”(成员指针运算符)、“::”（作用域分辨符）、“ ? : ”（三目运算符） 、sizeof 以及typeid这6个操作符不能重载。否则会带来难以琢磨的问题
+
 * 和类的概念紧密联系，操作数中至少有一个是自定义的类类型。 这一点也和编译原理有联系
 
 **成员函数和友元函数**
@@ -3017,6 +3025,9 @@ int operator ^(pwr b, pwr e)
 ```
 
 * 二目操作符的成员函数：参数常引用
+
+`bool operator==(const Operation& other) const { return node_ == other.node_; }`
+
 * 二目操作符的友员函数
 * 单目操作符的成员函数
   * 前置重载`++a`视为无形参的成员函数，后置`a++`具有一个int类型形参
