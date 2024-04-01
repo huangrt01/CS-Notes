@@ -133,11 +133,12 @@ plugin: [推荐网站](https://vimawesome.com/)，git clone到`~/.vim/pack/vendo
 
 #### Vim的其它特性积累
 
-Q: 如果文件太大打不开怎么办？
+* Q: 如果文件太大打不开怎么办？
+  * A: 先`grep -nr  <img src="https://www.zhihu.com/equation?tex=target%20" alt="target " class="ee_img tr_noresize" eeimg="1"> FILE`获取行号，然后`vim $FILE +N`进入定位所在。
 
-A: 先`grep -nr  <img src="https://www.zhihu.com/equation?tex=target%20" alt="target " class="ee_img tr_noresize" eeimg="1"> FILE`获取行号，然后`vim $FILE +N`进入定位所在。
-
-
+* 粘贴文本
+  * `:set paste`
+  * `:set nopaste`
 
 * 缩进操作：
   * 先 `v` 进入visual模式选定要缩进的内容，再 `shift + </>` 进行整体的左右缩进
@@ -253,19 +254,25 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 
 #### 快捷键
 
-* `ctrl + P`: 查文件，@追加符号，冒号追加行
+* 查文件：`ctrl + P`，@追加符号，冒号追加行
 
 * 头文件和源文件切换：`option + O`
   * 搜索switch获知快捷键
 * 历史打开文件切换：`ctrl + TAB`
 * 跳转前一次/后一次光标位置：`ctrl + - ` / `shift + ctrl + -`
 * Format： `Option + Shift + F` 
+* `ctrl + command + P`
+  * Settings
+
+* 打开终端：ctrl + `
 
 #### 开发必备插件
 
-* 公共: Code Spell Checker, GitLens, EditorConfig for VSCode, String Manipulation, Visual Studio IntelliCode
+* 公共: 
+  * Code Spell Checker, GitLens, EditorConfig for VSCode, String Manipulation, Visual Studio IntelliCode
   * Code Runner
   * Remote - SSH
+  
 * C++: [cpplint](https://github.com/cpplint/cpplint), CodeLLDB, Header source switch, Rainbow Brackets, C++ Intellisense
   * CMake, CMake Tools
     * cmake插件需要cmake3.9.4以上版本的cmake的支持，ubuntu16.04以下的用户可能需要手动安装新版本的cmake
@@ -287,7 +294,7 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
       * 自动构建
       * 手动生成：`mkdir build && cd build && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..`
     * 如果linux的glibc版本较旧，需要给clangd打补丁（patchelf），链接向新版glibc
-  
+
 
 #### Format
 
@@ -324,7 +331,15 @@ sudo ln -s xxx/bin/clang /usr/bin/clang-13.0
 
 * clang-format: https://clang.llvm.org/docs/ClangFormat.html
   * style-options: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
-  * `clang-format -style=llvm -dump-config > .clang-format`
+  * `clang-format -style=llvm|Google -dump-config > .clang-format`
+
+```shell
+# 格式化main.cpp, 结果直接写到main.cpp
+clang-format -i main.cpp
+# 支持对指定行格式化，格式化main.cpp的第1，2行
+clang-format -lines=1:2 main.cpp
+```
+
 * clang-tidy: https://clang.llvm.org/extra/clang-tidy/
 * clangd插件：https://clangd.llvm.org/installation
   * `sudo apt install clangd-13`
@@ -464,7 +479,8 @@ CheckOptions:
 	"python.linting.pylintEnabled": false,
 	"python.formatting.yapfArgs": [
 		"--style={based_on_style: google, indent_width: 2}" // column_limit: 80
-	]
+	],
+  "terminal.integrated.scrollback": 100000,
 }
 ```
 

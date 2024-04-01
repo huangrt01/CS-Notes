@@ -971,6 +971,8 @@ auto* mini_batch_proto = google::protobuf::Arena::CreateMessage<myProto>(&local_
 
   * reserved values
 
+* debug
+  * ShortDebugString()
 * Importing Definitions
 
   * 允许import proto2，但不能直接在proto3用proto2 syntax
@@ -1031,8 +1033,10 @@ for (const Any& detail : status.details()) {
 
   * Changing a single value into a member of a new oneof is safe and binary compatible. Moving multiple fields into a new oneof may be safe if you are sure that no code sets more than one at a time. Moving any fields into an existing oneof is not safe.
 
-  * 小心oneof出core，设了另一个field会把原先的删掉，不能再设原先的内部field
+  * 用 TypeCase来判断OneOf类型
 
+  * 小心oneof出core，设了另一个field会把原先的删掉，不能再设原先的内部field
+  
   * [Backwards-compatibility issues](https://developers.google.com/protocol-buffers/docs/proto3#backwards-compatibility_issues)
 
 
@@ -1155,7 +1159,15 @@ option cc_enable_arenas = true;
 int32 old_field = 6 [deprecated = true];
 ```
 
+#### 内存泄漏调研
 
+- 对一个长期存在的proto message对象进行多次repeated field相关操作，内存会持续增长
+  - https://github.com/protocolbuffers/protobuf/issues/10294
+  - https://brunocalza.me/what-zero-copy-serialization-means/
+- 使用arena create的protobuf对象，如果swap了一个非arena create的对象也会产生僵尸内存，导致内存增长
+  - https://linux.do/t/topic/25107/2 (只言片语，缺失代码分析)
+- `set_allocated_XXX/release_XXX` 可能导致内存泄漏
+  - https://cloud.tencent.com/developer/article/1747458
 
 #### Python API
 
@@ -1188,9 +1200,9 @@ with open(os.path.join(out_dir, "person.protobuf"), "w") as f:
     f.write(str(person))
 ```
 
-
-
-python动态解析oneof字段
+* 杂项
+  * SetInParent()
+* python动态解析oneof字段
 
 ```python
 data = getattr(config, config.WhichOneof('config')).value
@@ -1765,7 +1777,12 @@ https://github.com/chenshuo/recipes https://github.com/huangrt01/recipes
 ### absl
 
 * [hash.h](https://github.com/abseil/abseil-cpp/blob/master/absl/hash/hash.h)
-  * 
+* mutex
+  * ReaderLock(), ReaderUnlock()
+  
+* status
+  * StatusCode:   0代表kOk， ok()函数
+  
 
 ### boost
 
@@ -2079,6 +2096,14 @@ https://github.com/boostorg/smart_ptr
 
     * Make the object hold a `shared_ptr` to itself, using a `null_deleter`
 
+#### Other Code
+
+##### dynamic_bitset
+
+https://www.boost.org/doc/libs/1_81_0/libs/dynamic_bitset/dynamic_bitset.html
+
+
+
 #### boost 的使用
 
 ```shell
@@ -2089,6 +2114,39 @@ sudo apt-get install libboost-all-dev
 "-lboost_thread",
 "-lboost_system"
 ```
+
+### deeprec
+
+https://github.com/alibaba/DeepRec
+
+#### tensorflow
+
+* core/kernels/unique_ali_op.cc
+
+  * unique_ali_op_util.h
+
+  * 默认google::dense_hash_map，可选std::unordered_map、absl::flat_hash_map
+
+  * 三种计算方式：SerialComputeV1、ParallelComputeV1、MultiMapCompute
+
+  * SerialComputeV1：有点糙，多了一次map遍历
+
+  * ParallelComputeV1
+
+    * 数据结构
+      * UniqueSubMap
+      * INode: inverse mapping
+    * Step 1: Seperate input data into T1 sections. build individual local hash maps M(0 .. (T1 - 1)) for each section.
+    * Step 2: Mark and count duplicated keys accross all T1 hash maps. For each key stored in hasp map M(i), it needs to do lookups from hash map M(0) to M(i-1) to check possible duplicates. Thus keys stored in M(i, i = 1 .. (T1 - 1) would be divided into T2 parts, and then processed simultanously in T2 tasks.
+    * Step 3: Calculate the global unique index for all keys, based on marking and counting result of Step 2. Hash maps would be processed by T1 tasks in parallel.
+
+    * Step 4: Fill the output Tensor with multiple tasks as many as possible.
+
+  * MultiMapCompute
+
+  * Notes:
+
+    * 支持MultipleElements，axis_tensor 作为分界的参数
 
 ### illumos
 
@@ -2119,6 +2177,17 @@ https://illumos.org/
 	
 	    
 	
+### brpc
+
+* backup request
+  * https://brpc.apache.org/docs/client/backup-request/
+
+### grpc
+
+* CQ（CompletionQueue）是一个重要的概念。
+  * CQ 是用于异步处理 RPC 请求和响应的事件队列。它是 gRPC 中实现异步通信和多路复用的关键机制之一。CQ 允许应用程序在发出请求后继续执行其他操作，而不需要阻塞等待响应返回。
+  * 当应用程序使用异步 API 发起 RPC 请求时，请求会被放入 CQ 中作为一个事件。CQ 监听这些事件并通知应用程序有关请求状态的变化，比如请求成功返回或失败。应用程序可以通过轮询或异步回调的方式从 CQ 中获取这些事件，并根据事件类型进行相应的处理。
+
 ### tinyflow
 
 https://github.com/huangrt01/tinyflow

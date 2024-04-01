@@ -26,6 +26,22 @@ __主题：virtualization, concurrency, persistence__
 * size classes
   * 4KB逻辑页 -> "small" 小于 16KB 
 
+#### jeprof使用
+
+* 安装jeprof和jemalloc
+  * https://note.abeffect.com/articles/2019/07/26/1564106051567.html
+* 使用
+
+```
+export MALLOC_CONF="prof:true,prof_leak:true,lg_prof_interval:31,prof_final:true,prof_prefix:jemalloc/jeheap"
+
+apt-get install -y binutils graphviz ghostscript
+
+jeprof --show_bytes --pdf /usr/bin/python3 [--base=98/heapf_.3408.0.i0.heap] 98/heapf_.3408.44.i44.heap > result.pdf
+```
+
+
+
 #### je 接口与参数
 
 ##### 非标准接口
@@ -812,15 +828,25 @@ e.g. work stealing: source queue经常peek其它的target queue，使两边work 
 
 * peek频率是超参数，过高会失去MQMS的意义，过低会有load imbalances
 
-**Linux Multiprocessor Schedulers**
+##### Linux Scheduling
 
-O(1) scheduler: priority-based scheduler
+* Linux Multiprocessor Schedulers
 
-CFS (Completely Fair Scheduler): a deterministic proportional-share approach
+  * O(1) scheduler: priority-based scheduler
 
-BFS (BF Scheduler): also proportional-share, but based on a more complicated scheme known as Earliest Eligible Virtual Deadline First (EEVDF) 
+  * CFS (Completely Fair Scheduler): a deterministic proportional-share approach
 
-* BFS是single queue，前两个是multiple queues
+  * BFS (BF Scheduler): also proportional-share, but based on a more complicated scheme known as Earliest Eligible Virtual Deadline First (EEVDF) 
+
+  * BFS是single queue，前两个是multiple queues
+
+
+* Linux中，每个CPU都有一个自己的本地队列（红黑树），用来存放等待这个CPU资源的，已就绪待运行的tasks。正在运行的task，主要有两种机制离开CPU。
+  - 自愿抢占：通过调用sleep, lock, io等主动让出CPU；
+  - 非自愿抢占: 被优先级更高的task抢占或者时间片到期，被动的离开CPU。
+* 显然，task如果在CPU队列上等待的时间较长，一定会影响请求延迟。 但事实上Linux的CPU调度算法是非常优秀的，而且CPU是一种可以抢占的资源，因此通常即使在一个比较高的CPU利用率下，延迟也不会急剧上升（和磁盘IO调度相比）。
+
+![fcfdaf2f-b76b-47d9-a49f-ca74513cb09f](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/OSTEP-Operating-Systems-Three-Easy-Pieces/cpu-scheduling.png)
 
 
 
@@ -2207,7 +2233,9 @@ manual stack management => use an old programming language construct known as a 
 * /proc/pid/fd/ 查找持有的fd，查文件泄漏
   * `/proc/ <img src="https://www.zhihu.com/equation?tex=tid%60%20%E6%88%96%20%60/prod/" alt="tid` 或 `/prod/" class="ee_img tr_noresize" eeimg="1"> pid/task/$tid` 内核任务调度id
   * /proc/pid/status 线程数目
+* /proc/[pid]/uid_map 和  /proc/[pid]/gid_map
 * /proc/self/maps
+* /proc/sys/kernel/ns_last_pid
 * /proc/version 查看系统版本
 
 

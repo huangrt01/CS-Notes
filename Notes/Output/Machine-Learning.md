@@ -146,6 +146,7 @@ Materials
   - In step $$t" class="ee_img tr_noresize" eeimg="1">
 
 <img src="https://www.zhihu.com/equation?tex=g_t%20%5Cequiv%20%5Cnabla%20f%28w_%7Bt-1%7D%29" alt="g_t \equiv \nabla f(w_{t-1})" class="ee_img tr_noresize" eeimg="1">
+    - Note：g可以保留一部分当前emb值
 
 <img src="https://www.zhihu.com/equation?tex=v_t%20%5Cleftarrow%20v_%7Bt-1%7D%20%2B%20g_t%20%5Ccirc%20g_t" alt="v_t \leftarrow v_{t-1} + g_t \circ g_t" class="ee_img tr_noresize" eeimg="1">
 
@@ -307,6 +308,10 @@ Materials
   - We can apply LAMB normalization to any base optimizer
   - But the learning rate must be re-tuned
 
+#### Tuning
+
+https://github.com/google-research/tuning_playbook
+
 #### Validation
 
 holdout validation, cross-validation, leave-one-out validation, etc
@@ -383,7 +388,7 @@ Training 量化
 
 ### Search & NLP
 
-* 概念
+* 概念：语言模型
   * [Bag-of-words(BoW) model](https://en.wikipedia.org/wiki/Bag-of-words_model) 可作为一种信息模型，表示句子或图片，用于衡量相似度或别的用途
   * stop words: 停用词
   * [Tokenization and text normalization](https://www.analyticsvidhya.com/blog/2021/03/tokenization-and-text-normalization/)
@@ -404,24 +409,6 @@ Training 量化
   * **Reduced price.** We have reduced the price of new embedding models by 90% compared to old models of the same size. The new model achieves better or similar performance as the old Davinci models at a 99.8% lower price.
 
 
-#### ChatGPT TODO
-
-* https://openai.com/blog/chatgpt/
-* Reinforcement Learning from Human Feedback (RLHF), using the same methods as [InstructGPT](https://openai.com/blog/instruction-following/), but with slight differences in the data collection setup
-  * supervised fine-tuning: human AI trainers provided conversations in which they played both sides—the user and an AI assistant
-  * reward model: 人工打分
-    * prompt dataset
-    * fine-tune the model using [Proximal Policy Optimization](https://openai.com/blog/openai-baselines-ppo/)
-
-![img](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/ChatGPT_Diagram.svg)
-
-* limitations
-  * Correctness: 模型不是全知的，一本正经地胡说八道
-  * sensitive to rephrase
-  * verbose
-  * No asking clarifying questions，而是猜
-  * it will sometimes respond to harmful instructions or exhibit biased behavior
-*  [Iterative deployment](https://openai.com/blog/language-model-safety-and-misuse/)
 
 
 ### CV

@@ -88,6 +88,7 @@ done
   * `$!` - last backgrounded job
 * ||和&& operator：机制和 error code 联系，true 和 false 命令返回固定的error code
   * [linux中，&和&&, |和|| ,&> 与 >的区别](https://blog.csdn.net/sunfengye/article/details/78973831)
+  * `false || sleep 10s` 固定error code为零
 ```shell
 false || echo "Oops, fail"
 # Oops, fail
@@ -191,6 +192,8 @@ polo(){
 ```
 
 * 实用小工具，比如可以抢实验室GPU（实现的功能相对原题有改动）
+  * 简化版：`mycount=0; while (( $mycount < 15 )); do ./my_script;((mycount=$mycount+1)); done;`
+
 
 ```shell
 #!/usr/bin/env bash
@@ -754,6 +757,7 @@ sudo apt autoremove
   * `sudo chmod 777 -R` 文件修改为可执行
   * `Permissions 0644 for ‘~/.ssh/id_rsa’ are too open` => `chmod 0600 ~/.ssh/id_rsa`
 * chown: 用于设置文件所有者和文件关联组的命令
+  * ``sudo chown root:root /usr/bin/rclone``
 ```shell
 HOST_PERM="$(id -u):$(id -g)"
 chown $HOST_PERMS $file
@@ -803,7 +807,10 @@ declare -a NAMES=(
 * df: disk情况
 * disown
 * diff：[Linux中diff的渊源](https://www.cnblogs.com/moxiaopeng/articles/4853352.html)
+  * `diff -Naur`  比较两个文件夹
+
 * dmesg: kernel log
+* `dpkg -i ***.deb`
 * `du -h -d 1 $file`
 
 #### e
@@ -834,6 +841,8 @@ find . -size +500k -size -10M -name '*.tar.gz'
 find . -name '*.tmp' -exec rm {} \;
 # Find all PNG files and convert them to JPG
 find . -name '*.png' -exec convert {} {.}.jpg \;
+
+find /tmp -maxdepth 1 -mmin +720 -name "tmp*" -delete
 
 ```
 * [fuck](https://github.com/nvbn/thefuck#the-fuck-----): 流行的纠正工具
@@ -878,6 +887,15 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
 #### j
 * jobs
 #### k
+
+* krb5
+
+```shell
+export DEBIAN_FRONTEND=noninteractive && apt-get update && apt-get install -y krb5-user
+```
+
+
+
 #### l
 * less
   * `space / B` 翻页
@@ -886,6 +904,7 @@ gunzip -v -S "mygz" 1.mygz # 按指定后缀名解压
 * ls
   * -l: long listing format; drwxr-xr-x，d代表文件夹，后面3*3代表owner、owning group、others的权限
   * r：read，w：modify，x：execute
+  * -t: 按时间排序
 * lsof: 查看文件占用
   * 也可查看端口占用，接 grep 即可 
 #### m
@@ -930,9 +949,15 @@ nohup python -u main.py > name.log 2>&1 & echo $! > run.pid
 * pmap: Displays the memory map of a process.
 * ps aux
 * pstree
+* pushd: 目录栈，方便切换目录
+  * 配合popd
 * pwd: print cwd
 #### q
 #### r
+
+* rsync
+  * `rsync -avz /path/to/source/ user@remote:/path/to/destination/`
+
 #### s
 * scp
 
@@ -974,7 +999,7 @@ scp -r $folder
 
 ```shell
 tar cvzf 压缩文件名.tar.gz 被压缩文件夹 # gz文件
-tar xvzf 压缩文件名.tar.gz -C 目标文件夹
+tar xvzf 压缩文件名.tar.gz -C 目标文件夹 # 否则解压到当前路径
 tar xvf  压缩文件名.tar.xz
 ```
 

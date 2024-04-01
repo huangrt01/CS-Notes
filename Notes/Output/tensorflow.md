@@ -53,7 +53,7 @@ sudo pip install tensorflow-version-tags.whl
 
 * IDE配置
   * 参考【Compiling】-bazel-ide
-  
+
 * 编译优化
   * 有些需要手动开，包括xla这些
 
@@ -104,6 +104,20 @@ $ pip uninstall enum   # 如果报错则直接下一步
 $ pip install enum34==1.1.10
 ```
 
+#### 切换 gcc 工具链编译 Tf
+
+* 主体思路参考：https://medium.com/analytics-vidhya/compiling-tensorflow-from-the-source-when-your-compiler-is-in-a-non-standard-location-194fecc92153
+
+* 关键代码路径
+  * 搜索 "/ar"
+  * `local_config_cuda/crosstool/cc_toolchain_config.bzl`
+  * `tensorflow/third_party/gpus/crosstool/cc_toolchain_config.bzl.tpl `
+
+* 其它参考：
+  * https://gist.github.com/jakublipinski/40ba68994fe0092600a05b0060e7d445
+
+
+
 #### 写Op的编译
 
 * 利用Bazel + Tf source code
@@ -134,6 +148,16 @@ print(zero_out_module.zero_out([[1, 2], [3, 4]]).numpy())
 ###
 ```
 
+op编译的原理
+
+* A shared object which includes registration mechanisms for ops and kernels. Does not include the implementations of any ops or kernels. Instead, the library which loads libtensorflow_framework.so (e.g. `_pywrap_tensorflow_internal.so` for Python, `libtensorflow.so` for the C API) is responsible for registering ops with `libtensorflow_framework.so`. In addition to this core set of ops, user libraries which are loaded (via `TF_LoadLibrary`/`tf.load_op_library`) register their ops and kernels with this shared object directly.
+* For example, from Python `tf.load_op_library` loads a custom op library (via dlopen() on Linux), the library finds libtensorflow_framework.so (no filesystem search takes place, since libtensorflow_framework.so has already been loaded by pywrap_tensorflow) and registers its ops and kernels via REGISTER_OP and REGISTER_KERNEL_BUILDER (which use symbols from libtensorflow_framework.so), and pywrap_tensorflow can then use these ops. Since other languages use the same libtensorflow_framework.so, op libraries are language agnostic.
+* modular op registration support: framework_shared_object=true (set in the configure script unconditionally);
+  * otherwise if it is false or undefined, the build is static and TensorFlow symbols (in Python only) are loaded into the global symbol table in order to support op registration. This means that projects building with Bazel and importing TensorFlow as a dependency will not depend on libtensorflow_framework.so unless they opt in.
+
+#### 写Op的测试（tf.test）
+
+
 ```python
 # zero_out_op_test.py
 import tensorflow as tf
@@ -144,17 +168,29 @@ class ZeroOutTest(tf.test.TestCase):
     with self.cached_session():
       result = zero_out_module.zero_out([5, 4, 3, 2, 1])
       self.assertAllEqual(result.eval(), [5, 0, 0, 0, 0])
+      
+    with self.session() as sess:
+      result = sess.run([xxx])
 
 if __name__ == "__main__":
   tf.compat.v1.disable_eager_execution()
   tf.test.main()
+
 ```
 
-* op编译的原理
-  * A shared object which includes registration mechanisms for ops and kernels. Does not include the implementations of any ops or kernels. Instead, the library which loads libtensorflow_framework.so (e.g. `_pywrap_tensorflow_internal.so` for Python, `libtensorflow.so` for the C API) is responsible for registering ops with `libtensorflow_framework.so`. In addition to this core set of ops, user libraries which are loaded (via `TF_LoadLibrary`/`tf.load_op_library`) register their ops and kernels with this shared object directly.
-  * For example, from Python `tf.load_op_library` loads a custom op library (via dlopen() on Linux), the library finds libtensorflow_framework.so (no filesystem search takes place, since libtensorflow_framework.so has already been loaded by pywrap_tensorflow) and registers its ops and kernels via REGISTER_OP and REGISTER_KERNEL_BUILDER (which use symbols from libtensorflow_framework.so), and pywrap_tensorflow can then use these ops. Since other languages use the same libtensorflow_framework.so, op libraries are language agnostic.
-  * modular op registration support: framework_shared_object=true (set in the configure script unconditionally);
-    * otherwise if it is false or undefined, the build is static and TensorFlow symbols (in Python only) are loaded into the global symbol table in order to support op registration. This means that projects building with Bazel and importing TensorFlow as a dependency will not depend on libtensorflow_framework.so unless they opt in.
+```python
+except tf.errors.OutOfRangeError:
+	self.assertTrue(result is None)
+```
+
+* 运行部分测试
+
+```python
+tf.test.main(argv=['', 'DecompressTest.testDecompressGzip'])
+```
+
+* 关于tf test的bazel运行
+  * `tf_cc_tests` ，这个macro会对srcs中的每一个src去定义一个tf_cc_test
 
 
 
@@ -415,7 +451,59 @@ tensorflow/python
     `-- protobuf
 ```
 
-#### session.py
+#### client/session.py
+
+* Session 继承 BaseSession，并增加了默认图与默认会话的上下文管理器的功能，保证系统资源的安全释放。
+
+  * _default_graph_context_manager
+  * _default_session_context_manager
+
+* InteractiveSession在init是即调用上下文管理器的`__enter__`
+
+* BaseSession
+
+  * `class BaseSession(SessionInterface):` 
+  * 是两者的基类，它主要实现会话的创建，关闭，执行，销毁等管理生命周 期的操作;它与后台计算引擎相连接，实现前后端计算的交互。
+  * as_default: ops.default_session
+
+  * run()函数
+    * 有详细的session run注释
+      * 首先通过 tf_session.TF_ExtendGraph 将图注册给后台计算引擎，然后再通过调用 tf_session.TF_Run 启动计算图的执行
+    * `_FetchHandler` 由fetches到targets（如果fetch的类型是op，则认为是target）
+
+```python
+def __del__(self):
+    # cleanly ignore all exceptions
+    try:
+      self.close()
+    except Exception:  # pylint: disable=broad-except
+      pass
+    if self._session is not None:
+      try:
+        tf_session.TF_DeleteSession(self._session)
+      except (AttributeError, TypeError):
+        # At shutdown, `c_api_util`, `tf_session`, or
+        # `tf_session.TF_DeleteSession` may have been garbage collected, causing
+        # the above method calls to fail. In this case, silently leak since the
+        # program is about to terminate anyway.
+        pass
+      self._session = None
+```
+
+* `SessionRef` blocks the return of Close() until all pending operations have been completed or cancelled and underlying session has been freed.
+  * 调用 c/c_api.cc: 
+    * Tf_NewSession
+    * TF_SessionRun_wrapper -> TF_SessionRun_wrapper_helper
+      * python obj和C++ obj之间的转换
+      * 追踪到 tensorflow::DirectSession::Run()
+
+```
+# session.py
+opts = tf_session.TF_NewSessionOptions(target=self._target, config=config)
+    try:
+      # pylint: disable=protected-access
+      self._session = tf_session.TF_NewSessionRef(self._graph._c_graph, opts)
+```
 
 * pybind11桥接C++和python
   * pip安装后，进入 `.myenv/lib/python3.6/site-packages/tensorflow`
@@ -432,31 +520,6 @@ tensorflow/python
     * `m.def("TF_NewBuffer", TF_NewBuffer, py::return_value_policy::reference);`
     * `m.def("_TF_NewSessionOptions", TF_NewSessionOptions, py::return_value_policy::reference, py::call_guard<py::gil_scoped_release>());`
     * ---> c/c_api.cc
-* session.py
-  * `class BaseSession(SessionInterface):` 
-    * as_default: ops.default_session
-  * Session基于BaseSession，增加了：
-    * _default_graph_context_manager
-    * _default_session_context_manager
-  * run()函数
-    * 有详细的session run注释
-    * `_FetchHandler` 由fetches到targets（如果fetch的类型是op，则认为是target）
-  * `SessionRef` blocks the return of Close() until all pending operations have been completed or cancelled and underlying session has been freed.
-  * 调用 c/c_api.cc: 
-    * Tf_NewSession
-    * TF_SessionRun_wrapper -> TF_SessionRun_wrapper_helper
-      * python obj和C++ obj之间的转换
-      * 追踪到 tensorflow::DirectSession::Run()
-
-```
-# session.py
-opts = tf_session.TF_NewSessionOptions(target=self._target, config=config)
-    try:
-      # pylint: disable=protected-access
-      self._session = tf_session.TF_NewSessionRef(self._graph._c_graph, opts)
-```
-
-
 
 #### data
 
@@ -467,13 +530,20 @@ https://www.tensorflow.org/guide/data
   * `train_data = mnist_train.map(scale).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)`
 
   * `image_batch, label_batch = next(iter(train_data))`
-
 * ops/dataset_ops.py
-  * DataSetV2 支持 shuffle、batch、repeat、map 等操作
+  * DatasetV2 支持 shuffle、batch、repeat、map 等操作
     * shuffle(buffer_size)
     * batch(batch_size, drop_remainder=False)
     * map(parser_fn, num_parallel_calls=tf.data.AUTOTUNE)
     * prefetch(tf.data.experimental.AUTOTUNE)
+  * DatasetV2用一个variant tensor初始化
+    * 以cardinality为例
+    * DatasetCardinalityOp
+    * 调用 GetDatasetFromVariantTensor
+  * UnaryUnchangedStructureDataset
+  * class ParallelInterleaveDataset(UnaryDataset):
+    * `self._map_func = StructuredFunctionWrapper(map_func, self._transformation_name(), dataset=input_dataset)`
+      * 当使用 `tf.function` 装饰器将 Python 函数转换为 TensorFlow 计算图时，函数中的属性会自动转换为符号张量（symbolic Tensors），前提是这些属性被用于计算图的构建
 
 ```python
 # 自定义dataset
@@ -510,7 +580,38 @@ def get_tfrecord_dataset(paths,
     return dataset
 ```
 
+```python
+>>> dataset = Dataset.range(1, 6)  # ==> [ 1, 2, 3, 4, 5 ]
+>>> # NOTE: New lines indicate "block" boundaries.
+>>> dataset = dataset.interleave(
+  ...     lambda x: Dataset.from_tensors(x).repeat(6),
+  ...     cycle_length=2, block_length=4)
+>>> list(dataset.as_numpy_iterator())
+[1, 1, 1, 1,
+ 2, 2, 2, 2,
+ 1, 1,
+ 2, 2,
+ 3, 3, 3, 3,
+ 4, 4, 4, 4,
+ 3, 3,
+ 4, 4,
+ 5, 5, 5, 5,
+ 5, 5]
+```
 
+
+
+* ops/iterator_ops.py
+  * GLOBAL_ITERATORS
+  * CheckpointInputPipelineHook
+    * This hook should be used if the input pipeline state needs to be saved separate from the model checkpoint. Doing so may be useful for a few reasons:
+    * The input pipeline checkpoint may be large, if there are large shuffle or prefetch buffers for instance, and may bloat the checkpoint size.
+    * If the input pipeline is shared between training and validation, restoring the checkpoint during validation may override the validation input pipeline.
+    * For saving the input pipeline checkpoint alongside the model weights use `tf.data.experimental.make_saveable_from_iterator` directly to create a `SaveableObject` and add to the `SAVEABLE_OBJECTS` collection.
+  * _gather_saveables_for_checkpoint
+    * _IteratorSaveable
+    * iterators = tf.compat.v1.get_collection(iterator_ops.GLOBAL_ITERATORS)
+    * 从stdin读数据时，无法获取iterator状态
 
 
 
@@ -628,6 +729,13 @@ def num_elements(self):
   else
   	return None
 ```
+
+* test_util.py
+  * `@tf_export("test.TestCase") class TensorFlowTestCase(googletest.TestCase):`
+    * captureWritesToStream
+    * session相关
+    * assertNear、assertArrayNear、assertAllClose、assertAllEqual、assertAllGreaterEqual、assertAllInRange、assertAllInSet、assertDTypeEqua
+    * assertRaisesOpError、assertShapeEqual、assertDeviceEqual
 
 
 
@@ -781,7 +889,7 @@ with graph.as_default():
 
 
 
-
+###### Operation
 
 * Operation
   * session可以run op
@@ -800,6 +908,8 @@ with graph.as_default():
     * control_inputs, _control_outputs
     * traceback
 
+###### Tensor
+
 * Tensor
   * 使用 op:index 的 二元组信息在图中唯一标识一个 Tensor 实例
   * tensor是边，存了生产者和消费者op信息，持有上游op索引
@@ -809,24 +919,37 @@ with graph.as_default():
   * shape相关操作
   * Eval
     * tf.Session.run 的 fetches 列表可以混合接收 Operation, Tensor 实例
-
+    * _eval_using_default_session(self, feed_dict, self.graph, session)
+    
   * consumers
+
+###### default管理
+
+* _DefaultStack(threading.local)
+  * `@tf_contextlib.contextmanager def get_controller(self, default):`
+* get_default_graph()
+* get_default_session()
+* default_session
+  * Use with the "with" keyword to specify that Tensor.eval() and Operation.run() invocations within the scope of a block should be executed by a particular session.
+
+###### 其它
 
 * traceable_stack
   * 记录文件和行数信息的stack
-* default管理
-  * _DefaultStack(threading.local)
-    * `@tf_contextlib.contextmanager def get_controller(self, default):`
-  * get_default_graph()
-  * get_default_session()
-  * default_session
-    * Use with the "with" keyword to specify that Tensor.eval() and Operation.run() invocations within the scope of a block should be executed by a particular session.
 
 #### lib/io
 
 * gfile
   * IsDirectory
   * MakeDirs
+
+```python
+with tf.io.gfile.GFile(file_name, "rb") as f:
+	instance = parse_instance(f, True, False, True)
+	print(instance)
+```
+
+
 
 #### lib/core
 
@@ -835,22 +958,63 @@ with graph.as_default():
 
 #### ops
 
+* array_ops
+  * split
+    * `size_splits = ops.convert_to_tensor(num_or_size_splits)`
+    * 根据size_splits的类型决定调用 split or split_v
+
 * control_flow_ops
   * tf.group
     * `c = tf.group(a, b)` will compute the same graph as this: `with tf.control_dependencies([a, b]): c = tf.no_op()`
 * data_flow_ops
   * [GPUCompatiableQueue](https://github.com/tensorflow/tensorflow/commit/f98b3bc7012085096d8171fe56f6004677461567#)
     * size方法是一个op
+* list_ops
+  * `ops.NotDifferentiable("TensorListConcatLists")`
+  
+
+```python
+@ops.RegisterGradient("TensorListPushBack")
+def _PushBackGrad(op, dresult):
+  return gen_list_ops.tensor_list_pop_back(
+      dresult,
+      element_shape=array_ops.shape(op.inputs[1]),
+      element_dtype=op.get_attr("element_dtype"))
+```
+
 * metrics_impl
   * metric_variable
     * synchronization "ON_READ"
     * 通过 `distribution_strategy_context.get_replica_context().merge_call(fn, args=args)` 
-  
+
   * precision_at_top_k
     * 两个variable，一个update op
-  
+
     * _streaming_sparse_true_positive_at_k
+
+* rnn.py
+  * tf.nn.dynamic_rnn
+    * 动态图，变长sequence length
   
+* string_ops.py
+  * tf.strings.format
+  
+
+```python
+    Formatting a single-tensor template:
+
+    >>> tensor = tf.range(5)
+    >>> tf.strings.format("tensor: {}, suffix", tensor)
+    <tf.Tensor: shape=(), dtype=string, numpy=b'tensor: [0 1 2 3 4], suffix'>
+
+    Formatting a multi-tensor template:
+
+    >>> tensor_a = tf.range(2)
+    >>> tensor_b = tf.range(1, 4, 2)
+    >>> tf.strings.format("a: {}, b: {}, suffix", (tensor_a, tensor_b))
+    <tf.Tensor: shape=(), dtype=string, numpy=b'a: [0 1], b: [1 3], suffix'>
+```
+
 * summary_ops_v2.py
   * summary.create_file_writer
 
@@ -864,6 +1028,19 @@ with graph.as_default():
     * 可以用iter访问variables
 
   * tf.compat.v1.get_variable，参数有Partitioner
+
+  * VariableMetaClass：控制variable的creation
+
+```python
+class VariableMetaClass:
+  def _variable_v2_call(...):
+    previous_getter = lambda **kws: default_variable_creator_v2(None, **kws)
+    for _, getter in ops.get_default_graph()._variable_creator_stack:  # pylint: disable=protected-access
+      previous_getter = _make_getter(getter, previous_getter)
+```
+
+
+
 * Variable的magic方法
   * Variable重载了tensor的ops
   * 在math_ops中有 `ops.Tensor._override_operator("__neg__", gen_math_ops.neg)` `ops.Tensor._override_operator("__abs__", abs)`
@@ -947,7 +1124,13 @@ def _OverloadOperator(cls, operator):  # pylint: disable=invalid-name
   }
 ```
 
+* class RegisterGradient(object)
 
+##### ragged
+
+* ragged_tensor.py
+  * from_row_splits(cls, values, row_splits, name=None, validate=True):
+    * validate=True要注意，有性能问题
 
 ##### resource_variable_ops.py
 
@@ -1048,6 +1231,61 @@ tf.compat.v1.assign(cached_var,
                  					_get_valid_op_name(str(var.device))))
 ```
 
+* _UnreadVariable
+
+```python
+def assign_add(self, delta, use_locking=None, name=None, read_value=True):
+    """Adds a value to this variable.
+
+    Args:
+      delta: A `Tensor`. The value to add to this variable.
+      use_locking: If `True`, use locking during the operation.
+      name: The name to use for the operation.
+      read_value: A `bool`. Whether to read and return the new value of the
+        variable or not.
+
+    Returns:
+      If `read_value` is `True`, this method will return the new value of the
+      variable after the assignment has completed. Otherwise, when in graph mode
+      it will return the `Operation` that does the assignment, and when in eager
+      mode it will return `None`.
+    """
+    with _handle_graph(self.handle), self._assign_dependencies():
+      assign_add_op = gen_resource_variable_ops.assign_add_variable_op(
+          self.handle,
+          ops.convert_to_tensor(delta, dtype=self.dtype),
+          name=name)
+    if read_value:
+      return self._lazy_read(assign_add_op)
+    return assign_add_op
+
+  def _lazy_read(self, op):
+    variable_accessed(self)
+    return _UnreadVariable(
+        handle=self._handle,
+        dtype=self.dtype,
+        shape=self._shape,
+        in_graph_mode=self._in_graph_mode,
+        deleter=self._handle_deleter if not self._in_graph_mode else None,
+        parent_op=op,
+        unique_id=self._unique_id)
+    
+class _UnreadVariable(...):
+  def read_value(self):
+    return self._read_variable_op()
+
+  def _read_variable_op(self):
+    with ops.control_dependencies([self._parent_op]):
+      result = gen_resource_variable_ops.read_variable_op(
+          self._handle, self._dtype)
+      _maybe_set_handle_data(self._dtype, self._handle, result)
+      return result
+```
+
+* EagerResourceDeleter
+
+
+
 #### summary
 
 * summary.py
@@ -1088,6 +1326,10 @@ class CallCounter(tf_decorator.TFDecorator):
 
 
 #### training
+
+* Checkpoint_management
+  * https://www.tensorflow.org/guide/checkpoint
+  * tf.train.latest_checkpoint
 
 * saver
   * 命名ckpt（counter）、管理ckpt（增删）
@@ -1137,13 +1379,10 @@ saver = tf.compat.v1.train.Saver({v.op.name: v for v in [v1, v2]})
 
   - CheckpointSaverHook: saves checkpoint
     - 第一次也会save，实际上没必要
-
+    - Get_saver: `collection_key = ops.GraphKeys.SAVERS`, `savers = ops.get_collection(collection_key)`
   - StepCounterHook
-
   - LoggingTensorHook: outputs one or more tensor values to log
-
   - NanTensorHook: Request stop if given `Tensor` contains Nans.
-
   - SummarySaverHook: saves summaries to a summary writer
   - GlobalStepWaiterHook: 用于distributed setting下的slow starting
   - FinalOpsHook
@@ -1171,6 +1410,7 @@ class ExampleHook(SessionRunHook):
   def after_create_session(self, session, coord):
     # When this is called, the graph is finalized and
     # ops can no longer be added to the graph.
+    # 注意有coord
     print('Session created.')
 
   def before_run(self, run_context):
@@ -1192,6 +1432,55 @@ with MonitoredTrainingSession(hooks=your_hooks, ...) as sess:
   while not sess.should_stop():
     sess.run(your_fetches)
 ```
+
+* session_manager
+  * Training helper that restores from checkpoint and creates session.
+  
+* Monitored_session
+  * hook相关
+  * Scaffold
+  * session相关
+
+
+```python
+saver_hook = CheckpointSaverHook(...)
+summary_hook = SummarySaverHook(...)
+with MonitoredSession(session_creator=ChiefSessionCreator(...),
+                      hooks=[saver_hook, summary_hook]) as sess:
+  while not sess.should_stop():
+    sess.run(train_op)
+```
+
+* Queue_runner_impl.py
+  * _close_on_stop 监听队列关闭，注意cancel op会撤销已缓存 的 Enqueue OP 列表
+
+```python
+def start_queue_runner(...)
+  with sess.graph.as_default():
+    threads = []
+    for qr in ops.get_collection(collection):
+      threads.extend(qr.create_threads(sess, coord=coord,
+                                       daemon=daemon,
+                                       start=start))
+  return threads
+
+class QueueRunner(object):
+  def _run(self, sess, enqueue_op, coord):
+    try:
+      enqueue_callable = sess.make_callable(enqueue_op)
+      while True:
+        if coord.should_stop():
+          break
+        try:
+					enqueue_callable()
+				except errors.OutOfRangeError:
+          sess.run(self._close_op)
+          return
+    except Exception as e:
+      coord.request_stop(e)
+```
+
+
 
 * training_util
   * _get_or_create_global_step_read()
@@ -1366,20 +1655,34 @@ session->Close();
     * Call `Session::Finalize()` to release global graph-related state.
     * Call `Session::RunCallable()` with the handle(s) created in step 2.
 * direct_session
+  * DirectSessionFactory: 给指针数组加锁、copy，避免死锁
+    * NewSession: `TF_RETURN_IF_ERROR(DeviceFactory::AddDevices(options, "/job:localhost/replica:0/task:0", &devices));`, 由 C API 调用
+  
+  * ctor
+    * CancellationManager()
+    * 线程池
+  
+  * 析构函数
+    * 清理其负责管理的系统资源。主要包括 Executor 列表，ThreadPool 列表，CancellationManager 实例。
+  
   * Run()
     * 累加 session 计数器
     * GetOrCreateExecutors(): 根据输入输出 tensor、目标节点，从当前 Session 中已有的 executor 中找是否存在一个相同任务的 executor，找到则将其返回，否则创建一个新的 executor
       * CreateExecutors
         * CreateGraphs
+          * BuildGraph 进行graph的prune
         * 构造 LocalExecutorParams params，作为Executor的参数，有关create和delete kernel的逻辑
           * OpSegment::ShouldOwnKernel
         * optimizer.Optimize
         * NewExecutor
       * 优化sort：先concat直接fast lookup再sort and concat，map内用原key和sorted key插入两份，value是shared_ptr
-    * FeedArgs的构建，考虑了 DT_RESOURCE
-      * 关于DT_RESOURCE一般会在使用ResourceVariable时才会碰到。ResourceVariable与Variable相比具有很多新特性，这些特性是TF2.0中主推的内容。关于它的优势我们不在这里展开，只对其Op的类型做一个说明。Variable在C++层面的Op类型是VariableV2，而ResourceVariable在C++层面的Op类型为VarHandleOp。后者产生的Tensor就是一种DT_RESOURCE
-      * 见 python/ops/resource_variable_ops.py
+    * FeedArgs的构建
+      * 构建FunctionCallFrame
+      * 考虑了 DT_RESOURCE
+        * 关于DT_RESOURCE一般会在使用ResourceVariable时才会碰到。ResourceVariable与Variable相比具有很多新特性，这些特性是TF2.0中主推的内容。关于它的优势我们不在这里展开，只对其Op的类型做一个说明。Variable在C++层面的Op类型是VariableV2，而ResourceVariable在C++层面的Op类型为VarHandleOp。后者产生的Tensor就是一种DT_RESOURCE
+        * 见 python/ops/resource_variable_ops.py
     * RunInternal() executor 用于具体的执行
+      * core/common_runtime/executor
       * Global_handler、pool、sync执行，三个层面的三种抽象执行方式
       * executor->RunAsync 启动 graph 的运行
         * 配合 Notification、ExecutorBarrier 实现同步
@@ -1391,6 +1694,9 @@ session->Close();
       * 处理重复的output_name
   * RunState
     * For each live Run() call, the session maintains a RunState.  'status' is the current status of the execution.
+  * 成员变量
+    * `operation_timeout_in_ms_`: Global timeout for all blocking operations in this session.
+  
 
 ```c++
 DirectSession::DirectSession(){
@@ -1434,16 +1740,35 @@ Thread 1 "python" hit Breakpoint 2, 0x00007f91e7425a54 in tensorflow::(anonymous
 * session_factory
   * static锁、static factories
 
-
-
 * graph_execution_state
+  * 主要职责包括:
+    * 构造 FullGraph:发生在 DirectSession.Create;
+      * MakeForBaseGraph: execution_state_
+        * ConvertGraphDefToGraph 完成 FullGraph 从 GraphDef 到 Graph 的格式转换
+          * 同理，可以调用 Graph.ToGraphDef 将 Graph 实例变换为等价的 GraphDef 实例。
+        * InitBaseGraph启动 Placer 的 OP 编排算法
+    * 执行简单的 OP 编排算法:发生在 DirectSession.Create;
+    * 执行图的剪枝操作:发生在 DirectSession.Run。
+  * 持有 FullGraph 两种格式的实例: Graph 与 GraphDef，并由它负责管理和维护 FullGraph 的生命周期
+  * CreateGraph
+    * OptimizeGraph
+    * PruneGraph
+      * RewriteGraphForExecution 进行剪枝
   * 创建executable graph、改图
   * executable graph和graph def的区别：Placed, meaning that each Node is assigned to a single Device in the available set.
   * OptimizeGraph: Grappler
 
+* placer
+  * OP 的编排 (placement) 指的是，将计算图中包含的 OP 以最高效的方式置放在合适的计算设备上运算，以最大化计算资源的利用率，可以形式化地描述为下图
+  * 多种colocate条件
+  * 一篇介绍placement的文章，介绍了启发式算法：https://article.itxueyuan.com/W1Gdn2
+  * 似乎CostModel没开启，注意和这里的cost model不一样
+    * [腾讯机智]tensorflow cost model和cost graph浅析 - 朱小霖的文章 - 知乎
+      https://zhuanlan.zhihu.com/p/146969167
 
+![image-20231205054521790](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/placer.png)
 
-##### Other Code
+##### Other Code (executor等)
 
 * colocation_graph
   * ColocateResourceOrRefEdge: placer将DT_RESOURCE相关的op放置在resource所在device上
@@ -1475,18 +1800,18 @@ union {
 
 
 * executor
-  * RunAsync
+  * Executor::RunAsync
     * 创建一个 ready 队列
     * 把入度为 0 的 node 加入 ready 队列
     * 调用 ScheduleReady() 把 ready 队列中的内容调度起来运行
       * ScheduleReady->RunTask(Process())->ProcessAsync->NodeDone->ScheduleReady
-
-  * RunTask
+  * Executor::RunTask
     * Align the atomic variables at 64 bytes to avoid false-sharing, assuming the cacheline size is 64 bytes or smaller.
-
-  * PrepareInputs: 由Entry构造TensorValueVec
-    
-  * "step_id" is a process-wide unique identifier for the step being run. Executors on different devices may receive the same step_id in the case that a step runs Ops on more than one device. The step_id is used for tracking resource usage of a given step.
+  * Executor::PrepareInputs: 由Entry构造TensorValueVec
+  * ExecutorBarrier
+  * Note:
+    * "step_id" is a process-wide unique identifier for the step being run. Executors on different devices may receive the same step_id in the case that a step runs Ops on more than one device. The step_id is used for tracking resource usage of a given step.
+  
 
 
 ```c++
@@ -1500,7 +1825,8 @@ TF_CHECK_OK(executor->Run({ExecutorOpts, rendezvous, nullptr}));
 TF_CHECK_OK(rendezvous->Recv("output", &output_tensor));
 ```
 
-
+* Graph_constructor
+  * ConvertGraphDefToGraph
 
 * public
   * session.h
@@ -1549,6 +1875,8 @@ session->Close();
 
 https://www.tensorflow.org/api_docs/python/tf/distribute
 
+##### 领域模型：Cluster、Job、Task
+
 * 概念
   * Server：通常一台机器上运行一个 Server，用于管理机器上的计算资源、运行 graph 以及完成对远程服务的通信。
     * 每个 Server 中都会运行 2 种服务，Master Service 和 Worker Service。 
@@ -1560,11 +1888,22 @@ https://www.tensorflow.org/api_docs/python/tf/distribute
   * **In-graph replication：**只构建一个client，这个client构建一个Graph，Graph中包含一套模型训练的参数，放置在ps上，同时Graph中包含模型计算部分的多个副本，每个副本放在一个worker上，这样多个worker就可以同时训练复制的模型。
   * **Between-graph replication：**每个worker都构建一个client，各个client构建相同的Graph（similar graph，因为chief worker会有额外的Op），但是参数仍然放在ps上，这样即使worker的client挂了，不影响其他worker的训练。
     - 这个方式下，对于一些公共操作比如模型参数初始化与checkpoint文件保存等，如果每个worker都做则会浪费资源，这个时候需要一个chief worker来作为各个worker的管家，协调训练，并且完成这些公共操作
+    - 这是tensorflow estimator的默认方式
   
 * 再高一层： 
+  * Server： 表示 Task 的服务进程，它对外提供 MasterService 和 WorkerService 服务
   * Task：Task 对应了一个 Server，用于具体处理某些任务。 
+    * 其上运行一个 tf.train.Server 实例
   * Job：一组 Task 可以共同完成一个 Job。
   * Cluster：一整个分布式运行时的集合，包括运行任务、设备等等。一个 Cluster 中包含了一个或多个 Job，每个 Job 又可分为一个或多个 Task。
+    * tf_config/tf_cluster的赋值可以来源于zk/环境变量等
+    * 主要用于不同角色间访问，通过 with tf.device 或者在estimator 中制定 **device_func** 设置不同op在不同角色上执行
+* 组建集群
+  * 创建tf.train.ClusterSpec
+    * core/protobuf/cluster.proto
+  
+  * 每一个Task启动tf.train.Server
+  
 
 ```
 tf.train.ClusterSpec({
@@ -1583,7 +1922,23 @@ tf.train.ClusterSpec({
 /job:worker/task:2
 /job:ps/task:0
 /job:ps/task:1
+
+
+
+message JobDef {
+	string name = 1;
+	map<int32, string> tasks = 2;
+}
+message ClusterDef {
+	repeated JobDef job = 1;
+}
+
+# 其中，tasks 的关键字表示 task_index，值表示 host:port。
 ```
+
+
+
+##### 代码走读
 
 * `server = tf.distribute.Server.create_local_server()`
 
@@ -1646,35 +2001,111 @@ server.join()
 #3  0x00007fffea0c7d16 in tensorflow::Device::ComputeAsync(tensorflow::AsyncOpKernel*, tensorflow::OpKernelContext*, std::function<void ()>) ()
 ```
 
+##### 代码分析
+
 * master
   * 管理 MasterSession 对象，key为session handle
   * CreateSession
   * CloseSession
+
+* master_interface
+  * 因为 RunStepRequest/RunStepResponse 消息中可能包含较大的 Tensor 实例。为了避免不必要的对象拷贝，实现特化实现了消息包装器。
+  * 分布式:基于 gRPC 的 GrpcRemoteMaster 实现，Client 与 Master 分别部署在两个不同的进程;
+  * 本地模式:基于函数调用的 LocalMaster 实现，Client 与 Master 在同一个进程内。
+  * CreateSession           master.proto
+    * return session_handle
+  * ExtendSession
+    * input current_graph_version
+    * return new_graph_version
+  * RunStep
+    * **feed, fetch, target，分别表示输入的 NamedTensor 列表，待输出 Tensor 的名称列表，待执行 OP 的名称列表**
+  * CloseSession
+
+```c++
+stub = NewStub("/job:worker/replica:0/task:0")
+handle = stub->CreateSession({graph_def})
+do {
+  stub->RunStep(handle, feeds, fetches);
+} while (!should_stop());
+stub->CloseSession({handle})
+```
+
+![image-20231208021533082](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/master-service.png)
+
+* message_wrappers
+  * class InMemoryRunGraphRequest : public MutableRunGraphRequestWrapper
 
 * master_session
   * DoRegisterPartitions: 收到 graph_handle
   * RunPartitionsHelper
     * RunPartitions 的实现，when at least two of the {client, master, worker} are in the same process，多了一次tensor copy
 * worker
+  * CreateWorkerSession
   * RegisterGraphAsync
     * 由 `MasterSession::ReffedClientGraph::DoRegisterPartitions` 调用
+  * DeregisterGraph
+    * 当 Worker 节点上的子图不再需要时调用 (例如，计算图被重新调度，图中节点被重新编排)
+  * RecvTensorAsync
+    * 通过携带 (step_id, rendezvous_key) 二元组，请求对端 Worker 相应的 Tensor 数据，并通过 RecvTensorResponse 返回
   * RunGraphAsync (DoRunGraph)
+    * input：唯一的step_id
+      * 各个 Worker 通过 step_id 实现数据的协同
     * PrepareRunGraph
+      * RunGraphRequest 携带了 send, recv_key，分别表示子图输入的 Tensor 标识和数据，及其子图输出的 Tensor 的标识
     * `session->graph_mgr()->ExecuteAsync`
       * 对每个partition执行
     * `session->graph_mgr()->RecvOutputs(step_id, out)`
-* grpc_remote_worker
+* Worker_interface
+  * Master 与 Worker 之间，Worker 与 Worker 之间的交互遵循 WorkerService 定义的接口规范
+  * 有异步接口和同步接口
+    * CallAndWait
+  * 析构函数protected
+
+```c++
+template <typename Method, typename Req, typename Resp>
+Status CallAndWait(Method func, const Req* req, Resp* resp) {
+  Status ret;
+  Notification n;
+  (this->*func)(req, resp, [&ret, &n](const Status& s) {
+    ret = s;
+    n.Notify();
+  });
+  n.WaitForNotification();
+  return ret;
+}
+```
+
+```c++
+struct WorkerInterface {
+ protected:
+  virtual ~WorkerInterface() {}
+  friend class WorkerCacheInterface;
+};
+```
+
+* Worker_cache
+  * WorkerCacheInterface <- WorkerFreeListCache
+* worker_session
+  * WorkerFreeListCache
+
+  * WorkerSession
+    * worker_cache()
+
+* grpc_worker_service: local实现
+  * 当 Worker 首次完成 RegisterGraph 后，向 Master 返回唯一的 graph_handle，以此标识该图实例。因此，在集群内可以使用 (session_handle, graph_handle) 二元组唯一标识该图实例。
+  * 当 Master 广播通知各个 Worker 并发地 RunGraph。为了区分不同 step，Master 生成全局唯一的 step_id，并通过 RunGraph 传递给各个 Worker。
+* grpc_remote_worker: rpc实现
   * RecvTensorAsync
     * 由 RpcRemoteRendezvous 调用
-  
 * grpc_session
   * Close() 调用 Master::CloseSession
-  
+
 
 
 
 * rendezvous
   * [Send-Driven & Rendezvous-Bypass 优化](https://tech.meituan.com/2021/12/09/meituan-tensorflow-in-recommender-systems.html)
+* Rpc_Remote_Rendezvous
 
 
 
@@ -1696,7 +2127,7 @@ server.join()
 
 
 
-##### op_kernel
+
 
 ##### 如何写一个Op
 
@@ -1737,7 +2168,7 @@ def tf_cdist_vectorised(x, y):
     return tf.sum(z, axis=-1)
 ```
 
-
+###### op注册
 
 * Op Registration Defines
   * input tensors
@@ -1762,23 +2193,6 @@ REGISTER_OP("my_op_name")
 ```
 
 ![image-20230103000701765](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/register-opdef.png)
-
-* op.h
-  * OpRegistry（Graph持有）
-  * 实现细节参考 platform/macros、platform/selective_registration.h
-* load_library
-  * LoadDynamicLibrary，调用OpRegistry相关函数
-
-* OpKernelContext
-  * The context object simply allows the op access to basic functionality such as querying the device, fetching the op’s inputs, and allocating space for new tensors.
-  * `ctx->GetAttr("config", &config_serialized_)` 类型是string
-  * allocate tensor
-    * allocate_persistent: only needed for Tensors that will be stored by the Op between invocations
-    * allocate_output
-    * allocate_temp
-      * 将input、persistent tensor设为output，set_output or set_output_ref
-      * 注意如果AllocatorAttributes不一致，可能有额外copy
-      * 用这个接口可能是为了LogMemory
 
 ```c++
 // tensorflow/core/ops/pairwise_manhattan_distance_ops.cc
@@ -1918,7 +2332,68 @@ REGISTER_OP("PairwiseManhattanDistanceGrad")
     })
 ```
 
+* Op shape inference
 
+```c++
+REGISTER_OP("HashTableLookup")
+    .Input("table_handle: resource")
+    .Input("ids: int64")
+    .Output("embeddings: float32")
+    .Attr("dim_size: int")
+    .Attr("use_multi_threads: bool = false")
+    .SetShapeFn([](shape_inference::InferenceContext* c) {
+      int64 dim_size;
+      TF_RETURN_IF_ERROR(c->GetAttr("dim_size", &dim_size));
+      shape_inference::DimensionHandle len_ids = c->Dim(c->input(1), 0);
+      c->set_output(0, c->Matrix(len_ids, dim_size));
+      return Status::OK();
+    });
+
+REGISTER_OP("HashTableOptimize")
+    .Input("table_handle: resource")
+    .Input("id_values: int64")
+    .Input("id_updates: float")
+    .Input("learning_rate_tensor: float")
+    .Input("global_step: int64")
+    .Output("table_handle_output: resource")
+    .Attr("use_multi_threads: bool = false")
+    .Attr("queue_size: int = 0")
+    .SetShapeFn(shape_inference::ScalarShape);
+    
+```
+
+```c++
+REGISTER_KERNEL_BUILDER(Name("MyOp")
+                            .Device(DEVICE_GPU)
+                            .HostMemory("batch_size")
+                            .HostMemory("row_lenthg"),
+                        		MyOpGPU);
+```
+
+
+
+###### op内容错和日志
+
+```c++
+OP_REQUIRES(context, method_ == "xxx" || method_ == "yyy",
+                errors::Unknown("method unknown! need to be xxx/yyy"));
+
+OP_REQUIRES(ctx, version == 4 || version == 5,
+              errors::FailedPrecondition("only support version 4 or 5"));
+
+OP_REQUIRES_OK_ASYNC(
+            context,
+            tensorflow::Status(
+                static_cast<tensorflow::error::Code>(rpc_status.code()),
+                rpc_status.message()),
+            rpc_cleaner.release());
+```
+
+###### 其它
+
+* op内获取参数
+  * `Status s = ReadInt64FromEnvVar("CACHE_SIZE_IN_MB", -1, &cache_size);`
+  * `OP_REQUIRES_OK(ctx, ctx->GetAttr("unique", &unique_));`
 
 * 用op管理ResouceBase
 
@@ -1976,7 +2451,56 @@ workers->ParallelFor(
     fn);
 ```
 
+##### op.h
 
+* op.h/op.cc
+  * OpRegistry（Graph持有）
+  * OpRegistryInterface
+    * OpRegistrationData 描述了 OP 两种基本的元数据:OpDef 与 OpShapeInferenceFn;前者用于描述 OP 的输入/输出参数信息，属性名列表，及其约束关系。后者用于 描述 OP 的 Shape 的推演规则。
+    * `typedef std::function<Status(OpRegistrationData*)> OpRegistrationDataFactory;`
+  * 实现细节参考 platform/macros、platform/selective_registration.h
+  * 延迟初始化技术
+
+```c++
+OpRegistry::Global()->Register(
+  [](OpRegistrationData* op_reg_data)->Status {
+    // Populate *op_reg_data here.
+    return Status::OK();
+});
+// 可以由外部OpDef构造内部reg_data，也可以将内部reg_data传到外面（利用lambda capture）
+
+Status OpRegistry::Register(const OpRegistrationDataFactory& factory) {
+	auto op_reg_data(std::make_unique<OpRegistrationData>());
+  Status s = factory(op_reg_data.get());
+  if (s.ok()) {
+    gtl::InsertIfNotPresent(&registry_,
+           op_reg_data->op_def.name(),
+           op_reg_data.get());
+  }
+  if (s.ok()) {
+    op_reg_data.release();
+  } else {
+    op_reg_data.reset();
+  }
+  return watcher_status;
+}
+   
+```
+
+
+
+* load_library
+  * LoadDynamicLibrary，调用OpRegistry相关函数
+* OpKernelContext
+  * The context object simply allows the op access to basic functionality such as querying the device, fetching the op’s inputs, and allocating space for new tensors.
+  * `ctx->GetAttr("config", &config_serialized_)` 类型是string
+  * allocate tensor
+    * allocate_persistent: only needed for Tensors that will be stored by the Op between invocations
+    * allocate_output
+    * allocate_temp
+      * 将input、persistent tensor设为output，set_output or set_output_ref
+      * 注意如果AllocatorAttributes不一致，可能有额外copy
+      * 用这个接口可能是为了LogMemory
 
 
 
@@ -2048,6 +2572,31 @@ message Summary.Value {
 }
 ```
 
+##### dataset
+
+* DatasetOpKernel
+  * input_fn每个步骤都是一个dataset，每个dataset构造的时候框架会给上一个dataset的iterator，在函数GetNextInternal 拿着iterator get一下，就拿到上一个dataset的数据，再处理下输
+  * 整体类似一个拉模型，由最后一个op驱动，不断从前一个op拉数据处理
+* 自己写DataSetOp
+  * 首先 DatasetOpKernel 的 Compute 接口会调用 MakeDataset 返回一个 Dataset
+    - 可以继承 DatasetOpKernel  重写 MakeDataset 返回一个自定义的 Dataset
+  * 接着在后续 op 中（如 dataset.map，dataset.filter）会调用 Dataset 的 MakeIterator 获取迭代器 DatasetIterator
+    - 可以继承实现一个自定义的 Dataset，重写 MakeIteratorInternal 返回一个自定义的 DatasetIterator，并调用 Iterator 的 Initialize 接口
+  * 然后调用 DatasetIterator 的 GetNext 接口获取数据
+    - 可以继承实现一个自定义的 DatasetIterator，重写 GetNextInternal 实现自定义的数据读取逻辑
+  * 总的来说要实现一个自定义的 DatasetOp，一般需要继承 DatasetOpKernel、DatasetBase、DatasetIterator 实现自定义子类，并分别重写以下接口
+    * CustomDatasetOp::MakeDataset
+    * CustomDatasetOp::MakeDatasetInternal
+    * CustomDatasetOp::Dataset::Iterator::GetNextInternal
+* DatasetBase
+  *  Returns a new iterator for iterating over the range of elements in this dataset.
+  * This method may be called multiple times on the same instance, and the resulting iterators will have distinct state. Each iterator will traverse all elements in this dataset from the start.
+  * The prefix identifies the sequence of iterators leading up to the newly created iterator.
+    * IteratorPrefix
+
+* DatasetIterator
+* 分发文件
+  * matching_files.MatchingFilesDataset
 
 
 ##### tensor
@@ -2124,25 +2673,62 @@ friend Status batch_util::CopyContiguousSlices(
   Tensor* dst);  // For access to base<T>().
 ```
 
+###### eigen相关
+
+```c++
+setConstant:
+auto vec = tensor->vec<int32>();
+vec.setConstant(-1);
+```
+
+
+
+
+
 ##### Other Code
 
 * bounds_check
   * FastBoundsCheck
   * internal::SubtleMustCopy
   
+* Cancellation
+  * CancellationManager
+    * 当前 Step 的 CancellationManager 最终会传递给 OpKernelContext
+    * Kernel 实现计算时，如果保存了中间状态，可以向其注册相应的回调钩子。其中，每个回调钩子都有唯一的 token 标识。
+  
+
+![image-20231206002504396](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/cancellation-manager.png)
+
+* 以FIFO QUEUE的cancel为例
+  * queue_base、fifo_queue
+  * 很细致地维护入队出队状态的取消
+  * TryAttemptLocked
+    * 调用attempt中的run_callback
+
+
+
+* common_shape_fns
+  * UnchangedShape
+    * shape_inference::InferenceContext中有存储shape_and_dtypes
+
+* function
+  * FunctionCallFrame
+
 * run_handler TODO
   * schedule inter/intra-op closures to run on a global pool shared across all Session::Run(s)
   * Pimpl
 * op_def_builder
   * FinalizeInputOrOutput
     * 如果arg type是DT_RESOURCE，则将op设为stateful
-  
+
 * op_kernel
+  * AsyncOpKernel
+  
   * TensorValue
     * Holds a tensor or tensor reference. For tensor references, we need a mutex to prevent concurrent access to the tensor.
 
   * `#define REGISTER_KERNEL_BUILDER(kernel_builder, ...)`
-
+  
 * op_segment
   * keeps track of OpKernels registered for sessions running on a device
     * Ref 管理，AddHold
@@ -2150,6 +2736,8 @@ friend Status batch_util::CopyContiguousSlices(
     * OpSegment should not own kernel if the node is stateless, or a function.
 
 * register_types
+  * 其中Name是KernelDefBuilder的一个派生类，Name("KernelName")会首先创建一个KernelDefBuilder同时设置设置kernel名称，每次调用这种setter函数就会返回Builder自身从而支持连续调用，然后是设置Device，最后添加值float到属性T中。
+
 
 ```c++
 #define REGISTER_SLICE(type)                             \
@@ -2165,8 +2753,21 @@ TF_CALL_QUANTIZED_TYPES(REGISTER_SLICE);
 #undef REGISTER_SLICE
 ```
 
+* resource_var
+  * Sparse operations are not supported in copy-on-write mode.
+  * To upgrade a variable from copy-on-write to copy-on-read use `EnsureSparseVariableAccess()`, and then grab the variable's mutex as desired.
+  * To access the variable in dense mode grab the mutex either directly or via `MaybeLockVariableInputMutexesInOrder` on all variables being modified and then call `PrepareToUpdateVariable` on them in any order.
+
 * Type_index
   * 避免RTTI，使用参考MakeResourceHandleToOutput
+* variant.h
+
+```c++
+const Tensor &input_tensor = context->input(0);
+const Variant& variant = input_tensor.scalar<Variant>()();
+OP_REQUIRES(context, variant.TypeId() == TypeIndex::Make<Example>(),
+            errors::InvalidArgument("input must be Example proto"));
+```
 
 ##### resource_mgr
 
@@ -2317,7 +2918,7 @@ name_ = strings::StrCat("_", counter.fetch_add(1), "_", ndef.name());
 
 ![image-20230103002049555](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/graph-object.png)
 
-##### graph
+
 
 * Edge
   * 普通边:用于承载数据 *(*以 Tensor 表示*)*，表示节点间“生产者*-*消费者”的数据 依赖关系，常用实线表示;
@@ -2345,6 +2946,14 @@ name_ = strings::StrCat("_", counter.fetch_add(1), "_", ndef.name());
   * Predefined source and sink nodes, id 0 and 1
     * 它们之间的控制依赖边，其 src_output, dst_input 值都为-1。
   * 边相关方法：AddEdge, RemoveEdge
+* graph_partition：分裂
+  * 在 PartitionOptions 中，存在两个重要的回调函数。
+    * NodeToLocFunc 用于图分裂
+    * NewNameFunc 用于给新增加的节点命名，例如 Send/Recv。
+
+  * 在本地模式下，NodeToLocFunc 被配置为 SplitByDevice
+  * 在分布式模式下，Master 的 NodeToLocFunc 被配置为 SplitByWorker;而 Worker 的 NodeToLocFunc 被配置为 SplitByDevice。
+
 
 #### grappler
 
@@ -2387,6 +2996,88 @@ Tensor* out = nullptr;
 OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape({rank}), &out));
 ```
 
+* data
+  * Single_threaded_executor
+
+* function_ops
+  * ArgOp
+  * RetValOp
+  * RemoteCallOp
+
+
+```python
+void ArgOp::Compute(OpKernelContext* ctx) {
+  auto frame = ctx->call_frame();
+  OP_REQUIRES(ctx, frame != nullptr, errors::Internal("no call frame"));
+  const Tensor* val;
+
+  auto validate_type = [this](const Tensor& val) {
+    if (val.dtype() == dtype_) {
+      return Status::OK();
+    } else {
+      return errors::InvalidArgument("Type mismatch: actual ",
+                                     DataTypeString(val.dtype()),
+                                     " vs. expect ", DataTypeString(dtype_));
+    }
+  };
+
+  if (frame->CanConsumeArg(index_)) {
+    Tensor val;
+    frame->ConsumeArg(index_, &val);
+    OP_REQUIRES_OK(ctx, validate_type(val));
+    ctx->set_output(0, std::move(val));
+  } else {
+    OP_REQUIRES_OK(ctx, frame->GetArg(index_, &val));
+    OP_REQUIRES_OK(ctx, validate_type(*val));
+    ctx->set_output(0, *val);
+  }
+}
+```
+
+
+
+* list_kernels TODO variants的应用
+  * TensorListResize
+    * forward_input的技巧，手动check output tensor的RefCountIsOne
+      * ForwardInputOrCreateNewList
+
+
+```c++
+Status GetInputList(OpKernelContext* c, int index, const TensorList** list) {
+  if (!TensorShapeUtils::IsScalar(c->input(index).shape())) {
+    return errors::InvalidArgument("Input list must be a scalar saw: ",
+                                   c->input(index).shape().DebugString());
+  }
+  const TensorList* l = c->input(index).scalar<Variant>()().get<TensorList>();
+  if (l == nullptr) {
+    return errors::InvalidArgument(
+        "Input handle is not a list. Saw: '",
+        c->input(index).scalar<Variant>()().DebugString(), "'");
+  }
+  *list = l;
+  return Status::OK();
+}
+```
+
+* resource_variable_ops
+  * copy_on_read_mode相关逻辑
+  * AssignVariableOp,  COW时直接用assign的tensor
+  * AssignUpdateVariableOp
+    * 调用 PrepareToUpdateVariable
+
+* Send_recv_ops
+  * 进程内的 Send/Recv 通过唯一的标识 ParsedKey 实现数据的交换
+  
+  * ParsedKey 包括:发送设备，接受设备，设备全局标识，及其待发送 Tensor 的 标识 (src:output_index) 
+  
+  * RecvOp::RecvOp(OpKernelConstruction* ctx) : AsyncOpKernel(ctx)
+  
+    * 当 Rendezvous 中数据可获取，便开始执行回调函数 done_cb，它
+  
+      将其得到的 Tensor 输出到下游 OP
+
+![image-20231207024829218](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/send_recv_ops.png)
+
 * slice_op
   * SharedSliceCommonCases: 共享buffer的两种case，is_identity和slice_dim0
   * input参数：begin_tensor and size_tensor
@@ -2395,8 +3086,32 @@ OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape({rank}), &out));
     * `port::prefetch<port::PREFETCH_HINT_T0>(&output_t(i + 1, 0));`
   * 普通case，用`functor::Slice`
 
+* tensor_list
+
+```c++
+private:
+  class Tensors : public core::RefCounted {
+   public:
+    std::vector<Tensor> values_;
+  };
+  Tensors* tensors_;
+```
+
+* training_op_helpers
+  * EnsureSparseVariableAccess(ctx, var)
+  * PrepareToUpdateVariable(ctx, var_tensor, copy_on_read_mode)
+  * GetInputTensorFromVariable
+    * `OP_REQUIRES_OK(ctx, GetInputTensorFromVariable<CPUDevice, float>(ctx, 0, use_exclusive_lock_, sparse, &var));`
+
+
 #### lib/core
 
+* bitmap
+  * 类似boost::dynamic_bitset
+  * 核心数据结构是 `uint32*` 即 `Word*`
+  * `size_t FirstUnset(size_t start) const;`
+    * 实现思路是按Word分治
+  
 * status_test_util.h
   * TF_EXPECT/ASSERT/CHECK_OK
 
@@ -2448,8 +3163,25 @@ class ScopedUnref {
 };
 ```
 
+* default/integral_types.h
+
+```c++
+typedef signed char int8;
+typedef short int16;
+typedef int int32;
+typedef long long int64;
+
+typedef unsigned char uint8;
+typedef unsigned short uint16;
+typedef unsigned int uint32;
+typedef unsigned long long uint64;
+```
+
 * default/logging
   * DCHECK_EQ
+
+* default/notification
+  * WaitForNotificationWithTimeout
 
 * mutex
 
@@ -2557,7 +3289,13 @@ trace_me.AppendMetadata([value1]() {
 });
 ```
 
+* internal/cpu/traceme_recorder
+  * 线程搜集
 
+#### protobuf
+
+* cluster.proto
+* master.proto
 
 #### public
 
@@ -2590,14 +3328,17 @@ static_assert(
 * 面向用户的 C++编程 API
 * c_api.cc
   * 被 python/client 中的代码调用
+  * Tf_Graph
+    * 内部维护sessions，用于判断delete
   * Tf_NewSession
     * `TF_Session* TF_NewSession(TF_Graph* graph, const TF_SessionOptions* opt, TF_Status* status)`
     * graph作为参数，图实例在多个 Session 实例中共享
     * 调用 core/common_runtime: NewSession()
     * New nodes can still be added to `graph` after TF_NewSession().
-  * TF_CloseSession
   * TF_SessionRun
     * The caller retains ownership of `input_values` (which can be deleted using TF_DeleteTensor). The caller also retains ownership of `run_options` and/or `run_metadata` (when not NULL) and should manually call TF_DeleteBuffer on them.
+  * TF_CloseSession
+  * TF_DeleteSession
   * TF_Buffer
 
 ```c++
@@ -2608,7 +3349,8 @@ typedef struct TF_Buffer {
 } TF_Buffer;
 ```
 
-
+* c_api_internal
+  * TF_Session
 
 ### cc
 
@@ -2646,6 +3388,13 @@ tensorflow/compiler
 |-- xla
 `-- xrt
 ```
+
+* mlir
+  * tensorflow/ir/tf_trait.h
+    * `op->hasTrait<OpTrait::quant::NoQuantizableResult>()` 判断op是否具有某种属性
+    * op基本只有element_wise, scatter, gather三种类型（custom_op在这三种之外，会让一些图优化失效）
+      * scatter: SplitV, slice
+      * gather: concat
 
 ### Tf2 vs Tf1
 
@@ -2872,6 +3621,26 @@ https://www.cnblogs.com/jicanghai/p/9535808.html
 * TF_GUARDED_BY、TF_EXCLUSIVE_LOCKS_REQUIRED
   * tsl/platform/thread_annotations.h
   * [现代C++开发之线程安全注解 by 陈硕](https://zhuanlan.zhihu.com/p/47837673)
+* clang format相关
+
+```c++
+// clang-format off
+...
+// clang-format on
+```
+
+* 轮子
+  * core/platform有一些
+
+##### 装饰器
+
+* @tf_export 导出符号
+
+##### 性能优化
+
+`gtl::InlinedVector<Tensor, 4>` ， 预留四个位置
+
+
 
 #### tensorflow-serving
 
@@ -2886,7 +3655,7 @@ https://www.cnblogs.com/jicanghai/p/9535808.html
 * [一篇很好的回答，梳理tf的核心框架思路](https://www.zhihu.com/question/51216952/answer/124708405) MUSTDO
 * tf guides https://www.tensorflow.org/guide/basics
 
-
+* tf答疑：developers@tensorflow.org
 
 
 #### 图优化相关
@@ -3164,7 +3933,7 @@ https://www.tensorflow.org/guide/tensor
 * 单层/多层感知器，见【基本 API 用法】
 * 卷积网络，见【ML笔记】
 
-#### chpt 4 系统架构
+#### chpt 4 系统架构 Architecture
 
 ![image-20221212015113480](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/tf-arch.png)
 
@@ -3216,10 +3985,10 @@ def run_partitions(rendezvous, executors_and_partitions, inputs, outputs):
   * `py::object` - does automatic refcounting. Subclass of `py::handle`.
 * 讲了一些session的源码
 
-#### chpt 6 计算图
+#### chpt 6 计算图 Graph
 
 * Python前端: python/framework/ops
-  * Operation 表示图中的 Node 实例，而 Tensor 表示 图中的 Edge 实例
+  * Operation 表示图中的 Node 实例，而 Tensor 表示图中的 Edge 实例
   * 有向边存在两种类型，一种承载数据，并使用 Tensor 表示;另一种不承载数据，仅表示计算依赖关系
   * Operation 的元数据由 OpDef 与 NodeDef 持有，它们以 ProtoBuf 的格式存在，它描述 了 Operation 最本质的东西。其中，OpDef 描述了 OP 的静态属性信息，例如 OP 的名称， 输入/输出参数列表，属性集定义等信息。而 NodeDef 描述了 OP 的动态属性值信息，例如 属性值等信息
 
@@ -3231,9 +4000,9 @@ def run_partitions(rendezvous, executors_and_partitions, inputs, outputs):
   * python_op_gen_*
 * op相关，参考【如何写一个op】
 
-#### chpt 7 设备
+#### chpt 7 设备 Device
 
-设备规范 (Device Specification) 用于描述 OP 存储或计算设备的具体位置
+> 设备规范 (Device Specification) 用于描述 OP 存储或计算设备的具体位置
 
 * 形式化
   * 完整指定：`/job:ps/replica:0/task:0/device:GPU:0`
@@ -3276,9 +4045,224 @@ with g.device(matmul_on_gpu):
 
 #### chpt 8 会话 Session
 
+> Session 建立了执行计算图的闭包环境，它封装了 OP 计算，及其 Tensor 求 值的计算环境。
+
+* 资源管理
+  * close
+  * with tf.compat.v1.Session() as sess:
+  * 一个图实例，可以运行在多个 Session 实例中。如果尝试在同一个 Session 运行另外一个图实例，必须先关闭 Session(不必销毁)， 再启动新图的计算过程。
+    * 并发运行输入子图、训练子图、checkpoint子图
+    * 图实例中维护一个 Session 的引用计数器
+
+* 默认会话
+  * 显式close
+  * tensor的eval方法
+
+```python
+hello = tf.constant('hello, world')
+sess = tf.Session()
+with sess.as_default():
+  print(hello.eval())
+sess.close()
+
+
+tf.get_default_session().run(hello)
+```
+
+* 会话类型
+  * Session 与 InteractiveSession
+    * InteractiveSession 将 GPUOptions.allow_growth 置为 True, 避免在实验环境中独占整个 GPU 的存储资源
+  * 代码参考 python/client/session.py
+    * InteractiveSession在init时调用上下文管理器的`__enter__`
+
+
+
+#### chpt 9 变量 Variable
+
+> 有状态；相比于tensor，可横跨steps，可checkpoint
+>
+> Variable 可以看做 Tensor 的包装器，Tensor 所支持的所有操作都被 Variable 重载实现。
+
+* 实战:线性模型
+
+```python
+x = tf.placeholder(tf.float32, [None, 784]) W = tf.Variable(tf.zeros([784,10]), name='W') b = tf.Variable(tf.zeros([10]), name='b')
+y = tf.matmul(x, W) + b
+
+init = tf.global_variables_initializer()
+with tf.Session() as sess:
+  sess.run(init)
+```
+
+![image-20231127070722184](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/variable.png)
+
+* 初始化模型
+  * Variable 根据初始值 (Initial Value) 推演 Variable 的数据类型，并确定 Tensor 的形状 (Shape)
+  * initializer
+  * Identity 操作 Variable 常称为一个快照 (Snapshot)，表示 Variable 当前的值。
+  * `tf.global_variables_initializer() ` 用一个no_op搜集全部变量的初始化器，控制依赖
+  * 同位关系colocation
+    * 可以在 Assign/Identity 节点上指定 _class 属性值:[s: "loc:@W"]
+  * 初始化依赖
+    * 两者通过 Identity 衔接，并显式地添加了依赖控制边
+  * 初始化器列表
+    * 全局变量的初始化器列表
+
+```python
+# Create a variable
+W = tf.Variable(tf.zeros([784,10]), name='W')
+# Use the variable in the graph like any Tensor.
+y = tf.matmul(x, W)
+
+# The overloaded operators are available too.
+z = tf.sigmoid(w + y)
+# Assign a new value to the variable with assign/assign_add.
+w.assign(w + 1.0)
+w.assign_add(1.0)
+
+# Run the variable initializer.
+with tf.Session() as sess:
+  sess.run(W.initializer)
+  
+W = tf.Variable(tf.zeros([784,10]), name='W')
+V = tf.Variable(W.initialized_value(), name='V')
+
+
+def variables_initializer(var_list, name="init"):
+  def _initialier_list():
+		return *[v.initializer for v in var_list]
+	return control_flow_ops.group(_initialier_list(), name=name)
+    
+def global_variables_initializer():
+	return variables_initializer(global_variables())
+```
+
+![image-20231128050138962](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/variable-1.png)
+
+* Note:
+  * 在 TensorBoard 中展示 Assign 的输入，其边使用特殊的 ref 标识。数 据流向与之刚好相反，否则计算图必然出现环，显然违反了 DAG(有向无环图) 的基本需求。
+* 变量分组
+  * 默认地，Variable 被划分在全局变量和训练变量的集合中。正如上例，W, V 自动划分至全局变量和训练变量的集合中。
+  * `tf.global_variables()`
+    * return ops.get_collection(ops.GraphKeys.GLOBAL_VARIABLES)
+    * 不同进程间参数共享
+  * `tf.local_variables()`
+    * 本地变量表示进程内的共享变量，它通常不需要做断点恢复 (Checkpoint)，仅用于临时的计数器的用途。例如，在分布式环境中，使用本地变量记录该进程已读数据的 Epoch 数目。
+  * `tf.trainable_variables()`
+  * `tf.compat.v1.train.get_or_create_global_step()`
+
+```python
+def local_variable(initial_value, validate_shape=True, name=None): 	return variables.Variable(
+  initial_value, trainable=False, collections=[ops.GraphKeys.LOCAL_VARIABLES], validate_shape=validate_shape, 
+  name=name)
+
+def create_global_step(graph=None):
+  graph = ops.get_default_graph() if graph is None else graph
+  with graph.as_default() as g, g.name_scope(None):
+    collections = [GLOBAL_VARIABLES, GLOBAL_STEP]
+   	return variable(
+      GLOBAL_STEP, shape=[], dtype=dtypes.int64,
+      initializer=init_ops.zeros_initializer(), trainable=False,
+      collections=collections)
+
+```
+
+* 源码分析:构造变量
+
+```python
+class Variable(object):
+  def __init__(self, initial_value=None, trainable=True,
+               collections=None, name=None, dtype=None):
+    with ops.name_scope(name, "Variable", [initial_value]) as name:
+      self._cons_initial_value(initial_value, dtype) 
+      self._cons_variable(name)
+      self._cons_initializer()
+      self._cons_snapshot()
+    self._cons_collections(trainable, collections)
+  
+  def _cons_initial_value(self, initial_value, dtype):
+    self._initial_value = ops.convert_to_tensor(
+      initial_value, name="initial_value", dtype=dtype)
+    
+  def _cons_variable(self, name):
+    self._variable = state_ops.variable_op_v2(
+      self._initial_value.get_shape(),
+      self._initial_value.dtype.base_dtype,
+      name=name)
+    
+	def _cons_initializer(self):
+    self._initializer_op = state_ops.assign(
+           self._variable,
+           self._initial_value).op
+    
+	def _cons_snapshot(self):
+    with ops.colocate_with(self._variable.op):
+      self._snapshot = array_ops.identity(
+        self._variable, name="read")
+
+	def _cons_collections(self, trainable, collections):
+    if collections is None:
+      collections = [GLOBAL_VARIABLES]
+    if trainable and TRAINABLE_VARIABLES not in collections:
+      collections = list(collections) + [TRAINABLE_VARIABLES]
+      ops.add_to_collections(collections, self)
+```
+
+
+
 
 
 #### chpt 10 队列 Queue
+
+* session是线程安全的
+  * 通过多线程并使用同一个 Session 实例，并发地执行同一个图实例的不同 OP， 最终实现的效果是子图之间的并发执行
+* Queue
+  * Enqueue，Dequeue，EnqueueMany，DequeueMany
+  * RandomShuffleQueue
+* 如何同时停止所有的线程，及其处理异常报告? 
+  * tf.train.Coordinator
+  * Coordinator 协调多个线程同时停止运行，并且向等待停止通知的主程序报告异常
+
+```python
+try:
+	# Create a coordinator.
+  coord = tf.train.Coordinator()
+  # Create 10 threads that run 'MyLoop()'
+  threads = [threading.Thread(target=MyLoop, args=(coord,)) for i in xrange(10)]
+
+  # Start the threads.
+  for t in threads:
+    t.start()
+  # wait for all of them to stop
+  coord.join(threads)
+except Exception as e:
+	# ...exception that was passed to coord.request_stop(e)
+
+def MyLoop(coord):
+  try
+  while not coord.should_stop():
+    # ...do something...
+  except Exception as e:
+    coord.request_stop(e)
+	
+  # 也可以这样：
+  with coord.stop_on_exception():
+    while not coord.should_stop():
+      # ...do some work...
+    
+
+```
+
+
+
+* 如何并发地向队列中追加样本数据?
+  * tf.train.QueueRunner
+  * QueueRunner 创建了一组线程，并协作多个入队 OP(例如 Enqueue， EnqueueMany) 的执行
+* QueueRunner
+  * 参考python/training/queue_runner_impl.py
+  * tf.train.add_queue_runner 注册QueueRunner
+    * 将其添加到 GraphKeys.QUEUE_RUNNERS 集合中
+  * tf.train.start_queue_runners
 
 ```python
 class XMonitor():
@@ -3309,7 +4293,146 @@ class XMonitor():
         sess.run(self._enqueue_ops[device])
 ```
 
+#### chpt 11 Op本质论
 
+* Op注册
+  * REGISTER_OP 宏定义了一套精致的内部 DSL，系统自动完成字符串表示的翻译表达，并将其转换为 OpDef 的内部表示，最后保存在 OpDef 的仓库中。
+* 查询接口 core/framework/op.h
+  * OpRegistryInterface
+  * 其中，OpRegistrationData 描述了 OP 两种基本的元数据:OpDef 与 OpShapeInferenceFn;前者用于描述 OP 的输入/输出参数信息，属性名列表，及其约束关系。后者用于 描述 OP 的 Shape 的推演规则。
+
+```c++
+struct OpRegistryInterface {
+  virtual ~OpRegistryInterface() {}
+
+  virtual Status LookUp(
+    const string& op_name,
+    const OpRegistrationData** op_reg_data) const = 0;
+
+  Status LookUpOpDef(const string& op_name, const OpDef** op_def) const;
+};
+  
+```
+
+#### chpt 12 本地执行
+
+![image-20231205045444711](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/tensorflow-local.png)
+
+* 本地模式
+  * client-master-worker
+  * 在 run_step 执行过程之中，计算图的剪枝、分裂、执行
+  * 部分执行
+    * prune成最小依赖子图ClientGraph
+  * 并发执行：worker并发用Executor执行PartitionGraph
+
+![image-20231205045628772](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/tensorflow-graph-prune.png)
+
+* 会话控制
+  * DirectSession
+  * 创建、销毁、创建/拓展图、迭代执行、关闭会话
+  * 迭代执行：剪枝、分裂、执行
+  * 跨设备的 PartitionGraph 之间可能存在数据依赖关系，它们之间通过插入 Send/Recv 节点完成交互。
+    * 在本地模式中，Send/Recv 通过 Rendezvous 完成数据交换，Send 将数据放在 Rendezvous 上，而 Recv 则根据标识从 Rendezvous 取走。其中，Send 不阻塞， 而 Recv 是阻塞的。
+
+![image-20231205050055252](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/direct-session.png)
+
+![image-20231205050323471](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/direct-session-1.png)
+
+形式化描述run_step的执行过程
+
+```python
+def do_run_partitions(executors_and_partitions):
+  barrier = ExecutorBarrier(executors_and_partitions.size())
+  for (executor, partition) in executors_and_partitions:
+    executor.run(partition, barrier)
+  barrier.wait()
+
+def run_partitions(executors_and_partitions, inputs, outputs): 	
+  frame = FunctionCallFrame()
+  frame.set_args(inputs)
+  do_run_partitions(executors_and_partitions)
+  frame.get_ret_vals(outputs)
+
+def run_step(devices, full_graph, inputs, outputs):
+  client_graph = prune(full_graph, inputs, outputs)
+  executors_and_partitions = split(client_graph, devices)
+  run_partitions(executors_and_partitions, inputs, outputs)
+```
+
+Cancellation Manager
+
+![image-20231206002504396](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/cancellation-manager.png)
+
+
+
+* 剪枝
+  * RewriteGraphForExecution：得到最小依赖子图
+  * 存在两种媒介:FunctionCallFrame 和 Rendezvous，外部运行时与输入/输出节点可以 使用其中一种媒介交换数据。
+    * FunctionCallFrame 用于 Arg/RetVal 函数调用的 OP，用于函数调用时传递函数参数值，及其返回函数值。但是，它们仅适用于单进程的运行时环境。
+      * local模式
+      * 使用 Arg/RetVal 分别替代 Send/Recv 节点
+    * Rendezvous 用于 Send/Recv 消息发送的 OP，这是一种更为通用的通信方式，适用于分布式的运行时环境。
+  * RewriteGraphForExecution的实现
+    * 追加输入节点
+    * 追加输出节点
+    * 反向剪枝
+      * reverse bfs
+      * fix up source and sink edge
+* 分裂
+  * core/graph/graph_partition.cc
+  * 情况 3:src 与 dst 不在同一个 Partition 内，但两者之间是控制依赖边
+    * 两边dummy node，微妙性能开销
+
+![image-20231206013701061](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/partition.png)
+
+* 执行
+  * 3 个核心问题:
+    * 输入*/*输出处理
+    * 设备间数据交换
+    * 执行 PartitionGraph
+  * 最后一公里
+    *  SendOp 与 RecvOp 的工作原理
+    * IntraProcessRendezvous 的工作原理
+    * Executor 的调度算法
+
+![image-20231206020406892](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/executor.png)
+
+* 设备间通信
+  * SendOp/RecvOp 通过 Rendezvous 交换数据的;它实现了消息发送/接受，与具体消息传 递相解耦。例如，在单进程内，SendOp/RecvOp 基于 IntraProcessRendezvous 传递数据的; 而在多进程环境中，SendOp/RecvOp 则可以基于 GrpcRendezvous 传递数据。
+  * SendOp实现
+    * core/kernels/sendrecv_ops
+  * RecvOp实现
+
+#### chpt 13 分布式 Tensorflow
+
+* 分布式模式
+
+  * Client 负责计算图的构造，然后通过调用 Session.run，启动计算图
+
+    的执行过程。
+
+  * Master 进程收到计算图执行的消息后，启动计算图的剪枝，分裂，优化等操作;最终将子图分发注册到各个 Worker 进程上，然后触发各个 Worker 进程并发执行子图。
+
+  * Worker 进程收到子图注册的消息后，根据本地计算设备资源，再将计算子图实施二次分裂，将子图分配在各个计算设备上，最后启动各个计算设备并发地执行子图;如果 Worker 之间存在数据交换，可以通过进程间通信完成交互。
+
+  * 分布式执行用RpcRemoteRendezvous实现数据交换
+
+    * GrpcRemoteRendezvous/Intra Process Rendezvous
+
+  * 形式化：Master/worker的RunStep
+
+  * 领域模型 cluster-job-task，参考 core/distributed_runtime
+
+* Master服务
+  * MasterService 定义了 Client 接入 Master 的公共契约，负责协调和控制多个 WorkerService 的执行过程。
+  * master和chief冲突
+  * MasterInterface访问服务
+  * 因为 RunStepRequest/RunStepResponse 消息中可能包含较大的 Tensor 实例。为了避免不必要的对象拷贝，实现特化实现了消息包装器。
+  * GrpcSession 持有 MasterSession 句柄，实现 Client 获取 Master 的服务
+
+* 服务器
+  * Server 是一个基于 gRPC 的服务器，负责管理本地设备集。它对外提供 MasterService服务和 WorkerService 服务，具有同时扮演 Master 和 Worker 的角色
+  * 
 
 
 
@@ -3317,9 +4440,28 @@ class XMonitor():
 
 #### tf.data
 
+```python
+import tensorflow.compat.v1 as tf
 
+dataset = tf.data.Dataset.range(3)
+iterator = tf.data.make_one_shot_iterator(dataset)
+next_element = iterator.get_next()
+
+with tf.Session() as sess:
+    for i in range(3):
+        value = sess.run(next_element)
+        print(value)
+```
 
 * 利用pipeline优化：https://www.tensorflow.org/tensorboard/tensorboard_profiling_keras#debug_performance_bottlenecks
+
+
+
+#### [Functions, not sessions](https://www.youtube.com/watch?v=MSXouZPyTrc&list=PLQY2H8rRoyvzIuB8rZXs7pfyjiSUs8Vza&index=18)
+
+* 函数类型
+  * 必须跑完才知道完整的资源信息
+* 类派生类型
 
 
 
@@ -3419,6 +4561,8 @@ for _ in tf.range(N):
 
 #### [Resources and Variants](https://www.youtube.com/watch?v=uaRO0AV6Tto&list=PLQY2H8rRoyvzIuB8rZXs7pfyjiSUs8Vza&index=16)
 
+##### Resources
+
 * State: "an op is stateful if either executing it has a side effect or if its output depends on sth other than the value of its input."
   * kernel需要标注为stateful -> disable constant folding (buggy with datasets)
   * sth go either way (tf2 fix了一些不必stateful的op)
@@ -3467,7 +4611,142 @@ iter(d) # Iterators are stateful
 
 ![image-20230117023755071](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/variable-example-2.png)
 
+* Other resource types, 基本是用于维护runtime state，(Resource的含义是tensor + handle to modify it)
+  * Iterator
+  * FifoQueue
+  * HashTable
+  * Mutex也是一种Variant
+  * Note: resource的handle是shared_name
+  
+* Shape Inference
+  * ephemeral，用于构图过程，辅助static/dynamic的决策
+  * 如果resources是scalar，会增加stateful ops做shape inference的难度
+  * UnchangedShape
 
+* variables act like tensors （python视角）
+  * 可以传给op、operations可overload、曾经variable就是tensor
+
+```python
+# Making Variable a tensor-like type
+
+# this ensures tf.convert_to_tensor(Variable) works
+
+# Register a conversion function which reads the value of the variable,
+# allowing instances of the class to be used as tensors.
+ops.register_tensor_conversion_function(
+  RefVariable,
+  RefVariable._TensorConversionFunction)
+# This ensures tf.foo([variable, other_variable], ...) works
+ops.register_dense_tensor_like_type(RefVariable)
+
+class Variable(...):
+  @classmethod
+  def _OverloadAllOperators(cls):
+    """Register overloads for all operators."""
+    for operator in ops.Tensor.OVERLOADABLE_OPERATORS:
+      cls._OverloadOperator(operator)
+    # For slicing, bind getitem differently than a tensor (use SliceHelperVar
+    # instead)
+    setattr(cls, "__getitem__", array_ops._SliceHelperVar)
+
+    def _as_graph_element(self):
+    """Conversion function for Graph.as_graph_element()."""
+    return self._variable
+```
+
+```python
+# Unread variables
+
+# in ref variables, the following works
+x = tf.assign_add(x, value)
+x = tf.assign_add(x, value)
+# Because x is just a ref tensor
+
+# for resource variable
+见lazy_read
+```
+
+* variable init
+
+![fdd65f59-16a9-459b-9dba-76eb51213207](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/variable-init.png)
+
+* variable sharing
+  * Async ps => variables shared by default
+  * This means names are load-bearing
+  * Tf2: names are gensims to hide sharing
+  * possiable to have shared names if take control of variable creation
+* controlling variable creation
+  * VariableMetaClass 
+  * 应用场景
+    * tf.function: need to capture variable init
+    * tf.distribute: might need to create mirrored variables
+* variable deletion
+  * v1 load-bearing names mean set of variables is roughly fixed
+  * so no need to delete
+  * with arbitrary variables in eager we do need to clean up
+  * So just `__del__`, right?
+    * 问题：reference cycle
+    * EagerResourceDeleter: 用一个cheap object存complex object的指针，管理delete
+      * python可能延迟触发del?
+      * Gc module force it to clean
+
+##### Variants
+
+* Motivation
+  * tf中用resources表达immutable-like things，因为它容易hook into，并且允许有状态实现，代价是**differentiability/reliablity**
+  * 设计概念 for stateless operations on immutable values
+  * 历史原因：tf不好支持新增dtype，有大量enumerations和specializations
+    * dtype的代价：增加binary size，需要注册所有kernel
+    * 不完全取消dtype的原因：specializetions是有用的，比如减少type check、rewrap
+* Variant Dtype
+  * Idea: value tensor for "arbitrary C++ stuff"
+  * think absl::any
+  * example: TensorList ops 用于实现tf2中的stacks in tensor arrays
+    * 参考 list_ops, list_kernels
+    * 方便定义gradient: push->pop, pop->push, set->get
+  * 需要给variant register AddN和ZerosLike的op
+    * 为什么需要zeroslike：和multiple outputs的场景有关，比如某个output没用到，没有upstream gradients
+
+```python
+# TensorList ops by example
+l = list_ops.empty_tensor_list(
+		element_dtype=dtypes.float32,
+  	element_shape=[],
+  	max_num_elements=max_num_elements)
+l = list_ops.tensor_list_push_back(l, constant_op.constant(1.0))
+l, e = list_ops.tensor_list_pop_back(l, element_dtype=dtypes.float32)
+assert e.numpy() == 1.0
+
+# TensorList backprop code
+REGISTER_UNARY_VARIANT_BINARY_OP_FUNCTION(ADD_VARIANT_BINARY_OP, 																																DEVICE_CPU, TensorList,
+                                          TensorListBinaryAdd<CPUDevice>);
+
+REGISTER_UNARY_VARIANT_UNARY_OP_FUNCTION(ZEROS_LIKE_VARIANT_UNARY_OP,
+                                         DEVICE_CPU, TensorList,
+                                         TensorListZerosLike<CPUDevice>);
+```
+
+* common pitfalls
+  * fetch a variable on the same session.run step as you've done some mutating operations
+    * guaranteed to see the value before mutation -> read may happen before assign
+    * 如果是RefVariable，那么大概率会read到assign后的结果
+  * 很多bug能用sanitizer检查出来
+  * ControlFlowV1 + RefVariable
+    * ControlFlowV1 doesn't create a single predicate, but a lot of switch ops，如果input是RefVariable并且在一个branch中assign给variable，会有UB
+  * grappler相关
+    * RefVariable 优化掉 x + 0，但加法本身有强制copy的含义
+* hedge patterns
+  * put lots of identity tensors in different devices to force a send+recv or copy
+  * gradient with respect to the variable:
+    * 1.update the value of the variable
+    * 2.compute the gradient with respect to the input layer
+      * Gradient code有gating gradient arguments避免被assignment影响，但是有性能损失
+      * variable update和gradient computation不能很好的overlap
+  * send/recv scheduling中的code避免deadlocks，场景比如variable assignment
+  * 典型的使用RefVariable的例子：
+    * global step in Estimator：单机训练时需要确保read after assignment，因此用到了RefVariable的特性
+    * do snapshots + sparse writes efficiently
+  * 一个可能的方向：给tf graph增加更多type info，不再限于enums
 
 #### [Summaries and TensorBoard](https://www.youtube.com/watch?v=OI4cskHUslQ&list=PLQY2H8rRoyvzIuB8rZXs7pfyjiSUs8Vza&index=15)
 
@@ -3662,11 +4941,239 @@ with tf.compat.v1.Graph().as_default():
   * Reservoir sampling: pool size k, add nth item with probability k/n
     * tune k with `--samples_per_plugin`
 
+##### 坑
+
+* tensorflow/core/profiler/convert/xplane_to_tools_data.cc:226] Can not find tool: tool_names. Please update to the latest version of Tensorflow.
+  * https://github.com/tensorflow/profiler/issues/380
+  * `pip3 install tensorflow==2.8.4`
+  * `pip3 install tensorboard-plugin-profile==2.8.0`
+
+* PermissionError: [Errno 13] Permission denied: '/tmp/.tensorboard-info/pid-2928255.info'
+
+```shell
+export TMPDIR=/tmp/$USER;
+mkdir -p $TMPDIR;
+```
+
+
+
 ### AddOns
 
 * https://github.com/tensorflow/addons/
 * optimizers/lazy_adam.py
   * 对于sparse updates效率比adam高
+
+### Estimator
+
+#### 基本用法
+
+```python
+estimator = tf.estimator.Estimator(training.create_model_fn(), config=run_config)
+run_hooks = ...
+estimator.train(create_input_fn(mode), hooks=run_hooks) 
+# train与eval 在 create_model_fn/create_input_fn内做了区分
+estimator.predict(serving_input_fn, predict_keys, hooks, checkpoint_path)
+```
+
+* Input_fn
+  * 处理train/predict两种样本输入
+  * train是读大数据集，处理流程复杂
+* model_fn
+  * Input_fn的输出 --> loss的forward代码，框架帮助backward
+  * 根据mode判断是否需要计算到loss，可能只需要eval/predict结果
+
+* hooks
+  * 基于session进行流程控制
+  * 先执行worker hook再执行chief hook
+
+![image-20231123023715975](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/estimator.png)
+
+* export
+
+```python
+from tensorflow_estimator.python.estimator.export import export_lib
+export_outputs = export_lib.get_export_outputs(
+        estimator_spec.export_outputs, estimator_spec.predictions)
+signature_def_map = export_lib.build_all_signature_defs(
+        input_receiver.receiver_tensors,
+        export_outputs,
+        getattr(input_receiver, 'receiver_tensors_alternatives', None),
+        serving_only=True)
+```
+
+#### TensorFlow estimators: Managing simplicity vs. Flexibility in high-level machine learning frameworks
+
+* 特点
+  * a preference for functions and closures over objects, wherever such closures are sufficient; callbacks are common.
+  * 多种使用
+    * Keras，注意无法用独立的inference图
+  * canned estimator -> 引入feature column
+
+![image-20231124042520938](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/estimator-1.png)
+
+
+
+* layers: layer、loss
+  * metrics: aggregating a metric across many minibatches
+    * Eval模式的具体实现
+    * Metrics return two Tensors: update op, which should
+      be run for each minibatch, and a value op which computes the final metric value.
+    * using TensorFlow queues in evaluation requires extra finesse to avoid losing examples to logging or TensorBoard summary writing
+
+```python
+# Input images as a 4D tensor (batch , width , # height , and channels)
+net = inputs
+# instantiate 3 convolutional layers with pooling
+for _ in range(3):
+  net = layers.conv2d(net , filters=4, kernel_size=3,
+                      activation=relu)
+  net = layers.max_pooling2d(net, pool_size=2, strides=1)
+logits = layers.dense(net , units=num_classes)
+```
+
+* estimator
+  * 执行要素：
+    * training loop
+    * 初始化variables（Estimator自动做）、embedding table
+    * queue runner
+    * summaries
+    * distributed computation
+      * certain variables must be initialized on all workers, most only on one.
+      * The model state should be saved periodically to ensure that the computation can recover when work- ers go down, and needs to be recovered safely when they restart.
+      * End-of-input signals have to be handled gracefully.
+  * train/evaluate/predict/export_saved_model
+  * model_fn是一个callback设计
+    * Train/predict/eval共用一个，方便排查training/serving skew
+  * RunConfig
+  * Recreate the graph in loops
+  * Head定义输出
+
+```python
+def my_input_fn(file_pattern ):
+	feature_dict = learn.io.read_batch_features(
+    # path to data in tf.Example format
+    file_pattern=file_pattern,
+    batch_size=BATCH_SIZE,
+		# whether sparse or dense ... 
+    features=FEATURE_SPEC,
+		# such as TFRecordReader
+    reader=READER,
+		...)
+
+estimator.train(input_fn=lambda: my_input_fn(TRAINING_FILES), ...) estimator.evaluate(input_fn=lambda: my_input_fn(EVAL_FILES), hooks=..., steps=...)
+
+def model_fn(features, target, mode, params):
+  predictions = tf.stack(tf.fully_connected, [50, 50, 1])
+  loss = tf.losses.mean_squared_error(target, predictions)
+  train_op = tf.train.create_train_op(
+    loss, tf.train.get_global_step(), params['learning_rate'],
+    params['optimizer'])
+  return EstimatorSpec(mode=mode, predictions=predictions, loss=loss, train_op=train_op)
+
+def model_fn(
+  self, features: Dict[str, tf.Tensor],
+  mode: tf.estimator.ModeKeys):
+  
+# Heads
+  
+def model_fn(features , target , mode , params ):
+  last_layer = tf.stack(tf.fully_connected , [50, 50])
+	head = tf.multi_class_head(n_classes=10)
+  return head.create_estimator_spec( features , mode , last_layer
+                                    , label=target ,
+                                    train_op_fn=
+                                    	lambda loss: 
+                                    		my_optimizer.minimize(
+                                          loss , 
+                                          tf.train.get_global_step ())
+                                    
+def model_fn(features , target , mode , params ):
+	last_layer = tf.stack(tf.fully_connected , [50, 50])
+	head1 = tf.multi_class_head(n_classes=2, label_name='y', head_name='h1')
+	head2 = tf.multi_class_head(n_classes=10, label_name='z', head_name='h2')
+	head = tf.multi_head ([head1, head2])
+	return head.create_model_fn_ops(features , features , mode ,
+                                  last_layer , label=target ,
+                                  train_op_fn=
+                                  lambda loss: my_optimizer.minimize(
+                                    loss ,
+                                    tf.train.get_global_step ())
+```
+
+* hooks
+  * run_context.request_stop()
+
+```python
+class TimeBasedStopHook(tf.train.SessionRunHook ):
+  def begin(self):
+    self.started_at = time.time()
+  def after_run(self , run_context , run_values ):
+    if time.time() - self.started_at >= TRAIN_TIME:
+     	run_context.request_stop ()
+```
+
+* Canned Estimators
+  * restricted to define a canned model fn
+  * 处理一些模型范式，比如W&D model
+
+```python
+# Define wide model features and crosses.
+query_x_docid = crossed_column(["query", "docid"], num_buckets)
+wide_cols = [query_x_docid , ...]
+# Define deep model features and embeddings.
+query = categorical_column_with_hash_bucket( "query", num_buckets)
+docid = categorical_column_with_hash_bucket( "docid", num_buckets)
+query_emb = embedding_column(query , dimension=32)
+docid_emb = embedding_column(docid , dimension=32)
+deep_cols = [query_emb , docid_emb , ...]
+# Define model structure and start training.
+estimator = DNNLinearCombinedClassifier(wide_cols , deep_cols ,
+                                        dnn_hidden_units =
+                                        	[500, 200, 100])
+estimator.train(input_fn , ...)
+```
+
+* distributed execution
+
+![image-20231125230945183](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/estimator-2.png)
+
+* case studies
+  * the typical model construction cycle
+    involved:
+  * writing custom TensorFlow code to ingest and represent
+    features (sparse features were especially tricky)
+  * construction of the model layers itself
+  * establishing training and validation loops
+  * productionizing the system to run on distributed training clusters
+  * adding evaluation metrics
+  * debugging training NaNs
+  * debugging poor model quality
+* [DynamicRnnEstimator](https://github.com/israelg99/tensorflow/blob/e2323175148208340094e522615e0dddd687863a/tensorflow/contrib/learn/python/learn/estimators/dynamic_rnn_estimator.py#L545)
+
+#### python/estimator
+
+* estimator.py
+  * _train_with_estimator_spec
+    * with training.MonitoredTrainingSession
+      * while not mon_sess.should_stop(): current_step += 1
+
+* canned
+  * dnn_linear_combined
+    * _dnn_linear_combined_model_fn
+* head
+  * Base_head
+    * create_estimator_spec_train_op
+      * Scale loss by number of replicas
+* Multi_class_head
+  * _create_tpu_estimator_spec
+    * train_op = base_head.create_estimator_spec_train_op
+    * base_head.create_estimator_spec_summary
+* Run_config
+  * `__init__`
+    * master和chief两者只能存在一个
+  
+
+
 
 ### Profiling
 
@@ -3678,7 +5185,7 @@ with tf.compat.v1.Graph().as_default():
 
 ```python
 options = tf.profiler.experimental.ProfilerOptions(
-          host_tracer_level=2,
+          host_tracer_level=3,
           python_tracer_level=1,
           device_tracer_level=1)
 tf.profiler.experimental.start(logdir, options)
@@ -3932,3 +5439,10 @@ load模型（尤其是对模型进行warmup）导致延迟spike的问题，确�
 [How Zendesk Serves TensorFlow Models in Production](https://medium.com/zendesk-engineering/how-zendesk-serves-tensorflow-models-in-production-751ee22f0f4b)
 
 [美团：基于TensorFlow Serving的深度学习在线预估](https://tech.meituan.com/2018/10/11/tfserving-improve.html)
+
+
+
+### JAX
+
+* Apple LLM框架Ajax
+  * https://www.zhihu.com/question/613007857/answer/3126573867

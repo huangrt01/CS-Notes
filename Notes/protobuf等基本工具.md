@@ -1,78 +1,5 @@
 [toc]
 
-### docker
-
-* [docker container run](https://phoenixnap.com/kb/docker-run-command-with-examples)
-  * [docker build and run](https://www.freecodecamp.org/news/docker-easy-as-build-run-done-e174cc452599/)
-  * [network模式](https://loocode.com/post/docker-network-ru-men-yong-fa)
-    * host/none/bridge
-    * `docker inspect bridge`
-    * `-P`选项Docker会把Dockerfile中的通过EXPOSE指令或`--expose`选项暴露的端口随机映射到临时端口
-
-```shell
-docker ps -a
-
-docker run -it -u `id -u`:`id -g` -v /home/$(whoami):/home/$(whoami) my_image /bin/bash
-# -i 以交互模式运行容器，通常与 -t 同时使用
-# -t 为容器重新分配一个伪输入终端，通常与 -i 同时使用
-# -u 表示映射账户
-# -w 指定工作目录
-# -v /宿主机目录:/容器目录   表示映射磁盘目录，映射的目录才会共享（将宿主机目录挂载到容器里），这里选择把user账户所有内容都映射
-# --network=host/none/bridge
-
-docker container run --name $(whoami)_workspace_xxx ...
-
-docker container ls -a
-# exec进入容器
-sudo docker exec -it [-w $(pwd)] 34d2b0644938 /bin/bash
-# 如果容器已经停止，需要先启动再进入
-sudo docker start 34d2b0644938
-# Docker 里没有 sudo组，如果需要在 docker 里安装程序，可以先使用 root 账户进入容器
-sudo docker exec -it [-w $(pwd)] 34d2b0644938 /bin/bash -u root 
-```
-
-* rm docker
-
-```shell
-docker stop XXX
-docker rm XXX
-```
-
-* 添加 docker 权限给当前用户 ，使 docker 命令免 sudo
-  * [Ref](https://docs.docker.com/engine/install/linux-postinstall/)
-
-```shell
-# setup non-root docker
-sudo groupadd docker
-sudo usermod -aG docker $USER # add your own username, or others for them.
-
-# activate the changes to user group
-newgrp docker
-# verify you can run docker without root
-docker run hello-world
-
-```
-
-* Change docker's data-root into a bigger disk partition
-
-```shell
-sudo su # switch to root
-vi /etc/docker/daemon.json
-
-# copy
-{
-    "insecure-registries": ["$url", "$url:$port"],
-    "live-restore": true,
-    "data-root": "/opt/docker" // in most cases /opt is mounted at something like /data00 which is a much bigger partition
-}
-
-mkdir -p /opt/docker # in most cases /opt is mounted at something like /data00 which is a much bigger partition
-systemctl restart docker
-```
-
-* mount
-  * `--mount type=bind,source=$HOME/.cache,target=/home/$(whoami)/.cache`
-
 ### log4j
 
 ```properties
@@ -416,7 +343,27 @@ Hadoop Shell 命令：https://hadoop.apache.org/docs/r1.0.4/cn/hdfs_shell.html
 
 ```shell
 hadoop fs -test -e filename
+
+hadoop fs -ls -h
+hadoop fs -ls hdfs://abc/def/*/*/models/*/model.pb # 可匹配
+
+hadoop fs -du -h
+hadoop fs -get ... .
+-mkdir
+-cp
 ```
+
+* 设置 JVM 的最大堆内存限制
+
+```
+LIBHDFS_OPTS = [
+        os.environ.get('HADOOP_ROOT_LOGGER',
+                       '-Dhadoop.root.logger=WARN,console'), "-Xmx4096m"
+    ]
+os.environ["LIBHDFS_OPTS"] = ' '.join(LIBHDFS_OPTS)
+```
+
+
 
 ### thrift
 

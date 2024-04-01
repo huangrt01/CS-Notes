@@ -11,8 +11,10 @@
 
 ```shell
 docker ps -a
+docker cp 254eee:/path/result.pdf .
 
 docker run -it -u `id -u`:`id -g` -v /home/ <img src="https://www.zhihu.com/equation?tex=%28whoami%29%3A/home/" alt="(whoami):/home/" class="ee_img tr_noresize" eeimg="1"> (whoami) my_image /bin/bash
+# -d 后台运行
 # -i 以交互模式运行容器，通常与 -t 同时使用
 # -t 为容器重新分配一个伪输入终端，通常与 -i 同时使用
 # -u 表示映射账户

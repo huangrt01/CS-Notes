@@ -24,7 +24,7 @@ deducing types的机制：
 
 * c++14: decltype(auto)
 
-##### Item 1: Understand template type deduction.
+##### Item 1: Understand template type deduction 、Constexpr
 
 auto的deduction机制和template type deduction紧密相联
 
@@ -38,22 +38,19 @@ f(expr); // deduce T and ParamType from expr
 ```
 
 * Case 1: **ParamType** is a Reference or Pointer, but not a Universal Reference
-
 * Case 2: **ParamType** is a Universal Reference
   * 右值->右值引用；左值->左值引用
 
   * 唯一T会deduce为引用的场景
-
 * Case 3: **ParamType** is Neither a Pointer nor a Reference 
   * Param will be a copy
      * 去除 const、&、volatile等修饰
   * ` const char* const ptr =  // ptr is const pointer to const object
      "Fun with pointers";` 保留左边的const
-  
 * array arguments
   
   * the type of an array that’s passed to a template function by value is deduced to be a pointer type
-  * 需要注意数组传引用的时候不一样！存在数组引用`constchar(&)[13]`  => 利用它来推断数组大小
+  * 需要注意数组传引用的时候不一样！存在数组引用`constchar(&)[13]`  => 利用它来**推断数组大小**
 
 ```c++
 // return size of an array as a compile-time constant. (The
@@ -69,7 +66,16 @@ int keyVals[] = { 1, 3, 7, 9, 11, 22, 35 };      // keyVals has 7 elements
 int mappedVals[arraySize(keyVals)]; // so does mappedVals
 
 std::array<int, arraySize(keyVals)> mappedVals; // mappedVals' size is 7
+
+
+static_assert(arraySize(keyVals) == 7);
+类内定义
+constexpr static double keyVals[] = {1,2,3,4,5,6,7}
 ```
+
+
+
+
 
 ##### Item 2: Understand **auto** type deduction.
 
@@ -498,6 +504,10 @@ struct pair {
 
 * translation时知晓，包括compilation和linking
 * constexpr变量声明时需要初始化
+  * 类内constexpr变量需要额外定义
+    * https://stackoverflow.com/questions/8016780/undefined-reference-to-static-constexpr-char
+    * `constexpr int A::n;` in cpp file
+
 * constexpr function，用法参考Item 1
   * c++11只能写一句return
 
@@ -2085,7 +2095,8 @@ x.fetch_add(1, std::memory_order_release);
 
 * `exchange`
   * 返回值是旧值
-
+  * `auto pre_val = cur_val_.exchange(cur_val);`
+  
 * `std::atomic_thread_fence(std::memory_order_release);`
 
 ```c++
@@ -2796,7 +2807,12 @@ typedef unsigned int		uintptr_t;
     * 字节对齐：`__attribute__ ((__packed__))`
 * [Bit-field in structures](https://leavinel.blogspot.com/2012/06/bit-field-in-structures.html)
 
+##### switch语句
 
+* case后面加 {}，否则后面case中会有未定义的局部变量
+  * https://stackoverflow.com/questions/5685471/error-jump-to-case-label-in-switch-statement
+* 要将Enum类型转化为int
+  * https://stackoverflow.com/questions/11076941/warning-case-not-evaluated-in-enumerated-type
 
 
 ##### 宏
@@ -2891,7 +2907,13 @@ inline uint64_t native_to_little(uint64_t in) {
 
 ##### static
 
-[Why can't I initialize non-const static member or static array in class?](https://stackoverflow.com/questions/9656941/why-cant-i-initialize-non-const-static-member-or-static-array-in-class)
+* 总览
+  * https://stackoverflow.com/questions/6223355/static-variables-in-member-functions
+  * When used for data members it means that the data is **allocated in the class** and not in instances.
+  * When used for data inside a function it means that the data is allocated statically, **initialized the first time the block is entered** and lasts until the program quits. Also the variable is visible only inside the function. This special feature of local statics is often used to implement lazy construction of singletons.
+  * When used at a compilation unit level (module) it means that the variable is like a global (i.e. allocated and initialized before `main` is run and destroyed after `main` exits) but that **the variable will not be accessible or visible in other compilation units**.
+
+* [Why can't I initialize non-const static member or static array in class?](https://stackoverflow.com/questions/9656941/why-cant-i-initialize-non-const-static-member-or-static-array-in-class)
 
 ```c++
 class Class {
@@ -2902,6 +2924,11 @@ public:
     }
 };
 ```
+
+* [thread-safe initialization of local static objects](https://www.eevblog.com/forum/programming/what-is-thread-safe-initialization-of-local-static-objects/)
+  * C++11起
+
+
 
 ##### using / namespace
 
@@ -2983,6 +3010,23 @@ It supports arrays, types that provide begin and end member functions, and types
 * typeid
   * `const std::type_info& info = typeid(object_expression);`
   * does not support reference types.
+
+##### constexpr if
+
+https://en.cppreference.com/w/cpp/language/if#Constexpr_if
+
+```c++
+template<typename T>
+auto get_value(T t)
+{
+    if constexpr (std::is_pointer_v<T>)
+        return *t; // deduces return type to int for T = int*
+    else
+        return t;  // deduces return type to int for T = int
+}
+
+std::is_same<T, MyType>::value
+```
 
 
 
@@ -4708,6 +4752,9 @@ struct BloomFilterStoreItf {
 
 #### \<chrono>
 
+* time的单位是s，chrono可以统计ms
+  * https://stackoverflow.com/questions/27846166/timenull-in-c-only-counts-seconds-not-milliseconds
+
 ```c++
 auto server_time = std::chrono::duration_cast<std::chrono::microseconds>(
                            std::chrono::system_clock::now().time_since_epoch())
@@ -4873,7 +4920,7 @@ cells_.emplace(std::piecewise_construct,
                std::forward_as_tuple(ValueType()))
 ```
 
-
+* 用set自己的lower_bound方法，不要用`std::lower_bound`(复杂度O(n))
 
 #### \<unordered_map>
 

@@ -333,6 +333,16 @@ readelf -sW my_bin |grep LOCAL|grep OBJECT | grep -v __PRETTY_FUNCTION__|grep -v
   
   * `FLAGS = -Wall -pthread, INCLUDES = ../include, gcc -I $(INCLUDES) -o t0 t0.c $(FLAGS)`
 
+##### 配环境
+
+* 主干：https://cloud.tencent.com/developer/article/1894846
+* issue: https://gibsonic.org/tools/2019/08/08/gcc_building.html
+  * `gcc: error: gengtype-lex.c: No such file or directory`
+    * `apt-get install flex`
+    * https://gibsonic.org/tools/2019/08/08/gcc_building.html
+  * ./configure --disable-multilib
+  * apt-get install g++-multilib
+
 #### clang
 
 * Clang 线程安全注解 https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
@@ -434,7 +444,15 @@ bazel is /usr/local/bin/bazel
   * vscode bazel插件
   * intellisense: https://github.com/hedronvision/bazel-compile-commands-extractor
 
+* bazelrc
+  * 学习bazel config的使用：https://github.com/buildbuddy-io/buildbuddy/blob/master/.bazelrc
 
+```
+build:dbg --copt=-gsplit-dwarf
+build --cxxopt=-std=c++14
+build --host_cxxopt=-std=c++14
+build --copt=-O3
+```
 
 * 官方tutorial（没有写动态静态链接库so怎么生成）
   * https://bazel.build/start/cpp?hl=en
@@ -490,6 +508,12 @@ tf_cc_test(
         "@com_google_googletest//:gtest_main",
         "@org_tensorflow//tensorflow/core:test",
     ]
+)
+
+py_binary(
+		name = ...
+		data = ["//main:hello-world"]
+		...
 )
 ```
 
@@ -561,6 +585,8 @@ cc_binary(
     * `bazel clean --expunge` 清除编译链
   * `--override_repository=xxx=$(pwd)/third_party/xxx`
   * `--output_filter=IGNORE_LOGS`
+  * `--local_cpu_resources=30`
+  * `--verbose_failures`
 * Workspace 规则: https://bazel.build/docs/external
   * 在需要**远程依赖**的支持或导入**本地非当前目录下的依赖**需要使用
   * Depending on other Bazel projects
@@ -654,12 +680,25 @@ native.filegroup(
 )
 ```
 
+##### 构建依赖
 
+```
+bazel test @org_tensorflow//tensorflow/core/framework:variant_test --local_cpu_resources=30 --test_output=all 2>&1
+bazel build @org_tensorflow//tensorflow/core/framework:allocator --local_cpu_resources=30 --local_ram_resources=HOST_RAM*.5 --test_output=all 2>&1
+```
 
-* 坑
-  * [bazel: protobuf依赖](https://zhuanlan.zhihu.com/p/488199658)
-    * pb冲突: `build --sandbox_block_path=/usr/local`
-    * bazel4: `build --incompatible_blacklisted_protos_requires_proto_info=false`
+##### bazel test
+
+* --test_output=all
+
+##### 坑
+
+* [bazel: protobuf依赖](https://zhuanlan.zhihu.com/p/488199658)
+  * pb冲突: `build --sandbox_block_path=/usr/local`
+  * bazel4: `build --incompatible_blacklisted_protos_requires_proto_info=false`
+* Server terminated abruptly (error code: 14, error message: 'Socket closed'
+  * https://stackoverflow.com/questions/65605663/cannot-build-with-error-server-terminated-abruptly
+  * `--local_ram_resources=8192`
 
 ##### bazel ide (for tensorflow 2.4.0)
 

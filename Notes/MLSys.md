@@ -855,7 +855,7 @@ http://dlsys.cs.washington.edu/schedule
   * Programming languages and compilers
     * The dataflow graph is an intermediate representation which is optimized using a series of compiler passes. The resulting program is compiled (e.g., XLA) and/or interpreted (e.g., the TensorFlow/Theano runtimes). Similarly, PyTorch has started optimizing its traced Python programs using just-in-time (JIT) compiler approaches.
     * Python because of its flexibility with the need for high performance and speed is an open question. ML frameworks have focused on metaprogramming and using C extensions, but other approaches are possible. For example, Cython [6] is a superset
-      performance and speed is an open question.
+    * performance and speed is an open question.
 * Graph-based direct intermediate representation
   * graph based, purely functional, closure representation, strongly typed
   * IR specification

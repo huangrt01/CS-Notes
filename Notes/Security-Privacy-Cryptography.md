@@ -228,6 +228,9 @@ If you’re using Firefox, enable [Multi-Account Containers](https://support.moz
 
 ### Potpourri
 
+* [Python沙盒逃逸](https://ciphersaw.me/ctf-wiki/pwn/linux/sandbox/python-sandbox-escape/)
+  * `__builtins__`
+
 * SSRF (Server-Side Request Forgery) attack
   * 本质上，不允许访问内网资源即可修复，但可能会被301/302/307/308重定向、DNS重绑定攻破，修复的时候有可能手抖。
   * 方案：可以用安全开发包，从传输层彻底断掉内网请求，提供自定义黑白名单功能
@@ -239,7 +242,3 @@ If you’re using Firefox, enable [Multi-Account Containers](https://support.moz
 * 任意文件读取/下载漏洞
 * SQL注入漏洞
   * 编码不规范引发。攻击者拼接SQL片段，通过返回包内容的大小，逐步获取数据库的内容
-
-##### Inbox:
-
-配wireguard

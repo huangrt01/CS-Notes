@@ -6,6 +6,7 @@ https://rigtorp.se/low-latency-guide/
 
 * Disable hyper-threading
   * Using the [CPU hot-plugging functionality](https://www.kernel.org/doc/html/latest/core-api/cpu_hotplug.html) to disable one of a pair of sibling threads. Use `lscpu --extended` or `cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list` to determine which “CPUs” are sibling threads.
+  * 由于超线程的存在，CPU 使用率往往是低估的。所以你 CPU 使用率算出来是 50% 时，很可能实际对物理真实核心的占用其实是 70%。
 * CAS Latency: https://en.wikipedia.org/wiki/CAS_latency
   * One byte of memory (from each chip; 64 bits total from the whole DIMM) is accessed by supplying a 3-bit bank number, a 14-bit row address, and a 13-bit column address.
 * 绑核
@@ -73,6 +74,10 @@ ROCm：https://developer.amd.com/resources/rocm-learning-center/
 
 ### Cache 系列科普 ~ Latency
 
+#### CPU Cache
+
+![99f26bb4-bb61-4f00-abf5-99f6a3a82b22](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Computer-Architecture/cpu-cache.png)
+
 [UEFI和BIOS探秘 —— Zhihu Column](https://www.zhihu.com/column/UEFIBlog)
 
 [interactive latency numbers](https://colin-scott.github.io/personal_website/research/interactive_latency.html)
@@ -86,7 +91,7 @@ ROCm：https://developer.amd.com/resources/rocm-learning-center/
 * L2 cache
   * 512KB
   * ~12 cycles, ~4ns
-* LLC (L3 cache)
+* LLC (L3 cache) **很关键**
   * 32MB
   * ~38 cycles, ~12ns
     * 与之对比，memory access 约 50~100ns (Intel 70ns, AMD 80ns)
@@ -95,7 +100,6 @@ ROCm：https://developer.amd.com/resources/rocm-learning-center/
 * L4: eDRAM，可作显存
 * DRAM
   * ~100ns
-
 * [L1，L2，L3 Cache究竟在哪里？](https://zhuanlan.zhihu.com/p/31422201)
   * [CPU Die and Socket](https://zhuanlan.zhihu.com/p/51354994): Intel Xeon 是一个 CPU Die 一个 Socket；而 AMD ECPY 的一个 Socket 由 4 个 CPU Die 组成。因此 AMD 8 个逻辑核共享 LLC，而 Intel 全部核心共享
   * [为什么Intel CPU的Die越来越小了？](https://zhuanlan.zhihu.com/p/31903866)
@@ -104,6 +108,11 @@ ROCm：https://developer.amd.com/resources/rocm-learning-center/
 * [Cache是怎么组织和工作的？](https://zhuanlan.zhihu.com/p/31859105)
   * 全相联、组相联
 * [Cache为什么有那么多级？为什么一级比一级大？是不是Cache越大越好？](https://zhuanlan.zhihu.com/p/32058808)
+
+
+
+#### Cache Coherence
+
 * [显存为什么不能当内存使？内存、Cache和Cache一致性](https://zhuanlan.zhihu.com/p/63494668)
   * 有 GDDR 和 PC DDR 设计初衷不同导致的问题
   * 为什么不能通过PCIe来扩展普通内存？
@@ -172,6 +181,10 @@ Some conclusion and Advices
 * Use the scaling tests to find your bottleneck, and improve the “lock”  components
   * Maybe from DISK I/O, Network layer
   * Rarely from the memory bandwidth layer, LLC cache size for the non-HPC workloads
+
+#### TLB
+
+* 内存页条目缓存即TLB（ Translation Lookaside Buffer）TLB缓存命中率越高，CPU执行指令的速度越快。
 
 ### NUMA
 

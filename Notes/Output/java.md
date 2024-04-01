@@ -122,3 +122,8 @@ private final Lock writeLock
 private final Lock readLock = readWriteLock.readLock();
 ```
 
+### Profiling
+
+* jstack
+  * `apt-get install openjdk-12-jdk-headless`
+  * `jstack -f` ，-f必须写在jstack后面、待执行的进程前面

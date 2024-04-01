@@ -56,6 +56,13 @@ https://on-demand.gputechconf.com/gtc/2018/presentation/s8505-gpu-monitoring-and
   * 监控 PCIE-RX ---> H2D 带宽
   * Health Check
 
+##### nvidia-smi
+
+```shell
+nvidia-smi
+nvidia-smi --query-gpu=name --format=csv,noheader
+```
+
 #### OAM
 
 * OAM是一种异构计算设备的接口协议，对标nvlink.   nvlink是封闭的协议，OAM是若干大厂共建的一个开放协议。
@@ -65,8 +72,6 @@ https://on-demand.gputechconf.com/gtc/2018/presentation/s8505-gpu-monitoring-and
       - full connect 的结构更为简单，有一些散热和能耗的优势
     - NV switch: 整个switch提供 600GB/s 带宽 
     - 单机八卡时，OAM 和 NV switch 差不多；卡数少时 nvsiwtch 效率高
-
-
 
 ### Nvidia Lectures
 
@@ -205,6 +210,28 @@ cudaFree(a);
 
 https://on-demand.gputechconf.com/gtc/2018/presentation/s8430-everything-you-need-to-know-about-unified-memory.pdf
 https://developer.nvidia.com/blog/unified-memory-cuda-beginners/
+
+* 精讲UnifiedMemory的博客 https://blog.csdn.net/weixin_41172895/article/details/115403922
+  * 使用了虚拟内存(cudaMallocManaged)，降低代码复杂度，系统会将大于gpu内存的空间自动放到cpu上，内存申请cudaMemPrefetchAsync
+  * cudaMemAdvise
+  	* cudaMemAdviseSetReadMostly 及 cudaMemAdviseUnSetReadMostly
+  	  这两个是cudaMemAdvise的Flag，用来为某个device设定/解除内存空间ReadMostly的特性，device所指的设备可以有一个只读副本而不发生数据迁移，当两端没有写入时，两个副本的数据是一致的。
+  	* cudaMemAdvise(cudaMemAdviseSetAccessedBy), gpu上有的直接使用，cpu上就直接pci访问，什么时候搬运到gpu可以自行指定
+
+```c++
+#define GPU_DEVICE 0
+{
+	char * array = nullptr;       
+	cudaMallocManaged(&array, N)  //分配内存
+	fill_data(array);
+	cudaMemAdvise(array, N, cudaMemAdviseSetReadMostly, GPU_DEVICE); //提示GPU端几乎仅用于读取这片数据
+	cudaMemPrefetchAsync(array, N, GPU_DEVICE, NULL); // GPU prefetch
+	qsort<<<...>>>(array);        //GPU 无缺页中断，产生read-only副本
+	//cudaDeviceSynchronize();  
+	use_data(array);              //CPU process 没有page-fault.
+	cudaFree(array);
+}
+```
 
 
 ##### Grid Size Work 

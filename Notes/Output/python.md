@@ -5,9 +5,13 @@
 ####  安装 Python3
 
 ```shell
-wget https://www.python.org/ftp/python/3.6.2/Python-3.6.2.tar.xz
-sudo tar -xvf Python-3.6.2.tar.xz
-cd Python-3.6.2
+sudo apt install libffi-dev # setuptools error
+sudo apt install build-essential gcc
+sudo apt install libssl-dev libncurses5-dev libsqlite3-dev libreadline-dev libtk8.6 libgdm-dev libdb4o-cil-dev libpcap-dev
+
+wget https://www.python.org/ftp/python/3.8.3/Python-3.8.3.tar.xz
+sudo tar -xvf Python-3.8.3.tar.xz
+cd Python-3.8.3
 ./configure
 make
 make install
@@ -48,6 +52,29 @@ if not myset: # 判断set是否空
 # set operations: https://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html
 &, |, -, ^
 ```
+#### 字符串
+
+##### 格式化
+
+```python
+a=1
+f'{a:011d}'
+```
+
+* 011d是格式规范，它由冒号和格式选项组成。
+  - `0`是填充字符，表示使用0来填充字段。
+  - `11`是字段宽度，表示该字段的总宽度为11个字符。
+  - `d`表示将变量视为十进制整数进行格式化。
+
+#### 迭代器iterator
+
+```python
+# next取下一个元素
+next((value for value in values if type(value) == Tensor), None)
+```
+
+
+
 #### collections
 
 collections.defaultdict(list)、collections.defaultdict(set)
@@ -123,6 +150,8 @@ https://realpython.com/python-namedtuple/
 一些细节
 
 * 运行文件乱码问题，在文件开头加 `# coding=utf-8`
+
+
 
 #### dataclasses
 
@@ -252,6 +281,8 @@ class Student(object):
 class person:
     def __init__(self):
         self.__name=''
+    def __post_init__(self):
+      	...
     def setname(self, name):
         print('setname() called')
         self.__name=name
@@ -262,6 +293,69 @@ class person:
 ```
 
 * [一文让你彻底搞懂Python中\__ str\__和\__repr\__?](https://segmentfault.com/a/1190000022266368)
+
+##### metaclass
+
+* 用处
+  * 控制类的创建行为：通过定义`metaclass`中的特定方法，您可以控制类的创建过程。例如，您可以在类定义中添加或修改属性，检查类的结构，或者在类被创建之前执行某些操作。
+  * 修改类的属性和方法：通过在元类中重写特定的方法，您可以修改类的属性和方法。这使得您可以对类进行自定义操作，例如自动添加特定的属性，修改方法的行为或添加装饰器。
+* 例子
+  * kwargs可记录状态
+
+```python
+class MyMeta(type):
+    def __new__(cls, name, bases, attrs):
+        attrs['custom_attr'] = 'Custom Attribute'
+        return super().__new__(cls, name, bases, attrs)
+    
+    def __call__(cls, *args, **kwargs):
+        print("Creating an instance of", cls.__name__)
+        instance = super().__call__(*args, **kwargs)
+        return instance
+
+class MyClass(metaclass=MyMeta):
+    pass
+
+obj = MyClass()
+print(obj.custom_attr)  # 输出: 'Custom Attribute'
+```
+
+#### 异常处理
+
+##### atexit
+
+* 程序退出捕获signo
+
+```python
+import atexit
+import sys
+import signal
+
+sig_no = None
+
+def sig_handler(signo, frame):
+  global sig_no
+  sig_no = signo
+  sys.exit(signo)
+
+signal.signal(signal.SIGHUP, sig_handler)
+signal.signal(signal.SIGINT, sig_handler)
+signal.signal(signal.SIGTERM, sig_handler)
+
+@atexit.register
+def exit_hook():
+```
+
+##### traceback
+
+```python
+except Exception as e:
+	exc_type, exc_value, exc_traceback_obj = sys.exc_info()
+	traceback.format_exc()
+	traceback.print_tb(exc_traceback_obj)
+```
+
+
 
 #### abc
 
@@ -287,7 +381,26 @@ x = AnotherSubclass()
 x.do_something()
 ```
 
+#### absl
 
+* absl.app
+
+```python
+import absl.app
+import absl.flags
+
+FLAGS = absl.flags.FLAGS
+
+absl.flags.DEFINE_string('name', 'world', 'The name to greet')
+
+
+def main(argv):
+    print(f'Hello, {FLAGS.name}!')
+
+
+if __name__ == '__main__':
+    absl.app.run(main)
+```
 
 #### context manager
 
@@ -308,6 +421,27 @@ def ContextManager():
  
 with ContextManager() as manager:
     print('with statement block')
+```
+
+```python
+@contextlib.contextmanager
+def reset_to_default_py_env():
+  """Resets some env variables into default python env.
+  Useful when calling some other system code that requires python 2.
+  """
+  old_value = None
+  var = "PYTHONPATH"
+  if var in os.environ:
+    old_value = os.environ[var]
+  os.environ[var] = (
+      "/usr/local/lib/python2.7/site-packages")
+  try:
+    yield
+  finally:
+    if old_value is not None:
+      os.environ[var] = old_value
+    else:
+      del os.environ[var]
 ```
 
 
@@ -450,6 +584,10 @@ pip3 install -r requirements.txt
 conda deactivate
 ```
 
+#### cython
+
+[Cython加密打包python package](https://cloud.tencent.com/developer/article/1661136)
+
 #### ipython
 
 重启kernel，释放GPU内存
@@ -517,11 +655,23 @@ sys.path.insert(0,os.getcwd())
 
 ```python
 os.path.join(dir,file)
+os.makedirs
 ```
 
 ```python
 os.getenv('ABC', 'abc') # 注意返回值是str
 ```
+
+```shell
+os.system
+```
+
+
+
+* popen
+  * Check cmd的写法：`"grep \"failed:\"`
+
+
 
 #### datetime
 
@@ -555,6 +705,11 @@ str1 = obj1.strftime(DATETIME_FORMAT)
 str2 = '20001231000000'
 obj2 = dt.datetime.strptime(dt, '%Y%m%d%H%M%S').strftime(DATETIME_FORMAT)
 ```
+
+#### exception
+
+* IOError (python2)
+  * FileNotFoundError (python3)
 
 #### fstring
 
@@ -613,6 +768,63 @@ object = var_file.inside_object()
 import var
 object = var.inside_object()
 ```
+
+#### Math 数学相关
+
+##### 解方程
+
+```python
+from scipy.optimize import fsolve
+import math
+import numpy as np
+
+def equation(m):
+    return ((1-m)**19) * (1 + 19*m) - 0.995
+
+# 初始猜测值
+initial_guess = 0.01
+
+# 使用fsolve函数求解方程
+solution = fsolve(equation, initial_guess)
+
+print(solution, equation(solution))
+
+print(math.sqrt(solution))
+```
+
+
+
+##### 正态分布
+
+```python
+from scipy.stats import norm
+
+# 计算累积分布概率为0.95对应的分位数
+percentile = 0.95
+value = norm.ppf(percentile)
+
+print(value)
+```
+
+```python
+import math
+import numpy as np
+from scipy.stats import norm
+from matplotlib import pyplot as plt
+
+def icdf(loc=0, scale=1):
+  xs = np.array([i / 1000 for i in range(1000)])
+  ys1 = norm.ppf(xs, loc=loc, scale=scale)
+  ys2 = np.log(xs / (1.0 - xs)) / 1.702
+  return xs, ys1, ys2
+
+x, y1, y2 = icdf()
+plt.plot(x, y1)
+plt.plot(x, y2)
+plt.show()
+```
+
+
 
 #### mpl_toolkits
 
@@ -794,7 +1006,44 @@ def runCommand(cmd):
     return res.strip("\n")
 ```
 
+```python
+def get_version():
+    try:
+        result = subprocess.check_output(['python3', '/path/script.py', \
+                                '--operation', 'get_version'], \
+                                env=py3_env, universal_newlines=True, stderr=subprocess.STDOUT)
+        return result.split('\n')[-1]
+    except subprocess.CalledProcessError as e:
+        logging.exception('get_version error: {}'
+                            .format(e.output))
+    except IOError:
+        logging.exception('Error: script not found')
+    except Exception as e:
+        logging.exception("Error: {}".format(str(e)))
+    return
+```
+
+
+
+
+
 #### 测试
+
+##### absl testing
+
+```python
+from absl.testing import parameterized
+
+class AdditionExample(parameterized.TestCase):
+  @parameterized.parameters(
+    (1, 2, 3),
+    (4, 5, 9),
+    (1, 1, 3))
+  def testAddition(self, op1, op2, result):
+    self.assertEqual(result, op1 + op2)
+```
+
+
 
 ##### unittest
 
@@ -830,6 +1079,16 @@ nosetests -v autodiff_test.py --pdb --nocapture
 --nocapture # print output
 ```
 
+##### 小技巧
+
+* 替换函数
+
+```python
+def sleep_func(self):
+    time.sleep(1)
+MyClass.sleep_func.__code__ = sleep_func.__code__
+```
+
 
 
 
@@ -860,11 +1119,18 @@ python -m autopep8 -i -r $folder
 * Flake8
   * `pip install yapf`
   * VSCode setting.json 添加以下字段，文件页面
+  * `~/.style.yapf` 文件
 
 ```json
 "python.linting.flake8Enabled": true,
 "python.formatting.provider": "yapf",
 "python.linting.flake8Args": ["--max-line-length=120"],  
 "python.linting.pylintEnabled": false
+```
+
+```
+[style]
+based_on_style = google
+indent_width = 2
 ```
 

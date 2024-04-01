@@ -74,6 +74,12 @@ unsigned u64ToAsciiTable(uint64_t value, char* dst) {
 * GeoHash
 * Key的均衡性
   * [MurmurHash](https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp)
+* HashTable实现中可用的设计：
+  * per dim合并
+    * 记录available indices提升分配速度
+  
+  * map只存indices，提升rehash速度
+  
 
 
 #### LRU cache

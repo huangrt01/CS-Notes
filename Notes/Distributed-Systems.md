@@ -192,7 +192,7 @@ public int partition(String topic, Object key, byte[] keyBytes, Object value, by
 
 * consumer 介绍
   * https://docs.confluent.io/platform/current/clients/consumer.html#ak-consumer
-  * `auto.offset.reset` = earliest/latest/none
+  * `auto.offset.reset` = earliest / latest (default) / none
     * https://issues.apache.org/jira/browse/KAFKA-3370
     * 触发的两种场景：1）指定的timestamp过早，数据没了；2）consumer group没有commit过offset，挂了
 
@@ -219,6 +219,12 @@ public int partition(String topic, Object key, byte[] keyBytes, Object value, by
     * Broker磁盘故障
   * [Kafka的Lag计算误区及正确实现](https://blog.51cto.com/u_15127513/2682807)
     * Lag = HW - ConsumerOffset
+
+#### ZooKeeper
+
+```python
+ChildrenWatch
+```
 
 #### Flink 
 
@@ -426,19 +432,36 @@ R8,R9,R10: Apache MapReduce的局限性 -> YARN
 
 3.Architecture
 
-RM是中心，也是连接AM和NM的桥梁
+* 核心思路
 
-RM还能找AM要回资源
+  * RM是中心，也是连接AM和NM的桥梁
 
-NM: container launch context (CLC)的概念，启动、监控、local service、auxiliary service
+  * RM还能找AM要回资源
 
-AM: late binding, the process spawned is not bound to the request, but to the lease.
+- ResourceManager，用于管理集群中的用户作业和分配资源。（缩写为RM）
+- NodeManager，用于该节点上的用户作业和工作流。（缩写为NM）
+  - container launch context (CLC)的概念，启动、监控、local service、auxiliary service
+- Container，分布式任务中资源（memory、cpu）分配的最小单位
+- ApplicationMaster，用户应用程序驻留的地方，是一个特殊的Container（缩写为AM）
+  - AM: late binding, the process spawned is not bound to the request, but to the lease.
+    - 它允许YARN在AM启动之前进行资源分配。当AM被授予租约时，可以在后台进行资源预分配。这样可以减少应用程序启动的延迟，并提高资源的利用率。
+    - 其次，它允许AM在租约到期之前重新申请资源。如果AM需要更多的资源来扩展应用程序的规模或处理更大的工作负载，它可以在租约到期之前重新向YARN请求资源。这种灵活性使得应用程序可以根据需要进行动态调整，而不需要重新启动整个应用程序。
+- 提交任务的流程
+  - RM注册
+  - 生成AM
+  - AM请求同节点上的NM
+  - 拉起Container
 
-fault tolerance: RM对AM有责任、AM责任最重
+![1280X1280](Distributed-Systems/yarn.png)
 
-* YARN only secures its deployment
-* RM单点故障，Work is in progress to add sufficient protocol sup-port for AMs to survive RM restart.
-* 抽象分离的代价：更多fault tolerance工作交给了frameworks来设计
+* fault tolerance: RM对AM有责任、AM责任最重
+
+  * YARN only secures its deployment
+
+  * RM单点故障，Work is in progress to add sufficient protocol support for AMs to survive RM restart.
+
+  * 抽象分离的代价：更多fault tolerance工作交给了frameworks来设计
+
 
 4.YARN in the real-world
 
@@ -556,6 +579,8 @@ Fragmentation
 * AMD机器跨numa能力弱，因此划分subnuma
 
 ![isolate-resource](Distributed-Systems/isolate-resource.png)
+
+
 
 
 
@@ -744,9 +769,8 @@ src/ray/raylet/scheduling_policy.cc
 
 #### [Jeff Dean: Achieving Rapid Response Times in Large Online Services](https://storage.googleapis.com/pub-tools-public-publication-data/pdf/44875.pdf)
 
-讨论了分布式服务的通用优化思想，很值得学习！
-
-shared environment 提升资源利用率的同时，也带来不可预测的因素（比如network congestion、background activities、bursts of foreground activity、not just your jobs, but everyone else’s jobs, too），影响服务长尾延时，并且会 exacerbated by large fanout systems
+* 讨论了分布式服务的通用优化思想，很值得学习！
+  * shared environment 提升资源利用率的同时，也带来不可预测的因素（比如network congestion、background activities、bursts of foreground activity、not just your jobs, but everyone else’s jobs, too），影响服务长尾延时，并且会 exacerbated by large fanout systems
 
 Conclusion
 

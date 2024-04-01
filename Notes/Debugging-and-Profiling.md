@@ -85,7 +85,9 @@ gdb：c(continue), l(ist), s(tep), n(ext), b(reak), p(rint), r(eturn), run, q(ui
 * 参数
   * `gdb --args sleep 20` debug带参数的binary
   * `-q`  quiet模式
-
+  * `-ex`: 执行gdb命令
+    * `-ex "run"`
+  
 * bt(backtrace), frame X 进帧
 * `info b`
 * `watch -l ` 同时监视表达式本身和表达式指向的内容
@@ -118,6 +120,10 @@ p *(std::string*)(X.rep_.elements) //repeated string, 字段X
 
 ```
 
+* Q: 都是问号
+  * info sharedlibrary
+  * set solib-search-path $PATH
+
 ##### [gdb的多线程调试](https://blog.csdn.net/lf_2016/article/details/59741705)
 
 * info frame
@@ -139,10 +145,10 @@ p *(std::string*)(X.rep_.elements) //repeated string, 字段X
 
 
 
-* `gdb -q --batch --ex "set height 0" -ex "thread apply all bt full" [可执行文件] [core文件]`
+* `gdb -q --batch -ex "set height 0" -ex "thread apply all bt full" [可执行文件] [core文件]`
   * -q: 不打印gdb的版权消息
   * --batch: 执行批处理，不进入交互模式
-  * --ex: 执行gdb 命令
+  * -ex: 执行gdb 命令
   * "set height 0": 不对输出进行分页
     
 
@@ -174,7 +180,18 @@ Gdb STL support tools: https://sourceware.org/gdb/wiki/STLSupport
 
 ##### [gdb-watchpoint](https://undo.io/resources/gdb-watchpoint) MUSTDO
 
-[How to search memory for a byte sequence with GDB command find?](https://undo.io/resources/gdb-watchpoint/how-search-byte-sequence-memory-gdb-command-find/)
+* [How to search memory for a byte sequence with GDB command find?](https://undo.io/resources/gdb-watchpoint/how-search-byte-sequence-memory-gdb-command-find/)
+* [Debug mode](https://undo.io/resources/gdb-watchpoint/build-for-debug-in-gdb/)
+  * DWARF is a pun on ELF, which stands for Executable and Linking Format. DWARF goes with ELF.
+  * dwarf的不同版本
+    * -g2: dwarf4
+    * -g3
+    * `-g3 -Og` 平衡性能和debug信息
+  * `readelf --debug-dump a.out | less`
+  * `readelf --debug-dump=loc a.out | less`
+  * `print $pc`
+* [Split-dwarf](https://undo.io/resources/gdb-watchpoint/reduce-binary-size-compile-time-split-dwarf/)
+  * Even with incremental builds, the linker still needs to read all of the debug information in order to do things like remove duplications, for example.
 
 
 
@@ -238,6 +255,8 @@ https://wizardforcel.gitbooks.io/100-gdb-tips/content/index.html
 ```
 
 #### Sanitizers
+
+[如何高效解决 C++内存问题，Apache Doris 实践之路｜技术解析](https://zhuanlan.zhihu.com/p/561441347) TODO
 
 * [ASan](https://en.wikipedia.org/wiki/AddressSanitizer)
   * `-fsanitize=address`
@@ -337,17 +356,106 @@ lsof | grep /tmp/foobar.lock
 
 ### Profiling
 
-profilers和monitoring tools的意义：[premature optimization is the root of all evil](http://wiki.c2.com/?PrematureOptimization)
+* profilers和monitoring tools的意义：[premature optimization is the root of all evil](http://wiki.c2.com/?PrematureOptimization)
+* CPU usage和CPU使用率
+  - **CPU Usage**: CPU Usage是指单位时间内，进程使用了多少核心的CPU: 包括该进程用户态和内核态的开销。对于Pod来说，即单位时间内pod内所有进程使用了多少核心的CPU。
+  - **CPU使用率**: CPU利用率是指单位时间内: CPU usage/CPU总核心数。
 
-[时间概念](https://stackoverflow.com/questions/556405/what-do-real-user-and-sys-mean-in-the-output-of-time1)：real/user/system time
+* [时间概念](https://stackoverflow.com/questions/556405/what-do-real-user-and-sys-mean-in-the-output-of-time1)：real/user/system time
 
-* real time(wall time): 真实时间, user: 用户态耗时, sys: 内核态耗时, user+sys: 实际用时
-* time指令
+  * real time(wall time): 真实时间, user: 用户态耗时, sys: 内核态耗时, user+sys: 实际用时
 
-Jeff Dean推崇的back-of-the-envelope方法估算系统性能，这是一篇很好的[文章](http://highscalability.com/blog/2011/1/26/google-pro-tip-use-back-of-the-envelope-calculations-to-choo.html)，里面有各种实用数据
+  * time指令
 
-* scalable counter
-* keep per user comment indexes when paging through comments
+
+* Jeff Dean推崇的back-of-the-envelope方法估算系统性能，这是一篇很好的[文章](http://highscalability.com/blog/2011/1/26/google-pro-tip-use-back-of-the-envelope-calculations-to-choo.html)，里面有各种实用数据
+
+  * scalable counter
+
+  * keep per user comment indexes when paging through comments
+
+* 性能优化思路：
+
+  * CPU利用率 与 latency 的平衡
+  * 提高CPU利用率再优化latency的思路
+    * 暴露其他性能问题：在比较高的CPU使用率下，请求latency对CPU使用会变得比较敏感。 
+      - 引入糟糕的代码引入，会导致明显的latency上升，从而被及时发现。 
+      - 非预期的请求burst，会导致latency pct99明显上升。 
+      - 糟糕的流量调度，也会导致latency pct99明显上升。
+    * 提升对基础组件的要求
+      * 容器调度、超售
+      * 容灾降级、auto scale
+      * 流量动态调度
+      * 网络和中间件
+  * 分析CPU是否是瓶颈
+    * nr_throttled、nr_periods
+    * [阿里云容器方案](https://www.alibabacloud.com/help/en/elastic-compute-service/latest/enable-the-cpu-burst-feature-for-cgroup-v1)
+      - [Linux sched burst feature](https://www.kernel.org/doc/html/latest/scheduler/sched-bwc.html#burst-feature)
+      - [lkml: sched burst feature ](https://lkml.org/lkml/2019/11/26/196)
+      - [让容器跑的更快：CPU Burst技术实践](https://mp.weixin.qq.com/s?spm=a2c6h.12873639.0.0.cadb37a5JMOx9N&__biz=MzUzNzYxNjAzMg==&mid=2247519934&idx=1&sn=e87d2ab211516965ae3ffb51297df767&chksm=fae68571cd910c67b203d0d95023357a29ef9cd1ff956b3784ac3ebf490edfeb1f1ac6d75f74&scene=21#wechat_redirect)
+    * [AWS 虚拟机方案](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances.html)
+    * CPU队列长度
+      * [bcc工具](https://github.com/iovisor/bcc/blob/master/tools/runqlen.py)
+      * [bpftrace工具](https://github.com/iovisor/bpftrace/blob/master/tools/runqlen.bt)
+    * CPU调度延迟
+      * [bcc](https://github.com/iovisor/bcc/blob/master/tools/runqlat.py)
+      * [bpftrace](https://github.com/iovisor/bpftrace/blob/master/tools/runqlat.bt)
+    * task非自愿抢占
+      * [CFS算法](https://notes.eddyerburgh.me/operating-systems/linux/process-scheduling#fair-scheduling)
+      * ./ivcs.bt
+      * bpftrace
+  * CPU cache与TLB
+    * 容器环境下，由于内核是共享的，租户之间很可能通过TLB和CPU cache进行相互影响。
+    * [pmc工具: tlbstat](https://github.com/brendangregg/pmc-cloud-tools/blob/master/tlbstat)
+      - K_CYCLES: CPU Cycles x 1000
+      - K_INSTR: CPU Instructions x 1000
+      - IPC: Instructions-Per-Cycle
+      - DTLB_WALKS: Data TLB walks (count)
+      - ITLB_WALKS: Instruction TLB walks (count)
+      - K_DTLBCYC: Cycles at least one Page Miss Handler (PMH) is active with data TLB walks x 1000
+      - K_ITLBCYC: Cycles at least one PMH is active with instr. TLB walks x 1000
+      - DTLB%: Data TLB active cycles as a ratio of total cycles，即：DTLB miss花费的CPU开销。
+      - ITLB%: Instruction TLB active cycles as a ratio of total cycles，即：ITLB miss花费的CPU开销。
+    * [pmc工具： pmcarch](https://github.com/brendangregg/pmc-cloud-tools/blob/master/pmcarch)
+      - K_CYCLES: CPU Cycles x 1000
+      - K_INSTR: CPU Instructions x 1000
+      - IPC: Instructions-Per-Cycle
+      - BMR%: Branch Misprediction Ratio, as a percentage
+      - LLC%: Last Level Cache hit ratio, as a percentage
+    * ![71e328e7-e873-4336-b029-740b38218e78](Debugging-and-Profiling/cpu-cache.png)
+
+```c++
+#!/usr/bin/env bpftrace
+
+#include <linux/sched.h>
+
+BEGIN
+{
+        printf("Count involutary context switch... Hit Ctrl-C to end.\n");
+}
+
+tracepoint:sched:sched_switch
+{
+        if (args->prev_state == TASK_RUNNING) { // involutary
+                @involutary[args->prev_comm] = count();
+        }
+}
+i:s:1
+{
+        print(@involutary);
+        clear(@involutary);
+}
+```
+
+
+
+* QPS/单核QPS/latency等指标和CPU使用率的关系
+  * CPU使用率从40%到60%阶段，Success QPS从2000左右增加到了3500（增加了约75%）
+  * CPU利用率与[mesh过载保护](https://my.oschina.net/u/4843764/blog/5559303)
+  * 单核QPS随QPS上升而上升，呈抛物线状
+    * 基础开销（mesh/go runtime调度, sysmon等）被逐渐均摊，基础开销边际成本变得更低
+    * QPS上升，IPC变高； 但高峰期物理机负载高的时候IPC低
+  * CPU利用率从60%到80%，latency p99变化很大
 
 #### Profilers
 
@@ -416,7 +524,9 @@ http://sam.zoy.org/writings/programming/gprof.html
 
 编译参数 `-Og -pg`，前者是debug mode，后者是动态trace
 
+##### 代码分析
 
+`clock_gettime(CLOCK_THREAD_CPUTIME_ID)` 统计当前线程的CPU时间开销（不包含系统调用的开销）
 
 **内存泄露问题**
 
@@ -500,6 +610,12 @@ std::pair<size_t, size_t> MemoryUsage() {
 ##### [Intel® RDT(Resource Director Technology)](https://www.intel.com/content/www/us/en/architecture-and-technology/resource-director-technology.html)
 
 * 通过硬件实现任务组(tasks group)级的L3 Cache（LLC）和内存带宽（MBM）的监控和隔离限制的技术
+
+##### Intel PCM
+
+* https://github.com/intel/pcm
+  * `pcm-memory`
+* https://www.intel.com/content/www/us/en/developer/articles/technical/performance-counter-monitor.html
 
 
 
