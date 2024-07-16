@@ -163,6 +163,9 @@ op编译的原理
 import tensorflow as tf
 
 class ZeroOutTest(tf.test.TestCase):
+  def setUp(self):
+    super(ZeroOutTest, self).setUp()
+
   def testZeroOut(self):
     zero_out_module = tf.load_op_library('./zero_out.so')
     with self.cached_session():
@@ -187,6 +190,7 @@ except tf.errors.OutOfRangeError:
 
 ```python
 tf.test.main(argv=['', 'DecompressTest.testDecompressGzip'])
+tf.test.main(argv=['', 'DecompressTest'])
 ```
 
 * 关于tf test的bazel运行
@@ -530,20 +534,22 @@ https://www.tensorflow.org/guide/data
   * `train_data = mnist_train.map(scale).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)`
 
   * `image_batch, label_batch = next(iter(train_data))`
-* ops/dataset_ops.py
-  * DatasetV2 支持 shuffle、batch、repeat、map 等操作
-    * shuffle(buffer_size)
-    * batch(batch_size, drop_remainder=False)
-    * map(parser_fn, num_parallel_calls=tf.data.AUTOTUNE)
-    * prefetch(tf.data.experimental.AUTOTUNE)
-  * DatasetV2用一个variant tensor初始化
-    * 以cardinality为例
-    * DatasetCardinalityOp
-    * 调用 GetDatasetFromVariantTensor
-  * UnaryUnchangedStructureDataset
-  * class ParallelInterleaveDataset(UnaryDataset):
-    * `self._map_func = StructuredFunctionWrapper(map_func, self._transformation_name(), dataset=input_dataset)`
-      * 当使用 `tf.function` 装饰器将 Python 函数转换为 TensorFlow 计算图时，函数中的属性会自动转换为符号张量（symbolic Tensors），前提是这些属性被用于计算图的构建
+
+##### ops/dataset_ops.py
+
+* DatasetV2 支持 shuffle、batch、repeat、map 等操作
+  * shuffle(buffer_size)
+  * batch(batch_size, drop_remainder=False)
+  * map(parser_fn, num_parallel_calls=tf.data.AUTOTUNE)
+  * prefetch(tf.data.experimental.AUTOTUNE)
+* DatasetV2用一个variant tensor初始化
+  * 以cardinality为例
+  * DatasetCardinalityOp
+  * 调用 GetDatasetFromVariantTensor
+* UnaryUnchangedStructureDataset
+* class ParallelInterleaveDataset(UnaryDataset):
+  * `self._map_func = StructuredFunctionWrapper(map_func, self._transformation_name(), dataset=input_dataset)`
+    * 当使用 `tf.function` 装饰器将 Python 函数转换为 TensorFlow 计算图时，函数中的属性会自动转换为符号张量（symbolic Tensors），前提是这些属性被用于计算图的构建
 
 ```python
 # 自定义dataset
@@ -601,17 +607,52 @@ def get_tfrecord_dataset(paths,
 
 
 
-* ops/iterator_ops.py
-  * GLOBAL_ITERATORS
-  * CheckpointInputPipelineHook
-    * This hook should be used if the input pipeline state needs to be saved separate from the model checkpoint. Doing so may be useful for a few reasons:
-    * The input pipeline checkpoint may be large, if there are large shuffle or prefetch buffers for instance, and may bloat the checkpoint size.
-    * If the input pipeline is shared between training and validation, restoring the checkpoint during validation may override the validation input pipeline.
-    * For saving the input pipeline checkpoint alongside the model weights use `tf.data.experimental.make_saveable_from_iterator` directly to create a `SaveableObject` and add to the `SAVEABLE_OBJECTS` collection.
-  * _gather_saveables_for_checkpoint
-    * _IteratorSaveable
-    * iterators = tf.compat.v1.get_collection(iterator_ops.GLOBAL_ITERATORS)
-    * 从stdin读数据时，无法获取iterator状态
+* class DatasetSpec(type_spec.BatchableTypeSpec):
+  * Tf.data的structure，需要实现多个接口
+  * C++层面，tf.data只处理flat tensors
+
+![image-20240511184802335](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/data-structure.png)
+
+![image-20240511184913249](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/data-structure-2.png)
+
+
+
+##### ops/iterator_ops.py
+
+* GLOBAL_ITERATORS
+* CheckpointInputPipelineHook
+  * This hook should be used if the input pipeline state needs to be saved separate from the model checkpoint. Doing so may be useful for a few reasons:
+  * The input pipeline checkpoint may be large, if there are large shuffle or prefetch buffers for instance, and may bloat the checkpoint size.
+  * If the input pipeline is shared between training and validation, restoring the checkpoint during validation may override the validation input pipeline.
+  * For saving the input pipeline checkpoint alongside the model weights use `tf.data.experimental.make_saveable_from_iterator` directly to create a `SaveableObject` and add to the `SAVEABLE_OBJECTS` collection.
+* _gather_saveables_for_checkpoint
+  * _IteratorSaveable
+  * iterators = tf.compat.v1.get_collection(iterator_ops.GLOBAL_ITERATORS)
+  * 从stdin读数据时，无法获取iterator状态
+
+* IteratorBase
+
+```python
+>>> dataset = tf.data.Dataset.range(2)
+>>> iterator = iter(dataset)
+>>> print(iterator.get_next())
+tf.Tensor(0, shape=(), dtype=int64)
+>>> print(iterator.get_next())
+tf.Tensor(1, shape=(), dtype=int64)
+
+In addition, non-raising iteration is supported via `get_next_as_optional()`,
+which returns the next element (if available) wrapped in a
+`tf.experimental.Optional`.
+
+>>> dataset = tf.data.Dataset.from_tensors(42)
+>>> iterator = iter(dataset)
+>>> optional = iterator.get_next_as_optional()
+>>> print(optional.has_value())
+tf.Tensor(True, shape=(), dtype=bool)
+>>> optional = iterator.get_next_as_optional()
+>>> print(optional.has_value())
+tf.Tensor(False, shape=(), dtype=bool)
+```
 
 
 
@@ -959,19 +1000,25 @@ with tf.io.gfile.GFile(file_name, "rb") as f:
 #### ops
 
 * array_ops
+  * placeholder_with_default
+    * 实现上用的IdentityOp，外加一些tricks，将之视为placeholder op
+  
   * split
     * `size_splits = ops.convert_to_tensor(num_or_size_splits)`
     * 根据size_splits的类型决定调用 split or split_v
-
+  
 * control_flow_ops
   * tf.group
     * `c = tf.group(a, b)` will compute the same graph as this: `with tf.control_dependencies([a, b]): c = tf.no_op()`
+  * tf.debugging.Assert
+    * 实现在 core/kernels/logging_ops.cc
+    * 有一系列assert_less、assert_greater_equal
 * data_flow_ops
   * [GPUCompatiableQueue](https://github.com/tensorflow/tensorflow/commit/f98b3bc7012085096d8171fe56f6004677461567#)
     * size方法是一个op
 * list_ops
   * `ops.NotDifferentiable("TensorListConcatLists")`
-  
+
 
 ```python
 @ops.RegisterGradient("TensorListPushBack")
@@ -2139,7 +2186,7 @@ struct WorkerInterface {
   * Write a function to compute gradients for the op (optional).
   * Test the op. We usually do this in Python for convenience, but you can also test the op in C++. If you define gradients, you can verify them with the Python `tf.test.compute_gradient_error`. See [`relu_op_test.py`](https://www.tensorflow.org/code/tensorflow/python/kernel_tests/relu_op_test.py) as an example that tests the forward functions of Relu-like operators and their gradients.
   * TODO: Advanced features
-
+    * `REGISTER_KERNEL_BUILDER(Name("ParseExamples").Device(DEVICE_CPU).TypeConstraint<Variant>("T"), ParseVariantExamplesOp);`
 * [Extending TensorFlow with Custom C++ Operations](https://www.gresearch.co.uk/blog/article/extending-tensorflow-with-custom-c-operations/)
   * Motivation
     * the op’s outputs are dependent only on its inputs and not influenced by any of the subsequent operations. One instance where **this greedy strategy can lead to poor performance is computation involving many elementwise operations on the GPU** (as in the case of the [Gaussian Error Linear Unit](https://arxiv.org/abs/1606.08415) mentioned in our previous post).
@@ -2190,6 +2237,9 @@ REGISTER_OP("my_op_name")
 <name-of-attr-input-or-output>: <description of name;
   if long, indent the description on subsequent lines>
 )");
+
+.Output("output_tensors: output_types")
+.Attr("output_types: list(type)")
 ```
 
 ![image-20230103000701765](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/register-opdef.png)
@@ -2370,11 +2420,55 @@ REGISTER_KERNEL_BUILDER(Name("MyOp")
                         		MyOpGPU);
 ```
 
+* Attrs
+
+```c++
+OP_REQUIRES_OK(context,
+                   context->GetAttr("preserve_index", &preserve_index_));
+```
+
+* Attr types
+  * https://www.tensorflow.org/guide/create_op#attr_types
+  * There are shortcuts for common type constraints:
+    - `numbertype`: Type `type` restricted to the numeric (non-string and non-bool) types.
+    - `realnumbertype`: Like `numbertype` without complex types.
+    - `quantizedtype`: Like `numbertype` but just the quantized number types.
+
+```c++
+REGISTER_OP("EnumExample")
+    .Attr("e: {'apple', 'orange'}");
+REGISTER_OP("RestrictedTypeExample")
+    .Attr("t: {int32, float, bool}");
+		.Attr("a: int >= 2");
+		.Attr("a: list({int32, float}) >= 3"); // list长度
+		.Attr("i: int = 0");
+	  .Attr("i: int >= 1 = 1");
+REGISTER_OP("AttrDefaultExampleForAllTypes")
+   .Attr("s: string = 'foo'")
+   .Attr("i: int = 0")
+   .Attr("f: float = 1.0")
+   .Attr("b: bool = true")
+   .Attr("ty: type = DT_INT32")
+   .Attr("sh: shape = { dim { size: 1 } dim { size: 2 } }")
+   .Attr("te: tensor = { dtype: DT_INT32 int_val: 5 }")
+   .Attr("l_empty: list(int) = []")
+   .Attr("l_int: list(int) = [2, 3, 5, 7]");
+```
+
 
 
 ###### op内容错和日志
 
 ```c++
+void Compute(OpKernelContext* context) override {
+  // Grab the input tensor
+  const Tensor& input_tensor = context->input(0);
+
+  OP_REQUIRES(context, TensorShapeUtils::IsVector(input_tensor.shape()),
+              errors::InvalidArgument("ZeroOut expects a 1-D vector."));
+  // ...
+}
+
 OP_REQUIRES(context, method_ == "xxx" || method_ == "yyy",
                 errors::Unknown("method unknown! need to be xxx/yyy"));
 
@@ -2574,9 +2668,98 @@ message Summary.Value {
 
 ##### dataset
 
+* 部分核心代码见 core/kernels/data
+
+```c++
+// graph -> C++
+class DatasetOpKernel : public OpKernel {
+  void Compute(OpKernelContext* ctx) final;
+  virtual void MakeDataset(OpKernelContext* ctx, DatasetBase** output) = 0;
+};
+
+// C++ -> graph
+
+// Represents a (potentially infinite) range of outputs, where each
+// output is a tuple of tensors.
+class DatasetBase : public core::RefCounted {
+  // Returns a new iterator for iterating over the range of elements in
+  // this dataset.
+  //
+  // This method may be called multiple times on the same instance,
+  // and the resulting iterators will have distinct state. Each
+  // iterator will traverse all elements in this dataset from the
+  // start.
+  //
+  // The prefix identifies the sequence of iterators leading up to the newly
+  // created iterator.
+  Status MakeIterator(IteratorContext* ctx, const IteratorBase* parent,
+                      const string& output_prefix,
+                      std::unique_ptr<IteratorBase>* iterator) const;
+	friend Status AsGraphDef(
+      OpKernelContext* ctx, const DatasetBase* dataset,
+      SerializationContext&& serialization_ctx,
+      GraphDef* graph_def);  // For access to graph related members.
+};
+  
+// Represents the current position in a range of outputs, where the
+// range of outputs is typically represented by an `DatasetBase`,
+// defined below.
+class IteratorBase {
+  // Gets the next output from the range that this iterator is traversing.
+  //
+  // If at least one output remains in this iterator's range, that
+  // output will be stored in `*out_tensors` and `false` will be
+  // stored in `*end_of_sequence`.
+  //
+  // If no more outputs remain in this iterator's range, `true` will
+  // be stored in `*end_of_sequence`, and the content of
+  // `*out_tensors` will be undefined.
+  //
+  // Implementations should never return `OutOfRange` error. If at end of
+  // sequence, set `*end_of_sequence = true` and return `Status::OK()`.
+  // Internally raised `OutOfRange` errors that do not imply end of sequence
+  // should be converted to a different error type before being propagated to the caller.
+  //
+  // This method is thread-safe.
+  //
+  virtual Status GetNext(IteratorContext* ctx, std::vector<Tensor>* out_tensors,
+                         bool* end_of_sequence) = 0;
+}
+
+class IteratorResource : public ResourceBase {
+  // Gets the next output from the iterator managed by this iterator resource.
+  //
+  // If at least one output remains, that output will be stored in
+  // `*out_tensors` and `false` will be stored in `*end_of_sequence`.
+  //
+  // If no more outputs remain, `true` will be stored in `*end_of_sequence`, and
+  // the content of `*out_tensors` will be undefined.
+  Status GetNext(OpKernelContext* ctx, std::vector<Tensor>* out_tensors,
+                 bool* end_of_sequence);
+  
+  // Creates an iterator for `dataset`, and associates the iterator with this iterator resource.
+  //
+  // `SetIteratorFromDataset` should be called before calling `GetNext`, `Save`, or `Restore`.
+  Status SetIteratorFromDataset(OpKernelContext* ctx, DatasetBase* dataset);
+};
+```
+
 * DatasetOpKernel
+  * MakeDataset：在op和DatasetBase表示之间转化
   * input_fn每个步骤都是一个dataset，每个dataset构造的时候框架会给上一个dataset的iterator，在函数GetNextInternal 拿着iterator get一下，就拿到上一个dataset的数据，再处理下输
   * 整体类似一个拉模型，由最后一个op驱动，不断从前一个op拉数据处理
+
+![image-20240508192737771](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/tf-record-dataset.png)
+
+![image-20240508192813473](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/shuffle-dataset.png)
+
+![image-20240508193818322](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/map-dataset.png)
+
+* DatasetBase
+
+  * MakeIterator
+  * AsGraphDef：方便做static optimization
+
 * 自己写DataSetOp
   * 首先 DatasetOpKernel 的 Compute 接口会调用 MakeDataset 返回一个 Dataset
     - 可以继承 DatasetOpKernel  重写 MakeDataset 返回一个自定义的 Dataset
@@ -2588,6 +2771,7 @@ message Summary.Value {
     * CustomDatasetOp::MakeDataset
     * CustomDatasetOp::MakeDatasetInternal
     * CustomDatasetOp::Dataset::Iterator::GetNextInternal
+
 * DatasetBase
   *  Returns a new iterator for iterating over the range of elements in this dataset.
   * This method may be called multiple times on the same instance, and the resulting iterators will have distinct state. Each iterator will traverse all elements in this dataset from the start.
@@ -2595,6 +2779,28 @@ message Summary.Value {
     * IteratorPrefix
 
 * DatasetIterator
+
+* 当遍历dataset时，发生了什么
+
+  * AnonymousIteratorHandleOp::Compute
+    * 创建New IteratorResource
+    * 将resource handle返回，传给MakeIteratorOp
+
+  * MakeIteratorOp::Compute
+    * SetIteratorFromDataset
+  * IteratorResource::SetIteratorFromDataset
+    * dataset->MakeIterator
+    * iterator逐级往前传，BatchIterator、MapIterator、ShuffleIterator、TFRecordIterator
+  * IteratorGetNextOp::Compute
+    * lookup IteratorResource
+    *  IteratorResource->GetNext()
+    * Ctx->set_output
+  * iterator goes out of scope
+    * resource handle
+    * ctx->resource_manager()->Delete(handle)
+
+![image-20240508194211332](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/make-iterator.png)
+
 * 分发文件
   * matching_files.MatchingFilesDataset
 
@@ -2681,7 +2887,12 @@ auto vec = tensor->vec<int32>();
 vec.setConstant(-1);
 ```
 
-
+* Check failed: NDIMS == dims() (4 vs. 2)Asking for tensor of 4 dimensions from a tensor of 2 dimensions
+  * 调用链如下：
+  * auto inputTensorMapped = inputTensor.tensor<float, 4>();
+  * template <typename T, size_t NDIMS> Tensor::tensor()
+  * TensorShape::AsEigenDSizes()
+  * CheckDimsEqual
 
 
 
@@ -2997,7 +3208,46 @@ OP_REQUIRES_OK(ctx, ctx->allocate_output(0, TensorShape({rank}), &out));
 ```
 
 * data
+  * iterator_ops
+    * IteratorResource
+  
   * Single_threaded_executor
+  
+
+```c++
+class CapturedFunction {
+ public:
+  // Creates a new instance using a list of named attributes, using provided
+  // captured inputs.
+  static Status Create(OpKernelContext* ctx,
+                       std::shared_ptr<const FunctionMetadata> metadata,
+                       std::vector<Tensor>&& captured_inputs,
+                       std::unique_ptr<CapturedFunction>* out_function);
+  // Instantiates this function for use in the given context, providing an
+  // InstantiatedCapturedFunction that can be used to execute functions.
+  Status Instantiate(IteratorContext* ctx,
+                     std::unique_ptr<InstantiatedCapturedFunction>*
+                         instantiated_captured_function);
+};
+
+// `InstantiatedCapturedFunction` encapsulates all the runtime support needed
+// to execute a tensorflow function.
+//
+// While `CapturedFunction` encapsulates constant attributes of the function,
+// such as its name and captured arguments, `InstantiatedCapturedFunction`
+// encapsulates runtime aspects, such as `FunctionLibraryRuntime` and function
+// handle.
+//
+// The `Iterator` related classes use `InstantiatedCapturedFunction` to execute
+// functions outside of the normal `OpKernel::Compute()` context.
+class InstantiatedCapturedFunction {
+  // Runs the instantiated captured function. This method takes ownership of the tensors in `args`, in order to be able to deallocate them as early as possible. Use `RunWithBorrowedArgs()` if the caller needs to retain ownership of the `args`.
+  Status Run(IteratorContext* ctx, std::vector<Tensor>&& args,
+             std::vector<Tensor>* rets) const;
+};
+```
+
+
 
 * function_ops
   * ArgOp
@@ -4438,7 +4688,7 @@ Cancellation Manager
 
 ### Inside Tensorflow 系列
 
-#### tf.data
+#### [tf.data - TF Input Pipeline](https://www.youtube.com/watch?v=kVEOCfBy9uY&list=PLQY2H8rRoyvzIuB8rZXs7pfyjiSUs8Vza&index=15)
 
 ```python
 import tensorflow.compat.v1 as tf
@@ -4454,6 +4704,243 @@ with tf.Session() as sess:
 ```
 
 * 利用pipeline优化：https://www.tensorflow.org/tensorboard/tensorboard_profiling_keras#debug_performance_bottlenecks
+
+* tf官方优化guide
+  * https://www.tensorflow.org/guide/data_performance
+    * 介绍如何写代码measure dataset耗时
+
+  * https://www.tensorflow.org/guide/data_performance_analysis
+
+
+* 一些优化techniques
+
+```python
+# interleave
+dataset = tf.data.Dataset.from_tensor_slices(filenames)
+dataset = dataset.interleave(tf.data.TFRecordDataset,
+  num_parallel_calls=tf.data.AUTOTUNE,
+  deterministic=False)
+
+# outer parallelism
+filenames = tf.data.Dataset.list_files(file_path, shuffle=is_training)
+
+def make_dataset(shard_index):
+  filenames = filenames.shard(NUM_SHARDS, shard_index)
+  dataset = filenames_to_dataset(filenames)
+  Return dataset.batch(batch_size)
+
+indices = tf.data.Dataset.range(NUM_SHARDS)
+dataset = indices.interleave(make_dataset,
+                             num_parallel_calls=tf.data.AUTOTUNE)
+dataset = dataset.prefetch(tf.data.AUTOTUNE)
+```
+
+```python
+dataset = ...
+options = tf.data.Options()
+# 关掉intra op并行，优化cpu usage
+options.experimental_threading.max_intra_op_parallelism = 1
+# 线程池大小
+options.experimental_threading.private_threadpool_size = 8
+# optimizations
+options.experimental_optimizations.map_vectorization = True
+dataset = dataset.with_options(options)
+```
+
+* Optimising your input pipeline performance with tf.data
+  * [part1](https://towardsdatascience.com/optimising-your-input-pipeline-performance-with-tf-data-part-1-32e52a30cac4)
+    * prefetching
+    * Parallelising data extraction - dataset.interleave
+      * i/o并发
+    * Parallelising data transformation - dataset.map
+    * Dataset.cache
+    * [Vectorised mapping](https://www.tensorflow.org/guide/data_performance#vectorizing_mapping)
+  * [part2](https://towardsdatascience.com/optimising-your-input-pipeline-performance-with-tf-data-part-2-9ee406451f93)
+* Python View
+  * iterable
+  * map: graph or non-graph(->autograph) function
+  * User-defined func
+    * func会转成func graph，并将func graph handle作为attr传入dataset op
+  * Eager mode和graph mode区别：
+    * 区别一：eager mode的Anonymous Iterator每次创建新Resource，而graph mode只在第一次创建，后面返回handle
+      * 原因：get_next op调用iterator op，而2.x和1.x调用get_next的方式有差异
+    * 区别二：graph mode没有delete_iterator，因为iterator的lifetime跟随surrounding session
+
+```python
+TFRecordDataset
+dataset = dataset.map(lambda record: parse(record))
+for ele in dataset:
+  ...
+```
+
+```python
+# 1.x版本tf
+iter = dataset.make_initializable_iterator()
+get_next = iter.get_next()
+
+sess.run(iter.initializer)
+...
+try:
+except errors.OutOfRangeError:
+  	pass
+```
+
+* C++ View： 见代码 framework/dataset
+  * Anonymous Iterator -> OwnedIterator (eager mode) -> DeleteItertor
+
+![image-20240422204607198](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/iterator_op.png)
+
+* Supporting non-tensor types
+  * DatasetSpec
+
+![image-20240511183644542](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/data-non-tensor-types.png)
+
+* Static Optimizations
+  * 往dataset后面插transformation
+
+![image-20240511185545030](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/data-static-opt.png)
+
+```c++
+OptimizedDatasetOp::Compute(OpKernelContext* ctx, DatasetBase** output) {
+  DatasetBase* input;
+  OP_REQUIRES_OK(ctx, GetDatasetFromVariantTensor(ctx->input(0), &input));
+  Dataset *dataset = new OptimizeDatasetOp::Dataset(ctx, input, optimizations, ...);
+  OP_REQUIRES_OK(ctx, dataset->optimize());
+  *output = dataset;
+}
+```
+
+![image-20240516164351127](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/dataset-optimize.png)
+
+* Dynamic Optimizations
+  * e.g. dataset.map(f, num_parallel_calls=1)
+    * 增加num_parallel_calls=1参数，会使用background thread，独立线程。本质上达成了prefetch的效果
+    * num_parallel_calls设为1024，本质上是增加了待内部threads调度的tasks的数量，影响temporal or thread locality
+  * 有options，用来override tf的intra_op、inter_op_parallelism抽象
+* 其它：
+  * 支持 Sparse tensors
+  * 当前不支持Ragged tensors
+* num_parallel_calls=AUTOTUNE：建模op延时，用所有输入节点的延时，建模输出节点的延时
+  * 注册analytic model，给预期优化最大的并行节点分配更多cores
+
+![image-20240516171304935](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/dataset-autotune.png)
+
+#### [tf.data + tf.distribute](https://www.youtube.com/watch?v=ZnukSLKEw34&list=PLQY2H8rRoyvzIuB8rZXs7pfyjiSUs8Vza&index=9)
+
+* ML blocks
+  * Tf.data + keras/Estimator -> tf.distribute
+* Why input pipeline?
+  * data might not fit in memory
+  * data might require (randomized) pre-processing
+  * Efficiently utilize hardware
+  * decouple loading + pre-processing from distribution
+* ETL
+  * extract
+  * transform
+  * Load
+* CPU算力发展比GPU慢，因此input pipeline随时间发展，可能陷入瓶颈
+* software technique
+  * Prefetch
+  * parallelized map
+    * num_parallel_calls = X
+
+  * Interleave: 并行IO
+  * map+batch fuse: up to 2x speed up
+  * AUTOTUNE
+
+* tf.data.Options
+* `import tensorflow_datasets as tfds`
+  * https://www.tensorflow.org/datasets/overview
+
+* tf.distribute.Strategy API
+  * 开箱即用 out-of-the-box，高性能，versatile，易用性
+
+
+![image-20240711162718550](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/tensorflow/distribute-strategy.png)
+
+* Multi-GPU All-reduce Sync Training
+  * replicas: Lock-step
+  * Variables: mirrored on each GPU
+  * Ring All-reduce
+    * https://towardsdatascience.com/visual-intuition-on-ring-allreduce-for-distributed-deep-learning-d1f34b4911da
+  * 调优：
+    * gpu privite threads
+    * tf.data threads
+  * estimator with tf.distribute.strategy
+
+```python
+import tensorflow as tf
+
+strategy = tf.distribute.MirroredStrategy(devices=["gpu:0","gpu:1"])
+strategy = tf.distribute.MirroredStrategy(cross_device_op=tf.distribute.NcclAllReduce(num_packs=2))
+
+with strategy.scope(): # take controls of variable creation
+  model = ...          # distribute-aware
+  optimizer = ...
+  model.compile(...)
+  model.fit(...)
+  
+```
+
+```python
+run_config = tf.estimator.RunConfig(train_distribute=strategy)
+... = Estimator(..., model_fn=model_fn, config=run_config)
+# model_fn: called once per replica
+```
+
+* Multi-worker all-reduce sync training
+  * uses new collective ops
+
+```python
+strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy(tf.distribute.experimental.CollectiveCommunication.NCCL)
+os.environ["TF_CONFIG"] = json.dumps({"cluster":{"worker":["host1:port","host2:port","host3:port"]},"task":{"type":"worker","index": 1}})
+```
+
+* TPUStrategy
+  * similar to MirroredStrategy
+  * use cross_replica_sum on TPUs to do the all-reduce
+* ParameterServerStrategy
+  * TF_CONFIG标注ps
+* CentralStorageStrategy
+  * 1-machine multi-GPU
+  * 相比较MirroredStrategy
+    * 把variable存一份在CPU上，适合GPU放不下variable的场景
+
+##### custom training loop
+
+https://www.tensorflow.org/tutorials/distribute/custom_training
+
+* Note
+  * GLOBAL_BATCH_SIZE = num_replicas_in_sync * BATCH_SIZE_PER_REPLICA
+  * The optimizer takes care that these **gradients are summed up across replicas** before using them to update the copies of the model weights on each replica.
+
+```python
+import tensorflow as tf
+
+def replica_step(inputs):
+  with tf.GradientTape() as tape:
+    logits = model(inputs, training=True)
+    loss = tf.nn.compute_average_loss(loss_fn(logits,labels), global_batch_size=...)
+    loss += tf.nn.scale_regularization_loss(...)
+    grads = tape.gradient(loss, model.variables)
+    optimizer.apply_gradients(zip(grads, model.variables))
+    return loss
+  
+@tf.function
+def train_epoch(dataset):
+  for input in dataset:
+    l = strategy.experimental_run_v2(replica_step, input)
+    loss = strategy.reduce(tf.distribute.ReduceOp.MEAN, l, axis=0)
+    # per-step processing here
+    tf.print("Training Loss: ", loss)
+
+for epoch in range(num_epochs):
+  train_epoch(input_dataset)
+  # per-epoch processing here (e.g. checkpoint and eval)
+  
+```
+
+
 
 
 

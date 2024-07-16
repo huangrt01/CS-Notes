@@ -10,7 +10,48 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 
 ### GPU 相关知识
 
+#### 机型基础
+
+* Nvidia GPU的算力([Compute Capability](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#compute-capability)), 只是一个版本号, 用来表示核心架构. 一般用`X.X`的方式表示, 第一位是主版本号, 第二位是次版本号, 如下:
+
+| 架构                            | 算力 | 上市时间 | 产品                                                         | NVLink                                                       | NVSwitch                     | PCIe              |
+| ------------------------------- | ---- | -------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------------------- | ----------------- |
+| Hopper architecture (霍普)      | 9    |          | H100, 训练卡                                                 | 3td-NVLink, SXM2/SXM4900GB/s最多18个                         | 3td-NVSwitch: 900GB/s最多8个 |                   |
+| Ampere architecture (安培)      | 8    | 2020     | A100, 训练卡, 80G HBM2e 显存19.5 TFLOPSCuda Cores: 6912Tensor Cores: 432 | 3td-NVLink, SXM2/SXM3 600GB/s最多12个                        | 2nd-NVSwitch: 600GB/s最多8个 | PCIe Gen4 64 GB/s |
+| Turing architecture (图灵)      | 7.5  | 2018     | T4, 推理卡, 16GB GDDR6 显存8.1 TFLOPSCuda Cores: 2560Tensor Cores: 320 |                                                              |                              | PCIe Gen332 GB/s  |
+| Volta architecture (伏特)       | 7    | 2017     | V100, 训练卡, 24G HBM2显存14~16.4 TFLOPSCuda Cores: 5120Tensor Cores: 640 | 2nd-NVLink, SXM2300GB/s最多6个                               | 1st-NVSwitch: 300GB/s最多8个 | PCIe Gen332 GB/s  |
+| Pascal architecture (帕斯卡)    | 6    | 2016     | **P100, 训练卡, 16G HBM2显存**9.3 ~ 10.6 TFLOPSCuda Cores: 3840P40, 训练卡, 24G GDDR5 显存P4, 推理卡, 8G GDDR5 显存 | 1st-NVLink, SXMP100: 732 GB/s160 GB/sP40: 346 GB/sP4: 192 GB/s |                              | PCIe Gen332 GB/s  |
+| Maxwell architecture (麦克斯韦) | 5    | 2014     | M40, M60                                                     |                                                              |                              |                   |
+| Kepler architecture (开普勒)    | 3    | 2010     | K10, K20, K40, K80                                           |                                                              |                              |                   |
+| Fermi architecture (费米)       | 2    | 2010     |                                                              |                                                              |                              |                   |
+| Tesla architecture (特斯拉)     | 1    | ~        |                                                              |                                                              |                              |                   |
+
+Nvidia GPU 产品根据使用场景不同分为不同的序列:
+
+- GeForce: 用于家庭和个人电脑，包括游戏和娱乐等;
+  - **前缀**: 显卡档次与代号. GT: 频率提升版本; GS: GT的缩减版，级别在GT之后; GTX: 一般可以理解为GT eXtreme，代表了极端、极致的意思; GTS: GTX的缩减版，级别在GTX之后. RTX-> GTX > GTS > GT > GS
+  - **数字**: 例如1060, 10代表的是第几代, 6代表显卡性能档次的定位
+  - **后缀**: SE的意思是阉割版, TI表示增强版, M表示移动端, LE表示
+- Quadro: 用于工业渲染、艺术设计，工作站等场合
+- Tesla: 用于科学计算，深度学习加速等场景, 对于15年以后的产品, 一般或以省去Tesla, 或用NVIDIA代替, 如P100, T4, V100, A100等.
+
+GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件的版本. 
+
 ![h100](nvidia/h100.png)
+
+
+
+* [A10 v.s. A10G](https://www.baseten.co/blog/nvidia-a10-vs-a10g-for-ml-model-inference/)
+  * The A10 is an Ampere-series datacenter GPU well-suited to many model inference tasks, such as running seven billion parameter LLMs. However, AWS users run those same workloads on the A10G, a variant of the graphics card created specifically for AWS. The A10 and A10G have somewhat different specs — most notably around tensor compute — but are interchangeable for most model inference tasks because they share the same GPU memory and bandwidth, and most model inference is memory bound.
+  * the A10 prioritizes tensor compute, while the A10G has a higher CUDA core performance
+  * 根据ops_to_byte分析是compute bound还是memory bound
+    * arithmetic_intensity (Llama 2 7B, Single-Headed Attention Operation)
+          ~= total compute / total memory movement
+          = 4d(N^2) + 3N^2 ops / 8N^2 + 8Nd bytes
+          = 62 ops/byte
+  * [A guide to LLM inference and performance](https://www.baseten.co/blog/llm-transformer-inference-guide/) TODO
+
+
 
 #### CPU vs GPU
 
@@ -348,23 +389,34 @@ nsys profile --stats=true -o output-report ./single-thread-vector-add
 * A set of CUDA cores
   * Tensor core相比CUDA core，实现了MMA operations，支持2:4 sparsity，支持in8和int4，更高效
   
-  * CUDA Core<->Thread --> registers&local memory
+  * SP(Streaming Processor) <-> CUDA Core<->Thread --> registers&local memory
   
-  * SM <-> Thread Block pool ---> shared memory
+  * SM <-> Thread Block pool --->  N*SP + warp scheduler、register、shared memory
+    * thread之间可同步，可通过shared memory通信
   
   * Device <-> Grid ---> global memory
   
   * 白框：subpartition
+* SM可以看做GPU的心脏（对比CPU核心），register和shared memory是SM的稀缺资源。CUDA将这些资源分配给所有驻留在SM中的threads。因此，这些有限的资源就使每个SM中active warps有非常严格的限制，也就限制了并行能力。
+
+  * 每个SM包含的SP数量依据GPU架构而不同，Fermi架构GF100是32个，GF10X架构是48个，Kepler架构是192个，Maxwell架构是128个，Turing架构是64个。相同架构的GPU包含的SM数量则根据GPU的中高低端来定。
+
 * A warp is the basic schedule unit in kernel execution
+
+  * SIMT，同一个warp里的线程执行相同的指令
+
   * 一个warp是successive 32 threads in a block
     * thread如果不能被32整除，余数占据one more warp
-  
+
+  * [Why only one of the warps is executed by a SM in cuda?](https://stackoverflow.com/questions/13463440/why-only-one-of-the-warps-is-executed-by-a-sm-in-cuda)
+    * 和warp scheduler数量有关
+
   * 一个SM有一个thread block pool，一个thread block有多个warp，一个warp scheduler 16个warp
     * [How to choose how many threads/blocks to have?](https://forums.developer.nvidia.com/t/how-to-choose-how-many-threads-blocks-to-have/55529)
     * The only thing that really matters for occupancy and if performance depends on occupancy is warps. You want to have as close to 64 active warps as possible, all other factors being equal.
     * very small block sizes (e.g. 32 threads per block) may limit performance due to occupancy. Very large block sizes for example 1024 threads per block, may also limit performance, if there are resource limits (e.g. registers per thread usage, or shared memory usage) which prevent 2 threadblocks (in this example of 1024 threads per block) from being resident on a SM
     * 推荐值：one thread block, 128~512 threads
-  
+
   * Instructions are SIMD synchronous within a warp
     * 一个warp中的线程执行同一指令（Volta架构之后，可以执行不同指令，但不同时）
       * e.g. 【code/reduce.cu】`reduce3()`
@@ -378,7 +430,7 @@ nsys profile --stats=true -o output-report ./single-thread-vector-add
   * 一些单元
     * SFU: special function unit
     * Load/Store memory
-  
+
 * Registers / Shared Memory / L1 Cache
 * SMs share Global Memory 
 * PCIe / NVLINk 与CPU Chipset交互

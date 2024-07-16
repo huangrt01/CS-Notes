@@ -287,6 +287,12 @@ git push origin HEAD --force
 	    - `git stash pop --index` 恢复最新的进度到工作区和暂存区
 	    - `git stash pop stash@{1}` 恢复指定的进度到工作区。stash_id是通过git stash list命令得到的。通过git stash pop命令恢复进度后，会删除当前进度
 	
+	- `git stash save --include-untracked`
+	    
+	- `git stash apply stash@{n}`
+	    
+	- `git stash list`
+	    
 	- `git stash show -p | git apply -R`
 	
 - `git cherry-pick`

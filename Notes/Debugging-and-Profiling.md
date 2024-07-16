@@ -15,6 +15,11 @@
 
 ### Debugging
 
+#### 概要
+
+* 提问的艺术 —— 如何有效地提问、Debug
+  * https://www.yuque.com/keep/up/ur2rk0giu3mghqdc
+
 #### Printf Debugging and Logging
 脑力劳动debug，借助打印信息思考和推断问题所在
 

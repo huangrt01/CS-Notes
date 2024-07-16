@@ -17,9 +17,31 @@ make
 make install
 ```
 
+#### pyenv管理多版本
 
+````shell
+brew update
+brew install pyenv
+
+# ~/.zshrc
+eval "$(pyenv init --path)"
+
+pyenv install 3.9.2
+pyenv global 3.9.2
+python --version
+````
+
+
+
+#### 在线编辑器
+
+https://onecompiler.com/
 
 #### 基础数据
+
+* int类型的大小是无限的
+  * python动态调整位数
+  * 只要内存能存的下即可
 
 ```python
 bool(int(str(3))) -> True
@@ -33,6 +55,7 @@ range和xrange的区别：xrange返回生成器，可以转化成list
 
 list.extend(list)
 list.append(item)
+list.index(item)
 
 # split不加参数，默认为所有的空字符，包括空格、换行(\n)、制表符(\t)等
 list = [x.strip() for x in list_string.split() if x.strip()]
@@ -71,6 +94,16 @@ f'{a:011d}'
 ```python
 # next取下一个元素
 next((value for value in values if type(value) == Tensor), None)
+```
+
+```python
+dict_A = {'a': 1, 'b': 2, 'c': 3}
+dict_B = {'a': 4, 'b': 5, 'c': 6}
+dict_C = {'a': 3, 'b': 4, 'c': 2}
+
+common_keys = set(dict_A.keys()) & set(dict_B.keys()) & set(dict_C.keys())
+
+filtered_dict_A = dict(filter(lambda item: item[0] in common_keys and dict_B[item[0]] > dict_C[item[0]], dict_A.items()))
 ```
 
 
@@ -293,6 +326,10 @@ class person:
 ```
 
 * [一文让你彻底搞懂Python中\__ str\__和\__repr\__?](https://segmentfault.com/a/1190000022266368)
+* 坑
+  * python2需要用 class A(object):才能用descriptors. `@property` is descriptor
+    * https://stackoverflow.com/questions/9163940/property-getter-setter-have-no-effect-in-python-2
+
 
 ##### metaclass
 
@@ -349,10 +386,11 @@ def exit_hook():
 ##### traceback
 
 ```python
-except Exception as e:
-	exc_type, exc_value, exc_traceback_obj = sys.exc_info()
-	traceback.format_exc()
-	traceback.print_tb(exc_traceback_obj)
+def handle_exception():
+    exc_type, exc_value, exc_traceback_obj = sys.exc_info()
+    error_message = traceback.format_exc()
+    logging.log_every_n_seconds(logging.ERROR, f"exc_type: {exc_type}, error_message: {error_message}", 60)
+    traceback.print_tb(exc_traceback_obj, limit=10)
 ```
 
 
@@ -472,6 +510,30 @@ def wrapper(*args, **kwargs):
   ...
   return func(*args, **kwargs)
 ```
+
+* 修饰类的例子：自动生成函数
+
+```python
+@auto_pop_field("private_value_")
+class ABC
+...
+
+def auto_pop_field(field_name):
+
+  def decorator(cls):
+
+    def pop_field(self):
+      field_value = getattr(self, field_name)
+      setattr(self, field_name, None)
+      return field_value
+
+    setattr(cls, f"pop_{field_name}", pop_field)
+    return cls
+
+  return decorator
+```
+
+
 
 #### 函数
 
@@ -706,10 +768,37 @@ str2 = '20001231000000'
 obj2 = dt.datetime.strptime(dt, '%Y%m%d%H%M%S').strftime(DATETIME_FORMAT)
 ```
 
+#### dotenv
+
+* https://stackoverflow.com/questions/44761958/using-pip3-module-importlib-bootstrap-has-no-attribute-sourcefileloader
+
+```shell
+pip3 install python-dotenv
+```
+
+
+
 #### exception
 
 * IOError (python2)
   * FileNotFoundError (python3)
+
+
+
+* 系统基础异常
+
+```python
+try:
+  ...
+except Exception as e:
+  ...
+except (SystemExit, KeyboardInterrupt, GeneratorExit) as e:
+  ...
+```
+
+
+
+
 
 #### fstring
 
@@ -720,6 +809,10 @@ person = {"name": "John", "age": 19}
 ## 双引号套单引号
 print(f"{person['name']} is {person['age']} years old.")
 ```
+
+#### func_timeout
+
+* 超时控制
 
 #### functools
 
@@ -769,6 +862,11 @@ import var
 object = var.inside_object()
 ```
 
+#### logging
+
+* 基础调用
+  * `logging.log_every_n_seconds(logging.ERROR, f"", 60)`
+
 #### Math 数学相关
 
 ##### 解方程
@@ -791,6 +889,9 @@ print(solution, equation(solution))
 
 print(math.sqrt(solution))
 ```
+
+* hybrd方法：https://math.stackexchange.com/questions/3642041/what-is-the-function-fsolve-in-python-doing-mathematically
+  * HYBRD is a modification of the Powell hybrid method. Two of its main characteristics involve **the choice of the correction as a convex combination of the Newton and scaled gradient directions**, and the updating of the Jacobian by the rank-1 method of Broyden. The choice of the correction guarantees (under reasonable conditions) **global convergence for starting points far from the solution** and a fast rate of convergence. The Jacobian is approximated by forward differences at the starting point, but forward differences are not used again until the rank-1 method fails to produce satisfactory progress.
 
 
 
@@ -868,6 +969,11 @@ while True:
 
 #### 多线程编程
 
+* https://chriskiehl.com/article/parallelism-in-one-line
+  * 巧用 Pool 实现多线程并行
+
+* 定时执行
+
 ```python
 class PeriodicRunner(object):
     def __init__(self, name, cond, callback, interval=5, daemon=True):
@@ -937,6 +1043,14 @@ pdb.set_trace()
 p dir(var)
 ```
 
+#### psutil
+
+```python
+proc = psutil.Process(pid)
+children = proc.children(recursive=True)
+```
+
+
 
 #### random
 
@@ -980,7 +1094,12 @@ class Scheduler:
 nohup python2.7 MyScheduledProgram.py &
 ```
 
+#### shutil
 
+```python
+if os.path.exists(curr_path):
+	shutil.rmtree(curr_path)
+```
 
 #### struct
 
@@ -1133,4 +1252,17 @@ python -m autopep8 -i -r $folder
 based_on_style = google
 indent_width = 2
 ```
+
+* 静态static检查
+  * mypy
+  * .mypy.ini
+
+```
+[mypy]
+ignore_missing_imports = True
+```
+
+#### 坑
+
+* the interactive Python is the only place (I'm aware of) to not have `__file__`.
 

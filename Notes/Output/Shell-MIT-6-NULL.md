@@ -579,23 +579,103 @@ pidwait(){
 
 [ubuntu无sudo权限以及非root的用户apt安装软件](https://blog.csdn.net/qq_24406903/article/details/88376829)
 
-**Keyboard remapping**
+##### **Keyboard remapping**
 
 Mac-os karabiner，right command -> escape
 
-**Daemons**
+##### **Daemons** - systemd
 
-e.g. sshd, systemd
+* e.g. sshd, systemd
+  * `systemctl --user status`
 
-`systemctl --user status`
+* Systemd can be interacted with the `systemctl` command in order to `enable`, `disable`, `start`, `stop`, `restart` or check the `status` of services (those are the `systemctl` commands).
+  * 如果出现端口占用，可以先stop再disable相关service
 
-Systemd can be interacted with the `systemctl` command in order to `enable`, `disable`, `start`, `stop`, `restart` or check the `status` of services (those are the `systemctl` commands).
 
-* 如果出现端口占用，可以先stop再disable相关service
+* [systemd入门教程](https://www.ruanyifeng.com/blog/2016/03/systemd-tutorial-commands.html)
+* Systems Intro
+  * https://docs.fedoraproject.org/en-US/quick-docs/systemd-understanding-and-administering/
+  * 特点：
+    * Aggressive parallelization capabilities
+    * Uses socket and D-Bus activation for starting services
+    * Offers on-demand starting of daemons, keeps track of processes using Linux cgroups
+    * Supports snapshotting and restoring of the system state
+    * Maintains mount and automount points
+    * Implements an elaborate transactional dependency-based service control logic.
 
-[systemd入门教程](https://www.ruanyifeng.com/blog/2016/03/systemd-tutorial-commands.html)
 
-**FUSE**
+* **运维操作**
+
+```shell
+cd .config/systemd/user/
+systemctl start/stop/restart/reload/condrestart(如果运行中则重新启动)/status/enable/disable/mask/is-enabled foo
+```
+
+```
+systemctl
+systemctl list-unit-files --type=service
+ls /lib/systemd/system/*.service /etc/systemd/system/*.service
+
+ls /etc/systemd/system/*.wants/
+systemctl list-dependencies graphical.target
+
+
+# Used when you create a new service file or modify any configuration
+systemctl daemon-reload
+```
+
+* Modify service
+
+  * `systemctl edit httpd.service`
+
+  * To replace an option that can be set multiple times, it must cleared first, otherwise the override file will add the option a second time.
+
+  * ```
+    systemctl restart httpd
+    ```
+
+```
+[Service]
+Restart=always
+RestartSec=30
+
+[Service]
+ExecStart=
+ExecStart=<new command>
+
+systemctl restart httpd
+# systemctl edit --full httpd.service
+```
+
+* create service
+  * /etc/systemd/system/foo.service
+
+```
+[Unit]
+Description=My custom service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/sleep infinity
+
+[Install]
+WantedBy=multi-user.target
+```
+
+* Converting SysVinit services to systemd
+
+* man systemd.unit
+
+* [Common service parameters](https://docs.fedoraproject.org/en-US/quick-docs/systemd-understanding-and-administering/#_common_service_parameters)
+
+* Mapping runlevels to targets
+
+  
+
+
+
+##### **FUSE**
 
 [FUSE](https://en.wikipedia.org/wiki/Filesystem_in_Userspace) (Filesystem in User Space)
 
@@ -605,7 +685,7 @@ Systemd can be interacted with the `systemctl` command in order to `enable`, `di
 - [kbfs](https://keybase.io/docs/kbfs) - Distributed filesystem with end-to-end encryption. You can have private, shared and public folders.
 - [borgbackup](https://borgbackup.readthedocs.io/en/stable/usage/mount.html) - Mount your deduplicated, compressed and encrypted backups for ease of browsing.
 
-**Backups**
+##### **Backups**
 
 a copy of the data in the same disk is not a backup, because the disk is the single point of failure for all the data
 
@@ -615,13 +695,13 @@ Some core features of good backups solutions are versioning, deduplication and s
 
 [backups lecture](https://missing.csail.mit.edu/2019/backups/)
 
-**APIs**
+##### **APIs**
 
  “[OAuth](https://www.oauth.com/)” is a protocol you will often see used. At its heart, OAuth is a way to give you tokens that can “act as you” on a given service, and can only be used for particular purposes. Keep in mind that these tokens are *secret*, and anyone who gains access to your token can do whatever the token allows under *your* account!
 
 [IFTTT](https://ifttt.com/) is a website and service centered around the idea of APIs — it provides integrations with tons of services, and lets you chain events from them in nearly arbitrary ways.
 
-**Common command-line flags/patterns**
+##### **Common command-line flags/patterns**
 
 Command-line tools vary a lot, and you will often want to check out their `man` pages before using them. They often share some common features though that can be good to be aware of:
 
@@ -633,15 +713,15 @@ Command-line tools vary a lot, and you will often want to check out their `man` 
 - Possibly destructive tools are generally not recursive by default, but support a “recursive” flag (often `-r`) to make them recurse.
 - Sometimes, you want to pass something that *looks* like a flag as a normal argument. For example, imagine you wanted to remove a file called `-r`. Or you want to run one program “through” another, like `ssh machine foo`, and you want to pass a flag to the “inner” program (`foo`). The special argument `--` makes a program *stop* processing flags and options (things starting with `-`) in what follows, letting you pass things that look like flags without them being interpreted as such: `rm -- -r` or `ssh machine --for-ssh -- foo --for-foo`.
 
-**VPNs**
+##### **VPNs**
 
 [Don't use VPN services.](https://gist.github.com/joepie91/5a9909939e6ce7d09e29)
 
-**Markdown**
+##### **Markdown**
 
 [Markdown](https://commonmark.org/help/)
 
-**Hammerspoon (desktop automation on macOS)**
+##### **Hammerspoon (desktop automation on macOS)**
 
 [Hammerspoon](https://www.hammerspoon.org/) 
 
@@ -661,7 +741,7 @@ resources:
 - [Hammerspoon APIs](http://www.hammerspoon.org/docs/)
 - [Anish’s Hammerspoon config](https://github.com/anishathalye/dotfiles-local/tree/mac/hammerspoon)
 
-**Booting + Live USBs**
+##### **Booting + Live USBs**
 
 When your machine boots up, before the operating system is loaded, the [BIOS](https://en.wikipedia.org/wiki/BIOS)/[UEFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface) initializes the system. During this process, you can press a specific key combination to configure this layer of software. For example, your computer may say something like “Press F9 to configure BIOS. Press F12 to enter boot menu.” during the boot process. You can configure all sorts of hardware-related settings in the BIOS menu. You can also enter the boot menu to boot from an alternate device instead of your hard drive.
 
@@ -669,7 +749,7 @@ When your machine boots up, before the operating system is loaded, the [BIOS](ht
 
 Live USBs are useful for all sorts of purposes. Among other things, if you break your existing operating system installation so that it no longer boots, you can use a live USB to recover data or fix the operating system.
 
-**Docker, Vagrant, VMs, Cloud, OpenStack**
+##### **Docker, Vagrant, VMs, Cloud, OpenStack**
 
 docker和VM的区别：docker运行的时候和host共享kernel，在Linux中用LXC机制，利用一系列isolation机制spin up a program that thinks it’s running on its own hardware but it’s actually sharing the hardware and kernel with the host
 
@@ -677,11 +757,11 @@ docker和VM的区别：docker运行的时候和host共享kernel，在Linux中用
 
 Popular services include [Amazon AWS](https://aws.amazon.com/), [Google Cloud](https://cloud.google.com/), and [DigitalOcean](https://www.digitalocean.com/).
 
-**Notebook programming**
+##### **Notebook programming**
 
 [Notebook programming environments](https://en.wikipedia.org/wiki/Notebook_interface) can be really handy for doing certain types of interactive or exploratory development. Perhaps the most popular notebook programming environment today is [Jupyter](https://jupyter.org/), for Python (and several other languages). [Wolfram Mathematica](https://www.wolfram.com/mathematica/) is another notebook programming environment that’s great for doing math-oriented programming.
 
-**Q&A**
+##### **Q&A**
 
 [Writing an OS in Rust](https://os.phil-opp.com/)
 
@@ -723,6 +803,8 @@ shopt expand_aliases # show current status
 ```
 
 * apt
+  * 坑：krb5在docker中安装 https://askubuntu.com/questions/1017999/install-kerberos-client-without-interactive-session
+  * -y：静默模式
 ```shell
 sudo apt update # 更新源
 sudo apt dist-upgrage
@@ -938,19 +1020,53 @@ nohup python -u main.py > name.log 2>&1 & echo $! > run.pid
   * `pandoc test1.md -f markdown -t html -s -o test1.html
   `
   * `pandoc -s --toc -c pandoc.css -A footer.html MANUAL.txt -o example3.html`
+  
 * pbcopy: 复制到剪贴板 `pbcopy < file`
+
 * pgrep: 配合jobs
   * `pgrep -f 100` 全命令行匹配
+  
 * ping
+
 * pip
-  * `pip install package==` 显示可安装的版本
+  * pip list
+  
+  * pip show requests
+  
+  * ```Bash
+    pip uninstall requests
+    ```
+  
+  * ```Bash
+    pip freeze > requirements.txt
+    ```
+  
+  * ```shell
+    python -m ensurepip --upgrade # 如果损坏
+    pip install /path/to/package #安装一个本地的Python包
+    pip install package== 显示可安装的版本
+    pip install -r requirements.txt #从requirements.txt文件中安装包
+    pip cache purge #清理缓存
+    pip install package_name==version_number #安装指定版本的包
+    pip install --upgrade package_name #升级已安装的包
+    pip install --user package_name #这将在用户的本地目录中安装该库
+    pip install --no-dependencies package_name #安装名为xx的Python包但忽略其依赖项
+    pip install --find-links=URL package_name #从指定的URL中找到并安装名为"myproject的Python包
+    ```
+  
 * pkill = pgrep + kill
-  *`pkill -9 -f 100` 
+
+  * `pkill -9 -f 100` 
+
 * pmap: Displays the memory map of a process.
+
 * ps aux
+
 * pstree
+
 * pushd: 目录栈，方便切换目录
   * 配合popd
+
 * pwd: print cwd
 #### q
 #### r

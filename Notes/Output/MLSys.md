@@ -470,7 +470,17 @@ for prediction, label, img in zip(p,l,i):
   * Using Debugger for iterative model pruning
     * Many types of pruning techniques are known, for example, structured versus unstructured prun-ing, randomly removing weights versus removing by size or rank, and iterative pruning versus one-shot pruning (Blalock et al., 2018). In case of CNNs, iterative filter pruning is known to achieve state of the art results
 
+### LLM — MLSys
 
+#### 基础技术
+
+* KV cache
+  * LLM模型预测的时候使用的是KV cache的技术，也就是缓存已经推理出的前t-1个token的KV matrix，那么在第t个token开始就无需再计算这部分KV，直接调用缓存的KV就可以。具体而言，整个MHA在casual mask下，可以表示为： $ <img src="https://www.zhihu.com/equation?tex=Logit_%7Bt_h%7D%20%3D%20%5Csum_%7Bi%20%5Cleq%20t%7Dsoftmax%28%5Cfrac%7BQ_%7Bt_h%7DK%5ET_%7Bi_h%7D%7D%7B%5Csqrt%20d%7D%29V_%7Bi_h%7D" alt="Logit_{t_h} = \sum_{i \leq t}softmax(\frac{Q_{t_h}K^T_{i_h}}{\sqrt d})V_{i_h}" class="ee_img tr_noresize" eeimg="1"> $,因此预测第t个token的时候，query的multi head（h表示）需要重新计算，以及第t个key和query的multi head（h表示）表示需要重新计算，其余的就可以直接用预测t-1个token缓存的KV进行计算。整体上会大大节省预测时间。附：但是这部分的KV需要占用GPU缓存，而大模型中缓存占用过多，会导致预测的时候Batch size过小，那么整体的预测吞吐率会降低，所以后续很多工作都在对于KV cache做优化。
+
+#### 论文
+
+* [ByteDance] MegaScale: Scaling Large Language Model Training to More Than 10,000 GPUs 
+  * https://arxiv.org/pdf/2402.15627
 
 ### Other MLSys
 

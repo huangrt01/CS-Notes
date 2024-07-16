@@ -1,79 +1,19 @@
 [toc]
 
-### docker
+### ansible
 
-* [docker container run](https://phoenixnap.com/kb/docker-run-command-with-examples)
-  * [docker build and run](https://www.freecodecamp.org/news/docker-easy-as-build-run-done-e174cc452599/)
-  * [network模式](https://loocode.com/post/docker-network-ru-men-yong-fa)
-    * host/none/bridge
-    * `docker inspect bridge`
-    * `-P`选项Docker会把Dockerfile中的通过EXPOSE指令或`--expose`选项暴露的端口随机映射到临时端口
+* Ansible 是一种自动化工具，它基于 SSH（Secure Shell）协议来实现系统配置和管理。下面是关于 Ansible 基于 SSH 协议的解释和理解：
+  * 远程执行：Ansible 使用 SSH 协议与远程主机进行通信，通过在远程主机上执行命令和任务来实现自动化配置和管理。SSH 是一种安全的远程登录协议，它提供了加密的通信通道，确保数据的机密性和完整性。
+  * 无需代理：与其他自动化工具不同，Ansible 不需要在远程主机上安装和配置任何额外的代理程序或客户端。它利用 SSH 协议本身的功能，直接与目标主机进行通信，并执行所需的操作。这简化了部署和管理过程，减少了对目标主机的依赖性和配置要求。
+  * 无需持久连接：Ansible 采用基于 SSH 的无需持久连接的模型。这意味着 Ansible 在执行任务时，会建立一个临时的 SSH 连接到远程主机上，执行任务后立即断开连接。这种模型避免了长时间保持连接的开销和管理复杂性，并提供了更好的灵活性和可伸缩性。
+  * 身份验证和授权：SSH 协议提供了多种身份验证方法，包括密码、公钥和证书等。Ansible 可以利用这些身份验证方法来连接和认证远程主机。此外，Ansible 还支持使用 SSH Agent 来管理和传递身份验证凭据，以提供更便捷和安全的身份验证方式。
+  * 并行执行：Ansible 基于 SSH 协议实现了高度并行的任务执行。它可以同时与多个远程主机建立 SSH 连接，并在这些主机上并行执行任务，从而提高执行效率和速度。
 
-```shell
-docker ps -a
-docker cp 254eee:/path/result.pdf .
+* 总结起来，Ansible 基于 SSH 协议使得远程主机之间的自动化配置和管理变得简单、安全和高效。它利用 SSH 的加密通信和身份验证机制，无需额外的代理程序，实现了远程主机的批量操作和任务执行。
 
-docker run -it -u `id -u`:`id -g` -v /home/ <img src="https://www.zhihu.com/equation?tex=%28whoami%29%3A/home/" alt="(whoami):/home/" class="ee_img tr_noresize" eeimg="1"> (whoami) my_image /bin/bash
-# -d 后台运行
-# -i 以交互模式运行容器，通常与 -t 同时使用
-# -t 为容器重新分配一个伪输入终端，通常与 -i 同时使用
-# -u 表示映射账户
-# -w 指定工作目录
-# -v /宿主机目录:/容器目录   表示映射磁盘目录，映射的目录才会共享（将宿主机目录挂载到容器里），这里选择把user账户所有内容都映射
-# --network=host/none/bridge
+* jinja2(j2)语法
+  * https://ansible.leops.cn/basic/Jinja2/
 
-docker container run --name $(whoami)_workspace_xxx ...
-
-docker container ls -a
-# exec进入容器
-sudo docker exec -it [-w $(pwd)] 34d2b0644938 /bin/bash
-# 如果容器已经停止，需要先启动再进入
-sudo docker start 34d2b0644938
-# Docker 里没有 sudo组，如果需要在 docker 里安装程序，可以先使用 root 账户进入容器
-sudo docker exec -it [-w $(pwd)] 34d2b0644938 /bin/bash -u root 
-```
-
-* rm docker
-
-```shell
-docker stop XXX
-docker rm XXX
-```
-
-* 添加 docker 权限给当前用户 ，使 docker 命令免 sudo
-  * [Ref](https://docs.docker.com/engine/install/linux-postinstall/)
-
-```shell
-# setup non-root docker
-sudo groupadd docker
-sudo usermod -aG docker $USER # add your own username, or others for them.
-
-# activate the changes to user group
-newgrp docker
-# verify you can run docker without root
-docker run hello-world
-
-```
-
-* Change docker's data-root into a bigger disk partition
-
-```shell
-sudo su # switch to root
-vi /etc/docker/daemon.json
-
-# copy
-{
-    "insecure-registries": [" <img src="https://www.zhihu.com/equation?tex=url%22%2C%20%22" alt="url", "" class="ee_img tr_noresize" eeimg="1"> url:$port"],
-    "live-restore": true,
-    "data-root": "/opt/docker" // in most cases /opt is mounted at something like /data00 which is a much bigger partition
-}
-
-mkdir -p /opt/docker # in most cases /opt is mounted at something like /data00 which is a much bigger partition
-systemctl restart docker
-```
-
-* mount
-  * `--mount type=bind,source= <img src="https://www.zhihu.com/equation?tex=HOME/.cache%2Ctarget%3D/home/" alt="HOME/.cache,target=/home/" class="ee_img tr_noresize" eeimg="1"> (whoami)/.cache`
 
 ### log4j
 
@@ -133,6 +73,22 @@ log4j.appender.Access.layout.ConversionPattern=%p %d{yyyy-MM-dd HH:mm:ss} %F:%L 
 ### glog
 
 https://github.com/google/glog
+
+
+
+### grpc
+
+* debug
+
+```python
+os.environ['GRPC_VERBOSITY'] = 'DEBUG'
+os.environ['GRPC_TRACE'] = 'all'
+```
+
+* 坑
+  * failed to pick subchannel
+    * https://github.com/grpc/grpc/issues/23340
+    * https://stackoverflow.com/questions/69444526/python-grpc-failed-to-pick-subchannel
 
 ### gtest
 
@@ -418,7 +374,31 @@ Hadoop Shell 命令：https://hadoop.apache.org/docs/r1.0.4/cn/hdfs_shell.html
 
 ```shell
 hadoop fs -test -e filename
+
+hadoop fs -ls -h
+hadoop fs -ls hdfs://abc/def/*/*/models/*/model.pb # 可匹配
+
+hadoop fs -du -h
+hadoop fs -get ... .
+-mkdir
+-cp
+
+hadoop fs -copyToLocal <HDFS文件路径> <本地文件路径>
 ```
+
+* 设置 JVM 的最大堆内存限制
+
+```
+LIBHDFS_OPTS = [
+        os.environ.get('HADOOP_ROOT_LOGGER',
+                       '-Dhadoop.root.logger=WARN,console'), "-Xmx4096m"
+    ]
+os.environ["LIBHDFS_OPTS"] = ' '.join(LIBHDFS_OPTS)
+```
+
+### Redis
+
+* [redis.clients.jedis.exceptions.JedisClusterException: CLUSTERDOWN The cluster is down](https://github.com/redis/jedis/issues/2144#top)
 
 ### thrift
 
