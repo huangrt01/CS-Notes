@@ -1,15 +1,25 @@
 import logging
+
 def init_logging(log_file):
     fmt = '%(asctime)-15s %(filename)s:%(lineno)s %(levelname)s %(message)s'
-    logging.basicConfig(filename=log_file,
-                        level=logging.DEBUG,
-                        format=fmt,
-                        datefmt='%Y-%m-%d %H:%M:%S')
+
+    rotating_handler = logging.handlers.RotatingFileHandler(log_file,
+                                                            maxBytes=10 *
+                                                            1024 * 1024,
+                                                            backupCount=5)
+    rotating_handler.setLevel(logging.DEBUG)
+    rotating_handler.setFormatter(
+        logging.Formatter(fmt=fmt, datefmt='%Y-%m-%d %H:%M:%S'))
+
     stream_handler = logging.StreamHandler()
-    formatter = logging.Formatter(fmt=fmt)
-    stream_handler.setFormatter(formatter)
     stream_handler.setLevel(logging.INFO)
-    logging.getLogger().addHandler(stream_handler)
+    stream_handler.setFormatter(
+        logging.Formatter(fmt=fmt, datefmt='%Y-%m-%d %H:%M:%S'))
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(rotating_handler)
+    logger.addHandler(stream_handler)
 
 
 if __name__ == '__main__':

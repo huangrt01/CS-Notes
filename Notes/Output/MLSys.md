@@ -2,6 +2,10 @@
 
 plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, HugeCTR, DALI
 
+### 资料搜集
+
+* RecSys2024 https://recsys.acm.org/recsys24/accepted-contributions/
+
 ### Introduction
 
 * 100TB model = 50万亿参数
@@ -470,7 +474,7 @@ for prediction, label, img in zip(p,l,i):
   * Using Debugger for iterative model pruning
     * Many types of pruning techniques are known, for example, structured versus unstructured prun-ing, randomly removing weights versus removing by size or rank, and iterative pruning versus one-shot pruning (Blalock et al., 2018). In case of CNNs, iterative filter pruning is known to achieve state of the art results
 
-### LLM — MLSys
+### LLM MLSys
 
 #### 基础技术
 
@@ -481,6 +485,90 @@ for prediction, label, img in zip(p,l,i):
 
 * [ByteDance] MegaScale: Scaling Large Language Model Training to More Than 10,000 GPUs 
   * https://arxiv.org/pdf/2402.15627
+
+### LLM + Rec/Search MLSys
+
+https://arxiv.org/pdf/2303.13835
+
+
+
+#### [Where to Go Next for Recommender Systems? ID- vs. Modality-based Recommender Models Revisited](https://arxiv.org/pdf/2303.13835)
+
+* 一篇中文科普文章：https://www.163.com/dy/article/J3RIV6RP05566ZHB.html
+  * LLM MLSys比传统RecSys更通用
+    * 传统RecSys涉及的中间件更多、更重
+    * Langchain的调用流程通用性强
+
+![img](https://nimg.ws.126.net/?url=http%3A%2F%2Fdingyue.ws.126.net%2F2024%2F0604%2F94c56fc3j00sejlo6001bd200u000klg00hx00ca.jpg&thumbnail=660x2147483647&quality=80&type=jpg)
+
+
+
+#### [马坚鑫 阿里M6团队 MLNLP2023大模型与推荐系统论坛](https://www.bilibili.com/video/BV17u4y1N7zY)
+
+* Qwen LLM介绍
+
+  * 7B开源模型
+  * ReAct prompting
+    * 技巧：处理多轮问答上下文，将ReAct prompting贴在倒数第二个回答前面，而不是最后一个问题前，有助于模型理解上下文
+  * 如何训练Agent能力
+    * AI aligns AI
+      * Step 0: 少量高质量数据，用作SFT和in-context examples
+      * Step 1: self-instruct，即通过in-context prompt生成更多样本
+      * Step 2: 规则处理，人工审核，（可选）人工改正
+      * Step 3: 循环 Step 1-2
+
+* LLM在RecSys的价值 —— 从生产者、平台、消费者视角
+
+  * ![image-20240719185430334](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/llm-rec-text.png)
+
+  * LLM + RecSys 有益于内容生产者
+
+    * 核心诉求：流量，尤其是新内容的冷启动
+    * ![image-20240719185656541](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/llm-recsys-1.png)
+
+    * ali结果：小模型、少量样本、冷启动优秀
+
+  * LLM + RecSys有益于推荐平台
+
+    * 核心诉求：算法支持平台的运营企划
+    * 时事热点：加快对事件的响应速度
+      * 快中秋了 -> 推荐月饼，无需从行为学习
+    * 人工干预：基于LLM的customized instruction/system prompt
+
+  * LLM + RecSys有益于内容消费者
+
+    * 推荐理由
+    * 用户反馈
+    * 导购、对话式推荐
+
+* RecSys对LLM的挑战
+
+  * 推理成本
+    * 硬件
+    * 工程：缓存；投机采样
+    * 算法：大模型+小模型+规则；放弃通用；Linear Attn
+      * e.g. GPT做数学题非常消耗token（CoT），但调用工具很轻量
+    * UI/UX：好的产品设计能避开缺陷
+      * e.g. chatGPT流式输出，巧妙地让生成长文的耗时可接受
+
+* 模型结构尝试：
+
+  * 延迟交互（late interaction）
+    * 把浅层的cross attention干掉，高层再进行transformer的交互
+
+![image-20240719191437165](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/llm-recsys-2.png)
+
+* 挑战：模型更新 - RecSys每天都有新内容
+  * 检索增强RAG的难点1：新知识易检索，新常识难检索
+    * e.g. 有没有超过GPT-4的大模型
+  * RAG的难点2：检索算法的精度、LLM的长序列支持
+  * 预测：1-2年内会出现LLM的online learning
+
+![image-20240719191754039](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/MLSys/llm-recsys3.png)
+
+
+
+
 
 ### Other MLSys
 

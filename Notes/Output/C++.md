@@ -3142,6 +3142,43 @@ public:
 };
 ```
 
+#### 模版
+
+* Basics
+  * 在C++中，模板函数的定义和声明必须在同一个翻译单元中（通常是一个源文件）。原因在于模板是编译期生成代码的，它们在实例化时需要可见其定义。如果仅在头文件中声明模板函数而不定义，会导致链接错误（例如undefined symbol错误）。
+    * 方案一：将定义放在头文件中
+    * 方案二：定义放在源文件中，头文件中显式实例化
+
+* 模板编程中使用`auto`作为函数参数类型
+
+```c++
+#include <iostream>
+#include <string>
+#include <type_traits>
+
+template <typename F>
+void execute(F func) {
+    func();
+}
+
+int main() {
+    auto void_func = [&](const std::string& name, auto value) {
+        std::cout << "Name: " << name << ", Value: " << value << std::endl;
+    };
+
+    execute([&]() { void_func("Age", 30); });
+    execute([&]() { void_func("Height", 5.9); });
+    execute([&]() { void_func("IsStudent", true); });
+
+    return 0;
+}
+
+auto int_func = [](auto value) {
+    static_assert(std::is_integral<decltype(value)>::value, "Only integral types are allowed");
+    std::cout << "Value: " << value << std::endl;
+};
+```
+
 
 
 

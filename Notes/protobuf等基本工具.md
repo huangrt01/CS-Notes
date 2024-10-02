@@ -2,6 +2,10 @@
 
 ### ansible
 
+```
+ansible $host -u tiger -f 100 -T 60 -mshell -a 'bash -x /path/test.sh'
+```
+
 * Ansible 是一种自动化工具，它基于 SSH（Secure Shell）协议来实现系统配置和管理。下面是关于 Ansible 基于 SSH 协议的解释和理解：
   * 远程执行：Ansible 使用 SSH 协议与远程主机进行通信，通过在远程主机上执行命令和任务来实现自动化配置和管理。SSH 是一种安全的远程登录协议，它提供了加密的通信通道，确保数据的机密性和完整性。
   * 无需代理：与其他自动化工具不同，Ansible 不需要在远程主机上安装和配置任何额外的代理程序或客户端。它利用 SSH 协议本身的功能，直接与目标主机进行通信，并执行所需的操作。这简化了部署和管理过程，减少了对目标主机的依赖性和配置要求。
@@ -13,6 +17,10 @@
 
 * jinja2(j2)语法
   * https://ansible.leops.cn/basic/Jinja2/
+* Issue
+  * “In **non** docker environment, these "left behind" processes are picked up by init process, which is capable of reaping zombies. In docker setup the solution is to add `init: true` into docker-compose, to enable init process inside docker.”
+    * https://github.com/ansible/ansible/issues/49270
+  
 
 
 ### log4j

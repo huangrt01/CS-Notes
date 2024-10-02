@@ -48,6 +48,13 @@ bool(int(str(3))) -> True
 bool(int(str(0))) -> False
 ```
 
+* str类型和unicode类型：
+  * 在 Python 2 中，`u'abc'` 是 `unicode` 类型，而 `str` 是字节字符串。
+    * `instance(u'abc', str)` 返回 `False`，因为它们是不同的类型。
+  * 在 Python 3 中，所有字符串都是 Unicode，因此这种区分不再存在。
+
+
+
 #### 数据结构
 
 ```python
@@ -1101,6 +1108,10 @@ if os.path.exists(curr_path):
 	shutil.rmtree(curr_path)
 ```
 
+#### sqlite
+
+文件型数据库
+
 #### struct
 
 https://docs.python.org/3/library/struct.html
@@ -1140,6 +1151,13 @@ def get_version():
     except Exception as e:
         logging.exception("Error: {}".format(str(e)))
     return
+```
+
+#### warnings
+
+```python
+import warnings
+warnings.simplefilter("ignore")  # 屏蔽 ES 的一些Warnings
 ```
 
 

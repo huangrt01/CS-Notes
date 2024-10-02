@@ -297,6 +297,10 @@
 
 https://github.com/huggingface/peft
 
+### In-context Learning
+
+https://ai.stanford.edu/blog/understanding-incontext/
+
 
 
 ### 幻觉
@@ -341,6 +345,69 @@ https://github.com/huggingface/peft
 * 实现 Copilot 的主流架构是 **多 Agent 架构**
   * 模仿人做事，将业务拆成工作流（workflow、SOP、pipeline）
   * 每个 Agent 负责一个工作流节点
+
+### 产品逻辑
+
+* [有赞的 AI 实践：把决定权交给用户、Copilot 和 Agent 最重要](https://mp.weixin.qq.com/s/ItnXazO86IeGEb7yL-72gg)
+  * AI 对于交互的改变： LUI+GUI 会是未来主流
+    * 乔布斯对人类的两大贡献，一是将电脑引入了图形界面，二是在离世前让苹果的整个用户界面扁平化。扁平化虽然有人认为不够美观，但它的好处是让用户更加聚焦于界面内容，也让产品设计者更加聚焦于如何通过内容与用户互动，而不是修饰那些好看的渐变和边边角角。
+    * CUI，也就是命令式用户界面，不仅允许用户录入文本甚至语音，还会在与用户交互过程中弹出过去的一部分图形界面表现形式，以使用户更容易操作。
+  * 有赞如何落地 AI SaaS： 让用户做最终决策、Copilot最重要
+    * **原则一：要控制模型含量**
+    * **原则二：回到纯文本逻辑思考**
+    * **原则三：能选择就不录入**
+    * **原则四：直接呈现答案，再做解释**
+    * **原则五：给用户交付可用的结果**
+    * **原则六：让人类来按下「回车」键**。 决策不只是「客观」就够了，潜意识、情绪、偏见里面固然有不客观，但是也有梦想、喜欢、爱，有了这些才是完美的决策。
+  * 变现逻辑：
+    * 在有赞的业务中，我们的核心是帮助商家和品牌商进行顾客运营
+    * 现在普遍一个商场店一年的客户复购率在 30% 左右，商场给的自然流量，进来的用户不到四成，每年的生意都会下降 30%。通过线上获得新的流量可能会越来越贵，因为流量就是人，人数不涨，用户时长也不涨，但掌握流量的平台它的财报要涨，肯定会从商家那挤利润。那你怎么办？从平台那获得的流量变贵，复购率也不够，自然流量也不够，那把复购率翻一倍不就好了？
+    * 所以**深度运营消费者是非常划算的一件事**。有赞希望做的，就是帮助商家将复购率翻倍。目前我们的产品线已经覆盖到内容营销、消费者运营、导购运营、交易转化、线上交易转化、门店管理、进销存收银的门店数字化等环节。
+      * 导购对连锁门店老顾客的运营
+  * AI助力
+    * **第一是 Copilot，就是助手**。它能够帮助客户快速地使用产品，更好地使用产品。
+    * **第二是 Agent，自动化的能力**。自动化的发报告，自动化的预警，自动化的去完成很多事情。例如，商家可以设置库存促销规则，如还有 500 件库存时打 5 折，剩下 200 件时打 6 折，以此类推。那么用户就不需要时刻盯着去改库存，因为这些事情都可以通过自动化来完成。
+    * **第三是 Insight，洞察建议能力**。它能够总结周报，告诉你做得好不好，给你建议，你可以怎么改善。
+    * **第四是 AIGC，生成创意的能力**。生成营销文案，优化商品标题，设计营销推广海报，优化商品图片等等。
+  * AI + SaaS
+    * SaaS 有两个非常重要的特点，一个是可以在线热更新，不像单机版软件，需要重新安装才能更新；另一个是因为它是在线服务，所以会有多个用户同时使用，而不是只有一个用户使用单机版软件。因此，SaaS 面临着一个宿命，就是**必须不断地进行个性化定制，因为每个用户都觉得自己与众不同**。尤其是在中国，整个职业化体系和商业化体系还没有成熟，每个企业都觉得自己很了不起，都有自己独特的基因和个性化的需求。
+    * **每增加一个功能，只能服务不到 5% 的用户，却会骚扰 95% 的用户**。
+    * 一方面，如果你打开有赞给商家提供的后台，比如新零售的 CRM、导购助手或者有赞微商城的商家后台，会发现里面有几千上万个功能。我们现在的设计思路是，通过左边的导航地图，让你找到最常用和最需要的功能。另一方面，你可以唤起一个叫做智能助手的东西，通过命令式对话告诉它你想干什么，它可以一键直达某个功能，或者一键直接帮你执行你想要的自动化任务和操作。
+    * **SaaS 业务的运营，其实就是在运营最佳实践的总结、传播，或者说是把最佳实践做成产品**
+  * AI + 企业管理
+    * 今年，我们把公司的角色分成两类，一类叫直接生产力，另一类叫非直接生产力。直接生产力是指直接面对用户的人员，包括客服、交付的客户成功、销售等。我们还规定，每 10 个直接生产力需要有一个直接生产力的运营人员。这些运营人员的职责是总结一线直接生产力面对客户时的最佳实践和最佳发现，这些最佳实践和最佳发现是最好的语料
+    * 未来，有赞将从一个研发软件、销售软件的公司，变成一个给商家提供智能化消费者运营系统的公司，并从一个软件公司变成一个运营商，通过运营这套智能化系统，让直接生产力在一线看到的所有最佳实践和最佳总结变成语料来训练系统，使系统越来越懂用户，更好地传播最佳实践。这就是我们的核心思路。
+
+
+
+* [How to build an enterprise LLM application: Lessons from GitHub Copilot](https://github.blog/2023-09-06-how-to-build-an-enterprise-llm-application-lessons-from-github-copilot/)。这篇文章描述了 GitHub Copilot 的产品打造哲学
+
+  * **Find it:** Identify an impactful problem space for your LLM application
+
+    * the “whole function” level  <- **Balance product ambition with quality**
+
+  * **Nail it:** Create a smooth AI product experience
+
+    * “**We have to design apps not only for models whose outputs need evaluation by humans, but also for humans who are learning how to interact with AI.**”
+    * “[dogfooding](https://www.nytimes.com/2022/11/14/business/dogfooding.html)” products before—and after—they’re released
+    * 核心指标：acceptance rates、code retention rate
+    * **Evaluate your testing tools**.
+    * **Make a habit of revisiting old ideas**
+    * **Avoid the sunk cost fallacy**.
+
+  * **Scale it:** Get your LLM application ready and useable for general availability (GA)
+
+    * **Ensure consistent results**.
+      * 降低LLM随机性、cache result
+
+    * **Take advantage of real user feedback**
+      * a new guardrail metric—the percentage of suggestions that are multi-line vs. single line
+    * 安全和信任
+      * the GitHub Copilot team created a filter to block suggestions matching public source code in GitHub public repositories that were longer than 150 characters.
+      *  [code reference tool](https://github.blog/2023-08-03-introducing-code-referencing-for-github-copilot/)
+    * Develop a go-to-market strategy
+      * **Launch your product with product evangelists**
+      * **Get your product in front of individual users before going after businesses**
 
 ### App
 
@@ -493,7 +560,7 @@ https://github.com/huggingface/peft
 * Notes
   * “准备测试数据“容易被忽略
 
-### 大模型选型
+### 大模型技术选型
 
 * 基础模型选型，合规和安全是首要考量因素。
 
@@ -516,6 +583,31 @@ https://github.com/huggingface/peft
   * 榜单已被应试教育污染。唯一值得相信的榜单：[LMSYS Chatbot Arena Leaderboard](https://chat.lmsys.org/?leaderboard)
   * 榜单体现的是整体能力。放到一件具体事情上，排名低的可能反倒更好
   * 榜单体现不出成本差异
+* **GPTs 现状：**
+  * 界面不可定制，不能集成进自己的产品
+  * 只有 ChatGPT Plus/Team/Enterprise 用户才能访问
+  * 未来开发者可以根据使用量获得报酬，北美先开始
+  * 承诺会推出 Team/Enterprise 版的组织内部专属 GPTs
+
+* **适合使用 Assistants API 的场景：**
+  * 定制界面，或和自己的产品集成
+  * 需要传大量文件
+  * 服务国外用户，或国内 B 端客户
+  * 数据保密性要求不高
+  * 不差钱
+
+* **适合使用原生 API 的场景：**
+  * 需要极致调优
+  * 追求性价比
+  * 服务国外用户，或国内 B 端客户
+  * 数据保密性要求不高
+
+* **适合使用国产或开源大模型的场景：**
+  * 服务国内用户
+  * 数据保密性要求高
+  * 压缩长期成本
+  * 需要极致调优
+
 * Notes
   * 国产大模型在 agent和function calling方面表现一般，明显不如OpenAI
 
@@ -656,6 +748,9 @@ print(response.choices[0].message.content)
 ```
 
 
+
+* issues
+  * 如果http client卡了，httpcore==1.0.3
 
 
 
@@ -989,7 +1084,6 @@ Assistant：
     * CLI->GUI->CUI (Conversational User Interface) -> BCI (Brain–Computer Interface)
   * API: 本质是程序员的约定
   * 新理念：自然语言连接一切（Natural Language Interface）
-
 * 思路：大模型连接世界
   * <b>大模型两大缺陷：</b>
     * 并非知晓一切
@@ -1000,15 +1094,20 @@ Assistant：
         * GPT-4o 知识截至 2023 年 10 月
       * 「灾难性遗忘」现象
     * 没有「真逻辑」。它表现出的逻辑、推理，是训练文本的统计规律，而不是真正的逻辑，所以有幻觉。
+* FC和Agent关系：
+  * 大模型的Agent能力实现了FC
+  
 * 有这类无需开发的工具，为什么还要学大模型开发技术呢？
   * 并不是所有事情都适合用对话解决
   * 它们都无法针对业务需求做极致调优
   * 它们和其它业务系统的集成不是特别方便
-* 函数与参数的描述也是一种 Prompt，需要调优
-* 函数声明是消耗 token 的。要在功能覆盖、省钱、节约上下文窗口之间找到最佳平衡
-* Function Calling 不仅可以调用读函数，也能调用写函数。但 https://platform.openai.com/docs/guides/function-calling/introduction 官方强烈建议，在写之前，一定要有真人做确认
-* 实现稳定的 FC 能力，难度挺大。需要模型推理能力强，格式控制能力强，以及有好的中间层
-  * 国产大模型24年基本都支持了
+* Note
+  * 函数与参数的描述也是一种 Prompt，需要调优
+  * 函数声明是消耗 token 的。要在功能覆盖、省钱、节约上下文窗口之间找到最佳平衡
+  * Function Calling 不仅可以调用读函数，也能调用写函数。但 https://platform.openai.com/docs/guides/function-calling/introduction 官方强烈建议，在写之前，一定要有真人做确认
+  * 实现稳定的 FC 能力，难度挺大。需要模型推理能力强，格式控制能力强，以及有好的中间层
+    * 国产大模型24年基本都支持了
+
 
 ### Actions
 
@@ -1173,6 +1272,800 @@ def get_sql_completion(messages, model="gpt-3.5-turbo"):
   * [《Wolfram|Alpha as the Way to Bring Computational Knowledge Superpowers to ChatGPT》](https://writings.stephenwolfram.com/2023/01/wolframalpha-as-the-way-to-bring-computational-knowledge-superpowers-to-chatgpt/)
     * the concept of [computational irreducibility](https://www.wolframscience.com/nks/chap-12--the-principle-of-computational-equivalence#sect-12-6--computational-irreducibility)
 
+## RAG
+
+### Basics
+
+* RAG（Retrieval Augmented Generation）顾名思义，通过***\*检索\****的方法来增强***\*生成模型\****的能力。
+
+![image-20240923003438170](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/rag.png)
+
+* 搭建过程：
+  * 文档加载，并按一定条件**切割**成片段
+  * 将切割的文本片段灌入**检索引擎**
+  * 封装**检索接口**
+  * 构建**调用流程**：Query -> 检索 -> Prompt -> LLM -> 回复
+* 离线步骤：
+  1. 文档加载
+  2. 文档切分
+  3. 向量化
+  4. 灌入向量数据库
+- 在线步骤：
+  1. 获得用户问题
+  2. 用户问题向量化
+  3. 检索向量数据库
+  4. 将检索结果和用户问题填入 Prompt 模版
+  5. 用最终获得的 Prompt 调用 LLM
+  6. 由 LLM 生成回复
+
+### 检索
+
+#### 关键字检索
+
+* Elastic Search
+  * Elasticsearch（简称ES）是一个广泛应用的开源搜索引擎: https://www.elastic.co/
+  * 关于ES的安装、部署等知识，网上可以找到大量资料，例如: https://juejin.cn/post/7104875268166123528
+  * 关于经典信息检索技术的更多细节，可以参考: https://nlp.stanford.edu/IR-book/information-retrieval-book.html
+* **关键字检索的局限性**
+  * 同一个语义，用词不同，可能导致检索不到有效的结果
+
+#### 向量检索
+
+* Text Embeddings
+  * **语义相似度**：向量之间距离
+    * 欧氏距离
+    * 余弦距离
+* 向量数据库
+  * 与传统的关系型数据库是互补的
+* 主流向量数据库性能对比：
+  * FAISS: Meta 开源的向量检索引擎 https://github.com/facebookresearch/faiss
+  - Pinecone: 商用向量数据库，只有云服务 https://www.pinecone.io/
+  * **Milvus**: 开源向量数据库，同时有云服务 https://milvus.io/
+    * 性能优化较多
+  * Weaviate: 开源向量数据库，同时有云服务 https://weaviate.io/
+  * Qdrant: 开源向量数据库，同时有云服务 https://qdrant.tech/
+  * PGVector: Postgres 的开源向量检索引擎 https://github.com/pgvector/pgvector
+  * RediSearch: Redis 的开源向量检索引擎 https://github.com/RediSearch/RediSearch
+  * ElasticSearch 也支持向量检索 https://www.elastic.co/enterprise-search/vector-search
+
+![vectordb](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/vectordb.png)
+
+### Embedding模型
+
+* 向量模型怎么训练：
+
+  * 构建相关（正例）与不相关（负例）的句子对儿样本
+
+  * 训练双塔式模型，让正例间的距离小，负例间的距离大
+
+  * https://www.sbert.net/
+
+* OpenAI 新发布的两个 Embedding 模型
+  * text-embedding-3-large、text-embedding-3-small
+  * 特点：**越大越准、越小越快**
+    * 支持自定义的缩短向量维度，从而在几乎不影响最终效果的情况下降低向量检索与相似度计算的复杂度
+    * 计算时用前N维
+  * 可变长度的 Embedding 技术：
+    * https://arxiv.org/abs/2205.13147 Matryoshka Representation Learning
+  * ![mteb](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/mteb.png)
+
+* 开源库：
+  * https://github.com/FlagOpen/FlagEmbedding
+
+* Note：
+  * 可能支持跨语言
+
+### 算法进阶
+
+*  [text chunking](https://www.google.com/search?q=rag+text+chunking&tbm=isch&ved=2ahUKEwi7kqzi08CCAxUJaPUHHbcEB5IQ2-cCegQIABAA&oq=rag+text+chunking&gs_lcp=CgNpbWcQAzoGCAAQCBAeOgcIABATEIAEOggIABAHEB4QEzoICAAQCBAeEBM6BggAEAcQHjoICAAQCBAHEB46BwgAEIoFEEM6BQgAEIAEOgYIABAFEB46BAgAEB46BwgAEBgQgARQqQVYtyhghipoAXAAeACAAVaIAcwMkgECMjGYAQCgAQGqAQtnd3Mtd2l6LWltZ8ABAQ&sclient=img&ei=RutRZbvXOInQ1e8Pt4mckAk&bih=1582&biw=1504&hl=en-US), [query expansion](https://www.google.com/search?q=query+expansion+rag&tbm=isch&ved=2ahUKEwiW_uve08CCAxXtbPUHHSZyCyEQ2-cCegQIABAA&oq=query+expansion+rag&gs_lcp=CgNpbWcQAzoHCAAQGBCABFDHAljTBWD1BmgAcAB4AIABY4gBuAKSAQE0mAEAoAEBqgELZ3dzLXdpei1pbWfAAQE&sclient=img&ei=P-tRZdbiI-3Z1e8PpuStiAI&bih=1582&biw=1504&hl=en-US), [hybrid search](https://www.google.com/search?q=rag+hybrid+search&tbm=isch&ved=2ahUKEwiwh9Tu08CCAxW6efUHHQxnD_sQ2-cCegQIABAA&oq=rag+hybrid+search&gs_lcp=CgNpbWcQAzIHCAAQGBCABDoHCAAQigUQQzoFCAAQgAQ6BggAEAgQHjoJCAAQGBCABBAKUJ4YWMsqYMAsaABwAHgAgAFXiAGRCJIBAjE0mAEAoAEBqgELZ3dzLXdpei1pbWfAAQE&sclient=img&ei=YOtRZbDXLbrz1e8PjM692A8&bih=1582&biw=1504&hl=en-US), [knowledge graph](https://www.google.com/search?q=rag+knowledge+graph&sca_esv=581867933&tbm=isch&source=lnms&sa=X&ved=2ahUKEwj4pt-a1sCCAxUYl1YBHd3rDU0Q_AUoAXoECAMQAw&biw=1504&bih=1582&dpr=2), [reranking](https://www.google.com/search?q=rag+reranking&tbm=isch&ved=2ahUKEwjlw7H608CCAxXMcPUHHcWkBhEQ2-cCegQIABAA&oq=rag+reranking&gs_lcp=CgNpbWcQAzIJCAAQGBCABBAKOgcIABAYEIAEOgcIABCKBRBDOgUIABCABFCyFVjNHmDvH2gAcAB4AIABWYgB-wWSAQIxMJgBAKABAaoBC2d3cy13aXotaW1nwAEB&sclient=img&ei=eetRZaWjFczh1e8PxcmaiAE&bih=1582&biw=1504&hl=en-US)
+
+* 文本分割的粒度
+  * 缺陷
+    * 粒度太大可能导致检索不精准，粒度太小可能导致信息不全面
+      * 比如切分自然段，粒度太大
+    * 问题的答案可能跨越两个片段
+  * 改进: 按一定粒度，部分重叠式的切割文本，使上下文更完整
+
+* 检索后排序
+  * 问题: 有时，最合适的答案不一定排在检索的最前面
+  * 方案:
+    * 检索时过招回一部分文本
+    * 通过一个排序模型对 query 和 document 重新打分排序
+  * 一些 Rerank 的 API 服务
+    * [Cohere Rerank](https://cohere.com/rerank)：支持多语言
+    * [Jina Rerank](https://jina.ai/reranker/)：目前只支持英文
+
+![sbert-rerank](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/sbert-rerank.png)
+
+* **混合检索（Hybrid Search）**
+  * 参考 「LLM + Search」
+  * 很多向量数据库都支持混合检索，比如 [Weaviate](https://weaviate.io/blog/hybrid-search-explained)、[Pinecone](https://www.pinecone.io/learn/hybrid-search-intro/) 等。也可以根据上述原理自己实现。
+
+* RAG Fusion
+
+![rag-fusion](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/rag-fusion.jpeg)
+
+*  [query rewriting and query expansion](https://www.google.com/search/howsearchworks/how-search-works/ranking-results/#meaning)
+* PDF中的表格如何处理
+  * TableTransformer模型 + GPT-4V
+    * TableTransformer找到表格
+    * 用 GPT-4 Vision 生成表格（图像）描述，并向量化用于检索
+  * 一些面向 RAG 的文档解析辅助工具
+
+    - [PyMuPDF](https://pymupdf.readthedocs.io/en/latest/): PDF 文件处理基础库，带有基于规则的表格与图像抽取（不准）
+    - [RAGFlow](https://github.com/infiniflow/ragflow): 一款基于深度文档理解构建的开源 RAG 引擎，支持多种文档格式
+    - [Unstructured.io](https://unstructured.io/): 一个开源+SaaS形式的文档解析库，支持多种文档格式
+    - [LlamaParse](https://docs.llamaindex.ai/en/stable/llama_cloud/llama_parse/)：付费 API 服务，由 LlamaIndex 官方提供，解析不保证100%准确，实测偶有文字丢失或错位发生
+    - [Mathpix](https://mathpix.com/)：付费 API 服务，效果较好，可解析段落结构、表格、公式等，贵！
+
+
+![table_rag](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/table_rag.png)
+
+![https://storage.googleapis.com/gweb-cloudblog-publish/images/15._document_processing.max-1100x1100.png](https://storage.googleapis.com/gweb-cloudblog-publish/images/15._document_processing.max-1100x1100.png)
+
+## Assistants API
+
+### Basics
+
+* 可操控性和易用性之间的权衡与折中：
+
+  1. 更多技术路线选择：原生 API、GPTs 和 Assistants API
+  2. GPTs 的示范，起到教育客户的作用，有助于打开市场
+  3. 要更大自由度，需要用 Assistants API 开发
+  4. 想极致调优，还得原生 API + RAG
+  5. 国内大模型的 Assistants API，参考 [Minimax](https://www.minimaxi.com/document/guides/Assistants/operate?id=6586b8674da4834fd75906e7)
+* 已有能力：
+
+  1. 创建和管理 assistant，每个 assistant 有独立的配置
+  2. **支持无限长的多轮对话**，对话历史保存在 OpenAI 的服务器上
+  3. 通过自有向量数据库支持基于文件的 RAG
+  4. 支持 Code Interpreter
+     1. 在沙箱里编写并运行 Python 代码
+     2. 自我修正代码
+     3. 可传文件给 Code Interpreter
+  5. 支持 Function Calling
+  6. 支持在线调试的 Playground
+
+* 承诺未来会有的能力：
+  * 支持 DALL·E
+  * 支持图片消息
+  * 支持自定义调整 RAG 的配置项
+* 收费：
+  1. 按 token 收费。无论多轮对话，还是 RAG，所有都按实际消耗的 token 收费
+  2. 如果对话历史过多超过大模型上下文窗口，会自动放弃最老的对话消息
+  3. 文件按数据大小和存放时长收费。1 GB 向量存储 一天收费 0.10 美元
+  4. Code interpreter 跑一次 $0.03
+
+### Assistants API
+
+```python
+from openai import OpenAI
+
+# 初始化 OpenAI 服务
+client = OpenAI()
+
+# 创建助手
+assistant = client.beta.assistants.create(
+    name="AGIClass Demo TempLive",
+    instructions="你叫瓜瓜，你是xx课堂的智能助理。你负责回答与xx课堂有关的问题。",
+    model="gpt-4o",
+)
+
+print(assistant.id)
+```
+
+* 管理thread
+  * Threads 里保存的是对话历史，即 messages
+  * 一个 assistant 可以有多个 thread
+  * 一个 thread 可以有无限条 message
+  * 一个用户与 assistant 的多轮对话历史可以维护在一个 thread 里
+
+```python
+thread = client.beta.threads.create(
+    metadata={"fullname": "wang", "username": "w", message=...}
+)
+
+thread = client.beta.threads.retrieve(thread.id)
+
+message = client.beta.threads.messages.create(
+    thread_id=thread.id,  # message 必须归属于一个 thread
+    role="user",          # 取值是 user 或者 assistant。但 assistant 消息会被自动加入，我们一般不需要自己构造
+    content="你都能做什么？",
+)
+```
+
+* thread的其它功能：
+  *  `threads.modify()` 修改 thread 的 `metadata` 和 `tool_resources`
+  *  `threads.delete()` 删除 thread。
+  *  `threads.messages.retrieve()` 获取 message
+  *  `threads.messages.update()` 更新 message 的 `metadata`
+  *  `threads.messages.list()` 列出给定 thread 下的所有 messages
+  * 具体文档参考：https://platform.openai.com/docs/api-reference/messages
+
+* 开始Run
+  * 用 run 把 assistant 和 thread 关联，进行对话
+  * 一个 prompt 就是一次 run
+  * https://platform.openai.com/docs/api-reference/runs
+
+```python
+run = client.beta.threads.runs.create_and_poll(
+    thread_id=thread.id,
+    assistant_id=assistant_id,
+)
+if run.status == 'completed':
+    messages = client.beta.threads.messages.list(
+        thread_id=thread.id
+    )
+    show_json(messages)
+else:
+    print(run.status)
+```
+
+![statuses](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/statuses.png)
+
+* 流式运行
+
+```python
+from typing_extensions import override
+from openai import AssistantEventHandler
+
+
+class EventHandler(AssistantEventHandler):
+    @override
+    def on_text_created(self, text) -> None:
+        """响应输出创建事件"""
+        print(f"\nassistant > ", end="", flush=True)
+
+    @override
+    def on_text_delta(self, delta, snapshot):
+        """响应输出生成的流片段"""
+        print(delta.value, end="", flush=True)
+
+message = client.beta.threads.messages.create(
+    thread_id=thread.id,
+    role="user",
+    content="你说什么？",
+)
+with client.beta.threads.runs.stream(
+    thread_id=thread.id,
+    assistant_id=assistant_id,
+    event_handler=EventHandler(),
+) as stream:
+    stream.until_done()
+```
+
+* 使用tools
+  * 创建assistant时，tools=[{"type": "code_interpreter"}]
+  * EventHandler的on_tool_call_created、on_tool_call_delta接口
+  * Code_interpreter操作文件
+    * https://platform.openai.com/docs/api-reference/files
+
+```python
+@override
+def on_tool_call_delta(self, delta, snapshot):
+  """响应工具调用的流片段"""
+  if delta.type == 'code_interpreter':
+    if delta.code_interpreter.input:
+      print(delta.code_interpreter.input, end="", flush=True)
+      if delta.code_interpreter.outputs:
+        print(f"\n\noutput >", flush=True)
+        for output in delta.code_interpreter.outputs:
+          if output.type == "logs":
+            print(f"\n{output.logs}", flush=True)
+```
+
+```python
+# 上传文件到 OpenAI
+file = client.files.create(
+    file=open("mydata.csv", "rb"),
+    purpose='assistants'
+)
+
+# 创建 assistant
+my_assistant = client.beta.assistants.create(
+    name="CodeInterpreterWithFileDemo",
+    instructions="你是数据分析师，按要求分析数据。",
+    model="gpt-4o",
+    tools=[{"type": "code_interpreter"}],
+    tool_resources={
+        "code_interpreter": {
+          "file_ids": [file.id]  # 为 code_interpreter 关联文件
+        }
+    }
+)
+
+# 创建 thread
+thread = client.beta.threads.create()
+
+# 添加新一轮的 user message
+message = client.beta.threads.messages.create(
+    thread_id=thread.id,
+    role="user",
+    content="统计csv文件中的总销售额",
+)
+# 使用 stream 接口并传入 EventHandler
+with client.beta.threads.runs.stream(
+    thread_id=thread.id,
+    assistant_id=my_assistant.id,
+    event_handler=EventHandler(),
+) as stream:
+    stream.until_done()
+```
+
+* 创建assistant时声明function
+  * EventHandler的onEvent方法
+  * **两个无依赖的 function 会在一次请求中一起被调用**
+  * https://platform.openai.com/docs/api-reference/assistants-streaming/events
+
+```python
+@override
+    def on_event(self, event):
+        """
+        响应 'requires_action' 事件
+        """
+        if event.event == 'thread.run.requires_action':
+            run_id = event.data.id  # 获取 run ID
+            self.handle_requires_action(event.data, run_id)
+
+    def handle_requires_action(self, data, run_id):
+        tool_outputs = []
+
+        for tool in data.required_action.submit_tool_outputs.tool_calls:
+            arguments = json.loads(tool.function.arguments)
+            print(
+                f"{tool.function.name}({arguments})",
+                flush=True
+            )
+            # 运行 function
+            tool_outputs.append({
+                "tool_call_id": tool.id,
+                "output": available_functions[tool.function.name](
+                    **arguments
+                )}
+            )
+
+        # 提交 function 的结果，并继续运行 run
+        self.submit_tool_outputs(tool_outputs, run_id)
+
+    def submit_tool_outputs(self, tool_outputs, run_id):
+        """提交function结果，并继续流"""
+        with client.beta.threads.runs.submit_tool_outputs_stream(
+            thread_id=self.current_run.thread_id,
+            run_id=self.current_run.id,
+            tool_outputs=tool_outputs,
+            event_handler=EventHandler(),
+        ) as stream:
+            stream.until_done()
+```
+
+* 内置的RAG功能
+  * Vector store
+    * Vector store: https://platform.openai.com/docs/api-reference/vector-stores
+    * Vector store file: https://platform.openai.com/docs/api-reference/vector-stores-files
+    * Vector store file 批量操作: https://platform.openai.com/docs/api-reference/vector-stores-file-batches
+  * 创建 Assistant 时声明 RAG 能力
+
+```python
+vector_store = client.beta.vector_stores.create(
+  name="MyVectorStore"
+)
+file = client.files.create(
+  file=open("agiclass_intro.pdf", "rb"),
+  purpose="assistants"
+)
+vector_store_file = client.beta.vector_stores.files.create(
+  vector_store_id=vector_store.id,
+  file_id=file.id
+)
+
+files = ['file1.pdf','file2.pdf']
+
+file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+    vector_store_id=vector_store.id,
+    files=[open(filename, "rb") for filename in files]
+)
+
+assistant = client.beta.assistants.create(
+  instructions="你是个问答机器人，你根据给定的知识回答用户问题。",
+  model="gpt-4o",
+  tools=[{"type": "file_search"}],
+)
+assistant = client.beta.assistants.update(
+  assistant_id=assistant.id,
+  tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
+)
+```
+
+* 内置RAG的实现：https://platform.openai.com/docs/assistants/tools/file-search/how-it-works，The file_search tool implements several retrieval best practices out of the box to help you extract the right data from your files and augment the model’s responses. The file_search tool:
+  - Rewrites user queries to optimize them for search. (面向检索的 Query 改写)
+  - Breaks down complex user queries into multiple searches it can run in parallel.（复杂 Query 拆成多个，并行执行）
+  - Runs both keyword and semantic searches across both assistant and thread vector stores.（关键字与向量混合检索）
+  - Reranks search results to pick the most relevant ones before generating the final response.（检索后排序）
+  - 默认配置：
+
+    - Chunk size: 800 tokens
+    - Chunk overlap: 400 tokens
+    - Embedding model: text-embedding-3-large at 256 dimensions
+    - Maximum number of chunks added to context: 20 (could be fewer)
+    - 以上配置可以通过 [`chunking_strategy`](https://platform.openai.com/docs/api-reference/vector-stores-files/createFile#vector-stores-files-createfile-chunking_strategy) 参数自定义修改。
+
+  - 承诺未来增加：
+    -  Support for deterministic pre-search filtering using custom metadata.
+    - Support for parsing images within documents (including images of charts, graphs, tables etc.)
+    - Support for retrievals over structured file formats (like csv or jsonl).
+    - Better support for summarization — the tool today is optimized for search queries.
+
+* 多个assistants协作
+  * 使用 assistant 的意义之一，是可以隔离不同角色的 instruction 和 function 能力。
+  * “六顶思维帽”
+
+```python
+hats = {
+    "蓝色": "思考过程的控制和组织者。你负责会议的组织、思考过程的概览和总结。"
+    + "首先，整个讨论从你开场，你只陈述问题不表达观点。最后，再由你对整个讨论做简短的总结并给出最终方案。",
+    "白色": "负责提供客观事实和数据。你需要关注可获得的信息、需要的信息以及如何获取那些还未获得的信息。"
+    + "思考“我们有哪些数据？我们还需要哪些信息？”等问题，并提供客观答案。",
+    "红色": "代表直觉、情感和直觉反应。不需要解释和辩解你的情感或直觉。"
+    + "这是表达未经过滤的情绪和感受的时刻。",
+    "黑色": "代表谨慎和批判性思维。你需要指出提案的弱点、风险以及为什么某些事情可能无法按计划进行。"
+    + "这不是消极思考，而是为了发现潜在的问题。",
+    "黄色": "代表乐观和积极性。你需要探讨提案的价值、好处和可行性。这是寻找和讨论提案中正面方面的时候。",
+    "绿色": "代表创造性思维和新想法。鼓励发散思维、提出新的观点、解决方案和创意。这是打破常规和探索新可能性的时候。",
+}
+queue = ["蓝色", "白色", "红色", "黑色", "黄色", "绿色", "蓝色"]
+
+from openai import OpenAI
+import os
+import json
+
+from dotenv import load_dotenv, find_dotenv
+_ = load_dotenv(find_dotenv())
+
+# 初始化 OpenAI 服务
+client = OpenAI()
+
+existing_assistants = {}
+
+def create_assistant(color):
+    if color in existing_assistants:
+        return existing_assistants[color]
+    assistant = client.beta.assistants.create(
+        name=f"{color}帽子角色",
+        instructions=f"我们在进行一场Six Thinking Hats讨论。按{queue}顺序。你的角色是{color}帽子。",
+        model="gpt-4o",
+    )
+    existing_assistants[color] = assistant
+    return assistant
+  
+# 创建 thread
+thread = client.beta.threads.create()
+
+topic = ""
+
+# 添加 user message
+message = client.beta.threads.messages.create(
+    thread_id=thread.id,
+    role="user",
+    content=f"讨论话题：{topic}\n\n[开始]\n",
+)
+
+for hat in queue:
+    assistant = create_assistant(hat)
+    with client.beta.threads.runs.stream(
+        thread_id=thread.id,
+        assistant_id=assistant.id,
+        event_handler=EventHandler(),
+    ) as stream:
+        stream.until_done()
+    print()
+```
+
+* 其它：
+
+  * Annotations 获取参考资料地址：https://platform.openai.com/docs/assistants/how-it-works/message-annotations
+  2. 创建 thread 时立即执行：https://platform.openai.com/docs/api-reference/runs/createThreadAndRun
+  3. Run 的状态管理 (run steps）: https://platform.openai.com/docs/api-reference/run-steps
+
+  * 官方Guide: https://platform.openai.com/docs/assistants/overview
+  * API Reference: https://platform.openai.com/docs/api-reference/assistants
+
+### 对话机器人
+
+![dialog_system](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/dialog_system.png)
+
+
+
+## LLM + Search
+
+### 产品逻辑
+
+#### 电商
+
+* [Product Search And Recommendation Trends In 2024 For Better Converting eCommerce Stores](https://blog.boostcommerce.net/posts/product-search-and-recommendation-trends)
+* [Inside Product Recommendation Feature Of Boost AI Search & Discovery](https://blog.boostcommerce.net/posts/product-recommendation-feature-of-boost-ai-search-discovery)
+* [Using Ecommerce Recommendation Engines to Keep Your Customers Coming Back](https://www.bigcommerce.com/articles/ecommerce/recommendation-engine/)
+* [21 Ecommerce **Product Recommendation** Tips (That Increase Conversions)](https://thegood.com/insights/ecommerce-product-recommendation/)
+* **Search relevance** is king!
+  * The search bar is the go-to destination for [69%](https://www.nosto.com/blog/future-of-ecommerce-search-2023/) of shoppers
+  * [82%](https://www.nosto.com/blog/future-of-ecommerce-search-2023/) of online businesses believe that the site search experience can be enhanced by providing more relevant results
+  * and a compelling [79%](https://www.nosto.com/blog/future-of-ecommerce-search-2023/) of consumers surveyed expressed their likelihood to purchase a product that they had specifically searched for in the search results
+* 个性化也重要
+  * [Research](https://www.barilliance.com/personalized-product-recommendations-stats/) conducted by Barilliance in 2018 concluded that product recommendations accounted for up to 31 percent of ecommerce revenue. On average, customers saw 12 percent of their overall purchases coming from products that were recommended to them. 
+  * [A Salesforce study](https://www.salesforce.com/blog/2017/11/personalized-product-recommendations-drive-just-7-visits-26-revenue.html) of product recommendations concluded that visits where the shopper clicked a recommendation comprise just 7 percent of total site traffic, but make up 24 percent of orders and 26 percent of revenue. 
+  * The conversion rate for visitors clicking on product recommendations was found to be [5.5x higher](https://www.barilliance.com/personalized-product-recommendations-stats/) than for visitors who didn’t click.
+  * [An Accenture report](https://www.accenture.com/us-en/interactive-index) says personalization increases the likelihood of a prospect purchasing from you by 75 percent.
+* No more “No results found”
+  * **synonyms and autocorrect** to prevent unmatched search frustrating experiences
+  * [Best Practices for Instant Search Box - What to Do With ‘No Search Results’](https://boostcommerce.net/blogs/all/instant-search-box-tips-with-no-search-results)
+* The age of intelligent search continues
+  * AL/ML-based models (can also use rules to set up)
+    * content-based filtering
+    * item-CF和user-CF
+    * Frequently bought together (FBT)
+      - FBT和Complementary products的区别是，前者基于加入购物车的数据，后者基于商品语义信息
+    * Related items
+      - Alternative products
+      - Complementary products
+      - Mix of the 2 sub-models
+  * Statistic-based models
+    - Newest arrivals
+    - Trending products
+    - Bestsellers
+    - Most viewed
+    - Recently viewed
+  * Manual model
+    - Hand-pick products ( fix the limelight for a particular set of products without changing or updating them.)
+      - 实现时可以用tag标注
+* Customers want personalized product recommendations
+  * 个性化对retaining customers（留存）有帮助
+* 产品能力：
+  * **NLP-backed search engine** to better respond to long-tail queries
+  * **Semantic search** to maximize the accuracy and relevance of search results
+  * Enhanced **typo tolerance**
+  * **Understanding search with high complexity**
+  * AI-fueled **upselling and cross-selling**
+    * such as a Bluetooth headset to go with their chosen laptop
+  * secondary algorithm
+    * ![img](https://cdn.prod.website-files.com/663e17fff238bd97b0a022cd/6645d914bd140fa3afeac447_Img_14_1_1344x.png)
+  * **Analyze能力**
+    * **Analyze customer feedback and reviews**：分析效果
+    * **Identify the most popular products**：决定promote and stock哪些商品
+    * **Improve upselling and cross-selling**：create more cohesive marketing campaigns by bundling items in ways that appeal to customers
+    * **Understand customer preferences and behavior**: Understanding which upselling and cross-selling offers customers respond to provides more insight into their purchase behavior and lets you make better-informed decisions about which products to restock. For example, if customers don’t respond to upselling product suggestions, you might consider discontinuing the higher-end product.
+    * **Show Bestsellers Across Different Categories**
+  * *And many more*
+* 对应产品功能：
+  * Frequently Bought Together
+    * "Viewed this, bought that."
+    * Amazon does this by showing bundles of products frequently viewed in succession and enabling users to **add the entire bundle** to their shopping cart in one click.
+      * **Provide Social Proof**  (Customers Who Bought This Item Also Bought)
+  * Related Items (AI-powered)
+    * “Deals based on your recent history”
+    * 推荐理由
+  * Recently Purchased
+    * “Buy again”
+  * Bestsellers
+  * Hand-picked Products
+  * Recently Viewed
+    * “Keep shopping for”
+  * Most Viewed
+  * Newest Arrivals
+  * Trending Products
+    * based on new trends and seasons
+  * Personalize Your Email Campaigns
+
+* 模型输入特征：
+
+  * past purchases, viewed products
+  * time spent on various pages
+  * Location
+
+  * 元信息
+    * new trends and seasons (as prompt)
+    * product titles and descriptions
+
+* 指标metrics：
+
+  * average order value
+  * upsell/cross-sell conversion rate
+  * insight into user behavior.
+
+* 产品页面：[**How to Display Product Recommendations Throughout the Sales Cycle** ](https://thegood.com/insights/ecommerce-product-recommendation/#h-how-to-display-product-recommendations-throughout-the-sales-cycle-nbsp)
+
+  * Homepage   ---> “Most Popular” and “Recently Viewed”
+    - **Trending products**
+    - **Recently viewed**
+    - Bestsellers
+    - Most viewed
+    - Newest arrivals
+  * Collection page ---> most popular
+    - **Trending products**
+    - **Bestsellers**
+    - **Most viewed**
+    - Recently viewed
+    - Newest arrivals
+  * Product page
+    - **Frequently bought together**
+    - **Related items**
+    - Newest arrivals
+    - Trending products
+    - Bestsellers
+    - Most viewed
+    - Recently viewed
+    - Hand-pick products
+    - **Note**: Frequently bought together & Related items can be displayed as Product Bundles.
+  * Cart page
+    - Frequently bought together
+    - **Related items** -> cross-selling
+    - Newest arrivals
+    - Trending products
+    - Bestsellers
+    - Most viewed
+    - Recently viewed
+
+
+
+
+
+###  算法
+
+#### Hybrid Search
+
+* Hybrid search is a combination of full text and vector queries that execute against a search index that **contains both searchable plain text content and generated embeddings**. For query purposes, hybrid search is:
+  * A single query request that includes both `search` and `vectors` query parameters
+  * Executing in parallel
+  * With merged results in the query response, scored using Reciprocal Rank Fusion (RRF)
+* 背景：
+  * 实际生产中，传统的关键字检索（稀疏表示）与向量检索（稠密表示）各有优劣。
+    * 举个具体例子，比如文档中包含很长的专有名词，关键字检索往往更精准而向量检索容易引入概念混淆。
+    * e.g. 在医学中“小细胞肺癌”和“非小细胞肺癌”是两种不同的癌症
+
+* [Relevance scoring in hybrid search using Reciprocal Rank Fusion (RRF)](https://learn.microsoft.com/en-us/azure/search/hybrid-search-ranking)
+  * Kv search (BM25)
+  * Vector search (HNSW)
+  * RRF:  <img src="https://www.zhihu.com/equation?tex=rrf%28d%29%3D%5Csum_%7Ba%5Cin%20A%7D%5Cfrac%7B1%7D%7Bk%2Brank_a%28d%29%7D" alt="rrf(d)=\sum_{a\in A}\frac{1}{k+rank_a(d)}" class="ee_img tr_noresize" eeimg="1"> 
+
+
+
+
+
+### MLSys
+
+* Google：https://cloud.google.com/blog/products/ai-machine-learning/scaling-deep-retrieval-tensorflow-two-towers-architecture
+* Amazon:  [基于大语言模型和推荐系统构建电商智能导购机器人](https://aws.amazon.com/cn/blogs/china/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system/)
+  * 基于 Amazon SageMaker、Amazon OpenSearch、AWS Lambda、Amazon Personalize 和 Amazon API Gateway 等基础云服务，结合大语言模型、开源大语言模型应用框架 langchain 以及开源前端架构 Stramlit
+  * 功能：智能问询、商品推荐、商品个性化营销文案
+    * 多轮对话：挖掘用户需求，商品的品牌、价格、材质、用途、使用场景等角度
+  * 框架：
+    * dynamodb存储“用户同session的对话记录”（类似OpenAI的thread概念）
+  * 测试集：https://github.com/aws-samples/retail-demo-store
+    * 2000 多个虚拟商品数据、6000 多个虚拟顾客数据和 2 万多条虚拟交互信息
+
+![build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system1](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system1.png)
+
+![img](https://s3.cn-north-1.amazonaws.com.cn/awschinablog/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system3.png)
+
+![img](https://s3.cn-north-1.amazonaws.com.cn/awschinablog/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system7.png)
+
+![img](https://s3.cn-north-1.amazonaws.com.cn/awschinablog/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system8.png)
+
+### 竞品
+
+#### Google Vertex Search
+
+* https://cloud.google.com/enterprise-search?hl=en
+* 技术介绍（RAG）
+  * simplified the end-to-end search and discovery process of managing ETL, OCR, chunking, embedding, indexing, storing, input cleaning, schema adjustments, information retrieval, and summarization to just a few clicks
+  * 融合AI for document understanding
+  * **Your RAGs powered by Google Search technology**
+    * https://cloud.google.com/blog/products/ai-machine-learning/rags-powered-by-google-search-technology-part-1
+      * semantic search
+      * *Neural matching learns the relationships between queries and documents*
+      * A production-grade semantic search is not just a similarity search, but must provide smart recommendation to users.
+      * 向量检索使用[ScaNN](https://blog.research.google/2020/07/announcing-scann-efficient-vector.html)
+    * https://cloud.google.com/blog/products/ai-machine-learning/rags-powered-by-google-search-technology-part-2
+  * [Grounding能力](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/overview)
+  * 基础的IR能力，[Vector Search](https://cloud.google.com/vertex-ai/docs/vector-search/quickstart)
+
+![https://storage.googleapis.com/gweb-cloudblog-publish/images/3._Vertex_AI_Search.max-1300x1300.png](https://storage.googleapis.com/gweb-cloudblog-publish/images/3._Vertex_AI_Search.max-1300x1300.png)
+
+* 产品形态 https://cloud.google.com/use-cases/recommendations?hl=zh-cn
+  * [Vertex AI Search for retail](https://cloud.google.com/solutions/retail-product-discovery) offers retailers the ability to improve the search, product recommendations, and browsing experience on their channels.
+    * Retail companies are harnessing AI with Google Cloud today to recommend **tailored products and promotions to shoppers** and reap business results, such as **increased sales,** **average order value****, and** **customer lifetime value**.
+    * LLM based Recommendation方便商家人工干预推荐结果，进行运营企划活动。实现saas定制化需求的成本低。
+  * [Vertex AI Search for media](https://cloud.google.com/generative-ai-app-builder/docs/about-media) offers media and entertainment companies the ability to provide more personalized content recommendations powered by generative AI, increasing consumer time spent on their platforms, which can lead to higher engagement, revenue, and retention. 
+  * [Generic Recommendation Data Store](https://cloud.google.com/generative-ai-app-builder/docs/create-data-store-recommendations)
+  * [Vertex AI Search for healthcare and life sciences](https://cloud.google.com/generative-ai-app-builder/docs/create-app-hc) is a medically tuned search that improves patient and provider experience. [支持医疗搜索](https://www.googlecloudpresscorner.com/2023-10-09-Google-Cloud-Adds-New-Features-to-Vertex-AI-Search-for-Healthcare-and-Life-Science-Companies)
+
+![image-20240920165612409](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/vertex-search.png)
+
+* LLM和Semantic Search互相增强：
+  * Prompt：Given that it's the beginning of winter, a customer is browsing for clothing on an e-commerce site. Winters are cold in their city. They entered "warm clothing for winter" as a search term on the site. What other search terms might they use to find related and cross-sell items?
+  * Responses from an LLM may include the following queries:
+    - Type-specific: Warm winter jackets, Cozy knitwear, Thermal leggings, Waterproof snow boots
+    - Activity-specific: Ski clothing, Winter running gear, Work-appropriate winter outfits, Cozy homewear
+    - Style-specific: Cashmere sweaters, Puffer vests, Statement scarves, Athleisure-inspired winter looks
+  * 优势：多样性强
+  * 局限性：冷启动The models may not be familiar with newly added product names or trained to memorize millions of product model numbers in its embedding space. 用hybrid search解决
+* demo
+  * stackoverflow的检索：https://ai-demos.dev/demos/matching-engine
+    * https://cloud.google.com/blog/products/ai-machine-learning/how-to-use-grounding-for-your-llms-with-text-embeddings?hl=en
+
+* 算法进阶
+  * 召回+rerank
+  * Filtering and boosting
+    * https://cloud.google.com/generative-ai-app-builder/docs/filter-search-metadata
+  * Extraction and generation
+    * 三层：*Snippet, Extractive answer, and Extractive Segment*
+  * Summarization and multi-turn search
+    * generating [search result summaries](https://cloud.google.com/generative-ai-app-builder/docs/get-search-summaries) and also supports [follow-up questions](https://cloud.google.com/generative-ai-app-builder/docs/multi-turn-search) with multi-turn search to provide a context-aware search.
+  * document processing
+    * **Document understanding and text chunking**
+    * **Document and query annotation with Knowledge Graph**
+    * ![https://storage.googleapis.com/gweb-cloudblog-publish/images/15._document_processing.max-1100x1100.png](https://storage.googleapis.com/gweb-cloudblog-publish/images/15._document_processing.max-1100x1100.png)
+
+* 支持custom embedding能力
+  * https://cloud.google.com/generative-ai-app-builder/docs/bring-embeddings
+  * 场景：
+    * Your embeddings have been trained on custom words, such as internal terms whose semantic similarity wouldn't be captured by training on public data—for example, organization-specific terms that appear only in private documents.
+    * You've created embeddings for user profiles and want to use these to create a personalized, semantically-relevant document ranking. You can use your embeddings to get personalization-based ranking, which can augment Google's document embeddings for relevance-based ranking.
+  * `0.5 * relevance_score + 0.3 * dotProduct(example_embedding_field)`
+* Collect scattered enterprise data
+  * **Blended Search and web crawling**
+    * All you have to do is specify[ the URL or URL pattern](https://cloud.google.com/generative-ai-app-builder/docs/create-data-store-es#website) and Vertex AI Search will instantly create a data store with all the relevant website pages. You can then use [Google Search Central](https://developers.google.com/search), to manage site crawling on your website.
+  * **Connectors**： [Connectors](https://cloud.google.com/generative-ai-app-builder/docs/prepare-data) 
+
+![https://storage.googleapis.com/gweb-cloudblog-publish/images/17._blended_search.max-1300x1300.png](https://storage.googleapis.com/gweb-cloudblog-publish/images/17._blended_search.max-1300x1300.png)
+
+* 更多资料：
+  * LangChain-based samples and documents: [RAG sample notebooks using Vertex AI Search, PaLM, and LangChain](https://github.com/GoogleCloudPlatform/generative-ai/tree/main/search/retrieval-augmented-generation) and [Vertex AI Search support in LangChain](https://python.langchain.com/docs/integrations/retrievers/google_vertex_ai_search)
+  * [Grounding in Vertex AI](https://cloud.google.com/vertex-ai/docs/generative-ai/grounding/ground-language-models): provides a quick and easy way for grounding
+  * [Check Grounding API](https://cloud.google.com/generative-ai-app-builder/docs/check-grounding?hl=en) provides a grounding score for an answer candidate
+  * Vertex AI Conversation-based grounding: [Vertex AI Search and Conversation: search with follow-ups](https://cloud.google.com/generative-ai-app-builder/docs/multi-turn-search)
+  * [How to use custom embedding with Vertex AI Search](https://github.com/GoogleCloudPlatform/generative-ai/blob/main/search/custom-embeddings/custom_embeddings.ipynb)
+  * [Vertex AI Search and Conversation product page](https://cloud.google.com/vertex-ai-search-and-conversation?hl=en)
+  * [Get started with Vertex AI Search](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search)
+  * [Vertex AI Search sample notebooks](https://github.com/GoogleCloudPlatform/generative-ai/tree/main/search) on GitHub Gen AI repo
+  * Video: [Harnessing the power of generative AI to deliver next-gen search experiences](https://youtu.be/HD_xreaLKb4?feature=shared)
+
+
+
+
+
+#### Azure (AI-Enhanced Search)
+
+* Build-in vectorization
+  * Data chunking during indexing
+  * Text-to-vector conversion during indexing
+  * Text-to-vector conversion during queries
+* 多语言，Translation and language detection for multi-lingual search
+* 实体抽取，Entity recognition to extract people names, places, and other entities from large chunks of text
+* 实体标注抽取，Key phrase extraction to identify and output important terms
+* OCR，Optical Character Recognition (OCR) to recognize printed and handwritten text in binary files
+* 图文多模，Image analysis to describe image content, and output the descriptions as searchable text file
+
+#### Algolia (电商搜索推荐)
+
+* https://www.algolia.com/
+* [Get started with click and conversion events](https://www.algolia.com/doc/guides/sending-events/getting-started/?utm_medium=page_link&utm_source=dashboard)
+* 对接了包括shopify等接近10个电商平台系统，无缝衔接数据，极为简单方式（4步）提供以下推荐
+  - [Frequently Bought Together](https://www.algolia.com/doc/guides/building-search-ui/ui-and-ux-patterns/recommend/js/?utm_medium=page_link&utm_source=dashboard#frequently-bought-together) （频繁购买放一起）
+  - [Related Products and Related Content](https://www.algolia.com/doc/guides/building-search-ui/ui-and-ux-patterns/recommend/js/?utm_medium=page_link&utm_source=dashboard#related-products-and-related-content) （相关产品，相关内容）
+  - [Trending Products](https://www.algolia.com/doc/guides/building-search-ui/ui-and-ux-patterns/recommend/js/?utm_medium=page_link&utm_source=dashboard#trending-items) （流行产品）
+  - [Looking Similar](https://www.algolia.com/doc/guides/building-search-ui/ui-and-ux-patterns/recommend/js/?utm_medium=page_link&utm_source=dashboard#looking-similar) （look-alike）
+
+* 算法：
+  * 算法细节：https://www.algolia.com/doc/guides/algolia-recommend/overview/
+  * [归因](https://www.algolia.com/doc/guides/sending-events/getting-started/)
+    * Client-side versus server-side events
+
+
+
+#### 其它
+
+* [垂直](https://www.bigcommerce.com/articles/ecommerce/recommendation-engine/#h2_best_ecommerce_recommendation_engines)：algolia、boomreach、clerk、emrsys、nosto、[Boost Commerce](https://boostcommerce.net/)
+* 日本： silveregg（推荐），ES(搜索）、zeta search/algolia (搜推）
+
 
 
 ## LLM + Recommendation
@@ -1184,11 +2077,11 @@ def get_sql_completion(messages, model="gpt-3.5-turbo"):
 
 #### Transformer结构引入推荐算法
 
-##### [Meta] Actions Speak Louder than Words: Trillion-Parameter Sequential Transducers for Generative Recommendations
+##### [Meta] [HSTU] Actions Speak Louder than Words: Trillion-Parameter Sequential Transducers for Generative Recommendations
 
 https://arxiv.org/pdf/2402.17152v1
 
-> - 算法创新点：改变了特征排列（序列构造方式）、将target item做进了模型底座
+> - 算法创新点：改变了特征排列（序列构造方式）将用户行为视作一种新模态、将target item做进了模型底座
 > - 工程创新点：序列采样、 M-FALCON、激进的kernel fusion、casual mask（KV cache）
 
 * Intro
@@ -1217,7 +2110,8 @@ https://arxiv.org/pdf/2402.17152v1
     * 按时间merge主序列和user profile序列
   * 辅助时间序列 - 随时间缓慢变化的时间序列
     * 只在变的时候merge进去
-  * 当下一个token表示与参与无关的(non-engagement related)分类特征（例如人口统计学特征）时，$ <img src="https://www.zhihu.com/equation?tex=y_i" alt="y_i" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%20%E6%9C%AA%E5%AE%9A%E4%B9%89%2C%20%E5%AF%B9%E4%BA%8E%E8%BF%99%E4%BA%9B%E6%83%85%E5%86%B5%EF%BC%8C%E6%88%91%E4%BB%AC%E5%B0%86%20" alt=" 未定义, 对于这些情况，我们将 " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=m_i" alt="m_i" class="ee_img tr_noresize" eeimg="1"> $ 设置为 0。
+
+<img src="https://www.zhihu.com/equation?tex=y_i%24%20%3Cimg%20src%3D%22https%3A//www.zhihu.com/equation%3Ftex%3D%20%E6%9C%AA%E5%AE%9A%E4%B9%89%2C%20%E5%AF%B9%E4%BA%8E%E8%BF%99%E4%BA%9B%E6%83%85%E5%86%B5%EF%BC%8C%E6%88%91%E4%BB%AC%E5%B0%86%20" alt=" 未定义, 对于这些情况，我们将 " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=m_i" alt="m_i" class="ee_img tr_noresize" eeimg="1"> $ 设置为 0。
   * 精排：**内容位置的预测**转换为**多任务预测**
     * casual mask: https://zhuanlan.zhihu.com/p/698447429
 
@@ -1255,22 +2149,309 @@ https://arxiv.org/pdf/2402.17152v1
 * 用transformer做序列特征交叉
   * 将transformer的输出结果和target item做din
 
-#### Inbox
+##### SASREC
 
-##### [LLM+RecSys探讨 马坚鑫 阿里M6团队 MLNLP2023大模型与推荐系统论坛](https://www.bilibili.com/video/BV17u4y1N7zY)
+https://arxiv.org/abs/1808.09781
 
-* Qwen LLM介绍
-  * 7B开源模型
-  * ReAct prompting
-    * 技巧：处理多轮问答上下文，将ReAct prompting贴在倒数第二个回答前面，而不是最后一个问题前，有助于模型理解上下文
-  * 如何训练Agent能力
-    * AI aligns AI
-      * Step 0: 少量高质量数据，用作SFT和in-context examples
-      * Step 1: self-instruct，即通过in-context prompt生成更多样本
-      * Step 2: 规则处理，人工审核，（可选）人工改正
-      * Step 3: 循环 Step 1-2
-* LLM在RecSys的价值 —— 从生产者、平台、消费者视角
-  * 
+## AI编程
+
+* 「编程」是**目前大模型能力最强的垂直领域**，甚至超越了对「自然语言」本身的处理能力。因为：
+
+  - 训练数据质量高
+  - 结果可衡量
+  - 编程语言无二义性
+  - 有[论文](https://arxiv.org/pdf/2211.09110.pdf)证明编程训练能增强模型的推理能力，所以会特别着意训练 (code-davinci002)
+    - “The first model that OpenAI gave us was a Python-only model,” Ziegler remembers. “Next we were delivered a JavaScript model and a multilingual model, and it turned out that the Javascript model had particular problems that the multilingual model did not. It actually came as a surprise to us that the multilingual model could perform so well. But each time, the models were just getting better and better, which was really exciting for GitHub Copilot’s progress.” --[Inside GitHub: Working with the LLMs behind GitHub Copilot](https://github.blog/2023-05-17-inside-github-working-with-the-llms-behind-github-copilot/)
+* 知道怎么用好 AI 编程，了解它的能力边界、使用场景，就能类比出在其他领域 AI 怎么落地，能力上限在哪
+* 趋势：
+  * [Atom Capital: 1000x 的超级码农——AI 编程的机会和未来](https://mp.weixin.qq.com/s/IE1P-USAJDlbPcssJltNnw)
+
+### 理论
+
+* AI 祖师爷阿兰·图灵 1947 年在[伦敦数学学会的演讲](https://www.vordenker.de/downloads/turing-vorlesung.pdf)上说过：
+
+  * > ...if a machine is expected to be infallible, it cannot also be intelligent.
+
+  * --> 使用者的判断力，决定了 AI 能力的上限。 就像团队领导，是团队的上限一样。
+
+* AI 能力定律：AI 能力的上限，是使用者的判断力
+
+  * $ <img src="https://www.zhihu.com/equation?tex=AI%20%E8%83%BD%E5%8A%9B%20%3D%20%5Cmin%28%5Ctext%7BAI%20%E8%83%BD%E5%8A%9B%7D%2C%20%5Ctext%7B%E4%BD%BF%E7%94%A8%E8%80%85%E5%88%A4%E6%96%AD%E5%8A%9B%7D%29" alt="y_i" alt="AI 能力 = \min(\text{AI 能力}, \text{使用者判断力})" alt="y_i" class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=%20%E6%9C%AA%E5%AE%9A%E4%B9%89%2C%20%E5%AF%B9%E4%BA%8E%E8%BF%99%E4%BA%9B%E6%83%85%E5%86%B5%EF%BC%8C%E6%88%91%E4%BB%AC%E5%B0%86%20" alt=" 未定义, 对于这些情况，我们将 " class="ee_img tr_noresize" eeimg="1">  <img src="https://www.zhihu.com/equation?tex=m_i" alt="m_i" class="ee_img tr_noresize" eeimg="1"> $ 设置为 0。
+  * 精排：**内容位置的预测**转换为**多任务预测**
+    * casual mask: https://zhuanlan.zhihu.com/p/698447429
+
+![image-20240716221553540](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/hstu1.png)
+
+* HSTU
+  * Pointwise aggregated attention
+    * HSTU在Transformer中采用了一种新的点对点（pointwise）聚集注意力机制，而不是softmax注意力。这是出于两个因素的考虑。
+    * 在推荐系统中，与目标相关的先前数据点的**数量**作为一个强大的特征，指示用户偏好的强度，在经过softmax归一化后很难捕捉到。这一点很关键，因为我们需要预测参与度的强度，例如在给定item上花费的时间，以及item的相对顺序，再例如预测候选人的排序以最大化AUC。
+    * 虽然softmax激活函数对噪声具有鲁棒性，但它不太适合流式设置中的非平稳词汇表。
+  * 通过随机长度（Stochastic Length，SL）进一步从算法上增加用户历史序列的稀疏性
+    * 对用户序列做采样：
+      * 一种说法：在一个user的request/session结束时，以1/n的概率采样这个user，其中n是这个user的序列长度。
+      * 另一种说法：一个session采样一次
+
+![image-20240716222635364](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/hstu2.png)
+
+* 工程优化
+  * 优化activations的内存占用
+  * 单kernel
+  *  M-FALCON 
+    * Microbatched-Fast Attention Leveraging Cacheable OperatioNs
+    * to perform inference for m candidates with an input sequence size of n
+    * We optionally divide the overall m candidates into ⌈m/bm⌉ microbatches of size bm to leverage encoder-level KV caching (Pope et al., 2022) either across forward passes to reduce cost, or across requests to minimize tail latency
+* 实验insight
+  * 生成式推荐模型与LLM一样遵循scaling law，但传统推荐模型不遵循
+  * 同等参数量的情况下，在参数达到一定规模的threshold后，生成式推荐模型才能有比传统推荐模型更好的效果。精排模型需要比召回模型更大的threshold(约100x)
+  * Scaling law的最大配置时：8,192 sequence length, 1,024 embedding dimension, 24 layers of HSTU。**对精排模型，约在最大配置的1/10处，GR表现超过传统模型，对应的配置约为：4000 sequence length, 1,024 embedding dimension, 6 layers**
+* Question
+  * 用户token数量n_i 和用户的时序行为数量（上张图中，老推荐模型的时序样本数量）是什么关系？
+  * 为什么在用户session结束时生成样本，相当于做采样？
+
+##### [美团] https://tech.meituan.com/2020/04/16/transformer-in-meituan.html
+
+* 用transformer做序列特征交叉
+  * 将transformer的输出结果和target item做din
+
+##### SASREC
+
+https://arxiv.org/abs/1808.09781
+
+## AI编程
+
+* 「编程」是**目前大模型能力最强的垂直领域**，甚至超越了对「自然语言」本身的处理能力。因为：
+
+  - 训练数据质量高
+  - 结果可衡量
+  - 编程语言无二义性
+  - 有[论文](https://arxiv.org/pdf/2211.09110.pdf)证明编程训练能增强模型的推理能力，所以会特别着意训练 (code-davinci002)
+    - “The first model that OpenAI gave us was a Python-only model,” Ziegler remembers. “Next we were delivered a JavaScript model and a multilingual model, and it turned out that the Javascript model had particular problems that the multilingual model did not. It actually came as a surprise to us that the multilingual model could perform so well. But each time, the models were just getting better and better, which was really exciting for GitHub Copilot’s progress.” --[Inside GitHub: Working with the LLMs behind GitHub Copilot](https://github.blog/2023-05-17-inside-github-working-with-the-llms-behind-github-copilot/)
+* 知道怎么用好 AI 编程，了解它的能力边界、使用场景，就能类比出在其他领域 AI 怎么落地，能力上限在哪
+* 趋势：
+  * [Atom Capital: 1000x 的超级码农——AI 编程的机会和未来](https://mp.weixin.qq.com/s/IE1P-USAJDlbPcssJltNnw)
+
+### 理论
+
+* AI 祖师爷阿兰·图灵 1947 年在[伦敦数学学会的演讲](https://www.vordenker.de/downloads/turing-vorlesung.pdf)上说过：
+
+  * > ...if a machine is expected to be infallible, it cannot also be intelligent.
+
+  * --> 使用者的判断力，决定了 AI 能力的上限。 就像团队领导，是团队的上限一样。
+
+* AI 能力定律：AI 能力的上限，是使用者的判断力
+
+  * $$AI 能力 = \min(\text{AI 能力}, \text{使用者判断力})" class="ee_img tr_noresize" eeimg="1">
+  * AI 提效定律：AI 提升的效率，与使用者的判断力成正比，与生产力成反比
+
+### Github Copilot
+
+#### Intro
+
+* [Inside GitHub: Working with the LLMs behind GitHub Copilot](https://github.blog/2023-05-17-inside-github-working-with-the-llms-behind-github-copilot/)
+  * Prompt crafting
+    * pulled similar texts in from the user’s neighboring editor tabs
+    * filename的小技巧![A diagram of the file path improvement ](https://github.blog/wp-content/uploads/2023/05/copilot-llms-2.png?w=844&resize=844%2C504)
+
+* [How to build an enterprise LLM application: Lessons from GitHub Copilot](https://github.blog/2023-09-06-how-to-build-an-enterprise-llm-application-lessons-from-github-copilot/)。这篇文章描述了 GitHub Copilot 的产品打造哲学
+
+* 使用技巧 https://github.blog/2024-01-22-10-unexpected-ways-to-use-github-copilot/：
+  * 代码有了，再写注释，更省力
+  * 改写当前代码，可另起一块新写，AI 补全得更准，完成后再删旧代码
+  *  `Cmd/Ctrl + →` 只接受一个 token
+  * 如果有旧代码希望被参考，就把代码文件在新 tab 页里打开
+  * 有命令行版本
+* [Copilot Extension](https://github.blog/2024-05-21-introducing-github-copilot-extensions/)：把 Copilot Chat 扩展成一套多 agent 的系统
+  *  每个 extension 专注做自己最擅长的事情，并自带用户的数据
+  * 在 Copilot Chat 中，通过 @ 的动作把 agent 串联，就像一场专家会诊
+  * 可以开发自己的 private extension
+  * 产品设计经验：在 chat 界面里用 @ 串联多个 agent 是一个常见的 AI 产品设计范式。
+* 一个小转折：Copilot 从最开始的只用问答，到取消问答使用补全，到恢复问答
+  * 产品设计经验：让 AI 在不影响用户原有工作习惯的情况下切入使用场景，接受度最高。 
+* 资料
+  * [How GitHub Copilot is getting better at understanding your code](https://github.blog/2023-05-17-how-github-copilot-is-getting-better-at-understanding-your-code/)
+  * [A developer’s guide to prompt engineering and LLMs](https://github.blog/2023-07-17-prompt-engineering-guide-generative-ai-llms/)
+  * [GitHub Copilot VSCode Extension 逆向工程](https://zhuanlan.zhihu.com/p/639993637)
+    * 对于编辑器输入的边界判断，包括太少、太多、取消等等很多场景齐全的考虑
+    * 缓存思想，利用多级缓存策略保护后台，模型运算本身就是一件昂贵的事情
+    * prompt的设计，不仅仅包含了上下文代码，在文件解析、编辑器打开的相关代码上还做了很多
+    * 利用简单的Jaccard算法计算分词后的文本相似度，能够快速决策出当前上下文相关的snippet
+    * 实验特性，在Copilot中，大量的参数、优先级、设置字段都是通过实验来控制的，有一套完整的监控上报体系，帮助Copilot去调整这些参数，以达到更好的效果
+  * [GitHub Copilot 深度剖析](https://xie.infoq.cn/article/06aabd93dc757a1015def6857)
+
+#### 基本原理
+
+- 模型层：最初使用 OpenAI Codex 模型，它也是 GPT-3.5、GPT-4 的「一部分」。[现在已经完全升级，模型细节未知](https://github.blog/2023-07-28-smarter-more-efficient-coding-github-copilot-goes-beyond-codex-with-improved-ai-model/)。
+
+- 应用层： prompt engineering。Prompt 中包含：
+
+  1. 组织上下文：光标前和光标后的代码片段
+  2. 获取代码片段：其它相关代码片段。当前文件和其它打开的同语言文件 tab 里的代码被切成每个 60 行的片段，用 [Jaccard 相似度](https://zh.wikipedia.org/wiki/%E9%9B%85%E5%8D%A1%E5%B0%94%E6%8C%87%E6%95%B0)评分，取高分的
+     - 为什么是打开的 tabs？
+     - 多少个 tabs 是有效的呢？经验选择：20 个
+  3. 修饰相关上下文：被取用的代码片段的路径。用注释的方式插入，例如：`# filepath: foo/bar.py`，或者 `// filepath: foo.bar.js`
+  4. 优先级：根据一些代码常识判断补全输入内容的优先级
+  5. 补全格式：在函数定义、类定义、if-else 等之后，会补全整段代码，其它时候只补全当前行
+
+![copilot_snippet_structure](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/copilot_snippet_structure.webp)
+
+![life-of-a-completion](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/life-of-a-completion.webp)
+
+* 有效性：
+  * Telemetry(远程遥测[如何取消](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement))
+    * 后台上传留下来的代码，服务器判断有没有留下来
+    * 为什么不能本地判断，然后回传特征？
+  * A/B Test
+  * 智谱的度量方式：
+
+![efficency](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/copilot-efficency.png)
+
+
+
+### 度量
+
+![info_collection](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/info_collection.png)
+
+### 本机部署
+
+#### Tabby
+
+* Tabby：https://tabby.tabbyml.com/
+
+  - 全开源
+
+  - 可以本机部署，也可以独立本地部署
+
+  - 支持所有开源编程模型
+  - 可以做RAG
+
+
+![image-20240726034021852](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/AIGC/tabby.png)
+
+* Tabby RAG
+
+  * vim ~/.tabby/config.toml
+
+  * ```
+    # ~/.tabby/config.toml
+    # Index three repositories' source code as additional context for code completion.
+    
+    [[repositories]]
+    name = "tabby"
+    git_url = "https://github.com/TabbyML/tabby.git" # 远程的git项目，但是如果没有代理很容易失败
+    
+    # git through ssh protocol.
+    [[repositories]]
+    name = "CTranslate2"
+    git_url = "git@github.com:OpenNMT/CTranslate2.git"
+    
+    # local directory is also supported!
+    [[repositories]]
+    name = "Dify"
+    # 你自己下载下来本地的项目， 如果你的项目目录是 /home/xiaoming/Code/Dify
+    git_url = "file:///home/xiaoming/Code/Dify" 
+    ```
+
+* [Tabby使用非官方指定的更大尺寸Code Model](https://aipolgx71pe.feishu.cn/docx/MilXdqqzJowsHtxKgJ8c7pF3nmj)
+
+
+
+#### 开源编程大模型
+
+* [Code Llama](https://ai.meta.com/blog/code-llama-large-language-model-coding/) - Meta 出品，可能是开源中最强的 （7B、13B、34B、70B）
+* [DeepSeek-Coder](https://github.com/deepseek-ai/DeepSeek-Coder) - 深度探索公司出品（1B、5.7B、6.7B、33B）
+* [CodeGemma](https://huggingface.co/blog/codegemma) - Google 出品（2B、7B）
+
+### 强Agent尝试 —— 自动编写代码的机器人
+
+* **Agent 的落地难题**
+  * Agent 落地需要两个条件：
+    * LLM 能力足够强（GPT-4 也不够）
+    * 使用场景足够窄（某种框架、某种小需求）
+  * GPT-5 没面世之前，别再相信类似 Devin 的媒体渲染了
+
+* **MetaGPT：多智能体元编程框架**
+  * https://github.com/geekan/MetaGPT
+  * 它不只写代码，而且写文档、画图。详见讲座课里 MetaGPT 核心工程师的分享。
+  * 核心 prompts：https://github.com/geekan/MetaGPT/tree/main/metagpt/prompts
+  * 评价：
+    * 让 agent 模拟岗位这个思路挺有意思。未来的公司就是人和 agent 混合的，这样的系统架构更匹配公司治理
+    * 所以 MetaGPT 其实是个多 Agent 开发框架，而不是单纯的编程工具
+* GPT Engineer
+  * https://github.com/AntonOsika/gpt-engineer
+  * 指定您想要它构建的内容，AI 会要求澄清，然后构建它。
+  * 核心 prompts：https://github.com/AntonOsika/gpt-engineer/tree/main/gpt_engineer/preprompts
+  * 有个专门开发 Web App 的，可用性好一些：https://gptengineer.app/
+  * 只需三步操作：
+
+```bash
+pip install gpt-engineer
+
+vim prompt
+
+gpt-engineer .
+```
+
+* Devin
+  * 主页：https://www.cognition-labs.com/introducing-devin
+  * 首个AI程序员造假被抓，Devin再次“震撼”硅谷！扒皮详解附上 - 量子位的文章 - 知乎
+    https://zhuanlan.zhihu.com/p/692393890
+
+* MAGE - GPT Web App Generator
+  * 主页：https://usemage.ai/
+  * 源代码：https://github.com/wasp-lang/wasp
+  * 用 Wasp, React, Node.js 和 Prisma 生成全栈 Web 应用程序。
+    * 纯在线操作，跟着提示下载到本地执行。
+  * 核心 prompts：https://github.com/wasp-lang/wasp/blob/main/waspc/src/Wasp/AI/GenerateNewProject/Operation.hs
+  * 一句话评价：限定了技术栈，用参数做配置，提供框架代码，成品率更高。各种框架都该效仿。
+* v0
+  * 主页：https://v0.dev/
+  * 提需求或传图，生成 React 前端代码
+  * 一句话评价：一定程度可以代替设计师。可以对话式修改设计
+* GitHub Copilot Workspace
+  * 主页：https://githubnext.com/projects/copilot-workspace
+  * 技术预览版，申请使用权需要排队
+  * 工作流程：
+    * 从 issue 出发，在 issue 的上下文里工作
+    * 分析 issue，形成计划，人工调整、确认
+    * 执行计划，生成代码
+    * 人工审核、修改代码后，直接提 pull request
+
+
+
+### 其它工具
+
+1. [Tongyi Lingma](https://tongyi.aliyun.com/lingma) -- 代码补全，免费。阿里云相关。
+2. [CodeGeeX](https://codegeex.cn/) -- 清华智谱制造，CodeGeeX 3 Pro 免费可用
+3. [Comate](https://comate.baidu.com/zh) -- 百度制造，有免费试用版
+4. [Bito](https://bito.ai/) - 比 Copilot 还多些创新
+5. [DevChat](https://www.devchat.ai/) -- 前端开源，同时卖 GPT 服务
+6. [Cursor](https://www.cursor.so/) - AI first 的 IDE
+7. [Tabnine](https://www.tabnine.com/) - 代码补全，个人基础版免费
+8. [Amazon CodeWhisperer](https://aws.amazon.com/codewhisperer/) - 代码补全，免费。AWS 相关的编程能力卓越。其它凑合
+
+### 应用
+
+* 提效落地场景：
+  * 市场调研
+  * 需求分析
+  * PRD 撰写
+  * 图形元素绘制
+  * 技术选型
+  * 从需求文本生成代码
+  * 代码审查
+  * 编写测试用例
+  * 运维
+  * 产品：写用户故事
+  * 从设计图生成代码
+  * API 文档调用
+  * 协议解析
+  * 跨语言迁移：两周的时间，2 名同事将 40 个 API 接口的 go 工程迁移成 Java 工程
+  * 解读遗留代码
+
+#### Examples
+
+* [gpt-4-chatall](AIGC/gpt-4-chatall.png) 演示用GPT-4创建应用框架
 
 ## LangChain
 
@@ -1423,3 +2604,162 @@ https://arxiv.org/pdf/2402.17152v1
 4. **展示**：向观众展示，当系统启动时，自动敲钟的奇观。
 
 通过上述四种方法，你可以用当时的技术向中世纪的人展示“奇迹”，不仅让他们惊叹于所见，也可能激发他们对科学原理的好奇心和探索欲
+
+
+
+### 古代中国
+
+```
+assistant > 欢迎大家参与本次讨论。我们的讨论将按照“蓝色、白色、红色、黑色、黄色、绿色、蓝色”顺序进行。作为蓝色帽子的主持人，我的主要职责是引导讨论，确保每个人按照帽子的角色贡献自己相对应的观点和思考，让讨论富有结构和成效。
+
+今天的讨论话题是：**如果穿越到了中国古代（明朝）成为了乞丐，如何利用现代知识一步步生存下来，并成为时代风云人物。**
+
+在我们开始讨论之前，让我们回顾一下各帽子的作用：
+- **蓝色帽子**（主持和总结）：引导讨论，设定目标并做总结。
+- **白色帽子**（事实和信息）：提出与主题相关的事实和数据。
+- **红色帽子**（情感和直觉）：表达直觉和情感反应。
+- **黑色帽子**（批判和风险）：指出潜在的风险和问题。
+- **黄色帽子**（积极和收益）：讨论积极面及可能的收益。
+- **绿色帽子**（创造和新意）：提出创新和新的想法。
+
+现在，让我们从第一顶帽子开始，即**白色帽子**。请白色帽子参与者分享一些与明朝社会结构、经济环境、科技水平等相关的事实和信息。
+
+assistant > 作为白色帽子，我将给出一些事实和信息，帮助我们了解穿越到明朝后的具体情况，从而为后续讨论奠定基础。
+
+**明朝背景信息：**
+1. **时间范围**：明朝（1368-1644年）是中国历史上一个重要的朝代，其开国皇帝是朱元璋。
+2. **社会结构**：明朝是一个高度中央集权的封建王朝，社会分为几个阶层：皇室和贵族、官僚和地主、普通农民、工匠和商人、乞丐等社会底层。乞丐在社会地位上几乎处于最底层。
+3. **经济环境**：明朝的经济主要依赖农业，商业也逐步发展。南京、北京、苏州、杭州等地是重要的经济中心。货币流通以银两为主，粮食和布匹也是重要的交易物品。
+4. **科技和知识**：虽然不及现代，但明朝已具备相当高的科技和文化水平，四大发明（造纸术、印刷术、火药和指南针）在此期间仍有广泛应用。书籍传播相对较广，许多经典儒家、道家、佛教和医学的书籍可供获取。
+5. **城市与农村**：城市中有一定的商业活动，且常有集市，可能是谋生的一个途径。但是，大多数人生活在农村，土地是生存的基础。
+6. **交通与通信**：虽然没有现代的交通工具和通信手段，但驿站、马车、船运等也是重要的交通方式。通信依赖书信，由驿站和信使传递。
+7. **法律和治安**：明朝的法律由《大明律》规范，但执行过程中存在因官员腐败和地方豪强的问题。乞丐受到社会歧视，但并非没有生存的可能。
+
+这些信息勾画了一个基本的生存环境。接下来，将由红色帽子的参与者分享他们的情感和直觉反应。
+
+assistant > 作为红色帽子，我要表达的是一些情感和直觉反应，主要集中在面对这样一个境遇时可能会有的主观感受和情绪反应。
+
+穿越到明朝成为乞丐的情感反应可能涵盖以下几个方面：
+
+1. **绝望和无助**：处于社会的最底层，没有资源和地位。面对陌生而艰难的生活环境，可能会感觉到强烈的无助和绝望。
+2. **恐惧和焦虑**：对未知世界的恐惧，以及对生存的焦虑。穿越族将会面对很多未知的危险和挑战，如地痞流氓的欺凌、疾病、恶劣的气候等等。
+3. **孤独和疏离**：穿越后的身份与现代社会的身份差距巨大，朋友和家人都不在身边，极易产生强烈的孤独感以及对社会的疏离感。
+4. **愤怒和不满**：社会不公带来的愤怒，对命运的不满，特别是需要面对被社会歧视和排挤的现实状况。
+5. **适应与生存的动力**：尽管环境艰难，但生存的本能驱使下会产生强烈的适应和反抗的动力，希望找到方法让自己和可能的伙伴存活下来。
+
+这些情感反应是正常且可以预期的。接下来，请黑色帽子的参与者分享他们看到的潜在风险和问题。
+
+assistant > 作为黑色帽子，我的任务是指出潜在的风险和问题。我们现在假设穿越到了明朝并成为乞丐，利用现代知识一步步生存下来并成为时代风云人物。虽然这个想法非常吸引人，但我们也需要审视其中的挑战和障碍。
+
+1. **语言和文化隔阂**：
+   - **语言**：尽管普通话在中国有着一定的通用性，但明朝的方言差异较大，现代汉语和古代汉语在词汇和表达上都存在较大差异，可能导致沟通困难。
+   - **文化习俗差异**：现代观念和明代价值观有很大差别，处理不好可能会引起误解或抵触。
+
+2. **社会阶层固化**：
+   - **阶级流动性差**：乞丐处于社会最底层，要实现上升非常困难。即使有现代知识和技能，也很难被社会上层所接受或利用。
+   - **缺乏资源和机会**：乞丐没有资源，缺乏资金和社会关系，拓展机会远不如富商和官员。
+
+3. **生存环境恶劣**：
+   - **卫生和医疗条件差**：古代的医疗水平和卫生条件远不如现代，容易感染疾病，且难以得到有效治疗。
+   - **食物和住所**：乞丐生活艰难，如找不到可靠的食物来源和安全住所，可能陷入绝境。
+
+4. **法治和治安问题**：
+   - **法律保护不足**：乞丐在社会中的地位低下，容易受到欺压和不公待遇，依靠法律维权的可能性低。
+   - **治安混乱**：某些地方治安较差，乞丐容易被欺凌或卷入犯罪活动。
+
+5. **心理压力**：
+   - **适应压迫性制度**：在封建制度下，社会压迫感强大，要承受巨大的心理压力。
+   - **孤独和迷茫**：长期生活困境可能导致心理问题，如抑郁、焦虑等。
+
+虽然有众多问题和挑战，但接下来将由黄色帽子的参与者讨论积极面及可能的收益。
+
+assistant > 作为黄色帽子，我将以乐观和积极的角度来看待这个挑战，并探讨如何利用现代知识，从乞丐的身份一步步生存下来，成为时代风云人物。
+
+1. **知识优势**：
+   - **科学和技术知识**：即使在乞丐的身份下，也可以逐步试图通过资源收集、废物利用等方式进行简单的手工制作，比如肥皂制作、基础医学知识，比如清洁伤口、草药应用等，提升生存质量。
+   - **农业和手工艺技能**：现代的农业知识和手工艺技能可以让你在农村快速找到出路，通过高效种植和养殖技术提高产量与收入。
+
+2. **信息和策略**：
+   - **策略思维**：现代的教育体系培养了较强的逻辑和策略思维，可以用于分析周围环境，制定出适合自己的生存策略，比如选择一个经济活跃的城市从事小买卖，并通过积累资金和人脉扩大事业。
+   - **识别机会**：现代信息素养使你更善于抓住稍纵即逝的机会，如通过观察市场需求，贩卖食物、草药或小工具等，逐步积累财富。
+
+3. **社交和沟通**：
+   - **语言学习能力**：可以快速适应和学习当地语言和方言，提升沟通能力，从而更好地融入当地社会。
+   - **人际交往技能**：利用现代的社交技能，与不同阶层的人建立关系，获得合作和帮助，乃至可能通过婚姻等方式打入上层社会。
+
+4. **创新和企业家精神**：
+   - **创业精神**：现代人的创业理念和方式，可以通过积累资本和资源，逐步开展小规模的贸易或技艺，发展成较大的经营模式。
+   - **创新思维**：创新的思考方式可以用于改善现有技术或产品，比如改良传统的手工工具、工艺品等，提升附加价值。
+
+5. **文艺和文化**：
+   - **文化素养**：如果有一定的文艺素养，可能通过写作、书画等途径引起注意，如作品表现出独特的思想和风格，有机会被文人或官员赏识。
+   - **利用印刷术**：明朝的印刷术较为发达，可以出版自己的思想和技术手册，与人分享现代知识，扩大影响面。
+
+6. **社群和组织领导力**：
+   - **组织和管理能力**：在现代社会学习到的组织与管理知识可以用于建立一个小型的社群，通过互助提升整体生活质量。
+   - **领导才能**：现代领导能力让你可以带领一群人共同奋斗，实现共同目标，比如成立一个工匠合作社、商会等，逐步提升社会地位。
+
+这些积极因素和潜在的收益使得即使是一名乞丐，也有机会通过现代知识和技巧，走出贫困，逐步提升自己的社会地位，最终成为明朝的风云人物。
+
+现在，绿帽子参与者可以提供一些创新和新颖的创意，进一步帮助我们实现这一目标。
+
+assistant > 作为绿色帽子，我将在这里提供一些富有创意和创新性的想法，帮助这个假想中的乞丐利用现代知识一步步生存，并最终成为明朝的风云人物。
+
+1. **创造性解决问题**：
+   - **发明和改造**：利用现代的常识发明一些简易工具。如用废料制成简单的水过滤装置，以提高水源的安全性能；利用天然资源制造肥皂和消毒剂，提高卫生条件。
+   - **医疗创新**：带来的现代医疗知识可以用来采集和利用当地的药草，制作和普及简单的药物，比如用草药止血和治疗简单的感染，赢得人们的信任和尊重。
+
+2. **教育和传授**：
+   - **知识传播**：可以扮演一个“老师”的角色，把现代知识分门别类地传授给有需求的人，譬如教授基础的算术、文字，甚至是一些基础的机械原理。通过教育提升自己在社区中的地位。
+   - **印刷和出版**：在有一定经济基础后，可以利用明朝已有的印刷术，复制现代的知识或信息，甚至编撰书籍，传播科学理念、农牧知识等有用信息。
+
+3. **商业创新**：
+   - **创新商业模式**：运用现代商业理念，如批发和零售、产品差异化等，在市场上推出新颖或改进的产品，比如更有效的农具、改良的食品保鲜技术等。
+   - **新型经济组织**：比如建立类似合作社的组织，集结乞丐或底层劳动力，通过集体的力量和组织，提高生产和生活条件；形成、发展成新型的商业联盟。
+
+4. **社群和网络**：
+   - **建立互助网络**：在乞丐群体中，通过组织慈善活动、互助互济等方式，形成一个具有凝聚力的群体，增加自身和群体的社会地位和资源获取能力。
+   - **关键人物联络**：利用人际交往能力结交重要人物，比如有影响力的商人、官员或学者，通过这种网络获取更多资源和机会，为自身的提升铺路。
+
+5. **创意行业切入**：
+   - **手工艺创新**：引入或改进一些现代手工艺技术，如陶瓷、刺绣、木工等，生产出更精美或实用的产品，吸引市场并为自己的名声打基础。
+   - **文艺和娱乐**：如有文艺才能，可创作具有现代意识观念的戏剧、歌曲、绘画等，引起文化界的关注。在明朝庙会、市场等地通过表演获利，同时宣扬个人智慧和才华。
+
+6. **探索和冒险**：
+   - **矿产和自然资源开发**：利用地理和化学知识，可能能找到一些未被开采的矿产资源或其他有用的自然资源，进行开发，获取丰厚的经济利益。
+   - **海外贸易**：明朝时期已有对外的海上贸易，可以利用现代的地理知识和外语能力，争取参与或启动新的贸易路线，带进先进产品和技术。
+
+这些创新和创意都是为了在困境中开辟生存之道，并通过不断积累资源和提升影响力，最终走上成为明朝风云人物的道路。
+
+最后，蓝色帽子可以进行总结，并确保讨论的结果得到把握和应用。
+
+assistant > 非常感谢大家的精彩讨论！我们已经通过六顶思考帽的不同视角，深入探讨了如何在穿越到明朝成为乞丐的情况下，利用现代知识一步步生存，并最终成为时代风云人物。现在，我作为蓝色帽子，将对这次讨论进行总结，并提炼出关键点和可行步骤。
+
+1. **现状评估**（白色帽子）：了解明朝的社会结构、经济环境、科技水平以及语言和文化差异，从实际情况出发制定计划。
+2. **情感调整**（红色帽子）：面对初期的绝望、恐惧和孤独，培养强大的心理素质，并用适应与生存的动力支撑自己走过最艰难的阶段。
+3. **风险意识**（黑色帽子）：谨慎处理语言和文化差异问题，保持对底层社会雷区的敏感，关注卫生和医疗状况，合理规避法律和治安风险。
+4. **积极利用现代知识**（黄色帽子）：利用现代科学、农业、商业和人际交往技能，逐步提高自己的生存能力并在社会中提升地位。
+5. **创新和创意方案**（绿色帽子）：通过创新解决问题、教育和传播现代知识、引入新的商业模式和组织形式、扩展社群网络以及发掘创意产业的机会，不断积累资源和声望。
+
+**行动步骤总结**：
+
+1. **短期生存策略**：
+   - 善用现代农业和医药知识，确保基本生活质量和健康。
+   - 掌握明朝的语言和习俗，快速融入当地社区。
+
+2. **中期积累资源**：
+   - 通过手工艺、医疗、教育等方式，利用现代知识开创生计，积累初步资金和影响力。
+   - 结交重要人物，逐步建立社交网络和互助组织。
+
+3. **长期提升地位**：
+   - 运用创新商业模式，参与并拓展商业活动，积累财富。
+   - 发布和传播现代知识，成为文化和科技传播的先锋。
+   - 利用现代企业管理和组织能力，成立合作社或商会，形成更大的社会影响力。
+   - 探索矿产资源或参与海外贸易，打造经济优势。
+
+最终，通过这些综合策略和不断的努力，目标是从乞丐身份起步，逐步提升自己的社会地位，积累财富和影响力，最终成为明朝的风云人物。
+
+感谢大家的贡献，这次讨论非常丰富且富有成效。如果没有其他问题，我们这次六顶思考帽讨论就到此结束。希望大家都能从中获得启发和新思路。谢谢！
+
+```
+

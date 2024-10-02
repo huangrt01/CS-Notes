@@ -341,6 +341,15 @@ Training 量化
   * **Smaller embedding size.** The new embeddings have only 1536 dimensions, one-eighth the size of `davinci-001` embeddings, making the new embeddings more cost effective in working with vector databases.
   * **Reduced price.** We have reduced the price of new embedding models by 90% compared to old models of the same size. The new model achieves better or similar performance as the old Davinci models at a 99.8% lower price.
 
+#### CLIP
+
+* CLIP（Contrastive Language-Image Pre-training）模型是 OpenAI于 2021 年发布的一个用于匹配图像和文本的预训练神经网络模型，旨在实现跨模态的语义对齐。CLIP 的全称是 Contrastive Language-Image Pre-Training，简称 CLIP。该模型结合了自然语言处理和计算机视觉，使用大量互联网上的图像文本对进行预训练，使其能够在多种多模态任务中表现出色。
+* CLIP 的主要思想是通过对比学习，使模型能够学习到文本-图像对的匹配关系。
+  * 具体来说，CLIP 由两个模态组成：一个用于处理文本的文本编码器（Text Encoder），另一个用于处理图像的图像编码器（Image Encoder）。
+  * 这两个编码器分别产生各自领域内的单向向量表示。在训练过程中，CLIP 会将一对图像和文本作为正样本，其他图像和文本作为负样本，通过对正样本之间的相似性和负样本之间的不相似性进行对比学习，来增强模型对图像和文本之间关系的理解。
+
+
+
 
 
 
