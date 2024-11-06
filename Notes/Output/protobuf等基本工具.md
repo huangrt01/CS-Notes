@@ -3,7 +3,7 @@
 ### ansible
 
 ```
-ansible $host -u tiger -f 100 -T 60 -mshell -a 'bash -x /path/test.sh'
+ansible $host -u tiger -f 100 -T 60 -mshell -a 'bash -x /path/test.sh' -e "ansible_shell_executable=/bin/bash""
 ```
 
 * Ansible 是一种自动化工具，它基于 SSH（Secure Shell）协议来实现系统配置和管理。下面是关于 Ansible 基于 SSH 协议的解释和理解：

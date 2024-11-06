@@ -119,7 +119,17 @@ else:
 
 print(f"thread_id: {thread_id}, assistant_id: {assistant_id}")
 
-topic = "我叫什么名字？"
+topic = """
+# 需求
+
+详细解释一下top-k Hit Ratio (HR@k), top-k Normalized Discounted Cumulative Gain (NDCG@k)
+
+# Output Format
+
+* 最好给出关键示例
+* 侧重讲解核心原理
+* 以自然且类似人类的方式回答问题5.确保你的回答无偏见，不依赖于刻板印象
+"""
 
 
 

@@ -258,9 +258,13 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 
 * 头文件和源文件切换：`option + O`
   * 搜索switch获知快捷键
-* 历史打开文件切换：`ctrl + TAB`
+* 折叠函数：
+  * 折叠：`Command K + 1/2/3/4` （按住command）
+  * unfold：`Command K + J`
+
 * 跳转前一次/后一次光标位置：`ctrl + - ` / `shift + ctrl + -`
 * Format： `Option + Shift + F` 
+* 历史打开文件切换：`ctrl + TAB`
 * `ctrl + command + P`
   * Settings
 

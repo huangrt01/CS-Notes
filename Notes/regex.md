@@ -62,6 +62,51 @@ matched = PAT.match(path)
 group_dict = matched.groupdict()
 ```
 
+
+
+```python
+import re
+
+text = "The cat chased the cat that chased the mouse"
+pattern = re.compile(r"cat")
+
+matches = re.finditer(pattern, text)
+for match in matches:
+    print(f"匹配位置: {match.start()} - {match.end()}，匹配内容: {match.group()}")
+```
+
+
+
+* 中括弧、理解Group
+
+```python
+def replace_dict_keys_in_string(my_dict, input_string):
+  pattern = re.compile(r'(--([\w, ]+)-->)|(<--([\w, ]+)--)', re.IGNORECASE)
+
+  def replace_key(match):
+    relations = None
+    if match.group(1) is not None:
+      relations = match.group(2)
+      relations = relations.split(',')
+      translated_relation = ','.join(
+          [my_dict[r] if r.strip() in my_dict else r for r in relations])
+      return f"--{translated_relation}-->"
+    elif match.group(3) is not None:
+      relations = match.group(4)
+      relations = relations.split(',')
+      translated_relation = ','.join(
+          [my_dict[r] if r.strip() in my_dict else r for r in relations])
+      return f"<--{translated_relation}--"
+    return match.group(0)
+
+  new_string = re.sub(pattern, replace_key, input_string)
+  return new_string
+```
+
+
+
+
+
 ## 技巧
 
 ### 捕获组

@@ -719,6 +719,16 @@ Queues with Random Arrival Processes (Queueing Theory)
     ```
   
 
+
+
+
+
+### MLSys + Network
+
+* [腾讯的ETH-X和阿里的Alink两者本质区别是什么？OISA的态度是什么？-三大scale-up网络标准齐聚ODCC 2024](https://zhuanlan.zhihu.com/p/720064056)
+
+
+
 ### potpourri
 
 #### RFC

@@ -312,6 +312,14 @@ Materials
 
 https://github.com/google-research/tuning_playbook
 
+#### Visualization
+
+##### t-SNE：可视化高维向量
+
+* 科普文章 https://medium.com/@sachinsoni600517/mastering-t-sne-t-distributed-stochastic-neighbor-embedding-0e365ee898ea
+
+
+
 #### Validation
 
 holdout validation, cross-validation, leave-one-out validation, etc
@@ -321,6 +329,22 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
 ```
 
 
+
+
+
+### ML Theory
+
+* 2024 诺贝尔物理学奖授予人工神经网络机器学习，为什么会颁给 AI 领域？ - SIY.Z的回答 - 知乎
+  https://www.zhihu.com/question/777943030/answer/4508673022
+  * RBM 受限玻尔兹曼机
+  * sigmoid 函数有了自然的解释：玻尔兹曼分布下隐含层神经元激活的条件概率的激活函数。
+* 大模型是不是能够稀疏化? 
+  * 从物理和能量密度/信息密度的角度来看, 似乎是可以的. 
+  * 但是从范畴论的角度, 特别是预层范畴的角度来看待,Dense的Foundation Model训练是必须要做的, 因为只有在相对Dense的模型结构上才能更好的捕获所有的态射. 
+  
+* TOPOS理论 在ML的应用
+  * on the diagram of thought https://github.com/diagram-of-thought/diagram-of-thought
+  
 
 ### Quantization
 
@@ -384,29 +408,391 @@ Training 量化
     * 将finetune进一步分为两阶段，把质量较低、挖掘的数据放在第一阶段finetune，质量高的标注数据放在第二阶段finetune，优化finetune的整体效果。
     * 这种递进的训练技巧在BERT中较常见，论文中也有将长度较短的向量放在第一阶段训练的方法。
 
+#### 向量降维
+
+* 向量白化
+  * https://arxiv.org/pdf/2103.15316
 
 
-### Search & NLP
+
+### Search + NLP
 
 * 概念：语言模型
   * [Bag-of-words(BoW) model](https://en.wikipedia.org/wiki/Bag-of-words_model) 可作为一种信息模型，表示句子或图片，用于衡量相似度或别的用途
   * stop words: 停用词
   * [Tokenization and text normalization](https://www.analyticsvidhya.com/blog/2021/03/tokenization-and-text-normalization/)
-* ElasticSearch
+
+#### 传统搜索
+
+* 历史：https://www.vantagediscovery.com/post/ecommerce-search-transcended-for-the-ai-age
+  * PageRank
+  * As search engines become more personalized and user-focused, traditional ecommerce SEO tactics based on keyword optimization and backlinking are giving way to more sophisticated strategies that prioritize user intent and experience. 
+* 传统的Indexing技术
+  * [Suffix tree](https://en.wikipedia.org/wiki/Suffix_tree) 
+    * Figuratively structured like a tree, supports linear time lookup. Built by storing the suffixes of words. The suffix tree is a type of [trie](https://en.wikipedia.org/wiki/Trie). Tries support [extendible hashing](https://en.wikipedia.org/wiki/Extendible_hashing), which is important for search engine indexing.[[8\]](https://en.wikipedia.org/wiki/Search_engine_indexing#cite_note-8) Used for searching for patterns in [DNA](https://en.wikipedia.org/wiki/DNA) sequences and clustering. A major drawback is that storing a word in the tree may require space beyond that required to store the word itself.[[9\]](https://en.wikipedia.org/wiki/Search_engine_indexing#cite_note-Gus97-9) An alternate representation is a [suffix array](https://en.wikipedia.org/wiki/Suffix_array), which is considered to require less virtual memory and supports data compression such as the [BWT](https://en.wikipedia.org/wiki/Burrows–Wheeler_transform) algorithm.
+  * [Inverted index](https://en.wikipedia.org/wiki/Inverted_index)
+    * Stores a list of occurrences of each atomic search criterion,[[10\]](https://en.wikipedia.org/wiki/Search_engine_indexing#cite_note-10) typically in the form of a [hash table](https://en.wikipedia.org/wiki/Hash_table) or [binary tree](https://en.wikipedia.org/wiki/Binary_tree).[[11\]](https://en.wikipedia.org/wiki/Search_engine_indexing#cite_note-11)[[12\]](https://en.wikipedia.org/wiki/Search_engine_indexing#cite_note-12)
+  * [Citation index](https://en.wikipedia.org/wiki/Citation_index)
+    * Stores citations or hyperlinks between documents to support citation analysis, a subject of [bibliometrics](https://en.wikipedia.org/wiki/Bibliometrics).
+  * [*n*-gram index](https://en.wikipedia.org/wiki/N-gram)
+    * Stores sequences of length of data to support other types of retrieval or [text mining](https://en.wikipedia.org/wiki/Text_mining).[[13\]](https://en.wikipedia.org/wiki/Search_engine_indexing#cite_note-13)
+  * [Document-term matrix](https://en.wikipedia.org/wiki/Document-term_matrix)
+    * Used in latent semantic analysis, stores the occurrences of words in documents in a two-dimensional [sparse matrix](https://en.wikipedia.org/wiki/Sparse_matrix).
+* faceted search
+  * https://www.sparq.ai/blogs/ecommerce-faceted-search
+* TF-IDF
+  * Term Frequency–Inverse Document Frequency
+  * 指标定义：TF-IDF = TF * IDF。其中，TF（Term Frequency）指的是词频，即某个词在文本中出现的次数。IDF（Inverse Document Frequency）指的是逆文档频率，即该词在整个语料库中出现的文档数的倒数。
+  * 应用场景：TF-IDF是一种统计方法，用以评估一字词对于一个文件集或一个语料库中的其中一份文件的重要程度。字词的重要性随着它在文件中出现的次数成正比增加，但同时会随着它在语料库中出现的频率成反比下降。
+* beam search 
+  * https://towardsdatascience.com/foundations-of-nlp-explained-visually-beam-search-how-it-works-1586b9849a24
+  * Beam search is an algorithm used in many NLP and speech recognition models as a final decision making layer to choose the best output given target variables like maximum probability or next output character.   
+  * 核心在于LM generate output的地方
+  * Greedy Search: A Naïve Approach
+  * Beam Search: **Using Conditional Probability** ,多次计算Decoder
+    * The algorithm can take any number of N best alternatives through a hyperparameter know as Beam width
+
+
+![image-20241005231947598](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/translation.png)
+
+#### ElasticSearch
+
+* Intro
+
+  * https://www.elastic.co/guide/en/elasticsearch/reference/8.15/release-highlights.html
+
+  * ES基于Lucene引擎，其核心是基于关键词的倒排索引，关键组件包括分词、倒排索引、相关性计算等。其中相关性计算通常采用TF-IDF和BM25等基于词频的算法
 
   * denormalization
-  * inverted index
-    * An index is a collection of documents.
-    * index: <word -> [documents]>
-    * document: <field -> [values]>
+    * inverted index
+      * An index is a collection of documents.
+      * index: <word -> [documents]>
+      * document: <field -> [values]>
+      * 用stopword处理
+
 
   * document oriented tool
-* [OpenAI Embedding Model](https://openai.com/blog/new-and-improved-embedding-model/)
-  * text search, code search, sentence similarity, text classification
-  * Unification of capabilities
-  * **Longer context.** The context length of the new model is increased by a factor of four, from 2048 to 8192, making it more convenient to work with long documents.
-  * **Smaller embedding size.** The new embeddings have only 1536 dimensions, one-eighth the size of `davinci-001` embeddings, making the new embeddings more cost effective in working with vector databases.
-  * **Reduced price.** We have reduced the price of new embedding models by 90% compared to old models of the same size. The new model achieves better or similar performance as the old Davinci models at a 99.8% lower price.
+
+* Usage
+
+  * term关键字，不能用于text，要用于keywords类型
+
+    * https://stackoverflow.com/questions/21933787/elasticsearch-not-returning-results-for-terms-query-against-string-property
+
+  * phrase匹配
+
+    * ```
+      "query": {
+          "multi_match": {
+                  "query": "严有兵",
+                  "fields": [
+                      ...
+                  ],
+                  "operator": "OR",
+                  "type": "phrase"
+              }
+        }
+      ```
+
+  * 前缀匹配 query_string
+
+  * 分类汇总
+
+    * HyperLogLog:  cardinality关键字
+
+    * ```
+      "aggs": {
+          "count_unlisted_companies": {
+            "cardinality": {
+              "field": "company_id" // 假设这里有一个代表公司唯一标识的company_id字段
+            }
+          }
+        }
+      ```
+
+    * ```
+      "aggs": {
+          "count_active_companies": {
+            "value_count": {
+              "field": "_id"
+            }
+          }
+        }
+      ```
+
+#### Semantic Search
+
+* 参考「MLSys - 召回」笔记
+
+#### 电商搜索
+
+##### 业务理解
+
+* 商品搜索中的用户强意图场景，召回率/MAP/NDCG指标要求高，因为不能让一些商品永远没有曝光的机会 —— 第四范式
+* 商品搜索对个性化的要求高于网页/视频/文字搜索，比如搜索的时候，不同的人消费能力的不同，那么排序时，需要考虑用户的消费能力，返回合适价格的商品
+* 电商场景出于商家生态考虑，商品覆盖率要求高
+
+##### 关键词提取和生成
+
+> [电商搜索全链路（PART II）Query理解](https://mp.weixin.qq.com/s/GrMItUHW8Szghmveejn9XA)
+
+![图片](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/640-20241011183258573)
+
+![img](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/78aa0a537b0122edf97ec9a6d01a4fbf.png)
+
+* Query预处理
+  * 运营审核干预
+  * 归一化：包括大小写转换、繁简体转换、全半角转换、符号表情移除等
+  * 长度截断：对超长的query进行截断
+* Query分词
+  * 目前业界中大部分搜索系统中的分词模块都会有专门的基础中台部门来迭代优化，亦或直接使用开源的分词工具（譬如JieBa、HanLP、PyLTP、LAC等）
+  * Review of Chinese Word Segmentation Studies: *https://manu44.magtech.com.cn/Jwk_infotech_wk3/CN/Y2020/V4/I2/3/1*
+  * NLP分词算法深度综述: *https://zhuanlan.zhihu.com/p/50444885*
+
+```python
+# 提取名词
+values = [token.word for token in jieba.posseg.cut(query)
+            if token.flag in {'n', 'nr', 'ns', 'nt', 'nz'}]
+```
+
+
+
+
+
+> Query改写
+
+- Query纠错：技术方案主要可以分为pipeline和end2end两种类型
+
+  - Pipeline错误检测：识别输入句子中错误词的位置。主要方法有以下几种：
+
+  - - 基于词典：对query切分后，检查各个词是否在维护的自定义词表或挖掘积累的常见纠错pair中；
+    - 基于语言模型：统计大规模语料的n-gram信息，频率小于一定阈值的即认为是错误词；
+    - 基于序列标注：通过模型（bi-LSTM-CRF、BERT-CRF等）来学习错误词的开始和结束位置，'0' 表示无错误，'1' 表示错误；
+
+  - Pipeline错误纠正：定位到错词后，进行错词的纠正。首先采用多种策略（编辑距离、HMM模型、训练深度模型挖掘等）进行纠错候选召回，然后对该候选集合进行排序得到最终的正确query。
+
+  - End2End：
+
+    - 字节AI Lab的Soft-Mask BERT
+    - 蚂蚁金服SpellGCN
+    - 腾讯 PLOME
+
+  - 业界案例：在实际应用场景中，会存在很多论文未涉及的问题
+
+    - [百度：中文纠错技术](https://mp.weixin.qq.com/s?__biz=MzU1NTMyOTI4Mw==&mid=2247488610&idx=1&sn=c8793392f789ba5c39a9e8a4d7c6beac&scene=21#wechat_redirect)
+    - [哈工大讯飞文本纠错系统](http://cogskl.iflytek.com/archives/1306)
+    - [平安寿险AI：文本纠错技术](https://zhuanlan.zhihu.com/p/159101860)
+    - [阿里：语音对话中的纠错系统](https://mp.weixin.qq.com/s?__biz=MzA3MTQ0NTUyMw==&mid=2247484572&idx=1&sn=de6d707458e05bec4d53c4e4427da0e2&scene=21#wechat_redirect)
+    - [小爱：基于BERT的ASR纠错](https://mp.weixin.qq.com/s?__biz=MzU1NTMyOTI4Mw==&mid=2247503412&idx=1&sn=75ef312902713d3766a43a6c71e1024e&scene=21#wechat_redirect)
+    - [滴滴：语音交互自然语言理解探索与实践](https://mp.weixin.qq.com/s?__biz=MzU1NTMyOTI4Mw==&mid=2247529750&idx=2&sn=dbf897c5cb112fb87b6a1d9a37804548&scene=21#wechat_redirect)
+    - [流利说：自动语法纠错](https://mp.weixin.qq.com/s?__biz=MzI0NjIzNDkwOA==&mid=2247484827&idx=1&sn=137c9b927a9d77af73825eb24abb5c8f&scene=21#wechat_redirect)
+
+![图片](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/640-20241011184242866)
+
+- Query归一：目标是将长尾冷门的query/词语归一到热门标准query
+  - 涉及的主要技术是同义词挖掘及语义实体对齐。具体实现上有很多方式，譬如：
+    - 从知识库或者结构化数据构造规则模板来挖掘；
+    - 利用丰富的行为数据，结合无监督词向量，来挖掘语义相似词；
+    - 通过深度匹配模型、文本生成模型seq2seq等先挖掘出语义表达相近的query-query、item-item或query-item短语对，然后再将语义相近的query/item短语对进行语义对齐；
+- Query扩展：根据粒度的不同分为Term粒度和Query粒度两种
+  - 美团方案：
+    - 首先离线通过用户搜索日志、翻译（词对齐等）、图方法（协同过滤、graph embedding等）、词向量Embedding等方法挖掘得到千万级别的候选语料；
+    - 但一般上述挖掘语料质量不够高，又设计了基于BERT的语义判别模型进一步提高改写pair对的准确率；
+    - 在线的目标是进一步提高改写的效果，设计了高精度的词典改写、较高精度的模型改写（基于SMT统计翻译模型和XGBoost排序模型）、覆盖长尾Query的基于强化学习方法优化的NMT模型、针对商户搜索的向量化召回四种线上方案。
+  - 其它方案：
+    - [丁香园：搜索中的Query扩展技术](https://zhuanlan.zhihu.com/p/138551957)
+    - [丁香园：搜索中的Query扩展技术(二)](https://zhuanlan.zhihu.com/p/296504323)
+    - [Query 理解和语义召回在知乎搜索中的应用](https://mp.weixin.qq.com/s?__biz=MzU1NTMyOTI4Mw==&mid=2247496409&idx=1&sn=7b2f5984d71454e1a2812321f6018cf8&scene=21#wechat_redirect)
+    - [美团搜索中查询改写技术的探索与实践](https://tech.meituan.com/2022/02/17/exploration-and-practice-of-query-rewriting-in-meituan-search.htm)
+
+
+
+##### 实体识别
+
+![img](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/ab517b8391561f900d538776c1bc0381.png)
+
+* 领域知识积累
+  * e.g.
+    * 口条=猪舌
+    * 角瓜=茭瓜=西葫芦
+    * Redmi
+  * 词库挖掘
+    * 同义词挖掘
+      * 基于word2vec共现关系（噪声大）
+      * 百科爬取
+      * 运营提供
+      * 现有词库
+    * 上位词挖掘
+      * 类目作为上位词
+      * 爬取类目体系
+  * 商品知识图谱构建
+    * 知识图谱其实是做了一个非个性化全局的知识构建，通过商品库去分析静态概率，最后根据用户点击行为会做一些动态调整，调整完的知识图谱再用在后面的排序上。
+    * ![image-20241011154227917](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/image-20241011154227917.png)
+  * LLM都能搞定
+
+##### 意图识别
+
+![img](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/a0dd83557a74b8d07f3bed5e4a6fd0ef.png)
+
+![img](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/43f0a0f7c0b801a7be62446738bf1b6a.png)
+
+* FastText分类器 https://fasttext.cc/
+
+##### 召回
+
+* ES
+
+![img](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/d350bbd78199bc8b214e81bc6a387820.png)
+
+
+
+##### 粗排
+
+* 当召回数量较大时，粗排截断
+* 相关性、时间、热度、销量、好评数和收藏数等等特征，训练出简单的模型，做一些粗排的排序，进行截断
+  * 找出核心的特征，做加权平均也可以。
+
+##### Rerank
+
+> [搜推广生死判官：重排技术发展](https://mp.weixin.qq.com/s/oSxtpVuoTFQGsVxbZelGQg)
+
+* LR、GBDT
+
+![img](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/690ce3a3bbc3f407bc453ebc35ceb18b.png)
+
+
+
+##### 模型微调
+
+[“阿里灵杰”问天引擎电商搜索算法赛--季军经验分享](https://mp.weixin.qq.com/s/sfFZpttGqf_f4sBFpQIiyg)
+
+* ![image-20241010195711640](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/image-20241010195711640.png)
+
+* ![image-20241010195813065](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/image-20241010195813065.png)
+
+* 领域数据后训练
+  * 动机：大量corpus未曝光，未经过训练
+  * 预训练模型：Chinese-roberta-wwm-ext, Whole World MLM
+* 召回任务微调
+  * 数据构造：
+    * 正样本：标注document
+    * 负样本：
+      * in-batch-negative: batch内其它query的标注document
+      * random-negative：随机在corpus采样非标注document
+        * 动机：如果仅使用in-batch-negative，会影响非标注document的学习过程
+
+![image-20241010202306817](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/image-20241010202306817.png)
+
+* 精排任务微调
+  * 均值变换：相似程度较高的召回，区分度增强，增加梯度
+
+![image-20241010202519864](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/image-20241010202519864.png)
+
+![image-20241010202709678](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/image-20241010202709678.png)
+
+![image-20241010202740700](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/image-20241010202740700.png)
+
+##### 各种Tricks
+
+* **数据增强**
+
+  - **训练bart生成模型，使用document生成query构造伪标签**（还可以生成时随机替换一些阿拉伯数字、拼音），同时使用一定规则修正生成的伪标签query
+
+  - 反向翻译（不确定是否有效）
+
+  - **把query中长度小于4的拿出来，加入词表构建新词**
+
+  - 把document分词后随机抽几个拼接作为新doc（不确定是否有效）
+
+* **召回模型：**
+
+  - 降维时可以使用无监督PCA作为降维矩阵初始化
+
+  - 训练交互式精排模型去蒸馏非交互式召回模型
+
+  - 难负例构造：使用训练好的召回模型+faiss召回，取相似度中等水平（30左右）的document作为难负例
+
+  - infoNCE loss的温度：可以首先设定一个比较小的，然后慢慢变大，但不能太大
+
+  - 集成使用提交的线上得分作为系数加权求和embedding（不确定是否有效）
+
+* **精排模型：**
+  - **可以使用ES引擎先召回query对应top-k doc，然后经过规则过滤（字面相似度高，向量余弦相似度不低）出过滤doc，然后把query和这些doc的向量表示按照一定规则相加，作为新query向量表示**
+
+* **召回模型融合：**
+  - **不能直接取均值，而是使用stacking的方法，把多个模型的输出向量使用一个训练后的FFN网络融合。**
+
+
+
+#### Evaluation
+
+* F-score: 精确率和召回率的调和平均数
+
+1. BLEU（Bilingual Evaluation Understudy）
+   - **定义**：BLEU 是一种用于评估机器翻译质量的指标。它通过比较机器生成的翻译文本与参考（人工翻译）文本之间的 n - gram（n 个连续单词的序列）重叠情况来衡量翻译的准确性。
+   - 工作原理
+     - 计算生成文本和参考文本之间的 n - gram（如 1 - gram、2 - gram、3 - gram 和 4 - gram）的匹配数量。例如，对于一个句子，1 - gram 是单个单词的匹配，2 - gram 是两个连续单词的匹配，以此类推。
+     - BLEU 得分是这些 n - gram 匹配率的几何平均值，并且会考虑简短回答的惩罚因子。如果生成的句子过短，会受到惩罚，以避免系统总是生成非常简短但可能部分匹配的句子来获取高分。
+   - **应用场景**：广泛应用于机器翻译系统的评估，帮助比较不同翻译模型或算法的性能，确定哪种模型能够生成更接近人工翻译质量的译文。
+2. ROUGE（Recall - Oriented Understudy for Gisting Evaluation）
+   - **定义**：ROUGE 是一组用于评估自动文本摘要和机器翻译质量的指标，主要侧重于召回率（Recall），即衡量系统生成的文本能够包含参考文本中多少重要信息。
+   - 工作原理
+     - 有多种 ROUGE 变体，如 ROUGE - N（基于 N - gram 的召回率）、ROUGE - L（基于最长公共子序列的召回率）和 ROUGE - S（基于句子的召回率）等。
+     - 以 ROUGE - N 为例，它计算生成摘要和参考摘要之间 N - gram 的重叠比例作为召回率。ROUGE - L 通过寻找生成文本和参考文本之间的最长公共子序列来计算召回率，更注重句子的整体结构和顺序。
+   - **应用场景**：在文本摘要领域，用于评估自动生成的摘要是否能够准确地捕捉原始文本的主要内容；在机器翻译中，也可以帮助评估翻译后的文本是否完整地传达了原文的关键信息。
+3. METEOR（Metric for Evaluation of Translation with Explicit ORdering）
+   - **定义**：METEOR 是一种综合考虑了精确率（Precision）、召回率（Recall）和词序（Word Order）的文本生成质量评估指标，用于评估机器翻译和其他文本生成任务。
+   - 工作原理
+     - 首先计算生成文本和参考文本之间的精确率和召回率，类似于 BLEU 和 ROUGE 的部分计算。
+     - 然后，METEOR 引入了一个基于词序的 F - measure（调和平均数）来综合评估匹配质量。它通过考虑单词的匹配、同义词匹配（通过预定义的词表）和词序的连贯性来计算得分。
+     - 还包括一个对齐模块，用于找到生成文本和参考文本之间单词的最佳匹配，考虑了多种匹配类型，如完全匹配、同义词匹配和词根匹配等。
+   - **应用场景**：在机器翻译和文本生成任务中，METEOR 能够提供一个更全面的评估，因为它不仅仅关注单词或短语的匹配，还考虑了词序和语义相似性，能够更好地反映生成文本的自然度和准确性。
+
+#### 看case
+
+* 点击和相关性逆序比较大的case
+
+
+
+### NLP
+
+#### 词之间的相似度
+
+* Embedding-based
+  * SentenceEmbedding
+
+```python
+from sentence_transformers import SentenceTransformer, util
+
+model = SentenceTransformer('...')
+
+field_embeddings = model.encode(fields)
+
+def find_most_similar(input_word):
+    input_embedding = model.encode(input_word)
+    similarities = util.cos_sim(input_embedding, field_embeddings)
+    best_index = similarities.argmax()
+    return fields[best_index]
+```
+
+
+
+* 编辑距离
+  * Levenshtein
+  * fuzzywuzzy
+
+```python
+from fuzzywuzzy import process
+def find_most_similar(input_word):
+    match, score = process.extractOne(input_word, fields)
+    return match
+```
+
+
+
+
+
+
 
 #### CLIP
 
@@ -414,6 +800,10 @@ Training 量化
 * CLIP 的主要思想是通过对比学习，使模型能够学习到文本-图像对的匹配关系。
   * 具体来说，CLIP 由两个模态组成：一个用于处理文本的文本编码器（Text Encoder），另一个用于处理图像的图像编码器（Image Encoder）。
   * 这两个编码器分别产生各自领域内的单向向量表示。在训练过程中，CLIP 会将一对图像和文本作为正样本，其他图像和文本作为负样本，通过对正样本之间的相似性和负样本之间的不相似性进行对比学习，来增强模型对图像和文本之间关系的理解。
+
+#### 指标
+
+* 困惑度(perplexity)的基本概念及多种模型下的计算（N-gram, 主题模型, 神经网络）https://zhuanlan.zhihu.com/p/114432097
 
 
 
@@ -453,11 +843,16 @@ Training 量化
 
 * [物理改变图像生成：扩散模型启发于热力学，比它速度快10倍的挑战者来自电动力学](https://zhuanlan.zhihu.com/p/599013984)
 
-### AIGC
 
-* 2018年英伟达可以生成图片的StyleGAN模型、2019年DeepMind可以自动生成连续视频的DVD-GAN模型和2022年OpenAI聊天机器人ChatGPT是AIGC在应用层面的三个重要节点。
 
 ### Reinforce Learning
+
+* [AI挑战黑神话！死亡1000次，我训练的AI终于击败了首个BOSS【图灵计划10】](https://www.bilibili.com/video/BV1qE421c7mU)
+* [【DQN只狼实战教程】手把手带你实现用强化学习DQN打只狼里的boss（第一期）](https://www.bilibili.com/video/BV1by4y1n7pe)
+
+
+
+
 
 [深度强化学习（一）强化学习概述 - iker peng的文章 - 知乎](https://zhuanlan.zhihu.com/p/22542101)
 
@@ -554,7 +949,18 @@ DCN-V2: to model explicit crosses in an expressive yet simple manner.
 
 DCN-Mix: Observing the low-rank nature of the weight matrix in the cross network, to propose a mixture of low-rank DCN，是效果和延时的折中
 
+### AI4Science
 
+* [AlphaFold开发者获2024诺贝尔化学奖，AI抢夺科学家的最重要荣誉](https://mp.weixin.qq.com/s/BqO1-UN3hQ4Bagcp206_uw)
+  * 从围棋到蛋白质结构预测
+  * AlphaFold2 成功解决蛋白质折叠问题
+  * AlphaFold 3 具备了药物设计的能力，可以预测药物中常用的分子（如配体和抗体），这些分子可与蛋白质结合，改变蛋白质在人类健康和疾病中的相互作用方式。
+  * 方向：构建虚拟细胞
+  * 基于AlphaFold 3 推出了免费平台AlphaFold Server，供全世界的科学家利用它进行非商业性研究，预测蛋白质如何与细胞中的其他分子相互作用。
+  * 鲜为人知的是，AlphaFold一直存在诸多竞争者，其中最为知名的莫过于华盛顿大学的David Baker团队。
+    * Baker是预测和设计蛋白质三维结构方法的开创者
+  * “癌症、气候变迁、能源、基因组学、宏观经济学、金融系统、物理学等，太多我们想掌握的系统知识正变得极其复杂,如此巨大的信息量让最聪明的人穷其一生也无法完全掌握。如何才能从如此庞大的数据量中筛选出正确的见解呢？” 未来超级智能机器将与人类专家合作解决一切问题，一种通用人工智能可以自动将非结构化信息转换为可使用知识，这是一种针对任何问题的元解决方法（meta-solution）。
+* ChemCrow
 
 
 ### Fundamentals of Deep Learning -- nvidia
@@ -1129,3 +1535,8 @@ python train.py
 ### 术语
 
 NLU: Natural Language Understanding
+
+### TODO
+
+* 传统关键词检索
+  * https://www.elastic.co/cn/blog/implementing-academic-papers-lessons-learned-from-elasticsearch-and-lucene

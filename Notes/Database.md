@@ -2,6 +2,10 @@
 
 ## Database
 
+### Intro
+
+* [从零开始深入理解存储引擎](https://mp.weixin.qq.com/s/sEml0lH2Zj-b_sIFRn2wzQ) TODO
+
 ### mysql
 
 没学过db。。。极速入门满足日常简单需求
@@ -197,6 +201,112 @@ ALTER TABLE test TABLE (c1 char(1),c2 char(1));
   - zadd：sorted set (element with score)
   - hset：https://redis.io/commands/hset/
 
+### 图数据库
+
+#### Gremlin
+
+https://tinkerpop.apache.org/docs/current/reference/#_tinkerpop_documentation
+
+* 建模细节：
+  * 对边类型做拆分
+  * 边索引：`g.V(A).outE('follow').order().by('age')`
+* 基础命令
+  * path
+  * by
+    * 作为Path修饰器，对Path上的元素Element执行投影计算。
+
+```
+g.V().has('id', {CityHash32(c)}).has('type', 2).outE('Company2Person').otherV().inE('Company2Person').otherV().outE('Company2Person').otherV().has('type', 1).has('id', {CityHash32(p)}).path().by(properties('name')).by(properties('role'))
+```
+
+* 规范
+  * 判断点存在性：不能使用g.V().has("id", xxx).has("type", yyy)。原因是点有2种语义分别是属性点和边的端点。
+    * 判断属性点存在性： 使用g.V().has("id", xxx).has("type", yyy).properties() 如果返回空，表示不存在。
+    * 判断边端点存在性： 使用g.V().has("id",xxx).has("type",yyy).outE(edge_type).count()，如果返回0，表示不存在。
+  * 新增(addV)或修改点(Property(key, value))，需要进行点存在性判断。
+    * 添加点(addV)是覆盖语义，会把已有的点删除，再重新写入，导致原有的数据丢失。
+    * 修改点(Property) 只能修改已存在点，不能新建属性，否则会报错。
+  * 使用drop删除addV产生的点，删除点的属性，点并没有真正删除，只能由底层存储进行compact，降低空间占用。
+  * 点的update-or-insert不支持原子性，边的update-or-insert并发下只能保证1个记录成功，其他会失败。 如有强需求使用原子性, 建议业务层实现。
+
+```
+g.V().has("id",A.id).has("type",A.type)
+ .property("age", 28) // 如果A点存在，更新点的属性
+ .fold()              // 结果为[]或[Vertex(A)]
+ .coalesce(unfold(),  // 如果是[Vertex(A)],直接返回
+   g.addV().overwrite(false).property("id",A.id).property("type",A.type)
+    .property("age", 28) // 如果是[]，插入A并更新属性
+  )              // coalesce 返回结果一定是 Vertex(A)
+```
+
+* 多跳查询：
+  * 例如1跳出度为n，二跳出度为m。第1跳查询的次数为1，出现记录数为n，第2跳查询次数为n，输出记录为m，所以共需要查询次数为n+1，遍历总记录数为n*m。
+* 技巧：
+  * 引入虚拟点：
+    * A->B
+    * A->C
+      * 点C的属性：B上要维护的属性
+      * 边A->C的属性：B.id、B.type
+
+* 例子：
+
+```
+# 插入一条 (1,1) -> (2,1) 的正向边
+g.V().addE('follow').from(1,1).to(2,1).property('tsUs', 123)
+# 从 (2,1) 出发，做入度查询，也就是反向查询
+g.V(vertex(2,1)).inE('follow').count()
+
+# 双向边
+g.V(vertex(2,1)).double('follow').count()
+```
+
+
+
+```
+# 关注
+g.addE("follow").from(100, 2).to(200, 2).setProperty("tsUs", 1234).setProperty("closeness", 20)
+# 取关
+g.V(vertex(100, 2)).outE("follow").where(otherV().has("id", 200).has("type", 2)).drop()
+# 按关注时间排序
+g.V(vertex(100, 2)).outE("follow").order().by("tsUs").limit(10).otherV()
+# 判断关系
+g.V(vertex(100, 2)).outE("follow").where(otherV().has("id", 200).has("type", 2))
+# 粉丝数量
+g.V(vertex(100, 2)).in("follow").count()
+
+# 使用local，子查询
+g.V(vertex(100, 2)).out("follow").local(out("like").limit(100))
+g.V(vertex(100, 2)).out("follow").out("follow").local(in("follow").count().is(le(500)))
+
+# 按边属性筛选点
+g.V(vertex(100, 2)).outE("follow").has("closeness", 20).otherV()
+
+# 同时关注
+g.V().has("id", C.id).has("type", C.type)
+ .out("follow")
+ .store("vertices")
+ .count()
+ .local(
+        g.V().has("id", A.id).has("type", A.type)
+         .out("follow")
+         .where(P.within("vertices")))
+
+# A->C路径
+.g.V().has("id", A.id).has("type", A.type)
+ .repeat(                              // repeat()表示表示迭代从A找关注or被关注的人
+        both("follow")
+        .simplePath())                 // simplePath()是过滤条件，出现环则过滤掉
+ .until(                               // until()指定repeat步骤的终止条件是:
+        or(has("id", C.id).has("type", C.type),  // 1. 找到了用户C，或者
+           loops().is(gte(4))))                  // 2. 找了4度还没有找到；
+ .emit(has("id", C.id).has("type", C.type))  // emit()表示只保留遍历终点是C的结果
+ .path()                                     // path()表示生成起点A到终点C的路径
+```
+
+
+
+
+
 ### Hive
 
 * hadoop 生态下的OLAP引擎，将 SQL 查询翻译为 map reduce 任务，特点是稳定，成功率高，但是查询速度慢
@@ -328,7 +438,7 @@ nvm读写性能介于dram和ssd之间，更接近dram
 * 指标：performance/price numbers
 
 * insights	
-  * To achieve the highest absolute performance, the hierarchy usually consists ofDRAM (since DRAM has the lowest latency).
+  * To achieve the highest absolute performance, the hierarchy usually consists of DRAM (since DRAM has the lowest latency).
   * If the workload is read-intensive, DRAM-NVM-SSD hierarchy is the best choice from a performance/price standpoint, since it is able to ensure the hottest data resides in DRAM.
   * If the workload is write-intensive, NVM-SSD hierarchy is the best choice from a performance/price standpoint, since NVM is able to reduce the recovery protocol overhead.
 

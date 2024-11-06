@@ -166,6 +166,16 @@ https://zhuanlan.zhihu.com/p/146462733
 
 最简单的方法就是单双引号交替
 
+##### shell中的容错：set -e、trap
+
+```shell
+set -e
+function cleanup {{
+	rm ...;
+}}
+trap cleanup EXIT SIGKILL
+```
+
 **shell函数和scripts的区别：**
 
 - Functions have to be in the same language as the shell, while  scripts can be written in any language. This is why including a shebang  for scripts is important.
@@ -1057,6 +1067,7 @@ nohup python -u main.py > name.log 2>&1 & echo $! > run.pid
 * pkill = pgrep + kill
 
   * `pkill -9 -f 100` 
+  * `pkill -f "^.*autoops.api*" -n`
 
 * pmap: Displays the memory map of a process.
 
@@ -1087,6 +1098,14 @@ scp -r $folder
   * 记录终端操作记录，按`C-d`退出
   * 可用于demo演示终端操作
   
+* sed
+  * `-i.bak`: 直接修改文件并创建备份。
+
+
+```shell
+sed -i.bak "s/version='[0-9]\+\.[0-9]\+\.[0-9]\+'/version='$NEW_VERSION'/" setup.py
+```
+
 * sha1sum:  `printf 'hello' | sha1sum`  
 
 * sha256sum

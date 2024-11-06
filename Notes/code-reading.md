@@ -1774,6 +1774,8 @@ https://github.com/chenshuo/recipes https://github.com/huangrt01/recipes
     * 这里实际上是一个非常特殊的场景（写入量太少了），分布式kv不能这样搞，会增加绝对计算量影响性能
     * 本质上是read-intensive、写入操作少的业务（比如交易业务），可以用CopyOnWrite范式。延伸来说，也可以将读多写少的业务抽象为类似的模型，将写入操作按分钟级聚合为batch。比如借鉴progressive rehash的思路，维护两份hashtable，一份存近期增量，一份存旧数据，新的查找来临时先查bloom filter决定是否查新table，再查旧table。但这样会增加写入的cpu消耗（多查一次hashtable），不一定划算。
 
+## 基础库
+
 ### absl
 
 * [hash.h](https://github.com/abseil/abseil-cpp/blob/master/absl/hash/hash.h)
@@ -2115,6 +2117,150 @@ sudo apt-get install libboost-all-dev
 "-lboost_system"
 ```
 
+## LLM4Rec/Search
+
+### LightRAG
+
+> https://github.com/HKUDS/LightRAG
+>
+> 代码解读：https://www.bilibili.com/video/BV1CwCRYGE6J
+
+* examples
+  * lightrag_openai_compatible_demo.py：  核心接口，比较简单
+  * QueryParam(mode="local")
+    * local: low-level
+    * global: high-level
+    * hybrid
+  * 可视化：dickens/*.graphml
+    * 用networkx可视化
+    * https://github.com/TheAiSingularity/graphrag-local-ollama/blob/main/visualize-graphml.py
+
+* lightrag.py
+
+  * insert
+  * query
+
+* operate.py
+
+  * Local_query
+    * 关键词提取：PROMPTS["keywords_extraction"]，仅生成low-level
+    * 构建上下文：_build_local_query_context
+      * 查entities_vdb，检索top-k实体
+      * knowledge_graph_inst
+      * text_chunks_db
+      * 检索最相关的文本单元：use_text_units = _find_most_related_text_unit_from_entities
+        * 先获取一跳节点
+        * 计数：文本相关的一跳节点数目
+        * 截断并返回
+      * _find_most_related_edges_from_entities
+        * 按边的度（`rank`）排序，然后按边的权重（`weight`）降序排序
+
+  * global_query
+    * 提取 high_level_keywords
+    * 构建上下文：_build_global_query_context
+      * 在 relationships_vdb检索top-k关系，获取边数据
+      * 按边的度（`rank`）排序，然后按边的权重（`weight`）降序排序
+      * 基于边数据，找到最相关的实体：use_entities = _find_most_related_entities_from_relationships
+        * 排序和edge的排序一致
+      * use_text_units = _find_related_text_unit_from_relationships
+
+* 增量构建KG
+
+  * light_rag.py: ainsert
+    - ```Python
+      maybe_new_kg = extract_entities(
+                      inserting_chunks,
+                      knwoledge_graph_inst=self.chunk_entity_relation_graph,
+                      entity_vdb=self.entities_vdb,
+                      relationships_vdb=self.relationships_vdb,
+                      global_config=asdict(self),
+                  )
+      ```
+
+    - operate.py: extract_entities
+      - 通过 PROMPTS["entity_extraction"]，LLM抽取实体
+      - 实现了基础的reflection功能，尽量不漏抽实体
+      - 没有考虑对实体的去重和合并（比如将“西红柿”和“番茄”合并为同一实体），猜测是因为基于实体相关性进行实体检索，相似的实体都能检索进来
+
+* prompt.py 提示词
+
+* 构建KG边节点，对high-level concept做embedding
+
+  * 原始
+    - **("relationship"<|>"Taylor"<|>"The Device"<|>"Taylor shows reverence towards the device, indicating its importance and potential impact."<|>"reverence, technological significance"<|>9)##**
+  * record = re.search(r"\((.*)\)", record)、re.group(1)
+    - **"relationship"<|>"Taylor"<|>"The Device"<|>"Taylor shows reverence towards the device, indicating its importance and potential impact."<|>"reverence, technological significance"<|>9**
+  * split_string_by_multi_markers
+    - [**"relationship", "Taylor", "The Device", "Taylor shows reverence towards the device, indicating its importance and potential impact.", "reverence, technological significance"**]
+  * [_handle_single_relationship_extraction](https://github.com/HKUDS/LightRAG/blob/57e9604ce6526a48a7f60281962c2f14c0cbea76/lightrag/operate.py#L98)
+    - edge_keywords = **reverence, technological significance**
+    - source = **Taylor**
+    - target = **The Device**
+    - edge_description = **Taylor shows reverence towards the device, indicating its importance and potential impact.**
+  * upsert edge data: 把description和keywords都存进去
+    - ```Python
+      await knwoledge_graph_inst.upsert_edge(
+              src_id,
+              tgt_id,
+              edge_data=dict(
+                  weight=weight,
+                  description=description,
+                  keywords=keywords,
+                  source_id=source_id,
+              ),
+          )
+      ```
+  * [做embedding，插入relationship_vdb](https://github.com/HKUDS/LightRAG/blob/57e9604ce6526a48a7f60281962c2f14c0cbea76/lightrag/operate.py#L375)
+    - **是使用 concat(keywords, src_item, target_item, description) 做****embedding**
+      - edge_keywords = **reverence, technological significance**
+      - source = **Taylor**
+      - target = **The Device**
+      - edge_description = **Taylor shows reverence towards the device, indicating its importance and potential impact.**
+
+### RecAI - InteRecAgent
+
+> https://github.com/microsoft/RecAI
+>
+> https://github.com/microsoft/RecAI/tree/main/InteRecAgent
+
+* Candidate store
+  * CandidateBuffer
+  * Llm4crs/buffer
+    * 数据结构：BaseGallery
+    * 实际存储：llm4crs_candidates，环境变量存字符串
+
+* Plan-First
+
+  * `plan_first`
+
+  * agent_plan_first_openai.py
+
+    * self.memory = DialogueMemory
+
+      * Shorten
+
+    * **SYSTEM_PROMPT_PLAN_FIRST**
+
+    * ```
+      self._domain_map = {
+                  "item": self.domain,
+                  "Item": self.domain.capitalize(),
+                  "ITEM": self.domain.upper(),
+              }
+      ```
+
+    * Example_selector: 用的 from langchain.prompts import example_selector
+    * _summarize_recommendation：基于结果生成回复
+
+* Reflection
+  * `enable_reflection`
+  * agent_plan_first_openai.py
+    * self.critic
+
+
+
+## RecSys
+
 ### deeprec
 
 https://github.com/alibaba/DeepRec
@@ -2148,45 +2294,7 @@ https://github.com/alibaba/DeepRec
 
     * 支持MultipleElements，axis_tensor 作为分界的参数
 
-### illumos
-
-https://illumos.org/
-
-[LISA11 - Fork Yeah! The Rise and Development of illumos](https://www.youtube.com/watch?v=-zRN7XLCRhc)
-
-* uts/common/os/fio
-  * http://home.mit.bme.hu/~meszaros/edu/oprendszerek/segedlet/unix/4_fajlrendszerek/solaris_internals_ch14_file_system_framework.pdf
-  * [flist_grow](https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/common/os/fio.c#L338): use memory retiring to implement per-chain hash-table locks，避免hashtable查找时加全局锁来获取当前hashtable的指针
-    * fi_list是volatile，并且要加memory barrier
-    * fi_lock protects fi_list and fi_nfiles
-    * ufp->uf_lock 只在发现 size 变大时锁住（调用 UF_ENTER）
-    * flist_grow() must acquire all such locks -- fi_lock and every fd's uf_lock -- to install a new file list
-* uts/common/sys/user.h
-  * [UF_ENTER](https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/common/sys/user.h#L176)
-
-
-* uts/common/os/kmem.c
-  
-  
-  * https://www.cs.dartmouth.edu/~sergey/cs108/2015/solaris_kernel_memory.pdf
-	
-	* For example, the Solaris kernel memory allocator has per-CPU caches of memory buffers. When a CPU exhausts its per-CPU caches, it must obtain a new series of buffers from a global pool. Instead of simply acquiring a lock in this case, the code [*attempts* to acquire the lock](https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/common/os/kmem.c#L2090), incrementing a counter when this fails (and then acquiring the lock through the blocking entry point). If the counter reaches a predefined threshold, the size of the per-CPU caches is increased, thereby dynamically reducing contention.
-	  * `int kmem_depot_contention = 3;`
-	
-	  * `if (cp->cache_chunksize < cp->cache_magtype->mt_maxbuf && (int)(cp->cache_depot_contention - cp->cache_depot_contention_prev) > kmem_depot_contention) {need_magazine_resize = 1;}`
-	
-	    
-	
-### brpc
-
-* backup request
-  * https://brpc.apache.org/docs/client/backup-request/
-
-### grpc
-
-* CQ（CompletionQueue）是一个重要的概念。
-  * CQ 是用于异步处理 RPC 请求和响应的事件队列。它是 gRPC 中实现异步通信和多路复用的关键机制之一。CQ 允许应用程序在发出请求后继续执行其他操作，而不需要阻塞等待响应返回。
-  * 当应用程序使用异步 API 发起 RPC 请求时，请求会被放入 CQ 中作为一个事件。CQ 监听这些事件并通知应用程序有关请求状态的变化，比如请求成功返回或失败。应用程序可以通过轮询或异步回调的方式从 CQ 中获取这些事件，并根据事件类型进行相应的处理。
+## MLSys
 
 ### tinyflow
 
@@ -2222,12 +2330,13 @@ https://github.com/huangrt01/tinyflow
   ```
 
 * Autodiff
+
   * ad.gradients() 是在构图，倒序遍历topology
     * node.op.gradient(self, node, output_grad): op级别的后向，输出一个新op
   * Executor.run() 是在运行图，顺序遍历topology
     * node.op.compute(self, node, input_vals): op级别的前向，输出value
   * test: 支持grad_of_grad
-  
+
 * Graph_executor_with_tvm
 
 ```shell
@@ -2251,6 +2360,7 @@ python tests/mnist_dlsys.py -l -m mlp
 ![tvm-arch](code-reading/tvm-arch.png)
 
 * 参考资料：[从零开始学习深度学习编译器](http://giantpandacv.com/project/%E9%83%A8%E7%BD%B2%E4%BC%98%E5%8C%96/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%BC%96%E8%AF%91%E5%99%A8/TVM%20%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/)
+
   * 这个资料好全，深坑。。。 列为TODO吧
 
 * 内存管理
@@ -2270,6 +2380,7 @@ python tests/mnist_dlsys.py -l -m mlp
       ```
 
     * `attrs->storage_id` 
+
     * ndarray的view接口
 
   * 内存管理算法：`src/relay/backend/graph_plan_memory.cc`
@@ -2327,8 +2438,11 @@ python tests/mnist_dlsys.py -l -m mlp
   * [rfc: relay dynamic runtime](https://github.com/apache/tvm/issues/2810), converged in VM design
 
 * tests
+
   * tests/python/relay/test_backend_graph_executor.py: test_plan_2d_memory()
+
 * tvm and tf: [TVMDSOOp RFC](https://discuss.tvm.apache.org/t/add-the-document-for-tvmdsoop/6622), [PR](https://github.com/apache/tvm/pull/4459/files)
+
   * src/contrib/tf_op/tvm_dso_op_kernels.cc
     * 如果不align到64，需要 `EnsureAlignment` 分配内存然后 `input.CopyFromOrigin()` 做memcpy
 
@@ -2366,6 +2480,7 @@ python tests/mnist_dlsys.py -l -m mlp
     ```
 
 * [Optimize Tensor Operators](https://tvm.apache.org/docs/how_to/optimize_operators/index.html)
+
   * [optimize conv2d](https://tvm.apache.org/docs/how_to/optimize_operators/opt_conv_cuda.html)
   * [optimize using TensorCores](https://tvm.apache.org/docs/how_to/optimize_operators/opt_conv_tensorcore.html)
 
@@ -2401,6 +2516,7 @@ python tests/mnist_dlsys.py -l -m mlp
 * [Optimizing Operators with Schedule Templates and AutoTVM](https://tvm.apache.org/docs/tutorial/autotvm_matmul_x86.html#install-dependencies)
 
 * testing
+
   * `np.testing.assert_allclose()`
 
 
@@ -2415,7 +2531,53 @@ python tests/mnist_dlsys.py -l -m mlp
 
 
 
-### TODO
+
+
+## Kernel
+
+### illumos
+
+https://illumos.org/
+
+[LISA11 - Fork Yeah! The Rise and Development of illumos](https://www.youtube.com/watch?v=-zRN7XLCRhc)
+
+* uts/common/os/fio
+  * http://home.mit.bme.hu/~meszaros/edu/oprendszerek/segedlet/unix/4_fajlrendszerek/solaris_internals_ch14_file_system_framework.pdf
+  * [flist_grow](https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/common/os/fio.c#L338): use memory retiring to implement per-chain hash-table locks，避免hashtable查找时加全局锁来获取当前hashtable的指针
+    * fi_list是volatile，并且要加memory barrier
+    * fi_lock protects fi_list and fi_nfiles
+    * ufp->uf_lock 只在发现 size 变大时锁住（调用 UF_ENTER）
+    * flist_grow() must acquire all such locks -- fi_lock and every fd's uf_lock -- to install a new file list
+* uts/common/sys/user.h
+  * [UF_ENTER](https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/common/sys/user.h#L176)
+
+
+* uts/common/os/kmem.c
+  
+  
+  * https://www.cs.dartmouth.edu/~sergey/cs108/2015/solaris_kernel_memory.pdf
+	
+	* For example, the Solaris kernel memory allocator has per-CPU caches of memory buffers. When a CPU exhausts its per-CPU caches, it must obtain a new series of buffers from a global pool. Instead of simply acquiring a lock in this case, the code [*attempts* to acquire the lock](https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/common/os/kmem.c#L2090), incrementing a counter when this fails (and then acquiring the lock through the blocking entry point). If the counter reaches a predefined threshold, the size of the per-CPU caches is increased, thereby dynamically reducing contention.
+	  * `int kmem_depot_contention = 3;`
+	
+	  * `if (cp->cache_chunksize < cp->cache_magtype->mt_maxbuf && (int)(cp->cache_depot_contention - cp->cache_depot_contention_prev) > kmem_depot_contention) {need_magazine_resize = 1;}`
+	
+	    
+	
+## Rpc
+
+### brpc
+
+* backup request
+  * https://brpc.apache.org/docs/client/backup-request/
+
+### grpc
+
+* CQ（CompletionQueue）是一个重要的概念。
+  * CQ 是用于异步处理 RPC 请求和响应的事件队列。它是 gRPC 中实现异步通信和多路复用的关键机制之一。CQ 允许应用程序在发出请求后继续执行其他操作，而不需要阻塞等待响应返回。
+  * 当应用程序使用异步 API 发起 RPC 请求时，请求会被放入 CQ 中作为一个事件。CQ 监听这些事件并通知应用程序有关请求状态的变化，比如请求成功返回或失败。应用程序可以通过轮询或异步回调的方式从 CQ 中获取这些事件，并根据事件类型进行相应的处理。
+
+## TODO
 
 这有一系列关于hash_map精巧设计的文章 https://preshing.com/20160222/a-resizable-concurrent-map/
 

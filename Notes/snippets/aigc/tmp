@@ -1,10 +1,46 @@
-variables.json file created and variables stored.
-thread_id: thread_HHXaJhZJ2aFnGRnx6bcH0GRy, assistant_id: asst_47Fsq9mhf26HHtg7CziJncLw
+你的代码中的问题似乎和构建关系链时使用的符号有关系，因为在符号选择和连接时可能没能正确地将信息拼接，导致了输出不符合预期。我们可以通过检查符号的连接逻辑来解决这个问题。以下是我对代码逻辑的调整和建议：
 
-assistant > 你好，黄锐腾！很高兴认识你。如果你有任何问题或需要帮助的地方，请随时告诉我。我在各个领域都有所涉及，可以帮你解答许多问题。你有什么特别想聊的或需要了解的吗？
-Variables loaded from /Users/bytedance/variables.json.
-Variables loaded from /Users/bytedance/variables.json.
-Variables loaded from /Users/bytedance/variables.json.
-thread_id: thread_HHXaJhZJ2aFnGRnx6bcH0GRy, assistant_id: asst_47Fsq9mhf26HHtg7CziJncLw
+1. **符号表**：由于 `result` 中的拼接依赖于 `symbols` 和 `symbol_index`，请确认你想要的符号顺序是否正确，同时在排版中考虑这个符号表。
+   
+2. **循环逻辑**：在 `value_matches` 循环中，为确保正确的符号值放入，我们可以调整符号拼接逻辑。
 
-assistant > 你叫黄锐腾。
+3. **关系流定义与符号**：确保为关系流定义的符号和具体输出的符号之间的关系是清晰的，这样能保证不同角色和属性之间清楚地表达。
+
+具体来说，修改上述代码的方法如下：
+
+```python
+import re
+from typing import Dict, Any
+
+def _process_single_relation(relation, c_first, side_info: Dict[str, Any]):
+    assert isinstance(relation, str)
+    value_matches = None
+
+    # 匹配数据
+    if bg_use_http_client:
+        value_matches = re.findall(r'Property{.*?Value:"(.*?)"}', relation)
+    else:
+        value_matches = re.findall(r'Property{.*?value: (.*?)}', relation)
+
+    # 调整的符号列表
+    symbols = ["--", "-->", "--"] if c_first else ["<--", "--", "-->"]
+    symbol_index = 0
+
+    result = ""
+    for i, value in enumerate(value_matches):
+        result += value
+
+        if i % 3 == 2 - int(c_first):  # 对接符号交替连接
+            if value not in side_info['召回公司结果']:
+                side_info['召回公司结果'].append(value)
+
+        if i < len(value_matches) - 1:
+            result += symbols[symbol_index]
+            symbol_index = (symbol_index + 1) % 3
+
+    return result
+```
+
+**注意**：此代码假定关系在路径上的分布规律在第三个属性后作分隔通过。你可能需要调整 `3` 这个数字以及 `symbols` 的构造来适配实际业务逻辑。如果 `legal_person_name` 缺失是因为顺序或位置不对，可以通过改变 `i % 3 == 2 - int(c_first)` 这部分逻辑来解决，确保关系的实际意义在每个符号连接中得到完整的 传达。
+
+如果调整后仍然有问题，建议细化输出结构的期望格式，再逐步定位到具体原因。

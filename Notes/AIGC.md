@@ -4,6 +4,9 @@
 
 ## 概要
 
+* Intro
+  * 做大模型，很难理解全部，退而求其次，理解其能力的边界很关键
+  
 * 术语
   * Large Language Model(LLM)
   * ChatGPT
@@ -13,6 +16,7 @@
 * 大模型的发展
   * https://arxiv.org/pdf/2304.13712
   * BERT pretrain的概念
+  * 2018年英伟达可以生成图片的StyleGAN模型、2019年DeepMind可以自动生成连续视频的DVD-GAN模型和2022年OpenAI聊天机器人ChatGPT是AIGC在应用层面的三个重要节点。
 
 ### 大模型简要介绍
 
@@ -73,6 +77,22 @@
 
 ## 算法
 
+### Intro
+
+* 大模型最重要的演进方向：
+  * 一、世界知识方面如何有效消除幻觉
+    * 随着数据规模增大，遇到的新知识比例就越低，在世界知识方面就体现出Scaling law的减缓现象。
+  * 二、如何大幅提升复杂逻辑推理能力。
+    * 逻辑推理相关数据比例低，更慢。
+    * 现在为了提高模型逻辑能力，往往在预训练阶段和Post-training阶段，大幅增加逻辑推理数据占比的原因，且是有成效的。
+  * 语言能力已不是问题。
+
+* [Yann LeCun演讲“人类水平的AI”@ Husdon论坛 2024.10](https://www.bilibili.com/video/BV1b1ycYTECU)
+  * 介绍了算法沿袭
+  * Moravec's Paradox: AI做不到一些人类很容易做的事情
+
+![image-20241019021542281](AIGC/image-20241019021542281.png)
+
 ### token
 
 * token是LLM训练推理的最小单元，由tokenizer模型将文本切成token
@@ -131,9 +151,22 @@
 
 目前只有 transformer 被证明了符合 scaling-law。
 
+### BERT
+
+![image-20241019021744575](AIGC/bert.png)
+
 ### GPT-2
 
+![image-20241019021839037](AIGC/image-20241019021839037.png)
+
+* 自回归架构
+  * 局限性：只接受离散样本
+
+
+
 * TODO1: https://jalammar.github.io/illustrated-gpt2/
+
+
 
 ### ChatGPT
 
@@ -213,7 +246,9 @@
     * https://openai.com/research/microscope
     * https://distill.pub/2020/circuits/curve-detectors/
 
-### Sora
+### GPT-4o、多模态、Sora
+
+> GPT 4o本质上是要探索不同模态相互融合的大一统模型应该怎么做的问题，对于提升大模型的智力水平估计帮助不大
 
 * 技术报告：https://openai.com/research/video-generation-models-as-world-simulators
 
@@ -232,6 +267,95 @@
 
   * 生成的视频特点：
     * 多种输入形式、多视频间过渡、人和物的特征
+
+### OpenAI o1
+
+> o1本质上是在探索大模型在AGI路上能走多远、天花板在哪里的问题
+
+* [如何理解OpenAI o1](https://mp.weixin.qq.com/s/QdVSq8q7wLWtPakdZdqidA)
+
+  * 提升LLM模型认知能力的核心在于复杂逻辑推理能力。
+
+    * LLM的逻辑推理能力越强，则能解锁更多复杂应用，大模型应用的天花板就越高
+    * o1模型能力越强，则可以反哺基座模型
+
+  * o1的做法本质上是CoT的自动化or内化。
+
+    * rl搜索COT的决策空间
+    * 问题越复杂，隐藏的COT token消耗越大
+
+    * 大部分逻辑推理数据的形式是<问题，正确答案>，缺了中间的详细推理步骤，而o1本质上是让大模型学会自动寻找从问题到正确答案的中间步骤，以此来增强复杂问题的解决能力。
+
+  * RL的scaling law本质上是COT决策树搜索的scaling law
+
+  * Agent无法实用化的主要原因就在于基座模型的复杂推理能力不够强。
+
+    * 通过基座模型Plan把一个复杂任务分解为10个步骤，哪怕单个步骤的正确率高达95%，要想最后把任务做对，10个环节的准确率连乘下来，最终的正确率只有59%
+
+  * OpenAI想做的方向太多，资源分散导致分到具体一个方向的资源不够用，所以越往后发展“期货状态”的方向越多，也让人觉得尽显疲态。
+
+### AGI
+
+> LeCun: https://www.bilibili.com/video/BV1b1ycYTECU
+>
+> 视频其中一个核心思想是“预测能力的本质是我们找到我们观察的事物的良好表征”，事实上现在人类做机器学习的工作大部分是在 寻找表征、优化表征。
+>
+> 最近一段时间伴随LLM出现，技术领域的发展不外乎这两种：1）利用LLM学到的表征去做一些事情；2）让LLM学会更多表征。
+
+* Lecun的Insight：需要视觉信息训练
+  * 反驳“视觉信息冗余”
+    * 视神经纤维 1byte/s 已经相比视网膜光传感器有1/100的压缩比了
+      * 6000w-1e8光传感器
+      * 100w神经纤维
+    * self-supervised learning需要冗余信息才能学好
+      * 高度压缩==随机 -> 学不好
+
+![image-20241019022443123](AIGC/image-20241019022443123.png)
+
+* Objective-Driven AI
+  * 转化为优化问题，让决策output接近objective，需要先优化perception
+  * optimization-based AI
+    * 有zero-shot能力
+    * search/plan
+
+![image-20241019023330137](AIGC/image-20241019023330137.png)
+
+![image-20241019163724135](AIGC/image-20241019163724135.png)
+
+* 系统
+  * Model Predictive Control（MPC）
+    * using gradient-based method, graph search, MCTS, DP, ...
+  * 分层的planning，world model预估级联
+
+* 训练：
+  * 观察婴儿对世界模型的认知路径，可以启发各种属性的认知顺序和难度（比如对重力的认知）
+  * generative + self-supervised行不通
+
+![image-20241019165227218](AIGC/image-20241019165227218.png)
+
+* Joint Embedding Predictive Architecture
+  * 预测能力的本质是我们找到我们观察的事物的良好表征
+    * e.g. 电商场景下的类目体系，类目是对商品的向上一层的抽象表征
+
+![image-20241019165308598](AIGC/image-20241019165308598.png)
+
+![image-20241019165600928](AIGC/image-20241019165600928.png)
+
+![image-20241019171905634](AIGC/image-20241019171905634.png)
+
+![image-20241019172914244](AIGC/image-20241019172914244.png)
+
+* VICReg
+  * 先扩维再正则化
+
+![image-20241019173438149](AIGC/image-20241019173438149.png)
+
+* Video-JEPA
+  * 蒸馏防止collapse
+
+![image-20241019173516379](AIGC/image-20241019173516379.png)
+
+
 
 ### finetune
 
@@ -298,7 +422,56 @@ https://ai.stanford.edu/blog/understanding-incontext/
 
 
 
+### CoT 相关技术
+
+* [OpenAI研究员、思维树作者姚顺雨专访：人生是一场无限流游戏丨独家](https://mp.weixin.qq.com/s/MdPI-X1HvRxFuX_Z0Ju_ug)
+  * 许多计算本质上就是去计算下一个token，next token prediction开始成为一个新的计算。那么针对计算复杂性，传统的语言如何在新框架下适用，还有很多问题需要去解决
+  * Open-endedness
+    * 语言游戏之所以和其他游戏区别很大，就是因为语言的开放性，即open-endedness。既然这样，那么它本质上应该有一个generative solution，而不是一个discriminative solution。所以从我第一个工作开始，我就一直在做autoregressive language model (GPT-2)
+    * 从哲学的角度来看，人生就是一个无限流游戏，某种程度上来说，更像一个文字游戏，而不是电子游戏。每天你都有很多选择，从程度上说是非常high level、 open ended的。
+  * ReAct
+    * 这篇论文的本质是Agent不仅仅有environment action，也有thinking action。
+    * 主要的思路是，在玩文字游戏的时候，为什么机器很笨，而人很聪明，是因为人类有思考的能力。当时我在做ReAct的时候，最初的想法是，如果我能够让机器模仿人，不仅仅是模仿人的活动，也模仿人怎么思考，是不是就可以泛化得更好。具体比如人看到了一个城堡，人的选择是走向第三个门，如果你只去模仿这样的Mapping，很多时候是很难去泛化的。但是如果能够让它同时去模仿人的思考过程，那可能就是一个非常自然的、可以泛化的一个理由。比如人可能会想，现在周围很黑暗而且有奇怪的叫声，可能有危险需要灯。灯在第一个房间，但是第一个房间的钥匙在第三个房间，所以我得先去第三个房间。
+  * CoT的扩展
+    * 从某种程度上来说，ReAct和Tree of Thoughts其实相当于是CoT的两个方向的扩展。一个方向是要和外部世界发生联系，另一个方向是内部的思考，如何从一个线性过程变成一个非线性，也就是更加通往 system 2的一个过程。
+  * 身边太多聪明的人，但你发现自己并不比他们差。做研究非常重要的因素就是信心，如果你不相信能做出非常好的研究，那你是不可能做出来好的研究的。
+
+
+
+### 关于超长上下文
+
+* 超大的上下文窗口=超长的短期记忆
+
+
+
+### Interpretability
+
+* Intro
+  * 关于可解释性，诙谐的举例，青少年在想什么无法理解，有些东西就是很难理解，但他真实存在并work，青少年也是人
+
+* sparse autoencoders (SAEs) , Anthropic's paper https://transformer-circuits.pub/2024/scaling-monosemanticity/
+
+* Interpretability在电商场景的潜在应用 https://www.vantagediscovery.com/post/the-future-of-e-commerce-is-ai-powered-and-interpretable
+
+  * **Hyper-Personalized Product Discovery**
+    * Scenario: An e-commerce platform wants to move beyond basic recommendation algorithms and create truly personalized shopping experiences that resonate with individual customers. They need to understand not just what products customers interact with, but the underlying reasons and preferences driving their choices.
+    * Solution: By using SAEs to analyze the LLM activations associated with user browsing behavior, purchase history, and product interactions (e.g., reviews, ratings, wishlists), the platform can extract nuanced features representing individual preferences and decision criteria. For example, features might emerge for "aesthetic style," "sustainability concerns," "value for money," "brand affinity," or specific functional requirements.
+    * ![image-20241009174406858](AIGC/interpretability1.png)
+
+  * **Optimized Merchandising and Assortment**
+    * Scenario: A retailer using an e-commerce platform wants to make data-driven decisions about inventory management, product assortment, and merchandising strategies. They need to understand which products are resonating with customers, which attributes are driving demand, and how to optimize pricing and promotions for maximum profitability.
+    * Solution: By applying SAEs to analyze the LLM activations linked to product sales data, customer reviews, and market trends, the platform can identify crucial features influencing purchasing decisions. These might include features like "price sensitivity," "seasonal demand," "regional preferences," or "emerging trends" related to specific product attributes.
+  * **Enhanced Explainable Search**
+    * Scenario: A customer searches for "running shoes" but is dissatisfied with the results, feeling they are too generic.
+    * Solution: The platform could use SAEs to analyze the search query's representation in the LLM's activation space. By identifying the activated features, they could provide an explanation to the customer, like "We are showing you popular running shoes based on your location and browsing history." Additionally, the platform could offer "steering" options based on other relevant features. For example, they could suggest refining the search by "cushioning," "terrain," or "price range."
+
+
+
 ### 幻觉
+
+《Lost in the middle: How language models use long contexts》
+
+
 
 - 自然语言生成中关于幻觉研究的综述：https://arxiv.org/abs/2202.03629
 - 语言模型出现的幻觉是如何滚雪球的：https://arxiv.org/abs/2305.13534
@@ -307,21 +480,122 @@ https://ai.stanford.edu/blog/understanding-incontext/
 - 自洽性提高了语言模型的思维链推理能力：https://arxiv.org/abs/2203.11171
 - 生成式大型语言模型的黑盒幻觉检测：https://arxiv.org/abs/2303.08896
 
+## 安全 & 伦理
 
+> 仅一天就被外媒封杀 前谷歌CEO到底说了... https://v.douyin.com/iBttgjpb/
+
+### AI战争
+
+* 美国白鹤计划crane war
+  * 机器人/无人机摧毁整个军队理论（坦克、炮兵、迫击炮），让地面进攻成为不可能
+  * 美国能源不足，加拿大发电，阿拉伯投资
+
+### AI安全
+
+* 关键问题：如何在一个学习了的系统中检测危险（比如混合某些化合物），并且你无法直接询问它这些内容
+  * 解决方案：设定一个阈值，超过了向政府报告
+
+### AI政治
+
+* 对民主的威胁-虚假信息-aigc
+  * 尝试解决tiktok问题：平等时间规则（总统候选人的内容播出时间平等）
+* 去中心化的思想构建未来的AI安全：https://mp.weixin.qq.com/s/K1gbW1aIkwl8aLzkD9nYnQ
+  * 比特币：攻击收益远小于攻击成本
+  * 以生态著称的公链以太坊：虽然秘钥也是几十位，但是系统就太复杂了，各种二层技术、跨链桥等带来了很多漏洞，以至于网络攻击不断，就是因为攻击收益大于攻击成本
+  * 方案：确权，实名，竞争
+
+### AI伦理
+
+* 算法演变到最后会扩大“out of rage”，因为冲突带来流量
+* 关于丢失工作：需要高等教育的工作没事，因为这些人会和系统协作
+
+## Literature Review
+
+> from InteRecAgent
+
+* Survey
+  * 《Pretrain, prompt, and predict: A systematic survey of
+    prompting methods in natural language processing》
+  
+* LLM capability
+  * in- context learning
+    * 《few-shot learners》
+  * instruction following
+  * planning and reasoning
+
+* alignment
+  * 《Training language models to follow instructions with human feedback》
+
+* leverage LLMs as autonomous agents
+  * equipped LLMs with an external memory
+  * CoT and ReAct：propose to enhance planning by step-wise reasoning;
+  * ToT and GoT：introduce multi-path reasoning to ensure consistency and correctness
+  * Self-Refine and Reflexion：lead the LLMs to reflect on errors
+  * To possess domain-specific skills，guiding LLMs to use external tools
+    * such as a web search engine
+    * mathematical tool
+    * code interpreters
+    * visual models
+    * recommender systems
+
+> from MindMap
+
+* LLM应用于生产的局限性
+  * Inflexibility. 
+    * The pre-trained LLMs possess outdated knowledge and are inflexible to parameter updating. Fine-tuning LLMs can be tricky be-
+      cause either collecting high-quality instruction
+      data and building the training pipeline can be
+      costly (Cao et al., 2023), or continually fine-
+      tuning LLMs renders a risk of catastrophic for-
+      getting (Razdaibiedina et al., 2022).
+  * Hallucination. 
+    * LLMs are notoriously known to produce hallucinations with plausible-sounding
+      but wrong outputs (Ji et al., 2023), which causes
+      serious concerns for high-stake applications such
+      as medical diagnosis.
+  * Transparency. 
+    * LLMs are also criticized for their
+      lack of transparency due to the black-box na-
+      ture (Danilevsky et al., 2020). The knowledge
+      is implicitly stored in LLM’s parameters, thus
+      infeasible to be validated. Also, the inference
+      process in deep neural networks remains elusive
+      to be interpretable
+* CoT、ToT
+  * 挖掘LLM的implicit知识
+  * 相应地，MindMap同时挖掘explicit and implicit知识
 
 ## 关于钱
 
-* AI系统：记录数据、与人交互、机器学习分析、预测、干预人的决策
+* Intro
+  * AIGC是大国的游戏
+    * 欧洲受欧盟法案影响，ai发展没跟上
+
+  * AI系统：记录数据、与人交互、机器学习分析、预测、干预人的决策
+
 
 ### 训练成本
 
 * LLaMA：2048 A100 21d
   * a100一个月几十刀，训一个几十万
 * 人力成本：训练基础大模型，团队20人
+  * 6个月准备、6个月训练、6个月微调，18个月训模型
+  * 上下文能力提升之后，时效性会显著增强
+
 * Note
   * 和芯片的对比：This “growth” is strikingly similar to the one involved in chip evolution where as the number of transistors increases (higher density on a chip) the cost for plants manufacturing  those chips skyrocket.  In  the case of chip manufacturing  the economics remained viable because new plants did cost more but they also produced many more chips so that till the middle lf the last decade the cost per chip was actually  decreasing generation over generation (one effect captured in the Moore’s law).
   * As with chips one may  wonder if there is a limit to the economic affordability (there sure is, it is just difficult  to pinpoint!).
   * TODO: https://www.wired.com/story/openai-ceo-sam-altman-the-age-of-giant-ai-models-is-already-over/
+
+### GPU
+
+* 存量和增量
+
+![image-20241019195324985](AIGC/image-20241019195324985.png)
+
+* 分布：
+
+![image-20241019195345714](AIGC/image-20241019195345714.png)
 
 ### 售价
 
@@ -773,16 +1047,18 @@ pip3 install --upgrade openai
 * 应用：
   * 大模型应用交付的最后一米，需要针对性做PE
 
+### Intro
 
-### Prompt调优
+* Prompt个人经验：
+  * 模型很关键：使用强力模型，不要使用轻模型做离线数据增强，效果相差非常大
+  * few-shot learning：缓解幻觉
+  * 拆解prompt的tasks
 
 * 找到好的 prompt 是个持续迭代的过程，需要不断调优。
-
 * 如果知道训练数据是怎样的，参考训练数据来构造 prompt 是最好的。「当人看」类比：
   * 你知道 ta 爱读红楼梦，就和 ta 聊红楼梦
   * 你知道 ta 十年老阿里，就多说阿里黑话
   * 你知道 ta 是日漫迷，就夸 ta 卡哇伊
-
 * 不知道训练数据怎么办？
 
   * 看 Ta 是否主动告诉你。例如：
@@ -792,16 +1068,21 @@ pip3 install --upgrade openai
 
   * 只能不断试了。有时一字之差，对生成概率的影响都可能是很大的，也可能毫无影响……
     * 「试」是常用方法，确实有运气因素，所以「门槛低、 天花板高」。
-
 * 高质量 prompt 核心要点：
 
   * 具体、丰富、少歧义
-
 * 修炼 prompt 能力，功夫在平时：
   * 我们的「群聊天」习惯，天然和 prompt 背道而驰。随口就说，全是短句、口语、歧义
   * 欧美的「群发邮件」习惯，更占优势。篇篇都是小作文
   * 让自己在群里也是「小作文」
 * 如果底层大模型换了，prompt 要不要重新调优？
+
+
+
+* OpenAI Meta-prompt
+  * https://platform.openai.com/docs/guides/prompt-generation?context=text-out
+  * https://arxiv.org/pdf/2401.12954
+
 * GPT-s调优
   * https://chat.openai.com/gpts/discovery
 * coze调优
@@ -832,6 +1113,8 @@ https://arxiv.org/pdf/2312.16171
 
 * 思维链：「Let's think step by step」
   * 请一步一步分析以下内容
+*  "combine with the knowledge you already have“
+* “If they are the same, output "2". Try to output "1" or "0"”
 * 简单地解释一下[具体主题]。
      o 像对11岁的孩子一样向我解释。
      o 像对一个[领域]新手一样向我解释。
@@ -1063,6 +1346,16 @@ Assistant：
 原谅值：20/100
 ```
 
+## LLM + DataProcessing
+
+* [Is AI-Powered Data Engineering the Key to Unlocking Your Product Catalog's Potential? -- VantageDiscovery](https://www.vantagediscovery.com/post/is-ai-powered-data-engineering-the-key-to-unlocking-your-product-catalogs-potential)
+  * The Operational Focus of Traditional Product Catalogs
+  * Unlocking the Power of Untapped Data Sources
+
+![66a73231a81895c66be5c687_669ab3b0b570c6869c1069d4_blog_ai_de_product_catalog_enriched](AIGC/66a73231a81895c66be5c687_669ab3b0b570c6869c1069d4_blog_ai_de_product_catalog_enriched.png)
+
+
+
 ## Function Calling
 
 ### Basics
@@ -1161,6 +1454,18 @@ components:
 * 模型版本要求：
   * gpt-3.5-turbo-1106
   * gpt-4-1106-preview
+
+### Json Format
+
+* OpenAI: https://openai.com/index/introducing-structured-outputs-in-the-api/
+  * 方法：
+    * Constrained decoding
+      * constrain our models to only tokens that would be valid according to the supplied schema, rather than all available tokens.
+      * dynamically
+      * context-free grammar (CFG)
+        * use this list of tokens to mask the next sampling step, which effectively lowers the probability of invalid tokens to 0.
+* trustcall：很不错的工具，让LLM专注增量部分的修改，提升可控性
+  * https://github.com/hinthornw/trustcall
 
 ### 产品
 
@@ -1262,7 +1567,7 @@ def get_sql_completion(messages, model="gpt-3.5-turbo"):
 
 ## RAG
 
-### Basics
+### Intro
 
 * RAG（Retrieval Augmented Generation）顾名思义，通过***\*检索\****的方法来增强***\*生成模型\****的能力。
 
@@ -1286,9 +1591,98 @@ def get_sql_completion(messages, model="gpt-3.5-turbo"):
   5. 用最终获得的 Prompt 调用 LLM
   6. 由 LLM 生成回复
 
-### 检索
+### Literature Review
 
-#### 关键字检索
+> LightRAG 5.2
+
+#### LLM + Graphs
+
+* GNNs as Prefix：
+  * (GNNs) are utilized as the initial processing layer for graph data, generating structure-aware tokens that LLMs can use during inference
+  * GraphGPT、LLaGA
+* LLMs as Prefix
+  * GALM、OFA
+* LLMs-Graphs Integration
+  * focuses on achieving a seamless interaction between LLMs and graph data, employing techniques such as fusion training and GNN alignment
+  * developing LLM-based agents capable of engaging with graph information directly
+
+> HybridRAG
+
+#### KG
+
+* knowledge extraction
+  * The main tasks in this step are entity recognition, relationship extraction, and co-reference resolution. 
+* knowledge improvement
+  *  KG completion technique infers missing entities and relationships within the graph using methods such as link prediction and entity resolution. 
+  * Link prediction predicts the existence and type of a relation between two entities
+    based on the graph structure and features
+  * entity resolution matches and merges different representations of the same entity
+    from different sources
+* knowledge adaptation
+
+> Retrieval-Augmented Generation with Knowledge Graphs for Customer Service Question Answering: Related Work
+
+#### KGQA: Question answering (QA) with knowledge graphs (KGs)
+
+* retrieval-based
+  * utilize relation extraction [19] or distributed representations [5] to derive answers from KGs, but they face difficulties with questions involving multi- ple entities.
+* template-based
+  * depend on manually-created templates for encoding complex queries, yet are limited by the scope of available templates [16].
+* semantic parsing-based methods
+  * map text to logical forms containing predicates from KGs [4] [14] [21]
+* Evaluation
+  * Mean Reciprocal Rank (MRR)
+    * MRR gauges the average inverse rank of the initial correct response
+  * recall@K
+    * recall@K determines the likelihood of a relevant item’s appearance within the top K selections
+  * NDCG@K
+    * NDCG@K appraises the rank quality by considering both position and pertinence of items.
+  * For question-answering performance, we juxtaposed the "golden" solutions against the generated responses, utilizing metrics such as BLEU [11], ROUGE [9], and METEOR [3] scores.
+
+#### LLM4KGQA
+
+* [7] provide a comprehensive review of this integration, categorizing the roles of LLMs as Predictors, Encoders, and Aligners
+* For graph-based reasoning, Think-on-Graph [15] and Reasoning-on-Graph [10] enhance LLMs’ reasoning abilities by integrating KGs. 
+* Yang et al. [20] propose augmenting LLMs’ factual reasoning across various training phases using KGs. 
+* For LLM-based question answering, Wen et al.’s Mindmap [18] and Qi et al. [13] employ KGs to boost LLM inference capabilities in specialized domains such as medicine and food. These contributions underscore the increasing efficacy of LLM and KG combinations in enhancing information retrieval and reasoning tasks.
+
+> MindMap
+
+#### LLM + KG
+
+> MindMap
+
+* 融入训练：KGs emerged as a promising complement to the drawbacks of LLMs
+  (Pan et al., 2023). 
+  * For instance, KG triples were
+    added to the training of LLMs (Zhang et al., 2019b)、Sun et al., 2021
+  * KG encoders were entangled with LLM layers
+    for joint inference and optimization on graph and
+    text data (Zhang et al., 2022). 
+  * applying KG prediction tasks, e.g., link prediction, as additional supervision (Ya-
+    sunaga et al., 2022)
+* synergistic inference of KGs and fixed LLMs
+  * 22年左右，很多工作挖掘GNN、Graph Encoder、added interactions between text tokens and KG
+    entities in the intermediate layers of LLMs (Zhang et al., 2022; Yao et al., 2023b)，后来才转向**prompting fixed pre-trained LLMs with graphical inputs**
+  * Retrieval-Augmented LLM Inference
+    * 《Knowledge-augmented language model prompting
+      for zero-shot knowledge graph question answering.》 忽略了图结构信息
+  * Graph Mining with LLMs
+    * 实体/关系识别、图summary
+      * prompting LLMs for KG entity linking prediction (Choudhary and Reddy, 2023; Sun et al., 2023), graph mining (Guo et al., 2023), and KG question answering (Baek et al., 2023)
+      * 《GPT4Graph: Can large language models understand graph structured data? an empirical evaluation and benchmarking》
+      * 《Exploring the potential of large language models (llms) in learning on
+        graphs.》
+      * 《Complex logical reasoning over knowledge graphs
+        using large language models》
+      * 局限性： rely heavily on the factual correctness of the KG and ignore the situation where
+        the KG does not match the question
+    * complex reasoning across multiple evidence graphs grounded on KGs
+      * MindMap
+
+
+
+### 关键字检索
 
 * Elastic Search
   * Elasticsearch（简称ES）是一个广泛应用的开源搜索引擎: https://www.elastic.co/
@@ -1297,7 +1691,7 @@ def get_sql_completion(messages, model="gpt-3.5-turbo"):
 * **关键字检索的局限性**
   * 同一个语义，用词不同，可能导致检索不到有效的结果
 
-#### 向量检索
+### 向量库和向量检索
 
 * Text Embeddings
   * **语义相似度**：向量之间距离
@@ -1317,6 +1711,21 @@ def get_sql_completion(messages, model="gpt-3.5-turbo"):
   * ElasticSearch 也支持向量检索 https://www.elastic.co/enterprise-search/vector-search
 
 ![vectordb](AIGC/vectordb.png)
+
+* pgvector
+  * PostgreSQL里面的一个vector search的插件
+  * 缺点：
+    * 向量维度最大只支持2000维，而现在很多新的模型生成的向量远远超过2000维，可能达到4096维以上（和采用了PostgreSQL底层存储有关）
+    * 处理复杂应用场景时能力非常弱。这里的复杂场景指的是传统的关系型数据库中的操作，如filter、join和where等。例如，如果需要将两张表进行join然后再进行向量搜索，pgvector处理这种关系型操作的能力很差。
+* PGVector.rs
+  * 主要论点：vector是一种新的data type，而不是新的indexing构建方式
+  * 基于关系型数据库来支持向量搜索，而不是开发一个新的specialized vector DB
+  * 复杂场景：关系型数据库中的表与表之间的复杂查询操作。
+    * 例如，支付宝的业务可能涉及几十张表，需要很多join和where语句来实现。这种复杂的关系型数据库查询需求是独立的vector DB无法满足的，因为它们通常只做向量搜索，没有大量的表与表之间的操作。
+  * 对于那些专注向量搜索的应用，独立的vector DB确实可能是更好的选择。它们有更好的扩展能力，能更好地满足这类需求。因此，这两种场景并不冲突，具体选择取决于业务需求。如果业务需要处理复杂的关系型数据库查询，我们的pgvecto.rs会更适合，而如果业务重心在向量搜索，独立的vector DB可能更有优势。
+
+* turbopuffer
+  * 专门做多租户场景，这一单点差异化让它的商业化进程非常顺利。它针对有多租户需求的客户（比如Notion这样的应用）提供数据库服务。
 
 ### Embedding模型
 
@@ -1390,6 +1799,433 @@ def get_sql_completion(messages, model="gpt-3.5-turbo"):
 ![table_rag](AIGC/table_rag.png)
 
 ![https://storage.googleapis.com/gweb-cloudblog-publish/images/15._document_processing.max-1100x1100.png](https://storage.googleapis.com/gweb-cloudblog-publish/images/15._document_processing.max-1100x1100.png)
+
+
+
+### GraphRAG
+
+> [Graph Retrieval-Augmented Generation: A Survey 论文解读](https://mp.weixin.qq.com/s/Dx8pYhmbrhtRMXNez_GOmw)
+
+* Intro
+  * 利用了实体之间的结构信息，实现了更精确、全面的检索，捕捉了关系知识，促进了更准确、上下文感知的响应
+  * Graph-Based Indexing, Graph-Guided Retrieval, and Graph-Enhanced Generation
+* 难点：
+  * **忽视关系：**传统RAG方法主要基于文本的语义相似性，而忽视了文本之间的结构关系。例如，在引用网络中，传统RAG方法可能无法捕捉到论文之间的引用关系。
+  * **冗余信息：**RAG通常以文本片段的形式提供信息，当这些片段拼接在一起作为提示时，可能会导致上下文过长，出现“lost in the middle”的问题。
+  * **缺乏全局信息：**RAG只能检索到文档的子集，而无法全面理解全局信息，这在查询聚焦摘要（QFS）等任务中可能存在问题。
+
+![image-20241020235306018](AIGC/image-20241020235306018.png)
+
+* GraphRAG的思路：
+  * GraphRAG的核心思想是将知识图谱中的结构化信息（如节点、三元组、路径或子图）与LLMs的输出相结合，以提供更准确和丰富的生成结果。
+  * 使用结构化知识图谱来更有效地处理冗余信息和全局信息的问题，更方便地进行信息的检索和聚合
+
+![image-20241020235459558](AIGC/image-20241020235459558.png)
+
+* Preliminaries
+
+  * Text-Attributed Graphs (TAGs)
+    * ![image-20241021001256375](AIGC/TAG.png)
+  * GNN
+    * ![image-20241021001339780](AIGC/GNN.png)
+
+* Graph-Based Indexing
+
+  * 数据
+    * 开放知识图谱：公开可用的知识图谱，一般主要包括三类：百科知识图谱（如WikiData）、常识知识图谱（ConceptNet）以及领域知识图谱。
+    * 自构建图数据：这些是研究人员根据特定任务需求构建的自定义图数据。例如，可能从文档、表格或其他数据库中提取实体和关系，并将它们组织成图结构。
+  * 索引
+    * 图索引：图索引保留了图的完整结构，使节点和边的访问变得容易。在后续的GraphRAG过程中，可以使用经典的图搜索算法（如BFS和最短路径算法）来快速检索信息。
+    * 文本索引：这种方法将图数据转换为文本描述，以便使用各种文本检索技术（如稀疏检索和密集检索）进行优化。
+    * 向量检索：这种方法将图数据转换为向量表示，以利用高效的向量搜索算法（如局部敏感哈希）进行快速检索。
+
+* Graph-Guided Retrieval
+
+  * ![image-20241021001832040](AIGC/graph-retrieval.png)
+
+  * **检索器的选择：**在图检索中，选择适当的检索器是至关重要的。研究人员可以根据任务需求和数据类型选择以下类型的检索器。
+    * 非参数化检索器：基于传统的图搜索算法（如BFS和DFS），不依赖于深度学习模型，适用于高效的大规模数据检索。
+    * 语言模型检索器：基于语言模型（如BERT、GPT等），利用其强大的自然语言理解能力，适用于处理复杂的用户查询。
+    * 图神经网络检索器：基于图神经网络（如GCN、GAT等），利用其对图结构数据的表示能力，适用于处理复杂的图结构数据。
+  * Retrieval Paradigm
+    * Once Retrieval
+    * **Iterative Retrieval**
+      * **Non-Adaptive Retrieval**
+      * **Adaptive Retrieval.**
+    * **Multi-Stage Retrieval.**
+
+* Graph-Enhanced Generation
+  * ![图片](AIGC/640-20241021002249376)
+
+
+
+* 训练
+  * Retriever训练
+    * Training-Free
+    * Training-Based
+  * Generator训练
+    * Training-Free
+    * SFT
+    * GNN
+
+* 应用
+  * 下游任务：问答（知识库问答、常识问答）、信息抽取（实体链接、关系抽取）、事实验证、链接预测、对话系统、推荐系统等。
+  * 应用领域：GraphRAG的应用领域主要包括：电商、生物医疗、学术、文献学、法律
+    * 电商：
+      * RETE: Retrieval-Enhanced Temporal Event Forecasting on **Unified Query Product Evolutionary Graph.**
+        * auto-regressive
+      * Retrieval-Augmented Generation with Knowledge Graphs for Customer Service Question Answering
+
+* 开源代码
+  * 微软GraphRAG：[GitHub - microsoft/graphrag: A modular graph-based Retrieval-Augmented Generation (RAG) system](https://github.com/microsoft/graphrag)
+  * 蚂蚁GraphRAG：https://github.com/eosphoros-ai/DB-GPTNeo4j 
+  * NallM：https://github.com/neo4j/NaLLMNeo4j 
+  * LLM Graph Builder：https://github.com/neo4j-labs/llm-graph-builderNebulaGraph 
+  * GraphRAG：https://www.nebula-graph.io/posts/graph-RAG
+
+
+
+### LightRAG
+
+> https://github.com/HKUDS/LightRAG
+>
+> [从原理、本地Qwen2.5-3B模型部署到源码解读，全流程解析LightRAG](https://www.bilibili.com/video/BV1CwCRYGE6J)
+>
+> * 思路：
+>
+>   - 数据增强：LLM
+>
+>   - 剪枝：
+>     - LLM realtime update Graph：图节点/边去重
+>     - high-level concept / low-level entity
+
+* Intro
+  * **incorporates graph structures into text indexing** and retrieval processes
+  * a **dual-level retrieval** system that enhances comprehensive information retrieval from both low-level and high-level knowledge discovery
+  * an incremental update algorithm that ensures the timely integration of new data
+
+![image-20241021170751318](AIGC/lightrag-example.png)
+
+* RAG的设计
+  * Comprehensive Information Retrieval: The indexing function φ(·) must be adept at extracting global information, as this is crucial for enhancing the model’s ability to answer queries effectively.
+  * Efficient and Low-Cost Retrieval: The indexed data structure Dˆ must enable rapid and cost- efficient retrieval to effectively handle a high volume of queries.
+  * Fast Adaptation to Data Changes: The ability to swiftly and efficiently adjust the data structure to incorporate new information from the external knowledge base, is crucial for ensuring that the system remains current and relevant in an ever-changing information landscape.
+
+![image-20241021142447180](AIGC/lightrag.png)
+
+* Framework
+  * we leverage LLMs to identify and extract various entities (e.g., names, dates, locations, and events) along with the relationships between them.
+  * Graph-Based Text Indexing
+  * DUAL-LEVEL RETRIEVAL PARADIGM
+* Graph-Based Text Indexing
+  * Extracting Entities and Relationships. R(·)
+  * LLM Profiling for Key-Value Pair Generation. P(·)
+    * Entities use their names as the sole index key,
+    * whereas relations may have multiple index keys derived from LLM enhancements that include global themes from connected entities.
+  * Deduplication to Optimize Graph Operations. D(·)
+* 两路召回 DUAL-LEVEL RETRIEVAL PARADIGM
+  - Specific Queries -> Low-Level Retrieval
+    - “Who wrote ’Pride and Prejudice’?”
+    - -> 召回title
+  - Abstract Queries -> High-Level Retrieval
+    - “How does artificial intelligence influence modern education?”
+    - -> 召回关系
+  - Integrating Graph and Vectors for Efficient Retrieval.
+    - Query Keyword Extraction: 
+      - local query keywords k(l) and global query keywords k(g).
+    - Keyword Matching：
+      - match local query keywords with candidate entities and global query keywords with relations linked to global keys
+    - Incorporating High-Order Relatedness.
+      - 基于前面已召回的节点和边，再多一跳
+
+* Evaluation
+
+  * 基线：
+    * Naive RAG
+    * RQ-RAG：These sub-queries are designed to enhance search accuracy by utilizing explicit techniques such as rewriting, decomposition, and disambiguation
+    * GraphRAG:
+      * It generates corresponding descriptions for these elements, aggregates nodes into communities, and produces a community report to capture global information
+  * **LightRAG做单一领域的任务比GraphRAG强**
+    * ![img_v3_02fs_6682e564-a869-4d15-a5c3-8fb11492dbeg](AIGC/img_v3_02fs_6682e564-a869-4d15-a5c3-8fb11492dbeg.jpg)
+
+  * 结论：
+    * The Superiority of Graph-enhanced RAG Systems in Large-Scale Corpora
+    * Enhancing Response Diversity with LightRAG
+    * LightRAG’s Superiority over GraphRAG
+      * **Enhanced Response Variety**: By integrating low-level retrieval of specific entities with high-level retrieval of broader topics, LightRAG boosts response diversity. This dual-level mechanism effectively addresses both detailed and abstract queries, ensuring a thorough grasp of information.
+      * **Complex Query Handling**: This approach is especially valuable in scenarios requiring diverse perspectives. By accessing both specific details and overarching themes, LightRAG adeptly responds to complex queries involving interconnected topics, providing contextually relevant answers.
+    * 对high/low level retrieval的分析：
+      * 去掉High：it struggles to gather information for complex queries that demand comprehensive insights
+    * Semantic Graph Excels in RAG.
+      * We eliminated the use of original text in our retrieval process. Surprisingly, the resulting variant, -Origin, does not exhibit significant performance declines across all four datasets. In some cases, this variant even shows improvements (e.g. in Agriculture and Mix). We attribute this phenomenon to the effective extraction of key information during the graph-based indexing process, which provides sufficient context for answering queries. Additionally, the original text often contains irrelevant information that can introduce noise in the response.
+      * 启发：信息并不是越多越好 -> 对rerank的启发
+
+* Prompts
+  * Prompts for Graph Generation：7.3.1 
+  * Prompts for Query Generation：7.3.2
+  * Prompts for Keyword Extraction：7.3.3
+  * Prompts for RAG Evaluation
+
+
+
+### LLM4KGQA
+
+> KGQA: Knowledge Graph Question Answering
+
+#### FinDKG
+
+* 抽取KG的prompt
+
+![image-20241027014446582](AIGC/image-20241027014446582.png)
+
+* 动态图
+  * GNN，时序信息建模
+
+#### HybridRAG: Integrating Knowledge Graphs and Vector Retrieval Augmented Generation for Efficient Information Extraction
+
+* Intro
+  * KG：将文档视为两个实体和关系的triplet
+  * 当前 RAG 技术包括基于向量数据库的 VectorRAG 和基于知识图谱（KG）的 GraphRAG，各有局限，如 VectorRAG 对金融文档的段落分块假设不合理，GraphRAG 在抽象问答任务或问题未提及明确实体时表现不佳。
+* KG构建
+  * each triplet is represented as **a nested list [’h’, ’type’, ’r’, ’o’, ’type’, ’metadata’]**,
+    * ’h’ and ’o’ denote the head and object entities respectively,
+    * ’type’ specifies the entity category,
+    * ’r’ represents the relationship,
+    *  ’metadata’ encapsulates additional contextual information.
+    * This format allows for a rich, multidimensional representation of information, facilitating
+      more nuanced downstream analysis.
+  * 少于4 word
+  * 实体消重
+  * 实现：NetworkxEntityGraph
+* 评估
+  * faithfulness, answer relevance, and context relevance      （HybridRAG）
+    * 使用 RAGAS 框架
+
+
+
+#### Retrieval-Augmented Generation with Knowledge Graphs for Customer Service Question Answering [SIGIR 2024]
+
+* Intro
+  * intra-issue structure and inter-issue relations
+  * 过往工作的 Limitations
+    * Limitation 1 - Compromised Retrieval Accuracy from Ignoring Structures
+    * Limitation 2 - Reduced Answer Quality from Segmentation
+* 意图识别
+  * 3.2.1 intent识别，。识别陈述句和疑问句区别不大 核心是识别对象，因此用一个template识别k到v的映射
+* 知识图谱构建
+  * 显式和隐式建立ticket之间关系
+    * 显式：已有数据
+    * 隐式：title embedding，余弦相似度，阈值
+
+* Embedding-based Retrieval of Sub-graphs. (3.2.2)
+  * EBR-based ticket identification step
+    * 计算ticket的相关性：涉及多个entity，每个entity算相关性然后分数相加召回
+    * 引申：图的二跳问题
+  * LLM-driven subgraph extraction step
+    * 从工单中查找想要的属性
+
+#### MindMap: Knowledge Graph Prompting Sparks Graph of Thoughts in Large Language Models
+
+> https://github.com/wyl-willing/MindMap
+>
+> 思路很清晰：既利用KG加强召回率和精准度，又融入GoT挖掘LLM的内在知识
+
+![image-20241027022219991](AIGC/image-20241027022219991.png)
+
+![image-20241027023313029](AIGC/image-20241027023313029.png)
+
+![image-20241027045058720](AIGC/image-20241027045058720.png)
+
+* Evidence graph mining
+  * 实体识别：
+    * **Prompt：Table 9 of Appendix D.**
+    * BERT similarity to match entities and keywords
+  * Evidence Sub-graphs Exploration
+    * 基于提取的实体从源 KG 构建证据子图，包括基于路径的探索和基于邻居的探索两种方法，并对生成的子图进行修剪
+    * 算法见Appendix E
+    * Path-based
+    * Neighbor-based
+      * 一跳必加
+      * 二跳根据和query的相关性加
+* Evidence graph aggregation
+  * 从前面步骤中提取至少 k 个基于路径和 k 个基于邻居的证据子图，将每个子图格式化为实体链并转换为自然语言描述，定义为推理图。
+  * 顺带能解决实体重复的问题
+* LLM reasoning on the mind map
+  * 相比来说，以前的LLM4KG： they do not think
+    on multiple evidence KG sub-graphs with multi-
+    thought in LLM, and without backtracking evi-
+    dence sources
+
+* Evaluation
+  * hallucination quantification：引入指标定义
+  * train a keyword extraction model(NER-MT5) based on mT5-large
+  *  "combine with the knowledge you already have“ 能提升效果
+
+
+
+
+
+* Prompt
+
+实体抽取
+
+```
+template = """
+There are some samples:
+\n\n
+### Instruction:\n’Learn to extract entities from the following
+medical questions.’\n\n### Input:\n
+<CLS>Doctor, I have been having discomfort and dryness in my vagina
+for a while now. I also experience pain during sex. What could be
+the problem and what tests do I need?<SEP>The extracted entities
+are\n\n ### Output:
+<CLS>Doctor, I have been having discomfort and dryness in my vagina
+for a while now. I also experience pain during sex. What could be
+the problem and what tests do I need?<SEP>The extracted entities
+are Vaginal pain, Vaginal dryness, Pain during intercourse<EOS>
+\n\n
+Instruction:\n’Learn to extract entities from the following medical
+answers.’\n\n### Input:\n
+<CLS>Okay, based on your symptoms, we need to perform some diagnostic
+procedures to confirm the diagnosis. We may need to do a CAT scan
+of your head and an Influenzavirus antibody assay to rule out any
+other conditions. Additionally, we may need to evaluate you
+further and consider other respiratory therapy or physical therapy
+exercises to help you feel better.<SEP>The extracted entities are
+\n\n ### Output:
+<CLS>Okay, based on your symptoms, we need to perform some diagnostic
+procedures to confirm the diagnosis. We may need to do a CAT scan
+of your head and an Influenzavirus antibody assay to rule out any
+other conditions. Additionally, we may need to evaluate you
+further and consider other respiratory therapy or physical therapy
+exercises to help you feel better.<SEP>The extracted entities are
+CAT scan of head (Head ct), Influenzavirus antibody assay,
+Physical therapy exercises; manipulation; and other procedures,
+Other respiratory therapy<EOS>
+\n\n
+Try to output:
+### Instruction:\n’Learn to extract entities from the following
+medical questions.’\n\n### Input:\n
+<CLS>{input}<SEP>The extracted entities are\n\n ### Output:
+"""
+```
+
+生成答案、GoT
+
+```Python
+SystemMessage(content= """You are an excellent AI doctor, and you can diagnose diseases and recommend medications based on the symptoms in the conversation."""),
+HumanMessage(content"""Patient input:"""+ Question),
+AIMessage(content=f """Combine the knowledge you already have, you have some extra medical knowledge information in the following:\n\n ### """+ path_reasoning_graph + """\n\n###""" + neighbor_reasoning_path),
+HumanMessage(content="""What disease does the patient have? What tests should patient take to confirm the diagnosis? What recommened medications can cure the disease? Think step by step.\n\n\n
+Output1: The answer includes disease and tests and recommened medications.\n\n
+Output2: Show me inference process as a string about extract what knowledge from which Path-based Evidence or Neighor-based Evidence, and in the end infer what result. \n Transport the inference process into the
+following format:\n Path-based Evidence number('entity name'->'relation name'->...)->Path-based Evidence number('entity name'->'relation name'->...)->Neighbor-based Evidence number('entity name'->'relation name'->...)-
+>Neighbor-based Evidence number('entity name'->'relation name'->...)->result number('entity name')->Path-based Evidence number('entity name'->'relation name'->...)->Neighbor-based Evidence number('entity name'->'relation
+name'->...). \n\n
+Output3: Draw a decision tree. The entity or relation in single quotes in the inference process is added as a node with the source of evidence, which is followed by the entity in parentheses.\n\n
+There is a sample:\n ... """)
+```
+
+传统RAG
+
+```
+template = """
+You are an excellent AI doctor, and you can diagnose diseases and Patient input:\n conversation.\n\n recommend medications based on the symptoms in the
+{question}
+\n\n
+You have some medical knowledge information in the following:
+{instruction}
+What disease does the patient have? What tests should patient \n\n
+take to confirm the diagnosis? What recommened medications can
+cure the disease?
+"""
+```
+
+LLM Evaluation
+
+* “If they are the same, output "2". Try to output "1" or "0"”
+
+```
+def prompt_comparation(reference,output1,output2): template = """
+Reference: {reference} \n\n
+output1: {output1}
+\n\n
+output2: {output2}
+\n\n
+According to the facts of disease diagnosis and drug and tests recommendation in reference output, which output is better match. If the output1 is better match, output ’1’. If the
+output2 is better match, output ’0’. If they are same match,
+output ’2’.
+"""
+prompt = template.format(reference=reference, output1=output1,
+output2=output2)
+response = openai.ChatCompletion.create( messages=[ model="gpt-4", {"role": "user", "content": prompt} {"role": "system", "content": """You are an excellent AI doctor."""},
+]
+response_of_comparation = response.choices[0].message.content return response_of_comparation
+```
+
+### 业务场景
+
+* 场景一：合作伙伴评估
+  - “哪些企业最适合成为我们的战略合作伙伴？”
+  - 对话式搜推 --> 追问用户企业
+  - 知识图谱 --> 业务领域、技术优势、市场定位、信用评级、知识产权情况、诉讼记录
+  - 寻求业务、技术能力的互补性 (工程施工 + 设计规划)
+* 场景二：市场趋势洞察
+  - “未来哪些行业领域可能出现爆发式增长，我们企业该如何提前布局？”
+  - 对话式搜推 --> 追问用户行业
+  - 知识图谱 --> 注册数量、资本投入、新增专利数量
+  - 寻找不同行业之间的关联节点
+* 场景三：潜在项目预测
+  - “未来哪些项目最有可能适合我们企业参与投标？”
+  - 对话式搜推 --> 追问用户技术优势
+  - 知识图谱 --> 领域招投标项目数量增长趋势、政策法规、行业动态
+  - 为用户提供潜在项目清单
+
+
+
+
+
+
+
+### 竞品
+
+![image-20241007224527684](AIGC/pai-rag.png)
+
+## Agent
+
+* OpenAI开源多智能体agent框架swarm https://mp.weixin.qq.com/s/ysUzxUYV-lsQ6aiYPU0KdA
+  * https://github.com/openai/swarm
+  * 自动将函数转成适配格式的json描述
+  * 上下文的管理有多种模式可以轻松传递
+  * 10行代码构建出多智能体系统
+
+### Plan-And-Execute
+
+> https://blog.langchain.dev/planning-agents/
+
+* 好处
+  * Generating the full reasoning steps is a tried-and-true prompting technique to improve outcomes.
+  * 性能、成本
+* Naive版本
+  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb
+
+![img](AIGC/plan-and-execute-0915298.png)
+
+* ReWOO：Reasoning WithOut Observations
+  * the planner can reference previous outputs using syntax like `#E2` 
+  * more effective than a naive plan-and-execute agent since each task can have only the required context (its input and variable values).
+
+* LLMCompiler
+  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/llm-compiler/LLMCompiler.ipynb
+  * **Planner**: streams a DAG of tasks. Each task contains a tool, arguments, and list of dependencies.
+  * **Task Fetching Unit** schedules and executes the tasks. This accepts a stream of tasks. This unit schedules tasks once their dependencies are met. Since many tools involve other calls to search engines or LLMs, the extra parallelism can grant a significant speed boost (the paper claims 3.6x).
+  * **Joiner**: dynamically replan or finish based on the entire graph history (including task execution results) is an LLM step that decides whether to respond with the final answer or whether to pass the progress back to the (re-)planning agent to continue work.
+  * 好处：
+    * **Planner** outputs are ***streamed;\*** the output parser eagerly yields task parameters and their dependencies.
+    * The **task fetching unit** receives the parsed task stream and schedules tasks once all their dependencies are satisfied.
+    * Task arguments can be *variables,* which are the outputs of previous tasks in the DAG. For instance, the model can call `search("${1}")` to search for queries generated by the output of task 1. This lets the agent work even faster than the "embarrassingly parallel" tool calling in OpenAI.
+
+
 
 ## Assistants API
 
@@ -1891,10 +2727,6 @@ for hat in queue:
     - Most viewed
     - Recently viewed
 
-
-
-
-
 ###  算法
 
 #### Hybrid Search
@@ -1912,6 +2744,24 @@ for hat in queue:
   * Kv search (BM25)
   * Vector search (HNSW)
   * RRF: $rrf(d)=\sum_{a\in A}\frac{1}{k+rank_a(d)}$
+
+* [VantageDiscovery的电商搜索实践](https://www.vantagediscovery.com/post/compound-ai-search-where-keywords-and-vectors-are-just-the-beginning)
+
+  * 高级能力
+    * **Intelligent Weighting**: Dynamically adjust the importance of different search factors based on business goals or seasonal priorities.
+    * **Flexible Matching Criteria**: Find relevant results even with partial query matches, ensuring customers always find suitable products.
+    * **Contextual Semantic Adjustment**: Control the degree of semantic interpretation based on product categories or query types, optimizing for both precision and recall.
+    * **Category-Specific Models**: Utilize different AI models for various product types, ensuring specialized understanding across diverse catalogs.
+
+  * Imagine a customer searching for a "cozy blue sweater for a winter wedding." A compound AI system handles this complex query by:
+    * Analyzing intent: identifying style, color, item, and occasion.
+    * Expanding context: considering related concepts like "formal knitwear" or "elegant cold-weather attire."
+    * Performing semantic search using advanced embeddings.
+    * Conducting traditional keyword search in parallel.
+    * Blending results, prioritizing wedding-appropriate items.
+    * Returning a curated selection of relevant products, including complementary accessories.
+  * https://docs.vantagediscovery.com/docs/search-more-like-these-tm#example-soft-chair--item-27--two-pinterest-images
+    * ![more-like-these-overview](AIGC/more-like-these-overview.webp)
 
 
 
@@ -1939,9 +2789,74 @@ for hat in queue:
 
 ### 竞品
 
+* [深度｜AI+电商搜索大盘点，又一个资本集中下注的细分赛道](https://mp.weixin.qq.com/s/zaczcDifgT-9Gt5q-R7azQ)
+  * VantageDiscovery
+  * DayDream
+    * 强调基于多模态理解的商品搜索能力，例如其官网展示的场景中，用户上传一张带有条纹的托特包，并希望找到一款类似的无条纹款，DayDream 可以轻松基于这些提示给出搜索结果。
+  * Glaze
+    * 在该产品中，每个人都会获得一个初始的虚拟时尚买手 Glaze。用户可添加 Glaze 的联系方式，并成为他的好友。随后在用户浏览 Ins、Pinterest 等时尚内容网站时，可以通过分享按钮将你喜欢的内容分享给这位助手。**Glaze 购物助手会积累这些用户分享数据，学习用户的穿衣风格、产品偏好，并随时为你推荐相关商品**，用户可以直接在 Glaze 推荐的链接中进行购买和转化。
+
+#### VantageDiscovery AI Search
+
+> https://www.vantagediscovery.com/blog
+>
+> Demo：https://demo.vantagediscovery.com/fashion/search
+
+* Intro
+  * **VantageDiscovery 最大的竞争力来自他们的自定义向量数据库。**将用户查询的语义理解和对用户个人风格的语义理解结合起来，在几毫秒内从数百万个项目中检索出最个性化、最有针对性的结果
+  * VantageDiscovery 的商业策略是为那些独立站卖家、集合店、大型购物网站提供面向商业的搜索引擎。
+* e.g.
+  * “母亲节给妈妈买什么”或“一个有趣的夜晚外出的衬衫”
+  * recipes for a 6 year old's birthday party
+  * graduation garden party -> floral sundress、wide-brim sunhat
+* 技术文章：
+  * 搜索技术历史 https://www.vantagediscovery.com/post/ecommerce-search-transcended-for-the-ai-age
+  * 赋能cooklist，semantic search https://www.vantagediscovery.com/post/how-cooklist-brought-their-catalog-to-life-in-unexpected-ways
+  * More-Like-This https://www.vantagediscovery.com/post/personalizing-discovery-in-e-commerce-with-more-like-this
+  * CRS https://www.vantagediscovery.com/post/elevating-ecommerce-search-from-keywords-to-conversations
+    * shift from precision-based to intent-based queries
+    * "I'm looking for boots that won't give up on me in the rain but still let me look my best at a café."
+    * Cozy spot, pet-friendly romantic weekend getaway
+  * 对HNSW的改进 https://www.vantagediscovery.com/post/the-hush-hush-secret-of-accuracy-of-hnsw-and-vector-databases
+  * PR文章 https://www.vantagediscovery.com/post/vantage-discovery-raises-16m-to-bring-ai-powered-product-discovery-to-commerce
+  * Semantic search的经验 https://www.vantagediscovery.com/post/5-things-i-learned-building-85-semantic-search-indexes
+    * A clear, concise, salient set of text (3-4 paragraphs is a good rule of thumb) that describes the style, use, and attributes in real human-understandable terms is the number one predictor of great results out of the box.
+    * Pictures are worth way more than 1,000 words (or floats!).
+    * You must process images with clever vision LLM prompts or an overlaid trained image+text embedding model and include that in the embedding to be searched. It's crucial the text and image are combined into a single embedding (or at least single model).
+    * **Adjustments like** [**keyword boosting**](https://docs.vantagediscovery.com/docs/search-options#keyword-support), fine-tuned embedding models, and query augmentation allow reduction of these creative jumps. However, don't overdo this, as sometimes a little variety and some non-intuitive jumps can actually add to the diversity of your results. Variety in the results, even non-obvious ones, may benefit and delight your users. With keywords, you might have shown ZERO-ZILCH-NADA results before, but now you show some variety and the best if not creative results given your catalog!
+  * 聚焦数据预处理 https://www.vantagediscovery.com/post/is-ai-powered-data-engineering-the-key-to-unlocking-your-product-catalogs-potential
+  * style向量检索 https://www.vantagediscovery.com/post/vector-math-never-looked-so-floral-how-vantage-is-revolutionizing-e-commerce-search
+  * hybrid search https://www.vantagediscovery.com/post/compound-ai-search-where-keywords-and-vectors-are-just-the-beginning
+  * semantic search的科普 https://www.vantagediscovery.com/post/semantic-101
+    * `text-embedding-3-large` model with 2048 dimensions
+  * 高维向量可视化 https://www.vantagediscovery.com/post/from-high-dimensions-to-human-comprehension
+  * AI可解释性 https://www.vantagediscovery.com/post/the-future-of-e-commerce-is-ai-powered-and-interpretable
+    * sparse autoencoders (SAEs) https://transformer-circuits.pub/2024/scaling-monosemanticity/
+    * Hyper-Personalized Product Discovery
+    * Optimized Merchandising and Assortment
+    * Enhanced Explainable Search
+  * 搜索电商的商业逻辑和关键技术 https://www.vantagediscovery.com/post/adapt-or-die-why-retailers-want-to-be-like-amazon
+    * Implicit personalization at an n of 1
+    * Blending keyword and semantic search 
+    * Explicit style personalization
+    * Personalized shopping assistants
+  * Salesforce AppExchange https://www.vantagediscovery.com/post/introducing-vantage-discovery-for-salesforce-commerce-cloud-unlock-the-future-of-ai-powered-retail
+  * 关于semantic search的优化 https://www.vantagediscovery.com/post/semantic-search-using-matryoshka-embedding-vectors
+  * 分析传统search的缺点 https://www.vantagediscovery.com/post/ai-shopping-assistants-and-semantic-search
+    * When searchers find what they’re looking for, 92% purchase that item and 78% buy at least one additional item with an average of 3 additional items purchased after a successful search. On the other hand, 53% of consumers abandon the website entirely when they have an unsuccessful search.
+    * https://llcbuddy.com/data/e-commerce-search-statistics/
+* Note:
+  * search option，涉及关键词检索相关 https://docs.vantagediscovery.com/docs/search-options#field-value-weighting
+  * 图片上增加upvote，用于采集数据
+
+![640](AIGC/640.webp)
+
+
+
 #### Google Vertex Search
 
-* https://cloud.google.com/enterprise-search?hl=en
+> https://cloud.google.com/enterprise-search?hl=en
+
 * 技术介绍（RAG）
   * simplified the end-to-end search and discovery process of managing ETL, OCR, chunking, embedding, indexing, storing, input cleaning, schema adjustments, information retrieval, and summarization to just a few clicks
   * 融合AI for document understanding
@@ -2047,7 +2962,56 @@ for hat in queue:
   * [归因](https://www.algolia.com/doc/guides/sending-events/getting-started/)
     * Client-side versus server-side events
 
+#### 链企AI（深度搜索）
 
+> https://www.lianqiai.cn/
+
+#### 360 AI搜索
+
+> [双10亿：AI重塑搜索 | 一文看懂AI搜索现状和未来](https://mp.weixin.qq.com/s/DvEnhyk6ytQ8NcSGCvgSUw)
+
+![图片](AIGC/640)
+
+* 一次AI搜索，调用1次大模型？
+  * 错！答案是**会调用9次大模型，并且不同任务里会有不同大模型参与**
+  * 用户输入Query并点击搜索后，360会先调用一个2B-7B之间响应非常快的意图识别模型，快速理解Query，并做关键词识别、参数抽取、意图识别、搜索词改写等工作。
+  * 接下来会进行5次搜索，搜索完后对内容进行ReRank，这里面排序、选择哪些内容作为主答案，也需要LLM参与。
+  * 基于生成的答案，要生成各种追问、延伸阅读、相关事件、思维导图，这里面360思维导图的效果之所以好，就是360专门去训练了一个模型，才能够把结构化的信息比较准确和有结构的描述出来。
+
+* 秘塔AI搜索的问题
+  * 小参数量模型*上下文窗口很短，所以只能讨巧：**迭代调用，分批生成**
+    * 第一步先生成一个大纲，然后再基于大纲去做逐步的扩写，整体拼凑下来就能够得到很长的文章。
+    * 可能导致内容重复、内容质量低
+  * 360的策略：**用中文搜一次、再用英文搜一次**
+* 关于prompt
+  * 对于总结，他们确实可以用一个很短的Prompt（迭代了非常多的版本）获得很好的总结结果，**但是AI搜索用户的意图有很多，并不单纯是内容总结。**对于模型来说，对不同的搜索意图，想要生成好的结果，是需要传递给大模型不同的价值取向的。
+  * query的意图识别分类做到了4000多种，每一种需求配对应的Prompt
+* 期望AI搜索处理复杂问题
+  * 假设你在搜索“找到波士顿最受欢迎的瑜伽或普拉提工作室，并显示其入门优惠和从Beacon Hill步行的时间”。多步推理的AI会：
+    * 识别出你要找的是瑜伽或普拉提工作室。
+    * 找到波士顿地区的相关工作室。
+    * 筛选出那些在当地受欢迎的工作室。
+    * 检查这些工作室是否提供新会员的入门优惠。
+    * 计算每个工作室从Beacon Hill步行的时间。
+    * 综合以上信息，给出一个详细的结果列表。
+* 索引库的成本：爬5000万的网页，大概需要一两百万RMB。（From 360AI）
+* AI SEO：每天生成数百万个答案网页，覆盖自己搜索内的流量
+* 本地大模型
+
+![图片](AIGC/640-20241019015912504)
+
+#### Perplexity
+
+* [Perplexity CEO揭秘🤖搜索内核：不训练模型、关键在于路由编排、比搜索引擎更敢说](https://mp.weixin.qq.com/s/aBAd6-mDEgNCo8s2hOsE3w)
+  * AI搜索优势：
+    * 对于基于LLM的答案引擎，传统的检索方式只需要优化召回率即可
+  * 关于使用网页
+    * **使用来自多个搜索提供商的大量排名信号。我们实际上构建了自己的索引，但也依赖于大量数据提供商的排名信号**。对于某些我们不自行抓取或爬取的网络域名，我们还依赖于第三方数据提供商，这些提供商只提供高层级的摘要片段和与URL相关的元数据，而不是实际内容。
+    * 人们对这些域名的信任程度
+  * query匹配 - ngram重叠 - 语义检索
+    * 基于查询词匹配，这类似于传统的检索，例如TF-IDF风格的检索。
+  * 搜集开放式信息
+    * 我应该投资英伟达吗？我不太明白。所有信息都已被计入价格了吗？黑色世界芯片延误会怎样？对训练GPU的需求如何？英伟达现在的竞争对手是谁？它仍然没有竞争对手吗？五年后的市场会怎样？这将如何影响亚马逊网络服务（AWS）的收入？英伟达的利润率是如何被挤压的？谁可能会这么做？
 
 #### 其它
 
@@ -2056,89 +3020,36 @@ for hat in queue:
 
 
 
-## LLM + Recommendation
+## Finetune
 
-* https://github.com/WLiK/LLM4Rec-Awesome-Papers
-* [LLM+Recommendation大模型推荐近期进展|含WWW, SIGIR, AAAI等顶会文章](https://mp.weixin.qq.com/s/m8DMgSt_r-HVNHHzA8ceVw)
+### Literature Review
 
-### 论文
+* Pre-trained LLMs can be adapted to domain tasks with further fine-tuning
+  * 《Large language models encode clinical knowledge》
+* aligned with human preferences with instruction-tuning
+  * 《Training language models to follow instructions with human feedback. 》
 
-#### Transformer结构引入推荐算法
 
-##### [Meta] [HSTU] Actions Speak Louder than Words: Trillion-Parameter Sequential Transducers for Generative Recommendations
 
-https://arxiv.org/pdf/2402.17152v1
+### FoodGPT: A Large Language Model in Food Testing Domain with Incremental Pre-training and Knowledge Graph Prompt
 
-> - 算法创新点：改变了特征排列（序列构造方式）将用户行为视作一种新模态、将target item做进了模型底座
-> - 工程创新点：序列采样、 M-FALCON、激进的kernel fusion、casual mask（KV cache）
+* Incremental Pre-training 增量预训练
+  * 图像和扫描文档
+    * 存储大量领域标准文档信息，使用 OCR 技术处理。因文档可能超模型训练序列长度，按章节拆分，为防描述冲突，给数据章节添加前缀（通过 UIE 模型提取文档名，启发式生成方法构建前缀）。同时用 BERT 和 GPT - 2 计算文本章节中句子的困惑度，排除高困惑度句子。
+  * 结构化知识
+    * 存在于私有结构化数据库，由人工输入的表格组成。创建 Datav1 和 Datav2 两个版本用于增量预训练。Datav1 去除机密隐私信息后用字典构建数据，以 “测试项目” 为键，对应多个具体测试项目的表格（markdown 格式）为值；Datav2 采用新方法序列化，去除机密隐私信息后合并部分无单独意义的字段，输入 ChatGPT 按规则随机生成文本。
+  * 其他类型数据
+    * 包括食品检测字典、中国食品检测教程和研究论文、食品情感数据、食品安全相关法律、食品安全相关考题等，选择 Chinese - LLaMA2 - 13B 为基础模型，用 LoRA 方法进行增量预训练。
 
-* Intro
-  * reformulate recommendation problems as sequential transduction tasks within a generative modeling framework
-  * HSTU
-  * power-law of training compute
-* 分析难以scale的原因
-  * heterogeneous features的重要性大
-  * A billion-scale dynamic vocabulary，候选多
-  * 成本大：recommendation systems need to handle a few orders of magnitude more tokens per day than what language models process over 1-2 months.
-    * GPT-3 was trained on a total of 300B tokens over a period of 1-2 months with thousands of GPUs
+* Instruction Fine-tuning
 
-* In this work, we treat user actions as a new modality in generative modeling
-  * core ranking and retrieval tasks in industrial-scale recommenders can be cast as generative modeling problems given an appropriate new feature space
-  * this paradigm enables us to systematically leverage redundancies in features, training, and inference to improve efficiency
-  * --> **three orders of magnitude more computationally complex** than prior state-of-the-art,
+  - 数据集构建
+    - 通过两种方式构建指令微调数据集。一是从食品论坛选取相关主题，抓取大量问答对，优先选择发帖频率高的用户以确保高质量答案；二是与食品检测领域专家合作设计 100 个高质量种子指令，用 evol - instruct 方法扩展和多样化。
 
-* Recommendation as Sequential Transduction Tasks: From DLRMs to GRs
-  * Generative Recommenders (GRs)
-    * 本质上似乎是用transformer学一个hidden embedding
-  * sparse features：
-    * **Target item从底层引入**
-  * dense features:
-    * an important observation is that the categorical features (e.g., item topics, locations) over which we perform these aggregations are already sequentialized and encoded in GRs. Hence, we can remove numerical features in GRs given a sufficiently expressive sequential transduction architecture coupled with a target-aware formulation
-  * 顺序转换任务
-    * 按时间merge主序列和user profile序列
-  * 辅助时间序列 - 随时间缓慢变化的时间序列
-    * 只在变的时候merge进去
-  * 当下一个token表示与参与无关的(non-engagement related)分类特征（例如人口统计学特征）时，$$y_i$$ 未定义, 对于这些情况，我们将 $$m_i$$ 设置为 0。
-  * 精排：**内容位置的预测**转换为**多任务预测**
-    * casual mask: https://zhuanlan.zhihu.com/p/698447429
+  - 训练过程
+    - 用 LoRA 方法对 Chinese - LLaMA2 - 13B 的指令进行微调。
 
-![image-20240716221553540](AIGC/hstu1.png)
 
-* HSTU
-  * Pointwise aggregated attention
-    * HSTU在Transformer中采用了一种新的点对点（pointwise）聚集注意力机制，而不是softmax注意力。这是出于两个因素的考虑。
-    * 在推荐系统中，与目标相关的先前数据点的**数量**作为一个强大的特征，指示用户偏好的强度，在经过softmax归一化后很难捕捉到。这一点很关键，因为我们需要预测参与度的强度，例如在给定item上花费的时间，以及item的相对顺序，再例如预测候选人的排序以最大化AUC。
-    * 虽然softmax激活函数对噪声具有鲁棒性，但它不太适合流式设置中的非平稳词汇表。
-  * 通过随机长度（Stochastic Length，SL）进一步从算法上增加用户历史序列的稀疏性
-    * 对用户序列做采样：
-      * 一种说法：在一个user的request/session结束时，以1/n的概率采样这个user，其中n是这个user的序列长度。
-      * 另一种说法：一个session采样一次
-
-![image-20240716222635364](AIGC/hstu2.png)
-
-* 工程优化
-  * 优化activations的内存占用
-  * 单kernel
-  *  M-FALCON 
-    * Microbatched-Fast Attention Leveraging Cacheable OperatioNs
-    * to perform inference for m candidates with an input sequence size of n
-    * We optionally divide the overall m candidates into ⌈m/bm⌉ microbatches of size bm to leverage encoder-level KV caching (Pope et al., 2022) either across forward passes to reduce cost, or across requests to minimize tail latency
-* 实验insight
-  * 生成式推荐模型与LLM一样遵循scaling law，但传统推荐模型不遵循
-  * 同等参数量的情况下，在参数达到一定规模的threshold后，生成式推荐模型才能有比传统推荐模型更好的效果。精排模型需要比召回模型更大的threshold(约100x)
-  * Scaling law的最大配置时：8,192 sequence length, 1,024 embedding dimension, 24 layers of HSTU。**对精排模型，约在最大配置的1/10处，GR表现超过传统模型，对应的配置约为：4000 sequence length, 1,024 embedding dimension, 6 layers**
-* Question
-  * 用户token数量n_i 和用户的时序行为数量（上张图中，老推荐模型的时序样本数量）是什么关系？
-  * 为什么在用户session结束时生成样本，相当于做采样？
-
-##### [美团] https://tech.meituan.com/2020/04/16/transformer-in-meituan.html
-
-* 用transformer做序列特征交叉
-  * 将transformer的输出结果和target item做din
-
-##### SASREC
-
-https://arxiv.org/abs/1808.09781
 
 ## AI编程
 
@@ -2375,6 +3286,565 @@ gpt-engineer .
 
 * [gpt-4-chatall](AIGC/gpt-4-chatall.png) 演示用GPT-4创建应用框架
 
+
+
+## LlamaIndex
+
+### Intro
+
+_「 LlamaIndex is a framework for building context-augmented LLM applications. Context augmentation refers to any use case that applies LLMs on top of your private or domain-specific data. 」_
+
+* LlamaIndex 是一个为开发「上下文增强」的大语言模型应用的框架（也就是SDK）。**上下文增强**，泛指任何在私有或特定领域数据基础上应用大语言模型的情况。例如：
+
+
+  - Question-Answering Chatbots (RAG)
+    
+
+
+  - Document Understanding and Extraction （文档理解与信息抽取） 
+
+
+
+  - Autonomous Agents that can perform research and take actions （智能体应用）
+
+
+* LlamaIndex 有 Python 和 Typescript 两个版本，Python 版的文档相对更完善。
+
+  * Examples: https://docs.llamaindex.ai/en/stable/examples/
+
+  * Github: https://github.com/run-llama
+
+  * Python 文档地址：https://docs.llamaindex.ai/en/stable/
+
+
+  - Python API 接口文档：https://docs.llamaindex.ai/en/stable/api_reference/
+
+
+  - TS 文档地址：https://ts.llamaindex.ai/
+
+
+  - TS API 接口文档：https://ts.llamaindex.ai/api/
+
+
+![llamaindex](AIGC/llamaindex.png)
+
+* **大语言模型开发框架的价值是什么？**
+  * 所有开发框架（SDK）的核心价值，都是降低开发、维护成本。
+  * 大语言模型开发框架的价值，是让开发者可以更方便地开发基于大语言模型的应用。主要提供两类帮助：
+    1. 第三方能力抽象。比如 LLM、向量数据库、搜索接口等
+    2. 常用工具、方案封装
+    3. 底层实现封装。比如流式接口、超时重连、异步与并行等
+
+  * 好的开发框架，需要具备以下特点：
+    1. 可靠性、鲁棒性高
+    2. 可维护性高
+    3. 可扩展性高
+    4. 学习成本低
+
+  * 例子：
+    - 与外部功能解依赖
+      - 比如可以随意更换 LLM 而不用大量重构代码
+      - 更换三方工具也同理
+    - 经常变的部分要在外部维护而不是放在代码里
+      - 比如 Prompt 模板
+    - 各种环境下都适用
+      - 比如线程安全
+    - 方便调试和测试
+
+
+
+* Note：
+  * SemanticKernel（Microsoft）稳定性不行
+  * sdk和api的区别：https://aws.amazon.com/cn/compare/the-difference-between-sdk-and-api/
+
+
+
+### 环境配置
+
+```
+pip install llama-index
+```
+
+
+
+### Data Loader
+
+* SimpleDirectoryReader
+  * `.csv` - comma-separated values
+  - `.docx` - Microsoft Word
+  - `.epub` - EPUB ebook format
+  - `.hwp` - Hangul Word Processor
+  - `.ipynb` - Jupyter Notebook
+  - `.jpeg`, `.jpg` - JPEG image        只加载图片metadata
+  - `.mbox` - MBOX email archive
+  - `.md` - Markdown
+  - `.mp3`, `.mp4` - audio and video
+  - `.pdf` - Portable Document Format
+  - `.png` - Portable Network Graphics
+  - `.ppt`, `.pptm`, `.pptx` - Microsoft PowerPoint
+
+```python
+import json
+from pydantic.v1 import BaseModel
+
+def show_json(data):
+    if isinstance(data, str):
+        obj = json.loads(data)
+        print(json.dumps(obj, indent=4))
+    elif isinstance(data, dict) or isinstance(data, list):
+        print(json.dumps(data, indent=4))
+    elif issubclass(type(data), BaseModel):
+        print(json.dumps(data.dict(), indent=4, ensure_ascii=False))
+
+def show_list_obj(data):
+    if isinstance(data, list):
+        for item in data:
+            show_json(item)
+    else:
+        raise ValueError("Input is not a list")
+```
+
+* 提取图像视频语音要用data connector
+* 加载pdf：
+  * 还有 [`SmartPDFLoader`](https://llamahub.ai/l/readers/llama-index-readers-smart-pdf-loader?from=readers) 和 [`LlamaParse`](https://llamahub.ai/l/readers/llama-index-readers-llama-parse?from=readers)
+
+```python
+from llama_index.readers.file import PyMuPDFReader
+file_extractor={".pdf": PyMuPDFReader()} # 指定特定的文件加载器
+```
+
+* Data Connectors
+  * 加载feishu doc
+    * https://open.larkoffice.com/app 创建应用申请文档权限
+  * 更多 Data Connectors
+    * 内置的<a href="https://llamahub.ai/l/readers/llama-index-readers-file">文件加载器</a>
+    * 连接三方服务的<a href="https://docs.llamaindex.ai/en/stable/module_guides/loading/connector/modules/">数据加载器</a>，例如数据库
+    * 更多加载器可以在 <a href="https://llamahub.ai/">LlamaHub</a> 上找到
+
+```python
+from llama_index.readers.feishu_docs import FeishuDocsReader
+
+# 见说明文档
+app_id = "cli_a6f1c0fa1fd9d00b"
+app_secret = "dMXCTy8DGaty2xn8I858ZbFDFvcqgiep"
+
+# https://agiclass.feishu.cn/docx/FULadzkWmovlfkxSgLPcE4oWnPf
+# 链接最后的 "FULadzkWmovlfkxSgLPcE4oWnPf" 为文档 ID 
+doc_ids = ["FULadzkWmovlfkxSgLPcE4oWnPf"]
+
+# 定义飞书文档加载器
+loader = FeishuDocsReader(app_id, app_secret)
+
+# 加载文档
+documents = loader.load_data(document_ids=doc_ids)
+
+# 显示前1000字符
+print(documents[0].text[:1000])
+```
+
+### Chunking
+
+* Intro
+  * 为方便检索，我们通常把 `Document` 切分为 `Node`。
+  * 在 LlamaIndex 中，`Node` 被定义为一个文本的「chunk」。
+
+* **使用 TextSplitters 对文本做切分**
+  * 细节：node内部存储了"relationships"，前后的node
+  * LlamaIndex 提供了丰富的 `TextSplitter`，例如：
+    * [`SentenceSplitter`](https://docs.llamaindex.ai/en/stable/api_reference/node_parsers/sentence_splitter/)：在切分指定长度的 chunk 同时尽量保证句子边界不被切断；
+    * [`CodeSplitter`](https://docs.llamaindex.ai/en/stable/api_reference/node_parsers/code/)：根据 AST（编译器的抽象句法树）切分代码，保证代码功能片段完整；
+    * [`SemanticSplitterNodeParser`](https://docs.llamaindex.ai/en/stable/api_reference/node_parsers/semantic_splitter/)：根据语义相关性对将文本切分为片段。
+
+```python
+from llama_index.core import Document
+from llama_index.core.node_parser import TokenTextSplitter
+
+node_parser = TokenTextSplitter(
+    chunk_size=100,  # 每个 chunk 的最大长度
+    chunk_overlap=50  # chunk 之间重叠长度 
+)
+
+nodes = node_parser.get_nodes_from_documents(
+    documents, show_progress=False
+)
+```
+
+* **使用 NodeParsers 对有结构的文档做解析**
+  * [`HTMLNodeParser`](https://docs.llamaindex.ai/en/stable/api_reference/node_parsers/html/)，[`JSONNodeParser`](https://docs.llamaindex.ai/en/stable/api_reference/node_parsers/json/)
+
+```python
+from llama_index.readers.file import FlatReader
+from llama_index.core.node_parser import MarkdownNodeParser
+from pathlib import Path
+
+md_docs = FlatReader().load_data(Path("./data/ChatALL.md"))
+parser = MarkdownNodeParser()
+nodes = parser.get_nodes_from_documents(md_docs)
+```
+
+### Indexing and Retrieval
+
+* 向量检索
+  * LlamaIndex 默认的 Embedding 模型是 OpenAIEmbedding(model="text-embedding-ada-002")
+  * 使用自定义的 Vector Store，以 `Chroma` 为例
+  * 关键字检索
+      - [`BM25Retriever`](https://docs.llamaindex.ai/en/stable/api_reference/retrievers/bm25/)：基于 tokenizer 实现的 BM25 经典检索算法
+      - [`KeywordTableGPTRetriever`](https://docs.llamaindex.ai/en/stable/api_reference/retrievers/keyword/#llama_index.core.indices.keyword_table.retrievers.KeywordTableGPTRetriever)：使用 GPT 提取检索关键字
+      - [`KeywordTableSimpleRetriever`](https://docs.llamaindex.ai/en/stable/api_reference/retrievers/keyword/#llama_index.core.indices.keyword_table.retrievers.KeywordTableSimpleRetriever)：使用正则表达式提取检索关键字
+      - [`KeywordTableRAKERetriever`](https://docs.llamaindex.ai/en/stable/api_reference/retrievers/keyword/#llama_index.core.indices.keyword_table.retrievers.KeywordTableRAKERetriever)：使用[`RAKE`](https://pypi.org/project/rake-nltk/)算法提取检索关键字（有语言限制）
+  * RAG-Fusion [`QueryFusionRetriever`](https://docs.llamaindex.ai/en/stable/api_reference/retrievers/query_fusion/)
+  * 还支持 [KnowledgeGraph](https://docs.llamaindex.ai/en/stable/api_reference/retrievers/knowledge_graph/)、[SQL](https://docs.llamaindex.ai/en/stable/api_reference/retrievers/sql/#llama_index.core.retrievers.SQLRetriever)、[Text-to-SQL](https://docs.llamaindex.ai/en/stable/api_reference/retrievers/sql/#llama_index.core.retrievers.NLSQLRetriever) 等等
+
+```python
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+from llama_index.core.node_parser import TokenTextSplitter
+from llama_index.readers.file import PyMuPDFReader
+
+documents = SimpleDirectoryReader(
+    "./data", 
+    required_exts=[".pdf"],
+    file_extractor={".pdf": PyMuPDFReader()}
+).load_data()
+
+node_parser = TokenTextSplitter(chunk_size=300, chunk_overlap=100)
+
+nodes = node_parser.get_nodes_from_documents(documents)
+
+index = VectorStoreIndex(nodes)
+
+vector_retriever = index.as_retriever(
+    similarity_top_k=2 # 返回前两个结果
+)
+
+results = vector_retriever.retrieve("Llama2有多少参数")
+
+show_list_obj(results)
+```
+
+```python
+# !pip install llama-index-vector-stores-chroma
+import os 
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3']= sys.modules.pop('pysqlite3')
+
+import chromadb
+from chromadb.config import Settings
+
+# EphemeralClient 在内存创建；如果需要存盘，可以使用 PersistentClient
+chroma_client = chromadb.EphemeralClient(settings=Settings(allow_reset=True))
+
+from llama_index.vector_stores.chroma import ChromaVectorStore
+from llama_index.core import VectorStoreIndex
+from llama_index.core import StorageContext
+
+chroma_client.reset() # for demo
+chroma_collection = chroma_client.create_collection("demo")
+
+vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+storage_context = StorageContext.from_defaults(vector_store=vector_store)
+index = VectorStoreIndex(nodes, storage_context=storage_context)
+
+vector_retriever = index.as_retriever(similarity_top_k=2)
+results = vector_retriever.retrieve("Llama2有多少参数")
+
+show_list_obj(results)
+```
+
+* **Ingestion Pipeline 自定义数据处理流程**
+  * LlamaIndex 通过 `Transformations` 定义一个数据（`Documents`）的多步处理的流程（Pipeline）。
+  * 这个 Pipeline 的一个显著特点是，**它的每个子步骤是可以cache的**，即如果该子步骤的输入与处理方法不变，重复调用时会直接从缓存中获取结果，而无需重新执行该子步骤，这样即节省时间也会节省 token （如果子步骤涉及大模型调用）。
+  * `pipeline.persist("./pipeline_storage")`
+  * 也可以用远程的 Redis 或 MongoDB 等存储 `IngestionPipeline` 的缓存，具体参考官方文档：[Remote Cache Management](https://docs.llamaindex.ai/en/stable/module_guides/loading/ingestion_pipeline/#remote-cache-management)。
+  * `IngestionPipeline` 也支持异步和并发调用，请参考官方文档：[Async Support](https://docs.llamaindex.ai/en/stable/module_guides/loading/ingestion_pipeline/#async-support)、[Parallel Processing](https://docs.llamaindex.ai/en/stable/module_guides/loading/ingestion_pipeline/#parallel-processing)。
+
+```python
+from llama_index.vector_stores.chroma import ChromaVectorStore
+from llama_index.core import StorageContext
+from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.extractors import TitleExtractor
+from llama_index.core.ingestion import IngestionPipeline
+from llama_index.core import VectorStoreIndex
+from llama_index.readers.file import PyMuPDFReader
+import nest_asyncio
+nest_asyncio.apply() # 只在Jupyter笔记环境中需要此操作，否则会报错
+
+chroma_client.reset() # for demo
+chroma_collection = chroma_client.create_collection("ingestion_demo")
+
+vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+
+pipeline = IngestionPipeline(
+    transformations=[
+        SentenceSplitter(chunk_size=300, chunk_overlap=0), # 按句子切分
+        TitleExtractor(), # 利用 LLM 对文本生成标题
+        OpenAIEmbedding(), # 将文本向量化
+    ],
+    vector_store=vector_store,
+)
+
+documents = SimpleDirectoryReader(
+    "./data", 
+    required_exts=[".pdf"],
+    file_extractor={".pdf": PyMuPDFReader()}
+).load_data()
+
+with Timer():
+    pipeline.run(documents=documents)
+
+index = VectorStoreIndex.from_vector_store(vector_store)
+vector_retriever = index.as_retriever(similarity_top_k=1)
+results = vector_retriever.retrieve("Llama2有多少参数")
+
+show_list_obj(results[:1])
+
+pipeline.persist("./pipeline_storage")
+new_pipeline = IngestionPipeline(
+    transformations=[
+        SentenceSplitter(chunk_size=300, chunk_overlap=0),
+        TitleExtractor(),
+        OpenAIEmbedding()
+    ],
+)
+
+new_pipeline.load("./pipeline_storage")
+
+with Timer():
+    nodes = new_pipeline.run(documents=documents)
+```
+
+### Rerank
+
+* [Node Postprocessor Modules](https://docs.llamaindex.ai/en/stable/module_guides/querying/node_postprocessors/node_postprocessors/)
+
+```python
+from llama_index.core.postprocessor import SentenceTransformerRerank
+
+# 检索后排序模型
+postprocessor = SentenceTransformerRerank(
+    model="BAAI/bge-reranker-large", top_n=2
+)
+
+nodes = postprocessor.postprocess_nodes(nodes, query_str="Llama2 能商用吗?")
+
+for i, node in enumerate(nodes):
+    print(f"[{i}] {node.text}")
+```
+
+### QA & Chat
+
+* 能力
+  * 单轮、流式、多轮
+
+```Python
+qa_engine = index.as_query_engine()
+response = qa_engine.query("Llama2 有多少参数?")
+
+print(response)
+
+qa_engine = index.as_query_engine(streaming=True)
+response = qa_engine.query("Llama2 有多少参数?")
+response.print_response_stream()
+
+chat_engine = index.as_chat_engine()
+response = chat_engine.chat("Llama2 有多少参数?")
+print(response)
+
+response = chat_engine.chat("How many at most?")
+print(response)
+
+chat_engine = index.as_chat_engine()
+streaming_response = chat_engine.stream_chat("Llama 2有多少参数?")
+for token in streaming_response.response_gen:
+    print(token, end="")
+
+```
+
+### 底层接口：Prompt、LLM 与 Embedding
+
+* [Available LLM integrations](https://docs.llamaindex.ai/en/stable/module_guides/models/llms/modules/)
+* https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings/
+
+```python
+from llama_index.core import PromptTemplate
+
+prompt = PromptTemplate("写一个关于{topic}的笑话")
+
+prompt.format(topic="小明")
+
+
+from llama_index.core.llms import ChatMessage, MessageRole
+from llama_index.core import ChatPromptTemplate
+
+chat_text_qa_msgs = [
+    ChatMessage(
+        role=MessageRole.SYSTEM,
+        content="你叫{name}，你必须根据用户提供的上下文回答问题。",
+    ),
+    ChatMessage(
+        role=MessageRole.USER, 
+        content=(
+            "已知上下文：\n" \
+            "{context}\n\n" \
+            "问题：{question}"
+        )
+    ),
+]
+text_qa_template = ChatPromptTemplate(chat_text_qa_msgs)
+
+print(
+    text_qa_template.format(
+        name="瓜瓜",
+        context="这是一个测试",
+        question="这是什么"
+    )
+)
+
+
+from llama_index.llms.openai import OpenAI
+
+llm = OpenAI(temperature=0, model="gpt-4o")
+
+response = llm.complete(prompt.format(topic="小明"))
+
+print(response.text)
+
+response = llm.complete(
+    text_qa_template.format(
+        name="瓜瓜",
+        context="这是一个测试",
+        question="你是谁，我们在干嘛"
+    )
+)
+
+print(response.text)
+
+# 设置全局LLM
+from llama_index.core import Settings
+Settings.llm = OpenAI(temperature=0, model="gpt-4o")
+
+from llama_index.embeddings.openai import OpenAIEmbedding
+# 全局设定
+Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", dimensions=512)
+```
+
+### 高阶功能
+
+* 智能体（Agent）开发框架：https://docs.llamaindex.ai/en/stable/module_guides/deploying/agents/
+* RAG 的评测：https://docs.llamaindex.ai/en/stable/module_guides/evaluating/
+* 过程监控：https://docs.llamaindex.ai/en/stable/module_guides/observability/
+* [生产级Advanced Topics](https://docs.llamaindex.ai/en/stable/optimizing/production_rag/)
+
+
+
+### Examples
+
+```python
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+
+documents = SimpleDirectoryReader("./data").load_data()
+index = VectorStoreIndex.from_documents(documents)
+
+query_engine = index.as_query_engine()
+
+response = query_engine.query("llama2有多少参数")
+print(response)
+```
+
+#### 基于llamaIndex的RAG系统
+
+* 功能
+  * 加载指定目录的文件
+  * 支持 RAG-Fusion
+  * 使用 ChromaDB 向量数据库，并持久化到本地
+  * 支持检索后排序
+  * 支持多轮对话
+
+```python
+import chromadb
+ 
+chroma_client = chromadb.PersistentClient(path="./chroma_db")
+
+from llama_index.core import VectorStoreIndex, KeywordTableIndex, SimpleDirectoryReader
+from llama_index.vector_stores.chroma import ChromaVectorStore
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.ingestion import IngestionPipeline
+from llama_index.readers.file import PyMuPDFReader
+from llama_index.core import Settings
+from llama_index.core import StorageContext
+from llama_index.core.postprocessor import SentenceTransformerRerank
+from llama_index.core.retrievers import QueryFusionRetriever
+from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.core.chat_engine import CondenseQuestionChatEngine
+from llama_index.llms.openai import OpenAI
+from llama_index.embeddings.openai import OpenAIEmbedding
+import time
+import nest_asyncio
+nest_asyncio.apply() # 只在Jupyter笔记环境中需要此操作，否则会报错
+
+# 1. 指定全局llm与embedding模型
+Settings.llm = OpenAI(temperature=0, model="gpt-4o")
+Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small", dimensions=512)
+# 2. 指定全局文档处理的 Ingestion Pipeline
+Settings.transformations = [SentenceSplitter(chunk_size=300, chunk_overlap=100)]
+
+# 3. 加载本地文档
+documents = SimpleDirectoryReader("./data", file_extractor={".pdf": PyMuPDFReader()}).load_data()
+
+# 4. 新建 collection
+collection_name = hex(int(time.time()))
+chroma_collection = chroma_client.get_or_create_collection(collection_name)
+
+# 5. 创建 Vector Store
+vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+# 6. 指定 Vector Store 的 Storage 用于 index
+storage_context = StorageContext.from_defaults(vector_store=vector_store)
+index = VectorStoreIndex.from_documents(
+    documents, storage_context=storage_context
+)
+
+# 7. 定义检索后排序模型
+reranker = SentenceTransformerRerank(
+    model="BAAI/bge-reranker-large", top_n=2
+)
+
+# 8. 定义 RAG Fusion 检索器
+fusion_retriever = QueryFusionRetriever(
+    [index.as_retriever()],
+    similarity_top_k=5, # 检索召回 top k 结果
+    num_queries=3,  # 生成 query 数
+    use_async=True,
+    # query_gen_prompt="...",  # 可以自定义 query 生成的 prompt 模板
+)
+
+# 9. 构建单轮 query engine
+query_engine = RetrieverQueryEngine.from_args(
+    fusion_retriever,
+    node_postprocessors=[reranker]
+)
+
+# 10. 对话引擎
+chat_engine = CondenseQuestionChatEngine.from_defaults(
+    query_engine=query_engine, 
+    # condense_question_prompt=... # 可以自定义 chat message prompt 模板
+)
+
+while True:
+    question=input("User:")
+    if question.strip() == "":
+        break
+    response = chat_engine.chat(question)
+    print(f"AI: {response}")
+
+```
+
+
+
+
+
+
+
 ## LangChain
 
 * 介绍
@@ -2411,12 +3881,19 @@ gpt-engineer .
   * ConversationBufferWindowMemory
   * ConversationSummaryMemory
 
-## 安全
+## 端侧LLM
 
-* 去中心化的思想构建未来的AI安全：https://mp.weixin.qq.com/s/K1gbW1aIkwl8aLzkD9nYnQ
-  * 比特币：攻击收益远小于攻击成本
-  * 以生态著称的公链以太坊：虽然秘钥也是几十位，但是系统就太复杂了，各种二层技术、跨链桥等带来了很多漏洞，以至于网络攻击不断，就是因为攻击收益大于攻击成本
-  * 方案：确权，实名，竞争
+* 端侧AI相关 https://mp.weixin.qq.com/s/hGjeOL9iWTE3q_7jpUjasw
+  * 端侧LLM性能瓶颈，不是算力，而是内存速度。
+    * 每生成一个token需要把模型在内存中读出一遍，10-15tops算力即可实现7b 10token/s以上的推理速度，功耗也远低于手游，所以无需担心H端侧。
+    * 目前手机最快大概也就是LPDDR5T，9600MT/S，折合76.8 GB/s，理论最高能实现7b int4 下20 token/s，或14b int4下10token/s的输出。
+    * 存量手机大多内存带宽在40-60GB/s。
+
+
+
+
+
+
 
 ## Potpourri
 

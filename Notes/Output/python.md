@@ -2,7 +2,38 @@
 
 [toc]
 
-####  安装 Python3
+#### 环境搭建
+
+##### Docker
+
+```shell
+docker pull hub.xxx:yyy
+
+docker container run -itd \
+--network=host \
+--security-opt seccomp=unconfined \
+--mount type=bind,source= <img src="https://www.zhihu.com/equation?tex=%28pwd%29%2Ctarget%3D" alt="(pwd),target=" class="ee_img tr_noresize" eeimg="1"> (pwd) \
+--mount type=bind,source= <img src="https://www.zhihu.com/equation?tex=HOME/.ssh%2Ctarget%3D" alt="HOME/.ssh,target=" class="ee_img tr_noresize" eeimg="1"> HOME/.ssh \
+--mount type=bind,source=/opt/tiger,target=/opt/tiger \
+--mount type=bind,source= <img src="https://www.zhihu.com/equation?tex=HOME/.cache/bazel%2Ctarget%3D" alt="HOME/.cache/bazel,target=" class="ee_img tr_noresize" eeimg="1"> HOME/.cache/bazel \
+--mount type=bind,source=/usr/local/bin/doas,target=/usr/local/bin/doas \
+--mount type=bind,source=$HOME/tmp,target=/tmp \
+--name $(whoami)_myproj_dev \
+hub.xxx:yyy /bin/bash
+
+docker exec -it $(whoami)_myproj_dev /bin/bash
+
+pip3 install --upgrade pip
+
+apt update --allow-insecure-repositories --allow-unauthenticated
+apt install build-essential
+```
+
+
+
+##### 安装 Python3
+
+* ./configure --prefix=$HOME/python3.10
 
 ```shell
 sudo apt install libffi-dev # setuptools error
@@ -17,7 +48,9 @@ make
 make install
 ```
 
-#### pyenv管理多版本
+##### pyenv管理多版本
+
+* 不一定work，有坑
 
 ````shell
 brew update
@@ -26,8 +59,8 @@ brew install pyenv
 # ~/.zshrc
 eval "$(pyenv init --path)"
 
-pyenv install 3.9.2
-pyenv global 3.9.2
+pyenv install 3.10
+pyenv global 3.10
 python --version
 ````
 
@@ -53,7 +86,20 @@ bool(int(str(0))) -> False
     * `instance(u'abc', str)` 返回 `False`，因为它们是不同的类型。
   * 在 Python 3 中，所有字符串都是 Unicode，因此这种区分不再存在。
 
+##### 前向声明
 
+```python
+from typing import List, Dict, Optional, Any
+from pydantic import BaseModel
+
+class Schema(BaseModel):
+    title: Optional[str] = None
+    default: Optional[Any] = None
+    type: Optional[str] = None
+    anyOf: Optional[List['Schema']] = None  # 前向声明
+    items: Optional['Schema'] = None  # 前向声明
+    properties: Optional[Dict[str, 'Schema']] = None  # 前向声明
+```
 
 #### 数据结构
 
@@ -82,6 +128,21 @@ if not myset: # 判断set是否空
 # set operations: https://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html
 &, |, -, ^
 ```
+#### 基础算法
+
+* sorted
+  * key是函数
+  * 可以用 functools.cmp2key 构造复杂的比较函数
+
+```python
+duplicates = sorted(duplicates.items(), key=lambda item: len(item[1]), reverse=True)
+```
+
+* list保序去重：
+  * `list(dict.fromkeys(my_list))`
+
+
+
 #### 字符串
 
 ##### 格式化
@@ -95,6 +156,23 @@ f'{a:011d}'
   - `0`是填充字符，表示使用0来填充字段。
   - `11`是字段宽度，表示该字段的总宽度为11个字符。
   - `d`表示将变量视为十进制整数进行格式化。
+
+##### 转义
+
+* 括号两遍
+
+```python
+cmd = """
+	set -e
+  function cleanup {{
+  	rm {};
+  }}
+  trap cleanup EXIT SIGKILL
+  mkdir -p {}; cd {}; rm -f {};
+""".format(...)
+```
+
+
 
 #### 迭代器iterator
 
@@ -134,18 +212,6 @@ for k,v in d.items(): # python3.6+
   ...
 ```
 
-[collections.counter](https://docs.python.org/3/library/collections.html#collections.Counter)
-
-
-
-```python
-class Example(collections.namedtuple('Example', ['aid', 'bid', 'cid', 'did']))
-
-	@classmethod
-	def from_abcd(cls, a, b, c, d):
-    return cls(a, b, c, d)
-```
-
 
 
 ##### [浅拷贝与深拷贝](https://zhuanlan.zhihu.com/p/25221086)，[copy.py](https://docs.python.org/3/library/copy.html)
@@ -165,6 +231,10 @@ copy.deepcopy(dict)
 
 
 
+* locals()在3.13之前也是返回的局部变量的浅拷贝
+
+
+
 ##### queue
 
 ```python
@@ -181,13 +251,26 @@ queue的利用：新线程prefetch内容塞进queue里，可以拿到遍历queue
 
 https://realpython.com/python-namedtuple/
 
+##### Counter
+
+```python
+my_counter.most_common(10)
+xxx.values()
+```
+
+[collections.counter](https://docs.python.org/3/library/collections.html#collections.Counter)
+
+```python
+class Example(collections.namedtuple('Example', ['aid', 'bid', 'cid', 'did']))
+
+	@classmethod
+	def from_abcd(cls, a, b, c, d):
+    return cls(a, b, c, d)
+```
 
 
 
-
-
-
-一些细节
+##### 其它
 
 * 运行文件乱码问题，在文件开头加 `# coding=utf-8`
 
@@ -264,10 +347,13 @@ x - y =  -1
 
 
 
-#### module
+#### 项目组织和module
+
+* \__init__.py
+  * 自 Python 3.3 起，`__init__.py` 文件不再是创建包的必要条件，包可以是“命名空间包”。但是，保留 `__init__.py` 仍然是一个良好的实践，特别是在大型项目中。
 
 * [__all\_](https://zhuanlan.zhihu.com/p/54274339)_
-   * 控制 from xxx import 的行为
+   * 控制 from xxx import 的行为，定义公共接口
    * 为 lint 等代码检查工具提供辅助
 
 #### 关键词
@@ -287,6 +373,26 @@ else:
     not_found_in_container()
 ```
 
+##### match ... case ... (Python 3.10+)
+
+```python
+def prepare_embedding_documents(*documents: Optional[Union[str, List[str], Dict[Union[int, str], Any]]]):
+    if not documents:
+      return
+    assert isinstance(documents, (list, tuple))
+    results = []
+    for document in documents:
+      match document:
+        case str(doc):
+          results.append(doc)
+        case list() | set() | list() as docs if all(isinstance(doc, str) for doc in docs if doc):
+          results.append(list(docs))
+        case dict() as doc_dict if all(isinstance(v, str) for k, v in doc_dict.items() if v):
+          results.append([f'{key}:{doc_dict[key]}' for key in sorted(doc_dict)])
+        case _:
+          raise ValueError(f"document {document} error!")
+    return results
+```
 
 ##### with
 
@@ -294,13 +400,23 @@ else:
   * 使用with后不管with中的代码出现什么错误，都会进行对当前对象进行清理工作。
   * 在with语句结束后，as的对象仍然可见
 
+##### Ellipsis
+
+```python
+def example_function(param=...):
+    if param is Ellipsis:
+        print("Parameter not provided.")
+```
 
 #### class
+
+
 
 * [@staticmethod v.s. @classmethod](https://stackoverflow.com/questions/136097/difference-between-staticmethod-and-classmethod#:~:text=%40staticmethod)
 
 * @property
   * [Property function](https://www.tutorialsteacher.com/python/property-function)
+* `vars()` 函数返回对象的 `__dict__` 属性
 
 
 ```python
@@ -338,6 +454,9 @@ class person:
     * https://stackoverflow.com/questions/9163940/property-getter-setter-have-no-effect-in-python-2
 
 
+
+
+
 ##### metaclass
 
 * 用处
@@ -363,6 +482,15 @@ class MyClass(metaclass=MyMeta):
 obj = MyClass()
 print(obj.custom_attr)  # 输出: 'Custom Attribute'
 ```
+
+#### 文件操作
+
+* w+：读写
+* w：写
+* a：追加写入
+* 文件指针变换：
+  * file.seek(0)
+  * file.seek(0, 2) 移动到最后
 
 #### 异常处理
 
@@ -446,6 +574,107 @@ def main(argv):
 if __name__ == '__main__':
     absl.app.run(main)
 ```
+
+#### asyncio
+
+```python
+import asyncio
+
+# 定义一个异步函数
+async def hello_world():
+    print("Hello")
+    await asyncio.sleep(1)
+    print("World")
+
+# 获取事件循环
+loop = asyncio.get_event_loop()
+# 运行异步函数直到完成
+loop.run_until_complete(hello_world())
+# 关闭事件循环
+loop.close()
+```
+
+```python
+import asyncio
+
+async def hello_world():
+    print("Hello")
+    await asyncio.sleep(1)
+    print("World")
+
+async def main():
+    # 创建多个异步任务
+    tasks = [hello_world() for _ in range(3)]
+    # 并发运行任务
+    await asyncio.gather(*tasks)
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
+loop.close()
+```
+
+```python
+import asyncio
+
+class AsyncContextManager:
+    async def __aenter__(self):
+        print("Entering async context")
+        await asyncio.sleep(1)
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        print("Exiting async context")
+        await asyncio.sleep(1)
+
+async def main():
+    async with AsyncContextManager() as manager:
+        print("Inside async context")
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
+loop.close()
+```
+
+```python
+import asyncio
+
+# 定义一个异步生成器
+async def async_generator():
+    for i in range(3):
+        await asyncio.sleep(1)
+        yield i
+
+async def main():
+    async for item in async_generator():
+        print(item)
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
+loop.close()
+```
+
+```python
+import asyncio
+import aiohttp
+
+async def fetch(session, url):
+    async with session.get(url) as response:
+        return await response.text()
+
+async def main():
+    async with aiohttp.ClientSession() as session:
+        url = "http://example.com"
+        result = await fetch(session, url)
+        print(result)
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
+loop.close()
+```
+
+
+
+
 
 #### context manager
 
@@ -740,7 +969,18 @@ os.system
 * popen
   * Check cmd的写法：`"grep \"failed:\"`
 
+#### 新特性
 
+##### Python 3.13
+
+* 高天解读：https://www.bilibili.com/video/BV1dm2yYrEnn
+  * free threading/no GIL
+    * 单线程变慢、实验版本
+  * JIT
+  * new interactive interpreter (REPL)
+    * 定义函数很方便，自动缩进、上箭头
+  * pdb体验增强
+    * q.append(2)
 
 #### datetime
 
@@ -801,6 +1041,102 @@ except Exception as e:
   ...
 except (SystemExit, KeyboardInterrupt, GeneratorExit) as e:
   ...
+```
+
+
+
+
+
+
+
+#### fastapi
+
+```python
+from fastapi.routing import APIRouter, APIRoute
+```
+
+##### SSE能力 (Server-Sent Events)
+
+```python
+from fastapi import FastAPI, Request
+from fastapi.responses import StreamingResponse
+import asyncio
+import json
+
+app = FastAPI()
+
+
+async def event_generator(request: Request):
+    """
+    生成事件的异步函数，用于持续推送数据给客户端，直到客户端断开连接。
+    """
+    while True:
+        if await request.is_disconnected():
+            break
+
+        # 这里模拟获取实时股票价格数据，实际应用中应该从数据源获取真实数据
+        stock_price = {
+            "symbol": "AAPL",
+            "price": round(random.uniform(100, 200), 2)
+        }
+
+        yield f"data:{json.dumps(stock_price)}\n\n"
+
+        await asyncio.sleep(5)
+
+
+@app.get("/events/")
+async def sse_events(request: Request):
+    """
+    处理SSE请求的路由函数，返回一个StreamingResponse，通过事件生成器持续推送数据。
+    """
+    return StreamingResponse(event_generator(request), media_type="text/event-stream")
+```
+
+```python
+@app.post('/rec/...')
+async def stream_search(request: ...Request):
+  side_info = {}
+  side_info['state'] = '...'
+  q = request.query
+  start = time.perf_counter()
+
+  async def stream():
+    loop = asyncio.get_event_loop()
+    task = loop.create_task(
+        asyncio.to_thread(task_internal, ...))
+    sent_keys = set()
+    old_state = ""
+    while True:
+      need_yield = False
+      new_keys = set(
+          [k for k, v in side_info.items() if v and k not in sent_keys])
+      if len(new_keys) > 0:
+        sent_keys = sent_keys | new_keys
+        need_yield = True
+      if side_info['state'] != old_state:
+        old_state = side_info['state']
+        need_yield = True
+      if need_yield:
+        yield f"{json.dumps({'side_info': side_info}, ensure_ascii=False)} \n"
+      if search_task.done():
+        break
+      await asyncio.sleep(1)
+    answer_prompt = await task
+    if task.exception() is not None:
+      print(f"task_internal error: {task.exception()}")
+    side_info['state'] = '生成答案'
+    print("time elapsed before answering: ", time.perf_counter() - start, "s")
+    answer_stream = LLMService().stream_chat(prompt=answer_prompt)
+    prefix = []
+    for delta in answer_stream:
+      prefix.append(delta)
+      # print('delta:', delta, end='', flush=True)
+      prefix_str = ''.join(prefix)
+      answer = f"{json.dumps({'answer': prefix_str.strip(), 'side_info': side_info}, ensure_ascii=False)} \n"
+      yield answer
+
+  return StreamingResponse(stream(), media_type="text/event-stream")
 ```
 
 
@@ -868,6 +1204,89 @@ object = var_file.inside_object()
 import var
 object = var.inside_object()
 ```
+
+#### itertools
+
+* 算法工具
+
+```python
+import itertools
+
+names = ["Alice", "Bob", "Charlie", "David"]
+
+combinations = list(itertools.combinations(names, 2))
+print(combinations)
+
+# 存在人和公司，则只查找人和公司们的关系
+c2p_tuples = list(itertools.product(company_names, people_names))
+# 只有公司，则查找公司之间的遍历关系
+c2c_tuples = list(itertools.combinations(company_names, 2))  
+# 只有人，则查找人之间的遍历关系
+p2p_tuples = list(itertools.combinations(people_names, 2))  
+```
+
+
+
+
+
+#### json
+
+* HTML处理
+
+```
+json.loads(json.dumps({"content": row['raw_description']},
+                           ensure_ascii=False))['content']
+```
+
+* `json.dumps(..., ensure_ascii=False)`
+
+
+
+#### jinja2
+
+```python
+from jinja2 import Templatei
+
+# 定义模板字符串
+template_string = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+</head>
+<body>
+    <h1>{{ heading }}</h1>
+    <ul>
+        {% for item in items %}
+        <li>{{ item }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
+"""
+
+# 创建模板对象
+template = Template(template_string)
+
+# 数据
+data = {
+    'title': 'My Page',
+    'heading': 'Welcome to My Page',
+    'items': ['Item 1', 'Item 2', 'Item 3']
+}
+
+# 渲染模板
+output = template.render(data)
+
+# 输出结果
+print(output)
+```
+
+
+
+
+
+
 
 #### logging
 
@@ -974,7 +1393,45 @@ while True:
 
 ```
 
-#### 多线程编程
+#### 多线程编程 - concurrent
+
+* from concurrent.futures import ThreadPoolExecutor, Future
+  * 也可以用wait接口
+
+```python
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+# 定义一个示例函数
+def task(n):
+    time.sleep(n)
+    return f"Task {n} completed"
+
+# 使用 ThreadPoolExecutor 来并行执行任务
+def main():
+    tasks = [1, 2, 3, 4, 5]  # 每个任务的延迟时间
+    results = []
+
+    # 创建线程池
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        # 提交任务并获取 Future 对象
+        futures = {executor.submit(task, n): n for n in tasks}
+
+        # 处理任务完成的顺序
+        for future in as_completed(futures):
+            result = future.result()  # 获取结果
+            results.append(result)
+            print(result)
+
+    print("All tasks completed.")
+    print(results)
+
+# 运行主程序
+if __name__ == "__main__":
+    main()
+```
+
+
 
 * https://chriskiehl.com/article/parallelism-in-one-line
   * 巧用 Pool 实现多线程并行
@@ -1050,11 +1507,47 @@ pdb.set_trace()
 p dir(var)
 ```
 
+* 也可breakpoint()直接进入pdb
+
+
+
 #### psutil
 
 ```python
 proc = psutil.Process(pid)
 children = proc.children(recursive=True)
+```
+
+
+
+
+
+#### pydantic
+
+* 做数据格式校验
+
+```python
+from pydantic import BaseModel, conint, EmailStr
+from typing import List, Optional
+
+# 定义数据模型
+class User(BaseModel):
+    id: conint(gt=0)  # 整数，必须大于0
+    name: str
+    email: EmailStr  # 有效的电子邮件地址
+    age: Optional[int] = None  # 可选的整数
+    tags: List[str] = []  # 字符串列表，默认值为空列表
+    data: list[dict[str, Any]]
+
+# 创建一个用户实例
+user = User(id=1, name="Alice", email="alice@example.com", age=30, tags=["developer", "python"])
+
+# 输出用户信息
+print(user)
+
+# 访问字段
+print(user.name)
+print(user.email)
 ```
 
 
@@ -1101,6 +1594,58 @@ class Scheduler:
 nohup python2.7 MyScheduledProgram.py &
 ```
 
+#### setuptools
+
+```python
+from setuptools import find_packages
+from setuptools import setup
+
+PACKAGE_NAME = 'myproj'
+
+setup(
+  name=PACKAGE_NAME,
+  version='1.0.8',
+  description='',
+  author=,
+  author_email=,
+  # Contained modules and scripts.
+  packages=find_packages(),
+  install_requires=[
+    'cityhash==0.4.7',
+    'hnswlib==0.8.0',
+    'markdown_to_json==2.1.1',
+    'jinja2==3.1.4',
+    ...
+  ],
+  # Add in any packaged data.
+  include_package_data=True,
+  package_data={'': ['*.so', '*.txt', '*.cer']},
+  zip_safe=False,
+  ext_modules=[],
+  # PyPI package information.
+  classifiers=[
+    'Development Status :: 4 - Beta',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Education',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: Apache Software License',
+    'Programming Language :: Python :: 3.8',
+    'Topic :: Scientific/Engineering :: Mathematics',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Topic :: Software Development :: Libraries',
+  ],
+  license='Apache 2.0',
+  keywords='myproj'
+)
+
+# python setup.py sdist bdist_wheel
+
+```
+
+
+
+
+
 #### shutil
 
 ```python
@@ -1111,6 +1656,14 @@ if os.path.exists(curr_path):
 #### sqlite
 
 文件型数据库
+
+
+
+#### streamlit - WebApp
+
+* Streamlit 的脚本是自上而下执行的，每次用户交互（如点击按钮）都会重新运行整个脚本。这意味着你不需要显式地创建循环，而是通过状态管理和条件判断来实现对话的连续性。
+
+
 
 #### struct
 
@@ -1152,6 +1705,15 @@ def get_version():
         logging.exception("Error: {}".format(str(e)))
     return
 ```
+
+#### sys
+
+```python
+from xxx import main
+sys.exit(main())
+```
+
+
 
 #### warnings
 

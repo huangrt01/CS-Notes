@@ -177,7 +177,7 @@
     * 口罩+隔离+空气质量+检测+接种+风险评估
     * https://docs.google.com/document/d/1Syp8-kXkyTGgdnOPPfWS1rpq-CoOqVIawImaade1gNE/edit
 
-![image-20230116155917933](COVID-19-Prevention/multiple-layers.png)
+![image-20230116155917933](Health-COVID-19-Prevention/multiple-layers.png)
 
 
 
@@ -325,9 +325,9 @@
   
 * 气溶胶传播。小颗粒可以在空气中悬浮形成气溶胶，在空气中漂浮，还可以跟随气流进入风道。气溶胶不仅可以从感染者的呼吸道排出，也可以在下水道冲水中产生。在患者使用呼吸机等情况下可以产生大量的气溶胶。
 
-![img](COVID-19-Prevention/transimission.png)
+![img](Health-COVID-19-Prevention/transimission.png)
 
-![img](COVID-19-Prevention/detection.png)
+![img](Health-COVID-19-Prevention/detection.png)
 
 * [一篇很全面的综述科普文章](https://www.zhihu.com/question/576922951/answer/2833137649)
   * 免疫原理、防感染靠体液免疫、防重症靠细胞免疫
@@ -363,21 +363,21 @@
   * “见过几个年轻人的重症，需要气管插管，用激素+瑞德西韦的（是的，瑞德西韦目前还用于重症）”
 * [共存区往事4：儿童新冠的致命并发症——MIS-C - Luxenius的文章 - 知乎](https://zhuanlan.zhihu.com/p/590917106)
 
-![img](COVID-19-Prevention/symptoms-2.png)
+![img](Health-COVID-19-Prevention/symptoms-2.png)
 
 * 关于新冠喉咙剧痛的生物原理和缓解方案
 
-![img](COVID-19-Prevention/throat.png)
+![img](Health-COVID-19-Prevention/throat.png)
 
 * [感染新冠后，我们的身体会经历什么？（作者：钟文泽）](https://www.douyin.com/video/7174345663336041765)
 
-![bf7-symptoms](COVID-19-Prevention/bf7-symptoms.png)
+![bf7-symptoms](Health-COVID-19-Prevention/bf7-symptoms.png)
 
 #### 后遗症
 
 * [新冠后遗症有哪些症状？一张表看清Long COVID - Luxenius的文章 - 知乎](https://zhuanlan.zhihu.com/p/512450168)
 
-![img](COVID-19-Prevention/后遗症.png)
+![img](Health-COVID-19-Prevention/后遗症.png)
 
 ### 疫苗
 
@@ -411,11 +411,11 @@
     * 两国资本市场对生物医药公司不同的估值逻辑：国外资本市场多长线投资者，医药公司只要有研发能力，即使长期亏损也能获得投资，而国内生物技术类的创业公司主要依靠风险投资支持进行新药研发。
     * 随着2019年国家设立科创板，并为未盈利的生物医药公司设立了“第五套”IPO上市标准，中国资本市场对生物医药公司的估值逻辑将逐渐趋向于美国。
 
-![图片](COVID-19-Prevention/vaccine-procedure.png)
+![图片](Health-COVID-19-Prevention/vaccine-procedure.png)
 
 * 老年人接种禁忌
 
-![img](COVID-19-Prevention/vaccine-elderly.png)
+![img](Health-COVID-19-Prevention/vaccine-elderly.png)
 
 ### 药
 
@@ -430,7 +430,7 @@
   * 特别提醒：**孕妇不要用布洛芬**，有较高的胎儿风险，准确说NSAIDs里面的阿司匹林、洛索洛芬、萘普生、双氯芬酸、塞来昔布等都是孕妇禁用。如果不得不用的话，其中**对乙酰氨基酚**是唯一的选择，但超过20周也最好先咨询医生。
   * 至于连花清瘟，有舆论争议，但我个人也常备几盒，其实缓解症状的效果挺好的，我有一点呼吸道不适的时候都会服用。但是前提是，把上述的对乙酰氨基酚和布洛芬两个药先准备好。
 
-![img](COVID-19-Prevention/退烧药.png)
+![img](Health-COVID-19-Prevention/退烧药.png)
 
 #### 对症下药
 
@@ -488,17 +488,17 @@
 
 * 新冠用药目录第一版
 
-![western-medicine](COVID-19-Prevention/western-medicine.png)
+![western-medicine](Health-COVID-19-Prevention/western-medicine.png)
 
-![eastern-medicine](COVID-19-Prevention/eastern-medicine.png)
+![eastern-medicine](Health-COVID-19-Prevention/eastern-medicine.png)
 
 * 感冒药
 
-![cold-medicine](COVID-19-Prevention/cold-medicine.png)
+![cold-medicine](Health-COVID-19-Prevention/cold-medicine.png)
 
 * 武汉市中心医院新冠感染用药指导
 
-![medicine-guide](COVID-19-Prevention/medicine-guide.png)
+![medicine-guide](Health-COVID-19-Prevention/medicine-guide.png)
 
 ### 日常物资
 
@@ -639,7 +639,7 @@
     * 每6个月更换一次滤网
 
 
-![img](COVID-19-Prevention/corsi-box.png)
+![img](Health-COVID-19-Prevention/corsi-box.png)
 
 ##### 检测、健康监测
 
@@ -660,9 +660,9 @@
 
 
 
-![image](COVID-19-Prevention/CO2-detection-2.png)
+![image](Health-COVID-19-Prevention/CO2-detection-2.png)
 
-![image](COVID-19-Prevention/CO2-detection.png)
+![image](Health-COVID-19-Prevention/CO2-detection.png)
 
 * 血氧仪（手指脉搏氧饱和度计）
 
@@ -670,7 +670,7 @@
 
   
 
-![img](COVID-19-Prevention/血氧.png)
+![img](Health-COVID-19-Prevention/血氧.png)
 
 * 体温计
   * 正常体温范围：
@@ -682,13 +682,49 @@
 * 雾化器
   * 有小孩的话可以考虑，很多小孩哪怕在换季的时候经常干咳很久，各种原因都有，病毒感染、支原体感染等。雾化吸入支气管扩张和消炎药物是一种常见疗法，在家吸就免得在医院里面挤了。不过药还是咨询医生来开。
 
+### 养生
+
+* 八段锦
+* 金刚功
+  * 搜金刚功或者张至顺道长都行，先把四十多分钟有讲解功理的视频看完
+  * 头半个月每天练完再看纠功，道长亲传弟子许理慧道长也有很多讲解的
+  * 每天坚持，至少打五遍，几个月或者半年必有收获。
+* 俯卧撑
 * 传统文化防疫
 
-![img](COVID-19-Prevention/chinese-convention.png)
+![img](Health-COVID-19-Prevention/chinese-convention.png)
+
+### 饮食
+
+* 稳妥的饮食：鱼、蔬菜、牛奶，不吃甜的
 
 
 
-### 应急、就医
+### 健身
+
+* 宇树pump
+
+
+
+### 体检
+
+40岁后挽救或能够延长生命最显著的体检项目排名：
+
+1. 胸部CT：筛查发病最高的肺癌以及纵隔心脏食管等部分疾病，一年时间肺癌可以从治愈率100%的原位发展到只有20%左右的局部晚期，而且可以全程无症状，而且腺癌的发生和抽烟及生活习惯无关。
+
+2. 胃肠镜：筛查癌症前五中的食管癌，胃癌，大肠癌，以及消化道其它疾病，由于没有做胃肠镜导致消化道癌晚期，真的很亏很亏，它们大部分生长时间很长很长，但凡五年内做一次就可以救命。
+3. 冠脉CT：筛查潜在冠心病人群，阴性指证很好，可预测患者在5年内冠脉阻塞几率极低。
+4. 生化全套：辅助排查肝胆胰功能异常，监视三高，辅助早期发现血液或自身免疫疾病，隐匿性三高发病可能就是猝死。
+5. 心电/彩超：心脏结构与功能基础检查，排除潜在或先天心肌病，特别是排查先天心肌病可预防青少年猝死。
+6. 宫颈乳腺(妇)：检查妇科相关肿瘤，这类肿瘤预后相对较好，例行检查即可。
+7. 头颅核磁：恶性病发病率相对较低，很多查出来手术不好做，会导致功能受损
+8. 腹部彩超：排查肝胆胰脾异常，这些个地方患癌只能自求多福了，除了肝外灵敏度都低，需要配合CT、生化、标记物综合判断，查出来也不是很早期了，甚至治疗会加速进展，这里说下，肝癌其实是最好预防的，因为它的发生规律性很强，肝炎一定要控制好，避免长期脂肪肝，肝脏代谢生化指标保持好，患肝癌几率很低。
+9. 甲状腺/前列腺彩超：懒癌往后排
+10. 传染病：排除HIV，梅毒这些，无高危不用查
+
+
+
+### 医院、应急、就医
 
 * 在线问诊
   * 摸熟在线问诊平台，尤其是本地大医院的
@@ -697,6 +733,9 @@
 * 120
 * 海淀区急救专线：82468499
 * “ 朝阳区16家发热门诊，3家高端私立，2家急诊抢救，1家新冠定点，1家儿科专科，其他的也有几家看起来不那么靠谱的民办。实际上我看这里面有用的就是：中日、安贞、朝阳、306 ”
+* 细分类目：
+  * 底盘：https://www.wjhospital.com.cn/Html/Doctors/Main/Index_347.html
+
 
 ### 段子
 
@@ -704,13 +743,13 @@
 
 ### Rumours
 
-![img_v2_a302b221-f30a-4c2f-aec3-a3059b71177g](COVID-19-Prevention/rumour-1.png)
+![img_v2_a302b221-f30a-4c2f-aec3-a3059b71177g](Health-COVID-19-Prevention/rumour-1.png)
 
-![img](COVID-19-Prevention/rumour-2.png)
+![img](Health-COVID-19-Prevention/rumour-2.png)
 
-![img](COVID-19-Prevention/rumour-3.png)
+![img](Health-COVID-19-Prevention/rumour-3.png)
 
-![img](COVID-19-Prevention/rumour-4.png)
+![img](Health-COVID-19-Prevention/rumour-4.png)
 
 ### 资源
 
