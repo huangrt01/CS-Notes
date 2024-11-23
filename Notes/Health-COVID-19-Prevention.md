@@ -700,9 +700,13 @@
 
 
 
-### 健身
+### 健身、减肥
 
 * 宇树pump
+
+* 5:2轻断食
+  * https://mp.weixin.qq.com/s/yrm9uwnAbMdR7FoHptEtgg
+  * 连续2天 500kCal
 
 
 

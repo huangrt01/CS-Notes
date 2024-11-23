@@ -221,7 +221,7 @@
 
 
 
-## GAME THEORY: AN INTRODUCTION - Steven Tadelis
+## [Deprecated] GAME THEORY: AN INTRODUCTION - Steven Tadelis
 
 ### Intro
 
@@ -524,4 +524,9 @@
 ## Exercises in Machine Learning
 
 https://arxiv.org/pdf/2206.13446
+
+## 数学在工科的应用
+
+* [为什么这么多年直到马斯克出来才想到做可复用火箭？](https://www.zhihu.com/question/597238433/answer/3080541702)
+  * ![image-20241110022322621](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/mathematics/image-20241110022322621.png)
 

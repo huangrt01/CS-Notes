@@ -729,6 +729,11 @@ for prediction, label, img in zip(p,l,i):
 
 ![img](MLSys/5cb85359f486ff64c45d24790572daef.png)
 
+#### 个性化
+
+* DataSQRL + Flink https://www.datasqrl.com/blog/personalized-ai-search/
+  * deduplicate the stream to get the most recent version for each product.
+
 
 
 ### LLM + Rec/Search MLSys
@@ -752,11 +757,43 @@ for prediction, label, img in zip(p,l,i):
     * leveraging pre- trained language models for conversation understanding and response generation
     * incorporated external knowledge
 
+#### Picnic: LLM 增强电商搜索
+
+> https://blog.picnic.nl/enhancing-search-retrieval-with-large-language-models-llms-7c3748b26d72
+
+* 思路：大量的LLM离线预处理+在线缓存
+  * 离线：
+    * LLM: 商品 -> Query + 描述
+    * LLM: Query + List[描述] -> 描述
+  * 在线：
+    * 描述型 Query -> 相似Query描述 -> 召回需求商品
+    * 真 Query -> 缓存 -> 命中Query描述 -> 召回相似商品
+* prompt-based product description generation
+  * transforming search terms into detailed, actionable queries
+
+![img](MLSys/0*8YkG715dCEE80t8s.png)
 
 
 
+#### Amazon:  [基于大语言模型和推荐系统构建电商智能导购机器人](https://aws.amazon.com/cn/blogs/china/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system/)
 
+* 基于 Amazon SageMaker、Amazon OpenSearch、AWS Lambda、Amazon Personalize 和 Amazon API Gateway 等基础云服务，结合大语言模型、开源大语言模型应用框架 langchain 以及开源前端架构 Stramlit
+* 功能：智能问询、商品推荐、商品个性化营销文案
+  * 多轮对话：挖掘用户需求，商品的品牌、价格、材质、用途、使用场景等角度
+* 框架：
+  * dynamodb存储“用户同session的对话记录”（类似OpenAI的thread概念）
+* 测试集：https://github.com/aws-samples/retail-demo-store
+  * 2000 多个虚拟商品数据、6000 多个虚拟顾客数据和 2 万多条虚拟交互信息
 
+![build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system1](MLSys/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system1.png)
+
+![img](https://s3.cn-north-1.amazonaws.com.cn/awschinablog/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system3.png)
+
+![img](https://s3.cn-north-1.amazonaws.com.cn/awschinablog/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system7.png)
+
+![img](https://s3.cn-north-1.amazonaws.com.cn/awschinablog/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system8.png)
+
+### 
 
 #### 阿里[**LLM在电商推荐系统的探索与实践**](https://www.53ai.com/news/qianyanjishu/357.html)、LLM4REC综述
 
@@ -977,7 +1014,9 @@ for prediction, label, img in zip(p,l,i):
 * 其它：
   * appendix有sasrec在不同数据集的训练超参
 
+#### 对话式搜索架构
 
+* semantic cache优化：https://www.couchbase.com/blog/faster-llm-apps-semantic-cache-langchain-couchbase/
 
 #### [CRS] [Google] [RecLLM] Leveraging Large Language Models in Conversational Recommender Systems
 

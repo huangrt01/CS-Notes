@@ -139,7 +139,7 @@ p *(std::string*)(X.rep_.elements) //repeated string, 字段X
 * `info reg`
 * thread ID:切换当前调试的线程为指定ID的线程。
 * `thread apply all command`:让所有被调试的线程都执行command命令。
-  * `thread apply all bt` 把各个线程的调用栈打出来
+  * `thread apply all bt` **把各个线程的调用栈打出来**
 
 * `thread apply ID1 ID2 … command`:让线程编号是ID1，ID2…等等的线程都执行command命令。
 * `set scheduler-locking on|off|step`:在使用step或continue命令调试当前被调试线程的时候，其他线程也是同时执行的，如果我们只想要被调试的线程执行，而其他线程停止等待，那就要锁定要调试的线程，只让他运行。

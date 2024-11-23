@@ -44,41 +44,103 @@ client = OpenAI()
 
 # """
 
-user_content = """
-# 任务
-帮我debug一下，输出里 “李勇--沙雅县第八幼儿园”不符合预期，中间应该有一个legal_person_name
-# 输入
-['[Path[Property{Key:name, Value:"沙雅县第八幼儿园"}, Property{Key:role, Value:"legal_person_name"}, Property{Key:name, Value:"杨芳"}, Property{Key:role, Value:"staff_humans"}, Property{Key:name, Value:"雅安市市政建设工程有限公司"}, Property{Key:role, Value:"final_beneficiary,legal_person_name,staff_humans"}, Property{Key:name, Value:"李勇"}], Path[Property{Key:name, Value:"沙雅县第八幼儿园"}, Property{Key:role, Value:"legal_person_name"}, Property{Key:name, Value:"杨芳"}, Property{Key:role, Value:"holder_humans"}, Property{Key:name, Value:"晋城农村商业银行股份有限公司"}, Property{Key:role, Value:"holder_humans"}, Property{Key:name, Value:"李勇"}], Path[Property{Key:name, Value:"沙雅县第八幼儿园"}, Property{Key:role, Value:"legal_person_name"}, Property{Key:name, Value:"杨芳"}, Property{Key:role, Value:"history_holder_humans"}, Property{Key:name, Value:"鹤壁飞鹤股份有限公司"}, Property{Key:role, Value:"history_holder_humans"}, Property{Key:name, Value:"李勇"}], Path[Property{Key:name, Value:"沙雅县第八幼儿园"}, Property{Key:role, Value:"legal_person_name"}, Property{Key:name, Value:"杨芳"}, Property{Key:role, Value:"history_holder_humans"}, Property{Key:name, Value:"湖南酉能电力有限责任公司"}, Property{Key:role, Value:"history_holder_humans"}, Property{Key:name, Value:"李勇"}], Path[Property{Key:name, Value:"沙雅县第八幼儿园"}, Property{Key:role, Value:"legal_person_name"}, Property{Key:name, Value:"杨芳"}, Property{Key:role, Value:"legal_person_name,staff_humans"}, Property{Key:name, Value:"陕西建工铜川玉皇阁二号桥建设发展有限公司"}, Property{Key:role, Value:"staff_humans"}, Property{Key:name, Value:"李勇"}]]']
-# 代码
+user_content = """目标： 一路主召回，N-1路辅助召回。 主召回效果强、ndcg高，用N-1路辅助召回的结果，一定程度改变主召回的序，从而提升ndcg。 
 
-def _process_single_relation(relation, c_first, side_info: Dict[str, Any]):
-    assert isinstance(relation, str)
-    value_matches = None
-    if bg_use_http_client:
-      value_matches = re.findall(r'Property{.*?Value:"(.*?)"}', relation)
-    else:
-      value_matches = re.findall(r'Property{.*?value: (.*?)}', relation)
-    symbols = ["--", "-->", "<--", "--"
-              ] if c_first else ["<--", "--", "--", "-->"]
-    symbol_index = 0
+改进下面的技术方案：
+1. LTR：给出train.txt和test.txt的例子，补充以下特征：主召回中的序、主召回的得分、辅助召回的得分、辅助召回的序、辅助召回的得分
 
-    result = ""
-    for i, value in enumerate(value_matches):
-      result += value
-      if i % 4 == 2 - 2 * int(c_first):
-        # print(f"value {value}, i {i}, 1-xxx {1-int(c_first)}")
-        if value not in side_info['召回公司结果']:
-          side_info['召回公司结果'].append(value)
-      if i < len(value_matches) - 1:
-        result += symbols[symbol_index]
-        symbol_index = (symbol_index + 1) % 4
-    return result
+为了实现你提到的技术方案目标：提升主召回的效果，同时利用N-1路辅助召回来优化排序，我们可以进一步细化和改进你提到的几个策略。以下是一些具体建议以及相关代码示例。
 
-# 输出
-[('沙雅县第八幼儿园', '李勇', '沙雅县第八幼儿园--legal_person_name-->杨芳<--staff_humans--雅安市市政建设工程有限公司--final_beneficiary,legal_person_name,staff_humans-->李勇<--沙雅县第八幼儿园--legal_person_name--杨芳-->holder_humans<--晋城农村商业银行股份有限公司--holder_humans--李勇-->沙雅县第八幼儿园<--legal_person_name--杨芳--history_holder_humans-->鹤壁飞鹤股份有限公司<--history_holder_humans--李勇--沙雅县第八幼儿园-->legal_person_name<--杨芳--history_holder_humans--湖南酉能电力有限责任公司-->history_holder_humans<--李勇--沙雅县第八幼儿园--legal_person_name-->杨芳<--legal_person_name,staff_humans--陕西建工铜川玉皇阁二号桥建设发展有限公司--staff_humans-->李勇')]
+### 1. Advanced Learning to Rank (LTR)
 
+对于LTR，你可以通过构建更多元的特征来提升模型的表现，例如：
 
-from jinja2 import Template 能否分步render，先render几个字段，再把template传进一个函数，render另几个字段
+- **召回来源特征**：为每种召回策略构建单独的特征，例如来自主召回的标记为1，来自辅助召回的标记为其他值。
+- **重排序特征**：使用召回顺序、召回得分等作为特征。
+
+在你的训练数据格式上，除了基本的特征和评分以外，可以加入每个召回策略的标识。使用LibSVM格式:
+
+```
+<rank> qid:<query_id> <feature1>:<value1> <feature2>:<value2> ... # <comment>
+```
+
+每个实例代表一个文档的所有特征和标签：
+
+- `<rank>`: 真实评分，根据在ground truth中的位置。
+- `<query_id>`: 查询或会话ID。
+- `<feature1>:<value1>`: 具体特征，例如，是否为主召回等。
+
+可以使用 `LightGBM`的 `ranker`来进行实验，因为其对于特征重要性的分析支持友好。
+
+### 2. Reciprocal Rank Fusion with Controlled Weight
+
+继续使用RRF，但你可以加入一个控制辅助路径影响的小参数，使得其合并的权重始终小于主召回：
+
+```python
+def controlled_rrf(main_rank, auxiliary_ranks, main_weight=1.0, aux_weight=0.1, k=60):
+    scores = {}
+    # Calculate primary scores
+    for doc_id, pos in main_rank.items():
+        score = main_weight / (k + pos)
+        scores[doc_id] = scores.get(doc_id, 0) + score
+    
+    # Calculate auxiliary scores with lesser weight
+    for rank in auxiliary_ranks:
+        for doc_id, pos in rank.items():
+            score = aux_weight / (k + pos)
+            scores[doc_id] = scores.get(doc_id, 0) + score
+
+    ranked_documents = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    return ranked_documents
+
+# Example usage
+main_rank = {'doc1': 0, 'doc2': 1, 'doc3': 2}
+auxiliary_ranks = [
+    {'doc4': 0, 'doc3': 1},
+    {'doc2': 0, 'doc5': 1}
+]
+final_ranking = controlled_rrf(main_rank, auxiliary_ranks)
+```
+
+### 3. Hybrid Weighted Blending with Adaptive Weights
+
+改进的加权融合方法，可以根据效果动态调整权重：
+
+```python
+def adaptive_weighted_blend(predictions, base_weight=0.8, aux_weight_adjust=0.2):
+    blended_scores = {}
+    total_weight = base_weight + aux_weight_adjust * len(predictions[1:])
+    
+    for i, pred in enumerate(predictions):
+        if i == 0:
+            weight = base_weight
+        else:
+            weight = aux_weight_adjust / len(predictions[1:])
+        
+        for doc_id, score in pred.items():
+            blended_scores[doc_id] = blended_scores.get(doc_id, 0) + score * weight
+    
+    return sorted(blended_scores.items(), key=lambda x: x[1], reverse=True)
+
+# Example usage
+main_prediction = {'doc1': 0.9, 'doc2': 0.8, 'doc3': 0.5}
+auxiliary_predictions = [
+    {'doc1': 0.3, 'doc3': 0.6},
+    {'doc2': 0.7, 'doc4': 0.4}
+]
+final_predictions = adaptive_weighted_blend([main_prediction] + auxiliary_predictions)
+```
+
+### 4. Custom Scoring with Rule-based Adjustments
+
+在这种方法中，可以设计规则，根据召回路径来动态调整某一文档的分值，具体规则可以来源于历史数据分析。
+
+例如，利用某些辅助通道提升某类文档的优先级，根据特定业务指标（如点击率或转化率）进行调整。
+
+### 总结
+
+结合这些技术方案，你需要根据具体业务需求选择合适的方法。通常可以通过实验测试（例如A/B测试或交叉验证）来确定哪种策略最能提升ndcg。调整参数时，建议多关注实际效果与指标的平衡，在多路召回融合中，权重选择和特征选择都是成功的关键。
+
 """
 
 # 1.字数和格式不限，期望5000字以上
@@ -96,7 +158,8 @@ chat_completion = client.chat.completions.create(
             "content": user_content,
         },
     ],
-    model="gpt-4o",  #此处更换其它模型,请参考模型列表 eg: google/gemma-7b-it
+    model=
+    "gpt-4o",  #此处更换其它模型,请参考模型列表 eg: google/gemma-7b-it claude-3-sonnet-20240229
     max_tokens=4000,
 )
 print(chat_completion.choices[0].message.content)

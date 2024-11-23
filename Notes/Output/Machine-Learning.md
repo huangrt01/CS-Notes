@@ -413,6 +413,14 @@ Training 量化
 * 向量白化
   * https://arxiv.org/pdf/2103.15316
 
+### Contrastive Learning
+
+#### 训练 Dense Retriever
+
+* Query2Doc paper
+  * For training dense retrievers, several factors can influence the final performance, such as hard nega- tive mining (Xiong et al., 2021), intermediate pre- training (Gao and Callan, 2021), and knowledge distillation from a cross-encoder based re-ranker (Qu et al., 2021). In this paper, we investigate two settings to gain a more comprehensive understand- ing of our method. The first setting is training DPR (Karpukhin et al., 2020) models initialized from BERTbase with BM25 hard negatives only
+  * ![image-20241117211622999](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/image-20241117211622999.png)
+
 
 
 ### Search + NLP
@@ -605,7 +613,53 @@ values = [token.word for token in jieba.posseg.cut(query)
     - [Query 理解和语义召回在知乎搜索中的应用](https://mp.weixin.qq.com/s?__biz=MzU1NTMyOTI4Mw==&mid=2247496409&idx=1&sn=7b2f5984d71454e1a2812321f6018cf8&scene=21#wechat_redirect)
     - [美团搜索中查询改写技术的探索与实践](https://tech.meituan.com/2022/02/17/exploration-and-practice-of-query-rewriting-in-meituan-search.htm)
 
+##### Query Rewrite
 
+###### Literature Review
+
+* Pseudo-Relevance Feed- back (PRF)
+* Document Expansion
+* 数据集 Evaluation：https://github.com/amazon-science/esci-data
+
+###### Large Language Model based Long-tail Query Rewriting in Taobao Search
+
+* BEQUE, a comprehensive framework that Bridges the sEmantic gap for long-tail QUEries
+  * multi-instruction supervised fine tuning (SFT)
+    * based on rejection sampling and auxiliary tasks mixing to fine-tune LLM
+  * offline feedback
+  * objective alignment.
+  * beam search to generate multiple candidate rewrites
+
+* 现有查询改写方法的局限
+  - 基于嵌入的检索范式结果难解释
+  - “查询改写 & 精确匹配” 范式中判别式方法难以控制语义范围和确保相关性
+  - 生成式方法受限于模型规模对长尾查询理解不足，基于大语言模型的改写方法缺乏微调与目标对齐
+
+![image-20241117235808683](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/image-20241117235808683.png)
+
+* 多指令 SFT
+  - 收集改写相关任务数据微调大语言模型，包括:
+  - 构建查询改写数据集（经两轮拒绝采样提升质量并结合辅助任务数据）
+  - 利用辅助任务数据集（质量分类、产品标题预测、思维链任务）增强模型对长尾查询的理解
+
+* Evaluation: 利用taobao rele score function，定义hit rate
+
+
+
+###### Query Expansion by Prompting Large Language Models
+
+* Intro
+  * PRF-based approaches assume that the top retrieved documents are relevant to the query
+  * we rely on the knowledge inherent in the LLM.
+* ![image-20241114182225681](https://raw.githubusercontent.com/huangrt01/Markdown-Transformer-and-Uploader/mynote/Notes/Machine-Learning/image-20241114182225681.png)
+
+* 结论：
+  * PRF可以增强排序
+
+###### Query2doc: Query Expansion with Large Language Models
+
+* 检索sparse：重复5遍再相连
+* 检索dense：用[SEP]相连
 
 ##### 实体识别
 
@@ -727,26 +781,7 @@ values = [token.word for token in jieba.posseg.cut(query)
 #### Evaluation
 
 * F-score: 精确率和召回率的调和平均数
-
-1. BLEU（Bilingual Evaluation Understudy）
-   - **定义**：BLEU 是一种用于评估机器翻译质量的指标。它通过比较机器生成的翻译文本与参考（人工翻译）文本之间的 n - gram（n 个连续单词的序列）重叠情况来衡量翻译的准确性。
-   - 工作原理
-     - 计算生成文本和参考文本之间的 n - gram（如 1 - gram、2 - gram、3 - gram 和 4 - gram）的匹配数量。例如，对于一个句子，1 - gram 是单个单词的匹配，2 - gram 是两个连续单词的匹配，以此类推。
-     - BLEU 得分是这些 n - gram 匹配率的几何平均值，并且会考虑简短回答的惩罚因子。如果生成的句子过短，会受到惩罚，以避免系统总是生成非常简短但可能部分匹配的句子来获取高分。
-   - **应用场景**：广泛应用于机器翻译系统的评估，帮助比较不同翻译模型或算法的性能，确定哪种模型能够生成更接近人工翻译质量的译文。
-2. ROUGE（Recall - Oriented Understudy for Gisting Evaluation）
-   - **定义**：ROUGE 是一组用于评估自动文本摘要和机器翻译质量的指标，主要侧重于召回率（Recall），即衡量系统生成的文本能够包含参考文本中多少重要信息。
-   - 工作原理
-     - 有多种 ROUGE 变体，如 ROUGE - N（基于 N - gram 的召回率）、ROUGE - L（基于最长公共子序列的召回率）和 ROUGE - S（基于句子的召回率）等。
-     - 以 ROUGE - N 为例，它计算生成摘要和参考摘要之间 N - gram 的重叠比例作为召回率。ROUGE - L 通过寻找生成文本和参考文本之间的最长公共子序列来计算召回率，更注重句子的整体结构和顺序。
-   - **应用场景**：在文本摘要领域，用于评估自动生成的摘要是否能够准确地捕捉原始文本的主要内容；在机器翻译中，也可以帮助评估翻译后的文本是否完整地传达了原文的关键信息。
-3. METEOR（Metric for Evaluation of Translation with Explicit ORdering）
-   - **定义**：METEOR 是一种综合考虑了精确率（Precision）、召回率（Recall）和词序（Word Order）的文本生成质量评估指标，用于评估机器翻译和其他文本生成任务。
-   - 工作原理
-     - 首先计算生成文本和参考文本之间的精确率和召回率，类似于 BLEU 和 ROUGE 的部分计算。
-     - 然后，METEOR 引入了一个基于词序的 F - measure（调和平均数）来综合评估匹配质量。它通过考虑单词的匹配、同义词匹配（通过预定义的词表）和词序的连贯性来计算得分。
-     - 还包括一个对齐模块，用于找到生成文本和参考文本之间单词的最佳匹配，考虑了多种匹配类型，如完全匹配、同义词匹配和词根匹配等。
-   - **应用场景**：在机器翻译和文本生成任务中，METEOR 能够提供一个更全面的评估，因为它不仅仅关注单词或短语的匹配，还考虑了词序和语义相似性，能够更好地反映生成文本的自然度和准确性。
+* GSB：Good-Same-Bad
 
 #### 看case
 
@@ -788,9 +823,43 @@ def find_most_similar(input_word):
     return match
 ```
 
+#### 句子之间的相似度
 
+* 编辑距离
 
+* BLEU（Bilingual Evaluation Understudy）
 
+  - **定义**：BLEU 是一种用于评估机器翻译质量的指标。它通过比较机器生成的翻译文本与参考（人工翻译）文本之间的 n - gram（n 个连续单词的序列）重叠情况来衡量翻译的准确性。
+    - 工作原理
+      - 计算生成文本和参考文本之间的 n - gram（如 1 - gram、2 - gram、3 - gram 和 4 - gram）的匹配数量。例如，对于一个句子，1 - gram 是单个单词的匹配，2 - gram 是两个连续单词的匹配，以此类推。
+      - BLEU 得分是这些 n - gram 匹配率的几何平均值，并且会**考虑简短回答的惩罚因子**。如果生成的句子过短，会受到惩罚，以避免系统总是生成非常简短但可能部分匹配的句子来获取高分。
+      - 在整个测试集上平均下述值
+      - 完整计算公式： <img src="https://www.zhihu.com/equation?tex=%5Cmathrm%7BBLEU%7D_4%3D%5Cmin%5Cleft%281%2C%5Cfrac%7Boutput-length%7D%7Breference-length%7D%5Cright%29%5Cleft%28%5Cprod_%7Bi%3D1%7D%5E4%20precision_i%5Cright%29%5E%7B%5Cfrac%7B1%7D%7B4%7D%7D" alt="\mathrm{BLEU}_4=\min\left(1,\frac{output-length}{reference-length}\right)\left(\prod_{i=1}^4 precision_i\right)^{\frac{1}{4}}" class="ee_img tr_noresize" eeimg="1"> 
+
+  - **应用场景**：广泛应用于机器翻译系统的评估，帮助比较不同翻译模型或算法的性能，确定哪种模型能够生成更接近人工翻译质量的译文。
+
+* ROUGE（Recall-Oriented Understudy for Gisting Evaluation）
+
+  - **定义**：ROUGE 是一组用于评估自动文本摘要和机器翻译质量的指标，主要侧重于召回率（Recall），即衡量系统生成的文本能够包含参考文本中多少重要信息。
+    - Rouge-N：将模型生成的结果和标准结果按 N-gram 拆分后，只计算召回率；
+    - Rouge-L: 利用了最长公共子序列（Longest Common Sequence），计算： <img src="https://www.zhihu.com/equation?tex=P%3D%5Cfrac%7BLCS%28c%2Cr%29%7D%7Blen%28c%29%7D" alt="P=\frac{LCS(c,r)}{len(c)}" class="ee_img tr_noresize" eeimg="1"> ,  <img src="https://www.zhihu.com/equation?tex=R%3D%5Cfrac%7BLCS%28c%2Cr%29%7D%7Blen%28r%29%7D" alt="R=\frac{LCS(c,r)}{len(r)}" class="ee_img tr_noresize" eeimg="1"> ,  <img src="https://www.zhihu.com/equation?tex=F%3D%5Cfrac%7B%281%2B%5Cbeta%5E2%29PR%7D%7BR%2B%5Cbeta%5E2P%7D" alt="F=\frac{(1+\beta^2)PR}{R+\beta^2P}" class="ee_img tr_noresize" eeimg="1"> 
+    - 函数库：https://pypi.org/project/rouge-score/
+    - 对比 BLEU 与 ROUGE：
+      - BLEU 能评估流畅度，但指标偏向于较短的翻译结果（brevity penalty 没有想象中那么强）
+      - ROUGE 不管流畅度，所以只适合深度学习的生成模型：结果都是流畅的前提下，ROUGE 反应参照句中多少内容被生成的句子包含（召回）
+
+  - **应用场景**：在文本摘要领域，用于评估自动生成的摘要是否能够准确地捕捉原始文本的主要内容；在机器翻译中，也可以帮助评估翻译后的文本是否完整地传达了原文的关键信息。
+
+* METEOR（Metric for Evaluation of Translation with Explicit ORdering）
+
+  - **定义**：METEOR 是一种综合考虑了精确率（Precision）、召回率（Recall）和词序（Word Order）的文本生成质量评估指标，用于评估机器翻译和其他文本生成任务。
+    - 工作原理
+      - 首先计算生成文本和参考文本之间的精确率和召回率，类似于 BLEU 和 ROUGE 的部分计算。
+      - 然后，METEOR 引入了一个基于词序的 F-measure（调和平均数）来综合评估匹配质量。它通过考虑单词的匹配、同义词匹配（通过预定义的词表）和词序的连贯性来计算得分。
+      - 还包括一个对齐模块，用于找到生成文本和参考文本之间单词的最佳匹配，考虑了多种匹配类型，如完全匹配、同义词匹配和词根匹配等。
+    - 对语言学和语义词表有依赖，所以对语言依赖强。
+
+  - **应用场景**：在机器翻译和文本生成任务中，METEOR 能够提供一个更全面的评估，因为它不仅仅关注单词或短语的匹配，还考虑了词序和语义相似性，能够更好地反映生成文本的自然度和准确性。
 
 
 
@@ -845,12 +914,25 @@ def find_most_similar(input_word):
 
 
 
-### Reinforce Learning
+### 多模态
+
+
+
+#### 以图搜图
+
+* Aliyun
+  * https://help.aliyun.com/zh/image-search/developer-reference/api-searchbypic?spm=a2c4g.11186623.help-menu-66413.d_4_3_1_3.7538364fjOQka0&scm=20140722.H_202282._.OR_help-V_1
+
+
+
+### RL
 
 * [AI挑战黑神话！死亡1000次，我训练的AI终于击败了首个BOSS【图灵计划10】](https://www.bilibili.com/video/BV1qE421c7mU)
 * [【DQN只狼实战教程】手把手带你实现用强化学习DQN打只狼里的boss（第一期）](https://www.bilibili.com/video/BV1by4y1n7pe)
 
 
+
+* 豆包 veRL https://arxiv.org/abs/2409.19256
 
 
 

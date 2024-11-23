@@ -902,6 +902,13 @@ declare -a NAMES=(
   * `diff -Naur`  比较两个文件夹
 
 * dmesg: kernel log
+
+* docker
+
+```
+docker logs --tail 100 $pod
+```
+
 * `dpkg -i ***.deb`
 * `du -h -d 1 $file`
 

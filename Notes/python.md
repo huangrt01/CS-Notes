@@ -191,6 +191,17 @@ common_keys = set(dict_A.keys()) & set(dict_B.keys()) & set(dict_C.keys())
 filtered_dict_A = dict(filter(lambda item: item[0] in common_keys and dict_B[item[0]] > dict_C[item[0]], dict_A.items()))
 ```
 
+##### 列表推导
+
+```python
+new_concepts = [
+          k for k, v in concepts.items() if k not in set(
+              [item for sub_list in grouped_concepts for item in sub_list])
+      ]
+```
+
+
+
 
 
 #### collections
@@ -673,6 +684,15 @@ loop.close()
 ```
 
 
+
+#### base64
+
+```python
+encoded_string = base64.b64encode(raw_data)
+image = encoded_string.decode("utf-8")
+
+base64.b64decode(image)
+```
 
 
 
@@ -1178,6 +1198,15 @@ def _(input: Type1, ...):
 @do_sth.register(Type2)
 def _(input: Type2, ...):
   ...
+```
+
+```python
+from functools import lru_cache
+@lru_cache
+def get_info():
+  file = os.path.join(os.path.dirname(__file__), FILE)
+  with open(file, 'rb') as stream:
+    return load(stream)
 ```
 
 

@@ -175,3 +175,9 @@ function merge-pairs(list: List[PairingTree[Elem]]) -> PairingHeap[Elem]
 #### BloomFilter
 
 https://en.wikipedia.org/wiki/Bloom_filter
+
+
+
+### 图算法
+
+* 社区发现 Louvain算法 https://zhuanlan.zhihu.com/p/558706129

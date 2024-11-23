@@ -1,6 +1,38 @@
-### Distributed Systems
+## Distributed Systems
 
 [toc]
+
+### Intro
+
+#### 基础架构与人 —— Haiping Zhao
+
+基础架构
+
+* 底层软硬件
+* 不含业务逻辑：抽象化；云化
+* 四大资源：
+  * CPU：计算
+  * 内存
+  * 网络
+  * 磁盘：存储
+
+* 人也是基础架构的一部分
+
+不同的协同方式，不同的工程文化
+
+* 开源社区（Facebook），责 < 权 = 利
+* 中台（Alibaba），责 > 权 = 利
+* 纵横交织（ByteDance），责 = 权 = 利
+  * 需要控制合作的cost
+
+人和机器的矛盾
+
+* 编译器
+* 代码共享
+* 微服务
+* 工具和流程
+
+
 
 **[l01-Introduction and MapReduce](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Distributed-Systems/l01-Introduction%20and%20MapReduce)**
 
@@ -951,30 +983,8 @@ https://www.usenix.org/conference/osdi18/presentation/berger
     * Redundancy prevented data loss and end-user impact in each case
       * Redundancy and transparent fail-over at (or above) every level is essential
 
-#### 基础架构与人 —— Haiping Zhao
+* 
 
-基础架构
+### TODO
 
-* 底层软硬件
-* 不含业务逻辑：抽象化；云化
-* 四大资源：
-  * CPU：计算
-  * 内存
-  * 网络
-  * 磁盘：存储
-
-* 人也是基础架构的一部分
-
-不同的协同方式，不同的工程文化
-
-* 开源社区（Facebook），责 < 权 = 利
-* 中台（Alibaba），责 > 权 = 利
-* 纵横交织（ByteDance），责 = 权 = 利
-  * 需要控制合作的cost
-
-人和机器的矛盾
-
-* 编译器
-* 代码共享
-* 微服务
-* 工具和流程
+* 《Streaming System》 https://mp.weixin.qq.com/s/Uivs5oKCTOqtEGPZZooKTg
