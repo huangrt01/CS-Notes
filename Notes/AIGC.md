@@ -2167,532 +2167,7 @@ for hat in queue:
 
 
 
-## LLM + Search
-
-### 产品逻辑
-
-#### 电商
-
-* [Product Search And Recommendation Trends In 2024 For Better Converting eCommerce Stores](https://blog.boostcommerce.net/posts/product-search-and-recommendation-trends)
-* [Inside Product Recommendation Feature Of Boost AI Search & Discovery](https://blog.boostcommerce.net/posts/product-recommendation-feature-of-boost-ai-search-discovery)
-* [Using Ecommerce Recommendation Engines to Keep Your Customers Coming Back](https://www.bigcommerce.com/articles/ecommerce/recommendation-engine/)
-* [21 Ecommerce **Product Recommendation** Tips (That Increase Conversions)](https://thegood.com/insights/ecommerce-product-recommendation/)
-* **Search relevance** is king!
-  * The search bar is the go-to destination for [69%](https://www.nosto.com/blog/future-of-ecommerce-search-2023/) of shoppers
-  * [82%](https://www.nosto.com/blog/future-of-ecommerce-search-2023/) of online businesses believe that the site search experience can be enhanced by providing more relevant results
-  * and a compelling [79%](https://www.nosto.com/blog/future-of-ecommerce-search-2023/) of consumers surveyed expressed their likelihood to purchase a product that they had specifically searched for in the search results
-* 个性化也重要
-  * [Research](https://www.barilliance.com/personalized-product-recommendations-stats/) conducted by Barilliance in 2018 concluded that product recommendations accounted for up to 31 percent of ecommerce revenue. On average, customers saw 12 percent of their overall purchases coming from products that were recommended to them. 
-  * [A Salesforce study](https://www.salesforce.com/blog/2017/11/personalized-product-recommendations-drive-just-7-visits-26-revenue.html) of product recommendations concluded that visits where the shopper clicked a recommendation comprise just 7 percent of total site traffic, but make up 24 percent of orders and 26 percent of revenue. 
-  * The conversion rate for visitors clicking on product recommendations was found to be [5.5x higher](https://www.barilliance.com/personalized-product-recommendations-stats/) than for visitors who didn’t click.
-  * [An Accenture report](https://www.accenture.com/us-en/interactive-index) says personalization increases the likelihood of a prospect purchasing from you by 75 percent.
-* No more “No results found”
-  * **synonyms and autocorrect** to prevent unmatched search frustrating experiences
-  * [Best Practices for Instant Search Box - What to Do With ‘No Search Results’](https://boostcommerce.net/blogs/all/instant-search-box-tips-with-no-search-results)
-* The age of intelligent search continues
-  * AL/ML-based models (can also use rules to set up)
-    * content-based filtering
-    * item-CF和user-CF
-    * Frequently bought together (FBT)
-      - FBT和Complementary products的区别是，前者基于加入购物车的数据，后者基于商品语义信息
-    * Related items
-      - Alternative products
-      - Complementary products
-      - Mix of the 2 sub-models
-  * Statistic-based models
-    - Newest arrivals
-    - Trending products
-    - Bestsellers
-    - Most viewed
-    - Recently viewed
-  * Manual model
-    - Hand-pick products ( fix the limelight for a particular set of products without changing or updating them.)
-      - 实现时可以用tag标注
-* Customers want personalized product recommendations
-  * 个性化对retaining customers（留存）有帮助
-* 产品能力：
-  * **NLP-backed search engine** to better respond to long-tail queries
-  * **Semantic search** to maximize the accuracy and relevance of search results
-  * Enhanced **typo tolerance**
-  * **Understanding search with high complexity**
-  * AI-fueled **upselling and cross-selling**
-    * such as a Bluetooth headset to go with their chosen laptop
-  * secondary algorithm
-    * ![img](https://cdn.prod.website-files.com/663e17fff238bd97b0a022cd/6645d914bd140fa3afeac447_Img_14_1_1344x.png)
-  * **Analyze能力**
-    * **Analyze customer feedback and reviews**：分析效果
-    * **Identify the most popular products**：决定promote and stock哪些商品
-    * **Improve upselling and cross-selling**：create more cohesive marketing campaigns by bundling items in ways that appeal to customers
-    * **Understand customer preferences and behavior**: Understanding which upselling and cross-selling offers customers respond to provides more insight into their purchase behavior and lets you make better-informed decisions about which products to restock. For example, if customers don’t respond to upselling product suggestions, you might consider discontinuing the higher-end product.
-    * **Show Bestsellers Across Different Categories**
-  * *And many more*
-* 对应产品功能：
-  * Frequently Bought Together
-    * "Viewed this, bought that."
-    * Amazon does this by showing bundles of products frequently viewed in succession and enabling users to **add the entire bundle** to their shopping cart in one click.
-      * **Provide Social Proof**  (Customers Who Bought This Item Also Bought)
-  * Related Items (AI-powered)
-    * “Deals based on your recent history”
-    * 推荐理由
-  * Recently Purchased
-    * “Buy again”
-  * Bestsellers
-  * Hand-picked Products
-  * Recently Viewed
-    * “Keep shopping for”
-  * Most Viewed
-  * Newest Arrivals
-  * Trending Products
-    * based on new trends and seasons
-  * Personalize Your Email Campaigns
-
-* 模型输入特征：
-
-  * past purchases, viewed products
-  * time spent on various pages
-  * Location
-
-  * 元信息
-    * new trends and seasons (as prompt)
-    * product titles and descriptions
-
-* 指标metrics：
-
-  * average order value
-  * upsell/cross-sell conversion rate
-  * insight into user behavior.
-
-* 产品页面：[**How to Display Product Recommendations Throughout the Sales Cycle** ](https://thegood.com/insights/ecommerce-product-recommendation/#h-how-to-display-product-recommendations-throughout-the-sales-cycle-nbsp)
-
-  * Homepage   ---> “Most Popular” and “Recently Viewed”
-    - **Trending products**
-    - **Recently viewed**
-    - Bestsellers
-    - Most viewed
-    - Newest arrivals
-  * Collection page ---> most popular
-    - **Trending products**
-    - **Bestsellers**
-    - **Most viewed**
-    - Recently viewed
-    - Newest arrivals
-  * Product page
-    - **Frequently bought together**
-    - **Related items**
-    - Newest arrivals
-    - Trending products
-    - Bestsellers
-    - Most viewed
-    - Recently viewed
-    - Hand-pick products
-    - **Note**: Frequently bought together & Related items can be displayed as Product Bundles.
-  * Cart page
-    - Frequently bought together
-    - **Related items** -> cross-selling
-    - Newest arrivals
-    - Trending products
-    - Bestsellers
-    - Most viewed
-    - Recently viewed
-
-###  搜索算法
-
-#### Hybrid Search
-
-* Hybrid search is a combination of full text and vector queries that execute against a search index that **contains both searchable plain text content and generated embeddings**. For query purposes, hybrid search is:
-  * A single query request that includes both `search` and `vectors` query parameters
-  * Executing in parallel
-  * With merged results in the query response, scored using Reciprocal Rank Fusion (RRF)
-* 背景：
-  * 实际生产中，传统的关键字检索（稀疏表示）与向量检索（稠密表示）各有优劣。
-    * 举个具体例子，比如文档中包含很长的专有名词，关键字检索往往更精准而向量检索容易引入概念混淆。
-    * e.g. 在医学中“小细胞肺癌”和“非小细胞肺癌”是两种不同的癌症
-
-* [Relevance scoring in hybrid search using Reciprocal Rank Fusion (RRF)](https://learn.microsoft.com/en-us/azure/search/hybrid-search-ranking)
-  * Kv search (BM25)
-  * Vector search (HNSW)
-  * RRF: $rrf(d)=\sum_{a\in A}\frac{1}{k+rank_a(d)}$
-
-* [VantageDiscovery的电商搜索实践](https://www.vantagediscovery.com/post/compound-ai-search-where-keywords-and-vectors-are-just-the-beginning)
-
-  * 高级能力
-    * **Intelligent Weighting**: Dynamically adjust the importance of different search factors based on business goals or seasonal priorities.
-    * **Flexible Matching Criteria**: Find relevant results even with partial query matches, ensuring customers always find suitable products.
-    * **Contextual Semantic Adjustment**: Control the degree of semantic interpretation based on product categories or query types, optimizing for both precision and recall.
-    * **Category-Specific Models**: Utilize different AI models for various product types, ensuring specialized understanding across diverse catalogs.
-
-  * Imagine a customer searching for a "cozy blue sweater for a winter wedding." A compound AI system handles this complex query by:
-    * Analyzing intent: identifying style, color, item, and occasion.
-    * Expanding context: considering related concepts like "formal knitwear" or "elegant cold-weather attire."
-    * Performing semantic search using advanced embeddings.
-    * Conducting traditional keyword search in parallel.
-    * Blending results, prioritizing wedding-appropriate items.
-    * Returning a curated selection of relevant products, including complementary accessories.
-  * https://docs.vantagediscovery.com/docs/search-more-like-these-tm#example-soft-chair--item-27--two-pinterest-images
-    * ![more-like-these-overview](AIGC/more-like-these-overview.webp)
-
-
-
-### NL2Sql
-
-#### Literature Review
-
-* extracting the question-to-SQL patterns and generalizing them by training an
-  encoder-decoder model with Text-to-SQL corpus
-
-#### Evaluation
-
-* https://bird-bench.github.io/
-* https://yale-lily.github.io/spider
-
-
-
-#### [DAIL-SQL] Text-to-SQL Empowered by Large Language Models: A Benchmark Evaluation
-
-* Intro
-
-  * prompt engineering methods, including question representation, example selection and example organization
-  * DAIL- SQL encodes structure knowledge as SQL statements, selects examples based on their skeleton similarities and removes cross- domain knowledge from examples for token efficiency. Before
-
-* Prompt Engineering
-
-  * question representations in zero-shot scenario
-  * example selection and organization strategies in few-shot scenario
-    * the option of displaying full information, solely SQL queries or question-SQL pair.
-  * verify the hypothesis that LLMs learn from the mappings between question and SQL skeleton
-
-* Zero-shot -- Question Representation
-
-  * database schema
-  * prompt
-    * basic（BS）
-    * Text representation（TR）
-    * **OpenAI Demostration Prompt (OD)**
-      * “Complete sqlite SQL query only and with no explanation”
-      * 综合效果最好最通用
-    * Code Representation Prompt
-      * 完整建表语句
-    * AS
-      * 需要SFT模型才行
-
-  ![image-20241109125459701](AIGC/image-20241109125459701.png)
-
-![image-20241109010143981](AIGC/nl2sql-question-representation.png)
-
-* 增益
-  * INS
-  * **RI**
-    * with no explanation 效果好
-    * Let's think step by step 效果不稳定
-  * FK
-
-![image-20241109011512039](AIGC/nl2sql-prompt-result.png)
-
-![image-20241109012454931](AIGC/nl2sql-prompts.png)
-
-* Few-shot
-  * 背景setting：cross-domain Text- to-SQL （例子可能来自于别的数据库）
-  * example selection
-    * Random
-    * Question Similarity Selection (QTS )
-    * **Masked Question Similarity Selection （MQS）**
-      * 先mask实体再检索 -> CBR-ApSQL
-    * **Query Similarity Selection (QRS)**
-      * 先生成（拟合）query再检索
-    * 总结：taking both question and SQL queries into con- sideration may benefit Text-to-SQL task
-  * example organization
-    * Full-Information Organization (FI)
-    * SQL-Only Organization (SO).
-    * 总结：quality和quantity的权衡
-      * GPT 3.5 Turbo 上下文短，example加多了反而不好
-
-![image-20241109021923944](AIGC/dail-sql-prompt1.png)
-
-* supervised fine-tuning (SFT)
-
-  * **Alignment**的范式, which aligns LLMs’ behavior to avoid generating offensive, biased responses and hallucinations
-  * 数据对 -> (prompt, ground_truth)
-
-  * 细节：
-    * Following the setting of supervised fine-tuning [34, 47], we block the gradients from prompt and only update weights with those from response (SQL queries).
-    * 9000条样本
-
-  * 结论：
-    * SFT：
-      * Figure 6：LLAMA2-chat-7B 经过指令微调，EA达到70%
-      * **Alpaca SFT Prompt**
-      * 微调后，不同Question Representation的效果gap变小
-      * **fine-tuned LLMs fail to learn from examples.**
-    * Zero-shot Scenario with Open-source LLM
-      * code-llama-34B 厉害，只有用TR的时候效果差
-
-![image-20241109043228932](AIGC/nl2sql-sft.png)
-
-* DAIL-SQL
-  * 融合了上面的技术
-  * Question Representation: CR-P
-    * 外键->JOIN语句
-    * pre-trained on extensive coding corpora, LLMs could better understand the prompt in CR ?? without too much additional effort.
-  * Example Organization: DAIL Organization
-  * Example Selection: MQS + masked QRS
-    * 按MQS排序，再按masked QRS优先级重排
-
-* evaluation
-  * exact-set-match accuracy (EM)
-  * **execution accuracy (EX)**
-
-
-
-
-
-#### [CBR-ApSQL] Prompting GPT-3.5 for Text-to-SQL with De-semanticization and Skeleton Retrieval
-
-* Masked Question Similarity Selection (MQS)
-
-### 竞品
-
-* [深度｜AI+电商搜索大盘点，又一个资本集中下注的细分赛道](https://mp.weixin.qq.com/s/zaczcDifgT-9Gt5q-R7azQ)
-  * VantageDiscovery
-  * DayDream
-    * 强调基于多模态理解的商品搜索能力，例如其官网展示的场景中，用户上传一张带有条纹的托特包，并希望找到一款类似的无条纹款，DayDream 可以轻松基于这些提示给出搜索结果。
-  * Glaze
-    * 在该产品中，每个人都会获得一个初始的虚拟时尚买手 Glaze。用户可添加 Glaze 的联系方式，并成为他的好友。随后在用户浏览 Ins、Pinterest 等时尚内容网站时，可以通过分享按钮将你喜欢的内容分享给这位助手。**Glaze 购物助手会积累这些用户分享数据，学习用户的穿衣风格、产品偏好，并随时为你推荐相关商品**，用户可以直接在 Glaze 推荐的链接中进行购买和转化。
-
-
-
-#### WebKul
-
-https://webkul.com/ai-semantic-search-services/
-
-
-
-
-
-#### VantageDiscovery AI Search
-
-> https://www.vantagediscovery.com/blog
->
-> Demo：https://demo.vantagediscovery.com/fashion/search
-
-* Intro
-  * **VantageDiscovery 最大的竞争力来自他们的自定义向量数据库。**将用户查询的语义理解和对用户个人风格的语义理解结合起来，在几毫秒内从数百万个项目中检索出最个性化、最有针对性的结果
-  * VantageDiscovery 的商业策略是为那些独立站卖家、集合店、大型购物网站提供面向商业的搜索引擎。
-* e.g.
-  * “母亲节给妈妈买什么”或“一个有趣的夜晚外出的衬衫”
-  * recipes for a 6 year old's birthday party
-  * graduation garden party -> floral sundress、wide-brim sunhat
-* 技术文章：
-  * 搜索技术历史 https://www.vantagediscovery.com/post/ecommerce-search-transcended-for-the-ai-age
-  * 赋能cooklist，semantic search https://www.vantagediscovery.com/post/how-cooklist-brought-their-catalog-to-life-in-unexpected-ways
-  * More-Like-This https://www.vantagediscovery.com/post/personalizing-discovery-in-e-commerce-with-more-like-this
-  * CRS https://www.vantagediscovery.com/post/elevating-ecommerce-search-from-keywords-to-conversations
-    * shift from precision-based to intent-based queries
-    * "I'm looking for boots that won't give up on me in the rain but still let me look my best at a café."
-    * Cozy spot, pet-friendly romantic weekend getaway
-  * 对HNSW的改进 https://www.vantagediscovery.com/post/the-hush-hush-secret-of-accuracy-of-hnsw-and-vector-databases
-  * PR文章 https://www.vantagediscovery.com/post/vantage-discovery-raises-16m-to-bring-ai-powered-product-discovery-to-commerce
-  * Semantic search的经验 https://www.vantagediscovery.com/post/5-things-i-learned-building-85-semantic-search-indexes
-    * A clear, concise, salient set of text (3-4 paragraphs is a good rule of thumb) that describes the style, use, and attributes in real human-understandable terms is the number one predictor of great results out of the box.
-    * Pictures are worth way more than 1,000 words (or floats!).
-    * You must process images with clever vision LLM prompts or an overlaid trained image+text embedding model and include that in the embedding to be searched. It's crucial the text and image are combined into a single embedding (or at least single model).
-    * **Adjustments like** [**keyword boosting**](https://docs.vantagediscovery.com/docs/search-options#keyword-support), fine-tuned embedding models, and query augmentation allow reduction of these creative jumps. However, don't overdo this, as sometimes a little variety and some non-intuitive jumps can actually add to the diversity of your results. Variety in the results, even non-obvious ones, may benefit and delight your users. With keywords, you might have shown ZERO-ZILCH-NADA results before, but now you show some variety and the best if not creative results given your catalog!
-  * 聚焦数据预处理 https://www.vantagediscovery.com/post/is-ai-powered-data-engineering-the-key-to-unlocking-your-product-catalogs-potential
-  * style向量检索 https://www.vantagediscovery.com/post/vector-math-never-looked-so-floral-how-vantage-is-revolutionizing-e-commerce-search
-  * hybrid search https://www.vantagediscovery.com/post/compound-ai-search-where-keywords-and-vectors-are-just-the-beginning
-  * semantic search的科普 https://www.vantagediscovery.com/post/semantic-101
-    * `text-embedding-3-large` model with 2048 dimensions
-  * 高维向量可视化 https://www.vantagediscovery.com/post/from-high-dimensions-to-human-comprehension
-  * AI可解释性 https://www.vantagediscovery.com/post/the-future-of-e-commerce-is-ai-powered-and-interpretable
-    * sparse autoencoders (SAEs) https://transformer-circuits.pub/2024/scaling-monosemanticity/
-    * Hyper-Personalized Product Discovery
-    * Optimized Merchandising and Assortment
-    * Enhanced Explainable Search
-  * 搜索电商的商业逻辑和关键技术 https://www.vantagediscovery.com/post/adapt-or-die-why-retailers-want-to-be-like-amazon
-    * Implicit personalization at an n of 1
-    * Blending keyword and semantic search 
-    * Explicit style personalization
-    * Personalized shopping assistants
-  * Salesforce AppExchange https://www.vantagediscovery.com/post/introducing-vantage-discovery-for-salesforce-commerce-cloud-unlock-the-future-of-ai-powered-retail
-  * 关于semantic search的优化 https://www.vantagediscovery.com/post/semantic-search-using-matryoshka-embedding-vectors
-  * 分析传统search的缺点 https://www.vantagediscovery.com/post/ai-shopping-assistants-and-semantic-search
-    * When searchers find what they’re looking for, 92% purchase that item and 78% buy at least one additional item with an average of 3 additional items purchased after a successful search. On the other hand, 53% of consumers abandon the website entirely when they have an unsuccessful search.
-    * https://llcbuddy.com/data/e-commerce-search-statistics/
-* Note:
-  * search option，涉及关键词检索相关 https://docs.vantagediscovery.com/docs/search-options#field-value-weighting
-  * 图片上增加upvote，用于采集数据
-
-![640](AIGC/640.webp)
-
-
-
-#### Google Vertex Search
-
-> https://cloud.google.com/enterprise-search?hl=en
-
-* 技术介绍（RAG）
-  * simplified the end-to-end search and discovery process of managing ETL, OCR, chunking, embedding, indexing, storing, input cleaning, schema adjustments, information retrieval, and summarization to just a few clicks
-  * 融合AI for document understanding
-  * **Your RAGs powered by Google Search technology**
-    * https://cloud.google.com/blog/products/ai-machine-learning/rags-powered-by-google-search-technology-part-1
-      * semantic search
-      * *Neural matching learns the relationships between queries and documents*
-      * A production-grade semantic search is not just a similarity search, but must provide smart recommendation to users.
-      * 向量检索使用[ScaNN](https://blog.research.google/2020/07/announcing-scann-efficient-vector.html)
-    * https://cloud.google.com/blog/products/ai-machine-learning/rags-powered-by-google-search-technology-part-2
-  * [Grounding能力](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/overview)
-  * 基础的IR能力，[Vector Search](https://cloud.google.com/vertex-ai/docs/vector-search/quickstart)
-
-![https://storage.googleapis.com/gweb-cloudblog-publish/images/3._Vertex_AI_Search.max-1300x1300.png](https://storage.googleapis.com/gweb-cloudblog-publish/images/3._Vertex_AI_Search.max-1300x1300.png)
-
-* 产品形态 https://cloud.google.com/use-cases/recommendations?hl=zh-cn
-  * [Vertex AI Search for retail](https://cloud.google.com/solutions/retail-product-discovery) offers retailers the ability to improve the search, product recommendations, and browsing experience on their channels.
-    * Retail companies are harnessing AI with Google Cloud today to recommend **tailored products and promotions to shoppers** and reap business results, such as **increased sales,** **average order value****, and** **customer lifetime value**.
-    * LLM based Recommendation方便商家人工干预推荐结果，进行运营企划活动。实现saas定制化需求的成本低。
-  * [Vertex AI Search for media](https://cloud.google.com/generative-ai-app-builder/docs/about-media) offers media and entertainment companies the ability to provide more personalized content recommendations powered by generative AI, increasing consumer time spent on their platforms, which can lead to higher engagement, revenue, and retention. 
-  * [Generic Recommendation Data Store](https://cloud.google.com/generative-ai-app-builder/docs/create-data-store-recommendations)
-  * [Vertex AI Search for healthcare and life sciences](https://cloud.google.com/generative-ai-app-builder/docs/create-app-hc) is a medically tuned search that improves patient and provider experience. [支持医疗搜索](https://www.googlecloudpresscorner.com/2023-10-09-Google-Cloud-Adds-New-Features-to-Vertex-AI-Search-for-Healthcare-and-Life-Science-Companies)
-
-![image-20240920165612409](AIGC/vertex-search.png)
-
-* LLM和Semantic Search互相增强：
-  * Prompt：Given that it's the beginning of winter, a customer is browsing for clothing on an e-commerce site. Winters are cold in their city. They entered "warm clothing for winter" as a search term on the site. What other search terms might they use to find related and cross-sell items?
-  * Responses from an LLM may include the following queries:
-    - Type-specific: Warm winter jackets, Cozy knitwear, Thermal leggings, Waterproof snow boots
-    - Activity-specific: Ski clothing, Winter running gear, Work-appropriate winter outfits, Cozy homewear
-    - Style-specific: Cashmere sweaters, Puffer vests, Statement scarves, Athleisure-inspired winter looks
-  * 优势：多样性强
-  * 局限性：冷启动The models may not be familiar with newly added product names or trained to memorize millions of product model numbers in its embedding space. 用hybrid search解决
-* demo
-  * stackoverflow的检索：https://ai-demos.dev/demos/matching-engine
-    * https://cloud.google.com/blog/products/ai-machine-learning/how-to-use-grounding-for-your-llms-with-text-embeddings?hl=en
-
-* 算法进阶
-  * 召回+rerank
-  * Filtering and boosting
-    * https://cloud.google.com/generative-ai-app-builder/docs/filter-search-metadata
-  * Extraction and generation
-    * 三层：*Snippet, Extractive answer, and Extractive Segment*
-  * Summarization and multi-turn search
-    * generating [search result summaries](https://cloud.google.com/generative-ai-app-builder/docs/get-search-summaries) and also supports [follow-up questions](https://cloud.google.com/generative-ai-app-builder/docs/multi-turn-search) with multi-turn search to provide a context-aware search.
-  * document processing
-    * **Document understanding and text chunking**
-    * **Document and query annotation with Knowledge Graph**
-    * ![https://storage.googleapis.com/gweb-cloudblog-publish/images/15._document_processing.max-1100x1100.png](https://storage.googleapis.com/gweb-cloudblog-publish/images/15._document_processing.max-1100x1100.png)
-
-* 支持custom embedding能力
-  * https://cloud.google.com/generative-ai-app-builder/docs/bring-embeddings
-  * 场景：
-    * Your embeddings have been trained on custom words, such as internal terms whose semantic similarity wouldn't be captured by training on public data—for example, organization-specific terms that appear only in private documents.
-    * You've created embeddings for user profiles and want to use these to create a personalized, semantically-relevant document ranking. You can use your embeddings to get personalization-based ranking, which can augment Google's document embeddings for relevance-based ranking.
-  * `0.5 * relevance_score + 0.3 * dotProduct(example_embedding_field)`
-* Collect scattered enterprise data
-  * **Blended Search and web crawling**
-    * All you have to do is specify[ the URL or URL pattern](https://cloud.google.com/generative-ai-app-builder/docs/create-data-store-es#website) and Vertex AI Search will instantly create a data store with all the relevant website pages. You can then use [Google Search Central](https://developers.google.com/search), to manage site crawling on your website.
-  * **Connectors**： [Connectors](https://cloud.google.com/generative-ai-app-builder/docs/prepare-data) 
-
-![https://storage.googleapis.com/gweb-cloudblog-publish/images/17._blended_search.max-1300x1300.png](https://storage.googleapis.com/gweb-cloudblog-publish/images/17._blended_search.max-1300x1300.png)
-
-* 更多资料：
-  * LangChain-based samples and documents: [RAG sample notebooks using Vertex AI Search, PaLM, and LangChain](https://github.com/GoogleCloudPlatform/generative-ai/tree/main/search/retrieval-augmented-generation) and [Vertex AI Search support in LangChain](https://python.langchain.com/docs/integrations/retrievers/google_vertex_ai_search)
-  * [Grounding in Vertex AI](https://cloud.google.com/vertex-ai/docs/generative-ai/grounding/ground-language-models): provides a quick and easy way for grounding
-  * [Check Grounding API](https://cloud.google.com/generative-ai-app-builder/docs/check-grounding?hl=en) provides a grounding score for an answer candidate
-  * Vertex AI Conversation-based grounding: [Vertex AI Search and Conversation: search with follow-ups](https://cloud.google.com/generative-ai-app-builder/docs/multi-turn-search)
-  * [How to use custom embedding with Vertex AI Search](https://github.com/GoogleCloudPlatform/generative-ai/blob/main/search/custom-embeddings/custom_embeddings.ipynb)
-  * [Vertex AI Search and Conversation product page](https://cloud.google.com/vertex-ai-search-and-conversation?hl=en)
-  * [Get started with Vertex AI Search](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search)
-  * [Vertex AI Search sample notebooks](https://github.com/GoogleCloudPlatform/generative-ai/tree/main/search) on GitHub Gen AI repo
-  * Video: [Harnessing the power of generative AI to deliver next-gen search experiences](https://youtu.be/HD_xreaLKb4?feature=shared)
-
-
-
-
-
-#### Azure (AI-Enhanced Search)
-
-* Build-in vectorization
-  * Data chunking during indexing
-  * Text-to-vector conversion during indexing
-  * Text-to-vector conversion during queries
-* 多语言，Translation and language detection for multi-lingual search
-* 实体抽取，Entity recognition to extract people names, places, and other entities from large chunks of text
-* 实体标注抽取，Key phrase extraction to identify and output important terms
-* OCR，Optical Character Recognition (OCR) to recognize printed and handwritten text in binary files
-* 图文多模，Image analysis to describe image content, and output the descriptions as searchable text file
-
-#### Algolia (电商搜索推荐)
-
-* https://www.algolia.com/
-* [Get started with click and conversion events](https://www.algolia.com/doc/guides/sending-events/getting-started/?utm_medium=page_link&utm_source=dashboard)
-* 对接了包括shopify等接近10个电商平台系统，无缝衔接数据，极为简单方式（4步）提供以下推荐
-  - [Frequently Bought Together](https://www.algolia.com/doc/guides/building-search-ui/ui-and-ux-patterns/recommend/js/?utm_medium=page_link&utm_source=dashboard#frequently-bought-together) （频繁购买放一起）
-  - [Related Products and Related Content](https://www.algolia.com/doc/guides/building-search-ui/ui-and-ux-patterns/recommend/js/?utm_medium=page_link&utm_source=dashboard#related-products-and-related-content) （相关产品，相关内容）
-  - [Trending Products](https://www.algolia.com/doc/guides/building-search-ui/ui-and-ux-patterns/recommend/js/?utm_medium=page_link&utm_source=dashboard#trending-items) （流行产品）
-  - [Looking Similar](https://www.algolia.com/doc/guides/building-search-ui/ui-and-ux-patterns/recommend/js/?utm_medium=page_link&utm_source=dashboard#looking-similar) （look-alike）
-
-* 算法：
-  * 算法细节：https://www.algolia.com/doc/guides/algolia-recommend/overview/
-  * [归因](https://www.algolia.com/doc/guides/sending-events/getting-started/)
-    * Client-side versus server-side events
-
-#### Glean（企业内部深度搜索）
-
-> https://mp.weixin.qq.com/s/a3DhXOykVslxXbpobzIUCg
-
-#### 链企AI（深度搜索）
-
-> https://www.lianqiai.cn/
-
-#### 360 AI搜索
-
-> [双10亿：AI重塑搜索 | 一文看懂AI搜索现状和未来](https://mp.weixin.qq.com/s/DvEnhyk6ytQ8NcSGCvgSUw)
-
-![图片](AIGC/640)
-
-* 一次AI搜索，调用1次大模型？
-  * 错！答案是**会调用9次大模型，并且不同任务里会有不同大模型参与**
-  * 用户输入Query并点击搜索后，360会先调用一个2B-7B之间响应非常快的意图识别模型，快速理解Query，并做关键词识别、参数抽取、意图识别、搜索词改写等工作。
-  * 接下来会进行5次搜索，搜索完后对内容进行ReRank，这里面排序、选择哪些内容作为主答案，也需要LLM参与。
-  * 基于生成的答案，要生成各种追问、延伸阅读、相关事件、思维导图，这里面360思维导图的效果之所以好，就是360专门去训练了一个模型，才能够把结构化的信息比较准确和有结构的描述出来。
-
-* 秘塔AI搜索的问题
-  * 小参数量模型*上下文窗口很短，所以只能讨巧：**迭代调用，分批生成**
-    * 第一步先生成一个大纲，然后再基于大纲去做逐步的扩写，整体拼凑下来就能够得到很长的文章。
-    * 可能导致内容重复、内容质量低
-  * 360的策略：**用中文搜一次、再用英文搜一次**
-* 关于prompt
-  * 对于总结，他们确实可以用一个很短的Prompt（迭代了非常多的版本）获得很好的总结结果，**但是AI搜索用户的意图有很多，并不单纯是内容总结。**对于模型来说，对不同的搜索意图，想要生成好的结果，是需要传递给大模型不同的价值取向的。
-  * query的意图识别分类做到了4000多种，每一种需求配对应的Prompt
-* 期望AI搜索处理复杂问题
-  * 假设你在搜索“找到波士顿最受欢迎的瑜伽或普拉提工作室，并显示其入门优惠和从Beacon Hill步行的时间”。多步推理的AI会：
-    * 识别出你要找的是瑜伽或普拉提工作室。
-    * 找到波士顿地区的相关工作室。
-    * 筛选出那些在当地受欢迎的工作室。
-    * 检查这些工作室是否提供新会员的入门优惠。
-    * 计算每个工作室从Beacon Hill步行的时间。
-    * 综合以上信息，给出一个详细的结果列表。
-* 索引库的成本：爬5000万的网页，大概需要一两百万RMB。（From 360AI）
-* AI SEO：每天生成数百万个答案网页，覆盖自己搜索内的流量
-* 本地大模型
-
-![图片](AIGC/640-20241019015912504)
-
-#### Perplexity
-
-* [Perplexity CEO揭秘🤖搜索内核：不训练模型、关键在于路由编排、比搜索引擎更敢说](https://mp.weixin.qq.com/s/aBAd6-mDEgNCo8s2hOsE3w)
-  * AI搜索优势：
-    * 对于基于LLM的答案引擎，传统的检索方式只需要优化召回率即可
-  * 关于使用网页
-    * **使用来自多个搜索提供商的大量排名信号。我们实际上构建了自己的索引，但也依赖于大量数据提供商的排名信号**。对于某些我们不自行抓取或爬取的网络域名，我们还依赖于第三方数据提供商，这些提供商只提供高层级的摘要片段和与URL相关的元数据，而不是实际内容。
-    * 人们对这些域名的信任程度
-  * query匹配 - ngram重叠 - 语义检索
-    * 基于查询词匹配，这类似于传统的检索，例如TF-IDF风格的检索。
-  * 搜集开放式信息
-    * 我应该投资英伟达吗？我不太明白。所有信息都已被计入价格了吗？黑色世界芯片延误会怎样？对训练GPU的需求如何？英伟达现在的竞争对手是谁？它仍然没有竞争对手吗？五年后的市场会怎样？这将如何影响亚马逊网络服务（AWS）的收入？英伟达的利润率是如何被挤压的？谁可能会这么做？
-
-#### 其它
-
-* [垂直](https://www.bigcommerce.com/articles/ecommerce/recommendation-engine/#h2_best_ecommerce_recommendation_engines)：algolia、boomreach、clerk、emrsys、nosto、[Boost Commerce](https://boostcommerce.net/)
-* 日本： silveregg（推荐），ES(搜索）、zeta search/algolia (搜推）
+* 
 
 
 
@@ -3837,6 +3312,8 @@ https://agently.cn/guides/workflow/index.html
 
 ## 有趣的使用例子
 
+### 宗教
+
 * 如果你穿越到中世纪，并希望利用现代人的知诗优势创立自己的宗教并招揽一百名以上的信徒，你可以通过以下步骤来实现这个目标：
 
   ### 第一步：了解历史背景和文化环境
@@ -3875,17 +3352,22 @@ https://agently.cn/guides/workflow/index.html
 
 在中世纪，科技和魔法在人们的眼中常常是难以区分的。若要展示奇迹，可以利用当时不太为人知的自然现象和简单科学技术。下面，我将详细描述如何使用四种方法，包括镜子和放大镜制造焦点火，化学反应制造彩色烟雾，以及另外两种类似的手段。
 
-### 1. 使用镜子和放大镜制造焦点火
+### 发明创造
+
+* 使用镜子和放大镜制造焦点火
 
 在中世纪，使用镜子和放大镜集中阳光点火，可以被视为一种神奇的表演。这种方法的原理基于光的折射和焦点原理，即凸透镜（如放大镜）可以将太阳光聚焦到一点，从而产生足够的热量点燃易燃物质。
 
-#### 实施步骤：
+实施步骤：
+
 1. **选择合适的镜子或放大镜**：选择一个具有良好凸面的放大镜，确保可以聚集阳光。
 2. **选择易燃材料**：干草、纸张或细木条是理想的选择，因为它们可以很容易被低温点燃。
 3. **调整焦距**：将放大镜对准太阳，调整放大镜与易燃物之间的距离，直至聚焦点最小，火焰会在几秒内点燃易燃物。
 4. **展示**：在众人面前进行，确保他们看到这是阳光通过镜子的魔法。
 
-### 2. 利用化学反应制造彩色烟雾
+
+
+* 利用化学反应制造彩色烟雾
 
 彩色烟雾的制作可以通过燃烧含有不同金属盐的化学混合物来实现，这些金属盐在燃烧时会产生不同颜色的火焰和烟雾。
 
@@ -3895,7 +3377,11 @@ https://agently.cn/guides/workflow/index.html
 3. **点燃烟雾弹**：在安全的环境下点燃包裹好的化学混合物，观察彩色的烟雾效果。
 4. **安全措施**：确保观众与烟雾源保持安全距离，并注意风向。
 
-### 3. 制造简易电池
+
+
+
+
+* 制造简易电池
 
 利用中世纪已有的材料如铜和锌板，可以制造出一个简易的伏打电池，展示电的生成。
 
@@ -3905,7 +3391,9 @@ https://agently.cn/guides/workflow/index.html
 3. **连接导线**：使用导线连接铜板和锌板，并将导线的另一端连接到一个小型电灯泡或电铃。
 4. **展示电的生成**：当电池工作时，电灯泡会亮起或电铃会响起，展示了电能的奇迹。
 
-### 4. 制造机械自动装置
+
+
+* 制造机械自动装置
 
 使用简单的齿轮和杠杆系统，制造一个小型的自动机械装置，如自动敲钟的装置。
 

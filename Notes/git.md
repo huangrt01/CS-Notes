@@ -288,11 +288,11 @@ git push origin HEAD --force
 	    - `git stash pop stash@{1}` 恢复指定的进度到工作区。stash_id是通过git stash list命令得到的。通过git stash pop命令恢复进度后，会删除当前进度
 	
 	- `git stash save --include-untracked`
-	    
+	  
 	- `git stash apply stash@{n}`
-	    
+	  
 	- `git stash list`
-	    
+	  
 	- `git stash show -p | git apply -R`
 	
 - `git cherry-pick`
@@ -372,7 +372,7 @@ git config --global user.email huangrt01@163.com
 # MacOs
 ssh-keygen -t rsa -b 4096 -C "huangrt01@163.com" # 如果rsa已占用，可用ssh-keygen -t ed25519 -C "huangruiteng@xxx.com"
 eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_rsa # MacOS带--apple-use-keychain (-K)
+ssh-add ~/.ssh/id_rsa --apple-use-keychain # MacOS带
 pbcopy < ~/.ssh/id_rsa.pub  # MacOS , Linux用xclip
 # 上github添加SSH Key
 ssh -T git@github.com

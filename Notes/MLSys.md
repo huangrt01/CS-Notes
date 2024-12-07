@@ -591,6 +591,19 @@ for prediction, label, img in zip(p,l,i):
 * 字节Ckpt https://mp.weixin.qq.com/s/4pIAZqH01Ib_OGGGD9OWQg
   * ByteCheckpoint ，一个 PyTorch 原生，兼容多个训练框架，支持 Checkpoint 的高效读写和自动重新切分的大模型 Checkpointing 系统。
 
+#### 推理框架
+
+* MLLM推理
+  * SGLang
+  * LMDeploy
+  * vLLM
+
+
+
+
+
+
+
 
 ### 搜索电商架构
 
