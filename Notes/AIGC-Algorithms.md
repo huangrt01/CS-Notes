@@ -416,6 +416,40 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 
 
 
+* 论文要点：
+
+  * 网络共现图片数据
+
+    * google开源的conceptual captioner标注有害图片
+    * 数据噪声对pretraining影响不大
+
+    ![image-20241208011219216](./AIGC-Algorithms/image-20241208011219216.png)
+
+  * query negative：q(image=query_image, text=None) 作为重要负例
+    * 对比学习，参数T越小，训练越不稳定，但可以捕捉难负例
+    * 拓展：batch内其它query都可以作为negative
+  * ![image-20241208011303953](./AIGC-Algorithms/image-20241208011303953.png)
+
+  * ![image-20241208011505081](./AIGC-Algorithms/image-20241208011505081.png)
+
+  * 在 open domain 的图像上也有非常强的性能
+
+* 结论：
+
+  * I2T 打平或微降
+  * T2I 效果好
+  * Self-Attn is better than any Cross-Attn
+    * Cross-attn: uses text embedding
+      to attend concatenated image and text embeddings.
+
+* benchmark
+  * 图搜图：we consider three benchmarks, namely TU-Berlin (Zhang et al., 2016),
+    Sketchy (Yelamarthi et al., 2018), and QuickDraw (Dey
+    et al., 2019).
+  * ![image-20241208012001604](./AIGC-Algorithms/image-20241208012001604.png)
+
+
+
 ### Data Prepare
 
 ![image-20241207212813240](./AIGC-Algorithms/image-20241207212813240.png)
@@ -446,8 +480,10 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
   * ![image-20241207215612284](./AIGC-Algorithms/image-20241207215612284.png)
   * ![image-20241207225347798](./AIGC-Algorithms/image-20241207225347798.png)
 * 改进Projection Layer
+  * internLM已经弄的很大了，存在瓶颈
   * lora思想、改进文本能力
   * ![image-20241207230013814](./AIGC-Algorithms/image-20241207230013814.png)
+  
 
 
 #### 视频、语音输入
