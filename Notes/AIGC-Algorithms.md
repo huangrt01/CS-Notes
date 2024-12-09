@@ -747,8 +747,11 @@ https://github.com/huggingface/peft
 
 * Pre-trained LLMs can be adapted to domain tasks with further fine-tuning
   * 《Large language models encode clinical knowledge》
+
 * fine-tuned LLMs fail to learn from examples
   * DAIL-SQL
+
+  
 
 ### Instruction tuning
 
@@ -765,6 +768,7 @@ https://github.com/huggingface/peft
       FLAN (Wei et al., 2022a)..[TRwI]
 
 * Instruction Tuning
+
   * Weiet al., 2022a; Sanh et al., 2022; Ouyang et al., 2022;
     Min et al., 2022; Wang et al., 2022b; Mishra et al.,
     2022; Chung et al., 2022 .[TRwI]
@@ -772,6 +776,19 @@ https://github.com/huggingface/peft
     * 缺少标注数据集
     * llm生成海量emb的成本高 
     * Retrieval with descriptions的路线：效果一般
+
+  * dataset scale提升instruction的泛化能力
+    * Recent work (Wang et al., 2022b; Chung et al., 2022)
+      show that scaling up the number of the training
+      datasets improves LLMs’ ability to adapt to new
+      task via instructions. We open-source our instruc-
+      tion data and call for community efforts to collect
+      more retrieval tasks and human-written instructions
+      as in instruction-following for LMs (Wang et al.,
+      2022b; Bach et al., 2022), to investigate whether
+      further increasing the number of the datasets (e.g.,
+      more than 100 datasets) improves zero-shot and
+      cross-task retrieval. [TRwI]
 
 #### Task-aware Retrieval with Instructions
 
@@ -822,6 +839,12 @@ https://github.com/huggingface/peft
 * 评估
   * 评测数据集：beir、lotte-pooled
   * a new evaluation setup, X2-Retrieval
+    * closed performance and pooled performance
+* 结论：
+  * ![image-20241210030107766](./AIGC-Algorithms/image-20241210030107766.png)
+  * ![image-20241210030310460](./AIGC-Algorithms/image-20241210030310460.png)
+  * 8.2 Dataset Scale
+  * dual model效果一般(110M，table-3)，猜测需要参数量比较大或者cross-encoder才能学好
 
 
 
