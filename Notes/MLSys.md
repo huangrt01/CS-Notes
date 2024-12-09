@@ -244,6 +244,18 @@ val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
   * Int8 
   * PQ
 
+### 检索加速
+
+* 基于树
+  * KD Tree
+  * Annoy: https://github.com/spotify/annoy
+* Hash
+  * Local Sensitive Hashing: https://falconn-lib.org/
+
+* PQ
+  * https://github.com/facebookresearch/faiss
+* Learning to hash
+
 #### Semantic search
 
 * [OpenAI Embedding Model](https://openai.com/blog/new-and-improved-embedding-model/)

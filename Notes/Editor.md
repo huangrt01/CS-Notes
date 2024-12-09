@@ -270,34 +270,11 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 
 * 打开终端：ctrl + `
 
-#### 开发必备插件
+#### 插件
 
-* 公共: 
-  * Code Spell Checker, GitLens, EditorConfig for VSCode, String Manipulation, Visual Studio IntelliCode
-  * Code Runner
-  * Remote - SSH
-  
-* C++: [cpplint](https://github.com/cpplint/cpplint), CodeLLDB, Header source switch, Rainbow Brackets, C++ Intellisense
-  * CMake, CMake Tools
-    * cmake插件需要cmake3.9.4以上版本的cmake的支持，ubuntu16.04以下的用户可能需要手动安装新版本的cmake
-  * Clangd
-    * [VSCode C/C++ 开发环境和调试配置：Clangd+Codelldb](https://zhangjk98.xyz/vscode-c-and-cpp-develop-and-debug-setting/)
-      * 阅读超大型项目源码的注意事项
-        * 关闭 editor.formatOnSave, clang-tidy, all-scopes-completion
-        * codeLLDB 使用（TODO）
-    
-    * 有clangd之后，不需要 C/C++ (by Microsoft) 了
-    
-  * Tabnine：AI加持的自动补全，用GPT
-  * Peacock：不同workspace可以用不同的颜色区分
-  * 调大C++插件的可用内存：
-    * ![c++](Editor/vscode-c++.png)
-  * [如何优雅的用 VScode 编写 C++ 大型项目？](https://www.zhihu.com/question/353722203/answer/2564104885)
-    * lsp(language service provider): vscode clangd
-    * 依赖 compile_commands.json
-      * 自动构建
-      * 手动生成：`mkdir build && cd build && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..`
-    * 如果linux的glibc版本较旧，需要给clangd打补丁（patchelf），链接向新版glibc
+参考「dotfiles：README」
+
+
 
 
 #### Format

@@ -279,6 +279,50 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
   * on the diagram of thought https://github.com/diagram-of-thought/diagram-of-thought
   
 
+### Learning To Rank
+
+#### XGBoost
+
+https://xgboost.readthedocs.io/en/stable/tutorials/model.html
+
+XGBoost stands for “Extreme Gradient Boosting”, where the term “Gradient Boosting” originates from the paper *Greedy Function Approximation: A Gradient Boosting Machine*, by Friedman.
+
+![image-20241210004602072](./Machine-Learning/image-20241210004602072.png)
+
+![image-20241210004925060](./Machine-Learning/image-20241210004925060.png)
+
+![image-20241210004943879](./Machine-Learning/image-20241210004943879.png)
+
+![image-20241210005132323](./Machine-Learning/image-20241210005132323.png)
+
+![illustration of structure score (fitness)](./Machine-Learning/struct_score.png)
+
+
+
+#### LTR
+
+https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html
+
+* Intro
+  * The default objective is `rank:ndcg` based on the `LambdaMART` [[2\]](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references) algorithm, which in turn is an adaptation of the `LambdaRank` [[3\]](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references) framework to gradient boosting trees. For a history and a summary of the algorithm, see [[5\]](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references)
+  * 《Unbiased LambdaMART: An Unbiased Pairwise Learning-to-Rank Algorithm》
+* 调参
+  * lambdarank_num_pair_per_sample
+
+### Position Bias
+
+* Intro
+
+  * Obtaining real relevance degrees for query results is an expensive and strenuous, requiring human labelers to label all results one by one. When such labeling task is infeasible, we might want to train the learning-to-rank model on user click data instead, as it is relatively easy to collect. Another advantage of using click data directly is that it can reflect the most up-to-date user preferences [[1\]](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references). However, user clicks are often biased, as users tend to choose results that are displayed in higher positions. User clicks are also noisy, where users might accidentally click on irrelevant documents. To ameliorate these issues, XGBoost implements the `Unbiased LambdaMART` [[4\]](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references) algorithm to debias the position-dependent click data. The feature can be enabled by the `lambdarank_unbiased` parameter; see [Parameters for learning to rank (rank:ndcg, rank:map, rank:pairwise)](https://xgboost.readthedocs.io/en/stable/parameter.html#ltr-param) for related options and [Getting started with learning to rank](https://xgboost.readthedocs.io/en/stable/python/examples/learning_to_rank.html#sphx-glr-python-examples-learning-to-rank-py) for a worked example with simulated user clicks.
+
+  
+
+
+
+
+
+
+
 ### Quantization
 
 #### 模型量化介绍
@@ -351,7 +395,7 @@ Training 量化
 #### 训练 Dense Retriever
 
 * Query2Doc paper
-  * For training dense retrievers, several factors can influence the final performance, such as hard nega- tive mining (Xiong et al., 2021), intermediate pre- training (Gao and Callan, 2021), and knowledge distillation from a cross-encoder based re-ranker (Qu et al., 2021). In this paper, we investigate two settings to gain a more comprehensive understand- ing of our method. The first setting is training DPR (Karpukhin et al., 2020) models initialized from BERTbase with BM25 hard negatives only
+  * For training dense retrievers, several factors can influence the final performance, such as hard negative mining (Xiong et al., 2021), intermediate pretraining (Gao and Callan, 2021), and knowledge distillation from a cross-encoder based re-ranker (Qu et al., 2021). In this paper, we investigate two settings to gain a more comprehensive understand- ing of our method. The first setting is training DPR (Karpukhin et al., 2020) models initialized from BERTbase with BM25 hard negatives only
   * ![image-20241117211622999](Machine-Learning/image-20241117211622999.png)
 
 
@@ -601,10 +645,7 @@ def find_most_similar(input_word):
 
 
 
-#### 以图搜图
 
-* Aliyun
-  * https://help.aliyun.com/zh/image-search/developer-reference/api-searchbypic?spm=a2c4g.11186623.help-menu-66413.d_4_3_1_3.7538364fjOQka0&scm=20140722.H_202282._.OR_help-V_1
 
 
 
