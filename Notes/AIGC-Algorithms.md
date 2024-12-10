@@ -286,15 +286,43 @@
 
 #### ViT模型，图像表示的token化
 
+##### ViT
+
 ![image-20241207210214783](./AIGC-Algorithms/image-20241207210214783.png)
 
 ![image-20241207210250921](./AIGC-Algorithms/image-20241207210250921.png)
 
-* Mask Image Modeling (Kaiming He)    Masked autoencoders ...
+#####  [ViT-MAE] Vision Transformer based on Masked Autoencoding  (Kaiming He) 
+
+* In the input image, 75% patches are randomly masked; the encoder module of ViT only takes unmasked patches as input, and produces an embedding. This embedding is then concatenated with learnable masked image patch encoding.
+* ![img](./AIGC-Algorithms/figure_6-1.png)
+
+
+
+##### SWIN Transformer
+
+* key differences between language and vision data is of **the variation in scale between image features and language tokens.**
+* ![img](./AIGC-Algorithms/figure_7.png)
+
+* SWIN is a hierarchical transformer which addresses this problem of scale variation by computing transformer representation with shifted windows. The idea is to further divide usual image patches of input image to even smaller patches. These smaller non overlapping patches are then presented to attention layers.
+
+* The output from these attention layers are then **concatenated in pairs** to combine attention output the two higher level patches, this concatenated output is presented to next set of attention modules.
+* This hierarchical propagation through attention layers, allows transformer to **pay attention to smaller scale features and deal with variation in scales for image data.** 
+
+##### SWIN v.s ViT
+
+* https://www.reddit.com/r/MachineLearning/comments/1b3bhbd/d_why_is_vit_more_commonly_used_than_swin/
+  * vit的scaling更好
+* https://stuartfeeser.com/blogs/ai-engineers/swin-vs-vit/index.html
+  * 增大patch数量N时，swin效率更高，vit O(N^2), swin O(N)
+  * swin对细节捕捉更好
 
 #### 基于transformer的图像-文本联合建模
 
 ![image-20241207210505919](./AIGC-Algorithms/image-20241207210505919.png)
+
+* BEit
+  * ![img](./AIGC-Algorithms/figure_5.png)
 
 #### 大规模图文Token对齐模型 CLIP
 
@@ -1618,11 +1646,37 @@ response_of_comparation = response.choices[0].message.content return response_of
 * Query Expansion
   * random crop
 
-### 特征抽取
+### 视觉特征
 
 [SIFT Meets CNN: A Decade Survey of Instance Retrieval](https://arxiv.org/pdf/1608.01807.pdf)
 
 ![275f8067-4c5a-42ba-ae58-66b6f7c93067](./AIGC-Algorithms/275f8067-4c5a-42ba-ae58-66b6f7c93067.png)
+
+
+
+* [Image Similarity for Brand Detection: A Comparison Between BEiT, SWIN and ViT-MAE](https://bolster.ai/blog/image-similarity-beit-swin-vit-mae)
+  * 场景：brand识别，识别phishing attack.
+  * 算法方案讨论：
+    * CNN分类：label质量要求高、数据分布均匀性要求高
+  * 历史方案：
+    * CV Hashing: Secure Hashing Algorithm or SHA-> a 64 bit hexadecimal encoding，只能召回原图。。。
+  * Embedding Model
+    * BERT Pre-training of image transformers (BEiT)
+    * SWIN
+    * ViT-MAE
+    * 结论：SWIN最强
+
+* [国旗识别 - Build an AI Image Similarity Search with Transformers — ViT, CLIP, DINO-v2, and BLIP-2](https://medium.com/@tapanbabbar/build-an-image-similarity-search-with-transformers-vit-clip-efficientnet-dino-v2-and-blip-2-5040d1848c00)
+  * **CLIP** (Contrastive Language-Image Pre-training): Built by OpenAI, it learns to match images with text. Not a bad choice for our similarity search.
+  * **ViT** (Vision Transformer): ViT revolutionizes image processing by treating images as sequences, similar to how Transformers handle text.
+  * **BLIP**: A vision-language model with a focus on aligning visual and textual content.
+  * **EfficientNet**: Known for its efficiency, this model is great for image recognition tasks.
+  * **DINO**: A self-supervised transformer model that excels at learning features from images.
+  * **VGG16**: A classic convolutional neural network (CNN) that’s been around for years and still holds its own in image recognition tasks.
+  * Caution: Contextual Bias in Similarity Models
+
+* https://github.com/huggingface/notebooks/blob/main/examples/image_similarity.ipynb
+  * 完整的torch demo
 
 
 
