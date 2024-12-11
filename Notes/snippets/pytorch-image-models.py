@@ -1,3 +1,11 @@
+import base64
+from PIL import Image
+from io import BytesIO
+
+image_data = base64.b64decode(base64_string)
+img = Image.open(BytesIO(image_data))
+
+
 ### EfficientNet: Extracts flag features by averaging the spatial dimensions of the last hidden layer’s outputs, focusing on fine-grained patterns.
 
 image_processor = AutoImageProcessor.from_pretrained("google/efficientnet-b7")
@@ -74,6 +82,8 @@ embedding = embedding[:, 0, :].squeeze(1)
 ### SWIN
 
 https://huggingface.co/microsoft/swinv2-large-patch4-window12-192-22k
+
+latent_dim: 1536
 
 
 ### VGG16: A CNN model that outputs flag embeddings by applying a stack of convolution layers, emphasizing hierarchical image representations.

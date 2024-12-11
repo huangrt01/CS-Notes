@@ -673,7 +673,7 @@ def find_most_similar(input_word):
   * 不太适合离散输入
 * [AutoTVM 探秘（二）](https://reku1997.gitee.io/2019/12/31/autotvm-2/)
 
-### 特征压缩
+### 特征压缩、降维
 
 * According to [JL-lemma](https://en.wikipedia.org/wiki/Johnson–Lindenstrauss_lemma), [random projection](https://en.wikipedia.org/wiki/Random_projection) reduces the dimensionality of data while approximately preserving the pairwise distances between data points.
 
@@ -686,6 +686,10 @@ def find_most_similar(input_word):
   * 对比：比[AutoInt](https://arxiv.org/pdf/1810.11921.pdf)计算量小；比[DCN-V2](https://arxiv.org/pdf/2008.13535.pdf)线上效果好
 
 * Q-Former
+
+* Random projection
+  * Random projection in dimensionality reduction: Applications to image and text data
+
 
 ### 特征交叉
 
