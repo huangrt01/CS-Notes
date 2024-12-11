@@ -96,7 +96,7 @@ Case Study Setup:
 * 云+智能
   * “我的长沙”APP：“融媒体+城市服务”融合平台
 
-![image-20211202153930004](云原生/rec-value.png)
+![image-20211202153930004](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/rec-value.png)
 
 
 
@@ -329,7 +329,7 @@ e420a97835d9692df5b90b47e7951bc3fad48269eb2c8b1fa782527e0ae91c8e
 
   * 在k8s层面：cpu.cfs_quota_us/cpu.cfs_period_us == pod的cpu limit（也就是grafana面板里面 CPU Core (limit) 这个指标）
 
-![1280X1280 (1)](云原生/cpu-stat.png)
+![1280X1280 (1)](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/cpu-stat.png)
 
 ##### [namespace技术](https://segmentfault.com/a/1190000041096866?utm_source=sf-similar-article)
 
@@ -469,7 +469,7 @@ docker-compose up -d
 
 ### Kubernetes
 
-![kubernetes](云原生/kubernetes.png)
+![kubernetes](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/kubernetes.png)
 
 **Kubernetes 架构核心组件**
 
@@ -607,6 +607,8 @@ https://aws.amazon.com/cn/ec2/instance-types/
 
 ### ToB
 
+#### Intro
+
 * [一篇分析 ToB 与 ToC 技术上区别的文章](https://zhuanlan.zhihu.com/p/341358485)
   * tob更注重数据设计、数据一致性
   * toc：分布式解决方案、花式存储、异步化
@@ -614,6 +616,43 @@ https://aws.amazon.com/cn/ec2/instance-types/
   * 产品线相对可控，单个产品硬件成本低、可以开渠道做销售。需要的营销方向的人手相对少。渠道要分润，所以毛利低，项目周期相对短一些。
     * 渠道不是越多越好：市场中渠道太多，区域市场价格竞争激烈，渠道毛利就会降低，渠道伙伴不赚钱，就没有积极性。
   * 服务类：做项目服务业务，产品方向多，难以标准化，单个产品硬件成本高，需要很多人手。需要自己做项目交付，所以毛利高项目周期长。
+
+#### ToB 阶段
+
+* PMF Product Market Fit / 产品符合市场匹配
+
+  * B端产品（硬件或软件）达到PMF的一种判断标准可能是获得20-30个企业级付费
+
+  * 验证点：
+
+    * 核心卖点
+      * 如何打动客户
+    * 报价清单
+      * 客户愿意为哪些关键特性付费
+
+  * 各环节状态
+
+    * 销售
+    * 报价
+    * 案例
+    * 优劣势认知
+    * 产品销售模式（免费、捆绑、付费）
+
+  * 新进入者定价：
+
+    * B端：行业领导者的70%
+    * C端：行业领导者的50%
+
+  * 周期：
+
+    * 12-18个月
+
+  * 其它：
+
+    * 小微客户SMB的付费不能作为PMF的一个验证标准
+    * 企业级：1000人以上的企业和组织
+
+    
 
 #### 火山引擎业务
 
@@ -834,7 +873,7 @@ https://aws.amazon.com/cn/ec2/instance-types/
     * 经验复用
     * 经验沉淀到工具（DataLeap）
 
-![img](云原生/bytedance-data-platform.png)
+![img](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/bytedance-data-platform.png)
 
 * 如何将抖音的能力融入火山中
   * 火山做的包括公域和私域的一些事情，比如素材层面的剪映、投放层面通过火山引擎获得更细的用户画像颗粒度、直播间的装修、达人的匹配
@@ -904,7 +943,7 @@ rclone copy README.txt tos:ABC --s3-no-head-object
 
 http://xhslink.com/byZMGl
 
-![image-20221205185439684](云原生/tob-stack.png)
+![image-20221205185439684](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/tob-stack.png)
 
 * toB软件市场的本质和趋势
   * IaaS (55%)：稳定成熟，多云融合趋势，中国电子云
@@ -942,7 +981,7 @@ http://xhslink.com/byZMGl
     * `净利率=净利润/销售收入*100%=(销售收入-销售成本-各项期间费用-税金)/ 销售收入*100%`
     * 人效比=营业收入/人员总数
 
-![image-20221205211302189](云原生/tob-data.png)
+![image-20221205211302189](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/tob-data.png)
 
 
 
