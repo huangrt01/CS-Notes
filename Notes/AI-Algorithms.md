@@ -555,7 +555,7 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
   * https://github.com/BradyFU/Awesome-Multimodal-Large-Language-Models/tree/Evaluation
 * ![image-20241207212642821](./AIGC-Algorithms/image-20241207212642821.png)
 
-### 应用于 切图
+### 应用于 切图、物体匹配
 
 #### Talking to DINO: Bridging Self-Supervised Vision Backbones with Language for Open-Vocabulary Segmentation
 
@@ -577,6 +577,10 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 ![image-20241214121142744](./AIGC-Algorithms/image-20241214121142744.png)
 
 ![image-20241214121543467](./AIGC-Algorithms/image-20241214121543467.png)
+
+#### [todo] OmniGlue: Generalizable Feature Matching with Foundation Model Guidance
+
+
 
 
 
@@ -1707,6 +1711,21 @@ response_of_comparation = response.choices[0].message.content return response_of
   * Instead of taking a single attention layer, attention rollout [1] proposed to combine all attention maps in a linear way and to reassign all attention scores.
   * 《Towards interpretable deep metric learning with structural matching》
 
+* Transformers for high-resolution images [PEaLF]
+  * [50] designed a pyramidal architecture and addresses
+    complexity by gradually reducing the spatial resolution of keys and values.
+  * lowering spatial resolution at each layer for efficient computations
+    * [17] utilized pooling to reduce the resolution
+      across the spatial and temporal dimensions,
+    * [27] used local attention with
+      shifted windows and patch merging.
+    * XCiT [1] proposed to replace the
+      quadratic self-attention operation with a “transposed” attention operation be-
+      tween channels which they call “cross-covariance attention” (XCA).
+      * 特点是深层网络也保留局部特征
+
+
+
 
 
 ### 预处理
@@ -1717,6 +1736,18 @@ response_of_comparation = response.choices[0].message.content return response_of
   * random crop
 
 ### 视觉特征
+
+#### Intro
+
+* Global feature和local feature
+  * global feature
+    * compact representation
+    * can be learned so that it is in-
+      variant to viewpoint and illumination
+    * the risk of losing information about
+      the spatial arrangement of visual elements
+
+![image-20241215014023835](./AIGC-Algorithms/image-20241215014023835.png)
 
 #### 各类backbone
 
@@ -1818,7 +1849,54 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 > https://github.com/PXThanhLam/ViTGaL
 
+* ViTGaL
+  * Vision Transformer based Global and Local features (ViT-
+    GaL). 
+  * add a multi-atrous convolution to the output of the
+    transformer encoder layer of ViTs to simulate the image pyramid used in
+    standard image retrieval algorithms.
+  * use class attention to aggregate the token embeddings output from the multi-atrous layer to get both global and local features.
 
+* Intro
+
+  * ViT的深层patch embedding，具备局部特征
+    * a recent study [39] found that spatial information from the input is
+      preserved in ViT even as the final layer.
+    * using patch embeddings from the final layer of ViT yields the best result
+  * ViT的问题
+    * 景色识别，高精度图片很重要，模型难训练
+      * 方案1：The dominant approach is reducing the
+        spatial dimension of input resolutions at every block of layers, similar to CNN
+        [27,26,50]
+      * 方案2：XCiT [1] replaced a self-attention between tokens with a
+        “transposed” attention between channels which they call “cross-covariance attention” (XCA).
+
+  * image pyramid
+    * we proposed to simulate an image pyramid with multi-atrous convolutions [10]
+
+![image-20241215020433590](./AIGC-Algorithms/image-20241215020433590.png)
+
+* 模型
+  * merge all the attention scores in different attention
+    heads in the class attention layer and extract associated patch embeddings with
+    the top scores.
+    * class attention layer. This layer is identical to the
+      transformer encoder block used in ViT, except the self-attention operation is
+      only calculated between the cls token embedding (treated as a query) and the
+      token embeddings of image patches (treated as keys and values).
+
+* Local feature降维
+  * [23] shows that
+    whitening down weights co-occurrences of local features, which is generally ben-
+    eficial for retrieval applications.
+  * using a small autoencoder (AE) module [21] following
+    the state-of-the-art dimensionality reduction method used in [9]
+    * use the attention scores from the autoencoder network as key point detection scores to extract top local descriptors
+    * For local features matching, we use RANSAC [18] with an affine model
+
+* 结论：
+  * multi-atrous效果好，不需要multi-scale
+  * rerank效果好
 
 
 
