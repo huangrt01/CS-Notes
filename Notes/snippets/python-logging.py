@@ -1,25 +1,26 @@
 import logging
 
 def init_logging(log_file):
-    fmt = '%(asctime)-15s %(filename)s:%(lineno)s %(levelname)s %(message)s'
+  fmt = '%(asctime)-15s %(pathname)s:%(lineno)s %(levelname)s %(message)s'
 
-    rotating_handler = logging.handlers.RotatingFileHandler(log_file,
-                                                            maxBytes=10 *
-                                                            1024 * 1024,
-                                                            backupCount=5)
-    rotating_handler.setLevel(logging.DEBUG)
-    rotating_handler.setFormatter(
-        logging.Formatter(fmt=fmt, datefmt='%Y-%m-%d %H:%M:%S'))
+  rotating_handler = RotatingFileHandler(log_file,
+                                         maxBytes=10 * 1024 * 1024,
+                                         backupCount=5)
+  rotating_handler.setLevel(logging.INFO)
+  rotating_handler.setFormatter(
+      logging.Formatter(fmt=fmt, datefmt='%Y-%m-%d %H:%M:%S'))
 
-    stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(logging.INFO)
-    stream_handler.setFormatter(
-        logging.Formatter(fmt=fmt, datefmt='%Y-%m-%d %H:%M:%S'))
+  stream_handler = logging.StreamHandler()
+  stream_handler.setLevel(logging.DEBUG)
+  stream_handler.setFormatter(
+      logging.Formatter(fmt=fmt, datefmt='%Y-%m-%d %H:%M:%S'))
 
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(rotating_handler)
-    logger.addHandler(stream_handler)
+  logger = logging.getLogger("autoops")
+  for handler in logger.handlers:
+    logger.removeHandler(handler)
+  logger.setLevel(logging.INFO)
+  logger.addHandler(rotating_handler)
+  logger.addHandler(stream_handler)
 
 
 if __name__ == '__main__':

@@ -16,7 +16,7 @@ for f in ["config.json", "pytorch_model.bin", "preprocessor_config.json"]:
 from typing import Optional, Any
 from pydantic import BaseModel
 
-import logging, time
+import logging, time, asyncio
 import torchvision.transforms as T
 import torch
 from transformers import AutoImageProcessor, AutoModel
@@ -99,10 +99,15 @@ class EmbeddingModelStore:
         hidden_dim=model.config.hidden_size)
     logging.info(f"successfully load model {model_name}")
 
-  def get_embeddings(self, images, model_name):
+  def get_embeddings(self, images: str | list[str], model_name):
+    return asyncio.run(self.async_get_embeddings(images, model_name))
+
+  async def async_get_embeddings(self, images: str | list[str], model_name):
     assert isinstance(images, list) or isinstance(images, str), images
+    single_image = False
     if isinstance(images, str):
       images = [images]
+      single_image = True
     if model_name not in self._model_stores:
       self._load_model(model_name)
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -111,7 +116,7 @@ class EmbeddingModelStore:
         Image.open(BytesIO(base64.b64decode(base64_string)))
         for base64_string in images
     ]
-    with Timer(func_name=f'{model_name}_get_embeddings', force=True):
+    with Timer(f'{model_name}_get_embeddings', force=True):
       image_batch_transformed = model.image_processor(
           images, return_tensors='pt')['pixel_values'].to(device)
       new_batch = {"pixel_values": image_batch_transformed.to(device)}
@@ -121,4 +126,7 @@ class EmbeddingModelStore:
         else:
           embeddings = model.model.to(device)(**new_batch).last_hidden_state
           embeddings = embeddings[:, 0].cpu()
-    return embeddings
+    if single_image:
+      embeddings = embeddings[0]
+    return embeddings.tolist()
+
