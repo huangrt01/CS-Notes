@@ -8,13 +8,13 @@
   * https://arxiv.org/abs/2206.07682
   * 100TB=50000Billion
 
-![截屏2023-11-19 05.00.35](AIGC-Algorithms/emergent-1.png)
+![截屏2023-11-19 05.00.35](./AI-Algorithms/emergent-1.png)
 
-![image-20231119050100619](AIGC-Algorithms/emergent-2.png)
+![image-20231119050100619](./AI-Algorithms/emergent-2.png)
 
-![image-20231119050435217](AIGC-Algorithms/history-1.png)
+![image-20231119050435217](./AI-Algorithms/history-1.png)
 
-![Compute required for training LLMs](AIGC-Algorithms/Compute-for-Training-LLMs-GPT3-paper-672x385.jpg)
+![Compute required for training LLMs](./AI-Algorithms/Compute-for-Training-LLMs-GPT3-paper-672x385.jpg)
 
 
 
@@ -94,19 +94,89 @@
   * 介绍了算法沿袭
   * Moravec's Paradox: AI做不到一些人类很容易做的事情
 
-![image-20241019021542281](AIGC-Algorithms/image-20241019021542281.png)
+![image-20241019021542281](./AI-Algorithms/image-20241019021542281.png)
 
-### token
+### Tokenization 词元化
 
 * token是LLM训练推理的最小单元，由tokenizer模型将文本切成token
   * 可能是 1/3 个汉字（因为汉字的UTF-8编码是三个字节，取一个字节）、一个汉字、半个单词等
   * 和模型设计有关：
     * 多语言大模型：汉字拆开
-    * 中文大模型：一个token对应一个汉字
+    * 中文大模型比如ChatGLM：一个汉字大概1 token
+    * OpenAI的官网上，1 Tokens大概是0.75个英文单词上下（0.5个汉字上下）
   * 和消耗算力有关
     * ->中文大模型更便宜
+  * e.g.
+    * encoding = encod + ing
+    * encoded = encod + ed
+    * subword = sub + word
+* Tiktoken
+  * 为什么用子词：减少词表的数量
+    * 汉字有10万个
+
+
+```
+如果输入内容是：海南麒麟瓜<br/>
+  海, unicode:28023, utf8:b'\xe6\xb5\xb7'<br/>
+  南, unicode:21335, utf8:b'\xe5\x8d\x97'<br/>
+  麒, unicode:40594, utf8:b'\xe9\xba\x92'<br/>
+  麟, unicode:40607, utf8:b'\xe9\xba\x9f'<br/>
+  瓜, unicode:29916, utf8:b'\xe7\x93\x9c'<br/><br/>
+  
+通过tiktoken处理之后得到的Token序列是：（共11个Token）<br/>
+  b'\xe6\xb5\xb7'<br/>
+  b'\xe5\x8d\x97'<br/>
+  b'\xe9'<br/>
+  b'\xba'<br/>
+  b'\x92'<br/>
+  b'\xe9'<br/>
+  b'\xba'<br/>
+  b'\x9f'<br/>
+  b'\xe7'<br/>
+  b'\x93'<br/>
+  b'\x9c'<br/><br/>
+```
+
+
+
+* https://huggingface.co/docs/transformers/en/tokenizer_summary
+  * Byte-level BPE
+  * GPT-2 has a vocabulary size of 50,257, which corresponds to the 256 bytes base tokens, a special end-of-text token and the symbols learned with 50,000 merges.
+
+### Embedding
+
+* one-hot的缺点：
+  * 过于稀疏
+  * 无法体现距离
+  * 没有数学或逻辑关系
+    * e.g. 国王 - 男人 + 女人 = 女王
+
+* NLP Embedding
+  * WordVec
+  * CLIP
+  * OpenAI Embedding
+* 每个Token对应一个embedding
+  * GPT-3: 每个token **12228维**
+  * 经典的transformer，每个向量只有512维
+
+### Encoder & Decoder
+
+* encoder用于分析，decoder用于生成
+
+### 从 RNN 到 Transformer
+
+* 以RNN为核心的Encoder Decoder有以下几个重要的问题
+  * 信息丢失：每次传递乘了系数，丢失前面的信息
+  * 无法处理较长句子：同上
+  * 不能并行计算
+
+
 
 ## Attention Is All You Need
+
+![image-20241216030117146](./AI-Algorithms/image-20241216030117146.png)
+
+### Intro
 
 * Intro
   * connect the encoder and decoder through an attention mechanism. 
@@ -115,11 +185,12 @@
   
 * 公式
   * multi-head self-attention (MSA) + multi-layer perceptron (MLP) blocks
-  * ![image-20241213200148729](./AIGC-Algorithms/image-20241213200148729.png)
+  * ![image-20241213200148729](./AI-Algorithms/image-20241213200148729.png)
   
 * 模型结构是什么？
   * 过N个注意力层，再过一个full connection
   * Attention(Q,K, V) = softmax(QK^T/sqrt(d_k))V
+    * normalization
 * 模型参数是什么？
   * 词嵌入向量
     * learnable?
@@ -133,16 +204,42 @@
     * Encoder: 自注意力
     * Decoder：Q用outputs embedding做masked attention后的结果，K、V用encoder结果
     * 表征向量512维
-  * masked multi-head attention保证输出对输入的感知序列不会超出长度
+  * masked multi-head attention
+    * 保证输出对输入的感知序列不会超出长度：防止在训练过程中模型看到未来的信息，确保预测是基于之前的输出
   * 自注意力机制：Q（输入矩阵）、K（字典）、V
     * 用1/(dk)^(1/2) scale了一下QK的乘法，可能是为了防止gradient太小
     * Dot product的结果方差比additive attention的方差大
 
-![image-20231025202735456](AIGC-Algorithms/transformer.png)
+* Multi-head attention: 多头自注意力机制
 
-* Multi-head attention
+![image-20231025203852956](./AI-Algorithms/multi-head-attention.png)
 
-![image-20231025203852956](AIGC-Algorithms/multi-head-attention.png)
+![image-20241216030854804](./AI-Algorithms/image-20241216030854804.png)
+
+![image-20241216030905082](./AI-Algorithms/image-20241216030905082.png)
+
+* 自注意力：
+  * 本质上是信息的聚合
+  * 经典的transformer：6层
+  * GPT-3: 96层
+
+
+
+
+
+### 推理
+
+* 推理：
+  * `<sos>`（start of sentence）
+  * 不断过decoder
+  * 直到生成eos
+* 推理和训练的区别
+  * 推理阶段的操作和训练阶段的解码器操作类似，但是训练阶段有目标序列的真实值作为输入来计算损失并进行反向传播训练，而推理阶段是根据之前生成的单词不断生成新的单词。
+  * 在训练时，解码器的输入是已知的目标序列，在推理时，解码器的输入是逐步生成的单词序列。
+
+
+
+
 
 ### Implementation
 
@@ -160,18 +257,22 @@
 
 ## BERT
 
-![image-20241019021744575](AIGC-Algorithms/bert.png)
+![image-20241019021744575](./AI-Algorithms/bert.png)
 
 ## GPT-2
 
-![image-20241019021839037](AIGC-Algorithms/image-20241019021839037.png)
+![image-20241019021839037](./AI-Algorithms/image-20241019021839037.png)
 
 * 自回归架构
   * 局限性：只接受离散样本
+  * 一个一个字输出
 
 
 
 * TODO1: https://jalammar.github.io/illustrated-gpt2/
+* https://github.com/openai/gpt-2
+
+
 
 ## ChatGPT
 
@@ -261,7 +362,7 @@
   * 听雨声，判断路面情况，今天是否适合出门
   * 概念：单模态、多模态、跨模态、多模态语言大模型
   * 单模态
-    * ![image-20241124014848392](AIGC-Algorithms/image-20241124014848392.png)
+    * ![image-20241124014848392](./AI-Algorithms/image-20241124014848392.png)
     * LVM
   * 跨模态：
     * 音频->视觉：数字人
@@ -284,7 +385,7 @@
         * stable-audio-open-1.0
   
   * 多模态模型
-    * ![image-20241207210031737](./AIGC-Algorithms/image-20241207210031737.png)
+    * ![image-20241207210031737](./AI-Algorithms/image-20241207210031737.png)
 
 ### Literature Review
 
@@ -306,21 +407,21 @@
 
 ##### ViT
 
-![image-20241207210214783](./AIGC-Algorithms/image-20241207210214783.png)
+![image-20241207210214783](./AI-Algorithms/image-20241207210214783.png)
 
-![image-20241207210250921](./AIGC-Algorithms/image-20241207210250921.png)
+![image-20241207210250921](./AI-Algorithms/image-20241207210250921.png)
 
 #####  [ViT-MAE] Vision Transformer based on Masked Autoencoding  (Kaiming He) 
 
 * In the input image, 75% patches are randomly masked; the encoder module of ViT only takes unmasked patches as input, and produces an embedding. This embedding is then concatenated with learnable masked image patch encoding.
-* ![img](./AIGC-Algorithms/figure_6-1.png)
+* ![img](./AI-Algorithms/figure_6-1.png)
 
 
 
 ##### SWIN Transformer
 
 * key differences between language and vision data is of **the variation in scale between image features and language tokens.**
-* ![img](./AIGC-Algorithms/figure_7.png)
+* ![img](./AI-Algorithms/figure_7.png)
 
 * SWIN is a hierarchical transformer which addresses this problem of scale variation by computing transformer representation with shifted windows. The idea is to further divide usual image patches of input image to even smaller patches. These smaller non overlapping patches are then presented to attention layers.
 
@@ -337,16 +438,16 @@
 
 #### 基于transformer的图像-文本联合建模
 
-![image-20241207210505919](./AIGC-Algorithms/image-20241207210505919.png)
+![image-20241207210505919](./AI-Algorithms/image-20241207210505919.png)
 
 * BEit
-  * ![img](./AIGC-Algorithms/figure_5.png)
+  * ![img](./AI-Algorithms/figure_5.png)
 
 #### 大规模图文Token对齐模型 CLIP
 
-![image-20241207210538634](./AIGC-Algorithms/image-20241207210538634.png)
+![image-20241207210538634](./AI-Algorithms/image-20241207210538634.png)
 
-![image-20241207210618154](./AIGC-Algorithms/image-20241207210618154.png)
+![image-20241207210618154](./AI-Algorithms/image-20241207210618154.png)
 
 #### 多模态大语言模型
 
@@ -363,7 +464,7 @@
 
 * Gemini：原生多模态大模型
 
-![image-20241207211915709](./AIGC-Algorithms/image-20241207211915709.png)
+![image-20241207211915709](./AI-Algorithms/image-20241207211915709.png)
 
 * GPT-4o
   * GPT 4o本质上是要探索不同模态相互融合的大一统模型应该怎么做的问题，对于提升大模型的智力水平估计帮助不大
@@ -417,7 +518,7 @@ The **BGE-Visualized-M3** model is a prominent example of the Visualized BGE arc
 
 #### VISTA (Visualized Text Embedding for Universal Multimodal Retrieval)
 
-![img](./AIGC-Algorithms/rygUM4x9yYMvOzaCGkxrVuR0.png)
+![img](./AI-Algorithms/rygUM4x9yYMvOzaCGkxrVuR0.png)
 
 **What is VISTA?**
 
@@ -437,7 +538,7 @@ VISTA (Visualized Text Embedding for Universal Multimodal Retrieval) takes the a
 
 #### MagicLens by Google 
 
-![img](./AIGC-Algorithms/ZlUMrMOnFObZ7sRbqFe7d8QYZcI.png)
+![img](./AI-Algorithms/ZlUMrMOnFObZ7sRbqFe7d8QYZcI.png)
 
 **What is MagicLens?**
 
@@ -464,41 +565,41 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 
 ### Data Prepare
 
-![image-20241207212813240](./AIGC-Algorithms/image-20241207212813240.png)
+![image-20241207212813240](./AI-Algorithms/image-20241207212813240.png)
 
 * Trick
   * image放在prompt结尾，比较少受文本信息干扰
 
-![image-20241207212906560](./AIGC-Algorithms/image-20241207212906560.png)
+![image-20241207212906560](./AI-Algorithms/image-20241207212906560.png)
 
 * prompt
 
-![image-20241207215105555](./AIGC-Algorithms/image-20241207215105555.png)
+![image-20241207215105555](./AI-Algorithms/image-20241207215105555.png)
 
 ### Training - Llava
 
 * 细节：
   * 容易过拟合，--num_train_epochs=1，一般是从头训练
 
-![image-20241207212730097](./AIGC-Algorithms/image-20241207212730097.png)
+![image-20241207212730097](./AI-Algorithms/image-20241207212730097.png)
 
-![image-20241207213002988](./AIGC-Algorithms/image-20241207213002988.png)
+![image-20241207213002988](./AI-Algorithms/image-20241207213002988.png)
 
 #### 算法迭代
 
 * 改进Visual Encoder
-  * ![image-20241207215512977](./AIGC-Algorithms/image-20241207215512977.png)
-  * ![image-20241207215556328](./AIGC-Algorithms/image-20241207215556328.png)
-  * ![image-20241207215612284](./AIGC-Algorithms/image-20241207215612284.png)
-  * ![image-20241207225347798](./AIGC-Algorithms/image-20241207225347798.png)
+  * ![image-20241207215512977](./AI-Algorithms/image-20241207215512977.png)
+  * ![image-20241207215556328](./AI-Algorithms/image-20241207215556328.png)
+  * ![image-20241207215612284](./AI-Algorithms/image-20241207215612284.png)
+  * ![image-20241207225347798](./AI-Algorithms/image-20241207225347798.png)
 * 改进Projection Layer
   * lora思想、改进文本能力
-  * ![image-20241207230013814](./AIGC-Algorithms/image-20241207230013814.png)
+  * ![image-20241207230013814](./AI-Algorithms/image-20241207230013814.png)
 
 
 #### 视频、语音输入
 
-![image-20241207230602139](./AIGC-Algorithms/image-20241207230602139.png)
+![image-20241207230602139](./AI-Algorithms/image-20241207230602139.png)
 
 
 
@@ -509,43 +610,43 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
   * 阶段二：decoder段输出结果与指令对齐，只更新output projection layer
   * 阶段三：
 
-![image-20241207231036385](./AIGC-Algorithms/image-20241207231036385.png)
+![image-20241207231036385](./AI-Algorithms/image-20241207231036385.png)
 
-![image-20241207231155505](./AIGC-Algorithms/image-20241207231155505.png)
-
-
+![image-20241207231155505](./AI-Algorithms/image-20241207231155505.png)
 
 
 
-![image-20241207230626127](./AIGC-Algorithms/image-20241207230626127.png)
+
+
+![image-20241207230626127](./AI-Algorithms/image-20241207230626127.png)
 
 
 
-![image-20241207230702605](./AIGC-Algorithms/image-20241207230702605.png)
+![image-20241207230702605](./AI-Algorithms/image-20241207230702605.png)
 
-![image-20241207230732346](./AIGC-Algorithms/image-20241207230732346.png)
+![image-20241207230732346](./AI-Algorithms/image-20241207230732346.png)
 
-![image-20241207230840157](./AIGC-Algorithms/image-20241207230840157.png)
+![image-20241207230840157](./AI-Algorithms/image-20241207230840157.png)
 
-![image-20241207230853889](./AIGC-Algorithms/image-20241207230853889.png)
+![image-20241207230853889](./AI-Algorithms/image-20241207230853889.png)
 
-![image-20241207230909253](./AIGC-Algorithms/image-20241207230909253.png)
+![image-20241207230909253](./AI-Algorithms/image-20241207230909253.png)
 
-![image-20241207230919593](./AIGC-Algorithms/image-20241207230919593.png)
+![image-20241207230919593](./AI-Algorithms/image-20241207230919593.png)
 
-![image-20241207230938271](./AIGC-Algorithms/image-20241207230938271.png)
+![image-20241207230938271](./AI-Algorithms/image-20241207230938271.png)
 
-![image-20241207230956810](./AIGC-Algorithms/image-20241207230956810.png)
+![image-20241207230956810](./AI-Algorithms/image-20241207230956810.png)
 
-![image-20241207231244953](./AIGC-Algorithms/image-20241207231244953.png)
+![image-20241207231244953](./AI-Algorithms/image-20241207231244953.png)
 
 ### 开源项目
 
-![image-20241207230532748](./AIGC-Algorithms/image-20241207230532748.png)
+![image-20241207230532748](./AI-Algorithms/image-20241207230532748.png)
 
-![image-20241207230211854](./AIGC-Algorithms/image-20241207230211854.png)
+![image-20241207230211854](./AI-Algorithms/image-20241207230211854.png)
 
-![image-20241207230235619](./AIGC-Algorithms/image-20241207230235619.png)  
+![image-20241207230235619](./AI-Algorithms/image-20241207230235619.png)  
 
 
 
@@ -553,7 +654,7 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 
 * MME评测集
   * https://github.com/BradyFU/Awesome-Multimodal-Large-Language-Models/tree/Evaluation
-* ![image-20241207212642821](./AIGC-Algorithms/image-20241207212642821.png)
+* ![image-20241207212642821](./AI-Algorithms/image-20241207212642821.png)
 
 ### 应用于 切图、物体匹配
 
@@ -561,7 +662,7 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 
 * 核心思路：通过learned mapping，对vit patch embedding和clip category embedding对齐，做实体分割
 
-![image-20241213203708145](./AIGC-Algorithms/image-20241213203708145.png)
+![image-20241213203708145](./AI-Algorithms/image-20241213203708145.png)
 
 * 算法：
   * warp text embedding
@@ -574,9 +675,9 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 
 
 
-![image-20241214121142744](./AIGC-Algorithms/image-20241214121142744.png)
+![image-20241214121142744](./AI-Algorithms/image-20241214121142744.png)
 
-![image-20241214121543467](./AIGC-Algorithms/image-20241214121543467.png)
+![image-20241214121543467](./AI-Algorithms/image-20241214121543467.png)
 
 #### [todo] OmniGlue: Generalizable Feature Matching with Foundation Model Guidance
 
@@ -601,7 +702,7 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 * Llava衍生的应用
   * 图表问答生成：ChartLlama-code
 
-![image-20241207213052536](./AIGC-Algorithms/image-20241207213052536.png)
+![image-20241207213052536](./AI-Algorithms/image-20241207213052536.png)
 
 
 
@@ -611,7 +712,7 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 
 * VideoPoet
 
-![image-20241207231303500](./AIGC-Algorithms/image-20241207231303500.png)
+![image-20241207231303500](./AI-Algorithms/image-20241207231303500.png)
 
 * [一锤降维！解密OpenAI超级视频模型Sora技术报告，虚拟世界涌现了](https://mp.weixin.qq.com/s/ODsebK3fEc-adRDwRVDhQA?poc_token=HMxd12WjhN3a1nz74MaIrMjep8dIn2Cj_NTdFwef)
   * 扩展视频生成模型的规模，是构建模拟物理世界通用模拟器的非常有希望的方向
@@ -672,7 +773,7 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
     * self-supervised learning需要冗余信息才能学好
       * 高度压缩==随机 -> 学不好
 
-![image-20241019022443123](AIGC-Algorithms/image-20241019022443123.png)
+![image-20241019022443123](./AI-Algorithms/image-20241019022443123.png)
 
 * Objective-Driven AI
   * 转化为优化问题，让决策output接近objective，需要先优化perception
@@ -680,9 +781,9 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
     * 有zero-shot能力
     * search/plan
 
-![image-20241019023330137](AIGC-Algorithms/image-20241019023330137.png)
+![image-20241019023330137](./AI-Algorithms/image-20241019023330137.png)
 
-![image-20241019163724135](AIGC-Algorithms/image-20241019163724135.png)
+![image-20241019163724135](./AI-Algorithms/image-20241019163724135.png)
 
 * 系统
   * Model Predictive Control（MPC）
@@ -693,29 +794,29 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
   * 观察婴儿对世界模型的认知路径，可以启发各种属性的认知顺序和难度（比如对重力的认知）
   * generative + self-supervised行不通
 
-![image-20241019165227218](AIGC-Algorithms/image-20241019165227218.png)
+![image-20241019165227218](./AI-Algorithms/image-20241019165227218.png)
 
 * Joint Embedding Predictive Architecture
   * 预测能力的本质是我们找到我们观察的事物的良好表征
     * e.g. 电商场景下的类目体系，类目是对商品的向上一层的抽象表征
 
-![image-20241019165308598](AIGC-Algorithms/image-20241019165308598.png)
+![image-20241019165308598](./AI-Algorithms/image-20241019165308598.png)
 
-![image-20241019165600928](AIGC-Algorithms/image-20241019165600928.png)
+![image-20241019165600928](./AI-Algorithms/image-20241019165600928.png)
 
-![image-20241019171905634](AIGC-Algorithms/image-20241019171905634.png)
+![image-20241019171905634](./AI-Algorithms/image-20241019171905634.png)
 
-![image-20241019172914244](AIGC-Algorithms/image-20241019172914244.png)
+![image-20241019172914244](./AI-Algorithms/image-20241019172914244.png)
 
 * VICReg
   * 先扩维再正则化
 
-![image-20241019173438149](AIGC-Algorithms/image-20241019173438149.png)
+![image-20241019173438149](./AI-Algorithms/image-20241019173438149.png)
 
 * Video-JEPA
   * 蒸馏防止collapse
 
-![image-20241019173516379](AIGC-Algorithms/image-20241019173516379.png)
+![image-20241019173516379](./AI-Algorithms/image-20241019173516379.png)
 
 ### 其它
 
@@ -772,7 +873,7 @@ https://ai.stanford.edu/blog/understanding-incontext/
   * embedding：至少10w条数据，相似性和同义性
 * 很厉害的alpaca
 
-![image-20231025213448602](AIGC-Algorithms/alpaca.png)
+![image-20231025213448602](./AI-Algorithms/alpaca.png)
 
 
 
@@ -794,13 +895,13 @@ https://ai.stanford.edu/blog/understanding-incontext/
       * 客服点按钮，选取ai答案，也是finetune过程
       * reddit帖子中的最高分
 
-![img](AIGC-Algorithms/ChatGPT_Diagram.svg)
+![img](./AI-Algorithms/ChatGPT_Diagram.svg)
 
 * 
 
 #### LoRA
 
-![image-20231026212212239](AIGC-Algorithms/LoRA.png)
+![image-20231026212212239](./AI-Algorithms/LoRA.png)
 
 
 
@@ -866,7 +967,7 @@ https://github.com/huggingface/peft
 > https://github.com/facebookresearch/tart
 
 * Intro
-  * ![image-20241210014430460](./AIGC-Algorithms/image-20241210014430460.png)
+  * ![image-20241210014430460](./AI-Algorithms/image-20241210014430460.png)
   * In summary, our contributions are as follows:
     * Retrieval with instructions, a new formulation
       to model users’ intent explicitly (Section 3).
@@ -877,14 +978,14 @@ https://github.com/huggingface/peft
 * 数据
   * berri 数据集
     * intent domain unit
-    * ![image-20241210015507819](./AIGC-Algorithms/image-20241210015507819.png)
+    * ![image-20241210015507819](./AI-Algorithms/image-20241210015507819.png)
     * https://huggingface.co/datasets/sentence-transformers/embedding-training-data
   * ERRI (Bank of Explicit RetRieval Instructions), a collection of
     approximately 40 retrieval datasets with diverse in-
     structions in a unified format, covering 10 diverse
     domains. Each task has on average 3.5 diverse
     instructions annotated by experts, 
-  * 难负例：![image-20241210015627115](./AIGC-Algorithms/image-20241210015627115.png)
+  * 难负例：![image-20241210015627115](./AI-Algorithms/image-20241210015627115.png)
     * We mine hard negative documents dHD us-
       ing an off-the-shelf retriever and then **filter out**
       **false negative documents using an off-the-shelf**
@@ -906,14 +1007,14 @@ https://github.com/huggingface/peft
       them with cross-attention.
 * Training
   * 用cross-encoder rank model更准确地挖掘hard negative，给dual model学习
-  * ![image-20241210024754923](./AIGC-Algorithms/image-20241210024754923.png)
+  * ![image-20241210024754923](./AI-Algorithms/image-20241210024754923.png)
 * 评估
   * 评测数据集：beir、lotte-pooled
   * a new evaluation setup, X2-Retrieval
     * closed performance and pooled performance
 * 结论：
-  * ![image-20241210030107766](./AIGC-Algorithms/image-20241210030107766.png)
-  * ![image-20241210030310460](./AIGC-Algorithms/image-20241210030310460.png)
+  * ![image-20241210030107766](./AI-Algorithms/image-20241210030107766.png)
+  * ![image-20241210030310460](./AI-Algorithms/image-20241210030310460.png)
   * 8.2 Dataset Scale
   * dual model效果一般(110M，table-3)，猜测需要参数量比较大或者cross-encoder才能学好
 
@@ -974,7 +1075,7 @@ https://www.zhihu.com/question/603488576/answer/3178990801
   * **Hyper-Personalized Product Discovery**
     * Scenario: An e-commerce platform wants to move beyond basic recommendation algorithms and create truly personalized shopping experiences that resonate with individual customers. They need to understand not just what products customers interact with, but the underlying reasons and preferences driving their choices.
     * Solution: By using SAEs to analyze the LLM activations associated with user browsing behavior, purchase history, and product interactions (e.g., reviews, ratings, wishlists), the platform can extract nuanced features representing individual preferences and decision criteria. For example, features might emerge for "aesthetic style," "sustainability concerns," "value for money," "brand affinity," or specific functional requirements.
-    * ![image-20241009174406858](AIGC-Algorithms/interpretability1.png)
+    * ![image-20241009174406858](./AI-Algorithms/interpretability1.png)
 
   * **Optimized Merchandising and Assortment**
     * Scenario: A retailer using an e-commerce platform wants to make data-driven decisions about inventory management, product assortment, and merchandising strategies. They need to understand which products are resonating with customers, which attributes are driving demand, and how to optimize pricing and promotions for maximum profitability.
@@ -1031,7 +1132,7 @@ https://www.zhihu.com/question/603488576/answer/3178990801
 
 * RAG（Retrieval Augmented Generation）顾名思义，通过***\*检索\****的方法来增强***\*生成模型\****的能力。
 
-![image-20240923003438170](./AIGC-Algorithms/rag.png)
+![image-20240923003438170](./AI-Algorithms/rag.png)
 
 * 搭建过程：
   * 文档加载，并按一定条件**切割**成片段
@@ -1178,7 +1279,7 @@ https://www.zhihu.com/question/603488576/answer/3178990801
   * RediSearch: Redis 的开源向量检索引擎 https://github.com/RediSearch/RediSearch
   * ElasticSearch 也支持向量检索 https://www.elastic.co/enterprise-search/vector-search
 
-![vectordb](./AIGC-Algorithms/vectordb.png)
+![vectordb](./AI-Algorithms/vectordb.png)
 
 * pgvector
   * PostgreSQL里面的一个vector search的插件
@@ -1212,7 +1313,7 @@ https://www.zhihu.com/question/603488576/answer/3178990801
     * 计算时用前N维
   * 可变长度的 Embedding 技术：
     * https://arxiv.org/abs/2205.13147 Matryoshka Representation Learning
-  * ![mteb](./AIGC-Algorithms/mteb.png)
+  * ![mteb](./AI-Algorithms/mteb.png)
 
 * 开源库：
   * https://github.com/FlagOpen/FlagEmbedding
@@ -1238,7 +1339,7 @@ https://www.zhihu.com/question/603488576/answer/3178990801
      * [Cohere Rerank](https://cohere.com/rerank)：支持多语言
      * [Jina Rerank](https://jina.ai/reranker/)：目前只支持英文
 
-![sbert-rerank](./AIGC-Algorithms/sbert-rerank.png)
+![sbert-rerank](./AI-Algorithms/sbert-rerank.png)
 
 * **混合检索（Hybrid Search）**
   * 参考 「LLM + Search」
@@ -1246,7 +1347,7 @@ https://www.zhihu.com/question/603488576/answer/3178990801
 
 * RAG Fusion
 
-![rag-fusion](./AIGC-Algorithms/rag-fusion.jpeg)
+![rag-fusion](./AI-Algorithms/rag-fusion.jpeg)
 
 *  [query rewriting and query expansion](https://www.google.com/search/howsearchworks/how-search-works/ranking-results/#meaning)
 *  PDF中的表格如何处理
@@ -1262,7 +1363,7 @@ https://www.zhihu.com/question/603488576/answer/3178990801
      - [Mathpix](https://mathpix.com/)：付费 API 服务，效果较好，可解析段落结构、表格、公式等，贵！
 
 
-![table_rag](./AIGC-Algorithms/table_rag.png)
+![table_rag](./AI-Algorithms/table_rag.png)
 
 ![https://storage.googleapis.com/gweb-cloudblog-publish/images/15._document_processing.max-1100x1100.png](https://storage.googleapis.com/gweb-cloudblog-publish/images/15._document_processing.max-1100x1100.png)
 
@@ -1297,20 +1398,20 @@ https://www.zhihu.com/question/603488576/answer/3178990801
   * **冗余信息：**RAG通常以文本片段的形式提供信息，当这些片段拼接在一起作为提示时，可能会导致上下文过长，出现“lost in the middle”的问题。
   * **缺乏全局信息：**RAG只能检索到文档的子集，而无法全面理解全局信息，这在查询聚焦摘要（QFS）等任务中可能存在问题。
 
-![image-20241020235306018](./AIGC-Algorithms/image-20241020235306018.png)
+![image-20241020235306018](./AI-Algorithms/image-20241020235306018.png)
 
 * GraphRAG的思路：
   * GraphRAG的核心思想是将知识图谱中的结构化信息（如节点、三元组、路径或子图）与LLMs的输出相结合，以提供更准确和丰富的生成结果。
   * 使用结构化知识图谱来更有效地处理冗余信息和全局信息的问题，更方便地进行信息的检索和聚合
 
-![image-20241020235459558](./AIGC-Algorithms/image-20241020235459558.png)
+![image-20241020235459558](./AI-Algorithms/image-20241020235459558.png)
 
 * Preliminaries
 
   * Text-Attributed Graphs (TAGs)
-    * ![image-20241021001256375](./AIGC-Algorithms/TAG.png)
+    * ![image-20241021001256375](./AI-Algorithms/TAG.png)
   * GNN
-    * ![image-20241021001339780](./AIGC-Algorithms/GNN.png)
+    * ![image-20241021001339780](./AI-Algorithms/GNN.png)
 
 * Graph-Based Indexing
 
@@ -1324,7 +1425,7 @@ https://www.zhihu.com/question/603488576/answer/3178990801
 
 * Graph-Guided Retrieval
 
-  * ![image-20241021001832040](./AIGC-Algorithms/graph-retrieval.png)
+  * ![image-20241021001832040](./AI-Algorithms/graph-retrieval.png)
 
   * **检索器的选择：**在图检索中，选择适当的检索器是至关重要的。研究人员可以根据任务需求和数据类型选择以下类型的检索器。
     * 非参数化检索器：基于传统的图搜索算法（如BFS和DFS），不依赖于深度学习模型，适用于高效的大规模数据检索。
@@ -1338,7 +1439,7 @@ https://www.zhihu.com/question/603488576/answer/3178990801
     * **Multi-Stage Retrieval.**
 
 * Graph-Enhanced Generation
-  * ![图片](./AIGC-Algorithms/640-20241021002249376)
+  * ![图片](./AI-Algorithms/640-20241021002249376)
 
 
 
@@ -1387,14 +1488,14 @@ https://www.zhihu.com/question/603488576/answer/3178990801
   * a **dual-level retrieval** system that enhances comprehensive information retrieval from both low-level and high-level knowledge discovery
   * an incremental update algorithm that ensures the timely integration of new data
 
-![image-20241021170751318](./AIGC-Algorithms/lightrag-example.png)
+![image-20241021170751318](./AI-Algorithms/lightrag-example.png)
 
 * RAG的设计
   * Comprehensive Information Retrieval: The indexing function φ(·) must be adept at extracting global information, as this is crucial for enhancing the model’s ability to answer queries effectively.
   * Efficient and Low-Cost Retrieval: The indexed data structure Dˆ must enable rapid and cost- efficient retrieval to effectively handle a high volume of queries.
   * Fast Adaptation to Data Changes: The ability to swiftly and efficiently adjust the data structure to incorporate new information from the external knowledge base, is crucial for ensuring that the system remains current and relevant in an ever-changing information landscape.
 
-![image-20241021142447180](./AIGC-Algorithms/lightrag.png)
+![image-20241021142447180](./AI-Algorithms/lightrag.png)
 
 * Framework
   * we leverage LLMs to identify and extract various entities (e.g., names, dates, locations, and events) along with the relationships between them.
@@ -1429,7 +1530,7 @@ https://www.zhihu.com/question/603488576/answer/3178990801
     * GraphRAG:
       * It generates corresponding descriptions for these elements, aggregates nodes into communities, and produces a community report to capture global information
   * **LightRAG做单一领域的任务比GraphRAG强**
-    * ![img_v3_02fs_6682e564-a869-4d15-a5c3-8fb11492dbeg](./AIGC-Algorithms/img_v3_02fs_6682e564-a869-4d15-a5c3-8fb11492dbeg.jpg)
+    * ![img_v3_02fs_6682e564-a869-4d15-a5c3-8fb11492dbeg](./AI-Algorithms/img_v3_02fs_6682e564-a869-4d15-a5c3-8fb11492dbeg.jpg)
 
   * 结论：
     * The Superiority of Graph-enhanced RAG Systems in Large-Scale Corpora
@@ -1459,7 +1560,7 @@ https://www.zhihu.com/question/603488576/answer/3178990801
 
 * 抽取KG的prompt
 
-![image-20241027014446582](./AIGC-Algorithms/image-20241027014446582.png)
+![image-20241027014446582](./AI-Algorithms/image-20241027014446582.png)
 
 * 动态图
   * GNN，时序信息建模
@@ -1513,11 +1614,11 @@ https://www.zhihu.com/question/603488576/answer/3178990801
 >
 > 思路很清晰：既利用KG加强召回率和精准度，又融入GoT挖掘LLM的内在知识
 
-![image-20241027022219991](./AIGC-Algorithms/image-20241027022219991.png)
+![image-20241027022219991](./AI-Algorithms/image-20241027022219991.png)
 
-![image-20241027023313029](./AIGC-Algorithms/image-20241027023313029.png)
+![image-20241027023313029](./AI-Algorithms/image-20241027023313029.png)
 
-![image-20241027045058720](./AIGC-Algorithms/image-20241027045058720.png)
+![image-20241027045058720](./AI-Algorithms/image-20241027045058720.png)
 
 * Evidence graph mining
   * 实体识别：
@@ -1672,7 +1773,7 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 ### 竞品
 
-![image-20241007224527684](./AIGC-Algorithms/pai-rag.png)
+![image-20241007224527684](./AI-Algorithms/pai-rag.png)
 
 
 
@@ -1747,13 +1848,13 @@ response_of_comparation = response.choices[0].message.content return response_of
     * the risk of losing information about
       the spatial arrangement of visual elements
 
-![image-20241215014023835](./AIGC-Algorithms/image-20241215014023835.png)
+![image-20241215014023835](./AI-Algorithms/image-20241215014023835.png)
 
 #### 各类backbone
 
 [SIFT Meets CNN: A Decade Survey of Instance Retrieval](https://arxiv.org/pdf/1608.01807.pdf)
 
-![275f8067-4c5a-42ba-ae58-66b6f7c93067](./AIGC-Algorithms/275f8067-4c5a-42ba-ae58-66b6f7c93067.png)
+![275f8067-4c5a-42ba-ae58-66b6f7c93067](./AI-Algorithms/275f8067-4c5a-42ba-ae58-66b6f7c93067.png)
 
 
 
@@ -1814,7 +1915,7 @@ response_of_comparation = response.choices[0].message.content return response_of
   * For CNNs such as ResNet, f is obtained by global average pooling and fully connected layer on the feature maps of the final convolutional layer.
 
 * DIML
-  * ![image-20241213195211466](./AIGC-Algorithms/image-20241213195211466.png)
+  * ![image-20241213195211466](./AI-Algorithms/image-20241213195211466.png)
 
 * ViT with Convolutions
   * 动机：For structural similarity learning, good properties of the representation should be locally smooth and semantically discriminative. Comparing to ResNet and vanilla ViT, we hypothesize that the introduction of convolution to ViT satisfies the two requirements.
@@ -1825,7 +1926,7 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 * Structural Metric Learning using Transformers
 
-  * ![image-20241213200708432](./AIGC-Algorithms/image-20241213200708432.png)
+  * ![image-20241213200708432](./AI-Algorithms/image-20241213200708432.png)
 
   * Relevancy Score as Marginal Distribution
     * Cross-correlation is proposed in [35]
@@ -1834,15 +1935,15 @@ response_of_comparation = response.choices[0].message.content return response_of
       * In our method, the relevancy map is used to guide the optimal transport optimization for structural similarity.
       * The relevancy map can be obtained by a forward pass of transformers
       * it is theoretically applicable to almost all the transformers architectures [1] that use global attentions such as DeiT and CvT.
-    * ![image-20241213201553244](./AIGC-Algorithms/image-20241213201553244.png)
+    * ![image-20241213201553244](./AI-Algorithms/image-20241213201553244.png)
 
   * OT的改进：“partial”，缓解视角/Scale差异的影响
-    * ![image-20241213201914520](./AIGC-Algorithms/image-20241213201914520.png)
+    * ![image-20241213201914520](./AI-Algorithms/image-20241213201914520.png)
 
 * 结论：
   * Swin最强
   * 在CvT上，这个技术效果好
-  * ![image-20241213202153167](./AIGC-Algorithms/image-20241213202153167.png)
+  * ![image-20241213202153167](./AI-Algorithms/image-20241213202153167.png)
   * Visual Place Recognition评测，这个技术效果很好
 
 #### Patch Embedding as Local Features: Unifying Deep Local and Global Features Via Vision Transformer for Image Retrieval
@@ -1874,7 +1975,7 @@ response_of_comparation = response.choices[0].message.content return response_of
   * image pyramid
     * we proposed to simulate an image pyramid with multi-atrous convolutions [10]
 
-![image-20241215020433590](./AIGC-Algorithms/image-20241215020433590.png)
+![image-20241215020433590](./AI-Algorithms/image-20241215020433590.png)
 
 * 模型
   * merge all the attention scores in different attention
@@ -2070,7 +2171,7 @@ Aliyun
     * Blending results, prioritizing wedding-appropriate items.
     * Returning a curated selection of relevant products, including complementary accessories.
   * https://docs.vantagediscovery.com/docs/search-more-like-these-tm#example-soft-chair--item-27--two-pinterest-images
-    * ![more-like-these-overview](./AIGC-Algorithms/more-like-these-overview.webp)
+    * ![more-like-these-overview](./AI-Algorithms/more-like-these-overview.webp)
 
 
 
@@ -2116,9 +2217,9 @@ Aliyun
     * AS
       * 需要SFT模型才行
 
-  ![image-20241109125459701](./AIGC-Algorithms/image-20241109125459701.png)
+  ![image-20241109125459701](./AI-Algorithms/image-20241109125459701.png)
 
-![image-20241109010143981](./AIGC-Algorithms/nl2sql-question-representation.png)
+![image-20241109010143981](./AI-Algorithms/nl2sql-question-representation.png)
 
 * 增益
   * INS
@@ -2127,9 +2228,9 @@ Aliyun
     * Let's think step by step 效果不稳定
   * FK
 
-![image-20241109011512039](./AIGC-Algorithms/nl2sql-prompt-result.png)
+![image-20241109011512039](./AI-Algorithms/nl2sql-prompt-result.png)
 
-![image-20241109012454931](./AIGC-Algorithms/nl2sql-prompts.png)
+![image-20241109012454931](./AI-Algorithms/nl2sql-prompts.png)
 
 * Few-shot
   * 背景setting：cross-domain Text- to-SQL （例子可能来自于别的数据库）
@@ -2147,7 +2248,7 @@ Aliyun
     * 总结：quality和quantity的权衡
       * GPT 3.5 Turbo 上下文短，example加多了反而不好
 
-![image-20241109021923944](./AIGC-Algorithms/dail-sql-prompt1.png)
+![image-20241109021923944](./AI-Algorithms/dail-sql-prompt1.png)
 
 * supervised fine-tuning (SFT)
 
@@ -2167,7 +2268,7 @@ Aliyun
     * Zero-shot Scenario with Open-source LLM
       * code-llama-34B 厉害，只有用TR的时候效果差
 
-![image-20241109043228932](./AIGC-Algorithms/nl2sql-sft.png)
+![image-20241109043228932](./AI-Algorithms/nl2sql-sft.png)
 
 * DAIL-SQL
   * 融合了上面的技术
@@ -2262,7 +2363,7 @@ https://webkul.com/ai-semantic-search-services/
   * search option，涉及关键词检索相关 https://docs.vantagediscovery.com/docs/search-options#field-value-weighting
   * 图片上增加upvote，用于采集数据
 
-![640](./AIGC-Algorithms/640.webp)
+![640](./AI-Algorithms/640.webp)
 
 
 
@@ -2293,7 +2394,7 @@ https://webkul.com/ai-semantic-search-services/
   * [Generic Recommendation Data Store](https://cloud.google.com/generative-ai-app-builder/docs/create-data-store-recommendations)
   * [Vertex AI Search for healthcare and life sciences](https://cloud.google.com/generative-ai-app-builder/docs/create-app-hc) is a medically tuned search that improves patient and provider experience. [支持医疗搜索](https://www.googlecloudpresscorner.com/2023-10-09-Google-Cloud-Adds-New-Features-to-Vertex-AI-Search-for-Healthcare-and-Life-Science-Companies)
 
-![image-20240920165612409](./AIGC-Algorithms/vertex-search.png)
+![image-20240920165612409](./AI-Algorithms/vertex-search.png)
 
 * LLM和Semantic Search互相增强：
   * Prompt：Given that it's the beginning of winter, a customer is browsing for clothing on an e-commerce site. Winters are cold in their city. They entered "warm clothing for winter" as a search term on the site. What other search terms might they use to find related and cross-sell items?
@@ -2393,7 +2494,7 @@ https://webkul.com/ai-semantic-search-services/
 
 > [双10亿：AI重塑搜索 | 一文看懂AI搜索现状和未来](https://mp.weixin.qq.com/s/DvEnhyk6ytQ8NcSGCvgSUw)
 
-![图片](./AIGC-Algorithms/640)
+![图片](./AI-Algorithms/640)
 
 * 一次AI搜索，调用1次大模型？
   * 错！答案是**会调用9次大模型，并且不同任务里会有不同大模型参与**
@@ -2421,7 +2522,7 @@ https://webkul.com/ai-semantic-search-services/
 * AI SEO：每天生成数百万个答案网页，覆盖自己搜索内的流量
 * 本地大模型
 
-![图片](./AIGC-Algorithms/640-20241019015912504)
+![图片](./AI-Algorithms/640-20241019015912504)
 
 #### Perplexity
 

@@ -40,3 +40,6 @@
     * Batch_size=8, qps=20： 显存瓶颈 26G/32G，115W/300W
     * Batch_size=2, qps=27： 显存瓶颈 30G/32G，W/300W
   * 注：qps已经考虑了batch_size
+
+* Dinov2
+  * Batch_size=4, qps=50: 显存 14G，120W

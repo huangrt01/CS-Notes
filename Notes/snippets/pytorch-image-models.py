@@ -25,6 +25,7 @@ embedding = torch.mean(embedding, dim=[2,3])
 
 # embedding = embedding[:, 0, :].squeeze(1)
 # 第一个时间步的hidden state，对应于CLS token
+# 1024维
 
 image_processor = AutoImageProcessor.from_pretrained("google/vit-large-patch16-224-in21k")
 model = ViTModel.from_pretrained("google/vit-large-patch16-224-in21k")
