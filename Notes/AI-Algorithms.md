@@ -162,6 +162,12 @@
 ### Encoder & Decoder
 
 * encoder用于分析，decoder用于生成
+* 参考 「Attention is All You Need」
+* Encoder Only & Decoder Only & encoder-decoder
+  * Decoder Only：将输入拼起来，作为prompt
+    * 相比原始transformer，去除了：encoder、decoder中和encoder相连的MSA
+    * 转换成了「续写任务」，大部分LLM使用这种架构
+    * *Decoder*-*Only*模型在参数效率上通常优于*Encoder*-*Decoder*模型，因为它不需要同时训练两个模块
 
 ### 从 RNN 到 Transformer
 
@@ -189,7 +195,7 @@
   
 * 模型结构是什么？
   * 过N个注意力层，再过一个full connection
-  * Attention(Q,K, V) = softmax(QK^T/sqrt(d_k))V
+  * $$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$
     * normalization
 * 模型参数是什么？
   * 词嵌入向量
@@ -220,8 +226,12 @@
 
 * 自注意力：
   * 本质上是信息的聚合
+  * 计算复杂度：O(N^2)
   * 经典的transformer：6层
+  * GPT: 12层
+  * GPT-2: 32层
   * GPT-3: 96层
+  * GPT-4、llama3：120层
 
 
 
@@ -245,7 +255,7 @@
 
 * TODO2: https://tensorflow.org/text/tutorials/transformer
 
-### transformer外的模型结构
+### transformer外的相关模型结构
 
 | 架构        | 设计者                                               | 特点                                     | 链接                                                         |
 | ----------- | ---------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------ |
@@ -253,7 +263,19 @@
 | RWKV        | [PENG Bo](https://www.zhihu.com/people/bopengbopeng) | 可并行训练，推理性能极佳，适合在端侧使用 | [官网](https://www.rwkv.com/)、[RWKV 5 训练代码](https://github.com/BlinkDL/RWKV-LM/tree/main/RWKV-v5) |
 | Mamba       | CMU & Princeton University                           | 性能更佳，尤其适合长文本生成             | [GitHub](https://github.com/state-spaces/mamba)              |
 
-目前只有 transformer 被证明了符合 scaling-law。
+* 目前只有 transformer 被证明了符合 scaling-law。
+  * 收效甚微
+  * 这些新框架，主要用在端侧大模型
+  * 大公司追求效果极致的好
+* RWKV、Mamba：线性transformer
+  * mamba：选择性SSM架构
+* MoE混合专家模型：
+  * 门控网络+专家网络
+  * GPT-3 1750亿参数
+  * GPT-4 1.8万亿参数
+    * 16个专家网络
+    * 运行时只跑2个专家网络
+    * 相比GPT-3.5更像人脑
 
 ## BERT
 
@@ -271,6 +293,15 @@
 
 * TODO1: https://jalammar.github.io/illustrated-gpt2/
 * https://github.com/openai/gpt-2
+
+## GPT-3
+
+* Decoder
+  * 12288维
+  * 96层：
+    * 12288 -> 128
+    * 12288 -> 4*12288
+    * Insight：512维存不下96层信息聚合，因此用12288维
 
 
 
@@ -418,15 +449,25 @@
 
 
 
-##### SWIN Transformer
+##### Swin Transformer: Hierarchical Vision Transformer using Shifted Windows
 
 * key differences between language and vision data is of **the variation in scale between image features and language tokens.**
+  * visual feature的尺度更细； nlp token的尺度固定
 * ![img](./AI-Algorithms/figure_7.png)
 
 * SWIN is a hierarchical transformer which addresses this problem of scale variation by computing transformer representation with shifted windows. The idea is to further divide usual image patches of input image to even smaller patches. These smaller non overlapping patches are then presented to attention layers.
 
 * The output from these attention layers are then **concatenated in pairs** to combine attention output the two higher level patches, this concatenated output is presented to next set of attention modules.
 * This hierarchical propagation through attention layers, allows transformer to **pay attention to smaller scale features and deal with variation in scales for image data.** 
+  * brings greater efﬁciency by lim-
+    iting self-attention computation to non-overlapping local
+    windows while also allowing for cross-window connection.
+
+![image-20241218022713658](./AI-Algorithms/image-20241218022713658.png)
+
+![image-20241218023502807](./AI-Algorithms/image-20241218023502807.png)
+
+![image-20241218023820301](./AI-Algorithms/image-20241218023820301.png)
 
 ##### SWIN v.s ViT
 
@@ -434,7 +475,7 @@
   * vit的scaling更好
 * https://stuartfeeser.com/blogs/ai-engineers/swin-vs-vit/index.html
   * 增大patch数量N时，swin效率更高，vit O(N^2), swin O(N)
-  * swin对细节捕捉更好
+  * swin对细节捕捉更好，更适合做dense vision tasks（语义分割、实体检测）
 
 #### 基于transformer的图像-文本联合建模
 
@@ -660,6 +701,11 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 
 #### Talking to DINO: Bridging Self-Supervised Vision Backbones with Language for Open-Vocabulary Segmentation
 
+> 技术关键点和结论：
+>
+> * 利用ViT patch embedding，作为图像的局部特征
+> * 通过learned mapping，将图像的局部特征和clip category embedding对齐，做实体分割
+
 * 核心思路：通过learned mapping，对vit patch embedding和clip category embedding对齐，做实体分割
 
 ![image-20241213203708145](./AI-Algorithms/image-20241213203708145.png)
@@ -681,7 +727,9 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 
 #### [todo] OmniGlue: Generalizable Feature Matching with Foundation Model Guidance
 
-
+> - 技术关键点和结论（仅略读）：
+>   - Google的CV领域SOTA paper，基于更强的Foundation Model做优化
+>   - 针对图像Feature Matching的场景，DIML技术，用optimal transport做排序
 
 
 
@@ -1893,6 +1941,14 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 #### Beyond the CLS Token: Image Reranking using Pretrained Vision Transformers
 
+> * 技术关键点和结论：
+>   - vit/swin/dinov2的patch embedding作为图像局部特征
+>     - swin最强
+>   - 引入DIML技术，用optimal transport做排序
+>   - 技术适用场景：
+>     - 在CvT（vit + convolution）上，这个技术效果好
+>     - Visual Place Recognition评测，这个技术效果很好
+
 * Intro
   * exploit a pretrained model for optimal spatial weights
     assigned to local patch tokens.
@@ -1949,6 +2005,12 @@ response_of_comparation = response.choices[0].message.content return response_of
 #### Patch Embedding as Local Features: Unifying Deep Local and Global Features Via Vision Transformer for Image Retrieval
 
 > https://github.com/PXThanhLam/ViTGaL
+>
+> - 技术关键点和结论：
+>   - vit的patch embedding可作为图像局部特征
+>   - 先通过图像全局特征做召回，再基于图像局部特征做Rank，效果较好
+>   - multi-astrous，patch embedding通过空洞卷积，有效果提升
+>   - 用 a small autoencoder (AE) 做特征降维
 
 * ViTGaL
   * Vision Transformer based Global and Local features (ViT-

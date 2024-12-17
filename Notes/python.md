@@ -1549,7 +1549,9 @@ children = proc.children(recursive=True)
 
 
 
+#### pip
 
+* whl格式本质上是一个压缩包，里面包含了py文件，以及经过编译的pyd文件
 
 #### pydantic
 
