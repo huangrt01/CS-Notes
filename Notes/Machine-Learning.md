@@ -33,13 +33,30 @@ Materials
 * Dropout
   * 保证training/serving一致性：training或serving时scale
   * In the dense setting, dropout serves to separate effects from strongly correlated features, resulting in a more robust classifier. But in our sparse, noisy setting adding in dropout appears to simply reduce the amount of data available for learning. 《Ad Click Prediction: a View from the Trenches》
-* 过拟合
+* Initialization
   
+  * Xavier Initialization
+  * ![image-20241219212615709](./Machine-Learning/image-20241219212615709.png)
+  * Kaiming Initialization主要用于激活函数为ReLU（Rectified Linear Unit）的神经网络。
+  
+* 过拟合
+
   * 过拟合问题存在其他更深刻的原因。例如，将 28 × 28 的图片实施扁平化操作，将其变换为一个长度为 784 的一维向量，这将完全丢失了像素的空间排列信息
 
   * [为什么过多的特征（feature）导致过拟合（over-fitting)？ - Dr.Shiki的回答 - 知乎](https://www.zhihu.com/question/47375421/answer/306771331)
-  
-* [灾难遗忘现象](https://en.wikipedia.org/wiki/Catastrophic_interference)
+
+* 梯度相关
+
+  * 梯度的意义：
+
+    * 方向导数最大
+
+    * ![image-20241219183022789](./Machine-Learning/image-20241219183022789.png)
+
+  * [灾难遗忘现象](https://en.wikipedia.org/wiki/Catastrophic_interference)
+
+  * 梯度消失和梯度爆炸：网络太深，网络权值更新不稳定造成的。本质上是因为梯度反向传播中的连乘效应
+
 
 
 
@@ -165,6 +182,10 @@ Materials
 
 ##### Adam
 
+* Intro
+  * adaptive moment estimation
+  * Momentum 善于处理梯度的方向和大小，而 RMSProp 善于调整学习率以应对数据的稀疏性。Adam 的提出是为了结合这两种算法的优点，同时减少它们的缺点，提供一种更加鲁棒的优化解决方案。
+
 - Algorithm:
   - In step $$t$$
   - Compute gradient: $$g_t \equiv \nabla f(w_{t-1})$$
@@ -196,7 +217,12 @@ Materials
 
 ##### RMSProp
 
-* RMSProp: Adam with $$\beta_1=0$$, without any bias correction
+* Intro
+
+  * RMSProp 善于调整学习率以应对数据的稀疏性
+
+  * 本质：Adam with $$\beta_1=0$$, without any bias correction
+
 
 ##### Lookahead Optimizer: k steps forward, 1 step back, NIPS 2019
 

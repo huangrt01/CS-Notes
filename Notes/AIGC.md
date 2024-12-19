@@ -67,8 +67,6 @@ token_count = count_tokens(prompt_text)
 print(f"Prompt的token数量为: {token_count}")
 ```
 
-
-
 ### 性能
 
 * TTFT：time to first token，和input token长度相关
@@ -106,6 +104,12 @@ print(f"Prompt的token数量为: {token_count}")
     * input：5刀/1M token
 
 ## 产品
+
+### 模型能力
+
+![image-20241218105153242](./AIGC/image-20241218105153242.png)
+
+
 
 ### 产品架构
 

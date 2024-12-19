@@ -76,6 +76,42 @@ output = torch.tensor(output)
 print(output)
 
 
+# to numpy
+
+x = np.ones(3)
+y = torch.tensor(x)
+y = torch.from_numpy(x)
+
+x = torch.ones(3)
+y = x.detach().numpy() # gpu->cpu->numpy
+
+y = x.numpy()
+
+
+### tensor operation
+
+a = torch.arange(1, 13).view(4, 3)
+a_t = a.t()
+
+print(a.is_contiguous()) ## True
+
+print(a_t.is_contiguous()) ## False，对一个 tensor 进行转置操作之后会改变它的 contiguous 特性
+
+a_t_v = a_t.view(-1) ## 会报错
+a_t = a.t().contiguous()
+a_t_v = a_t.view(-1)
+
+# stack
+torch.stack(inputs,dim=0,out=None)
+
+# concat
+torch.cat(tensors, dim=0, out=None)
+
+数据合并：在数据预处理阶段，可能需要将来自不同源的数据集合并在一起。
+特征融合：在深度学习模型中，经常需要将来自不同层或不同路径的特征合并起来，以增强模型的表示能力。
+批处理操作：在处理批数据时，可以用torch.cat来合并来自不同批次的输出结果。
+
+
 ### tensor index
 
 torch.gather(input, dim, index, *, sparse_grad=False, out=None)
@@ -94,6 +130,24 @@ result = data.gather(dim=0, index=index)
 result = data.gather(dim=1, index=index)
 
 # tensor([[3, 2, 1]])
+
+
+### leaf node
+
+a = torch.tensor([1.0, 1.0], requires_grad=False)
+print(a.is_leaf) # T
+print(a.requires_grad) # F
+b = a + 1
+print(b.is_leaf) # T
+print(b.requires_grad) # F
+
+b = a + 1 # 非叶子
+
+### detach
+
+- 将张量从当前计算图中分离出来，从而不需要跟踪张量的梯度变化
+- 可视化
+- 独立tensor
 
 
 ### Global setting
@@ -153,4 +207,8 @@ nvidia-smi -L
 # nvidia-smi命令中的GPU编号与PyTorch代码中的CUDA编号正好相反
 原因：nvidia-smi下的GPU编号默认使用 PCI_BUS_ID，而 PyTorch 代码默认情况下设备排序是 FASTEST_FIRST
 解决办法：os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+
+
+### eval模式
+影响Dropout层和BatchNorm层行为
 

@@ -1,4 +1,4 @@
-# AIGC-Algorithms
+# AI-Algorithms
 
 ## 历史发展
 
@@ -462,12 +462,24 @@
   * brings greater efﬁciency by lim-
     iting self-attention computation to non-overlapping local
     windows while also allowing for cross-window connection.
+  * 解决transformer复杂度O(N^2)的问题
 
 ![image-20241218022713658](./AI-Algorithms/image-20241218022713658.png)
 
 ![image-20241218023502807](./AI-Algorithms/image-20241218023502807.png)
 
 ![image-20241218023820301](./AI-Algorithms/image-20241218023820301.png)
+
+* Efﬁcient batch computation for shifted conﬁguration
+  * Cyclic shift
+* 其它
+  * relative position bias
+  * Table 5 研究了 Real speed of different self-attention computation meth-
+    ods and implementations on a V100 GPU
+
+
+
+
 
 ##### SWIN v.s ViT
 

@@ -3,11 +3,24 @@
 
 # https://huggingface.co/microsoft/swinv2-large-patch4-window12-192-22k
 
+# patch embedding
+# 每个patch的特征长度：4*4*3=48
+self.projection = nn.Conv2d(num_channels, hidden_size, kernel_size=patch_size, stride=patch_size)
+hidden_size=config.embed_dim=192
+(batch_size, 192, height // p_h, width // p_w)
+
+# feature num
 self.num_features = int(config.embed_dim * 2 ** (self.num_layers - 1))
 
-192*2^7=1536
+192*2^3=1536
 
 self.layernorm = nn.LayerNorm(self.num_features, eps=config.layer_norm_eps)
+
+# block
+
+Swin Transformer block consists of a shifted window based MSA
+module, followed by a 2-layer MLP with GELU non-linearity in between
+
 
 # last_hidden_state
 

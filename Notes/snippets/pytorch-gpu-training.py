@@ -50,3 +50,21 @@ for data in data_loader:
     loss = loss_function(output, target)
     loss.backward()
     optimizer.step()
+
+
+### fp16
+
+import autocast
+from torch.cuda.amp import autocast
+
+@autocast()
+def forward(self, x):
+    ...
+    return x
+
+
+ for x in train_loader:
+    x = x.cuda()
+    with autocast():
+        output = model(x)
+        ...
