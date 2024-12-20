@@ -289,6 +289,48 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
 
 
 
+### 大 Batch 训练
+
+分布式SGD在算法方面的挑战
+
+* throughput ~ GPU num
+  * 深度学习的大规模训练通常以线性增加的理想情况为基准，Horovod和NCCL库在保持高吞吐量方面做得很好，但是他们的性能与所使用的硬件有着千丝万缕的联系。高带宽和低延迟的要求导致了NVLink互连的开发，它是本课程所使用的服务器用来互连一个节点上的多个GPU的方法。 NVIDIA DGX-2通过NVSwitch将这种互连又推进一步，该互连结构可以300GB/s的峰值双向带宽连接多达16个GPU。
+
+* critical batch size ~ gradient noise scale (openai)
+* 对精度的影响：朴素的方法（比如不加data augmentation）会降低精度
+  * ImageNet training in minutes. CoRR
+  * [Train longer, generalize better: closing the generalization gap in large batch training of neural networks](https://arxiv.org/abs/1705.08741)
+  * [On large-batch training for deep learning: Generalization gap and sharp minima](https://arxiv.org/abs/1609.04836)
+  * [Visualizing the Loss Landscape of Neural Nets](https://arxiv.org/abs/1712.09913)
+
+* 应对策略
+
+  * 提高学习率：One weird trick for parallelizing convolutional neural networks
+  * 早期学习率热身： Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour.
+* Batch Normalization
+  * BN通过最小化每个层的输入分布中的漂移来改善学习过程
+    * 缓解了深层网络中“梯度弥散”的问题（Internal Covariate Shift）
+  * 提高学习速度并减少使用 Dropout 的需求
+  * 想法是针对每批数据对**所有层**的输入 进行规一化（这比简单地只对输入数据集进行规一化更为复杂）
+    * 为了保持模型的表达能力，引入可学习的参数，缩放因子和平移因子
+* Ghost BN
+  * 计算更小批量的统计数据（“ghost 批量”）
+    * 引入其他噪声
+  * 按 GPU 逐个单独执行批量归一化，解决同步 BN 通信开销问题
+* 将噪声添加至梯度
+  * 确保权重更新的协方差随着批量大小的变动保持不变 
+  * 不会改变权重更新的平均值 
+  * $$\hat{g}=\frac{1}{M}\sum^{N}_{n\in B}g_n z_n$$
+* 更长的高学习率训练时间
+* 增加批量大小代替学习率衰减
+* LARS – 按层自适应学习率调整
+  *  [LARS论文](https://arxiv.org/abs/1904.00962): 大LR -> LR warm-up -> LARS，只是能保证大batch训练能训，关于效果问题，作者认为“increasing the batch does not give much additional gradient information comparing to smaller batches.”
+  *  [LARC](https://github.com/NVIDIA/apex/blob/master/apex/parallel/LARC.py): 带梯度裁剪的分层自适应学习率，以具有动力的SGD作为基础优化器
+  *  [LAMB](https://arxiv.org/abs/1904.00962): 分层自适应学习率，以 Adam 作为基础优化器，在BERT等语言模型上比LARC更成功
+  *  [NovoGrad](https://arxiv.org/abs/1905.11286): 按层计算的移动平均值，在几个不同的领域也有不错的表现
+
+![training_result](Machine-Learning/training_result.png)
+
 
 
 ### ML Theory
@@ -448,6 +490,10 @@ Training 量化
 
 ### Contrastive Learning
 
+#### Intro
+
+[Constrastive Learning: MoCo and SimCLR](https://mp.weixin.qq.com/s/v5p9QA3vDl-WTF3-7shp4g)
+
 #### 训练 Dense Retriever
 
 * Query2Doc paper
@@ -559,9 +605,17 @@ def find_most_similar(input_word):
 
 #### 卷积网络
 
-* 基础定义
+* Intro
 
   * 过滤器常使用一个 4 维的张量表示，前两维表示过滤器的大小，第三维表示输入的通道数，第四维表示输出的通道数
+    * 卷积核的深度或层数与输入图片的通道数目应保持一致。这是pytorch底层实现的，开发人员不需要考虑。
+    * 卷积操作之后输出的通道数目是由卷积核个数所决定的。
+  * 理解卷积
+    * 函数拟合
+    * 模式匹配：卷积核定义了某种模式，卷积运算是在计算每个位置与该模式的相似程度，或者说每个位置具有该模式的分量有多少，当前位置与该模式越像，响应越强。
+  * 感受野：第一层卷积层的输出特征图像素的感受野的大小等于卷积核的大小。
+  * Feature Map大小：
+    * ![image-20241221015354226](./Machine-Learning/image-20241221015354226.png)
 
 * 特点
 
@@ -598,23 +652,63 @@ def find_most_similar(input_word):
 * group convolution
   * only the input channels in the same group are used for computing a given output channel. A group convolution with total Ci input, Co output channels and G groups is essentially G independent convolutions each with d=Ci/G input and Co/G output channels. 
   * depth-wise convolution: Ci=Co=G and consequently group size d=1
+* 1x1卷积核
+  * 《Network-in-Network》论文中首次介绍了1x1卷积层用于“跨信道下采样”或“跨信道池池化”。
+  * 1x1卷积用于减少信道数量
+    * 伴随ReLU引入非线性
+
+  * ![image-20241221012403964](./Machine-Learning/image-20241221012403964.png)
+
+
+* 反卷积
+  * 上采样
+  * DCGAN
+  * 转置卷积先将卷积核转为稀疏矩阵的形式，然后正向传播的时候左乘这个稀疏矩阵的转置，反向传播的时候左乘这个稀疏矩阵
+
+#### 空洞卷积
+
+* Dilated Convolution
+  * dilation rate
+  * 扩大了感受野，而不增加参数量
+    * 降低过拟合
+* Multi-astrous Convolution
+  * 多尺度提取
+
+#### 池化层
+
+* Intro
+  * ![image-20241221015412266](./Machine-Learning/image-20241221015412266.png)
+
+* 降维
+  * 对卷积层输出的特征图进行特征选择和信息的过滤，提取主要特征
+  * 能够实现对特征图的下采样，从而减少下一层的参数和计算量
+  * 通过减小特征图的维度，池化层有助于减少模型的参数数量，从而减小了过拟合的风险，提高了模型的泛化能力
+  * 保持特征的不变性（平移、旋转、尺度）
+* 常见分类
+  * 平均池化：背景信息
+  * max pooling：纹理特征信息
+
+#### 注意力
+
+* 通常将CV领域中注意力机制中的模型结构分为三大注意力域来分析，主要是：空间域(spatial domain)，通道域(channel domain)，混合域(mixed domain)。
+
+  - 空间域——将图片中的的空间域信息做对应的空间变换，从而能将关键的信息提取出来。对空间进行掩码的生成，进行打分，代表是Spatial Attention Module。
+
+  - 通道域——类似于给每个通道上的信号都增加一个权重，来代表该通道与关键信息的相关度的话，这个权重越大，则表示相关度越高。对通道生成掩码mask，进行打分，代表是Channel Attention Module。
+
+  - 混合域——空间域的注意力是忽略了通道域中的信息，将每个通道中的图片特征同等处理，这种做法会将空间域变换方法局限在原始图片特征提取阶段，应用在神经网络层其他层的可解释性不强。
+
+#### 传统图像处理
+
 * [LBP (local binary patterns)](https://en.wikipedia.org/wiki/Local_binary_patterns)
   * resize到固定大小：大小越大则越准但有噪声，大小越小则误召回率高
   * hamming 距离度量
-
-* [Constrastive Learning: MoCo and SimCLR](https://mp.weixin.qq.com/s/v5p9QA3vDl-WTF3-7shp4g)
-
-* [物理改变图像生成：扩散模型启发于热力学，比它速度快10倍的挑战者来自电动力学](https://zhuanlan.zhihu.com/p/599013984)
-
-
-
-### 多模态
-
-
-
-
-
-
+* NMS算法
+  * 非极大值抑制
+  * 1、对所有的框，通过一个置信度阈值将置信度低的框滤除。
+  * 2、接着，选出置信度最高的框，将其保存进输出列表中。
+  * 3、依次计算该框与其他剩余的框的IOU值。然后通过一个IOU阈值将和这个置信度最高的框拥有较大IOU的框（即和这个框相近的框）去除。
+  * 4、 继续对剩余的框进行2，3操作，直到遍历完毕
 
 ### RL
 
@@ -1276,43 +1370,6 @@ python train.py
 
 
 
-分布式SGD在算法方面的挑战
-
-* throughput ~ GPU num
-  * 深度学习的大规模训练通常以线性增加的理想情况为基准，Horovod和NCCL库在保持高吞吐量方面做得很好，但是他们的性能与所使用的硬件有着千丝万缕的联系。高带宽和低延迟的要求导致了NVLink互连的开发，它是本课程所使用的服务器用来互连一个节点上的多个GPU的方法。 NVIDIA DGX-2通过NVSwitch将这种互连又推进一步，该互连结构可以300GB/s的峰值双向带宽连接多达16个GPU。
-
-* critical batch size ~ gradient noise scale (openai)
-* 对精度的影响：朴素的方法（比如不加data augmentation）会降低精度
-  * ImageNet training in minutes. CoRR
-  * [Train longer, generalize better: closing the generalization gap in large batch training of neural networks](https://arxiv.org/abs/1705.08741)
-  * [On large-batch training for deep learning: Generalization gap and sharp minima](https://arxiv.org/abs/1609.04836)
-  * [Visualizing the Loss Landscape of Neural Nets](https://arxiv.org/abs/1712.09913)
-
-* 应对策略
-
-  * 提高学习率：One weird trick for parallelizing convolutional neural networks
-  * 早期学习率热身： Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour.
-* Batch Normalization
-  * BN通过最小化每个层的输入分布中的漂移来改善学习过程
-  * 提高学习速度并减少使用 Dropout 的需求
-  * 想法是针对每批数据对所有层的输入 进行规一化（这比简单地只对输入数据集进行规一化更为复杂）
-  * Ghost BN
-    * 计算更小批量的统计数据（“ghost 批量”）引入其他噪声
-    * 按 GPU 逐个单独执行批量归一化
-  * 将噪声添加至梯度
-    * 确保权重更新的协方差随着批量大小的变动保持不变 
-    * 不会改变权重更新的平均值 
-    * $$\hat{g}=\frac{1}{M}\sum^{N}_{n\in B}g_n z_n$$
-  * 更长的高学习率训练时间
-  * 增加批量大小代替学习率衰减
-  * LARS – 按层自适应学习率调整
-    *  [LARS论文](https://arxiv.org/abs/1904.00962): 大LR -> LR warm-up -> LARS，只是能保证大batch训练能训，关于效果问题，作者认为“increasing the batch does not give much additional gradient information comparing to smaller batches.”
-    *  [LARC](https://github.com/NVIDIA/apex/blob/master/apex/parallel/LARC.py): 带梯度裁剪的分层自适应学习率，以具有动力的SGD作为基础优化器
-    *  [LAMB](https://arxiv.org/abs/1904.00962): 分层自适应学习率，以 Adam 作为基础优化器，在BERT等语言模型上比LARC更成功
-    *  [NovoGrad](https://arxiv.org/abs/1905.11286): 按层计算的移动平均值，在几个不同的领域也有不错的表现
-
-![training_result](Machine-Learning/training_result.png)
-
 ### 术语
 
 NLU: Natural Language Understanding
@@ -1321,3 +1378,5 @@ NLU: Natural Language Understanding
 
 * 传统关键词检索
   * https://www.elastic.co/cn/blog/implementing-academic-papers-lessons-learned-from-elasticsearch-and-lucene
+* 对比学习
+  * [Constrastive Learning: MoCo and SimCLR](https://mp.weixin.qq.com/s/v5p9QA3vDl-WTF3-7shp4g)

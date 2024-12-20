@@ -159,6 +159,20 @@
   * GPT-3: 每个token **12228维**
   * 经典的transformer，每个向量只有512维
 
+
+
+### Position Encoding
+
+* 绝对位置编码：
+  * Convolutional Sequence to Sequence Learning
+  * 正弦-余弦编码
+* 相对位置编码：
+  * 作用于自注意力机制
+
+
+
+
+
 ### Encoder & Decoder
 
 * encoder用于分析，decoder用于生成
@@ -217,6 +231,10 @@
     * Dot product的结果方差比additive attention的方差大
 
 * Multi-head attention: 多头自注意力机制
+  * 自注意力和CNN的辨析 https://www.mstx.cn/pytorch/209.html
+    * 相似性：信息提取机制、并行、可堆叠
+    * 区别：感受野的固定性和灵活性、局部性和全局性、计算复杂度、空间维度与序列维度
+
 
 ![image-20231025203852956](./AI-Algorithms/multi-head-attention.png)
 
@@ -768,7 +786,11 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 
 ## 视频生成模型
 
+### Intro
+
 * 技术报告：https://openai.com/research/video-generation-models-as-world-simulators
+
+* [物理改变图像生成：扩散模型启发于热力学，比它速度快10倍的挑战者来自电动力学](https://zhuanlan.zhihu.com/p/599013984)
 
 * VideoPoet
 

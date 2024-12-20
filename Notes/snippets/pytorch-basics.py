@@ -19,6 +19,12 @@ print(input)
 dim = len(input.shape)
 print(dim)
 
+# 创建一个3通道的RGB图像，大小为3x64x64
+image = torch.rand(3, 64, 64)
+
+# 输出：torch.Size([3, 64, 64])
+print(image.size()) 
+
 
 result1 = torch.sum(input, dim=0)
 print(result1)
