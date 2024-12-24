@@ -152,8 +152,7 @@ async def process_file(src_file, output_file):
     data = json.load(src_stream)
   with open(output_file, 'w') as dst_stream:
     for i, item in enumerate(data):
-      if i % 100 == 0:
-        logging.info(f"process item {i}")
+      logging.info(f"process item {i}")
       try:
         item = await process_item(item)
         json.dump(item, dst_stream, ensure_ascii=False)
@@ -166,7 +165,8 @@ async def process_file(src_file, output_file):
 
 async def read_data_from_file(file,
                               feature_list: list[str],
-                              select_indices=None):
+                              select_indices=None,
+                              query_recall_len=None):
   assert isinstance(feature_list, list)
   assert all(isinstance(f, str) for f in feature_list)
   assert select_indices is None or isinstance(select_indices, list)
@@ -183,8 +183,9 @@ async def read_data_from_file(file,
         query = item['query']
         if query not in query_groups:
           query_groups[query] = []
-        query_groups[query].append((i, feature))
-        if i % 100 == 0:
+        if len(query_groups[query]) < query_recall_len:
+          query_groups[query].append((len(features) - 1, None))
+        if i % 1000 == 0:
           logging.info(f"read data from file, item num: {i}")
       except Exception as e:
         logging.error(f"process data failed: {e}")
@@ -221,7 +222,9 @@ class RankDataset(Dataset):
     if FEATURE_LIST_MAP[
         self.model_name][MODEL_TYPE] == LISTWISE or FEATURE_LIST_MAP[
             self.model_name][MODEL_TYPE] == POS_LISTWISE:
-      return torch.tensor(self.data[idx], dtype=torch.float32), self.labels[idx]
+      res_data = torch.tensor(self.data[idx], dtype=torch.float32)
+      res_labels = self.labels[idx]
+      return res_data, res_labels
     else:
       return self.data[idx], self.labels[idx]
 
@@ -233,13 +236,13 @@ class RankModel(nn.Module):
     self.fc1 = nn.LazyLinear(50)
     self.fc2 = nn.Linear(50, 1)
     self.fc3 = nn.Linear(50, 50)
+    self.relu = nn.LeakyReLU(negative_slope=0.01)
+    # self.relu = nn.ReLU()
+    # self.relu = nn.PReLU()
 
     self._model_name = model_name
     self._model_type = FEATURE_LIST_MAP[model_name][MODEL_TYPE]
     self._rrf_strategy = FEATURE_LIST_MAP[model_name][RRF_STRATEGY]
-
-    # self.fc1 = nn.Linear(input_size, 10)
-    # self.fc2 = nn.Linear(10, 1)
 
   def forward(self, x):
     if self._rrf_strategy == BOTH or self._rrf_strategy == RR:
@@ -247,17 +250,13 @@ class RankModel(nn.Module):
         rr = torch.argsort(x, dim=0, descending=True)
       else:
         rr = torch.argsort(x, dim=1, descending=True)
-      # print(f"x: {x}, rr: {rr}")
       rr = 1 / (torch.log((rr + 1)) + 1)
       if self._rrf_strategy == BOTH:
         x = torch.concat((x, rr), dim=-1)
-    x = torch.relu(self.fc1(x))
-    x = torch.relu(self.fc3(x))
+    x = self.relu(self.fc1(x))
+    x = self.relu(self.fc3(x))
     x = self.fc2(x)
 
-    # x = torch.relu(self.fc1(x))
-    # x = self.fc2(x)
-    # x = torch.sigmoid(x)
     if self._model_type == POINTWISE:
       x = torch.sigmoid(x)
     return x.squeeze()
@@ -268,6 +267,33 @@ class RankModel(nn.Module):
       data = torch.tensor(data, dtype=torch.float32)
       predictions = self(data)
     return predictions.numpy()
+
+  def evaluate(self, inputs, targets, criterion=None):
+    val_loss = 0.0
+    ndcg_sum = 0.0
+    inputs = inputs.clone().detach().to(torch.float32)
+    targets = targets.clone().detach().to(torch.float32)
+    outputs = self(inputs)
+    if outputs.dim() == 1:
+      outputs = outputs.unsqueeze(0)
+    if targets.dim() == 1:
+      targets = targets.unsqueeze(0)
+    if criterion:
+      if self._model_type == POS_LISTWISE:
+        tmp_loss = criterion(outputs, targets, position_aware=True).item()
+      else:
+        tmp_loss = criterion(outputs, targets).item()
+      val_loss += tmp_loss
+
+    if self._model_type == POINTWISE:
+      ndcg_sum += ndcg_score(targets, outputs)
+    else:
+      batch_size = targets.shape[0]
+      for i in range(batch_size):
+        valid_target = targets[i][targets[i] != PADDED_Y_VALUE].unsqueeze(0)
+        valid_output = outputs[i][targets[i] != PADDED_Y_VALUE].unsqueeze(0)
+        ndcg_sum += ndcg_score(valid_target, valid_output) / batch_size
+    return val_loss, ndcg_sum
 
 
 @lru_cache
@@ -291,11 +317,12 @@ def get_rank_model_def(model_name: str):
 
 
 def rank_model_predict(datas, model_name):
-  # scaler = joblib.load(
-  #     os.path.join(os.path.dirname(__file__), f'{model_name}.scaler'))
+  scaler = joblib.load(
+      os.path.join(os.path.dirname(__file__), f'{model_name}.scaler'))
   datas = [[item[f] for f in get_feature_list(model_name)] for item in datas]
   datas = np.array(datas)
-  # datas = scaler.transform(datas)
+  # if FEATURE_LIST_MAP[model_name][MODEL_TYPE] == POINTWISE:
+  datas = scaler.transform(datas)
   if SELECT_INDICES is not None:
     datas = np.take(datas, SELECT_INDICES, axis=-1)
   model = get_rank_model(model_name)
@@ -303,20 +330,29 @@ def rank_model_predict(datas, model_name):
   return prediction
 
 
-def train_deep_learning_model(dataset_file, model_name, model_type):
+def train_deep_learning_model(dataset_file,
+                              model_name,
+                              model_type,
+                              load_ckpt=False):
   data, labels, query_groups = asyncio.run(
       read_data_from_file(dataset_file,
                           FEATURE_LIST_MAP[model_name]['feature'],
-                          select_indices=SELECT_INDICES))
+                          select_indices=SELECT_INDICES,
+                          query_recall_len=QUERY_RECALL_LEN))
 
-  # scaler = MinMaxScaler()
-  # scaler.fit(data)
-  # joblib.dump(scaler,
-  #             os.path.join(os.path.dirname(__file__), f'{model_name}.scaler'))
-  # data = scaler.transform(data)
+  scaler = MinMaxScaler()
+  scaler.fit(data)
+  joblib.dump(scaler,
+              os.path.join(os.path.dirname(__file__), f'{model_name}.scaler'))
+  data = scaler.transform(data)
 
   if model_type in [LISTWISE, POS_LISTWISE]:
-    data, labels = convert_to_list_mle_samples(query_groups, labels)
+    for query, group in query_groups.items():
+      for i, group_tuple in enumerate(group):
+        group[i] = (group_tuple[0], data[group_tuple[0]])
+      # assert len(group) == QUERY_RECALL_LEN, group
+    data, labels = convert_to_list_mle_samples(query_groups, labels,
+                                               QUERY_RECALL_LEN)
 
   # logging.info(
   #     f'data shape: {len(data)}, {data[0]}, labels shape: {len(labels)}, {labels[0]}'
@@ -335,6 +371,12 @@ def train_deep_learning_model(dataset_file, model_name, model_type):
   val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
   model = get_rank_model_def(model_name)
+
+  if load_ckpt:
+    model.load_state_dict(
+        torch.load(os.path.join(os.path.dirname(__file__), f'{model_name}.pth'),
+                   weights_only=True))
+
   if model_type in [LISTWISE, POS_LISTWISE]:
     criterion = listMLE
   else:
@@ -346,15 +388,17 @@ def train_deep_learning_model(dataset_file, model_name, model_type):
     init_lr = 0.006
   else:
     init_lr = 0.01
+  if load_ckpt:
+    init_lr *= 0.2
 
   optimizer = optim.Adam(model.parameters(), lr=init_lr)  # weight_decay=0.001
 
   if model_type in [LISTWISE, POS_LISTWISE]:
     patience = 40
   else:
-    patience = 60
+    patience = 100
   scheduler = ReduceLROnPlateau(optimizer,
-                                mode='min',
+                                mode='max',
                                 factor=0.6,
                                 patience=patience,
                                 min_lr=0.001)
@@ -395,29 +439,14 @@ def train_deep_learning_model(dataset_file, model_name, model_type):
     current_lr = optimizer.param_groups[0]['lr']
 
     model.eval()
-    val_loss = 0.0
-    ndcg_sum = 0.0
     with torch.no_grad():
       for inputs, targets in val_loader:
-        inputs = inputs.clone().detach().to(torch.float32)
-        targets = targets.clone().detach().to(torch.float32)
-        outputs = model(inputs)
-        if outputs.dim() == 1:
-          outputs = outputs.unsqueeze(0)
-        if targets.dim() == 1:
-          targets = targets.unsqueeze(0)
-        if model_type == POS_LISTWISE:
-          tmp_loss = criterion(outputs, targets, position_aware=True).item()
-        else:
-          tmp_loss = criterion(outputs, targets).item()
-        val_loss += tmp_loss
-        ndcg_sum += ndcg_score(targets, outputs)
-        # logging.error(f'ruiteng debug outputs: {outputs}, targets: {targets}, ndgc: {ndcg_score(targets, outputs)}')
+        val_loss, ndcg_sum = model.evaluate(inputs, targets, criterion)
       val_epoch_loss = val_loss / len(val_loader)
       val_epoch_ndcg = ndcg_sum / len(val_loader)
-      scheduler.step(val_epoch_loss)
+      scheduler.step(val_epoch_ndcg)
     logging.info(
-        f'Epoch {epoch+1}/{500}, Loss: {epoch_loss:.4f}, Eval Loss: {val_epoch_loss:.4f}, NDCG: {val_epoch_ndcg:.4f}, lr: {current_lr:.6f}'
+        f'Epoch {epoch}/{500}, Loss: {epoch_loss:.4f}, Eval Loss: {val_epoch_loss:.4f}, NDCG: {val_epoch_ndcg:.4f}, lr: {current_lr:.6f}'
     )
 
     if val_epoch_loss < best_loss:
@@ -452,3 +481,48 @@ def train_deep_learning_model(dataset_file, model_name, model_type):
       f'Best Loss Epoch: {best_loss_epoch}, Best Eval Loss: {best_loss:.4f}')
   logging.info(
       f'Best NDCG Epoch: {best_ndcg_epoch}, Best NDCG: {best_ndcg:.4f}')
+
+
+def eval_deep_learning_model(dataset_file, model_name, model_type):
+  data, labels, query_groups = asyncio.run(
+      read_data_from_file(dataset_file,
+                          FEATURE_LIST_MAP[model_name]['feature'],
+                          select_indices=SELECT_INDICES,
+                          query_recall_len=QUERY_RECALL_LEN))
+  scaler = joblib.load(
+      os.path.join(os.path.dirname(__file__), f'{model_name}.scaler'))
+  data = scaler.transform(data)
+
+  if model_type in [LISTWISE, POS_LISTWISE]:
+    for query, group in query_groups.items():
+      for i, group_tuple in enumerate(group):
+        group[i] = (group_tuple[0], data[group_tuple[0]])
+      # assert len(group) == QUERY_RECALL_LEN, group
+    data, labels = convert_to_list_mle_samples(query_groups, labels,
+                                               QUERY_RECALL_LEN)
+
+  X_train, X_val, y_train, y_val = train_test_split(
+      data,
+      labels,
+      test_size=0.5,
+  )
+  # random_state=42)
+
+  batch_size = 5 if model_type in [LISTWISE, POS_LISTWISE] else 50
+
+  val_dataset = RankDataset(X_val, y_val, model_name)
+  val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+  model = get_rank_model_def(model_name)
+
+  model.load_state_dict(
+      torch.load(os.path.join(os.path.dirname(__file__), f'{model_name}.pth'),
+                 weights_only=True))
+  model.eval()
+  ndcg_sum = 0.0
+  with torch.no_grad():
+    for inputs, targets in val_loader:
+      _, ndcg_sum = model.evaluate(inputs, targets, None)
+    val_epoch_ndcg = ndcg_sum / len(val_loader)
+  logging.info(
+      f'Eval {model_name}, Dataset: {dataset_file} NDCG: {val_epoch_ndcg:.4f}')

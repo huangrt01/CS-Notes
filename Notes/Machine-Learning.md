@@ -267,6 +267,41 @@ Materials
   - We can apply LAMB normalization to any base optimizer
   - But the learning rate must be re-tuned
 
+#### 激活函数
+
+* Intro
+  * 选激活函数 https://machinelearningmastery.com/choose-an-activation-function-for-deep-learning/
+    * When using the ReLU function for hidden layers, it is a good practice to use a “*He Normal*” or “*He Uniform*” weight initialization and scale input data to the range 0-1 (normalize) prior to training.
+  * 典型问题：XOR问题
+  * ![image-20241221123336418](./Machine-Learning/image-20241221123336418.png)
+
+
+
+* sigmoid函数
+  * 1/(1+e^(-x))
+  * 非常适合作为模型的输出函数用于输出一个0~1范围内的概率值
+  * 已经不太受欢迎，实际中很少作为激活函数
+    * 容易造成梯度消失。我们从导函数图像中了解到sigmoid的导数都是小于0.25的，那么在进行反向传播的时候，梯度相乘结果会慢慢的趋向于0。这样几乎就没有梯度信号通过神经元传递到前面层的梯度更新中，因此这时前面层的权值几乎没有更新，这就叫梯度消失。除此之外，为了防止饱和，必须对于权重矩阵的初始化特别留意。如果初始化权重过大，可能很多神经元得到一个比较小的梯度，致使神经元不能很好的更新权重提前饱和，神经网络就几乎不学习。
+    * 函数输出不是以 0 为中心的，梯度可能就会向特定方向移动，从而降低权重更新的效率
+    * 指数计算消耗资源
+* Tanh(x)=2Sigmoid(2x)−1
+  * 相比sigmoid，以0为中心
+* ReLU
+  * 优点：
+    * ReLU解决了梯度消失的问题，当输入值为正时，神经元不会饱和
+    * 由于ReLU线性、非饱和的性质，在SGD中能够快速收敛
+    * 计算复杂度低，不需要进行指数运算
+  * 缺点：
+    * 输出不是以0为中心的
+    * Dead ReLU 问题：要设置一个合适的较小的学习率
+
+* Leaky ReLU：解决了ReLU输入值为负时神经元出现的死亡的问题
+  * 函数中的α，需要通过先验知识人工赋值（一般设为0.01）
+  * 有些近似线性，导致在复杂分类中效果不好。
+* Parametric ReLU：alpha可学习
+* ELU：
+  * ![image-20241221141507094](./Machine-Learning/image-20241221141507094.png)
+
 #### Tuning
 
 https://github.com/google-research/tuning_playbook
@@ -1375,6 +1410,9 @@ python train.py
 NLU: Natural Language Understanding
 
 ### TODO
+
+* 调参
+  * https://github.com/google-research/tuning_playbook
 
 * 传统关键词检索
   * https://www.elastic.co/cn/blog/implementing-academic-papers-lessons-learned-from-elasticsearch-and-lucene

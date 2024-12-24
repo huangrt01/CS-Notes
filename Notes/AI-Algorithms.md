@@ -565,6 +565,12 @@ CLIP, developed by OpenAI, is a model designed to understand and relate images a
 - **Imprecise Multimodal Alignment:** The alignment between text and images can be imprecise, especially when dealing with complex or nuanced relationships.
 - **Retrieval Performance Variability:** CLIP's performance can vary depending on the specificity of the query and the image, sometimes leading to suboptimal results.
 
+#### CoCa
+
+https://research.google/blog/image-text-pre-training-with-contrastive-captioners/
+
+
+
 #### Visualized BGE (Bootstrapped Grid Embedding)
 
 **How Does Visualized BGE Work?**
@@ -1859,7 +1865,7 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 
 
-## ImageSearch
+## Multi-modal Search
 
 ### Intro
 
@@ -2099,9 +2105,35 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 ### Application
 
-Aliyun
+* Aliyun
+  * https://help.aliyun.com/zh/image-search/developer-reference/api-searchbypic?spm=a2c4g.11186623.help-menu-66413.d_4_3_1_3.7538364fjOQka0&scm=20140722.H_202282._.OR_help-V_1
 
-* https://help.aliyun.com/zh/image-search/developer-reference/api-searchbypic?spm=a2c4g.11186623.help-menu-66413.d_4_3_1_3.7538364fjOQka0&scm=20140722.H_202282._.OR_help-V_1
+* Google：https://cloud.google.com/blog/products/ai-machine-learning/multimodal-generative-ai-search
+  * https://ai-demos.dev/demos/matching-engine
+  * https://atlas.nomic.ai/map/vertexAI-mercari 可视化
+  * ![image-20241221224534885](./AI-Algorithms/image-20241221224534885.png)
+
+
+
+### Cases
+
+* 电商
+
+  * *"cups with dancing people"*
+
+  * *"handmade accessories with black and white beads"*
+
+  * *"Cups in the Google logo colors"*
+
+  * *"Shirts that says my birthday"*
+
+* 自动驾驶
+  * "a crossing road with red lights on and pedestrians are standing,"
+  * "a crushed car stopping in the middle of the freeway ahead" 
+* 安防
+  * a person trying to open the doors,
+  * water is flooding in the factory
+  * the machines are on fire.
 
 
 
