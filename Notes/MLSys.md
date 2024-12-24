@@ -355,6 +355,10 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 
 
 
+### Caching
+
+* perceptual hashing for images to cache similar input images.
+
 ### 成本和性能评估
 
 * [MFU与FLOPs计算](https://zhuanlan.zhihu.com/p/690804699?utm_psn=1830997251394240513)
@@ -367,38 +371,6 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 
 
 ### PyTorch
-
-* 训练
-  * 如果追求性能，可以用torch.fx改一下图，把手写op改进去
-  * torch.fx symbolic_trace可以变成静态图
-* 部署
-  * 静态图，会用torchscript trace出来整个图，然后在ir上做一些编译优化
-* 读数据
-  * https://zhuanlan.zhihu.com/p/376974245
-  * Dataset 每次获取一个Part的Dataframe，外部再进行batch_size的划分，这样在整个迭代期间，最多只会有num_worker个Dataset被实例化，事实上也确实不再有内存溢出的问题
-
-
-```python
-class ExpDataset2(Dataset):
-    def __init__(self, filenames, features_config): 
-        self._filenames = filenames
-        
-    def __getitem__(self, idx):
-        path = self._filenames[idx]
-        return preprocess(read_csv(path)
-        
-def load_data(paths, features_config, num_workers, batch_size):
-    dataset = ExpDataset2(paths, features_config)
-    data = DataLoader(
-        dataset,
-        num_workers=num_workers,
-        batch_size=1,
-        collate_fn=collate_fn2
-    )
-    for df in data:
-        for idx_from in range(0, df.shape[0], batch_size):
-            yield examples[idx_from : idx_from + batch_size]
-```
 
 
 

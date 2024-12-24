@@ -1998,7 +1998,7 @@ response_of_comparation = response.choices[0].message.content return response_of
     * In CNNs, patch level features are available before the aggregation of global
       average pooling and projection of fully connected layers.
     * For ViT, local patch tokens are trained together with a special CLS token. All tokens interact each other with self-attentions. To adapt a permutation-invariant transformer to work on images, position embeddings are added to the patch embedding.
-          
+  
 * Related Work
   * Deep metric learning (DML)  
   * ResNet
@@ -2140,6 +2140,30 @@ response_of_comparation = response.choices[0].message.content return response_of
 ## LLM4Search
 
 ### 产品逻辑
+
+#### Intro
+
+* AI 搜索是对一个传统互联网杀手级应用技术的强大重塑。互联网搜索是一种基于网络索引的导航技术。AI 搜索则是一种基于大语言模型的信息技术，能够阅读并从语义层面理解知识。对白领工作者来说，这将是巨大的福音。AI 搜索可能会使当前这个一统天下的市场出现分化。
+* 我们可以想象这样一个世界：每个专业都有自己专门的 AI 搜索引擎——
+  * 分析师和投资者默认使用 Perplexity
+  * 律师会使用 Harvey 这样的平台
+  * 医生则会使用 OpenEvidence 这样的解决方案。
+  * 循着这个思路，我们可以把 Midjourney 看作是对“像素宇宙”的搜索
+  * Github Copilot 是对“代码宇宙”的搜索
+  * 而 Glean 则是对“文档宇宙”的搜索
+  * Agent Universe 是对“Agent 智能体”的搜索。
+* 与传统搜索不同，AI 搜索可以在语义层面深入得多，因此其功能强大程度要高出一个数量级，带来显著的增量生产力提升。文本响应作为一个产品表现形式，其深度超出了表面所见。并非所有的文本响应都是一样的。我们认为大语言模型能够在多个维度实现真正的产品差异化，创业者将围绕这些能力打造针对特定客户群体的独特产品体验：
+  * 意图提取：通过领域专业化，可以更准确地将响应与用户意图匹配。例如，医生和患者问同一个问题时会需要看到不同类型的响应。
+    * 和传统DL搜索推荐领域的个性化似乎有些差异
+    * 样式生成 v.s. 意图判别
+  * 专有数据：在白领领域，独特的数据集将很重要，如律师的判例法、分析师的财务数据或保险承保人的天气数据。
+  * 在商业环境下，得到正确答案是最基本的要求。
+  * 格式化：结果呈现给用户的方式，例如响应的详略程度、要点的使用、多模态内容的使用、对源的引用等。
+    * 比如，会计师和记者消化接收信息的方式就不同。
+  * 界面设计：代码搜索需要存在于 IDE 中，会计政策搜索需要存在于会计 SaaS 平台中。
+* 语义搜索受益于用户现有工作流和数据的上下文。不同领域需要不同的界面交互。新的特定领域 AI 搜索引擎将尽可能地映射其目标用户的“思维模式”。医生、律师和会计师的思维方式并不相同。当我们成为某个领域的专家时，我们提取知识和做出决策的模式开始出现差异。医生面对医学文献，律师面对法案，投资者面对财报。我们在每个领域解析、分析和基于这些知识做出决策的方式都是不同的。
+
+
 
 #### 电商
 
@@ -2603,6 +2627,10 @@ https://webkul.com/ai-semantic-search-services/
   * 算法细节：https://www.algolia.com/doc/guides/algolia-recommend/overview/
   * [归因](https://www.algolia.com/doc/guides/sending-events/getting-started/)
     * Client-side versus server-side events
+
+#### ACCIO（电商导购搜索）
+
+> https://www.accio.com/
 
 #### Glean（企业内部搜索）
 

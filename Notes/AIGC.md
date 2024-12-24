@@ -2362,6 +2362,15 @@ while True:
   * 面向大模型的开发框架
   * 简单实现复杂功能的AI应用
   * 多组件封装
+  * [为什么都放弃了LangChain？](https://www.53ai.com/news/langchain/2024062851728.html)
+    * 优点：
+      * 开箱即用的可视化日志 
+      * Prompt playground，可以立即从日志中修复 Prompt，并查看它在相同输入下的表现 
+      * 可直接从日志轻松构建测试数据集，并可选择一键运行
+      * Prompt 中的简单测试集
+      * 测试分数历史 
+      * Prompt 版本控制 
+      * 对整个链的流式传输提供了很好的支持
 * 向大模型输入知识块，大模型结合外部数据
 * Note：
   * 使用 LangChain 要注意维护自己的 Prompt，尽量 Prompt 与代码逻辑解依赖

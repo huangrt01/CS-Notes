@@ -54,6 +54,12 @@
 
 
 
+## Serving
+
+* 如果追求性能，可以用torch.fx改一下图，把手写op改进去
+* torch.fx symbolic_trace可以变成静态图
+* 静态图，会用torchscript trace出来整个图，然后在ir上做一些编译优化
+
 
 
 ## 调参

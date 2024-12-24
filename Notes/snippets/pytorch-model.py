@@ -1,3 +1,7 @@
+# Rank Model
+https://github.com/allegro/allRank/tree/master
+
+
 ### Linear
 
 torch.nn.Linear(in_features, out_features, bias=True)
@@ -233,9 +237,8 @@ def listMLE(y_pred,
     ranks[finesort_show_indices] = 2.05 - 0.05 * ranks[finesort_show_indices]
     ranks[finesort_not_show_indices] = 1.0 - 0.0025 * ranks[
         finesort_not_show_indices]
-
+    # ranks = torch.pow(2, ranks) - 1.0
     ranks = ranks.unsqueeze(0).expand_as(y_true_sorted)
-
     # logging.info(f"debug ranks: {ranks}, observation_loss: {observation_loss}")
 
     # Calculate the position aware loss
@@ -243,3 +246,29 @@ def listMLE(y_pred,
   observation_loss[mask] = 0.0
   return torch.mean(torch.sum(observation_loss, dim=1))
 
+
+def convert_to_list_mle_samples(query_groups, labels, recall_len):
+  ret_features = []
+  ret_labels = []
+  for query, group in query_groups.items():
+    indices, features = zip(*group)
+    features = list(features)
+    targets = labels[list(indices)]
+    if len(features) < recall_len:
+      features.extend([features[-1]] * (recall_len - len(features)))
+      targets = np.append(targets,
+                          [PADDED_Y_VALUE] * (recall_len - len(targets)))
+      assert len(features) == recall_len
+      assert len(targets) == recall_len
+    ret_features.append(features)
+    ret_labels.append(targets)
+  return ret_features, ret_labels
+
+
+if __name__ == '__main__':
+  y_pred = torch.tensor([[0.8, 0.6, 0.4], [0.7, 0.5, 0.3]])
+  y_true = torch.tensor([[1, 2, 3], [3, 2, 1]])
+
+  loss = listMLE(y_pred, y_true)
+
+  print("ListMLE Loss:", loss.item())
