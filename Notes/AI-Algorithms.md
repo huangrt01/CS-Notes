@@ -2103,7 +2103,7 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 
 
-### Application
+### 竞品
 
 * Aliyun
   * https://help.aliyun.com/zh/image-search/developer-reference/api-searchbypic?spm=a2c4g.11186623.help-menu-66413.d_4_3_1_3.7538364fjOQka0&scm=20140722.H_202282._.OR_help-V_1
@@ -2135,7 +2135,611 @@ response_of_comparation = response.choices[0].message.content return response_of
   * water is flooding in the factory
   * the machines are on fire.
 
+## LLM4Rec
 
+### Intro
+
+* https://github.com/WLiK/LLM4Rec-Awesome-Papers
+* [LLM+Recommendation大模型推荐近期进展|含WWW, SIGIR, AAAI等顶会文章](https://mp.weixin.qq.com/s/m8DMgSt_r-HVNHHzA8ceVw)
+* KDD 2024 工业界搜广推工作整理 https://mp.weixin.qq.com/s/io8bZRMTmt9rQ2pRh1T2pQ
+* 一篇中文科普文章：https://36kr.com/p/2805108795192961
+  * LLM MLSys比传统RecSys更通用
+    * 传统RecSys涉及的中间件更多、更重
+    * Langchain的调用流程通用性强
+  * AI Paas引领推荐系统Saas由算法主导到工程主导的转型
+
+![img](https://nimg.ws.126.net/?url=http%3A%2F%2Fdingyue.ws.126.net%2F2024%2F0604%2F94c56fc3j00sejlo6001bd200u000klg00hx00ca.jpg&thumbnail=660x2147483647&quality=80&type=jpg)
+
+![img](https://nimg.ws.126.net/?url=http%3A%2F%2Fdingyue.ws.126.net%2F2024%2F0604%2Fa2c9deb7j00sejlo7002rd200u000npg00id00ei.jpg&thumbnail=660x2147483647&quality=80&type=jpg)
+
+![img](https://nimg.ws.126.net/?url=http%3A%2F%2Fdingyue.ws.126.net%2F2024%2F0604%2Ff9887823j00sejlog005cd200u000i6g00hx00au.jpg&thumbnail=660x2147483647&quality=80&type=jpg)
+
+
+
+#### [马坚鑫 阿里M6团队 MLNLP2023大模型与推荐系统论坛](https://www.bilibili.com/video/BV17u4y1N7zY)
+
+* Qwen LLM介绍
+
+  * 7B开源模型
+  * ReAct prompting
+    * 技巧：处理多轮问答上下文，将ReAct prompting贴在倒数第二个回答前面，而不是最后一个问题前，有助于模型理解上下文
+  * 如何训练Agent能力
+    * AI aligns AI
+      * Step 0: 少量高质量数据，用作SFT和in-context examples
+      * Step 1: self-instruct，即通过in-context prompt生成更多样本
+      * Step 2: 规则处理，人工审核，（可选）人工改正
+      * Step 3: 循环 Step 1-2
+
+* LLM在RecSys的价值 —— 从生产者、平台、消费者视角
+
+  * ![image-20240719185430334](./AI-Algorithms/llm-rec-text.png)
+
+  * LLM + RecSys 有益于内容生产者
+
+    * 核心诉求：流量，尤其是新内容的冷启动
+    * ![image-20240719185656541](./AI-Algorithms/llm-recsys-1.png)
+
+    * ali结果：小模型、少量样本、冷启动优秀
+
+  * LLM + RecSys有益于推荐平台
+
+    * 核心诉求：算法支持平台的运营企划
+    * 时事热点：加快对事件的响应速度
+      * 快中秋了 -> 推荐月饼，无需从行为学习
+    * 人工干预：基于LLM的customized instruction/system prompt
+
+  * LLM + RecSys有益于内容消费者
+
+    * 推荐理由
+    * 用户反馈
+    * 导购、对话式推荐
+
+* RecSys对LLM的挑战
+
+  * 推理成本
+    * 硬件
+    * 工程：缓存；投机采样
+    * 算法：大模型+小模型+规则；放弃通用；Linear Attn
+      * e.g. GPT做数学题非常消耗token（CoT），但调用工具很轻量
+    * UI/UX：好的产品设计能避开缺陷
+      * e.g. chatGPT流式输出，巧妙地让生成长文的耗时可接受
+
+* 模型结构尝试：
+
+  * 延迟交互（late interaction）
+    * 把浅层的cross attention干掉，高层再进行transformer的交互
+
+![image-20240719191437165](./AI-Algorithms/llm-recsys-2.png)
+
+* 挑战：模型更新 - RecSys每天都有新内容
+  * 检索增强RAG的难点1：新知识易检索，新常识难检索
+    * e.g. 有没有超过GPT-4的大模型
+  * RAG的难点2：检索算法的精度、LLM的长序列支持
+  * 预测：1-2年内会出现LLM的online learning
+
+![image-20240719191754039](./AI-Algorithms/llm-recsys3.png)
+
+
+
+
+
+### 电商 LLM4Rec
+
+#### Amazon:  [基于大语言模型和推荐系统构建电商智能导购机器人](https://aws.amazon.com/cn/blogs/china/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system/)
+
+* 基于 Amazon SageMaker、Amazon OpenSearch、AWS Lambda、Amazon Personalize 和 Amazon API Gateway 等基础云服务，结合大语言模型、开源大语言模型应用框架 langchain 以及开源前端架构 Stramlit
+* 功能：智能问询、商品推荐、商品个性化营销文案
+  * 多轮对话：挖掘用户需求，商品的品牌、价格、材质、用途、使用场景等角度
+* 框架：
+  * dynamodb存储“用户同session的对话记录”（类似OpenAI的thread概念）
+* 测试集：https://github.com/aws-samples/retail-demo-store
+  * 2000 多个虚拟商品数据、6000 多个虚拟顾客数据和 2 万多条虚拟交互信息
+
+![build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system1](./AI-Algorithms/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system1.png)
+
+![img](https://s3.cn-north-1.amazonaws.com.cn/awschinablog/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system3.png)
+
+![img](https://s3.cn-north-1.amazonaws.com.cn/awschinablog/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system7.png)
+
+![img](https://s3.cn-north-1.amazonaws.com.cn/awschinablog/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system8.png)
+
+#### 阿里[**LLM在电商推荐系统的探索与实践**](https://www.53ai.com/news/qianyanjishu/357.html)、LLM4REC综述
+
+> LLM+RS、LLM As RS
+>
+> 基于LLM知识能力的类目搭配推荐
+
+* 对比RecSys和LLM：
+  * 前者是一个数据驱动的系统，依赖电商ID体系来建模用户或物品，缺乏语义和外部知识信息，存在信息茧房、冷启动、多样性不足、无法跨域推荐等问题；
+  * 后者缺乏推荐领域内的专有数据信息，不具备传统推荐模型的序列处理和记忆能力，同时计算复杂度高、训练和推理成本大。
+
+* 两种范式：LLM+RS；LLM as RS
+* LLM + RS
+  * LLM Embedding: U-BERT[2]对用户评论内容进行编码来增强用户的个性化向量表征，最终得到稠密的embedding向量；UniSRec[3]通过对商品title/用户行为序列进行编码，来达成跨域序列推荐的目标。
+  * LLM Summary:
+    * 生成式新闻推荐框架GENRE[5]
+    * GPT4Rec[6]将LLM模型用于用户意图理解，根据用户的行为历史，进行兴趣抽取并生成中间的语义query，用于后续的推荐召回。如下图所示，其主要分为两步：首先根据用户历史交互的商品和它们对应的标题，通过prompt格式化后，使用GPT2来生成可以表征用户多个兴趣的“search query”。然后将GPT2生成的query提供给搜索引擎，以检索要推荐的商品，从而提高推荐召回的相关性和多样性。
+
+![img](https://api.ibos.cn/v4/weapparticle/accesswximg?aid=78909&url=aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy8zM1AyRmRBbmp1aWNIaGVlM1hJQjFNZXNjZm84dGljdFhkRGJlYzFpYTRhckl1N2ROcVVNNjFNTlhZZm03cU4wbTJtUEo5YWF1aWFxZ1A0TXY1TUJ3MzhkeXcvNjQwP3d4X2ZtdD1wbmc=)
+
+![img](https://api.ibos.cn/v4/weapparticle/accesswximg?aid=78909&url=aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy8zM1AyRmRBbmp1aWNIaGVlM1hJQjFNZXNjZm84dGljdFhkaFJpYWljVVZINWJ5eDJpY1hMQzR2R0xXaFdxbkV0TERERFRNb1I2NkVDQ2c0R21XZ2dYb0N3YVlBLzY0MD93eF9mbXQ9cG5n)
+
+* LLM As RS
+  * LLM As Ranker
+    * 此类工作[7] [8]将推荐问题形式化为给定条件的排序任务，其中用户的历史交互作为条件，推荐系统召回得到的商品作为候选。通过设计合适的prompt模版，结合条件、候选、排序指令，使得LLM为候选的商品进行打分或者排序。
+    * 实验证明，LLM在Zero-Shot场景具有较好的零样本排序能力，但在排序时不可避免地有position bias和popularity bias问题。
+
+![img](https://api.ibos.cn/v4/weapparticle/accesswximg?aid=78909&url=aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy8zM1AyRmRBbmp1aWNIaGVlM1hJQjFNZXNjZm84dGljdFhkNzI3aWFxb1ZXZnBNZHN3SWVmU2ljWjF2SGpVMlU3dk5nSjFFWUhNbjNpY1BTZVZqaWFUakVWZ3NkZy82NDA/d3hfZm10PXBuZw==)
+
+
+
+* 算法方案：受限于LLM模型极大的推理耗时，无法满足在线推荐系统毫秒级的时延限制，短期内不具备将LLM模型用于在线推理的条件。于是我们更多地采用"LLM + 推荐"的方式，去利用大模型的知识和推理能力，提高推荐模型对商品信息、上下文、用户行为序列的知识表达，包括：
+  * 借助LLM通用知识信息，构建类目搭配体系，引入推荐系统在推荐召回侧引入搭配I2I、排序侧进行类目兴趣扩展建模，提高推荐的多样性。
+  * 借助LLM文本推理能力，辅助商品/用户理解。
+    * 我们使用LLM将电商Item冗余文本信息进行去噪提纯和改写；
+    * 结合用户行为序列、上下文以及用户画像，进行用户行为sumarry总结。并通过预训练语言模型，将文本知识结果进行embedding向量化表征，与传统的推荐模型进行知识感知嵌入，提高模型的知识表达。
+
+![img](https://api.ibos.cn/v4/weapparticle/accesswximg?aid=78909&url=aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy8zM1AyRmRBbmp1aWNIaGVlM1hJQjFNZXNjZm84dGljdFhkSk1icEM1aWJER1FhUjdBN29udG5aZVhyTkt6T0hoSUgxQjJ3ZUFWTjJJTDhKdTE3NXk4NHRLdy82NDA/d3hfZm10PXBuZw==)
+
+* 基于LLM知识能力的类目搭配推荐
+  * 经过多年的沉淀，电商平台已经拥有了一套完整的类目体系。这套类目体系通常采用树状结构，通过层层拆解，最终将一个商品映射到一个末级类目，不同末级类目之间相对独立。现有的类目体系无法体现出这类目之间存在的搭配信息，缺乏跨类目的搭配关系表达。
+  * 同时，相较于品牌和卖家，类目可以更加显式地与用户兴趣进行聚合和映射。在推荐场景之中，给用户准确地推荐相关商品的同时，如果能够挖掘不同兴趣之间的隐藏关系，基于搭配进行发散推荐，将给用户带来新的惊喜感、实现用户需求和兴趣的扩展。
+  * 类目体系：休闲裤和衬衫分别属于一级类目（男装）下面的不同二级类目，而男帆布鞋又挂载在另一个一级类目（流行男鞋）上
+  * 传统的类目关系挖掘往往基于知识图谱，采用距离度量、聚类、行业规则、协同过滤等方法。这些工作大都需要繁杂的数据清洗、算法挖掘和行业专家知识。LLM大模型的出现，让快速、高效的电商知识构建变成了现实。
+  * Prompt:"1.用逗号分隔,2.返回格式为'''类目1,类目2,类目3...''',3.不包含【cate_name】这个词,4.搭配类目丰富"
+  * 站内类目ID映射：由于LLM模型返回的是通用知识信息，存在与站内的类目体系无法完全对应的情况。为了便于后续推荐各个模块使用，兼容现有的电商推荐链路，我们进一步将LLM搭配类目映射成站内类目ID。站内类目ID映射可以采用以下两种方法：
+    * 基于文本相关性的向量召回。将LLM搭配类目和站内类目分别表征成文本embedding向量，然后通过向量召回的方式，选取与LLM搭配类目距离空间最近的top站内类目进行映射。
+    * 基于站内后验统计的query2cate映射。将搭配类目作为query，根据电商平台搜索query2cate的统计数据，使用该query下top的点击cate作为映射类目，实现LLM搭配到站内ID的映射。
+  * 精排兴趣扩展
+
+![img](https://api.ibos.cn/v4/weapparticle/accesswximg?aid=78909&url=aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy8zM1AyRmRBbmp1aWNIaGVlM1hJQjFNZXNjZm84dGljdFhkeWlhR2lhTlE3QzVVOWVkSGlhaE1EY0NOaWNWUTV6cUZQUTVrYWpZaWNoc2lhVU5KSXZKd1h5MUtKaWNhZy82NDA/d3hfZm10PXBuZw==)
+
+![img](https://api.ibos.cn/v4/weapparticle/accesswximg?aid=78909&url=aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy8zM1AyRmRBbmp1aWNIaGVlM1hJQjFNZXNjZm84dGljdFhkVkIyMmVSWDJ2MjZzcEVub0JlWUI4Y0NIZ0x6eFFHRWxsQjZJSjgybGhzeW1OWTlmazdlQ0p3LzY0MD93eF9mbXQ9cG5n)
+
+
+
+* **基于LLM文本能力的商品语义表征**
+  * 对于商品类目以及属性信息，通常将其通过multi-hot的方式进行编码转化成特征向量。
+    * 容易产生数据稀疏问题。
+  * 商品标题语义上并不连贯，信息凌乱（包括“爆款”、“特价”等），直接进行mutli-hot或者文本编码难以得到很好的嵌入表示。
+  * 一种可行的解决方案是将对商品零散的信息转换成语义连贯的文本，然后通过pre-train语言模型进行编码。对此，我们借助LLM蕴含的强大的语言表达能力和逻辑推理能力从商品标题中抽取出关键信息，从而实现对商品标题的正则化，得到语义连贯的文本描述，再对其进行编码，从而丰富商品的特征。
+  * Prompt：你现在是一个买家。给定商品的描述词【A】以及各种属性【B】，请根据关键词和关键属性描述出商品是什么。要求是只需要回答是什么，不要补充其他内容，尽量从A和B中选出词语进行描述，字数不超过40，回答模版为:这个商品是...。比如当A=['giyo', '公路', '山地车', '专用', '自行车', '单车', '专业', '骑行', '手套', '半指', '夏季', '男', '硅胶', '减震', '女']，B=['尺码': 'XXL', '类目': '自行车手套', '适用对象': '通用', '颜色分类': '弧光半指-黄色-双面透气+GEL硅胶+劲厚掌垫', '上市时间': '2016年夏季', '货号': '1183', '品牌': 'GIYO/集优', '款式': '半指手套']，输出：这个商品是GIYO牌的自行车半指手套。现在A=...,B=...
+  * 指标：平均困惑度 https://zhuanlan.zhihu.com/p/114432097
+
+* 商品语义向量-引入排序模型：仅仅是加特征
+  * 借助Modelscope的CoROM模型[15]，我们对正则化后的商品标题文本进行了向量化抽取，并作为特征加入基于双塔结构的DSSM粗排模型中[16]
+    * https://www.modelscope.cn/models/damo/nlp_corom_sentence-embedding_chinese-base-ecom/summary
+  * 特征降维方式是BERT-whitening[18]
+
+* 更多方向：
+  * 多模态推荐：利用多模态LLM大模型的多模态信息抽取和表征能力，提取包括图片、文本、视频关键帧，视频语音文字等不同模态的语义化信息，并通过离线特征工程进行表征，使线上推荐模型能够真正完整地感知到各种电商模态信息，并实现对用户不同信息偏好和意图的理解。
+  * LLM推理加速：现阶段LLM存在推理时延过高的问题，无法满足推荐系统数十ms级别的rt要求，我们的LLM探索也止步于离线特征编码阶段。后续考虑通过蒸馏、剪枝、量化等手段，用一个小模型蒸馏出LLM的部分能力，从而降低推理的复杂性，使其能线上serving。
+  * LLM as 重排: 利用LLM丰富的知识领域扩展能力，在商品已有丰富的语义标签基础上，结合用户历史交互兴趣、选择偏好、序列生成规则 和 prompt template为用户从top排序集合中选取合适的商品或话题，生成推荐列表。
+
+#### 阿里云-施兴-推荐搜索技术的前沿探索
+
+> https://github.com/alibaba/EasyRec/
+
+![image-20241007223126666](./AI-Algorithms/pairec.png)
+
+![image-20241007223250405](./AI-Algorithms/ali-ai.png)
+
+![image-20241007223648967](./AI-Algorithms/easyrec.png)
+
+
+
+![image-20241007223838777](./AI-Algorithms/pairec-opt.png)
+
+![image-20241007224303869](./AI-Algorithms/ali-query-rewrite.png)
+
+### 通用 LLM4Rec
+
+#### Literature Review
+
+* LLMs as either feature encoders [9–24] [star]
+  * 直接使用
+    * star
+    * [15]
+  * mapping continuous LLM
+    embeddings into discrete tokens using vector quantization and
+    training a subsequent generative model [12, 13, 21, 22];
+  * training sequential models by initializing the embedding layer with
+    LLM embeddings [9, 14, 24];
+  * training models to directly compute the relevance between item and user embeddings (i.e., embeddings of user selected items) [10, 11, 16–20, 23].
+* LLM as scoring and ranking functions [25–31]. [star]
+  * generative selection prompting,
+  * lag behind the performance of fine-tuned models due to a lack of collaborative knowledge
+  * fine-tuning the models with interaction data, though this approach is also costly [40–45].
+* LLM as a Ranker for Information Retrieval.[star]
+  * point-wise: LLMs directly evaluate relevance using numerical scores or binary judgments [48, 49]
+    * capturing the relative importance of passages
+  * pair-wise: LLMs express preferences between item pairs
+    * effective but inefficient due to the high number ofcalls required [50]
+  * List-wise: LLMs compare multiple passages simultaneously [51],
+    * performance heavily relies on the model’s semantic prior and
+      reasoning capabilities [50]
+
+#### STAR: A Simple Training-free Approach for Recommendations using Large Language Models
+
+![image-20241225184836438](./AI-Algorithms/image-20241225184836438.png)
+
+* Intro
+  * ![image-20241225204332446](./AI-Algorithms/image-20241225204332446.png)
+* 结论：
+  * 召回效果很好
+    * “头重脚轻”的召回排序架构
+    * 语义比CF重要
+    * recency decay 0.7
+    * length=3，只能建模短时序列
+  * LLM做pairwise排序，能提升效果
+  * collaborative information在召回和排序中很重要
+  * 比较有趣的结果：不考虑rating，效果更好，原因是目标是ctr，不考虑rating的后验
+
+![image-20241225210031783](./AI-Algorithms/image-20241225210031783.png)
+
+![image-20241226015142625](./AI-Algorithms/image-20241226015142625.png)
+
+![image-20241226014245937](./AI-Algorithms/image-20241226014245937.png)
+
+* 比Avg Pooling再召回强很多：原因是更细腻的交互，不丢失信息，本质上已经是一个策略排序模型了。
+  * 启发：本质上是用短序列中的每个Item做召回，每个History Item可以作为一路召回，三路Merge
+
+![image-20241226020026743](./AI-Algorithms/image-20241226020026743.png)
+
+* 召回
+
+  * using a combination of semantic similarity and collaborative
+    commonality to the items in a user’s history.
+    * a temporal factor gives priority to user’s recent interactions
+
+  * Semantic relationship：
+    * 入库：We construct a prompt based on
+      the item information and metadata, including the title, description,
+      category, brand, sales ranking, and price.
+  * Collaborative relationship：
+    * ItemCF
+  * 融合：
+    * 时间衰减、rating（行为等级）
+    * ![image-20241226012231967](./AI-Algorithms/image-20241226012231967.png)
+
+* 排序：LLM as Ranker
+
+  * pointwise
+  * pairwise
+    * 从下往上
+  * listwise
+    * a window size 𝑤 and a stride d
+  * 特征：
+    * Popularity
+    * Co-occurence
+
+![image-20241226012908127](./AI-Algorithms/image-20241226012908127.png)
+
+* Evaluation
+  * 倒数第一个：test； 倒数第二个：validation
+
+
+
+#### [LLMRec] Is ChatGPT a Good Recommender ? A Preliminary Study
+
+> https://github.com/williamliujl/LLMRec
+
+* Intro
+  * taobao的尝试，Pretrained Model做推荐
+    * M6-Rec: Generative Pretrained Language Models are Open-Ended Recommender Systems.
+    * Recommendation as language processing (rlp): A unified pretrain, personalized prompt & predict paradigm (p5)
+* 实验结论：
+  * 「未经finetune的ChatGPT」 performs well in rating prediction but poorly in sequential and direct recommendation tasks, achieving only similar performance levels to early
+    baseline methods on certain metrics.
+  * 人工评估结果，Explanation Generation、Review Sumarization效果较好
+* 架构：
+  * different prompts are constructed based on the specific characteristics of the recommendation tasks (Section 3.1)
+  * these prompts are used as inputs for ChatGPT, which generates the recommendation results according to the requirements specified in the prompts
+  * the output from ChatGPT is checked and refined by the refinement module, and the refined results are returned to the user as the final recommendation results (Section 3.2).
+    * 检查gpt的输出是否符合格式
+    * 如果输出item和item pool不匹配，则用BERT做相似度匹配
+
+![image-20241003193718138](./AI-Algorithms/llmrec.png)
+
+* 五种task
+  * Rating Prediction
+  * Sequential Recommendation
+  * Direct Recommendation
+  * Explanation Generation
+  * Review Sumarization
+* 实验设置：
+  * 10 items、3 shots、gpt-3.5-turbo
+  * direct rec：99负例、1正例
+  * 指标：top-k Hit Ratio (HR@k), top-k Normalized Discounted Cumulative Gain (NDCG@k)
+* 其它：
+  * Figure2提供了针对不同recommendation task的一些prompt
+* 结果：
+  * rating predict效果还行
+  * sequential predict效果不好：
+    * focus more on semantic similarity rather than the transition relationships between items,
+    * 无法把候选都输入prompt，输出了假数据
+  * direct rec:
+    * gpt有bias，更容易推荐prompt中排在前面和后面的item
+
+![image-20241003202813843](./AI-Algorithms/llmrec1.png)
+
+
+
+
+
+#### [Where to Go Next for Recommender Systems? ID- vs. Modality-based Recommender Models Revisited](https://arxiv.org/pdf/2303.13835)
+
+* Intro：
+  * 结论是：MoRec is already comparable to its IDRec counterpart with an expensive end-to-end training method, **even for warm item recommendation**
+  * https://github.com/westlake-repl/IDvs.MoRec
+  * Q(i): Equipped with strong modality encoders (ME), can
+    MoRec be comparable to or even surpass IDRec in regular, especially in warm-start item recommendation scenario?
+    * two-tower based DSSM [24, 50] and session-based SASRec [25])，公平的实验setting对比
+  * Q(ii): If Q(i) is yes, can the recent technical advances devel-
+    oped in NLP and CV fields translate into accuracy improve- ment in MoRec when using text and visual features? 
+  * Q(iii): Are the representations learned by these founda-
+    tion models as general as claimed? How can we effectively use item modality representations derived from an NLP or CV encoder network?
+
+* 算法：
+  * User表征：User Emb、User BHV、User Profile
+  * Item表征：Item Emb、模态Emb
+  * 基于DSSM和SASREC研究IDRec和MoRec
+    * SASRec is a well-known se- quential recommendation model based on multi-head self-attention (MHSA) [59] which describes a user by her interacted item ID sequence.
+* 结论：
+  * seq2seq训练 + SASREC相比双塔，更能发挥MoRec的能力
+  * E2E训练效果比two stage好很多
+    * “唯一The good thing” is that by proper adaption (i.e., TS-DNN), TS-based MoRec have some potential to compete with E2E MoRec for text recommendation in the future (16.66 vs 18.23).
+    * representation fea- tures are not universal enough, at least for item recommendation.
+
+![image-20241003233046500](./AI-Algorithms/morec.png)
+
+* 关于Training Cost：
+  * the best MoRec (with SASRec as user encoder and Swin-B as ME) takes an astonishing more than 100x compute and training time than IDRec
+  * inference time差不多
+  * 优化思路：
+    * 只finetune top-layer
+* 其它算法相关：
+  * extra pre-training：在e2e morec的基础上，比较难做效果
+  * Combing ID & modality features：效果差
+  * it is sometimes necessary to set different learning rate for item ME and other modules. This may be because item ME has been pre-trained on NLP and CV datasets before, and its learning stride may be different from other modules trained from scratch.
+
+#### Exploring the Upper Limits of Text-Based Collaborative Filtering Using Large Language Models: Discoveries and Insights
+
+* Intro
+  * Text-based collaborative filtering (TCF)
+  * We examine whether these extremely large LMs could enable a universal item representation for the recommendation task.
+
+* 算法：
+  * loss：either be a pairwise BPR [38] loss or a cross-entropy classification loss [54].
+
+* 结论
+  * Q1: How does the recommender system’s performance respond to the continuous increase in the item encoder’s size? Is the performance limits attainable at the scale of hundreds of billions? 
+    * sasrec效果好于DSSM
+    * the TCF model with a 175B parameter LM may not have reached its performance ceiling
+  * Q2: Can super-large LMs, such as GPT-3 with 175-billion parameters, generate universal text representations?
+    * even the item representation learned by an extremely large LM (e.g., GPT-3) may not result in a universal representation, at least not for the text
+    * ![image-20241006172858506](./AI-Algorithms/tcf-result.png)
+    * Finetune LM效果好（top two layers）![image-20241006173055402](./AI-Algorithms/image-20241006173055402.png)
+  * Q3: Can recommender models with a 175-billion parameter LM as the item encoder easily beat the simplest ID embedding based models (IDCF), especially for warm item recommendation?
+    * ![image-20241006173158353](./AI-Algorithms/tcf-result2.png)
+  * Q4: How close is the TCF paradigm to a universal recommender model?
+    * while TCF models with large LMs do exhibit a certain degree of transfer learning capability, they still fall significantly short of being a universal recommender model, as we had initially envisioned
+    * Table 3
+    * For a universal recommender system model, not only should item representations be transferable, **but also the matching relationship between users and items needs to be transferable.** However, the matching relationship is closely related to the exposure strategy of the specific recommender system.
+  * Q5: Will the classic TCF paradigm be replaced by a recent prompt engineering based rec- ommendation method that utilizes ChatGPT (called ChatGPT4Rec)?
+
+![image-20241006171904133](./AI-Algorithms/TCF.png)
+
+* 其它：
+  * appendix有sasrec在不同数据集的训练超参
+
+
+
+#### [Meta] [HSTU] Actions Speak Louder than Words: Trillion-Parameter Sequential Transducers for Generative Recommendations
+
+https://arxiv.org/pdf/2402.17152v1
+
+> - 算法创新点：改变了特征排列（序列构造方式）将用户行为视作一种新模态、将target item做进了模型底座
+> - 工程创新点：序列采样、 M-FALCON、激进的kernel fusion、casual mask（KV cache）
+
+* Intro
+  * reformulate recommendation problems as sequential transduction tasks within a generative modeling framework
+  * HSTU
+  * power-law of training compute
+* 分析难以scale的原因
+  * heterogeneous features的重要性大
+  * A billion-scale dynamic vocabulary，候选多
+  * 成本大：recommendation systems need to handle a few orders of magnitude more tokens per day than what language models process over 1-2 months.
+    * GPT-3 was trained on a total of 300B tokens over a period of 1-2 months with thousands of GPUs
+
+* In this work, we treat user actions as a new modality in generative modeling
+  * core ranking and retrieval tasks in industrial-scale recommenders can be cast as generative modeling problems given an appropriate new feature space
+  * this paradigm enables us to systematically leverage redundancies in features, training, and inference to improve efficiency
+  * --> **three orders of magnitude more computationally complex** than prior state-of-the-art,
+
+* Recommendation as Sequential Transduction Tasks: From DLRMs to GRs
+  * Generative Recommenders (GRs)
+    * 本质上似乎是用transformer学一个hidden embedding
+  * sparse features：
+    * **Target item从底层引入**
+  * dense features:
+    * an important observation is that the categorical features (e.g., item topics, locations) over which we perform these aggregations are already sequentialized and encoded in GRs. Hence, we can remove numerical features in GRs given a sufficiently expressive sequential transduction architecture coupled with a target-aware formulation
+  * 顺序转换任务
+    * 按时间merge主序列和user profile序列
+  * 辅助时间序列 - 随时间缓慢变化的时间序列
+    * 只在变的时候merge进去
+  * 当下一个token表示与参与无关的(non-engagement related)分类特征（例如人口统计学特征）时，$$y_i$$ 未定义, 对于这些情况，我们将 $$m_i$$ 设置为 0。
+  * 精排：**内容位置的预测**转换为**多任务预测**
+    * casual mask: https://zhuanlan.zhihu.com/p/698447429
+
+![image-20240716221553540](./AI-Algorithms/hstu1.png)
+
+* HSTU
+  * Pointwise aggregated attention
+    * HSTU在Transformer中采用了一种新的点对点（pointwise）聚集注意力机制，而不是softmax注意力。这是出于两个因素的考虑。
+    * 在推荐系统中，与目标相关的先前数据点的**数量**作为一个强大的特征，指示用户偏好的强度，在经过softmax归一化后很难捕捉到。这一点很关键，因为我们需要预测参与度的强度，例如在给定item上花费的时间，以及item的相对顺序，再例如预测候选的排序以最大化AUC。
+    * 虽然softmax激活函数对噪声具有鲁棒性，但它不太适合流式设置中的非平稳词汇表。
+  * 通过随机长度（Stochastic Length，SL）进一步从算法上增加用户历史序列的稀疏性
+    * 对用户序列做采样：
+      * 一种说法：在一个user的request/session结束时，以1/n的概率采样这个user，其中n是这个user的序列长度。
+      * 另一种说法：一个session采样一次
+
+![image-20240716222635364](./AI-Algorithms/hstu2.png)
+
+* 工程优化
+  * 优化activations的内存占用
+  * 单kernel
+  * M-FALCON 
+    * Microbatched-Fast Attention Leveraging Cacheable OperatioNs
+    * to perform inference for m candidates with an input sequence size of n
+    * We optionally divide the overall m candidates into ⌈m/bm⌉ microbatches of size bm to leverage encoder-level KV caching (Pope et al., 2022) either across forward passes to reduce cost, or across requests to minimize tail latency
+* 实验insight
+  * 生成式推荐模型与LLM一样遵循scaling law，但传统推荐模型不遵循
+  * 同等参数量的情况下，在参数达到一定规模的threshold后，生成式推荐模型才能有比传统推荐模型更好的效果。精排模型需要比召回模型更大的threshold(约100x)
+  * Scaling law的最大配置时：8,192 sequence length, 1,024 embedding dimension, 24 layers of HSTU。**对精排模型，约在最大配置的1/10处，GR表现超过传统模型，对应的配置约为：4000 sequence length, 1,024 embedding dimension, 6 layers**
+* Question
+  * 用户token数量n_i 和用户的时序行为数量（上张图中，老推荐模型的时序样本数量）是什么关系？
+  * 为什么在用户session结束时生成样本，相当于做采样？
+
+
+
+#### GPT4Rec: A Generative Framework for Personalized Recommendation and User Interests Interpretation
+
+> * Beam Search生成多query：似乎可被LLM能力替代
+
+* Intro
+  * we present GPT4Rec, a novel and flexible generative framework inspired by search engines.
+    It first generates hypothetical "search queries" given item titles in a user’s history, and then retrieves items for recommendation by searching these queries.
+  * a multi-query generation technique with beam search.
+
+![image-20241005210152630](./AI-Algorithms/gpt4rec.png)
+
+* 架构
+  * GPT4Rec formats the item titles with a prompt and uses a generative language model
+    to learn both item and user embeddings in the language space.
+    The model then generates multiple queries that represent user’s
+    interests, which will be fed to a search engine to retrieve items
+    for recommendation.
+  * prompt: "Previously, the customer has bought: <ITEM TITLE 1>. <ITEM TITLE 2>... In the future, the customer wants to buy"
+  * beam search
+  * BM25 matching score function [20], as it is one of the most widely used baseline search engines that accounts for the term frequency saturation and the document length with two corresponding parameters
+  * **multi generation的算法**
+    * ![image-20241005215520146](./AI-Algorithms/multi-generation.png)
+* 训练细节
+  * 基于对比学习的思想，T-1个推测第T个
+  * 先训练好backbone，再调BM25的参数
+  * ![image-20241005220901898](./AI-Algorithms/image-20241005220901898.png)
+
+
+
+* 结论
+  * The comparison with baseline methods suggests that both item
+    content information and modern language modeling are key ingredients for achieving superior performance. One the one hand, while BERT4Rec has the best performance among the baseline methods by leveraging modern language modeling techniques, it fails to fully utilize the item content information by treating items as IDs. On the other hand, ContentRec’s use of item content information with bag- of-words embeddings and mean-pooling modeling is insufficient for achieving comparable performance.
+  * In particular, generating K queries and retriev- ing one item per query yields the best performance of Recall@K. This finding suggests that each query contains enough detail to re- trieve a relevant item.
+* 定性分析的角度
+  * diversity：兴趣模糊时，推送新类别
+  * coverage：兴趣固定时，推送固定类别
+
+#### [InteRecAgent] [CRS] Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations
+
+> https://aka.ms/recagent
+>
+> figure 5: plan-first 和 reflection 最有用
+>
+> 问题：
+>
+> * candidate bus怎么做的？
+
+* Intro
+  * LLMs lack the knowledge of domain-specific item catalogs and be- havioral patterns, particularly in areas that diverge from gen- eral world knowledge, such as online e-commerce
+    * fail to capture fine-grained, domain-specific behavior patterns, especially in domains with massive training data
+  * InteRecAgent的介绍
+    * employs LLMs as the brain and recommender models as tools
+    * a minimal set of essential tools required to transform LLMs into InteRecAgent
+    * an efficient workflow within InteRecAgent for task execution, in- corporating key components such as memory components, dynamic demonstration-augmented task planning, and reflec- tion
+  * InteRecAgent的设计思路：Interactive Recommender Agent
+    * “shared candidate bus”
+    * “long-term and short-term user profile”
+    * “plan-first execution”(plan-then-tool) strategy
+      * InteRecAgent generates all the steps of tool- calling at once and strictly follows the execution plan to ac- complish the task.
+      * a reflection strategy
+    * 基于GPT-4生成dataset，再finetune LLAMA2
+
+![image-20241007231933770](./AI-Algorithms/inte-rec-agent.png)
+
+* Methodology
+
+  * hard conditions and soft conditions.
+    * Hard conditions refer to explicit demands on items, such as “I want some popular sports games” or “Recommend me some RPG games under $100”.
+    * Soft conditions pertain to demands that cannot be explicitly expressed with discrete attributes and require the use of semantic matching models, like “I want some games similar to Call of Duty and Fortnite”.
+  * 潜在的Hard conditions：SQL Query Tool → SQL Retrieval Tool → Ranker Tool
+    * 想要比xxx贵的
+  * 解决ReAct的缺陷
+    * To tackle these chal- lenges, we enhance the three critical components of a typical LLM-based agent, namely memory (Section 3.2), task planning (Section 3.3 and 3.4), and tool learning abilities (Section 3.5).
+
+* Framework细节
+
+  * The Candidate Bus, accessible by all tools, comprises two parts: a data bus for storing can- didate items, and a tracker for recording each tool’s output.
+  * Which ofthese movies do you think is most suitable for me: [Movie List]?” In this case, the LLM will call a special tool—**the memory initialization tool**—to set the user-specified items as the initial candidate items.
+  * User Profile
+    * 基于对话历史分析User Profile，有“like”、“dislike”、“expect”三种
+      - 为了避免储存太长的对话历史，设定了“long-term"、“short-term”，当超过对话框，就用short-term interest更新long-term interest
+
+* Plan-first Execution with Dynamic Demonstrations
+
+  * 相比step-by-step的优点
+    * step-by-step不方便对各种dynamic tool调用做in-context learning
+    * 而这个方法可以写很多 ⟨query, plan⟩ pairs
+  * ![image-20241020001429229](./AI-Algorithms/image-20241020001429229.png)
+
+  * To address the challenge, we introduce a dynamic demonstration strategy, where only a few demonstrations that are most simi- lar to current user intent are incorporated into the prompt.
+    * **example sampler**
+  * LLM生成examples：
+    * plan -> intent -> plan
+    * The inconsistency indicates that the quality of the generated intent is not high enough, and we only retain those consistent demonstrations. 
+
+* Reflection
+
+  * actor-critic reflection mechanism
+
+* 微调7B小模型
+
+  * [instructions, tool execution plans] pairs
+
+* Evaluation
+
+  * 对话式：Hit@k and AT@k, representing the success of recommending the target item within k turns and the average turns (AT) re- quired for a successful recommendation
+  * 比Chat-Rec效果好，可能的优势点有很多
+    * SASRec做rerank
+    * 更合理的plan
+    * reflection
+
+* Cases：Figure 6
+
+* 结论：
+
+  * figure 5: plan-first 和 reflection 最有用
+
+* Prompts
+
+  * User simulator
+
+    * ```
+      You are a user chatting with a recommender for {item} rec- ommendation in turn. Your history is {history}. Your tar- get items: {target}. Here is the information about target you could use: {target item info}. You must follow the rules below during chat. If the recommender recommends {target}, you should ac- cept. If the recommender recommends other items, you should refuse them and provide the information about {target}. If the recommender asks for your preference, you should provide the information about {target}. You could provide your history. Your output is only allowed to be the words from the user you act. If you think the con- versation comes to an ending, output a ⟨END⟩. You should never directly tell the target item. Only use the provided in- formation about the target. Never give many details about the target items at one time. Less than 3 conditions is better. Now lets start, you first, act as a user. Here are the previous conversation you have completed: {chat history}.
+      ```
+
+  * Task Descriptions： Figure C1
+
+  * Tool Descriptions：Figure C2-C5
+
+  * Reflection：C6
+
+  * Demonstration Generation：
+
+    * generating plan：C7
+    * 两种生成intent：C8、C11
+
+  * 大模型做推荐：C9、C10
 
 ## LLM4Search
 
@@ -2155,11 +2759,13 @@ response_of_comparation = response.choices[0].message.content return response_of
 * 与传统搜索不同，AI 搜索可以在语义层面深入得多，因此其功能强大程度要高出一个数量级，带来显著的增量生产力提升。文本响应作为一个产品表现形式，其深度超出了表面所见。并非所有的文本响应都是一样的。我们认为大语言模型能够在多个维度实现真正的产品差异化，创业者将围绕这些能力打造针对特定客户群体的独特产品体验：
   * 意图提取：通过领域专业化，可以更准确地将响应与用户意图匹配。例如，医生和患者问同一个问题时会需要看到不同类型的响应。
     * 和传统DL搜索推荐领域的个性化似乎有些差异
-    * 样式生成 v.s. 意图判别
   * 专有数据：在白领领域，独特的数据集将很重要，如律师的判例法、分析师的财务数据或保险承保人的天气数据。
   * 在商业环境下，得到正确答案是最基本的要求。
   * 格式化：结果呈现给用户的方式，例如响应的详略程度、要点的使用、多模态内容的使用、对源的引用等。
     * 比如，会计师和记者消化接收信息的方式就不同。
+    * 阶段一：意图判别+既定样式
+    * 阶段二：样式判别
+    * 阶段三：样式生成
   * 界面设计：代码搜索需要存在于 IDE 中，会计政策搜索需要存在于会计 SaaS 平台中。
 * 语义搜索受益于用户现有工作流和数据的上下文。不同领域需要不同的界面交互。新的特定领域 AI 搜索引擎将尽可能地映射其目标用户的“思维模式”。医生、律师和会计师的思维方式并不相同。当我们成为某个领域的专家时，我们提取知识和做出决策的模式开始出现差异。医生面对医学文献，律师面对法案，投资者面对财报。我们在每个领域解析、分析和基于这些知识做出决策的方式都是不同的。
 
@@ -2324,6 +2930,30 @@ response_of_comparation = response.choices[0].message.content return response_of
     * Returning a curated selection of relevant products, including complementary accessories.
   * https://docs.vantagediscovery.com/docs/search-more-like-these-tm#example-soft-chair--item-27--two-pinterest-images
     * ![more-like-these-overview](./AI-Algorithms/more-like-these-overview.webp)
+
+
+
+
+
+### LLM4电商搜索
+
+#### Picnic: LLM 增强电商搜索
+
+> https://blog.picnic.nl/enhancing-search-retrieval-with-large-language-models-llms-7c3748b26d72
+
+* 思路：大量的LLM离线预处理+在线缓存
+  * 离线：
+    * LLM: 商品 -> Query + 描述
+    * LLM: Query + List[描述] -> 描述
+  * 在线：
+    * 描述型 Query -> 相似Query描述 -> 召回需求商品
+    * 真 Query -> 缓存 -> 命中Query描述 -> 召回相似商品
+* prompt-based product description generation
+  * transforming search terms into detailed, actionable queries
+
+![img](./AI-Algorithms/0*8YkG715dCEE80t8s.png)
+
+
 
 
 
@@ -2697,3 +3327,139 @@ https://webkul.com/ai-semantic-search-services/
 
 * [垂直](https://www.bigcommerce.com/articles/ecommerce/recommendation-engine/#h2_best_ecommerce_recommendation_engines)：algolia、boomreach、clerk、emrsys、nosto、[Boost Commerce](https://boostcommerce.net/)
 * 日本： silveregg（推荐），ES(搜索）、zeta search/algolia (搜推）
+
+
+
+## CRS 对话式搜推
+
+
+
+### Literature Review
+
+* CRS：参考「Recommender AI Agent」的文献综述
+
+  * attribute-based question-answering CRS
+    * aims to recom- mend suitable items to users within as few rounds as possible. The interaction between the system and users primarily revolves around question-answering concerning desired item attributes, iteratively refining user interests
+    * Key research challenges in this area include developing strategies for selecting queried attributes(Mirzadeh, Ricci, and Bansal 2005; Zhang et al. 2018)
+    * addressing the exploration- exploitation trade-off(Christakopoulou, Radlinski, and Hof- mann 2016; Xie et al. 2021).
+
+
+  * open-ended conversation CRS
+    * leveraging pre- trained language models for conversation understanding and response generation
+      * incorporated external knowledge
+
+### 工程
+
+* semantic cache优化：https://www.couchbase.com/blog/faster-llm-apps-semantic-cache-langchain-couchbase/
+
+### 算法工程
+
+#### [CRS] [Google] [RecLLM] Leveraging Large Language Models in Conversational Recommender Systems
+
+* Intro
+
+  * 难点：a large, evolving item corpus and a lack of conversational data for training.
+    * making it challenging for an LLM to memorize the corpus within its parameters.
+    * Evaluation of CRSs is difficult in part due to the generative and open-ended nature of the mixed-initiative dialogue [39]
+  * we propose new implementations for user preference understanding, flexible dialogue management and explainable recommendations as part of an integrated architecture powered by LLMs. 
+    * For improved personalization, we describe how an LLM can consume interpretable natural language user profiles and use them to modulate session-level context.
+    * To overcome conversa- tional data limitations in the absence of an existing production CRS, we propose techniques for building a controllable LLM-based user simulator to generate synthetic conversations.
+  * 实验设置：In terms of the item corpus, RecLLM recommends from the cor-
+    pus of all public YouTube videos
+    * there are no logs of users interacting with this system to jumpstart training of the model(s)
+  * 对话能力：
+    * retaining context
+    * handling topic shifts
+    * referencing slate items.
+
+* Dialogue Management
+
+  * extra challenges:
+    * control
+      * preference elicitation—in which the system must figure out when and how to best query the user in order to extract maximal information about their preferences—is an entire subfield of CRS dialogue management [11, 74, 83, 112].
+    * ambiguity
+      * Short-term satisfaction and long-term coverage: Understanding how users tolerate algorithmic exploration.
+    * Grounding
+  * **Unified LLM Impl**: one of the distinguishing features of this architecture is that there no longer exists a hardcoded policy graph with fixed dialogue states
+    * on a given system turn the LLM generates a sequence of natural language outputs that encapsulate all context tracking, intermediate reasoning, natural language generation, and API calls to the rest of the system
+    * System calls Hardcode: "Response: <message>";   "Request: <query>"
+    * Other outputs of the LLM can function as chain-of-reasoning steps, instructions to itself to follow, or dialogue state tracking inferences
+    * 利用in-context few-shot learning or tuning让LLM掌握新状态的处理，而不是开发新组件增加状态
+      * In Section 4.2 we discuss ideas for overcoming this limita- tion by tuning our dialogue manager and recommendation modules with larger amounts of synthetically generated data.
+  * ![image-20241005123415030](./AI-Algorithms/dialog-management.png)
+
+* Recommendations and Refinement - Retrieval
+
+  * Two-stage: with the added twist that the **ranker also jointly generates natural language explanations** for why each item is being selected
+  * ![image-20241005130712872](./AI-Algorithms/llm-retrieval.png)
+
+  * Generalized Dual Encoder Model: 
+    * using an LLM as a context encoder
+      * embedding：generated by extracting and then projecting a suitable activation layer from the model.
+    * 缺点：require large amounts of training data to constrain the context tower embeddings to occupy the same subspace as the item tower embedding
+      * 为了用上user feature和context feature
+  * Direct LLM Search
+    * 缺点：记不住全量corpus
+  * Concept Based Search
+    * In this method the LLM outputs a list of concepts, which are then embedded and aggregated by the recom- mendation engine into a single context embedding
+      * Concept Activation Vectors [43]
+    * 优势：
+      * 让LLM提取concept很简单
+      * 无需tuning item embs（可以直接用pretrained emb）
+    * 缺点：one limitation is that lists of concepts are often a coarse representation of a conversation and similar to continuous bag-of-words methods [60] are lossy with
+      respect to word order and other nuances of language, which can negatively affect retrieval quality.
+      * 思考：按信息价值排序
+  * Search API Lookup
+    * 优势同concept based search
+    * 依赖search api的能力
+
+* Rerank
+  * within RecLLM we use the simple approach of bucketing the range of possible scores and having the LLM output a semantically meaningful phrase (e.g. "excellent fit") corresponding to a bucket id
+  * scores the item using chain-of-thought reasoning[95]
+
+![image-20241005140444126](./AI-Algorithms/rerank.png)
+
+* User Profile
+  * 用自然语言表示
+    * 《On Natural Language User Profiles for Transparent and Scrutable Recommendation》
+  * In RecLLM we build user profiles **based on a user’s repeated interaction** with the system over multiple sessions, although it would be possible to incorporate other data sources as well.
+    * Memory Extraction: 用LLM
+    * Triggering：用RAG方法，判断上一句和user profile的余弦相似度
+    * system integration：
+      * For instance, the sys- tem may know that the user is allergic to seafood, but if the user explicitly says they want to see some videos about fish recipes to pass along to a friend it’s important that the system overrides this preference from the user profile and gives the user what they are asking for
+      * 交给LLM！
+
+![image-20241005140932414](./AI-Algorithms/user-profile.png)
+
+* SIMULATION AND LARGE-SCALE TUNING
+
+  * user simulation:
+    * input是之前所有对话
+  * 评估realism的方法：众包、模型、ensemble分类的分布
+    * diversity：defining a notion of entropy of Q with respect to the classifier ensemble
+
+  * Controlled Simulation：we condition the user simulator on additional latent (to the CRS) variables that allow us to guide its behavior in a certain direction
+    * Session-level control：user profile
+    * Turn-level control：user intent
+  * Generating Synthetic Training Data.
+    * ![image-20241005145620374](./AI-Algorithms/generate-synthetic.png)
+
+  * Tuning System Modules
+
+    * Retrieval - tune a Generalized Dual Encoder Model
+      * Regardless of whether we choose to tune only the adapter layers of the two tower model or the LLM params as well, the loss is fully differentiable and normal supervised learning with gradient descent suffices
+    * Retrieval - tune Search API
+      * we can reframe the setup as a contextual bandit problem [5], where the LLM is a policy, the labels are rewards signals, and the black box search algorithm is treated as the environment (see Figure 10b)
+      * ![image-20241005150637875](./AI-Algorithms/tune-recllm.png)
+
+    * Dialog system
+      * 方案一：给1000个例子
+      * 方案二：RLHF
+        * Generate a set of simulated sessions Q using a user simulator as outlined in Section 4.1
+        * Have crowdsource workers evaluate our unified LLM by **rating per turn responses** within Q in terms of fluency, interestingness, groundedness etc, as well as giving session level ratings based on overall how effective the system was at helping the user explore the recommendations corpus
+        * Train reward models on this rating data (likely also using LLMs with chain-of-thought reasoning).
+        * Further tune the unified LLM on simulated sessions through reinforcement learning to optimize for proxy rewards generated by these reward models
+
+* Related Work
+  * In [33, 63, 100] a pretrained language model is tuned to process
+    documents as part of a dual encoder retrieval model, and in [32] this is extended to full conversations as in the Generalized Dual Encoder proposal from Section 4.2. When the ground truth labels do not enable a fully differentiable loss function (such as in Search API Lookup), [65, 82] show it is still effective to tune LLMs for language generation tasks using techniques derived from reinforce- ment learning. Other works [14, 81] also use reinforcement learning to tune LLMs for open ended or task based dialogue using reward signals inferred from the conversations (e.g. through sentiment analysis or a notion of task completion).
