@@ -2336,7 +2336,19 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 #### Literature Review
 
+* LLM增强数据 [hllm]
+  * (Zhang et al. 2024a; Ren et al. 2024;
+    Xi et al. 2023), such as summary of user behavior and item
+    information expansion.
+  * RLMRec (Ren et al. 2024) develops a user/item profiling paradigm em-
+    powered by LLMs, and aligns the semantic space of LLMs
+    with the representation space of collaborative relational sig-
+    nals through a cross-view alignment framework.
+  * LLMs are also employed to generate augmented training signals for
+    coldstart items (Wang et al. 2024)
+
 * LLMs as either feature encoders [9–24] [star]
+
   * 直接使用
     * star
     * [15]
@@ -2346,11 +2358,15 @@ response_of_comparation = response.choices[0].message.content return response_of
   * training sequential models by initializing the embedding layer with
     LLM embeddings [9, 14, 24];
   * training models to directly compute the relevance between item and user embeddings (i.e., embeddings of user selected items) [10, 11, 16–20, 23].
+
 * LLM as scoring and ranking functions [25–31]. [star]
-  * generative selection prompting,
+
+  * generative selection prompting, instructing the LLM to choose the top k items in ranked order from a set of candidates [25, 27, 28]
   * lag behind the performance of fine-tuned models due to a lack of collaborative knowledge
   * fine-tuning the models with interaction data, though this approach is also costly [40–45].
+
 * LLM as a Ranker for Information Retrieval.[star]
+
   * point-wise: LLMs directly evaluate relevance using numerical scores or binary judgments [48, 49]
     * capturing the relative importance of passages
   * pair-wise: LLMs express preferences between item pairs
@@ -2358,6 +2374,17 @@ response_of_comparation = response.choices[0].message.content return response_of
   * List-wise: LLMs compare multiple passages simultaneously [51],
     * performance heavily relies on the model’s semantic prior and
       reasoning capabilities [50]
+  * adapt the recommendation domain data into conversational
+    formats (Bao et al. 2023; Friedman et al. 2023; Zhang
+    et al. 2023; Yang et al. 2023; Zhai et al. 2023). [HLLM]
+
+* LLM接受ID Feature作为输入，并建模 [HLLM]
+
+  * 改进处理文本行为序列耗时长的问题
+  * LLaRA (Liao et al.2024) proposed a novel hybrid prompting method that inte-
+    grates ID-based item embeddings with textual item features.
+
+  * Ning et al. 2024; Zhai et al. 2024;
 
 #### STAR: A Simple Training-free Approach for Recommendations using Large Language Models
 
@@ -2372,6 +2399,12 @@ response_of_comparation = response.choices[0].message.content return response_of
     * recency decay 0.7
     * length=3，只能建模短时序列
   * LLM做pairwise排序，能提升效果
+    * Table 5: 相比以往的N选M任务，window-based排序任务降低了难度，效果更好
+    * window size=4，stride=2，参与排序的recall len=20
+    * Table 6: 排序prompt中，popularity, co-occurrence的作用，热度信息没用
+      * previous research indicating that simple popularity bias
+        is ineffective in addressing recommendation problems [60–62].
+    * Table 7: LLM模型能力对pairwise排序任务的效果影响有限
   * collaborative information在召回和排序中很重要
   * 比较有趣的结果：不考虑rating，效果更好，原因是目标是ctr，不考虑rating的后验
 
@@ -2382,7 +2415,7 @@ response_of_comparation = response.choices[0].message.content return response_of
 ![image-20241226014245937](./AI-Algorithms/image-20241226014245937.png)
 
 * 比Avg Pooling再召回强很多：原因是更细腻的交互，不丢失信息，本质上已经是一个策略排序模型了。
-  * 启发：本质上是用短序列中的每个Item做召回，每个History Item可以作为一路召回，三路Merge
+  * 启发：用短序列中的每个Item做召回，每个History Item可以作为一路召回，三路Merge
 
 ![image-20241226020026743](./AI-Algorithms/image-20241226020026743.png)
 
@@ -2415,8 +2448,57 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 ![image-20241226012908127](./AI-Algorithms/image-20241226012908127.png)
 
+* Prompt:
+
+```
+Analyze the user’s purchase history to identify user preferences and purchase patterns. Then, rank the 4 items above based on their alignment
+with the user’s preferences and other contextual factors. All the items should be included and listed using identifiers, in descending order of the user’s
+preference. The most preferred recommendation item should be listed first. The output format should be [] > [], where each [] is an identifier, e.g., [1] >
+[2]. Only respond with the ranking results, do not say any word or explain. Output in the following JSON format:
+{
+"rank": "[] > [] .. > []"
+}
+```
+
+
+
 * Evaluation
   * 倒数第一个：test； 倒数第二个：validation
+
+#### HLLM: Enhancing Sequential Recommendations via Hierarchical Large Language Models for Item and User Modeling
+
+> https://github.com/bytedance/HLLM/tree/main
+>
+> 思路：Item LLM和User LLM一起训
+>
+> 模型1: ItemEmb=F(Item)
+>
+> 模型2: UserProfile=G(List[ItemEmb])
+
+* Intro
+  * three critical questions remain under-explored:
+    * firstly, the real value of LLMs’ pre-trained weights, often considered to en-
+      capsulate world knowledge;
+    * secondly, the necessity of finetuning for recommendation tasks;
+    * lastly, whether LLMs can exhibit the same scalability benefits in recommendation systems as they do in other domains.
+
+![image-20241228023941859](./AI-Algorithms/image-20241228023941859.png)
+
+* Item LLM
+  * Inspired by previous works (Devlin 2018; Neelakantan et al. 2022), a special
+    token [ITEM] is added at the end of the item’s text descrip-
+    tion to extract features.
+* User LLM
+  * discard the word embeddings from
+    the pre-trained LLM but retain all other pre-trained weights.
+    Experiments show that these pre-trained weights are very
+    helpful for reasoning user interests.
+
+* 训练
+  * 生成式
+  * 判别式
+
+
 
 
 
@@ -2740,6 +2822,22 @@ https://arxiv.org/pdf/2402.17152v1
     * 两种生成intent：C8、C11
 
   * 大模型做推荐：C9、C10
+
+### Evaluation
+
+> 有评估代码的开源仓库：
+>
+> https://github.com/bytedance/HLLM
+
+#### Amazon Book Review
+
+https://arxiv.org/pdf/2403.03952
+
+https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023
+
+#### PixelRec
+
+https://github.com/westlake-repl/PixelRec
 
 ## LLM4Search
 
