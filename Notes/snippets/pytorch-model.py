@@ -272,3 +272,35 @@ if __name__ == '__main__':
   loss = listMLE(y_pred, y_true)
 
   print("ListMLE Loss:", loss.item())
+
+### Time Embedding
+
+class TSEmbedding(nn.Module):
+    def __init__(self, time_num=6, time_dim=512, user_dim=2048):
+        super().__init__()
+        # Control the precision of time, such as 4 to the hour, and 6 to the second.
+        self.time_num = time_num
+        self.time_embeddings = nn.ModuleList(nn.Embedding(x, time_dim) for x in [2100, 13, 32, 24, 60, 60])
+        # Projection from time_dim to user_dim
+        self.merge_time = MLP(time_dim * time_num, user_dim)
+    
+    def split_time(self, timestamps: List) -> List:
+        # Split timestamps into specific components.
+        # (seq) -> (seq, 6)
+        split_time = []
+        for time in timestamps:
+            dt = datetime.datetime.fromtimestamp(time)
+            split_time.append([dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second])
+        return split_time
+    
+    def forward(self, timestamps: List) -> torch.tensor:
+        # Times: timestamp of each item in List format (bs, seq)
+        # (bs, seq) -> (bs, seq, 6)
+        time_seq = torch.tensor([self.split_time(x) for x in timestamps])
+        # (bs, seq, 6) -> [(bs, seq, time_dim)] * time_num
+        time_emb = [self.time_embeddings[i](time_seq[...,i]) for i in range(self.time_num)]
+        # [(bs, seq, time_dim)] * time_num -> (bs, seq, time_dim * time_num)
+        time_emb = torch.cat(time_emb, dim=-1)
+        # (bs, seq, time_dim * time_num) -> (bs, seq, user_dim)
+        time_emb = self.merge_time(time_emb)
+        return time_emb

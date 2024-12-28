@@ -314,9 +314,10 @@ https://github.com/google-research/tuning_playbook
 
 
 
-#### Validation
+#### Evalutaion/Validation
 
-holdout validation, cross-validation, leave-one-out validation, etc
+* holdout validation, cross-validation, leave-one-out validation, etc
+  * “leave-one-out” 将数据分割为训练集、验证集和测试集。具体操作是对于每个用户，将其一个交互行为数据留出作为测试集，其余的作为训练集和验证集。例如，对于有个交互行为的用户，选择其中第个行为作为测试数据，其余个行为用于训练和验证。
 
 ```python
 train_data, validation_data, test_data = np.split(model_data.sample(frac=1, random_state=1729), [int(0.7 * len(model_data)), int(0.9 * len(model_data))])   # Randomly sort the data then split out first 70%, second 20%, and last 10%

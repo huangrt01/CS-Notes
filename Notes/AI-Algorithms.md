@@ -2334,6 +2334,10 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 ### 通用 LLM4Rec
 
+> https://github.com/CHIANGEL/Awesome-LLM-for-RecSys
+>
+> https://github.com/WLiK/LLM4Rec-Awesome-Papers
+
 #### Literature Review
 
 * LLM增强数据 [hllm]
@@ -2367,6 +2371,14 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 * LLM as a Ranker for Information Retrieval.[star]
 
+  * 优势：
+    * 构建简单
+    * 顺便得到推荐解释
+    * 少量交互量的数据下，效果好于传统模型
+  * 劣势：
+    * 延时高
+    * 正常交互量的数据下，效果一般
+    * 效果提升很难
   * point-wise: LLMs directly evaluate relevance using numerical scores or binary judgments [48, 49]
     * capturing the relative importance of passages
   * pair-wise: LLMs express preferences between item pairs
@@ -2383,6 +2395,8 @@ response_of_comparation = response.choices[0].message.content return response_of
   * 改进处理文本行为序列耗时长的问题
   * LLaRA (Liao et al.2024) proposed a novel hybrid prompting method that inte-
     grates ID-based item embeddings with textual item features.
+  * SFT mainly enhances instruction-following abilities, which
+    do not aid in recommendation tasks (Zhou et al. 2024)
 
   * Ning et al. 2024; Zhai et al. 2024;
 
@@ -2495,12 +2509,41 @@ preference. The most preferred recommendation item should be listed first. The o
     helpful for reasoning user interests.
 
 * 训练
-  * 生成式
+  * 生成式：本质上是生成一个embedding
+    * InfoNCE
+    * ![image-20241228124429924](./AI-Algorithms/image-20241228124429924.png)
+    * s is the similarity function with a learnable temper-
+      ature parameter
   * 判别式
+    * ![image-20241228124550514](./AI-Algorithms/image-20241228124550514.png)
+    * ![image-20241228124712454](./AI-Algorithms/image-20241228124712454.png)
+  * pipeline：
+    * 先一起训：user seq len：150
+    * 单独训User LLM：seq len 1000
+  * ![image-20241228132412134](./AI-Algorithms/image-20241228132412134.png)
+* 相比HSTU的改动：
+  * the model architecture is
+    upgraded to large language models with pre-trained weights,
+    and the input features are changed from IDs to text-input
+    LLM features
 
+* 参数：
 
+  * LLM的pretrained token num：3T
+  * TinyLLM：1.1B Params
 
+* 实验结论：
 
+  * SFT mainly enhances instruction-following abilities, which
+    do not aid in recommendation tasks (Zhou et al. 2024)
+  * data scaling能力比HSTU强
+    * ![image-20241228131044343](./AI-Algorithms/image-20241228131044343.png)
+
+  * 附录：
+    * [ITEM] Token的方式效果比mean pooling好
+    * LLM Emb + Timestamp效果非常好
+      * ![image-20241228133059538](./AI-Algorithms/image-20241228133059538.png)
+    * 把ItemLLM Emb和ItemId Emb加起来，没效果，估计是text能丰富表达Item
 
 #### [LLMRec] Is ChatGPT a Good Recommender ? A Preliminary Study
 
