@@ -911,6 +911,8 @@ docker logs --tail 100 $pod
 
 * `dpkg -i ***.deb`
 * `du -h -d 1 $file`
+  * `du -h -d 1 $file | sort -rh`
+
 
 #### e
 * echo: 输出输入，空格分割

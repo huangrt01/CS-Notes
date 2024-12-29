@@ -152,14 +152,42 @@
     * e.g. 国王 - 男人 + 女人 = 女王
 
 * NLP Embedding
-  * WordVec
+  * Word2Vec
   * CLIP
   * OpenAI Embedding
 * 每个Token对应一个embedding
   * GPT-3: 每个token **12228维**
   * 经典的transformer，每个向量只有512维
 
+### Word2Vec: Efﬁcient Estimation of Word Representations in
+Vector Space
 
+* Intro
+  * 为什么之前流行 N-gram model
+    * simplicity, robustness and the observation that simple models trained on huge amounts of data outperform complex systems trained on less data
+  * 改进路线：distributed representations of words [10]
+  * datasets with billions of words, and with millions of words in the vocabulary
+    * multiple degrees of similarity
+    * vector(”King”) - vector(”Man”) + vector(”Woman”)   -- syntactic
+
+* 模型
+  * Feedforward Neural Net Language Model (NNLM)
+    * 效率优化：Huffman tree based hierarchical softmax
+  * Recurrent Neural Net Language Model (RNNLM)
+  * -->
+  * Continuous Bag-of-Words Model
+    * 去除hidden layer
+    * ![image-20241230025152492](./AI-Algorithms/image-20241230025152492.png)
+  * Continuous Skip-gram Model
+    * Since the more distant words are usually less related to the current
+      word than those close to it, we give less weight to the distant words by sampling less from those words in our training examples.
+  * ![image-20241230025140727](./AI-Algorithms/image-20241230025140727.png)
+* 训练：
+  * trained in two steps:
+    * ﬁrst, continuous word vectors are learned using simple model
+    * and then the N-gram NNLM is trained on top of these distributed representations of words.
+* MLSys
+  * DistBelief：异步训练 + adagrad
 
 ### Position Encoding
 
@@ -654,6 +682,11 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 ![image-20241207215105555](./AI-Algorithms/image-20241207215105555.png)
 
 ### Training - Llava
+
+#### Intro
+
+* 模型：
+  * ViT的倒数第二层除cls token外的image token
 
 * 细节：
   * 容易过拟合，--num_train_epochs=1，一般是从头训练
@@ -2062,10 +2095,14 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 * Intro
 
-  * ViT的深层patch embedding，具备局部特征
+  * **ViT的深层patch embedding，具备局部特征**
     * a recent study [39] found that spatial information from the input is
       preserved in ViT even as the final layer.
     * using patch embeddings from the final layer of ViT yields the best result
+    * Vit embedding的可视化
+      * Peeling Back the Layers: Interpreting the Storytelling of ViT https://mp.weixin.qq.com/s/gzTRfu3SU1_6ZJsH2ngduA
+        * 注意力向量的L2范数（长度视为信息量的度量）在网络的不同层呈现出一种抛物线型的变化趋势：先上升，达到峰值后又下降。
+        * 这似乎暗示着视觉理解在中层达到了一个饱和状态，之后部分非核心信息被舍弃，最终提炼出高度凝练的语义表征
   * ViT的问题
     * 景色识别，高精度图片很重要，模型难训练
       * 方案1：The dominant approach is reducing the
@@ -2073,7 +2110,7 @@ response_of_comparation = response.choices[0].message.content return response_of
         [27,26,50]
       * 方案2：XCiT [1] replaced a self-attention between tokens with a
         “transposed” attention between channels which they call “cross-covariance attention” (XCA).
-
+  
   * image pyramid
     * we proposed to simulate an image pyramid with multi-atrous convolutions [10]
 

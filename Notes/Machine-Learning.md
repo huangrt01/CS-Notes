@@ -383,7 +383,15 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
   * on the diagram of thought https://github.com/diagram-of-thought/diagram-of-thought
   
 
+
+
+
+
 ### Learning To Rank
+
+#### GBDT（Gradient Boosting Decision Tree）
+
+* 通过拟合残差，生成第N颗子树
 
 #### XGBoost
 
