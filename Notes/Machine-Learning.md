@@ -316,12 +316,23 @@ https://github.com/google-research/tuning_playbook
 
 #### Evalutaion/Validation
 
+* Metrics
+  * **Mean Absolute Error** (MAE)
+  * Normalized Discounted Cumulative Gain (NDCG)
+  * Root Mean Square Error 
+
 * holdout validation, cross-validation, leave-one-out validation, etc
   * “leave-one-out” 将数据分割为训练集、验证集和测试集。具体操作是对于每个用户，将其一个交互行为数据留出作为测试集，其余的作为训练集和验证集。例如，对于有个交互行为的用户，选择其中第个行为作为测试数据，其余个行为用于训练和验证。
 
 ```python
 train_data, validation_data, test_data = np.split(model_data.sample(frac=1, random_state=1729), [int(0.7 * len(model_data)), int(0.9 * len(model_data))])   # Randomly sort the data then split out first 70%, second 20%, and last 10%
 ```
+
+### 衡量相关性
+
+* cosine similarity
+* Pearson correlation
+  * ![image-20241231004219620](./Machine-Learning/image-20241231004219620.png)
 
 
 
@@ -546,16 +557,114 @@ Training 量化
 
 
 
-### Search + NLP
-
-* 概念：语言模型
-  * [Bag-of-words(BoW) model](https://en.wikipedia.org/wiki/Bag-of-words_model) 可作为一种信息模型，表示句子或图片，用于衡量相似度或别的用途
-  * stop words: 停用词
-  * [Tokenization and text normalization](https://www.analyticsvidhya.com/blog/2021/03/tokenization-and-text-normalization/)
-
-
-
 ### NLP
+
+#### Intro
+
+概念：语言模型
+
+* [Bag-of-words(BoW) model](https://en.wikipedia.org/wiki/Bag-of-words_model) 可作为一种信息模型，表示句子或图片，用于衡量相似度或别的用途
+* stop words: 停用词
+* [Tokenization and text normalization](https://www.analyticsvidhya.com/blog/2021/03/tokenization-and-text-normalization/)
+
+#### Embedding
+
+* one-hot的缺点：
+  * 过于稀疏
+  * 无法体现距离
+  * 没有数学或逻辑关系
+    * e.g. 国王 - 男人 + 女人 = 女王
+
+* NLP Embedding
+  * Word2Vec
+  * CLIP
+  * OpenAI Embedding
+* 每个Token对应一个embedding
+  * GPT-3: 每个token **12228维**
+  * 经典的transformer，每个向量只有512维
+* 向量空间模型（Vector Space Model，以下简称VSM），主要基于两个假说：
+  * 词袋假说（Bag of Words Hypothesis）和分布假说（Distributional Hypothesis）。
+  * 前者是说，一篇文档的词频（而不是词序）代表了文档的主题；
+  * 后者是说，上下文环境相似的两个词有着相近的语义。
+
+#### Word2Vec: Efﬁcient Estimation of Word Representations in
+Vector Space
+
+> https://www.cnblogs.com/sandwichnlp/p/11596848.html
+>
+> * CBOW和NNLM的区别：
+>   * 移除NNLM模型中的Hidden layer结构；
+>   * 直接将Embedding layer的查表之后累加求和（NNLM是将输出结果拼接）
+>   * 将下文单词纳入上、下文环境，真正考虑了Context（NNLM的输入严格来说为上文文本）
+
+* Intro
+  * 为什么之前流行 N-gram model
+    * simplicity, robustness and the observation that simple models trained on huge amounts of data outperform complex systems trained on less data
+  * 改进路线：distributed representations of words [10]
+  * datasets with billions of words, and with millions of words in the vocabulary
+    * multiple degrees of similarity
+    * vector(”King”) - vector(”Man”) + vector(”Woman”)   -- **syntactic/semantic relationships**
+
+* 模型
+
+  * Feedforward Neural Net Language Model (NNLM)
+    * 效率优化：Huffman tree based **hierarchical softmax**
+  * Recurrent Neural Net Language Model (RNNLM)
+  * Continuous Bag-of-Words Model
+    * 去除hidden layer
+    * ![image-20241230025152492](./Machine-Learning/image-20241230025152492.png)
+  * Continuous Skip-gram Model
+    * Since the more distant words are usually less related to the current
+      word than those close to it, we give less weight to the distant words by sampling less from those words in our training examples.
+  * ![image-20241230025140727](./Machine-Learning/image-20241230025140727.png)
+
+* 训练：
+
+  * trained in two steps:
+    * ﬁrst, continuous word vectors are learned using simple model
+    * and then the N-gram NNLM is trained on top of these distributed representations of words.
+  * Noise-Contrastive Estimation
+    * https://www.cnblogs.com/sandwichnlp/p/11596848.html
+
+* 结论：
+
+  * Skip - gram 在语义任务表现出色，CBOW 在句法任务较好
+  * **微软研究句子完成挑战**：Skip-gram 模型与 RNNLMs 结合在该任务中取得新的最优结果。
+
+* MLSys
+
+  * DistBelief：异步训练 + adagrad
+
+* [word2vec的局限性](https://www.cnblogs.com/sandwichnlp/p/11596848.html#4144593371)
+
+  总的来说，word2vec通过嵌入一个线性的投影矩阵（projection matrix），将原始的one-hot向量映射为一个稠密的连续向量，并通过一个语言模型的任务去学习这个向量的权重，而这个过程可以看作是无监督或称为自监督的，其词向量的训练结果与语料库是紧密相关的，因此通常不同的应用场景需要用该场景下的语料库去训练词向量才能在下游任务中获得最好的效果。这一思想后来被广泛应用于包括word2vec在内的各种NLP模型中，从此之后不单单是词向量，我们也有了句向量、文档向量，从Word Embedding走向了World Embedding的新时代。word2vec非常经典，但也有其明显的局限性，其主要在以下几个方面：
+
+  1. 在模型训练的过程中仅仅考虑context中的局部语料，没有考虑到全局信息；
+  2. 对于英文语料，对于什么是词，怎样分词并不是问题（单个词就是独立的个体）。而对于中文而言，我们在训练词向量之前首先要解决分词的问题，而分词的效果在很多情况下将会严重影响词向量的质量（如分词粒度等），因此，从某些方面来说word2vec对中文不是那么的友好；
+  3. 在2018年以前，对于word2vec及其一系列其他的词向量模型都有一个相同的特点：其embedding矩阵在训练完成后便已经是固定了的，这样我们可以轻易从网上获取到大量预训练好的词向量并快速应用到我们自己任务中。但从另一个角度来说，对于同一个词，在任意一个句子，任意一个环境下的词向量都是固定的，这对于一些歧义词来说是存在较大问题的，这也是限制类似word2vec、Glove等词向量工具性能的一个很重要的问题。
+
+#### GloVe(Globel Vectors)算法
+
+* Intro
+  * SVD分解与Word2Vec的结合。
+  * 现矩阵X，该矩阵中的Xij表示第j个单词出现在以第i个单词为中心，长度为n的窗口中的次数。将长度为n的窗口遍历整个语料库，则得到了共现矩阵X。
+  * 考虑全局信息
+* 推导
+  * ![image-20241231003216044](./Machine-Learning/image-20241231003216044.png)
+
+
+
+### Position Encoding
+
+* 绝对位置编码：
+  * Convolutional Sequence to Sequence Learning
+  * 正弦-余弦编码
+* 相对位置编码：
+  * 作用于自注意力机制
+
+
+
+
 
 #### 词之间的相似度
 
@@ -626,15 +735,6 @@ def find_most_similar(input_word):
     - 对语言学和语义词表有依赖，所以对语言依赖强。
 
   - **应用场景**：在机器翻译和文本生成任务中，METEOR 能够提供一个更全面的评估，因为它不仅仅关注单词或短语的匹配，还考虑了词序和语义相似性，能够更好地反映生成文本的自然度和准确性。
-
-
-
-#### CLIP
-
-* CLIP（Contrastive Language-Image Pre-training）模型是 OpenAI于 2021 年发布的一个用于匹配图像和文本的预训练神经网络模型，旨在实现跨模态的语义对齐。CLIP 的全称是 Contrastive Language-Image Pre-Training，简称 CLIP。该模型结合了自然语言处理和计算机视觉，使用大量互联网上的图像文本对进行预训练，使其能够在多种多模态任务中表现出色。
-* CLIP 的主要思想是通过对比学习，使模型能够学习到文本-图像对的匹配关系。
-  * 具体来说，CLIP 由两个模态组成：一个用于处理文本的文本编码器（Text Encoder），另一个用于处理图像的图像编码器（Image Encoder）。
-  * 这两个编码器分别产生各自领域内的单向向量表示。在训练过程中，CLIP 会将一对图像和文本作为正样本，其他图像和文本作为负样本，通过对正样本之间的相似性和负样本之间的不相似性进行对比学习，来增强模型对图像和文本之间关系的理解。
 
 #### 指标
 

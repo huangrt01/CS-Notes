@@ -550,6 +550,9 @@ https://arxiv.org/pdf/2206.13446
 
 ### Theory
 
+* 求解SVD
+  * $$A = U\Sigma V^T \Rightarrow A^T = V\Sigma U^T \Rightarrow A^T A = V\Sigma U^T U\Sigma V^T = V\Sigma^2 V^T$$
+
 * [SVD分解(一)：自编码器与人工智能](https://spaces.ac.cn/archives/4208) —— 苏剑林
 
   * **不带激活函数的三层自编码器，跟传统的SVD分解是等价的。**

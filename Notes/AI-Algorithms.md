@@ -143,62 +143,6 @@
   * Byte-level BPE
   * GPT-2 has a vocabulary size of 50,257, which corresponds to the 256 bytes base tokens, a special end-of-text token and the symbols learned with 50,000 merges.
 
-### Embedding
-
-* one-hot的缺点：
-  * 过于稀疏
-  * 无法体现距离
-  * 没有数学或逻辑关系
-    * e.g. 国王 - 男人 + 女人 = 女王
-
-* NLP Embedding
-  * Word2Vec
-  * CLIP
-  * OpenAI Embedding
-* 每个Token对应一个embedding
-  * GPT-3: 每个token **12228维**
-  * 经典的transformer，每个向量只有512维
-
-### Word2Vec: Efﬁcient Estimation of Word Representations in
-Vector Space
-
-* Intro
-  * 为什么之前流行 N-gram model
-    * simplicity, robustness and the observation that simple models trained on huge amounts of data outperform complex systems trained on less data
-  * 改进路线：distributed representations of words [10]
-  * datasets with billions of words, and with millions of words in the vocabulary
-    * multiple degrees of similarity
-    * vector(”King”) - vector(”Man”) + vector(”Woman”)   -- syntactic
-
-* 模型
-  * Feedforward Neural Net Language Model (NNLM)
-    * 效率优化：Huffman tree based hierarchical softmax
-  * Recurrent Neural Net Language Model (RNNLM)
-  * -->
-  * Continuous Bag-of-Words Model
-    * 去除hidden layer
-    * ![image-20241230025152492](./AI-Algorithms/image-20241230025152492.png)
-  * Continuous Skip-gram Model
-    * Since the more distant words are usually less related to the current
-      word than those close to it, we give less weight to the distant words by sampling less from those words in our training examples.
-  * ![image-20241230025140727](./AI-Algorithms/image-20241230025140727.png)
-* 训练：
-  * trained in two steps:
-    * ﬁrst, continuous word vectors are learned using simple model
-    * and then the N-gram NNLM is trained on top of these distributed representations of words.
-* MLSys
-  * DistBelief：异步训练 + adagrad
-
-### Position Encoding
-
-* 绝对位置编码：
-  * Convolutional Sequence to Sequence Learning
-  * 正弦-余弦编码
-* 相对位置编码：
-  * 作用于自注意力机制
-
-
-
 
 
 ### Encoder & Decoder
