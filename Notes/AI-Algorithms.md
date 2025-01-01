@@ -267,9 +267,7 @@
     * 运行时只跑2个专家网络
     * 相比GPT-3.5更像人脑
 
-## BERT
 
-![image-20241019021744575](./AI-Algorithms/bert.png)
 
 ## GPT-2
 
@@ -3528,8 +3526,7 @@ https://webkul.com/ai-semantic-search-services/
     * 优势：
       * 让LLM提取concept很简单
       * 无需tuning item embs（可以直接用pretrained emb）
-    * 缺点：one limitation is that lists of concepts are often a coarse representation of a conversation and similar to continuous bag-of-words methods [60] are lossy with
-      respect to word order and other nuances of language, which can negatively affect retrieval quality.
+    * 缺点：one limitation is that lists of concepts are often a coarse representation of a conversation and similar to continuous bag-of-words methods [60] are lossy with respect to word order and other nuances of language, which can negatively affect retrieval quality.
       * 思考：按信息价值排序
   * Search API Lookup
     * 优势同concept based search

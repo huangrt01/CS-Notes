@@ -1,5 +1,5 @@
 ### Intro
-Libraries: Surprise, LightFM, and implicit
+# Libraries: Surprise, LightFM, and implicit
 
 
 ### ALS + SGD
@@ -77,7 +77,7 @@ def sgd_als(user_item_matrix, num_factors, learning_rate, regularization, iterat
     num_users, num_items = user_item_matrix.shape
     errors = []  # To store RMSE after each iteration
     
-    # Initialize user and item latent factor matrices with small random values
+    # Initialize user and item latent factor matrices with small random values, 正态分布
     print("init user and item latent factors")
     user_factors = np.random.normal(scale=1./num_factors, size=(num_users, num_factors))
     item_factors = np.random.normal(scale=1./num_factors, size=(num_items, num_factors))

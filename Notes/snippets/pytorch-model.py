@@ -304,3 +304,38 @@ class TSEmbedding(nn.Module):
         # (bs, seq, time_dim * time_num) -> (bs, seq, user_dim)
         time_emb = self.merge_time(time_emb)
         return time_emb
+
+
+### Attention Pooling
+
+class AdditiveAttention(nn.Module):
+    ''' AttentionPooling used to weighted aggregate news vectors
+    Arg: 
+        d_h: the last dimension of input
+    '''
+    def __init__(self, d_h, hidden_size=200):
+        super(AdditiveAttention, self).__init__()
+        self.att_fc1 = nn.Linear(d_h, hidden_size)
+        self.att_fc2 = nn.Linear(hidden_size, 1)
+
+    def forward(self, x, attn_mask=None):
+        """
+        Args:
+            x: batch_size, candidate_size, candidate_vector_dim
+            attn_mask: batch_size, candidate_size
+        Returns:
+            (shape) batch_size, candidate_vector_dim
+        """
+        bz = x.shape[0]
+        e = self.att_fc1(x)
+        e = nn.Tanh()(e)
+        alpha = self.att_fc2(e)
+
+        alpha = torch.exp(alpha)
+        if attn_mask is not None:
+            alpha = alpha * attn_mask.unsqueeze(2)
+        alpha = alpha / (torch.sum(alpha, dim=1, keepdim=True) + 1e-8)
+
+        x = torch.bmm(x.permute(0, 2, 1), alpha)
+        x = torch.reshape(x, (bz, -1))  # (bz, 400)
+        return x

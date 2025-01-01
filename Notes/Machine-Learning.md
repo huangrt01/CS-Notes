@@ -517,8 +517,75 @@ Training 量化
 * [GELU](https://paperswithcode.com/method/gelu)
   * GELUs are used in [GPT-3](https://paperswithcode.com/method/gpt-3), [BERT](https://paperswithcode.com/method/bert), and most other Transformers.
 
+![image-20241019021744575](./Machine-Learning/bert.png)
+
+#### Paper
+
+* Intro
+  * BERT: Bidirectional Encoder Representations from Transformers.
+  * task类型：sentence-level/paraphrasing/token-level
+  * 方法：feature-based and fine-tuning
+    *  In previous work, both ap-
+      proaches share the same objective function dur-
+      ing pre-training, where they use unidirectional lan-
+      guage models to learn general language represen-
+      tations.
+  * BERT addresses the previously mentioned uni-directional constraints by proposing a new pre-training objective:
+    * the “masked language model" (MLM)
+    * next sentence prediction” task
+
+![image-20250102001058277](./Machine-Learning/image-20250102001058277.png)
+
+![image-20250102001246772](./Machine-Learning/image-20250102001246772.png)
+
+* 超参：
+  * BERTBASE: L=12, H=768, A=12, Total Parameters=110M
+  * BERTLARGE: L=24, H=1024, A=16, Total Parameters=340M
+  * In all cases we set the feed-forward/ﬁlter size to be 4H
+  * mask setting：
+    * mask 15%，只预测masked词
+  * training
+    * We train with batch size of 256 sequences (256
+      sequences * 512 tokens = 128,000 tokens/batch)
+      for 1,000,000 steps, which is approximately 40
+      epochs over the 3.3 billion word corpus.
+    * use Adam with learning rate of 1e-4, β1 = 0.9,
+      β2 = 0.999, L2 weight decay of 0.01，dropout 0.
+  * 微调
+    * Batch size: 16, 32
+    * Learning rate (Adam): 5e-5, 3e-5, 2e-5
+    * Number of epochs: 3, 4
+
+* 模型
+  * Emb初始化：We use WordPiece embeddings (Wu et al.,2016) with a 30,000 token vocabulary. We
+    denote split word pieces with ##
+  * 设计思想：
+    * masked的动机：看到两边，不泄露信息
+  * 问题1:训练和微调不一致
+    * 方案：8:1:1
+    * ![image-20250102001657033](./Machine-Learning/image-20250102001657033.png)
+  * 问题2:每个batch只有15%的token被预测，训练代价大
+    * 效果收益更高
+  * 任务类型2:next sentence预测，一半对一半
+
+* 和GPT对比
+  *  GPT uses a sentence separator ([SEP]) and classifier token ([CLS]) which are only in-
+    troduced at fine-tuning time; BERT learns
+    [SEP], [CLS] and sentence A/B embeddings during pre-training
+  * bert训练语料多、batch size大
+
+
 
 #### model finetune
+
+* paper
+  * squad任务，学一个start和end vector预测start和end位置
+  * CoNLL 2003 Named Entity Recognition (NER) dataset
+  * swag任务，N选一
+    * 学一个V vector
+    * ![image-20250102002146508](./Machine-Learning/image-20250102002146508.png)
+
+![image-20250102001936987](./Machine-Learning/image-20250102001936987.png)
 
 * model finetune是基于BERT预训练模型强大的通用语义能力，使用具体业务场景的训练数据做finetune，从而针对性地修正网络参数，是典型的双阶段方法。（[BERT在美团搜索核心排序的探索和实践](https://zhuanlan.zhihu.com/p/158181085)）
 * 在BERT预训练模型结构相对稳定的情况下，算法工程师做文章的是模型的输入和输出。首先需要了解BERT预训练时输入和输出的特点，BERT的输入是词向量、段向量、位置向量的特征融合（embedding相加或拼接），并且有[CLS]开头符和[SEP]结尾符表示句间关系；输出是各个位置的表示向量。finetune的主要方法有双句分类、单句分类、问答QA、单句标注，区别在于输入是单句/双句；需要监督的输出是 开头符表示向量作为分类信息 或 结合分割符截取部分输出做自然语言预测。
@@ -586,6 +653,19 @@ Training 量化
   * 词袋假说（Bag of Words Hypothesis）和分布假说（Distributional Hypothesis）。
   * 前者是说，一篇文档的词频（而不是词序）代表了文档的主题；
   * 后者是说，上下文环境相似的两个词有着相近的语义。
+
+#### 利用 Embedding 的 Feature-based 方法
+
+* 历史方法
+  * non-neural (Brown et al., 1992; Ando and Zhang, 2005; Blitzer et al., 2006)
+  * neural (Collobert and Weston, 2008; Mikolov et al., 2013; Pennington et al., 2014) methods.
+* 多种运用
+  * BERT
+  * ![image-20250102002230130](./Machine-Learning/image-20250102002230130.png)
+* 应用
+  * These approaches have been generalized to
+    coarser granularities, such as sentence embed-
+    dings (Kiros et al., 2015; Logeswaran and Lee, 2018) or paragraph embeddings (Le and Mikolov, 2014). [BERT]
 
 #### Word2Vec: Efﬁcient Estimation of Word Representations in
 Vector Space
