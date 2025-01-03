@@ -2744,107 +2744,6 @@ https://arxiv.org/pdf/2402.17152v1
   * diversity：兴趣模糊时，推送新类别
   * coverage：兴趣固定时，推送固定类别
 
-#### [InteRecAgent] [CRS] Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations
-
-> https://aka.ms/recagent
->
-> figure 5: plan-first 和 reflection 最有用
->
-> 问题：
->
-> * candidate bus怎么做的？
-
-* Intro
-  * LLMs lack the knowledge of domain-specific item catalogs and be- havioral patterns, particularly in areas that diverge from gen- eral world knowledge, such as online e-commerce
-    * fail to capture fine-grained, domain-specific behavior patterns, especially in domains with massive training data
-  * InteRecAgent的介绍
-    * employs LLMs as the brain and recommender models as tools
-    * a minimal set of essential tools required to transform LLMs into InteRecAgent
-    * an efficient workflow within InteRecAgent for task execution, in- corporating key components such as memory components, dynamic demonstration-augmented task planning, and reflec- tion
-  * InteRecAgent的设计思路：Interactive Recommender Agent
-    * “shared candidate bus”
-    * “long-term and short-term user profile”
-    * “plan-first execution”(plan-then-tool) strategy
-      * InteRecAgent generates all the steps of tool- calling at once and strictly follows the execution plan to ac- complish the task.
-      * a reflection strategy
-    * 基于GPT-4生成dataset，再finetune LLAMA2
-
-![image-20241007231933770](./AI-Algorithms/inte-rec-agent.png)
-
-* Methodology
-
-  * hard conditions and soft conditions.
-    * Hard conditions refer to explicit demands on items, such as “I want some popular sports games” or “Recommend me some RPG games under $100”.
-    * Soft conditions pertain to demands that cannot be explicitly expressed with discrete attributes and require the use of semantic matching models, like “I want some games similar to Call of Duty and Fortnite”.
-  * 潜在的Hard conditions：SQL Query Tool → SQL Retrieval Tool → Ranker Tool
-    * 想要比xxx贵的
-  * 解决ReAct的缺陷
-    * To tackle these chal- lenges, we enhance the three critical components of a typical LLM-based agent, namely memory (Section 3.2), task planning (Section 3.3 and 3.4), and tool learning abilities (Section 3.5).
-
-* Framework细节
-
-  * The Candidate Bus, accessible by all tools, comprises two parts: a data bus for storing can- didate items, and a tracker for recording each tool’s output.
-  * Which ofthese movies do you think is most suitable for me: [Movie List]?” In this case, the LLM will call a special tool—**the memory initialization tool**—to set the user-specified items as the initial candidate items.
-  * User Profile
-    * 基于对话历史分析User Profile，有“like”、“dislike”、“expect”三种
-      - 为了避免储存太长的对话历史，设定了“long-term"、“short-term”，当超过对话框，就用short-term interest更新long-term interest
-
-* Plan-first Execution with Dynamic Demonstrations
-
-  * 相比step-by-step的优点
-    * step-by-step不方便对各种dynamic tool调用做in-context learning
-    * 而这个方法可以写很多 ⟨query, plan⟩ pairs
-  * ![image-20241020001429229](./AI-Algorithms/image-20241020001429229.png)
-
-  * To address the challenge, we introduce a dynamic demonstration strategy, where only a few demonstrations that are most simi- lar to current user intent are incorporated into the prompt.
-    * **example sampler**
-  * LLM生成examples：
-    * plan -> intent -> plan
-    * The inconsistency indicates that the quality of the generated intent is not high enough, and we only retain those consistent demonstrations. 
-
-* Reflection
-
-  * actor-critic reflection mechanism
-
-* 微调7B小模型
-
-  * [instructions, tool execution plans] pairs
-
-* Evaluation
-
-  * 对话式：Hit@k and AT@k, representing the success of recommending the target item within k turns and the average turns (AT) re- quired for a successful recommendation
-  * 比Chat-Rec效果好，可能的优势点有很多
-    * SASRec做rerank
-    * 更合理的plan
-    * reflection
-
-* Cases：Figure 6
-
-* 结论：
-
-  * figure 5: plan-first 和 reflection 最有用
-
-* Prompts
-
-  * User simulator
-
-    * ```
-      You are a user chatting with a recommender for {item} rec- ommendation in turn. Your history is {history}. Your tar- get items: {target}. Here is the information about target you could use: {target item info}. You must follow the rules below during chat. If the recommender recommends {target}, you should ac- cept. If the recommender recommends other items, you should refuse them and provide the information about {target}. If the recommender asks for your preference, you should provide the information about {target}. You could provide your history. Your output is only allowed to be the words from the user you act. If you think the con- versation comes to an ending, output a ⟨END⟩. You should never directly tell the target item. Only use the provided in- formation about the target. Never give many details about the target items at one time. Less than 3 conditions is better. Now lets start, you first, act as a user. Here are the previous conversation you have completed: {chat history}.
-      ```
-
-  * Task Descriptions： Figure C1
-
-  * Tool Descriptions：Figure C2-C5
-
-  * Reflection：C6
-
-  * Demonstration Generation：
-
-    * generating plan：C7
-    * 两种生成intent：C8、C11
-
-  * 大模型做推荐：C9、C10
-
 ### Evaluation
 
 > 有评估代码的开源仓库：
@@ -3582,3 +3481,104 @@ https://webkul.com/ai-semantic-search-services/
 * Related Work
   * In [33, 63, 100] a pretrained language model is tuned to process
     documents as part of a dual encoder retrieval model, and in [32] this is extended to full conversations as in the Generalized Dual Encoder proposal from Section 4.2. When the ground truth labels do not enable a fully differentiable loss function (such as in Search API Lookup), [65, 82] show it is still effective to tune LLMs for language generation tasks using techniques derived from reinforce- ment learning. Other works [14, 81] also use reinforcement learning to tune LLMs for open ended or task based dialogue using reward signals inferred from the conversations (e.g. through sentiment analysis or a notion of task completion).
+
+#### [InteRecAgent] [CRS] Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations
+
+> https://aka.ms/recagent
+>
+> figure 5: plan-first 和 reflection 最有用
+>
+> 问题：
+>
+> * candidate bus怎么做的？
+
+* Intro
+  * LLMs lack the knowledge of domain-specific item catalogs and be- havioral patterns, particularly in areas that diverge from gen- eral world knowledge, such as online e-commerce
+    * fail to capture fine-grained, domain-specific behavior patterns, especially in domains with massive training data
+  * InteRecAgent的介绍
+    * employs LLMs as the brain and recommender models as tools
+    * a minimal set of essential tools required to transform LLMs into InteRecAgent
+    * an efficient workflow within InteRecAgent for task execution, in- corporating key components such as memory components, dynamic demonstration-augmented task planning, and reflec- tion
+  * InteRecAgent的设计思路：Interactive Recommender Agent
+    * “shared candidate bus”
+    * “long-term and short-term user profile”
+    * “plan-first execution”(plan-then-tool) strategy
+      * InteRecAgent generates all the steps of tool- calling at once and strictly follows the execution plan to ac- complish the task.
+      * a reflection strategy
+    * 基于GPT-4生成dataset，再finetune LLAMA2
+
+![image-20241007231933770](./AI-Algorithms/inte-rec-agent.png)
+
+* Methodology
+
+  * hard conditions and soft conditions.
+    * Hard conditions refer to explicit demands on items, such as “I want some popular sports games” or “Recommend me some RPG games under $100”.
+    * Soft conditions pertain to demands that cannot be explicitly expressed with discrete attributes and require the use of semantic matching models, like “I want some games similar to Call of Duty and Fortnite”.
+  * 潜在的Hard conditions：SQL Query Tool → SQL Retrieval Tool → Ranker Tool
+    * 想要比xxx贵的
+  * 解决ReAct的缺陷
+    * To tackle these chal- lenges, we enhance the three critical components of a typical LLM-based agent, namely memory (Section 3.2), task planning (Section 3.3 and 3.4), and tool learning abilities (Section 3.5).
+
+* Framework细节
+
+  * The Candidate Bus, accessible by all tools, comprises two parts: a data bus for storing can- didate items, and a tracker for recording each tool’s output.
+  * Which ofthese movies do you think is most suitable for me: [Movie List]?” In this case, the LLM will call a special tool—**the memory initialization tool**—to set the user-specified items as the initial candidate items.
+  * User Profile
+    * 基于对话历史分析User Profile，有“like”、“dislike”、“expect”三种
+      - 为了避免储存太长的对话历史，设定了“long-term"、“short-term”，当超过对话框，就用short-term interest更新long-term interest
+
+* Plan-first Execution with Dynamic Demonstrations
+
+  * 相比step-by-step的优点
+    * step-by-step不方便对各种dynamic tool调用做in-context learning
+    * 而这个方法可以写很多 ⟨query, plan⟩ pairs
+  * ![image-20241020001429229](./AI-Algorithms/image-20241020001429229.png)
+
+  * To address the challenge, we introduce a dynamic demonstration strategy, where only a few demonstrations that are most simi- lar to current user intent are incorporated into the prompt.
+    * **example sampler**
+  * LLM生成examples：
+    * plan -> intent -> plan
+    * The inconsistency indicates that the quality of the generated intent is not high enough, and we only retain those consistent demonstrations. 
+
+* Reflection
+
+  * actor-critic reflection mechanism
+
+* 微调7B小模型
+
+  * [instructions, tool execution plans] pairs
+
+* Evaluation
+
+  * 对话式：Hit@k and AT@k, representing the success of recommending the target item within k turns and the average turns (AT) re- quired for a successful recommendation
+  * 比Chat-Rec效果好，可能的优势点有很多
+    * SASRec做rerank
+    * 更合理的plan
+    * reflection
+
+* Cases：Figure 6
+
+* 结论：
+
+  * figure 5: plan-first 和 reflection 最有用
+
+* Prompts
+
+  * User simulator
+
+    * ```
+      You are a user chatting with a recommender for {item} rec- ommendation in turn. Your history is {history}. Your tar- get items: {target}. Here is the information about target you could use: {target item info}. You must follow the rules below during chat. If the recommender recommends {target}, you should ac- cept. If the recommender recommends other items, you should refuse them and provide the information about {target}. If the recommender asks for your preference, you should provide the information about {target}. You could provide your history. Your output is only allowed to be the words from the user you act. If you think the con- versation comes to an ending, output a ⟨END⟩. You should never directly tell the target item. Only use the provided in- formation about the target. Never give many details about the target items at one time. Less than 3 conditions is better. Now lets start, you first, act as a user. Here are the previous conversation you have completed: {chat history}.
+      ```
+
+  * Task Descriptions： Figure C1
+
+  * Tool Descriptions：Figure C2-C5
+
+  * Reflection：C6
+
+  * Demonstration Generation：
+
+    * generating plan：C7
+    * 两种生成intent：C8、C11
+
+  * 大模型做推荐：C9、C10

@@ -854,18 +854,6 @@ for prediction, label, img in zip(p,l,i):
 
 
 
-#### 微软新闻
-
-* msnews.github.io
-  * MIND acl2020
-
-* bert noisytune 大模型finetune
-* responsible的目标
-  * [cprs: objective beyond click](https://www.ijcai.org/proceedings/2020/0418.pdf)
-* fairness：fairrec 学习一个serving用的无偏网络，比如让模型估不出来性别
-
-
-
 #### DeepRec
 
 [Github](https://github.com/alibaba/DeepRec)
@@ -1921,53 +1909,6 @@ https://instagram-engineering.com/core-modeling-at-instagram-a51e0158aa48
 
 * 资料
   * [Youtube推荐系统的变迁](http://www.datagrand.com/blog/youtube.html)
-
-#### Wide & Deep learning for Recommender Systems, RecSys 17
-
-1.Introduction
-
-* Wide ~ Memorization: 模型直接学习并利用历史数据中物品或者特征的“共现频率”的能力
-* Deep ~ Generalization: 模型传递特征的相关性，以及发掘稀疏甚至从未出现过的稀有特征与最终标签相关性的能力
-* Generalized linear models with nonlinear feature transformations
-* cross-product transformations: 特征工程的概念，交叉积变换，缺点是无法 generalize 没出现过的 query-item feature pairs
-
-问题：输入是稀疏高秩矩阵，缺少 interactions，难以利用它学到合适的低维 embedding
-
-3.WIDE & DEEP Learning
-
-3.1 The Wide Component
-
-利用 cross-product transformation 提供多个特征的非线性
-
-<->  对比：[Deep Neural Networks for YouTube Recommendations ] 用平方 和 平方根项 提供单个特征的非线性
-
-3.3 Joint Training of Wide & Deep Model
-
-注意辨析 joint training 和 ensemble 的区别
-* 前者是共同训练，后者不是
-* 后者模型可以更大
-* 前者，Wide 只需要给 Deep 补少量 cross-product feature transformations
-
-4.System Implementation
-
-4.2 Model Training
-
-* warm-starting system
-* dry run
-* sanity check
-
-Appendix
-
-* 概念：AUC：ROC曲线下方的面积，ROC横坐标FPR，纵坐标TPR
-* 资源：
-  * 这个大佬的专栏很实用，讲解tensorflow和推荐系统，https://zhuanlan.zhihu.com/learningdeep
-* 思考：可否联系到IRLS方法，最优化稀疏矩阵的秩，用一个类似的矩阵学习秩的表示
-
-**改进：Deep&Cross模型 (DCN)**
-
-* 多层交叉层: $x_{l+1}=x_0x_l^Tw_l+b_l+x_l$ 
-  * 参数引入较为克制，增强模型的非线性学习能力
-  * 解决了Wide&Deep模型人工组合特征的问题
 
 #### A Hitchhiker's Guide On Distributed Training Of Deep Neural Networks, JPDC 18
 

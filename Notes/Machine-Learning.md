@@ -507,7 +507,10 @@ Training 量化
   * 模型结构：
     * ResNet
 
+### RNN/LSTM/GRU
 
+* Intro
+  * GRU解决了RNN的梯度消失问题，参数量比LSTM小
 
 
 
