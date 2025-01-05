@@ -704,14 +704,29 @@ Vector Space
 * 训练：
 
   * trained in two steps:
+
     * ﬁrst, continuous word vectors are learned using simple model
     * and then the N-gram NNLM is trained on top of these distributed representations of words.
+
   * Noise-Contrastive Estimation
+
     * https://www.cnblogs.com/sandwichnlp/p/11596848.html
+
+  * 模型训练过程
+
+    * 输入向量的权重矩阵 = 词向量查找表
+
+    * 负采样方法减轻训练负担
+
+      * $E=-log\sigma({v^{'}_{w_o}}^Th)-\sum_{w_j\in W_{neg}}log\sigma(-{v^{'}_{w_j}}^Th)$
+
+      * 采样到10个以内负样本
+
+    * 还有Hierarchical softmax方法加速训练，实际效果没有负采样好
 
 * 结论：
 
-  * Skip - gram 在语义任务表现出色，CBOW 在句法任务较好
+  * Skip-gram 在语义任务表现出色，CBOW 在句法任务较好
   * **微软研究句子完成挑战**：Skip-gram 模型与 RNNLMs 结合在该任务中取得新的最优结果。
 
 * MLSys

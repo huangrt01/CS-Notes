@@ -31,6 +31,18 @@ plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, 
 
   * 这一次人工智能革命的数学基础是：范畴论/代数拓扑/代数几何这些二十世纪的数学第一次登上商用计算的舞台。
 
+* Parameter Server
+
+  * Spark MLlib: 同步阻断式
+
+  * Parameter Server: 异步非阻断式
+  * 两者区别在于模型参数的分发是否同步
+
+
+* RecSys中工程与理论之间的均衡
+  * end2end：强调模型一致性的收益
+  * two stages：强调模型实时性的收益
+
 
 #### [Google Research: Themes from 2021 and Beyond](https://ai.googleblog.com/2022/01/google-research-themes-from-2021-and.html)
 
@@ -124,6 +136,15 @@ plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, 
 	      * 10000 qubits => complex softwares requires significant work on fabrication technology, control software, and more
 	      * 100000 qubits ~ 100 logical qubits: a quantum computer
 	    * TFQ: https://www.tensorflow.org/quantum
+
+### 算法工程协同
+
+* embedding和特征带来的在线内存成本：
+  * ftrl -> 稀疏性、全0 Embedding
+  * lasso
+  * sparseNAS
+
+
 
 ### 分布式调度框架
 
@@ -220,6 +241,31 @@ pipeline.fit(trainingData)
 val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
 ```
 
+### 数据流
+
+* 数据流，四种架构：批处理、流计算、Lambda、Kappa
+  * 批处理：分布式文件系统（HDFS）+Map Reduce
+  * 流计算：
+    * 滑动窗口分钟级，Flink
+    * 缺点：
+      * 数据合法性检查、数据回放、全量数据分析
+      * 时间窗口较短时，日志乱序、join操作会导致数据误差累计
+
+  * Lambda: 实时流+离线处理
+    * 流计算以增量计算为主，批处理进行全量计算；
+    * 存入数据库之前，对实时流和离线层数据合并，利用离线层数据对实时流数据进行校验和检错
+    * 缺点：浪费资源
+
+  * Kappa
+    * Everything is streaming
+    * 思路：数据存储+数据重播
+    * 缺点：回放效率，批处理和流处理操作不一定能完全共享
+    * ![image-20250106004639825](./MLSys/image-20250106004639825.png)
+
+
+* 推荐系统的数据流
+  * 训练数据处理 + 特征的预计算
+
 ### 特征工程
 
 * 参考【tensorflow笔记】的python/data部分
@@ -251,7 +297,9 @@ val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
   * Annoy: https://github.com/spotify/annoy
 * Hash
   * Local Sensitive Hashing: https://falconn-lib.org/
-
+    * 分桶的“与”、“或”策略
+    * “与”策略可能漏掉边界点
+  
 * PQ
   * https://github.com/facebookresearch/faiss
 * Learning to hash
@@ -353,7 +401,29 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 * 用精排模型参数来初始化参数，fine-tune 加速训练
 * $\gamma_3=10^{-7}$ 描述候选数量，也是一个衡量特征复杂度的参数
 
+### 算力优化
 
+* 边缘计算
+
+  * [EdgeRec：揭秘边缘计算在淘宝推荐系统的重要实践](https://developer.aliyun.com/article/742144)
+* 弹性近线计算
+
+  * [百度信息流和搜索业务中的弹性近线计算探索与应用](https://mp.weixin.qq.com/s/53KLAPphK9t4G3q-78S9mg)
+  * 弹性近线计算系统主要包括几个子系统：
+
+    * 触发控制系统：主要负责根据业务参数，控制近线计算的触发，达到削峰填谷的目的。
+
+    * 动态算力和动态调参系统：它相当于弹性近线计算系统的大脑，根据集群的资源情况，分配近线计算算力；再根据算力情况，计算控制参数，从而控制跟算力匹配的负载。
+
+    * 历史数据中心：保存近线计算历史的计算记录。可以根据资源的情况，复用历史计算结果，来调节对算力的使用。
+
+    * 业务近线计算 & 控制系统：这个主要是和业务接入近线计算相关的一些架构机制设计，比如说输入输出缓存的读写，计算的拆包 / 并包等等，业务计算与失败信号的反馈等等。
+      * 实践下来，通过错峰调度，预估资源需求并提前分配计算资源是比较有效的提升算力的办法，可以理解是如果在资源已经紧张的时候，再进行近线计算模块的调度，新的近线计算模块的算力消耗有概率本身就造成局部热点，导致扩展资源被回收，造成调度失败
+
+    * 业务在线接入：部分主要是业务接入近线计算系统上的一些设计。这块主要考虑的是如何高效的接入业务，避免业务接入过高的架构人力成本。
+  * 应用场景：
+
+    * Feed 在线 & 近线混合计算架构：将多个推荐算法服务的召回结果进行缓存，再放到近线系统来进行综合打分之后生成一个用户对应的近线计算候选集，作为一路新的召回。之后在线请求来了之后，使用这路新的召回结果，进行轻量的在线计算之后就可以返回给用户，这样就把召回层初步排序打分的计算规模提升了 1 个数量级。
 
 ### Caching
 
@@ -366,7 +436,83 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
   * 模型算力利用率是指 模型一次前反向计算消耗的矩阵算力 与机器算力的比值
   * 硬件算力利用率是指 考虑重计算后，模型一次前反向计算消耗的矩阵算力 与机器算力的比值
 
+### Parameter Server
 
+#### Intro
+
+* 异步训练，staleness
+  * 可设置“最大延迟”，N轮迭代内，模型参数必须更新一次
+
+#### Scaling distributed machine learning with the parameter server, OSDI 2014
+
+PS架构的优势主要还是高可用(system efficiency)
+
+* Intro
+  * distributed subgradient descent
+
+
+* 3.6 User-defined Filters
+
+  * signifi-cantly modified filter
+
+  * KKT(见5.1)：特征重要性筛选
+
+
+* 4.2 Messages
+
+  * key-caching and value-compression can be used jointly.
+
+  * key-cache让sender只需要传key lists的hash
+
+  * 用snappy压缩 zero value
+
+
+* 4.3 Consistent Hashing
+  * 一致性hash和 key-range 的概念紧密相连
+  * hash空间等分 nm 个范围
+  * 论文 Chord: A scalable peer-to-peer lookup protocol for Internet applications
+
+* 4.5 Server Management
+
+  * 计算节点分为server node和worker node
+
+  * server共同维持全局共享的模型参数
+
+  * workers保留一部分的训练数据，并且执行计算
+
+  * worker只和server有通信，互相之间没有通信
+
+
+* examples
+  * CountMin Sketch Algo 有点像 bloom filter
+
+
+* PS运维：
+
+  * expectation - current_situation = operations
+
+  * 服务发现、数据发现
+
+
+* 性能优化：
+
+  * 双buffer + RCU，读不被锁阻碍
+
+  * 简化版读写锁，优化系统态开销
+
+### 训练框架
+
+* spark MLlib
+  * 参考「深度学习推荐系统」6.2.1
+  * 分布式 + DAG
+  * 内部并行、边界消耗资源shuffle/reduce
+  * 缺点：
+    * 参数全局广播
+    * 同步阻断式的梯度下降
+    * 不支持复杂DL网络
+
+* tf
+* pytorch
 
 
 
@@ -428,6 +574,13 @@ OneFlow架构
 * node placement: consistent view
   * SBP, 在op层面实现数据和模型并行 
   ![SBP](./MLSys/SBP.jpg)
+
+### 模型推理
+
+* 范式：
+  * 预训练Embedding+轻量化线上模型
+
+
 
 ### MLOps
 
@@ -2099,45 +2252,6 @@ Ethane的优势：
 
 * Significant deployment experience.
   
-  
-#### Scaling distributed machine learning with the parameter server, OSDI 2014
-
-PS架构的优势主要还是高可用(system efficiency)
-
-2.2
-* distributed subgradient descent
-
-3.6 User-defined Filters
-* signifi-cantly modified filter
-* KKT(见5.1)：特征重要性筛选
-
-4.Implementation
-
-4.2 Messages
-* key-caching and value-compression can be used jointly.
-* key-cache让sender只需要传key lists的hash
-* 用snappy压缩 zero value
-
-4.3 Consistent Hashing
-一致性hash和 key-range 的概念紧密相连，论文 Chord: A scalable peer-to-peer lookup protocol for Internet applications
-
-4.5 Server Management
-* 计算节点分为server node和worker node
-* server共同维持全局共享的模型参数
-* workers保留一部分的训练数据，并且执行计算
-* worker只和server有通信，互相之间没有通信
-
-examples
-* CountMin Sketch Algo 有点像 bloom filter
-
-PS运维：
-* expectation - current_situation = operations
-* 服务发现、数据发现
-
-性能优化：
-* 双buffer + RCU，读不被锁阻碍
-* 简化版读写锁，优化系统态开销
-
 #### Serving DNNs like Clockwork: Performance Predictability from the BottomUp, OSDI 2020
 
 [presentation](https://www.usenix.org/conference/osdi20/presentation/gujarati) 挺有意思

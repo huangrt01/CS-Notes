@@ -4,6 +4,27 @@
 
 ## 概率论与数理统计
 
+### 正态分布
+
+* UCB的公式是基于霍夫丁不等式（Hoeffding Inequality）推导而来的。
+
+  * 假设有N个范围在0到1的独立有界随机变量，$$X_1, X_2, \cdots, X_N$$，那么这N个随机变量的经验期望为$$ \bar{X} = \frac{X_1 + \cdots + X_N}{N} $$
+  * 满足如（式5 - 4）所示的不等式：$$ P(|\bar{X}-E[\bar{X}]| \geq \epsilon) \leq e^{-2N\epsilon^2} \quad (式5 - 4) $$
+
+  * 那么，霍夫丁不等式和UCB的上界有什么关系呢？令 $$\epsilon = \sqrt{\frac{2\log t}{N}}$$，并代入（式5 - 4），可将霍夫丁不等式转换成如（式5 - 5）所示的形式：
+    $$ P\left(|\bar{X}-E[\bar{X}]| \geq \sqrt{\frac{2\log t}{N}}\right) \leq t^{-4} \quad (式5 - 5) $$
+
+  * 从（式5 - 5）中可以看出，如果选择UCB的上界是 $$\sqrt{\frac{2\log t}{N}}$$ 的形式，那么$$\bar{X}$$ 的均值与$$\bar{X}$$ 的实际期望值的差距在上界之外的概率非常小，小于$$t^{-4}$$，这就说明采用UCB的上界形式是严格且合理的。 --> UCB根据变量的上界进行exploration
+
+### beta分布
+
+* beta分布是伯努利分布的共轭先验分布
+  * **共轭先验分布的概念**：根据先验分布计算后验分布，后验分布和先验分布属于同一个分布族
+  * 应用：Thompson sampling
+
+
+### 其它
+
 * [Jaccard相似度](https://zh.wikipedia.org/wiki/%E9%9B%85%E5%8D%A1%E5%B0%94%E6%8C%87%E6%95%B0)：是用于比较[样本](https://zh.wikipedia.org/wiki/样本)集的相似性与[多样性](https://zh.wikipedia.org/wiki/多样性指数)的统计量，雅卡尔系数能够量度有限样本集合的相似度，其定义为两个集合[交集](https://zh.wikipedia.org/wiki/交集)大小与[并集](https://zh.wikipedia.org/wiki/并集)大小之间的比例
   * 文本相似度
 
