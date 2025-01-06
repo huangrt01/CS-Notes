@@ -2397,7 +2397,9 @@ void gemmPacked(
 
 #### Practical Lessons from Predicting Clicks on Ads at Facebook, KDD 2014
 
-2.指标
+> GBDT+LR、在线学习、Online Joiner、负样本降采样
+
+**2.指标**
 
 * Normalized Entropy: the average log loss per impression divided by what the average log loss per impression would be if a model predicted the background click through rate (CTR) for every impression. 
   * 用 background CTR 给 loss 做 normalize
@@ -2405,7 +2407,7 @@ void gemmPacked(
 * Calibration: the ratio of the average estimated CTR and empirical CTR
 * AUC(Area-Under-ROC): 衡量排序， 忽略低估与高估
 
-3.Prediction Model Structure
+**3.Prediction Model Structure**
 
 * BOPR (Bayesian online learning scheme for probit regression): 假定高斯分布，在线学习分布的参数
   * Both SGD-based LR and BOPR described above are stream learners as they adapt to training data one by one.
@@ -2428,7 +2430,7 @@ void gemmPacked(
   * LR's model size is half
   * BOPR provides a full predictive distribution over the probability of click. This can be used to compute percentiles of the predictive distribution, which can be used for explore/exploit learning schemes
 
-4.Online Data Joiner
+**4.Online Data Joiner**
 
 * length of waiting time window: 定义"no click"，需要 tune
   * 过长会增加buffer、影响"recency"
@@ -2441,7 +2443,7 @@ void gemmPacked(
 * Anomaly detection mechanisms
   * 监测到数据剧烈变化，断流训练器
 
-5.Containing Memory and Latency
+**5.Containing Memory and Latency**
 
 * number of boosting trees: 500个比较折中
 * boosting feature importance
@@ -2453,7 +2455,7 @@ void gemmPacked(
   * historical features 明显比 contextual features 重要
   * contextual features 更需要 data freshness
 
-6.Coping with Massive Training Data
+**6.Coping with Massive Training Data**
 
 * Uniform subsampling: sample rate 10% 
 
