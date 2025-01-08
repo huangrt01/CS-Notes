@@ -528,14 +528,10 @@ Training 量化
   * BERT: Bidirectional Encoder Representations from Transformers.
   * task类型：sentence-level/paraphrasing/token-level
   * 方法：feature-based and fine-tuning
-    *  In previous work, both ap-
-      proaches share the same objective function dur-
-      ing pre-training, where they use unidirectional lan-
-      guage models to learn general language represen-
-      tations.
+    *  In previous work, both approaches share the same objective function during pre-training, where they use unidirectional language models to learn general language representations.
   * BERT addresses the previously mentioned uni-directional constraints by proposing a new pre-training objective:
     * the “masked language model" (MLM)
-    * next sentence prediction” task
+    * “next sentence prediction” task
 
 ![image-20250102001058277](./Machine-Learning/image-20250102001058277.png)
 
