@@ -6,9 +6,31 @@ Materials
 
 * http://neuralnetworksanddeeplearning.com/
 
-### ML Basics
+### Intro
 
-#### Algorithms
+> 三要素
+
+* 特征
+* 结构
+  * 多层：提取深层特征
+  * 非线性变换
+* 参数
+  * Optimizer
+  * 人工设计：
+    * 差分
+    * 空洞卷积
+    * 非线性变换
+  * e.g. 图片边缘提取
+
+* 现代算法是策略和模型的融合：人工设计参数、特征提取、模型结构，有相似之处
+  * 特征提取：图像处理中的一阶、二阶特征
+    * 一阶特征主要关注图像的亮度和颜色信息，二阶特征则侧重于图像的纹理结构信息
+  * 人工设计参数：
+    * 比如MNIST768维像素，压缩到28维（每一行多少个点 / 每一列多少个点）
+  * 模型结构：
+    * ResNet
+
+### Algorithms
 
 * crossentropy、KL散度、logistic regression、softmax
   * KL散度 ---> CE loss: [看得见的信息论-为什么用交叉熵作为逻辑回归的代价函数](https://zhuanlan.zhihu.com/p/31207556)
@@ -57,19 +79,16 @@ Materials
 
   * 梯度消失和梯度爆炸：网络太深，网络权值更新不稳定造成的。本质上是因为梯度反向传播中的连乘效应
 
+### Optimizer
 
-
-
-#### Optimizer
-
-##### Optimization Problem
+#### Optimization Problem
 
 * Total Error = Optimization Error + Representation Error
 * $F(w_{alg}) = F(w_{alg})-F(w_*) + F(w_*)$
 * $F(w_*) \equiv \frac{1}{n} \sum_{i \in [n]} l(h_{w}(x_i), y_i) $
   * 模型预估误差均值，取决于模型结构
 
-##### GD: 1st-order method
+#### GD: 1st-order method
 
 * 梯度下降：$w_t \leftarrow w_{t-1} - \eta \nabla F(w_{t-1})$
 * Explanation: 一阶泰勒展开
@@ -81,7 +100,7 @@ Materials
   * "linear convergence" means: $$F(w_{t+1}) - F(w_*) \leq (1-\frac{\mu}{L}) \left( F(w_t) - F(w_*) \right)^1$$
   * This convergence is for the function value $$F(w)$$ (there are other types of convergence)
 
-##### Newton's method: 2nd-order method
+#### Newton's method: 2nd-order method
 
 * Gradient descent: $$w_t \leftarrow w_{t-t} - \eta (\nabla^2 F(w_{t-1}))^{-1} \nabla F(w_{t-1})$$
 
@@ -103,7 +122,7 @@ Materials
 
     - Also needs a "good" initial value: $$\|w_0-w_*\| \leq \frac{\mu}{2H}$$
 
-##### Polyak Momentum
+#### Polyak Momentum
 
 * $$w_t \leftarrow w_{t-1} - \eta \nabla F(w_{t-1}) + \beta(w_{t-1} - w_{t-2})$$
 * The formula above is equivalent to
@@ -114,7 +133,7 @@ Materials
   - $$v_t \leftarrow \nabla F(w_{t-1}) + \beta v_{t-1}$$, $$w_t \leftarrow w_{t-1} - \eta v_t$$
   - Caution: these 2 formulas will be different if the learning rate changes (warmup, decay)
 
-##### Nesterov Momentum
+#### Nesterov Momentum
 
 - Concept: **lookahead** to get a better gradient estimation
 
@@ -122,7 +141,7 @@ Materials
 
 * pytorch实际实现中，保留的是lookhead model
 
-##### SGD: stochastic methods
+#### SGD: stochastic methods
 
 * $$\min_{t} E\left[ \|\nabla F(w_{t-1})\|^2\right] \leq \frac{1}{T} \sum_{t=1}^T E\left[ \|\nabla F(w_{t-1})\|^2 \right] \leq \frac{2E[F(w_{0}) - F(w_*)]}{\eta T} + \frac{L\eta V_1}{b}$$
 * 2 parts of error:
@@ -135,12 +154,11 @@ Materials
 
 - Converges to a point where $$\nabla F(w) = 0$$, could be a saddle point or local minimum, not necessarily a global minimum
 
-##### Federated Averaging
+#### Federated Averaging
 
 《Advances and open problems in federated learning》p22
 
-
-##### AdaGrad: a natural learning rate decay
+#### AdaGrad: a natural learning rate decay
 
 - Algorithm:
 
@@ -160,7 +178,7 @@ Materials
 
   - 工程实现时，手动给 v 设置一个上界
 
-##### FTRL: AdaGrad + L1 reg + L2 reg
+#### FTRL: AdaGrad + L1 reg + L2 reg
 
 * Related Paper: 《Ad Click Prediction: a View from the Trenches, KDD 13》
 
@@ -173,14 +191,14 @@ Materials
   * 李亦锬大佬的机器学习答题集，很精彩，其中介绍了 FTRL 的实践意义
     https://zhuanlan.zhihu.com/p/20693546
 
-##### FTRL with Group Lasso
+#### FTRL with Group Lasso
 
 * Paper: https://dl.acm.org/doi/pdf/10.1145/3357384.3358114
   * 注意 Group Lasso 项是 L2 范数的一次幂
 * Lasso: https://en.wikipedia.org/wiki/Lasso_(statistics)
 * 应用：优化 sparse feature embedding layer (fid -> embedding vector layer) 的 model sparsity，将每个特征的 vector 当作一个 group
 
-##### Adam
+#### Adam
 
 * Intro
   * adaptive moment estimation
@@ -215,7 +233,7 @@ Materials
   - sparse 部分不适用 Adam：滑动平均用到了历史信息
   - 配合 slow start 技术，前期并发数缓慢增大
 
-##### RMSProp
+#### RMSProp
 
 * Intro
 
@@ -223,8 +241,7 @@ Materials
 
   * 本质：Adam with $$\beta_1=0$$, without any bias correction
 
-
-##### Lookahead Optimizer: k steps forward, 1 step back, NIPS 2019
+#### Lookahead Optimizer: k steps forward, 1 step back, NIPS 2019
 
 * 本文是SGD场景，slow weights + 主要提升训练稳定性、减小优化器的variance
 * mini-batch 异步SGD场景也可以应用，提升模型效果
@@ -239,7 +256,7 @@ Materials
   * Proposition 2 (Lookahead steady-state risk): Lookahead has a variance fixed point that is strictly smaller than that of the SGD inner-loop optimizer for the same learning rate
   * Deterministic quadratic convergence: underdamped系统提升稳定性，overdamped系统略有损收敛
 
-##### LAMB
+#### LAMB
 
 - Algorithm:
   - In step $$t$$:
@@ -267,7 +284,7 @@ Materials
   - We can apply LAMB normalization to any base optimizer
   - But the learning rate must be re-tuned
 
-#### 激活函数
+### 激活函数
 
 * Intro
   * 选激活函数 https://machinelearningmastery.com/choose-an-activation-function-for-deep-learning/
@@ -302,15 +319,23 @@ Materials
 * ELU：
   * ![image-20241221141507094](./Machine-Learning/image-20241221141507094.png)
 
-#### Tuning
+### Tuning
 
 https://github.com/google-research/tuning_playbook
 
-#### Visualization
+### Visualization 可视化
 
-##### t-SNE：可视化高维向量
+#### t-SNE：可视化高维向量
 
 * 科普文章 https://medium.com/@sachinsoni600517/mastering-t-sne-t-distributed-stochastic-neighbor-embedding-0e365ee898ea
+
+#### k-means clustering
+
+* k个初值，means方法归类，N次迭代
+
+#### Partial Dependency Plots (PDP, 部分依赖图)
+
+![image-20250111195734138](./Machine-Learning/image-20250111195734138.png)
 
 
 
@@ -378,7 +403,9 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
 
 ![training_result](Machine-Learning/training_result.png)
 
+### 训练采样
 
+https://www.tensorflow.org/extras/candidate_sampling.pdf
 
 ### ML Theory
 
@@ -481,31 +508,7 @@ Training 量化
 * 量化问题本质是NP难问题，部分情况下可转换成指数规划问题
 * 量化训练和预测是两个目标，训练结果应该恢复成全精度再用预测压缩的过程压缩一遍
 
-### Deep Learning Basic
-
-#### Intro
-
-> 三要素
-
-* 特征
-* 结构
-  * 多层：提取深层特征
-  * 非线性变换
-* 参数
-  * Optimizer
-  * 人工设计：
-    * 差分
-    * 空洞卷积
-    * 非线性变换
-  * e.g. 图片边缘提取
-
-* 现代算法是策略和模型的融合：人工设计参数、特征提取、模型结构，有相似之处
-  * 特征提取：图像处理中的一阶、二阶特征
-    * 一阶特征主要关注图像的亮度和颜色信息，二阶特征则侧重于图像的纹理结构信息
-  * 人工设计参数：
-    * 比如MNIST768维像素，压缩到28维（每一行多少个点 / 每一列多少个点）
-  * 模型结构：
-    * ResNet
+### 
 
 ### RNN/LSTM/GRU
 

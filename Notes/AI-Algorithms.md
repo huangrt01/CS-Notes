@@ -765,7 +765,7 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 
 
 
-## 视频生成模型
+## 视频算法
 
 ### Intro
 
@@ -791,6 +791,47 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 
   * 生成的视频特点：
     * 多种输入形式、多视频间过渡、人和物的特征
+
+### 视频抽关键帧
+
+#### Literature Review
+
+* 方法：
+  * uniform sampling based,
+  * clustering based,
+    * VSUMM [4], SGC [5], GMC [6] used k-means, minimum spanning tree, and graph modularity
+    * 缺点是忽略了temporal sequences
+  * comparison based,
+    * VSUKFE [7] and DiffHist [8]
+    * 根据阈值对比
+  * shot based approaches
+    * drawing only one frame
+      from each shot is insufficient to fully describe videos’ visual
+      contents;
+    * using traditional features for boundary
+      detection might be inaccurate for shot segmentations.
+
+#### Large Model based Sequential Keyframe Extraction for Video Summarization
+
+* 切片（shot）：TransNetV2
+* 帧理解：CLIP
+* 每个shot内的frame聚类
+  * 迭代出k_max个聚类中心
+    * $$k_{max}=\sqrt{N}$$
+  * 最大化SC(silhouette coefficient)，合并聚类中心
+    * 聚类中心合并到2个，选择SC最大的一个聚类 （类比于筛掉一半聚类对应的帧，并选择聚类效果更好的一个中心）
+  * Redundancy Elimination
+    * 先基于color histogram去除solid-color or uninformative frames
+    * 再基于color histogram迭代去除相似帧
+
+![image-20250109174239161](./AI-Algorithms/image-20250109174239161.png)
+
+![image-20250109181815631](./AI-Algorithms/image-20250109181815631.png)
+
+* benchmark构建
+  * 人工打分，取局部极值点作为关键帧
+
+
 
 ## OpenAI o1
 
@@ -3343,6 +3384,10 @@ https://webkul.com/ai-semantic-search-services/
     * 我应该投资英伟达吗？我不太明白。所有信息都已被计入价格了吗？黑色世界芯片延误会怎样？对训练GPU的需求如何？英伟达现在的竞争对手是谁？它仍然没有竞争对手吗？五年后的市场会怎样？这将如何影响亚马逊网络服务（AWS）的收入？英伟达的利润率是如何被挤压的？谁可能会这么做？
 
 #### 其它
+
+* 视频/播客：
+  * https://dexa.ai/
+  * 综述：https://mp.weixin.qq.com/s/t09ffrqc9C5xMj48zna-0A
 
 * [垂直](https://www.bigcommerce.com/articles/ecommerce/recommendation-engine/#h2_best_ecommerce_recommendation_engines)：algolia、boomreach、clerk、emrsys、nosto、[Boost Commerce](https://boostcommerce.net/)
 * 日本： silveregg（推荐），ES(搜索）、zeta search/algolia (搜推）
