@@ -41,8 +41,6 @@ Materials
 
 * XGBoost: gradient boosted trees works by combining predictions from many simple models, each of which tries to address the weaknesses of the previous models. By doing this the collection of simple models can actually outperform large, complex models.
 
-
-
 * Feature Bagging
 
   * offering a potentially useful way of managing the bias-variance tradeoff
@@ -178,26 +176,6 @@ Materials
 
   - 工程实现时，手动给 v 设置一个上界
 
-#### FTRL: AdaGrad + L1 reg + L2 reg
-
-* Related Paper: 《Ad Click Prediction: a View from the Trenches, KDD 13》
-
-* Online Learning and Sparsity
-  * FTRL-Proximal(Follow The Proximally Regularized Leader): get both the sparsity provided by RDA and the improved accuracy of OGD
-
-  * [在线学习（Online Learning）导读 - 吴海波的文章](https://zhuanlan.zhihu.com/p/36410780)
-  * FTRL的数学本质：SGD（梯度 + L2）+稀疏性（L1）
-
-  * 李亦锬大佬的机器学习答题集，很精彩，其中介绍了 FTRL 的实践意义
-    https://zhuanlan.zhihu.com/p/20693546
-
-#### FTRL with Group Lasso
-
-* Paper: https://dl.acm.org/doi/pdf/10.1145/3357384.3358114
-  * 注意 Group Lasso 项是 L2 范数的一次幂
-* Lasso: https://en.wikipedia.org/wiki/Lasso_(statistics)
-* 应用：优化 sparse feature embedding layer (fid -> embedding vector layer) 的 model sparsity，将每个特征的 vector 当作一个 group
-
 #### Adam
 
 * Intro
@@ -283,6 +261,35 @@ Materials
 - Note:
   - We can apply LAMB normalization to any base optimizer
   - But the learning rate must be re-tuned
+
+### Online Optimizer
+
+> https://aeyoo.net/pdf/Online_Optimization.pdf
+
+#### FTRL: AdaGrad + L1 reg + L2 reg
+
+* Related Paper: 《Ad Click Prediction: a View from the Trenches, KDD 13》
+
+* Online Learning and Sparsity
+  * FTRL-Proximal(Follow The Proximally Regularized Leader): get both the sparsity provided by RDA and the improved accuracy of OGD
+
+  * [在线学习（Online Learning）导读 - 吴海波的文章](https://zhuanlan.zhihu.com/p/36410780)
+  * FTRL的数学本质：SGD（梯度 + L2）+稀疏性（L1）
+
+  * 李亦锬大佬的机器学习答题集，很精彩，其中介绍了 FTRL 的实践意义
+    https://zhuanlan.zhihu.com/p/20693546
+
+#### FTRL with Group Lasso
+
+* Paper: https://dl.acm.org/doi/pdf/10.1145/3357384.3358114
+  * 注意 Group Lasso 项是 L2 范数的一次幂
+* Lasso: https://en.wikipedia.org/wiki/Lasso_(statistics)
+* 应用：
+  * 优化 sparse feature embedding layer (fid -> embedding vector layer) 的 model sparsity，将每个特征的 vector 当作一个 group
+
+
+
+
 
 ### 激活函数
 
@@ -405,7 +412,8 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
 
 ### 训练采样
 
-https://www.tensorflow.org/extras/candidate_sampling.pdf
+* Intro
+  * https://www.tensorflow.org/extras/candidate_sampling.pdf
 
 ### ML Theory
 
@@ -630,13 +638,22 @@ Training 量化
 
 #### Intro
 
-概念：语言模型
+* 概念：语言模型
 
-* [Bag-of-words(BoW) model](https://en.wikipedia.org/wiki/Bag-of-words_model) 可作为一种信息模型，表示句子或图片，用于衡量相似度或别的用途
-* stop words: 停用词
-* [Tokenization and text normalization](https://www.analyticsvidhya.com/blog/2021/03/tokenization-and-text-normalization/)
+  * [Bag-of-words(BoW) model](https://en.wikipedia.org/wiki/Bag-of-words_model) 可作为一种信息模型，表示句子或图片，用于衡量相似度或别的用途
+
+  * stop words: 停用词
+
+  * [Tokenization and text normalization](https://www.analyticsvidhya.com/blog/2021/03/tokenization-and-text-normalization/)
+
+
+
 
 #### Embedding
+
+* Intro
+  * Embedding从入门到专家必读的十篇论文 - 王喆的文章 - 知乎
+    https://zhuanlan.zhihu.com/p/58805184
 
 * one-hot的缺点：
   * 过于稀疏
@@ -669,8 +686,11 @@ Training 量化
     coarser granularities, such as sentence embed-
     dings (Kiros et al., 2015; Logeswaran and Lee, 2018) or paragraph embeddings (Le and Mikolov, 2014). [BERT]
 
-#### Word2Vec: Efﬁcient Estimation of Word Representations in
-Vector Space
+
+
+#### Word2Vec: Distributed Representations of Words and Phrases and their Compositionality
+
+#### Word2Vec: Efﬁcient Estimation of Word Representations in Vector Space
 
 > https://www.cnblogs.com/sandwichnlp/p/11596848.html
 >

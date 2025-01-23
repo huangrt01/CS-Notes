@@ -831,7 +831,15 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 * benchmark构建
   * 人工打分，取局部极值点作为关键帧
 
+#### An effective Key Frame Extraction technique based on Feature Fusion and Fuzzy-C means clustering with Artificial Hummingbird
 
+- https://www.nature.com/articles/s41598-024-75923-y
+- 和 LMSKE 的差异（二者均为一个hybrid方案）：
+  - 先利用 【颜色通道相关性、直方图差异、互信息、惯性矩】筛选关键帧再做聚类
+    - LMSKE：shot切分 -> 聚类(利用多模态Embedding) -> 筛选(颜色通道)
+    - 该paper：筛选(多种特征) -> 聚类(利用HSV)
+  - 聚类算法的改进：Artificial Hummingbird、Fuzzy C-means Clustering
+- 优劣势分析：相比LMSKE，实时性更好、视频图片语义信息的利用更少
 
 ## OpenAI o1
 
@@ -3015,7 +3023,148 @@ https://github.com/westlake-repl/PixelRec
 
 
 
+### Query理解和分析
 
+> [电商搜索全链路（PART II）Query理解](https://mp.weixin.qq.com/s/GrMItUHW8Szghmveejn9XA)
+
+![图片](./AI-Algorithms/640-20241011183258573)
+
+![img](./AI-Algorithms/78aa0a537b0122edf97ec9a6d01a4fbf.png)
+
+* Query预处理
+  * 运营审核干预
+  * 归一化：包括大小写转换、繁简体转换、全半角转换、符号表情移除等
+  * 长度截断：对超长的query进行截断
+* Query分词
+  * 目前业界中大部分搜索系统中的分词模块都会有专门的基础中台部门来迭代优化，亦或直接使用开源的分词工具（譬如JieBa、HanLP、PyLTP、LAC等）
+  * Review of Chinese Word Segmentation Studies: *https://manu44.magtech.com.cn/Jwk_infotech_wk3/CN/Y2020/V4/I2/3/1*
+  * NLP分词算法深度综述: *https://zhuanlan.zhihu.com/p/50444885*
+
+```python
+# 提取名词
+values = [token.word for token in jieba.posseg.cut(query)
+            if token.flag in {'n', 'nr', 'ns', 'nt', 'nz'}]
+```
+
+
+
+> Query改写
+
+- Query纠错：技术方案主要可以分为pipeline和end2end两种类型
+
+  - Pipeline错误检测：识别输入句子中错误词的位置。主要方法有以下几种：
+
+  - - 基于词典：对query切分后，检查各个词是否在维护的自定义词表或挖掘积累的常见纠错pair中；
+    - 基于语言模型：统计大规模语料的n-gram信息，频率小于一定阈值的即认为是错误词；
+    - 基于序列标注：通过模型（bi-LSTM-CRF、BERT-CRF等）来学习错误词的开始和结束位置，'0' 表示无错误，'1' 表示错误；
+
+  - Pipeline错误纠正：定位到错词后，进行错词的纠正。首先采用多种策略（编辑距离、HMM模型、训练深度模型挖掘等）进行纠错候选召回，然后对该候选集合进行排序得到最终的正确query。
+
+  - End2End：
+
+    - 字节AI Lab的Soft-Mask BERT
+    - 蚂蚁金服SpellGCN
+    - 腾讯 PLOME
+
+  - 业界案例：在实际应用场景中，会存在很多论文未涉及的问题
+
+    - [百度：中文纠错技术](https://mp.weixin.qq.com/s?__biz=MzU1NTMyOTI4Mw==&mid=2247488610&idx=1&sn=c8793392f789ba5c39a9e8a4d7c6beac&scene=21#wechat_redirect)
+    - [哈工大讯飞文本纠错系统](http://cogskl.iflytek.com/archives/1306)
+    - [平安寿险AI：文本纠错技术](https://zhuanlan.zhihu.com/p/159101860)
+    - [阿里：语音对话中的纠错系统](https://mp.weixin.qq.com/s?__biz=MzA3MTQ0NTUyMw==&mid=2247484572&idx=1&sn=de6d707458e05bec4d53c4e4427da0e2&scene=21#wechat_redirect)
+    - [小爱：基于BERT的ASR纠错](https://mp.weixin.qq.com/s?__biz=MzU1NTMyOTI4Mw==&mid=2247503412&idx=1&sn=75ef312902713d3766a43a6c71e1024e&scene=21#wechat_redirect)
+    - [滴滴：语音交互自然语言理解探索与实践](https://mp.weixin.qq.com/s?__biz=MzU1NTMyOTI4Mw==&mid=2247529750&idx=2&sn=dbf897c5cb112fb87b6a1d9a37804548&scene=21#wechat_redirect)
+    - [流利说：自动语法纠错](https://mp.weixin.qq.com/s?__biz=MzI0NjIzNDkwOA==&mid=2247484827&idx=1&sn=137c9b927a9d77af73825eb24abb5c8f&scene=21#wechat_redirect)
+
+![图片](./AI-Algorithms/640-20241011184242866)
+
+- Query归一：目标是将长尾冷门的query/词语归一到热门标准query
+  - 涉及的主要技术是同义词挖掘及语义实体对齐。具体实现上有很多方式，譬如：
+    - 从知识库或者结构化数据构造规则模板来挖掘；
+    - 利用丰富的行为数据，结合无监督词向量，来挖掘语义相似词；
+    - 通过深度匹配模型、文本生成模型seq2seq等先挖掘出语义表达相近的query-query、item-item或query-item短语对，然后再将语义相近的query/item短语对进行语义对齐；
+- Query扩展：根据粒度的不同分为Term粒度和Query粒度两种
+  - 美团方案：
+    - 首先离线通过用户搜索日志、翻译（词对齐等）、图方法（协同过滤、graph embedding等）、词向量Embedding等方法挖掘得到千万级别的候选语料；
+    - 但一般上述挖掘语料质量不够高，又设计了基于BERT的语义判别模型进一步提高改写pair对的准确率；
+    - 在线的目标是进一步提高改写的效果，设计了高精度的词典改写、较高精度的模型改写（基于SMT统计翻译模型和XGBoost排序模型）、覆盖长尾Query的基于强化学习方法优化的NMT模型、针对商户搜索的向量化召回四种线上方案。
+  - 其它方案：
+    - [丁香园：搜索中的Query扩展技术](https://zhuanlan.zhihu.com/p/138551957)
+    - [丁香园：搜索中的Query扩展技术(二)](https://zhuanlan.zhihu.com/p/296504323)
+    - [Query 理解和语义召回在知乎搜索中的应用](https://mp.weixin.qq.com/s?__biz=MzU1NTMyOTI4Mw==&mid=2247496409&idx=1&sn=7b2f5984d71454e1a2812321f6018cf8&scene=21#wechat_redirect)
+    - [美团搜索中查询改写技术的探索与实践](https://tech.meituan.com/2022/02/17/exploration-and-practice-of-query-rewriting-in-meituan-search.htm)
+
+### Query Rewrite
+
+#### Literature Review
+
+* Pseudo-Relevance Feed- back (PRF)
+* Document Expansion
+* 数据集 Evaluation：https://github.com/amazon-science/esci-data
+
+#### A Survey of Query Optimization in Large Language Models
+
+![image-20250113203747812](./AI-Algorithms/image-20250113203747812.png)
+
+![image-20250113203846340](./AI-Algorithms/image-20250113203846340.png)
+
+* **查询扩展（Query Expansion）**：
+  * 分为内部扩展和外部扩展。
+  * 内部扩展利用 LLM 自身或原始查询中的信息，如 GENREAD 依初始查询生成上下文文档辅助回答；QUERY2DOC 用 LLM 生成伪文档扩展查询提升检索效果；REFEED 迭代改进输出；INTER 构建交互框架协同检索与 LLM；HYDE 结合假设文档与对比编码检索；FLARE 迭代预测检索；MILL 生成子查询与文档协同；GENQRENSEMBLE 集成关键词增强检索；ERRR 提取参数知识优化查询。外部扩展则从外部数据源（如网络、知识库）引入信息，如 LameR 用潜在答案扩充查询；GuideCQR 依检索文档优化查询；CSQE 提取关键句扩展；MUGI 生成伪参考增强检索。
+* **问题分解（Question Decomposition）**：
+  * 复杂查询需分解为简单子查询再检索信息整合答案。
+  * 如 DSP 框架在 LLM 和检索模型间处理文本；LEAST - TO - MOST 等方法按顺序分解解决问题；SELF - ASK 指出组合性差距；EAR 等方法扩展或纠正查询；ICAT 转移推理能力；REACT 结合推理与行动；AUTOPRM 等控制分解粒度；LPKG 基于知识图生成查询；ALTER 等增强检索推理；REAPER 规划检索；HIRAG 分解多跳查询；MQA - KEAL 利用外部记忆；RICHRAG 和 CONTREGEN 改进检索过程；PLAN×RAG 构建推理图；RAG - STAR 集成信息推理。
+* **查询消歧（Query Disambiguation）**：
+  * 针对模糊查询
+  * 方法包括 Ling 等的演绎推理、ECHOPROMPT 的重述查询、TOC 的构建歧义树、INFOCQR 的改写编辑框架、ADAQR 的偏好优化、MAFERW 的多方面反馈优化、CHIQ 的利用 NLP 能力等，以明确用户意图提高检索准确性。
+* **查询抽象（Query Abstraction）**：
+  * 对于复杂多跳查询，人类常抽象求解，相关方法如 STEP-BACK 引导 LLM 推理；Zhou 等的概念推理；COA 的抽象推理链；AOT 的抽象框架；Baek 等的增加抽象信息；MA - RIR 的定义查询方面；META - REASONING 的语义解构；RULERAG 的规则引导；SIMGRAG 的处理查询与知识图对齐。
+* 挑战与未来方向
+  - **查询中心过程奖励模型**：过程奖励模型（PRMs）虽有潜力，但 CoT 方法生成过程难预测，构建以查询子问题为中心的 PRMs 可能是优化方向。
+  - **查询优化基准**：缺乏统一基准阻碍技术评估比较，开发全面评估框架和基准至关重要。
+  - **提高查询优化效率和质量**：现有方法多枚举耗时耗资源，应设计高效算法识别最优路径，如优化查询分解方式。
+  - **Enhancing Query Optimization via**
+    **Post-Performance**：基于提示的方法中 LLM 对检索质量感知不足，需进一步研究整合排名结果。
+
+
+
+#### Large Language Model based Long-tail Query Rewriting in Taobao Search
+
+* BEQUE, a comprehensive framework that Bridges the sEmantic gap for long-tail QUEries
+  * multi-instruction supervised fine tuning (SFT)
+    * based on rejection sampling and auxiliary tasks mixing to fine-tune LLM
+  * offline feedback
+  * objective alignment.
+  * beam search to generate multiple candidate rewrites
+
+* 现有查询改写方法的局限
+  - 基于嵌入的检索范式结果难解释
+  - “查询改写 & 精确匹配” 范式中判别式方法难以控制语义范围和确保相关性
+  - 生成式方法受限于模型规模对长尾查询理解不足，基于大语言模型的改写方法缺乏微调与目标对齐
+
+![image-20241117235808683](./AI-Algorithms/image-20241117235808683.png)
+
+* 多指令 SFT
+  - 收集改写相关任务数据微调大语言模型，包括:
+  - 构建查询改写数据集（经两轮拒绝采样提升质量并结合辅助任务数据）
+  - 利用辅助任务数据集（质量分类、产品标题预测、思维链任务）增强模型对长尾查询的理解
+
+* Evaluation: 利用taobao rele score function，定义hit rate
+
+#### Query Expansion by Prompting Large Language Models
+
+* Intro
+  * PRF-based approaches assume that the top retrieved documents are relevant to the query
+  * we rely on the knowledge inherent in the LLM.
+* ![image-20241114182225681](./AI-Algorithms/image-20241114182225681.png)
+
+* 结论：
+  * PRF可以增强排序
+
+#### Query2doc: Query Expansion with Large Language Models
+
+* 检索sparse：重复5遍再相连
+* 检索dense：用[SEP]相连
 
 ### NL2Sql
 

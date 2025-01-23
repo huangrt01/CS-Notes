@@ -2070,8 +2070,21 @@ boundary erosion, entanglement, hidden feedback loops, undeclared consumers, dat
 
 
 
-
 #### Ad Click Prediction: a View from the Trenches, KDD 13
+
+FTRL的提出经历了下面几个关键的过程：
+
+1. **从最近简单的SGD到OGD**（online gradient descent），OGD通过引入L1正则化简单解决稀疏性问题；
+2. **从OGD到截断梯度法**，通过暴力截断小数值梯度的方法保证模型的稀疏性，但损失了梯度下降的效率和精度；
+3. **FOBOS**（Forward-Backward Splitting），google和伯克利对OGD做进一步改进，09年提出了保证精度并兼顾稀疏性的FOBOS方法；
+4. **RDA**：微软抛弃了梯度下降这条路，独辟蹊径提出了正则对偶平均来进行online learning的方法，其特点是稀疏性极佳，但损失了部分精度。
+5. Google**综合FOBOS在精度上的优势和RDA在稀疏性上的优势**，将二者的形式进行了进一步统一，提出并应用FTRL，使FOBOS和RDA均成为了FTRL在特定条件下的特殊形式。
+
+作者：王喆
+链接：https://zhuanlan.zhihu.com/p/61154299
+
+
+
 2. Brief System Overview：Google 场景是搜索广告
 
 3. Online Learning and Sparsity
