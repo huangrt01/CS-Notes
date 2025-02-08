@@ -30,3 +30,9 @@ else:
     print("CUDA不可用")
 
 print(torch.cuda.current_device())
+
+
+### utils
+
+import GPUtil
+GPUtil.showUtilization()

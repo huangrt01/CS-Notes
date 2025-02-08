@@ -8,6 +8,14 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 
 
 
+### Intro
+
+> GPU Mode (Youtube): https://www.youtube.com/channel/UCJgIbYl6C5no72a0NUAPcTA
+>
+> GPU Mode (lecture): https://github.com/gpu-mode/lectures
+>
+> Blog: https://christianjmills.com/blog.html#listing-listing-page=1
+
 ### GPU 相关知识
 
 #### 显卡驱动
@@ -31,6 +39,15 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 | Kepler architecture (开普勒)    | 3    | 2010     | K10, K20, K40, K80                                           |                                                              |                              |                   |
 | Fermi architecture (费米)       | 2    | 2010     |                                                              |                                                              |                              |                   |
 | Tesla architecture (特斯拉)     | 1    | ~        |                                                              |                                                              |                              |                   |
+
+* A100
+  * 192KB of on-chip SRAM per each of 108 streaming multiprocessors
+  * 《Dissecting the Ampere GPU architecture via microbenchmarking》
+  * 《Nvidia A100 tensor core GPU architecture》
+
+
+
+
 
 Nvidia GPU 产品根据使用场景不同分为不同的序列:
 
@@ -133,6 +150,36 @@ nvidia-smi --query-gpu=name --format=csv,noheader
       - full connect 的结构更为简单，有一些散热和能耗的优势
     - NV switch: 整个switch提供 600GB/s 带宽 
     - 单机八卡时，OAM 和 NV switch 差不多；卡数少时 nvsiwtch 效率高
+
+
+
+### Triton
+
+#### Intro
+
+* Triton是OpenAI 推出的以python为编程语言基础，专门为深度学习研发和高性能计算而设计的编程语言和编译器，旨在简化和优化GPU编程的复杂操作，降低高性能优化的门槛。它允许开发者在Triton框架内更灵活地编写和优化自定义的算子（operators）或处理复杂的数据流程。Triton的初期版本以CUDA为起点而开发，为没有CUDA基础的编程者提供快速编写高效CUDA kernel的方案，而随着迭代已逐渐支持其他芯片和编程工具，如AMD的ROCm，并在继续支持其他的芯片，如Intel的CPU。
+  * 利用ptx汇编可以将triton降级为ptx代码，在cuda上直接运行以达到极致计算性能的优化，Triton提供了块指针非常便捷的实现FA，对GPU IO感知类的实现进行了充分的支持。
+
+
+
+### GPU优化
+
+#### Literature Review
+
+* 访存瓶颈
+  * compute speed has out-paced memory speed [61, 62, 63], and most operations in Transformers are bottlenecked by memory accesses [43]. 【FlashAttention】
+
+
+
+
+
+### Profiling
+
+[timeline](https://zhuanlan.zhihu.com/p/40156908)
+
+[nsight-systems](https://developer.nvidia.cn/nsight-systems)
+
+[nsight-compute](https://developer.nvidia.com/nsight-compute)
 
 ### Nvidia Lectures
 
@@ -1093,7 +1140,18 @@ Spark 0.2的亮点
   
   ![INT8](nvidia/INT8-optimization.png)
 
+### 应用
 
+#### 矩阵乘法
+
+* Cutlass implementation of matrix multiplication on A100
+  * https://developer.download.nvidia.com/video/gputechconf/gtc/2020/presentations/s21745-developing-cuda-kernels-to-push-tensor-cores-to-the-absolute-limit-on-nvidia-a100.pdf
+
+#### 其它
+
+* GPU做图像处理pipeline自动优化
+  * Halide: a language and compiler for optimizing parallelism, locality, and recomputation in
+    image processing pipelines.
 
 
 

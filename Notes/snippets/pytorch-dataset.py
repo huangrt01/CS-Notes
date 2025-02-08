@@ -69,3 +69,9 @@ def load_data(paths, features_config, num_workers, batch_size):
         for idx_from in range(0, df.shape[0], batch_size):
             yield examples[idx_from : idx_from + batch_size]
 
+
+DistributedSampler 要求输入的数据集是可索引的（map-style dataset）
+
+to_map_style_dataset 函数的作用是将迭代式数据集转换为可索引的数据集，使得数据集可以被 DistributedSampler 使用。
+通过这种转换，我们可以为数据集添加 __getitem__ 和 __len__ 方法，从而满足 DistributedSampler 的要求。
+

@@ -138,6 +138,11 @@ loss1.backward(retain_graph=True)
 loss2.backward()
 
 
+### Learning Rate
+
+LambdaLR
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+
 
 ### Example
 

@@ -1,3 +1,23 @@
+### positional encoding
+
+def positional_encoding(seq_len, d_model):
+    # 初始化位置编码矩阵
+    pe = torch.zeros(seq_len, d_model)
+    position = torch.arange(0, seq_len, dtype=torch.float).unsqueeze(1)
+    div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+    # 计算偶数维度的正弦编码
+    pe[:, 0::2] = torch.sin(position * div_term)
+    # 计算奇数维度的余弦编码
+    pe[:, 1::2] = torch.cos(position * div_term)
+    return pe
+
+# 示例使用
+seq_len = 10
+d_model = 512
+pe = positional_encoding(seq_len, d_model)
+print(pe.shape)  # 输出: torch.Size([10, 512])
+
+
 
 ### modeling_swinv2.py
 

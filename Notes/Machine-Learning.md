@@ -58,12 +58,13 @@ Materials
   * Xavier Initialization
   * ![image-20241219212615709](./Machine-Learning/image-20241219212615709.png)
   * Kaiming Initialization主要用于激活函数为ReLU（Rectified Linear Unit）的神经网络。
-  
 * 过拟合
 
   * 过拟合问题存在其他更深刻的原因。例如，将 28 × 28 的图片实施扁平化操作，将其变换为一个长度为 784 的一维向量，这将完全丢失了像素的空间排列信息
 
   * [为什么过多的特征（feature）导致过拟合（over-fitting)？ - Dr.Shiki的回答 - 知乎](https://www.zhihu.com/question/47375421/answer/306771331)
+
+#### ResNet
 
 * 梯度相关
 
@@ -73,9 +74,16 @@ Materials
 
     * ![image-20241219183022789](./Machine-Learning/image-20241219183022789.png)
 
+
   * [灾难遗忘现象](https://en.wikipedia.org/wiki/Catastrophic_interference)
 
+
   * 梯度消失和梯度爆炸：网络太深，网络权值更新不稳定造成的。本质上是因为梯度反向传播中的连乘效应
+
+*  为解决该问题，ResNet提出假设：“增加一个层至少不应该比之前更差”，
+  * 即每层映射至少应为恒等映射f(x)=x。假设L1层到L2层间有完美映射函数H(x)，不会丢失x的任何信息，梯度不会消失；
+  * 而实际训练出的是不完美映射F(x)，F(x)=H(x) - x（输出减去输入剩下的就是映射丢失的部分），所以完美映射是H(x)=F(x)+x。 
+* 从梯度反向传播角度看，在残差网络中，通过恒等映射F(x)+x，除给模型添加跳跃连接外，还为梯度反向传播提供直接通道，使梯度能从输出层直接反向传播到输入层，避免联乘效应，大大缓解了梯度消失问题。 
 
 ### Optimizer
 
@@ -527,6 +535,8 @@ Training 量化
 
 ### Bert
 
+> 完形填空的训练难度比NTP小
+
 * Transformer 具有 field reduce 能力，将 N 个 token reduce 成 M 个 token
 * [GELU](https://paperswithcode.com/method/gelu)
   * GELUs are used in [GPT-3](https://paperswithcode.com/method/gpt-3), [BERT](https://paperswithcode.com/method/bert), and most other Transformers.
@@ -769,21 +779,9 @@ Training 量化
 * 推导
   * ![image-20241231003216044](./Machine-Learning/image-20241231003216044.png)
 
+#### Evaluation
 
-
-### Position Encoding
-
-* 绝对位置编码：
-  * Convolutional Sequence to Sequence Learning
-  * 正弦-余弦编码
-* 相对位置编码：
-  * 作用于自注意力机制
-
-
-
-
-
-#### 词之间的相似度
+##### 词之间的相似度
 
 * Embedding-based
   * SentenceEmbedding
@@ -815,7 +813,7 @@ def find_most_similar(input_word):
     return match
 ```
 
-#### 句子之间的相似度
+##### 句子之间的相似度
 
 * 编辑距离
 
@@ -853,7 +851,7 @@ def find_most_similar(input_word):
 
   - **应用场景**：在机器翻译和文本生成任务中，METEOR 能够提供一个更全面的评估，因为它不仅仅关注单词或短语的匹配，还考虑了词序和语义相似性，能够更好地反映生成文本的自然度和准确性。
 
-#### 指标
+##### 指标
 
 * 困惑度(perplexity)的基本概念及多种模型下的计算（N-gram, 主题模型, 神经网络）https://zhuanlan.zhihu.com/p/114432097
 

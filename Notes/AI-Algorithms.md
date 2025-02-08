@@ -145,28 +145,36 @@
 
 
 
-### Encoder & Decoder
+## Attention Is All You Need
 
-* encoder用于分析，decoder用于生成
-* 参考 「Attention is All You Need」
-* Encoder Only & Decoder Only & encoder-decoder
-  * Decoder Only：将输入拼起来，作为prompt
-    * 相比原始transformer，去除了：encoder、decoder中和encoder相连的MSA
-    * 转换成了「续写任务」，大部分LLM使用这种架构
-    * *Decoder*-*Only*模型在参数效率上通常优于*Encoder*-*Decoder*模型，因为它不需要同时训练两个模块
+> Paper
+>
+> 硬核课堂：ChatGPT的设计和实现 https://hardcore-tech.feishu.cn/wiki/DtO3wHVzEiOUdNk0r3cc8BY8nef
 
-### 从 RNN 到 Transformer
+### 从过去的NLP技术到 Transformer
 
 * 以RNN为核心的Encoder Decoder有以下几个重要的问题
   * 信息丢失：每次传递乘了系数，丢失前面的信息
-  * 无法处理较长句子：同上
-  * 不能并行计算
+  * 无法处理较长句子：RNN 对长期序列依赖关系不稳定，LSTM/GRU 虽一定程度克服长期依赖问题，但无法捕获全局上下文信息。
+    * the number of operations required to relate signals from two arbitrary input or output positions grows in the distance between positions, linearly for ConvS2S and logarithmically for ByteNet.
+    * RNN是sequence-aligned实现
+  * 不能并行计算，对GPU不友好
+* 以上问题，对**从序列到序列的模型**很重要
 
-
-
-## Attention Is All You Need
+> Transformer 的目标是 **设计全新的、并行的、长期依赖稳定且能捕获全局上下文信息、处理可变长度序列的神经网络架构**。
 
 ![image-20241216030117146](./AI-Algorithms/image-20241216030117146.png)
+
+* N-gram word2vec模型泛化性差
+  * -> 大力出奇迹，对全局做attention
+
+
+
+* seq2seq模型的早期探索
+  * https://arxiv.org/abs/1609.08144
+  * additive attn: https://arxiv.org/abs/1703.03906
+
+
 
 ### Intro
 
@@ -182,27 +190,61 @@
 * 模型结构是什么？
   * 过N个注意力层，再过一个full connection
   * $$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$
-    * normalization
+    * normalization：$$d_k$$是head dim（最后一维）
+  * 残差网络
 * 模型参数是什么？
   * 词嵌入向量
     * learnable?
   * 将词嵌入向量转化为q、k、v向量的三个矩阵和bias
+    * 线性变换矩阵 $$W^Q、W^K、W^V$$
+    * 理解Q、K、V：K偏向兴趣和摘要；V偏向原始信息
 * 模型输出是什么？
   * 全连接层的结果，一个长度为全部词汇数量的向量
   * 如何增强随机性：
     * top-k采样
+
+### Encoder & Decoder
+
+> 一些思考：
+>
+> * 在同等参数下认为 Decoder - Only 架构比 Encoder - Decoder 架构更复杂，因其注意力层输入信息更多对模型能力挑战更大，这种观点有一定合理性
+> * Decoder - Only 架构在理论上如果模型能力足够强大，确实有处理长序列并避免明显信息丢失的潜力
+
+* encoder用于分析，decoder用于生成
+* ![image-20250203160834537](./AI-Algorithms/image-20250203160834537.png)
+* Encoder Only & Decoder Only & encoder-decoder
+  * Decoder Only：将输入拼起来，作为prompt
+    * 相比原始transformer，去除了：encoder、decoder中和encoder相连的MSA
+    * 转换成了「续写任务」，大部分LLM使用这种架构
+    * *Decoder*-*Only*模型在参数效率上通常优于*Encoder*-*Decoder*模型，因为它不需要同时训练两个模块
+
+### Encoder
+
+#### 多头自注意力
+
+> * 从模型复杂度的角度：假设超参对效果贡献相同，优先让模型更复杂，利于Scalable，更晚遇到天花板
+>
+>   - “多头”比“单头”复杂，是比较直观的
+>
+>   - “多头” v.s. overlap，类似于推荐系统中的share emb，不确定哪种“更复杂”
+>     - overlap利于提取特征的局部细节，对于语言类模型，不知道有没有用
+>
+> - 动机：缓解全局attention的信息丢失
+
+
+
 * The Transformer follows this overall architecture using **stacked self-attention and point-wise**, fully connected layers for both the encoder and decoder, shown in the left and right halves of Figure 1
   * 左边encoder，右边decoder
     * Encoder: 自注意力
     * Decoder：Q用outputs embedding做masked attention后的结果，K、V用encoder结果
     * 表征向量512维
-  * masked multi-head attention
-    * 保证输出对输入的感知序列不会超出长度：防止在训练过程中模型看到未来的信息，确保预测是基于之前的输出
   * 自注意力机制：Q（输入矩阵）、K（字典）、V
     * 用1/(dk)^(1/2) scale了一下QK的乘法，可能是为了防止gradient太小
-    * Dot product的结果方差比additive attention的方差大
-
+      * Dot product的结果方差比additive attention的方差大
+      * https://arxiv.org/abs/1703.03906
 * Multi-head attention: 多头自注意力机制
+  * 多头注意力机制（Multi - Head Attention）的计算表达式为： $$\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h)W_O $$
+    * 其中每个头的计算公式为： $$ \text{head}_i = \text{Attention}(QW_{Q_i}, KW_{K_i}, VW_{V_i}) $$
   * 自注意力和CNN的辨析 https://www.mstx.cn/pytorch/209.html
     * 相似性：信息提取机制、并行、可堆叠
     * 区别：感受野的固定性和灵活性、局部性和全局性、计算复杂度、空间维度与序列维度
@@ -222,8 +264,108 @@
   * GPT-2: 32层
   * GPT-3: 96层
   * GPT-4、llama3：120层
+  * Q、K、V不同的理解：Q、K、V通过不同的线性变换从同一输入序列中生成，各自承担着不同的作用，共同实现了模型对序列中不同位置之间关系的捕捉。
+
+#### MLP
+
+* 提升网络表达力
+* 非线性
+* 融合多头特征
+
+#### Layer Normalization
+
+对seq_len维度上的每一个embedding（768维）做LN
+
+### Decoder
+
+#### 因果掩码机制
+
+* masked multi-head attention
+
+  * 保证输出对输入的感知序列不会超出长度：防止在训练过程中模型看到未来的信息，确保预测是基于之前的输出
+
+  * 对 QK^T 做mask
+  * 注意力矩阵：下三角非零
+  * A = A + M，M的某些元素是 $$-\infty$$
+
+#### 交叉多头注意力层
+
+* Q来自Decoder：考虑已经生成的内容
+* K、V来自Encoder：考虑上下文
+  * **传统 Transformer Decoder 的局限性**：传统 Transformer Decoder 主要依靠输入的 K、V 与 Q 计算注意力，进而生成输出。当输入短，K、V 提供的信息不足，注意力机制可聚焦的范围窄，解码器难以跳出有限信息的限制，导致预测结果单一。
 
 
+
+### Position Encoding
+
+https://arxiv.org/pdf/1705.03122
+
+* 为什么引入？
+  * MSA的计算，改变Q和K的词元位置，计算结果不变
+
+* 绝对位置编码：
+  * Convolutional Sequence to Sequence Learning
+  * 正弦-余弦编码
+* 相对位置编码：
+  * 作用于自注意力机制
+
+#### 正弦-余弦编码
+
+在Transformer架构中，由于其核心组件（如多头自注意力机制）本身不具备捕捉序列中元素位置信息的能力，所以需要额外的位置编码来为模型提供位置信息。正弦 - 余弦编码通过使用正弦和余弦函数来生成位置编码向量，其基本思想是利用不同频率的正弦和余弦波来表示不同的位置。
+
+对于一个长度为 $L$、维度为 $d$ 的序列，位置编码 $PE$ 是一个 $L\times d$ 的矩阵，其中第 $pos$ 个位置、第 $i$ 个维度的编码值计算公式如下：
+
+当 $i$ 为偶数时：
+$$PE_{(pos, 2i)} = \sin\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)$$
+
+当 $i$ 为奇数时：
+$$PE_{(pos, 2i + 1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)$$
+
+其中，$pos$ 表示位置（范围从 0 到 $L - 1$），$i$ 表示维度（范围从 0 到 $\frac{d}{2}-1$），$d$ 是位置编码向量的维度。
+
+- **提供位置信息**：通过正弦 - 余弦编码，模型能够区分序列中不同位置的元素，从而学习到元素之间的相对位置关系。这对于处理序列数据（如自然语言、时间序列等）至关重要，因为元素的顺序往往携带了重要的语义信息。
+- **线性可学习**：正弦 - 余弦编码具有一定的线性特性，使得模型可以通过线性变换来学习位置信息，从而提高模型的学习效率。
+- **外推性**：由于正弦和余弦函数的周期性，正弦 - 余弦编码具有较好的外推性，即模型可以处理比训练时更长的序列。
+  - may allow the model to extrapolate to sequence lengths longer than the ones encountered during training.
+
+
+优点
+
+- **无需学习**
+- **相对位置信息**：比如B在A后面N个位置，C在B后面N个位置
+- **计算高效**
+
+缺点
+
+- **固定模式**
+- **缺乏语义信息**：只提供了位置信息，不包含元素的语义信息，对于一些需要结合位置和语义信息的任务，可能需要与其他编码方式结合使用。
+
+### 映射到预测空间
+
+* 线性层、词表数量
+  * **隐藏层的映射目的**：神经网络中所有隐藏层的映射，本质是不断在多个超空间中对特征进行相互映射。
+  * **表示学习假设**：表示学习假定存在一个超空间，在这个超空间里能够找到一个超平面，将空间中的目标向量区分开来。
+* share the same weight matrix between the two embedding layers and the pre-softmax linear transformation
+  * https://arxiv.org/abs/1608.05859
+
+### 算法技巧
+
+* Label Smoothing
+  * During training, we employed label smoothing of value ϵls=0.1*ϵ**l**s*=0.1 [(cite)](https://arxiv.org/abs/1512.00567). This hurts perplexity, as the model learns to be more unsure, but improves accuracy and BLEU score.
+  * label [2,1,0,3,3]
+    * ![image-20250207130816676](./AI-Algorithms/image-20250207130816676.png)
+
+1.BPE/ Word-piece
+https://github.com/rsennrich/subword-nmt
+减少未登录词（OOV）的问题
+
+2.Shared Embeddings
+https://arxiv.org/abs/1608.05859
+
+3.Beam Search
+https://github.com/OpenNMT/OpenNMT-py/
+
+4.Model Averaging
 
 
 
@@ -237,13 +379,15 @@
   * 推理阶段的操作和训练阶段的解码器操作类似，但是训练阶段有目标序列的真实值作为输入来计算损失并进行反向传播训练，而推理阶段是根据之前生成的单词不断生成新的单词。
   * 在训练时，解码器的输入是已知的目标序列，在推理时，解码器的输入是逐步生成的单词序列。
 
-
-
-
-
 ### Implementation
 
-* TODO2: https://tensorflow.org/text/tutorials/transformer
+* The Annotated Transformer https://nlp.seas.harvard.edu/annotated-transformer
+  * https://github.com/harvardnlp/annotated-transformer/
+
+
+### 实验
+
+![image-20250205164614941](./AI-Algorithms/image-20250205164614941.png)
 
 ### transformer外的相关模型结构
 
@@ -266,10 +410,54 @@
     * 16个专家网络
     * 运行时只跑2个专家网络
     * 相比GPT-3.5更像人脑
+* Additive Attention https://arxiv.org/abs/1409.0473
+
+## GPT
+
+* 维特根斯坦：语言是思想的边界
+  * NLP是实现AGI的关键
+* 目标：建设NLP领域的“预训练+微调“的训练范式
+  * 为什么NLP的研发效率低？
+    * 训练速度慢、成本高
+    * 任务种类多、繁杂
+      * 所有NLP任务都可以转化为语言模型的预测
+      * ![image-20250205180037387](./AI-Algorithms/image-20250205180037387.png)
+        * Entailment：文本蕴含任务
+    * 语料处理难度大
+    * 高质量数据稀疏
+      * next token prediction任务的泛化性差 --> Scaling Law优化
+
+* 如何Scaling Law？
+  - 简化模型结构：
+    - Decoder-Only架构，去除交叉注意力层
+      - 6编码6解码 -> 12层解码器，超大参数规模
+    - N-gram改变为对全局上下文attention
+  - 复杂化模型结构：
+    - multi head
+    - 增加MLP
+    - 多层解码
+
+
+
+* 模型结构：
+  * 预训练Loss：取对数，解决seq len增加之后，条件概率的相乘问题
+  * 微调Loss：
+    * ![image-20250205191932896](./AI-Algorithms/image-20250205191932896.png)
+
+
+
+
 
 
 
 ## GPT-2
+
+* 目标：如果不微调了，能不能有更好的效果？
+  * 稀疏自注意力机制
+  * 增加batch size到百万，减少通信量
+  * 爬取rabbit/wikipedia
+* 思路：足够多的数据，模型能够理解任务意图
+  * prompt的前身
 
 ![image-20241019021839037](./AI-Algorithms/image-20241019021839037.png)
 
@@ -284,6 +472,9 @@
 
 ## GPT-3
 
+* 目标：根据上下文进行学习
+  * ![image-20250205193747735](./AI-Algorithms/image-20250205193747735.png)
+
 * Decoder
   * 12288维
   * 96层：
@@ -293,7 +484,12 @@
 
 
 
-## ChatGPT
+## GPT-3.5 (ChatGPT)
+
+* 目标：与人类的指令对齐
+  * 无法对齐/不安全
+
+![image-20250205194626295](./AI-Algorithms/image-20250205194626295.png)
 
 * 对话式大型语言模型：https://openai.com/blog/chatgpt/
   * 自回归语言模型：帮助背下来事件知识
@@ -319,7 +515,9 @@
     * OpenAI: 通过人类反馈对齐人类指令
 * **大模型具备了对知识的跨语言能力**
 * RLHF
-  * 见【算法-finetune-RLHF】部分
+  * 见【本文档-finetuning-RLHF】部分
+  * 惩罚1：过大的梯度/概率值
+  * 惩罚2：灾难性遗忘
 * limitations
   * Correctness: 模型不是全知的，一本正经地胡说八道
   * sensitive to rephrase
@@ -350,6 +548,12 @@
     * Sutskever 说，他们可能会在弱小的时候采取一种行动，而在强大的时候采取另一种行动。我们甚至不会意识到，我们创造的东西已经决定性地超越了我们，我们也不知道它打算用自己的超能力做些什么。
 
 ## GPT-4
+
+> * 亮点：
+>   * 多模态
+>   * 大量的RLHF，最安全/可控的模型
+>   * 在小模型上做消融实验，从而预测大模型实验效果
+>   * 专家算法投票
 
 * GPT-4幕后的研发团队大致可分为七个部分：预训练（Pretraining）、长上下文（Long context）、视觉（Vision）、强化学习和对齐（RL & alignment）、评估和分析（Evaluation & analysis）、部署（Deployment）以及其他贡献者（Additional contributions）
 * [GPT-4技术报告](https://mp.weixin.qq.com/s?__biz=Mzk0NzQzOTczOA==&mid=2247484155&idx=1&sn=5ef0fcf20d4b87366269d3c0cf4312c0&scene=21#wechat_redirect)
@@ -983,13 +1187,25 @@ https://ai.stanford.edu/blog/understanding-incontext/
 * finetune需求
   * OpenAI: 1.3w条SFT prompt
   * embedding：至少10w条数据，相似性和同义性
-* 很厉害的alpaca
+* alpaca
 
 ![image-20231025213448602](./AI-Algorithms/alpaca.png)
 
+### Literature Review
 
+* finetuning分类
+  * full：Training Language Models to Follow Instructions with Human Feedback
+    * aligned with human preferences with instruction-tuning
 
-#### RLHF
+  * 高效的：LoRA: Low-Rank Adaptation of Large Language Models
+
+* Pre-trained LLMs can be adapted to domain tasks with further fine-tuning
+  * 《Large language models encode clinical knowledge》
+
+* fine-tuned LLMs fail to learn from examples
+  * DAIL-SQL
+
+### RLHF
 
 * Reinforcement Learning from Human Feedback (RLHF), using the same methods as [InstructGPT](https://openai.com/blog/instruction-following/), but with slight differences in the data collection setup
   * RLHF的blog介绍：https://huggingface.co/blog/rlhf
@@ -1011,7 +1227,7 @@ https://ai.stanford.edu/blog/understanding-incontext/
 
 * 
 
-#### LoRA
+### LoRA
 
 ![image-20231026212212239](./AI-Algorithms/LoRA.png)
 
@@ -1020,22 +1236,6 @@ https://ai.stanford.edu/blog/understanding-incontext/
 https://github.com/huggingface/peft
 
 
-
-### Literature Review
-
-* finetuning分类
-  * full：Training Language Models to Follow Instructions with Human Feedback
-    * aligned with human preferences with instruction-tuning
-
-  * 高效的：LoRA: Low-Rank Adaptation of Large Language Models
-
-* Pre-trained LLMs can be adapted to domain tasks with further fine-tuning
-  * 《Large language models encode clinical knowledge》
-
-* fine-tuned LLMs fail to learn from examples
-  * DAIL-SQL
-
-  
 
 ### Instruction tuning
 

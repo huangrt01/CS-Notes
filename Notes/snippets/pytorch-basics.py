@@ -96,12 +96,17 @@ y = x.numpy()
 
 ### tensor operation
 
+在旧版本的 PyTorch 中，使用 .data 属性来获取张量中的数据，现在更推荐使用 .item() 方法。
+
 a = torch.arange(1, 13).view(4, 3)
 a_t = a.t()
 
 print(a.is_contiguous()) ## True
 
-print(a_t.is_contiguous()) ## False，对一个 tensor 进行转置操作之后会改变它的 contiguous 特性
+print(a_t.is_contiguous()) ## False
+# 对一个 tensor 进行转置操作之后会改变它的 contiguous 特性
+
+# 当对张量进行一些操作（如 transpose()、permute() 等）后，张量在内存中的存储可能不再连续，此时如果直接使用 view() 方法，就会抛出错误
 
 a_t_v = a_t.view(-1) ## 会报错
 a_t = a.t().contiguous()
@@ -136,6 +141,13 @@ result = data.gather(dim=0, index=index)
 result = data.gather(dim=1, index=index)
 
 # tensor([[3, 2, 1]])
+
+torch.Tensor.scatter_(dim, index, src) 用于将源张量中的值按照指定的索引位置填充到目标张量中
+
+# tensor的bool mask
+def get_split_partition_masks(tensor: torch.Tensor, num_partition: int):
+  partition_idx = torch.fmod(tensor, num_partition)
+  return [partition_idx == i for i in range(num_partition)]
 
 
 ### leaf node

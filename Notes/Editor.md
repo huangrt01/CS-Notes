@@ -248,6 +248,12 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 - [Vim Screencasts](http://vimcasts.org/)
 - [Practical Vim](https://pragprog.com/book/dnvim2/practical-vim-second-edition) (book)
 
+### Clion
+
+* 文件栏：`command + shift + E`
+* 快速修复警告：`command + .`
+* 随处搜索：两次shift
+
 
 
 ### VSCode
