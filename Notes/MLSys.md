@@ -1048,7 +1048,31 @@ for prediction, label, img in zip(p,l,i):
     * 对于自由度较高的模块，主要指的是上面说的“模型构建”部分，则系统提供抽象父类，包含基础的功能。自定义模型时，通过继承父类，并重写“前向传播”等方法即可
   * 训练环境docker化
 
+### 测试
 
+- PyTorch 单测框架
+
+  - unittest + pytest
+  - **Golden Test**
+
+- TensorFlow Extended 的测试模式
+
+  - **Hermetic Testing**：使用 Docker 隔离测试环境
+  - **Artifact** **验证链**：对 checkpoint、saved_model 等中间产物进行签名验证
+
+- HuggingFace 的测试实践
+
+  - **Model Zoo 测试**：对每个预训练模型进行前向 / 反向传播验证
+
+  - **精度****容忍度标记**：
+
+    - ```Python
+      @require_torch_gpu
+      @slow
+      @pytest.mark.tolerance(atol=1e-4)
+      def test_large_model():
+          ...
+      ```
 
 ### MLSys Courses
 
