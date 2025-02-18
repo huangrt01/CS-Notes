@@ -1,5 +1,13 @@
 [toc]
 
+### Macbook
+
+#### 快捷键
+
+* ctrl + 左右箭头：切屏
+
+
+
 ### Vim
 
 [Editor War](https://en.wikipedia.org/wiki/Editor_war)
@@ -250,11 +258,109 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 
 ### Clion
 
+#### 快捷键
+
 * 文件栏：`command + shift + E`
-* 快速修复警告：`command + .`
-* 随处搜索：两次shift
+* 改代码：
+  * 快速修复警告/上下文操作：`command + .`
+
+* 写代码
+  * **包围模版：command + option + T**
+  * 复制和删除行：
+    * ![image-20250215160720438](./Editor/image-20250215160720438.png)
+
+  * 补全：
+    * 显式激活：command + I
+    * 智能补全：command + shift + 下箭头
+
+  * 向下拉取某行：option + 下箭头
+
+* 注释：
+  * 行注释：command + /
+  * 块注释：shift + /
+
+* 选代码：
+  * ![image-20250215163426680](./Editor/image-20250215163426680.png)
+  * 扩展选区：command + shift + ctrl + 右箭头
 
 
+* 重构：
+  * F2
+  * 上下文重构：shift + ctrl + R
+  * 更改签名：command + F6
+  * 提取常量：command + option + V； 接Tab改名
+  * 提取方法：command + option + M
+* 文件操作：
+  * command + shift + F
+  * command + shift + H，文件替换
+
+#### 读代码
+
+* **跳转到类型声明：**
+  * **command + shift + 点击**
+
+* **切换Tab：**
+  * **command + shift + 【/】**
+* **展开**
+  * **到级别（custom）**
+    * **command + shift + J/K 1/2/3/4/5**
+  * **某块区域**
+    * **command + option + [或]**
+  * 全部区域：
+    * command + option + -/=
+* 搜索：
+  * 随处搜索：两次shift 或者 `F1`
+  * 查文件：command + P
+  * 查方法或全局变量：command + T
+  * 上下切换：command + G / command + shift + G
+
+* **方法的详细用法：**
+  * **shift + option + F12**
+* **最近文件：command + E**
+* 文件视图
+  * command + option + O
+  * command + 7
+
+#### 代码辅助
+
+* 还原代码： 右键 本地历史记录
+* **Format: option + shift + F**
+  * **设置：command + Option + shift + L**
+* **显示方法签名：**
+  * **command + shift + space**
+* 右键 显示汇编
+* 打开文档：command K + command I，连续点
+
+* 类型匹配补全 (custom)：
+  * command + shift + 下箭头
+* 后缀补全：输入`.`，比如生成make_unique
+* 补全建议：Command I + Tab
+
+
+
+#### 编译
+
+
+
+#### 运行
+
+* ctrl + F5
+
+
+
+#### Debug
+
+* 打断点：F9
+* step into: f11
+* step over: f10
+* 重新运行：command + ; + L
+* Python AssertionError断点
+
+![image-20250213180054012](./Editor/image-20250213180054012.png)
+
+#### 测试
+
+![image-20250213180134525](./Editor/image-20250213180134525.png)
 
 ### VSCode
 

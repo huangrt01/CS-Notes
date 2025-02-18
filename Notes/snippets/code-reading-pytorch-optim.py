@@ -1,5 +1,10 @@
 https://zhuanlan.zhihu.com/p/346205754
 
+#
+
+### 其它注意点
+只有parameter才会被自动优化，tensor(...,require_grad=True)只会计算梯度，不会自动更新
+
 ### usage
 
 import torch
@@ -98,6 +103,8 @@ state_dict()
 # zero_grad
 set_to_none
 
+梯度设置为 None 和 0 在 PyTorch 中处理逻辑会不一样
+
 set_to_none (bool): instead of setting to zero, set the grads to None.
                 This will in general have lower memory footprint, and can modestly improve performance.
                 However, it changes certain behaviors. For example:
@@ -112,11 +119,148 @@ set_to_none (bool): instead of setting to zero, set the grads to None.
 for_each优化
 torch._foreach_zero_(grads)
 
+### 优化器有哪些
+
+adagrad.py  adamax.py  asgd.py   rmsprop.py  sgd.py
+adadelta.py    adam.py     adamw.py   lbfgs.py  nadam.py         radam.py      rprop.py    sparse_adam.py
+
+
+### SGD
+
+@_use_grad_for_differentiable
+def step(self, closure=None):
+
+step 方法可传入闭包函数 closure，主要目的是为了实现如Conjugate Gradient和LBFGS等优化算法，这些算法需要对模型进行多次评估
+Python 中闭包概念：在一个内部函数中，对外部作用域的变量进行引用(并且一般外部函数的返回值为内部函数)，那么内部函数就被认为是闭包
+
+# 原地更新，破坏梯度传播
+buf.mul_(momentum).add_(grad, alpha=1 - dampening)
+param.add_(grad, alpha=-lr)
+
+_multi_tensor_sgd
+_single_tensor_sgd
+* _foreach_add_
+_fused_sgd_
+* _fused_sgd_
+
 
 ### lr_scheduler
 
+有序调整策略:
+StepLR
+MultiStepLR
+ExponentialLR
+CyclicLR
+OneCycleLR
+CosineAnnealingLR
+CosineAnnealingWarmRestarts
+
+
+自适应调整策略:
+ReduceLROnPlateau
+
+
+自定义调整策略:
+LambdaLR
+MultiplicativeLR
+
+确保lr_scheduler.step()是在optimizer.step()之后调用的
+LRScheduler在初始化时已经调用过一次step()方法。
+
+def state_dict(self):
+    """Return the state of the scheduler as a :class:`dict`.
+
+    It contains an entry for every variable in self.__dict__ which
+    is not the optimizer.
+    """
+    return {
+        key: value for key, value in self.__dict__.items() if key != "optimizer"
+    }
+
+def load_state_dict(self, state_dict: Dict[str, Any]):
+    """Load the scheduler's state.
+
+    Args:
+        state_dict (dict): scheduler state. Should be an object returned
+            from a call to :meth:`state_dict`.
+    """
+    self.__dict__.update(state_dict)
+
+
+def step
+该方法里对last_epoch自增之后，在内部上下文管理器类里调用子类实现的get_lr()方法获得各参数组在此次 epoch 时的学习率，
+并更新到 optimizer的param_groups属性之中，最后记录下最后一次调整的学习率到self._last_lr，此属性将在get_last_lr()方法中返回
+
+
+### 可视化学习率
+
+## 可视化学习率
+from torch.optim import lr_scheduler
+from matplotlib import pyplot as plt
+%matplotlib inline
+
+def create_optimizer():
+    return SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+
+def plot_lr(scheduler, title='', labels=['base'], nrof_epoch=100):
+    lr_li = [[] for _ in range(len(labels))]
+    epoch_li = list(range(nrof_epoch))
+    for epoch in epoch_li:
+        scheduler.step()  # 调用step()方法,计算和更新optimizer管理的参数基于当前epoch的学习率
+        lr = scheduler.get_last_lr()  # 获取当前epoch的学习率
+        for i in range(len(labels)):
+            lr_li[i].append(lr[i])
+    for lr, label in zip(lr_li, labels):
+        plt.plot(epoch_li, lr, label=label)
+    plt.grid()
+    plt.xlabel('epoch')
+    plt.ylabel('lr')
+    plt.title(title)
+    plt.legend()
+    plt.show()
+## StepLR 可视化学习率
+optimizer = create_optimizer()
+scheduler = lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
+plot_lr(scheduler, title='StepLR')
+
 
 ### 随机参数平均 swa_utils
+
+AveragedModel: 实现 SWA 算法的权重平均模型
+SWALR: 与AverageModel配合使用的学习率调整策略
+update_bn: 更新模型中的 bn
+
+随机权重平均(SWA)是一种优化算法，在SWA 论文的结果证明，取 SGD 轨迹的多点简单平均值，以一个周期或者不变的学习率，会比传统训练有更好的泛化效果。
+论文的结果同样了证明了，随机权重平均 (SWA) 可以找到更广的最优值域。
+
+def get_ema_avg_fn(decay=0.999):
+    """Get the function applying exponential moving average (EMA) across a single param."""
+
+    @torch.no_grad()
+    def ema_update(ema_param: Tensor, current_param: Tensor, num_averaged):
+        return decay * ema_param + (1 - decay) * current_param
+
+    return ema_update
+
+
+def get_swa_avg_fn():
+    """Get the function applying stochastic weight average (SWA) across a single param."""
+
+    @torch.no_grad()
+    def swa_update(
+        averaged_param: Tensor, current_param: Tensor, num_averaged: Union[Tensor, int]
+    ):
+        return averaged_param + (current_param - averaged_param) / (num_averaged + 1)
+
+    return swa_update
+
+ Stochastic Weight Averaging was proposed in `Averaging Weights Leads to
+    Wider Optima and Better Generalization`_ by Pavel Izmailov, Dmitrii
+    Podoprikhin, Timur Garipov, Dmitry Vetrov and Andrew Gordon Wilson
+    (UAI 2018).
+
+    Exponential Moving Average is a variation of `Polyak averaging`_,
+    but using exponential weights instead of equal weights across iterations.
 
 
 ### 技巧
@@ -137,3 +281,9 @@ GlobalOptimizerPreHook: TypeAlias = Callable[
     ["Optimizer", Args, Kwargs], Optional[Tuple[Args, Kwargs]]
 ]
 
+
+self.register_buffer(
+    "n_averaged", torch.tensor(0, dtype=torch.long, device=device)
+)
+
+itertools.chain

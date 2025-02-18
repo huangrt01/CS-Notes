@@ -96,6 +96,10 @@ y = x.numpy()
 
 ### tensor operation
 
+# 原地更新，破坏梯度传播
+buf.mul_(momentum).add_(grad, alpha=1 - dampening)
+param.add_(grad, alpha=-lr)
+
 在旧版本的 PyTorch 中，使用 .data 属性来获取张量中的数据，现在更推荐使用 .item() 方法。
 
 a = torch.arange(1, 13).view(4, 3)
