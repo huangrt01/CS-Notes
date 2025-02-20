@@ -11,10 +11,16 @@
   * 7B模型：
     * float32: 70*10^8 * 4B = 26.7GB
     * 微调：考虑中间结果，100GB以上
-* Memory Efficient Attention with Online Softmax (2021) -> FlashAttention in Megatron-LM (2022) 
-* Continuous Batching (2022), Paged Attention (2023) -> vLLM, TensorRT-LLM (2023) 
-* Speculative Sampling (2023) -> Everywhere in LLM Serving (2023)
-* Sequence Parallel (2023) ->  Megatron-LLM (2023) 
+* 技术发展
+  * Memory Efficient Attention with Online Softmax (2021) -> FlashAttention in Megatron-LM (2022) 
+  * Continuous Batching (2022), Paged Attention (2023) -> vLLM, TensorRT-LLM (2023) 
+  * Speculative Sampling (2023) -> Everywhere in LLM Serving (2023)
+  * Sequence Parallel (2023) ->  Megatron-LLM (2023) 
+  
+* 业务目标：https://mp.weixin.qq.com/s/llalxX6miJRxy0-Vk8Ezpg
+  * MFU（Model FLOPs Utilization）：评估GPU算力的有效利用率，就是GPU的算力到底有多少用来干活的。如果MFU低于50%，则属于异常，如果能达到70-80%，那效率就很高了；
+  * 故障率：在大规模的集群中，推理请求的故障率，因为在一万张卡的集群中，如果每几分钟就有一张卡挂掉，那么这会影响整体效率，或者说看故障时间占在整个有效训练时间的占比，如果说是故障的时间占训练时间比例超过30%，也非常影响效率；
+  
 
 ## 推理优化
 

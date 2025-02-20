@@ -5,6 +5,25 @@ project(LearnCppProject)
 
 set(CMAKE_CXX_STANDARD 17)
 
+
+# 查找 Boost 库，要求找到 system 和 thread 组件
+# find_package(<PackageName> [version] [EXACT] [QUIET] [MODULE]
+             # [REQUIRED] [[COMPONENTS] [components...]]
+             # [OPTIONAL_COMPONENTS components...]
+             # [NO_POLICY_SCOPE])
+find_package(Boost 1.65.0 REQUIRED COMPONENTS system thread)
+
+# 如果找到 Boost 库，则输出信息
+if(Boost_FOUND)
+    message(STATUS "Boost found: ${Boost_VERSION}")
+    include_directories(${Boost_INCLUDE_DIRS})
+    link_directories(${Boost_LIBRARY_DIRS})
+    add_executable(MyExecutable main.cpp)
+    target_link_libraries(MyExecutable ${Boost_LIBRARIES})
+else()
+    message(FATAL_ERROR "Boost not found")
+endif()
+
 include_directories(include)
 
 add_executable(welcome main.cpp
@@ -23,6 +42,8 @@ add_executable(welcome main.cpp
         Refactorings.cpp
         Navigation.cpp
 )
+
+###
 
 
 ### PyTorch

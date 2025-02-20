@@ -1,30 +1,5 @@
-### Basic
-
-- unittest.mock
-
-coverage run --source=monotorch -m pytest tests/
-coverage html --show-contexts
 
 
-- @pytest.mark.benchmark
-
-
-
-import shutil
-import tempfile
-
-
-
-class Test(unittest.TestCase):
-    def setUp(self):
-        self.temp_dir = tempfile.mkdtemp()
-
-    def tearDown(self):
-        shutil.rmtree(self.temp_dir)
-
-    def test1(self):
-    		new_ckpt_dir = f'{self.temp_dir}/new_saved'
-    		...
 
 ### Decorator
 
@@ -45,22 +20,3 @@ def test_task_decorator(*args, task_filter: Union[str, List[str]] = None, **kwar
     return wrapper
 
   return decorator
-
-### parametrized
-
-from absl.testing import parameterized
-
-class MyOpTest(parameterized.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        ...
-
-    @parameterized.parameters(
-        (1,2),
-        (1,3),
-        (1,10)
-    )
-    @test_task_decorator()
-    def test_loader(self, N, M, task, task_name):
-        ...
-

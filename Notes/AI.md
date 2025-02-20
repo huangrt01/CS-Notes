@@ -42,7 +42,7 @@
 
 ### 技能点大纲
 
-![structure](AIGC/structure.png)
+![structure](./AI/structure.png)
 
 ## 成本和性能
 
@@ -89,11 +89,11 @@ print(f"Prompt的token数量为: {token_count}")
 
 * 存量和增量
 
-![image-20241019195324985](AIGC/image-20241019195324985.png)
+![image-20241019195324985](./AI/image-20241019195324985.png)
 
 * 分布：
 
-![image-20241019195345714](AIGC/image-20241019195345714.png)
+![image-20241019195345714](./AI/image-20241019195345714.png)
 
 ### 售价
 
@@ -107,19 +107,24 @@ print(f"Prompt的token数量为: {token_count}")
 
 ### 模型能力
 
-![image-20241218105153242](./AIGC/image-20241218105153242.png)
+![image-20241218105153242](./AI/image-20241218105153242.png)
 
 
 
 ### 产品架构
 
-![business_arch](AIGC/business_arch.webp)
+![business_arch](./AI/business_arch.webp)
 
 * 实现 Copilot 的主流架构是 **多 Agent 架构**
   * 模仿人做事，将业务拆成工作流（workflow、SOP、pipeline）
   * 每个 Agent 负责一个工作流节点
 
 ### 产品逻辑
+
+* 不看好的大模型公司类型
+  * 打补丁：大模型做错了数学题，因此在外面加了一堆东西，目的是算对数学题；
+  * 雕花：模型本来输出的格式可能不太对，给他加点后处理，它输出的格式就对了。
+  * 套壳：模型上面套个界面就拿去卖，没有任何行业的积累，或者别人没有的数据，别人没有的客户，只是当成通用工具去卖。
 
 * [有赞的 AI 实践：把决定权交给用户、Copilot 和 Agent 最重要](https://mp.weixin.qq.com/s/ItnXazO86IeGEb7yL-72gg)
   * AI 对于交互的改变： LUI+GUI 会是未来主流
@@ -181,6 +186,15 @@ print(f"Prompt的token数量为: {token_count}")
     * Develop a go-to-market strategy
       * **Launch your product with product evangelists**
       * **Get your product in front of individual users before going after businesses**
+
+### 天花板分析
+
+TODO
+
+* https://darioamodei.com/machines-of-loving-grace
+* https://epoch.ai/blog/can-ai-scaling-continue-through-2030
+
+
 
 ### App
 
@@ -270,7 +284,7 @@ print(f"Prompt的token数量为: {token_count}")
 * ToB场景示例
   * 大模型相关的ToB场景研发成本下降
 
-![image-20231025201548103](AIGC/tob.png)
+![image-20231025201548103](./AI/tob.png)
 
 ### 难点
 
@@ -316,7 +330,7 @@ print(f"Prompt的token数量为: {token_count}")
   - 向量数据库：把向量存起来，方便查找
   - 当人看：考试答题时，到书上找相关内容，再结合题目组成答案，然后，**就都忘了**
 
-![embeddings_arch](AIGC/embeddings_arch.png)
+![embeddings_arch](./AI/embeddings_arch.png)
 
 * Finetuning
   * 值得尝试 Fine-tuning 的情况：
@@ -326,7 +340,7 @@ print(f"Prompt的token数量为: {token_count}")
     * 需要私有部署
   * 一种手段：先用大模型服务，积攒输入输出数据，再用这些数据对小模型做微调
 
-![tech_arch](AIGC/tech_arch.png)
+![tech_arch](./AI/tech_arch.png)
 
 
 
@@ -623,7 +637,7 @@ pip3 install --upgrade openai
     * [大模型如何使用长上下文信息？斯坦福大学最新论文证明，你需要将重要的信息放在输入的开始或者结尾处！](https://www.datalearner.com/blog/1051688829605194)
     * [Lost in the Middle: How Language Models Use Long Contexts](https://arxiv.org/abs/2307.03172)
 
-![lost_middle](AIGC/lost_middle.jpg)
+![lost_middle](./AI/lost_middle.jpg)
 
 ### 常用Prompt
 
@@ -874,7 +888,7 @@ Assistant：
   * The Operational Focus of Traditional Product Catalogs
   * Unlocking the Power of Untapped Data Sources
 
-![66a73231a81895c66be5c687_669ab3b0b570c6869c1069d4_blog_ai_de_product_catalog_enriched](AIGC/66a73231a81895c66be5c687_669ab3b0b570c6869c1069d4_blog_ai_de_product_catalog_enriched.png)
+![66a73231a81895c66be5c687_669ab3b0b570c6869c1069d4_blog_ai_de_product_catalog_enriched](./AI/66a73231a81895c66be5c687_669ab3b0b570c6869c1069d4_blog_ai_de_product_catalog_enriched.png)
 
 
 
@@ -920,7 +934,7 @@ Assistant：
 * Actions
   * 官方文档：https://platform.openai.com/docs/actions
 
-![actions](AIGC/actions.png)
+![actions](./AI/actions.png)
 
 ```yaml
 openapi: 3.1.0
@@ -1105,7 +1119,7 @@ def get_sql_completion(messages, model="gpt-3.5-turbo"):
   * 上下文的管理有多种模式可以轻松传递
   * 10行代码构建出多智能体系统
 
-![agent-overview](AIGC/agent-overview.png)
+![agent-overview](./AI/agent-overview.png)
 
 ### ReAct
 
@@ -1147,7 +1161,7 @@ Thought:{agent_scratchpad}
 * Naive版本
   * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb
 
-![img](AIGC/plan-and-execute-0915298.png)
+![img](./AI/plan-and-execute-0915298.png)
 
 * ReWOO：Reasoning WithOut Observations
   * the planner can reference previous outputs using syntax like `#E2` 
@@ -1165,7 +1179,7 @@ Thought:{agent_scratchpad}
 
 ### Agent Examples
 
-![agent-flowchart](AIGC/agent-flowchart.png)
+![agent-flowchart](./AI/agent-flowchart.png)
 
 
 
@@ -1271,7 +1285,7 @@ else:
     print(run.status)
 ```
 
-![statuses](AIGC/statuses.png)
+![statuses](./AI/statuses.png)
 
 * 流式运行
 
@@ -1541,7 +1555,7 @@ for hat in queue:
 
 ### 对话机器人
 
-![dialog_system](AIGC/dialog_system.png)
+![dialog_system](./AI/dialog_system.png)
 
 
 
@@ -1626,9 +1640,9 @@ for hat in queue:
   4. 优先级：根据一些代码常识判断补全输入内容的优先级
   5. 补全格式：在函数定义、类定义、if-else 等之后，会补全整段代码，其它时候只补全当前行
 
-![copilot_snippet_structure](AIGC/copilot_snippet_structure.webp)
+![copilot_snippet_structure](./AI/copilot_snippet_structure.webp)
 
-![life-of-a-completion](AIGC/life-of-a-completion.webp)
+![life-of-a-completion](./AI/life-of-a-completion.webp)
 
 * 有效性：
   * Telemetry(远程遥测[如何取消](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement))
@@ -1637,13 +1651,13 @@ for hat in queue:
   * A/B Test
   * 智谱的度量方式：
 
-![efficency](AIGC/copilot-efficency.png)
+![efficency](./AI/copilot-efficency.png)
 
 
 
 ### 度量
 
-![info_collection](AIGC/info_collection.png)
+![info_collection](./AI/info_collection.png)
 
 ### 本机部署
 
@@ -1659,7 +1673,7 @@ for hat in queue:
   - 可以做RAG
 
 
-![image-20240726034021852](AIGC/tabby.png)
+![image-20240726034021852](./AI/tabby.png)
 
 * Tabby RAG
 
@@ -1826,7 +1840,7 @@ _「 LlamaIndex is a framework for building context-augmented LLM applications. 
   - TS API 接口文档：https://ts.llamaindex.ai/api/
 
 
-![llamaindex](AIGC/llamaindex.png)
+![llamaindex](./AI/llamaindex.png)
 
 * **大语言模型开发框架的价值是什么？**
   * 所有开发框架（SDK）的核心价值，都是降低开发、维护成本。
@@ -2375,9 +2389,9 @@ while True:
 * Note：
   * 使用 LangChain 要注意维护自己的 Prompt，尽量 Prompt 与代码逻辑解依赖
 
-![langchain](AIGC/langchain-1166937.png)
+![langchain](./AI/langchain-1166937.png)
 
-![image-20240716203733207](AIGC/langchain.png)
+![image-20240716203733207](./AI/langchain.png)
 
 ### I/O Module 
 
@@ -2502,7 +2516,7 @@ runnable = (
     * Generation 是用于记录与 AI 模型交互的 span，例如：调用 embedding 模型、调用 LLM。
   * Observation 可以嵌套使用。
 
-![span](AIGC/span.png)
+![span](./AI/span.png)
 
 * 基本使用
   * observe
@@ -2512,7 +2526,7 @@ runnable = (
 * 数据集和评测
   * 模型评估：https://langfuse.com/docs/scores/model-based-evals
 
-![annotation](AIGC/annotation.png)
+![annotation](./AI/annotation.png)
 
 * Prompt 版本管理
 
@@ -2591,7 +2605,7 @@ runnable = (
         - 块间数据传递
         - 工作流内数据传递
 
-![basic_elements](AIGC/basic_elements.png)
+![basic_elements](./AI/basic_elements.png)
 
 * 需求特性
 
@@ -2631,14 +2645,14 @@ runnable = (
 
 ### LangGraph
 
-![LangGraph_key_features](AIGC/LangGraph_key_features.png)
+![LangGraph_key_features](./AI/LangGraph_key_features.png)
 
 ### Agently
 
 https://github.com/Maplemx/Agently
 https://agently.cn/guides/workflow/index.html
 
-![Agently_Workflow_key_features](AIGC/Agently_Workflow_key_features.png)
+![Agently_Workflow_key_features](./AI/Agently_Workflow_key_features.png)
 
 ### Examples
 
@@ -2646,7 +2660,7 @@ https://agently.cn/guides/workflow/index.html
 * agently-workflow.py
 
 * 故事创作
-  * ![story_design](AIGC/story_design.png)
+  * ![story_design](./AI/story_design.png)
 
 * 每日新闻生成 https://github.com/AgentEra/Agently-Daily-News-Collector
 
@@ -2695,7 +2709,7 @@ https://agently.cn/guides/workflow/index.html
   * 多模态非必要，但绝对有用
   * 预测具有不确定性的高维向量：给定某书中的一页，预测下一页
 
-![图片](AIGC/gpt-3.png)
+![图片](./AI/gpt-3.png)
 
 ## 有趣的使用例子
 
