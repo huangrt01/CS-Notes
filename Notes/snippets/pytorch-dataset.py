@@ -2,6 +2,7 @@ import torch
 from torchvision import transforms
 from torch.utils.data import Dataset
 
+torch.utils.data.Dataset需要覆写下面两个方法
 
 class MyDataset(Dataset):
     def __init__(self, root_dir, transform=None):
@@ -74,4 +75,20 @@ DistributedSampler 要求输入的数据集是可索引的（map-style dataset�
 
 to_map_style_dataset 函数的作用是将迭代式数据集转换为可索引的数据集，使得数据集可以被 DistributedSampler 使用。
 通过这种转换，我们可以为数据集添加 __getitem__ 和 __len__ 方法，从而满足 DistributedSampler 的要求。
+
+
+### IterableDataset
+
+def worker_init_fn(worker_id):
+        ...     worker_info = torch.utils.data.get_worker_info()
+        ...     dataset = worker_info.dataset  # the dataset copy in this worker process
+        ...     overall_start = dataset.start
+        ...     overall_end = dataset.end
+        ...     # configure the dataset to only process the split workload
+        ...     per_worker = int(math.ceil((overall_end - overall_start) / float(worker_info.num_workers)))
+        ...     worker_id = worker_info.id
+        ...     dataset.start = overall_start + worker_id * per_worker
+        ...     dataset.end = min(dataset.start + per_worker, overall_end)
+
+print(list(torch.utils.data.DataLoader(ds, num_workers=2, worker_init_fn=worker_init_fn)))
 
