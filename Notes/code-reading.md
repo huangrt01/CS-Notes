@@ -2521,15 +2521,19 @@ python tests/mnist_dlsys.py -l -m mlp
 
 
 
-### 
-
-
-
 ### tensorflow
 
 见【tensorflow】笔记
 
+### PyTorch
 
+
+
+## GPU
+
+### GPU-Mode
+
+https://github.com/gpu-mode/lectures.git
 
 
 
@@ -2600,3 +2604,6 @@ perf/avl
 Second (and perhaps counterintuitively), one can achieve concurrency and composability by having no locks whatsoever. In this case, there must be no global subsystem state—subsystem state must be captured in per-instance state, and it must be up to consumers of the subsystem to assure that they do not access their instance in parallel. By leaving locking up to the client of the subsystem, the subsystem itself can be used concurrently by different subsystems and in different contexts
 
 * A concrete example of this is the AVL tree implementation used extensively in the Solaris kernel. As with any balanced binary tree, the implementation is sufficiently complex to merit componentization, but by not having any global state, the implementation may be used concurrently by disjoint subsystems—the only constraint is that manipulation of a single AVL tree instance must be serialized.
+
+
+

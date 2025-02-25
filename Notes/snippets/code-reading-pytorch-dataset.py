@@ -299,6 +299,11 @@ class _MultiProcessingDataLoaderIter(_BaseDataLoaderIter):
         self._send_idx += 1
 
 
+    def _reset(self):
+        ...
+        for _ in range(self._prefetch_factor * self._num_workers):
+            self._try_put_index()
+
 
 # NOTE [ Data Loader Multiprocessing Shutdown Logic ]
     #
@@ -336,3 +341,30 @@ a. A process won't hang when getting from a queue.
 b. A process won't hang when putting into a queue;
 --> 
 
+
+# 关于 num_workers的工作原理:
+
+开启num_workers个子进程(worker)。
+每个worker通过主进程获得自己需要采集的ids。
+ids的顺序由采样器（sampler）或shuffle得到。然后每个worker开始采集一个batch的数据。(因此增大num_workers的数量，内存占用也会增加。因为每个worker都需要缓存一个batch的数据）
+在第一个worker数据采集完成后，会卡在这里，等着主进程把该batch取走，然后采集下一个batch。
+主进程运算完成，从第二个worker里采集第二个batch，以此类推。
+主进程采集完最后一个worker的batch。此时需要回去采集第一个worker产生的第二个batch。如果第一个worker此时没有采集完，主线程会卡在这里等。（这也是为什么在数据加载比较耗时的情况下，每隔num_workers个batch，主进程都会在这里卡一下。）
+
+所以:
+如果内存有限，过大的num_workers会很容易导致内存溢出。
+可以通过观察是否每隔num_workers个batch后出现长时间等待来判断是否需要继续增大num_workers。如果没有明显延时，说明读取速度已经饱和，不需要继续增大。反之，可以通过增大num_workers来缓解。
+如果性能瓶颈是在io上，那么num_workers超过(cpu核数*2)是有加速作用的。但如果性能瓶颈在cpu计算上，继续增大num_workers反而会降低性能。(因为现在cpu大多数是每个核可以硬件级别支持2个线程。超过后，每个进程都是操作系统调度的，所用时间更长）
+
+
+# 关于缓存2*worker_num batch
+
+所有的 worker 进程最多缓存的 batch 数量就是 2 x self.num_workers 个。
+* 在初始化 dataloader 的时候，我们一共放了 2 x self.num_workers 个 batch 的 index 到 index_queue。
+* dataloader 只会在每次迭代成功的时候才会放入新的 index 到 index_queue 
+
+参考 _reset函数
+
+————————————————
+                        
+原文链接：https://blog.csdn.net/ytusdc/article/details/128517308

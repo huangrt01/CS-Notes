@@ -44,7 +44,7 @@ Y = torch.randn(100, 1)
 dataset = TensorDataset(X, Y)
 
 
-### 读多个文件
+### 内存问题 -- 读多个文件的实现
 
 * 读数据
   * https://zhuanlan.zhihu.com/p/376974245
@@ -80,15 +80,22 @@ to_map_style_dataset 函数的作用是将迭代式数据集转换为可索引�
 ### IterableDataset
 
 def worker_init_fn(worker_id):
-        ...     worker_info = torch.utils.data.get_worker_info()
-        ...     dataset = worker_info.dataset  # the dataset copy in this worker process
-        ...     overall_start = dataset.start
-        ...     overall_end = dataset.end
-        ...     # configure the dataset to only process the split workload
-        ...     per_worker = int(math.ceil((overall_end - overall_start) / float(worker_info.num_workers)))
-        ...     worker_id = worker_info.id
-        ...     dataset.start = overall_start + worker_id * per_worker
-        ...     dataset.end = min(dataset.start + per_worker, overall_end)
+...     worker_info = torch.utils.data.get_worker_info()
+...     dataset = worker_info.dataset  # the dataset copy in this worker process
+...     overall_start = dataset.start
+...     overall_end = dataset.end
+...     # configure the dataset to only process the split workload
+...     per_worker = int(math.ceil((overall_end - overall_start) / float(worker_info.num_workers)))
+...     worker_id = worker_info.id
+...     dataset.start = overall_start + worker_id * per_worker
+...     dataset.end = min(dataset.start + per_worker, overall_end)
 
 print(list(torch.utils.data.DataLoader(ds, num_workers=2, worker_init_fn=worker_init_fn)))
 
+
+
+### dataset加速 -- prefetcher
+
+最早见于nvidia apex
+
+https://blog.csdn.net/weiman1/article/details/125610786

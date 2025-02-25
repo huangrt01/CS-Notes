@@ -30,6 +30,12 @@
 * torch.nn.init模块
   * 网络参数初始化
 
+## 二次开发
+
+* 参考 GPU-Mode Lecture 1
+  * load_inline
+  * torch.profile
+
 ## Tensor
 
 * Gather index

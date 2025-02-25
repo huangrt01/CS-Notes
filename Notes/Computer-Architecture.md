@@ -1,5 +1,12 @@
 [toc]
 
+### Intro
+
+* CPU
+  *  [instruction pipelining](https://en.wikipedia.org/wiki/Instruction_pipelining), [out of order execution](https://en.wikipedia.org/wiki/Out-of-order_execution), [speculative execution](https://en.wikipedia.org/wiki/Speculative_execution) and multilevel caches
+
+
+
 ### 性能优化理论
 
 * Rooﬂine: an insightful visual performance model for multicore architectures.

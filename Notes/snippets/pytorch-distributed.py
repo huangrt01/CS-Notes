@@ -74,3 +74,9 @@ torchrun
 
 import torch.distributed as dist
 dist.init_process_group(backend="gloo|nccl")
+
+
+### GPU相关
+
+torch.distributed.barrier()
+torch.cuda.synchronize()

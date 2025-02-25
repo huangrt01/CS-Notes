@@ -10,19 +10,201 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 
 ### Intro
 
-> GPU Mode (Youtube): https://www.youtube.com/channel/UCJgIbYl6C5no72a0NUAPcTA
+> * GPU Mode
+>   * Youtube: https://www.youtube.com/channel/UCJgIbYl6C5no72a0NUAPcTA
+>   * lecture: https://github.com/gpu-mode/lectures
+>   * Blog: https://christianjmills.com/blog.html#listing-listing-page=1
 >
-> GPU Mode (lecture): https://github.com/gpu-mode/lectures
->
-> Blog: https://christianjmills.com/blog.html#listing-listing-page=1
+> * 书：Programming Massively Parallel Processors (PMPP) 3rd edition
+>   * 视频：https://www.youtube.com/@pmpp-book/videos?view=0&sort=dd&shelf_id=2
+> * [Nvidia’s CUDA C++ Programming Guide](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html)
+> * [How GPU Computing Works (YouTube)](https://www.youtube.com/watch?v=3l10o0DYJXg)
+> * [GPU Programming: When, Why and How?](https://enccs.github.io/gpu-programming/)
 
-### GPU 相关知识
-
-#### 显卡驱动
-
-* 英伟达的显卡驱动程序通常会随CUDA Toolkit一起安装。但是，这个驱动程序是为了开发目的而安装的。这意味着它主要用于开发和调试CUDA应用程序，以帮助开发人员在其工作站上进行开发和测试。这个驱动程序不建议在生产环境中与英伟达的GPU一起使用。在生产环境中，通常需要专门的、经过验证的驱动程序以确保系统的稳定性和性能。
+* Intro
+  * 科普小视频，绘画形象说明GPU和CPU区别：https://www.bilibili.com/video/BV1ry4y1y7KZ
 
 
+
+### GPU
+
+#### CPU vs GPU
+
+* GPU 101
+  * https://blog.codingconfessions.com/p/gpu-computing
+
+* GPU 的设计目标，GPU v.s CPU：
+  - 并行&串行
+    - GPU 侧重并行计算
+    - CPU侧重串行计算（[instruction pipelining](https://en.wikipedia.org/wiki/Instruction_pipelining), [out of order execution](https://en.wikipedia.org/wiki/Out-of-order_execution), [speculative execution](https://en.wikipedia.org/wiki/Speculative_execution) and multilevel caches）
+  - 吞吐&延迟
+    - GPU: throughput-optimized high throughput processor
+      - designed for massive levels of parallelism and high throughput, at the cost of medium to high instruction latency
+    - CPU: latency-optimized low latency processor
+      - 前端消耗大
+  - 吞吐数据 (these numbers are from 2021)：
+    - The Nvidia Ampere A100: 9.5 TFLOPS for 32-bit precision
+    - Intel 24-core processor: 0.66 TFLOPS for 32-bit precision 
+  - Scaling Law
+    - GPU: Huang's law
+    - CPU: Moore's law
+      - higher clock rate trend for CPU slowed in 2003: energy consumption & heat dissipation
+
+
+![CPU-GPU](./GPU/CPU-GPU.png)
+
+![image-20221103003942622](./GPU/CPU-GPU-2.png)
+
+#### GPU Architecture
+
+##### GPU Compute Architecture
+
+* GPU内部很多functional units: SMs(Streaming Multiprocessors)，一个SM可以schedule多个block，但同一时间只能执行一个
+
+* SP (Streaming Processor) <-> CUDA Core<->Thread
+
+  * 资源：registers & local memory
+
+  * Tensor core相比CUDA core，实现了MMA operations，支持2:4 sparsity，支持in8和int4，更高效
+
+* SM <-> Thread Block pool
+
+  * 资源：
+    * N*SP
+    * warp scheduler
+    * control unit resources
+    * register
+    * shared memory(scratchpad)
+  * A set of CUDA cores
+  * thread之间可同步，可通过shared memory通信
+
+* Device <-> Grid
+
+  * 资源：Global memory
+
+  * subpartition
+
+* SM可以看做GPU的心脏（对比CPU核心），register和shared memory是SM的稀缺资源。CUDA将这些资源分配给所有驻留在SM中的threads。因此，这些有限的资源就使每个SM中active warps有非常严格的限制，也就限制了并行能力。
+
+  * 每个SM包含的SP数量依据GPU架构而不同，Fermi架构GF100是32个，GF10X架构是48个，Kepler架构是192个，Maxwell架构是128个，Turing架构是64个。相同架构的GPU包含的SM数量则根据GPU的中高低端来定。
+
+![0f4c3f5e-1d1c-4556-8c7e-2725cc82d2df_971x593](./GPU/0f4c3f5e-1d1c-4556-8c7e-2725cc82d2df_971x593.webp)
+
+##### GPU Memory Architecture
+
+* Registers
+  * 65536 per SM (A100/H100)
+  * allocated to cores dynamically depending on the requirement of the threads
+  * private to the threads
+* Constant Caches
+  * cache constant data used by the code executing on the SM
+* Shared Memory
+  * a small amount of fast and low latency on-chip programmable SRAM memory
+  * 192KB of on-chip SRAM per each of 108 SMs (A100)
+  * Usage: 优化threads共享的访存、as a synchronization mechanism between threads executing within a block
+* L1 Cache
+  * each SM
+  * cache frequently accessed data from L2 cache
+* L2 Cache
+  * shared by all SMs
+  * 作为Global Memory的Cache
+* Global Memory 
+  * SMs share a high capacity and high bandwidth DRAM
+  * 80 GB high bandwidth memory (HBM) with bandwidth of 3000 GB/s (H100)
+
+![image-20250224172901222](./GPU/image-20250224172901222.png)
+
+![SM](./GPU/SM.png)
+
+![memory-hierarchy](./GPU/memory-hierarchy.png)
+
+![memory-hierarchy-1](./GPU/memory-hierarchy-1.png)
+
+* More registers than L1 cache
+  * half gemm用32位寄存器做累加，input/output用16位寄存器
+
+
+![gpu-memory-latency](./GPU/gpu-memory-latency.png)
+
+* SM片上单元比L2快3倍，比Global Memory快几十倍 
+
+```c++
+cudaMallocManaged()     不注意的话开销大
+cudaMalloc()       分配显存
+cudaMemcpyHostToDevice
+```
+
+* 编译器决定kernel内定义的变量是分配在寄存器上（**没有超过上限的标量**）还是per-thread local memory上
+* 寄存器之间的值不一定是私有的，可以shuffle
+
+![shared-memory](./GPU/shared_memory.png)
+
+##### GPU Execution Model
+
+**A warp is the basic schedule unit in kernel execution**
+
+* Intro
+
+  * SIMT，同一个warp里的线程执行相同的指令
+
+    * execution on a set of cores called a **processing block**.
+
+
+    * 一个warp是successive 32 threads in a block
+      * thread如果不能被32整除，余数占据one more warp
+
+  * Nvidia H100: each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
+  * threading blocks、warp、processing units、SM的关系
+    * threading blocks映射到SM
+    * warp由processing unit执行
+    * 一个threading block的thread数量通常是32的倍数（对应N个warp）
+
+* 一个SM有一个thread block pool，一个thread block有多个warp，一个warp scheduler 16个warp
+  * [How to choose how many threads/blocks to have?](https://forums.developer.nvidia.com/t/how-to-choose-how-many-threads-blocks-to-have/55529)
+  * The only thing that really matters for occupancy and if performance depends on occupancy is warps. You want to have as close to 64 active warps as possible, all other factors being equal.
+  * very small block sizes (e.g. 32 threads per block) may limit performance due to occupancy. Very large block sizes for example 1024 threads per block, may also limit performance, if there are resource limits (e.g. registers per thread usage, or shared memory usage) which prevent 2 threadblocks (in this example of 1024 threads per block) from being resident on a SM
+  * 推荐值：one thread block, 128~512 threads
+* Instructions are SIMD synchronous within a warp
+  * 一个warp中的线程执行同一指令
+    * e.g. 【code/reduce.cu】`reduce3()`
+      * 各种优化技巧，包括unrolling、algorithm cascading
+      * each thread should sum O(log n) elements
+    * [Independent Thread Scheduling](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#simt-architecture): Volta架构之后，可以执行不同指令，但不同时
+  * 对于control flow，可能是周期T一半的线程执行if语句，周期T+1另一半的线程执行else语句
+* Instructions will be issued to execution units by warp.
+  * warp scheduler: Decode and schedule the next instructions
+  * Latency is caused by not able to issue next instruction to execution unit
+* 一些单元：
+  * SFU: special function unit
+  * Load/Store memory
+
+##### GPU Network
+
+* PCIe / NVLINk 与CPU Chipset交互
+
+![nvlink](./GPU/nvlink.png)
+
+#### Execution of a Kernel on the GPU
+
+* H2D
+  * 有可能直接从host memory读：[EMOGI: Efficient Memory-access for Out-of-memory Graph-traversal in GPUs](https://arxiv.org/pdf/2006.06890.pdf)
+* Scheduling thread blocks on SMs
+  * ![image-20250224192038955](./GPU/image-20250224192038955.png)
+  * waitlisted blocks
+  * [Why only one of the warps is executed by a SM in cuda?](https://stackoverflow.com/questions/13463440/why-only-one-of-the-warps-is-executed-by-a-sm-in-cuda)
+    * 和warp scheduler数量有关
+    * Compute Capability 3.x (Kepler)
+      - 4 warp schedulers per SM
+      - Dispatch 1 or 2 instructions per warp scheduler
+
+* Single Instruction Multiple Threads (SIMT) and Warps
+  * 参考 「GPU Execution Model」
+* Warp Scheduling and Latency Tolerance
+  * **Zero-overhead Scheduling**
+    * As each thread in each warp has its own set of registers, there is no overhead for the SM to switch from executing one warp to another. 
+    * context switching in CPU is expensive because the CPU needs to save the registers into main memory, and restore the state of the other process
+    * --> 通过大量warp来hide memory latency
+* Copying of Result Data From Device to Host Memory
 
 #### 机型基础
 
@@ -41,11 +223,13 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 | Tesla architecture (特斯拉)     | 1    | ~        |                                                              |                                                              |                              |                   |
 
 * A100
-  * 192KB of on-chip SRAM per each of 108 streaming multiprocessors
+  * 192KB of on-chip SRAM per each of 108 SMs
   * 《Dissecting the Ampere GPU architecture via microbenchmarking》
   * 《Nvidia A100 tensor core GPU architecture》
 
-
+* H100 GPU
+  * 132 SMs with 64 cores per SM, totalling a whopping 8448 cores.
+  * each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
 
 
 
@@ -60,7 +244,7 @@ Nvidia GPU 产品根据使用场景不同分为不同的序列:
 
 GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件的版本. 
 
-![h100](nvidia/h100.png)
+![h100](./GPU/h100.png)
 
 
 
@@ -74,18 +258,9 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
           = 62 ops/byte
   * [A guide to LLM inference and performance](https://www.baseten.co/blog/llm-transformer-inference-guide/) TODO
 
+#### 显卡驱动
 
-
-#### CPU vs GPU
-
-* CPU: latency-optimized low latency processor
-  * 前端消耗大
-
-* GPU: throughput-optimized high throughput processor
-
-![CPU-GPU](nvidia/CPU-GPU.png)
-
-![image-20221103003942622](nvidia/CPU-GPU-2.png)
+* 英伟达的显卡驱动程序通常会随CUDA Toolkit一起安装。但是，这个驱动程序是为了开发目的而安装的。这意味着它主要用于开发和调试CUDA应用程序，以帮助开发人员在其工作站上进行开发和测试。这个驱动程序不建议在生产环境中与英伟达的GPU一起使用。在生产环境中，通常需要专门的、经过验证的驱动程序以确保系统的稳定性和性能。
 
 #### cuDNN
 
@@ -151,14 +326,57 @@ nvidia-smi --query-gpu=name --format=csv,noheader
     - NV switch: 整个switch提供 600GB/s 带宽 
     - 单机八卡时，OAM 和 NV switch 差不多；卡数少时 nvsiwtch 效率高
 
+### CUDA Programming Model
 
+![image-20250224190231769](./GPU/image-20250224190231769.png)
+
+#### Host and Device Code
+
+![image-20250224190443112](./GPU/image-20250224190443112.png)
+
+![image-20250224190455058](./GPU/image-20250224190455058.png)
 
 ### Triton
 
 #### Intro
 
-* Triton是OpenAI 推出的以python为编程语言基础，专门为深度学习研发和高性能计算而设计的编程语言和编译器，旨在简化和优化GPU编程的复杂操作，降低高性能优化的门槛。它允许开发者在Triton框架内更灵活地编写和优化自定义的算子（operators）或处理复杂的数据流程。Triton的初期版本以CUDA为起点而开发，为没有CUDA基础的编程者提供快速编写高效CUDA kernel的方案，而随着迭代已逐渐支持其他芯片和编程工具，如AMD的ROCm，并在继续支持其他的芯片，如Intel的CPU。
+* Triton是OpenAI 推出的以python为编程语言基础，专门为深度学习研发和高性能计算而设计的编程语言和编译器，旨在简化和优化GPU编程的复杂操作，降低高性能优化的门槛。它允许开发者在Triton框架内更灵活地编写和优化自定义的算子（operators）或处理复杂的数据流程。
+  * 生成PTX（Cuda Assembly）而不是cuda
+  * Triton的初期版本以CUDA为起点而开发，为没有CUDA基础的编程者提供快速编写高效CUDA kernel的方案，而随着迭代已逐渐支持其他芯片和编程工具，如AMD的ROCm，并在继续支持其他的芯片，如Intel的CPU。
   * 利用ptx汇编可以将triton降级为ptx代码，在cuda上直接运行以达到极致计算性能的优化，Triton提供了块指针非常便捷的实现FA，对GPU IO感知类的实现进行了充分的支持。
+
+#### Basic
+
+>  snippets/gpu-triton.py
+
+#### Debugging
+
+> snippets/gpu-triton-debugging.py
+
+* `TRITON_INTERPRET=1 python interpret_triton_square.py`
+* crash the kernel then get all the information
+
+### Torch.compile
+
+#### 为什么 Square 算子性能差
+
+> snippets/gpu-triton.py
+
+* Triton（Autotune）和 Triton（No Autotune Large Block Size）性能差不多，且最好
+  - Triton（No Autotune Large Block Size）: `BLOCK_SIZE = triton.next_power_of_2(n_cols)`
+  - --> H20机器，大Block Size效果好？
+* torch原生实现 和 Triton（No Autotune Fixed Block Size）性能相当
+  - Triton（No Autotune Fixed Block Size）：固定Block Size为1024
+* Torch(compiled) 性能最差
+  * torch.compile的实现用一个kernel处理整个矩阵数据
+  * 主要差异是，手写代码按行生成多个kernel实例，每个实例并行处理一行数据
+
+![image-20250225191017217](./GPU/image-20250225191017217.png)
+
+- 考虑到矩阵内存连续，对于element-wise任务，可以将2d-matrix视为1d-tensor，因此torch.compile将这一任务抽象成1d并行任务是合理的
+  - 为什么性能有损呢，本质是生成的kernel实例数量影响了性能（这个例子中，每行一个kernel实例，性能有优化）
+  - Q：kernel实例数量影响性能，原理是什么？ 取舍是什么？kernel launch代价？
+  - Q：triton能否自动优化这个？
 
 
 
@@ -169,21 +387,107 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 * 访存瓶颈
   * compute speed has out-paced memory speed [61, 62, 63], and most operations in Transformers are bottlenecked by memory accesses [43]. 【FlashAttention】
 
+#### SM效率
+
+* SM Occupancy：the ratio of the number of warps assigned to an SM to the maximum number it can support
+* 限制因素：主要是资源约束
+  *  **SM能够同时处理的线程块数量**
+    - 每个线程块包含 32 个线程，而总共需要执行 2048 个线程。可知总共需要 2048/32 = 64 个线程块来容纳这 2048 个线程
+    - 每个 SM 在同一时刻最多只能处理 32 个线程块
+    - --> 50% SM Occupancy
+  * **每个thread的register数量**
+    - each SM has 65536 registers. To execute 2048 threads simultaneously, each thread can have a maximum of 32 registers (65536/2048 = 32). If a kernel needs 64 registers per thread, we can only run 1024 threads per SM,
+    - --> resulting in 50% occupancy.
+
+#### Warp效率
+
+* 如果 warp 内的线程执行不同的分支，会出现分支分歧，显著降低性能
+  * 线程块的线程数量是 32 的倍数，更好地组织线程能减少分支分歧的发生概率
+
+#### Shared Memory利用
+
+
+
+### PMPP: Programming Massively Parallel Processors
+
+> * 书：Programming Massively Parallel Processors (PMPP) 3rd edition
+>
+> * 视频：https://www.youtube.com/@pmpp-book/videos?view=0&sort=dd&shelf_id=2
+
+#### Ch1-3 PPT
+
+> https://www.youtube.com/watch?v=NQ-0D5Ti2dc
+
+* Intro
+  * motivation: GPU go brrr, more FLOPS please
+    * Why? Simulation & world-models (games, weather, proteins, robotics)
+    * Bigger models are smarter -> AGI (prevent wars, fix climate, cure cancer)
+    * GPUs are the backbone of modern deep learning
+  * classic software: sequential programs
+    * higher clock rate trend for CPU slowed in 2003: energy consumption & heat dissipation
+  * multi-core CPU came up
+    * developers had to learn multi-threading (deadlocks, races etc.)
+* Heterogeneous data parallel computing
+* Multidimensional grids and data
 
 
 
 
-### Profiling
 
-[timeline](https://zhuanlan.zhihu.com/p/40156908)
+### GPU Profiling
 
-[nsight-systems](https://developer.nvidia.cn/nsight-systems)
+> [tf-timeline](https://zhuanlan.zhihu.com/p/40156908)
+>
+> [nsight-systems](https://developer.nvidia.cn/nsight-systems)
+>
+> [nsight-compute](https://developer.nvidia.com/nsight-compute)
 
-[nsight-compute](https://developer.nvidia.com/nsight-compute)
+* Intro
+  * cuda是async，因此用python的time模块，测的包含kernel launch时间，不包含execute时间
+
+
+
+#### Nvidia Lecture 5: Introduction to Nsight Profiling Tools
+
+![nsight-product](./GPU/nsight-product.png)
+
+
+```shell
+nsys profile -t cuda,osrt,nvtx -o baseline -w true python main.py
+```
+
+Support:
+
+* OS Thread state and CPU utilization, pthread, file I/O, etc.
+* User annotations API (NVTX)
+* Compute
+  * CUDA API: Kernel launch and execution correlation
+  * Libraries and directive: cuBLAS, cuDNN, OpenACC
+* Graphics
+  * Vulkan, OpenGL, DX11, DX12, DXR, V-sync
+
+
+
+* nvtx记录kernel信息
+  * "//tensorflow/core/profiler:nvtx_utils"
+  * nvtxDomainRangeStartEx 和 nvtxDomainRangeEnd
+  * export TF_ENABLE_NVTX_RANGES=1、export TF_ENABLE_NVTX_RANGES_DETAILED=1
+
+
+
+* Key features
+  * section is a group of metrics
+
+
+![warp-scheduler](./GPU/warp-scheduler.png)
+
+
+
+
 
 ### Nvidia Lectures
 
-#### 1.Course: Accelerating Applications with CUDA C/C++
+#### Nvidia Lecture 1: Accelerating Applications with CUDA C/C++
 
 [课程网页](https://courses.nvidia.com/courses/course-v1:DLI+C-AC-01+V1/courseware/85f2a3ac16a0476685257996b84001ad/9ef2f68fb10d40c5b54b783392938d04/?activate_block_id=block-v1%3ADLI%2BC-AC-01%2BV1%2Btype%40sequential%2Bblock%409ef2f68fb10d40c5b54b783392938d04)
 
@@ -246,7 +550,7 @@ At a high level, execution configuration allows programmers to specify the **thr
 
   * Several concurrent blocks can reside on one SM depending on block’s memory requirement and the SM’s memory resources.
 
-![SIMT](nvidia/SIMT.png)
+![SIMT](./GPU/SIMT.png)
 
 * CUDA-Provided Thread Hierarchy Variables，可以在`__global__`函数里直接用，作为标识来实现并行
 
@@ -447,96 +751,14 @@ nvcc -o single-thread-vector-add 01-vector-add/01-vector-add.cu -run
 nsys profile --stats=true -o output-report ./single-thread-vector-add
 ```
 
-##### SM(Streaming Multiprocessors) and Querying the Device
-
-**GPU and Programming Model**
-
-* GPU内部很多functional units: SMs(Streaming Multiprocessors)，一个SM可以schedule多个block，但同一时间只能执行一个
-
-* A set of CUDA cores
-  * Tensor core相比CUDA core，实现了MMA operations，支持2:4 sparsity，支持in8和int4，更高效
-  
-  * SP(Streaming Processor) <-> CUDA Core<->Thread --> registers&local memory
-  
-  * SM <-> Thread Block pool --->  N*SP + warp scheduler、register、shared memory
-    * thread之间可同步，可通过shared memory通信
-  
-  * Device <-> Grid ---> global memory
-  
-  * 白框：subpartition
-* SM可以看做GPU的心脏（对比CPU核心），register和shared memory是SM的稀缺资源。CUDA将这些资源分配给所有驻留在SM中的threads。因此，这些有限的资源就使每个SM中active warps有非常严格的限制，也就限制了并行能力。
-
-  * 每个SM包含的SP数量依据GPU架构而不同，Fermi架构GF100是32个，GF10X架构是48个，Kepler架构是192个，Maxwell架构是128个，Turing架构是64个。相同架构的GPU包含的SM数量则根据GPU的中高低端来定。
-
-* A warp is the basic schedule unit in kernel execution
-
-  * SIMT，同一个warp里的线程执行相同的指令
-
-  * 一个warp是successive 32 threads in a block
-    * thread如果不能被32整除，余数占据one more warp
-
-  * [Why only one of the warps is executed by a SM in cuda?](https://stackoverflow.com/questions/13463440/why-only-one-of-the-warps-is-executed-by-a-sm-in-cuda)
-    * 和warp scheduler数量有关
-
-  * 一个SM有一个thread block pool，一个thread block有多个warp，一个warp scheduler 16个warp
-    * [How to choose how many threads/blocks to have?](https://forums.developer.nvidia.com/t/how-to-choose-how-many-threads-blocks-to-have/55529)
-    * The only thing that really matters for occupancy and if performance depends on occupancy is warps. You want to have as close to 64 active warps as possible, all other factors being equal.
-    * very small block sizes (e.g. 32 threads per block) may limit performance due to occupancy. Very large block sizes for example 1024 threads per block, may also limit performance, if there are resource limits (e.g. registers per thread usage, or shared memory usage) which prevent 2 threadblocks (in this example of 1024 threads per block) from being resident on a SM
-    * 推荐值：one thread block, 128~512 threads
-
-  * Instructions are SIMD synchronous within a warp
-    * 一个warp中的线程执行同一指令（Volta架构之后，可以执行不同指令，但不同时）
-      * e.g. 【code/reduce.cu】`reduce3()`
-        * 各种优化技巧，包括unrolling、algorithm cascading
-        * each thread should sum O(log n) elements
-    * 对于control flow，可能是周期T一半的线程执行if语句，周期T+1另一半的线程执行else语句
-  * Instructions will be issued to execution units by warp.
-    * warp scheduler: Decode and schedule the next instructions
-  * Latency is caused by not able to issue next instruction to execution unit
-  * warp's context switching is free -> 通过大量warp来hide memory latency
-  * 一些单元
-    * SFU: special function unit
-    * Load/Store memory
-
-* Registers / Shared Memory / L1 Cache
-* SMs share Global Memory 
-* PCIe / NVLINk 与CPU Chipset交互
-
-![SM](nvidia/SM.png)
-
-![memory-hierarchy](nvidia/memory-hierarchy.png)
-
-![memory-hierarchy-1](nvidia/memory-hierarchy-1.png)
-
-* More registers than L1 cache
-  * half gemm用32位寄存器做累加，input/output用16位寄存器
 
 
-![gpu-memory-latency](nvidia/gpu-memory-latency.png)
+* block size的选择，最小取64，通常取128、256
 
-* SM片上单元比L2快3倍，比Global Memory快几十倍 
+  * SM的倍数
 
-```c++
-cudaMallocManaged()     不注意的话开销大
-cudaMalloc()       分配显存
-cudaMemcpyHostToDevice
-```
+  * 32的倍数， [in depth coverage of SMs and warps](http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#hardware-implementation)
 
-* 编译器决定kernel内定义的变量是分配在寄存器上（**没有超过上限的标量**）还是per-thread local memory上
-* 寄存器之间的值不一定是私有的，可以shuffle
-
-![shared-memory](nvidia/shared_memory.png)
-
-![nvlink](nvidia/nvlink.png)
-
-* 左边的不是全连接结构，NV引入了NVSwitch单元，交换机芯片，支持最多16个GPU的直联
-
-
-
-block size的选择，最小取64，通常取128、256
-
-* SM的倍数
-* 32的倍数， [in depth coverage of SMs and warps](http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#hardware-implementation)
 
 ```c++
 #include <stdio.h>
@@ -559,7 +781,7 @@ int main()
 
 
 
-![workflow](nvidia/workflow.png)
+![workflow](./GPU/workflow.png)
 
 **dynamic parallelism in cuda**: kernel内执行kernel，但launch kernel开销较大，有几微秒
 
@@ -591,7 +813,7 @@ int main()
 
 unmanaged memory allocation and migration; pinning, or page-locking host memory; and non-default concurrent CUDA streams.
 
-![optimization-workflow](nvidia/optimization-workflow.png)
+![optimization-workflow](./GPU/optimization-workflow.png)
 
 优化思路：
 
@@ -672,7 +894,7 @@ cudaDeviceSynchronize();
   * User-managed cache to reduce redundant global memory accesses
   * Avoid non-coalesced access: shared memory没有cache line的概念，e.g. matrix-transposition.cu
 
-![stencil](nvidia/stencil.png)
+![stencil](./GPU/stencil.png)
 
 * Shared memory应用于矩阵乘法，见【code/gemm.cu】
   * 双buffer的思路：prefetch和计算并行
@@ -684,7 +906,7 @@ cudaDeviceSynchronize();
   * Solution: Kernel Decomposition
     * Recursive kernel invocation
 
-![warp](nvidia/warp-sharing.png)
+![warp](./GPU/warp-sharing.png)
 
 * Manual Device Memory Allocation and Copying
 
@@ -788,11 +1010,11 @@ Using Streams to Overlap Data Transfers and Code Execution
   * DP4A and DP2A for int8 and int16 dot productions 
   * Warp matrix function for tensor core operations
 
-![control-flow](nvidia/control-flow.png)
+![control-flow](./GPU/control-flow.png)
 
 ##### CUDA cooperative group 协作线程组
 
-<img src="nvidia/cooperative-groups.png" alt="cooperative-groups.png" style="zoom:100%;" />
+<img src="./GPU/cooperative-groups.png" alt="cooperative-groups.png" style="zoom:100%;" />
 
 ```c++
 namespace cooperative_groups{
@@ -839,7 +1061,7 @@ public:
 
 
 
-![shuffle](nvidia/shuffle.png)
+![shuffle](./GPU/shuffle.png)
 
 
 
@@ -852,40 +1074,6 @@ public:
 * 在多个 GPU 上并发执行计算
 
 
-
-#### 5.Lecture: Introduction to Nsight Profiling Tools
-
-![nsight-product](nvidia/nsight-product.png)
-
-
-```shell
-nsys profile -t cuda,osrt,nvtx -o baseline -w true python main.py
-```
-
-Support:
-
-* OS Thread state and CPU utilization, pthread, file I/O, etc.
-* User annotations API (NVTX)
-* Compute
-  * CUDA API: Kernel launch and execution correlation
-  * Libraries and directive: cuBLAS, cuDNN, OpenACC
-* Graphics
-  * Vulkan, OpenGL, DX11, DX12, DXR, V-sync
-
-
-
-* nvtx记录kernel信息
-  * "//tensorflow/core/profiler:nvtx_utils"
-  * nvtxDomainRangeStartEx 和 nvtxDomainRangeEnd
-  * export TF_ENABLE_NVTX_RANGES=1、export TF_ENABLE_NVTX_RANGES_DETAILED=1
-
-
-
-Key features
-
-* section is a group of metrics
-
-![warp-scheduler](nvidia/warp-scheduler.png)
 
 
 
@@ -954,7 +1142,7 @@ Triton Inference Server
 
 * Client/server在本地：Inputs/outputs needed to be passed to/from Triton are stored in system/CUDA shared memory. Reduces HTTP/gRPC overhead
 
-![utilize-gpu](nvidia/utilize-gpu.png)
+![utilize-gpu](./GPU/utilize-gpu.png)
 
 ```
 dynamic_batching {
@@ -977,7 +1165,7 @@ ASR Pipeline
   * 多级带来海量choices，需要构建一个decoder解决识别任务(a search problem)
 * ASR system overview
 
-![ASR-system](nvidia/ASR-system.png)
+![ASR-system](./GPU/ASR-system.png)
 
 *Q: How do we combine HMM, Lexicon & LM together?*
 
@@ -1013,7 +1201,7 @@ Kaldi CUDA decoding pipeline
   * 结合Triton Inference Server
 
 
-![asr-pipeline](nvidia/asr-pipeline.png)
+![asr-pipeline](./GPU/asr-pipeline.png)
 
 
 
@@ -1035,7 +1223,7 @@ Modern TTS Solution
 * Vocoder：声码器 WAVENET、WAVEGLOW
   * 思路：利用可逆网络生成声音, affine coupling layer很关键
 
-![waveglow](nvidia/waveglow.png)
+![waveglow](./GPU/waveglow.png)
 
 
 
@@ -1062,9 +1250,9 @@ BERT
   * 高散列度数据的joins、aggregates、sort
   * Window operations、复杂计算、数据编码（创建Parquet和ORC文件，读取CSV）
 
-![RAPIDS accelerator for Apache Spark](nvidia/RAPIDS.png)
+![RAPIDS accelerator for Apache Spark](./GPU/RAPIDS.png)
 
-![dataframe](nvidia/dataframe.png)
+![dataframe](./GPU/dataframe.png)
 
 
 
@@ -1090,11 +1278,11 @@ Spark 0.2的亮点
 
 [NVTabular](https://github.com/NVIDIA/NVTabular)，基于RAPIDS的Recommendation ETL，底层是RAPIDS
 
-![pipeline](nvidia/pipeline.png)
+![pipeline](./GPU/pipeline.png)
 
-![pipeline](nvidia/pipeline-nvtabular.png)
+![pipeline](./GPU/pipeline-nvtabular.png)
 
-![nvtabular](nvidia/nvtabular.png)
+![nvtabular](./GPU/nvtabular.png)
 
 
 
@@ -1108,7 +1296,7 @@ Spark 0.2的亮点
 
 #### 10.Lecture: NLP领域的GPU加速案例，Faster Transformer
 
-![faster transformer](nvidia/faster-transformer.png)
+![faster transformer](./GPU/faster-transformer.png)
 
 * decoder和decoding两层抽象，适用于不同灵活性的场景
 
@@ -1138,7 +1326,7 @@ Spark 0.2的亮点
     * [effective_transformer by ByteDance](https://github.com/bytedance/effective_transformer): 记录每个sentence的padding前缀和，矩阵计算前移除无用的padding，做attention时再映射回来，本质上是追求tensor的紧致组织。
   * INT8 optimization：QAT + without quantizing residuals => 精度损失少
   
-  ![INT8](nvidia/INT8-optimization.png)
+  ![INT8](./GPU/INT8-optimization.png)
 
 ### 应用
 
@@ -1147,7 +1335,7 @@ Spark 0.2的亮点
 * Cutlass implementation of matrix multiplication on A100
   * https://developer.download.nvidia.com/video/gputechconf/gtc/2020/presentations/s21745-developing-cuda-kernels-to-push-tensor-cores-to-the-absolute-limit-on-nvidia-a100.pdf
 
-#### 其它
+#### 图像处理
 
 * GPU做图像处理pipeline自动优化
   * Halide: a language and compiler for optimizing parallelism, locality, and recomputation in

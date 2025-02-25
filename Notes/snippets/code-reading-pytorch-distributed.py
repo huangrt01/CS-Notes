@@ -13,3 +13,7 @@ entry_points = {
         "default = torch.distributed.elastic.multiprocessing:DefaultLogsSpecs",
     ],
 }
+
+### multiprocessing
+
+pytorch 在 multiprocessing 又加了一个 wraper 以实现shared memory

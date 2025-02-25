@@ -1,5 +1,3 @@
-### FlashAttention
-
 @triton.jit
 def flash_attention_v1_kernel(
     # 输入指针
