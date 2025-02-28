@@ -1,8 +1,10 @@
 block_dim: <M / b, N / b>
 thread_dim: <t, t>
 thread function
+
 // Each thread block computes a b x b area
 // 双buffer的思路：sA的第一维是2，感觉是利用GPU流水线的能力，提前去fetch下一次循环的数据
+
 __global__ void SGEMM(float *A, float *B, float *C, int b, int s) {
 	__shared__ float sA[2][b][s], sB[2][s][b]; // shared by a thread block
 	float rC[bt][bt] = {0}; // thread local buffer, in the registers

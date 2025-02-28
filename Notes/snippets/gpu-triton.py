@@ -40,29 +40,22 @@ def square_kernel_no_autotune(output_ptr, input_ptr, input_row_stride, output_ro
 
 @triton.jit
 def _square_kernel(output_ptr, input_ptr, input_row_stride, output_row_stride, n_cols, BLOCK_SIZE: tl.constexpr):
-  # The rows of the square are independent, so we parallelize across those
-  row_idx = tl.program_id(0)
-  # The stride represents how much we need to increase the pointer to advance 1 row
-  row_start_ptr = input_ptr + row_idx * input_row_stride
-  output_row_start_ptr = output_ptr + row_idx * output_row_stride
+    row_idx = tl.program_id(0)
+    input_row_start = input_ptr + row_idx * input_row_stride
+    output_row_start = output_ptr + row_idx * output_row_stride
 
-  col_offset = 0
-  while col_offset < n_cols:
-    # Calculate the current block's column offsets
-    col_offsets = tl.arange(0, BLOCK_SIZE) + col_offset
-    input_ptrs = row_start_ptr + col_offsets
-    output_ptrs = output_row_start_ptr + col_offsets
+    num_blocks = (n_cols + BLOCK_SIZE - 1) // BLOCK_SIZE
 
-    # Load the block into SRAM, using a mask since the block may go beyond n_cols
-    row = tl.load(input_ptrs, mask=col_offsets < n_cols, other=-float('inf'))
+    for block_idx in range(num_blocks):
+        block_start_col = block_idx * BLOCK_SIZE
+        col_offsets = tl.arange(0, BLOCK_SIZE) + block_start_col
+        input_block_ptrs = input_row_start + col_offsets
+        output_block_ptrs = output_row_start + col_offsets
 
-    square_output = row * row
+        input_block = tl.load(input_block_ptrs, mask=col_offsets < n_cols, other=-float('inf'))
+        square_output = input_block * input_block
 
-    # Write back output to DRAM
-    tl.store(output_ptrs, square_output, mask=col_offsets < n_cols)
-
-    col_offset += BLOCK_SIZE
-
+        tl.store(output_block_ptrs, square_output, mask=col_offsets < n_cols)
 
 def _calculate_block_size_and_warps(n_cols):
   BLOCK_SIZE = triton.next_power_of_2(n_cols)

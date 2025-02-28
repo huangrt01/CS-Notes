@@ -24,11 +24,26 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 * Intro
   * 科普小视频，绘画形象说明GPU和CPU区别：https://www.bilibili.com/video/BV1ry4y1y7KZ
 
+* Amdahl's Law
+  * achievable speedup is limited by the parallelizable portion **p** of programs
+    * speedup<1/(1-**p**)
+    * e.g., if **p** is 90%, speedup < 10×
+  * Fortunately, for many real applications, **p** > 99% especially for large datasets, and speedups >100× are attainable
+
 
 
 ### GPU
 
-#### CPU vs GPU
+#### Intro
+
+* launch many threads, 每个output element一个thread是合理的
+* Op开发流程
+  * If it's not fast enough, `torch.compile` it.
+  * If it's not fast enough, check if you can rewrite your code to make it more suitable for `torch.compile`.
+  * If it's not fast enough, check which parts are slow and write custom Triton kernel(s) for those.
+  * If it's not fast enough, check which parts are slow and write custom CUDA kernel(s) for those.
+
+#### GPU vs CPU
 
 * GPU 101
   * https://blog.codingconfessions.com/p/gpu-computing
@@ -49,11 +64,17 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
     - GPU: Huang's law
     - CPU: Moore's law
       - higher clock rate trend for CPU slowed in 2003: energy consumption & heat dissipation
+      - ![image-20250226023725815](./GPU/image-20250226023725815.png)
 
 
 ![CPU-GPU](./GPU/CPU-GPU.png)
 
 ![image-20221103003942622](./GPU/CPU-GPU-2.png)
+
+* GPU and CPU
+  * sequential parts on CPU, numerical intensive parts on GPU
+
+
 
 #### GPU Architecture
 
@@ -91,6 +112,8 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 ![0f4c3f5e-1d1c-4556-8c7e-2725cc82d2df_971x593](./GPU/0f4c3f5e-1d1c-4556-8c7e-2725cc82d2df_971x593.webp)
 
 ##### GPU Memory Architecture
+
+![image-20250226190716305](./GPU/image-20250226190716305.png)
 
 * Registers
   * 65536 per SM (A100/H100)
@@ -141,6 +164,17 @@ cudaMemcpyHostToDevice
 
 ##### GPU Execution Model
 
+* Grid
+  * kernel launch grid of threads
+  * All threads execute the same code: Single program multiple-data (SPMD)
+  * Threads are hierarchically organized into **grid blocks** & **thread blocks**
+  * threads in same block can access **the same shared mem**
+  * up to 1024 threads can be in a thread block
+    * Hopper架构：每个维度上的最大线程数分别是 1024（x 维度）、1024（y 维度）和 64（z 维度），且乘积不能超过1024
+  * threads can be scheduled in any order
+
+![image-20250226194634249](./GPU/image-20250226194634249.png)
+
 **A warp is the basic schedule unit in kernel execution**
 
 * Intro
@@ -148,10 +182,8 @@ cudaMemcpyHostToDevice
   * SIMT，同一个warp里的线程执行相同的指令
 
     * execution on a set of cores called a **processing block**.
-
-
-    * 一个warp是successive 32 threads in a block
-      * thread如果不能被32整除，余数占据one more warp
+  * 一个warp是successive 32 threads in a block
+    * thread如果不能被32整除，余数占据one more warp
 
   * Nvidia H100: each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
   * threading blocks、warp、processing units、SM的关系
@@ -326,37 +358,80 @@ nvidia-smi --query-gpu=name --format=csv,noheader
     - NV switch: 整个switch提供 600GB/s 带宽 
     - 单机八卡时，OAM 和 NV switch 差不多；卡数少时 nvsiwtch 效率高
 
-### CUDA Programming Model
+### CUDA
+
+#### Intro
+
+* CUDA：Compute Unified Device Architect
+* CUDA C: extends ANSI C with minimal new syntax
+
+#### Programming Model
+
+* thread：uniquely identified by threadIdx和blockIdx
+  * Idea: map threads to multi-dimensional data
 
 ![image-20250224190231769](./GPU/image-20250224190231769.png)
 
 #### Host and Device Code
 
+![image-20250226193631721](./GPU/image-20250226193631721.png)
+
 ![image-20250224190443112](./GPU/image-20250224190443112.png)
 
 ![image-20250224190455058](./GPU/image-20250224190455058.png)
+
+#### CUDA Compiler
+
+* nvcc (NVIDIA C compiler) is used to compile kernels into PTX
+* Parallel Thread Execution (PTX) is a low-level VM & instruction set
+* graphics driver translates PTX into executable binary code (SASS)
 
 ### Triton
 
 #### Intro
 
+* Triton v.s. CUDA
+  * pythonish
+  * easy to write and debug
+  * 二者均生成PTX
+
 * Triton是OpenAI 推出的以python为编程语言基础，专门为深度学习研发和高性能计算而设计的编程语言和编译器，旨在简化和优化GPU编程的复杂操作，降低高性能优化的门槛。它允许开发者在Triton框架内更灵活地编写和优化自定义的算子（operators）或处理复杂的数据流程。
   * 生成PTX（Cuda Assembly）而不是cuda
   * Triton的初期版本以CUDA为起点而开发，为没有CUDA基础的编程者提供快速编写高效CUDA kernel的方案，而随着迭代已逐渐支持其他芯片和编程工具，如AMD的ROCm，并在继续支持其他的芯片，如Intel的CPU。
+  * During the compilation, the Triton compiler tries to use clever tricks to **rearrange the parts of your program**
   * 利用ptx汇编可以将triton降级为ptx代码，在cuda上直接运行以达到极致计算性能的优化，Triton提供了块指针非常便捷的实现FA，对GPU IO感知类的实现进行了充分的支持。
 
 #### Basic
 
 >  snippets/gpu-triton.py
 
+#### Programming Model
+
+* Triton v.s. CUDA
+  * 只感知 blocks <-> CUDA两层抽象，blocks 、threads
+    * Note on jargon: In triton lingo, each kernel (which processes a block) is called a "program". Therefore, "block_id" is often called "pid" (short for "program id"), but it's the same.
+  * 处理tensor <-> 处理scalar
+    * **All** operations in triton kernels are vectorized: Loading data, operating on data, storing data, and creating masks.
+  * 不感知shared memory
+
+
+
 #### Debugging
 
 > snippets/gpu-triton-debugging.py
 
 * `TRITON_INTERPRET=1 python interpret_triton_square.py`
+  * 原理：CPU上运行，模拟GPU运行
+
 * crash the kernel then get all the information
 
 ### Torch.compile
+
+#### Intro
+
+* `torch.compile` makes your model faster by trying to **use existing kernels more effectively and creating simple new kernels.** 
+* 什么情况下torch.compile性能差
+  * 不能编译成一个cuda graph，有graph breaks
 
 #### 为什么 Square 算子性能差
 
@@ -387,6 +462,16 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 * 访存瓶颈
   * compute speed has out-paced memory speed [61, 62, 63], and most operations in Transformers are bottlenecked by memory accesses [43]. 【FlashAttention】
 
+#### 写好GPU程序的难点
+
+* "if you do not care about performance, parallel programming is very easy"
+* designing parallel algorithms in practice harder than sequential algorithms
+  * e.g. parallelizing recurrent computations requires nonintuitive thinking (like prefix sum)
+* speed is often limited by memory latency/throughput (memory bound)
+  * e.g. llm token by token效率低，需要batching
+* perf of parallel programs can vary dramatically based on input data characteristics
+* not all apps are "embarassingly parallel" - synchronization imposes overhead (waits)
+
 #### SM效率
 
 * SM Occupancy：the ratio of the number of warps assigned to an SM to the maximum number it can support
@@ -414,9 +499,14 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 >
 > * 视频：https://www.youtube.com/@pmpp-book/videos?view=0&sort=dd&shelf_id=2
 
+* Main Goals
+  * Parallel programming & computational thinking
+  * Correct & reliable: debugging function & performance 
+  * Scalability: regularize and localize memory access
+
 #### Ch1-3 PPT
 
-> https://www.youtube.com/watch?v=NQ-0D5Ti2dc
+> GPU-Mode Lecture 2: https://www.youtube.com/watch?v=NQ-0D5Ti2dc
 
 * Intro
   * motivation: GPU go brrr, more FLOPS please
@@ -428,9 +518,10 @@ nvidia-smi --query-gpu=name --format=csv,noheader
   * multi-core CPU came up
     * developers had to learn multi-threading (deadlocks, races etc.)
 * Heterogeneous data parallel computing
+  * Heterogeneous：GPU + CPU
+  * CUDA C: extends ANSI C with minimal new syntax
+
 * Multidimensional grids and data
-
-
 
 
 

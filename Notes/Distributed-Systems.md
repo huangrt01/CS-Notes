@@ -2,9 +2,9 @@
 
 [toc]
 
-### Intro
+#### Intro
 
-#### 基础架构与人 —— Haiping Zhao
+##### 基础架构与人 —— Haiping Zhao
 
 基础架构
 
@@ -777,7 +777,7 @@ The system layer consists of three major components: a global control store, a d
 - GCS让系统的任何成分都是stateless的 ，支持fault tolerance，makes it easy to scale the distributed object store and scheduler independently
 - 调度的分层，有助于scaling，先由local scheduler调度，只有overload的情形，才会给global scheduler
 
-
+##### code reading
 
 **读源码：**https://www.qtmuniao.com/2019/07/28/ray-source-reading-1/
 
@@ -796,6 +796,10 @@ src/ray/raylet/scheduling_queue.cc
 - SchedulingQueue
 
 src/ray/raylet/scheduling_policy.cc
+
+##### 应用
+
+* 「LLM-MLSys」—— 分布式Agent
 
 
 

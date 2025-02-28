@@ -1,4 +1,4 @@
-# AIGC
+# AI
 
 [toc]
 
@@ -40,7 +40,33 @@
   * 隐私
   * 认知
 
-### 技能点大纲
+### AI Engineer 的边界
+
+> “One of your key responsibilities will be to coach the organisation and be at the forefront of deciding where and if LLMs are even needed to solve a business problem.”
+
+* [What is AI Engineer?](https://www.newsletter.swirlai.com/p/what-is-ai-engineering?utm_campaign=post&utm_medium=web)
+  * **AI Researchers -** they are masters of prototyping, coming up with novel ideas and testing their hypothesis. Analyse the output data and come up with novel strategies how to keep continuously improving the models. Deep understanding of statistics and ML fundamentals. Nowadays, very likely they are able to run LLM training on distributed systems themselves.
+    - What they might initially lack in skills is the ability to deploy real world production applications and implementing MLOps best practices in the world of LLMs.
+    - “The goal of AI Engineer is to take what is already available and stitch up an AI system that would solve a real business problem.”
+  * **ML Engineers -** capable of building and deploying regular Machine Learning models as AI/ML systems with all of the bells and whistles of MLOps. This includes implementation of feedback flywheel and ability to observe and continuously improve the system. Also, ML Engineers are usually involved in Data Engineering to some extent, often utilising ML specific data stores like Feature Stores or Vector DBs.
+    - What they might initially lack in skills is the ability to perform deep research and build production ready high throughput systems as well as implementing and operating regular software best practices.
+  * **Software Engineers** - they are great! Capable of crafting complex high throughput, low latency systems that are deterministic. Translating business requirements into complex software flows. Masters of DevOps and software engineering best practices, capable of high velocity development and shipping to production in a safe way.
+    - What they might initially lack in skills is the ability to reason in non-deterministic systems and knowledge how to observe and evaluate them. Also, it is not in their nature to continuously learn non software related topics that could completely shift in a day, requiring re-architecture of the entire system.
+
+![image-20250227193138998](./AI/image-20250227193138998.png)
+
+### 技能点
+
+- **Research** - white papers need to become your best friend. There is so much research happening in the field of Agentic applications that it is hard to keep up. As an example, just recently, there has been a [paper](https://arxiv.org/abs/2411.10541) released with research around how Prompt Formatting can influence the performance of your LLM applications. The truth is that with internal data and compute resources at your disposal, you - the AI Engineer - are best positioned to do your own research on what works and what does not, and you should do it for the sake of your employer.
+- **Prompt Engineering** - while it might sound simple, the techniques for prompt engineering and formatting are vast. When it comes to agentic systems, you are also dealing with cross agent prompt dependencies, shared state and memory that is also implemented via prompting. On top of this, everything needs to be evaluated so you will need custom evals for any prompt you are crafting coupled with datasets that you can test on.
+- **Software Development -** no questions here, the systems you are deploying need to be solid. You need to know and follow software engineering and DevOps best practices.
+- **Infrastructure -** one aspect of this is that you need to be able to deploy your own work, you could say it is part of Software Development. Also you need to understand your data and new types of storage systems like Vector DBs. In general, these are not new, but rarely used by non ML Engineers.
+- **Data Engineering** - you would be surprised in how much time you would actually spend understanding, cleaning and processing the data that is then used in your AI Systems. Not everything is about prompting, the hardest part is usually integrating the data sources into your AI applications.
+- **MLOps adapted for AI Systems (AgentOps)** - we have introduced a lot of good practices into building AI systems in the past ~5 years via the MLOps movement. Most of them should be transferred when building with LLMs.
+  - Evaluation.
+  - Observability. I talk about some of the challenges in observing Agentic systems in one of my articles: [Observability in LLMOps pipeline - Different Levels of Scale](https://www.newsletter.swirlai.com/p/observability-in-llmops-pipeline)
+  - Prompt tracking and versioning.
+  - Feedback and the continuous system improvement flywheel.
 
 ![structure](./AI/structure.png)
 
@@ -1102,133 +1128,6 @@ def get_sql_completion(messages, model="gpt-3.5-turbo"):
 * 大模型结合数学能力
   * [《Wolfram|Alpha as the Way to Bring Computational Knowledge Superpowers to ChatGPT》](https://writings.stephenwolfram.com/2023/01/wolframalpha-as-the-way-to-bring-computational-knowledge-superpowers-to-chatgpt/)
     * the concept of [computational irreducibility](https://www.wolframscience.com/nks/chap-12--the-principle-of-computational-equivalence#sect-12-6--computational-irreducibility)
-
-## Agent
-
-### Intro
-
-* 和Workflow的对比，见workflow章节中的甲骨文文章
-* Intro
-  * understanding complex inputs, engaging in reasoning and planning, using tools reliably, and recovering from errors.
-  * it's crucial for the agents to gain “ground truth” from the environment at each step (such as tool call results or code execution) to assess its progress
-  * **When to use agents:** Agents can be used for open-ended problems where it’s difficult or impossible to predict the required number of steps, and where you can’t hardcode a fixed path. The LLM will potentially operate for many turns, and you must have some level of trust in its decision-making. Agents' autonomy makes them ideal for scaling tasks in trusted environments.
-
-![image-20250226015431648](./AI/image-20250226015431648.png)
-
-* 吴恩达：系统可以具有不同程度的Agentic特性
-  * **Reflection（反思）**：类似于AI的自我纠错和迭代。例如，AI系统会检查自己编写的代码，并提出修改建议。
-  * **Tool Use（工具使用）**：大语言模型调用插件，扩展了其能力。例如，使用Copilot进行联网搜索或调用代码插件解决数理逻辑问题。
-  * **Planning（规划）**：AI根据用户输入的任务，拆解流程、选择工具、调用、执行并输出结果。例如，根据一张图片中的姿态生成一张新图片，并进行描述。
-  * **Multi-agent（多智能体协作）**：多个Agent协作完成任务，每个Agent可能扮演不同的角色，如CEO、产品经理或程序员。这种模式模拟了现实生活中的工作场景，能够处理复杂系统处理复杂系统
-* OpenAI开源多智能体agent框架swarm https://mp.weixin.qq.com/s/ysUzxUYV-lsQ6aiYPU0KdA
-  * https://github.com/openai/swarm
-  * 自动将函数转成适配格式的json描述
-  * 上下文的管理有多种模式可以轻松传递
-  * 10行代码构建出多智能体系统
-
-![agent-overview](./AI/agent-overview.png)
-
-- [LangGraph](https://langchain-ai.github.io/langgraph/) from LangChain;
-- Amazon Bedrock's [AI Agent framework](https://aws.amazon.com/bedrock/agents/);
-- [Rivet](https://rivet.ironcladapp.com/), a drag and drop GUI LLM workflow builder; and
-- [Vellum](https://www.vellum.ai/), another GUI tool for building and testing complex workflows.
-
-### Function Calling
-
-https://www.anthropic.com/news/tool-use-ga
-
-*  Anthropic's suggestions for deciding on tool formats are the following:
-
-  - Give the model enough tokens to "think" before it writes itself into a corner.
-
-  - Keep the format close to what the model has seen naturally occurring in text on the internet.
-
-  - Make sure there's no formatting "overhead" such as having to keep an accurate count of thousands of lines of code, or string-escaping any code it writes.
-
-* *agent*-computer interfaces (ACI)
-
-  * Put yourself in the model's shoes
-  * writing a great docstring for a junior developer on your team
-  * https://console.anthropic.com/workbench
-  * [Poka-yoke](https://en.wikipedia.org/wiki/Poka-yoke) your tools
-  * e.g. SWE Bench，文件tool仅输入绝对路径
-
-### ReAct
-
-```
-Answer the following questions as best you can. You have access to the following tools:
-
-{tools}
-
-Use the following format:
-
-Question: the input question you must answer
-Thought: you should always think about what to do
-Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action
-Observation: the result of the action
-... (this Thought/Action/Action Input/Observation can repeat N times)
-Thought: I now know the final answer
-Final Answer: the final answer to the original input question
-
-Begin!
-
-Question: {input}
-Thought:{agent_scratchpad}
-```
-
-### **SelfAskWithSearch**
-
-* 适合知识图谱这样的层层推理场景
-
-
-
-### Plan-And-Execute
-
-> https://blog.langchain.dev/planning-agents/
-
-* 好处
-  * Generating the full reasoning steps is a tried-and-true prompting technique to improve outcomes.
-  * 性能、成本
-* Naive版本
-  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb
-
-![img](./AI/plan-and-execute-0915298.png)
-
-* ReWOO：Reasoning WithOut Observations
-  * the planner can reference previous outputs using syntax like `#E2` 
-  * more effective than a naive plan-and-execute agent since each task can have only the required context (its input and variable values).
-
-* LLMCompiler
-  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/llm-compiler/LLMCompiler.ipynb
-  * **Planner**: streams a DAG of tasks. Each task contains a tool, arguments, and list of dependencies.
-  * **Task Fetching Unit** schedules and executes the tasks. This accepts a stream of tasks. This unit schedules tasks once their dependencies are met. Since many tools involve other calls to search engines or LLMs, the extra parallelism can grant a significant speed boost (the paper claims 3.6x).
-  * **Joiner**: dynamically replan or finish based on the entire graph history (including task execution results) is an LLM step that decides whether to respond with the final answer or whether to pass the progress back to the (re-)planning agent to continue work.
-  * 好处：
-    * **Planner** outputs are ***streamed;\*** the output parser eagerly yields task parameters and their dependencies.
-    * The **task fetching unit** receives the parsed task stream and schedules tasks once all their dependencies are satisfied.
-    * Task arguments can be *variables,* which are the outputs of previous tasks in the DAG. For instance, the model can call `search("${1}")` to search for queries generated by the output of task 1. This lets the agent work even faster than the "embarrassingly parallel" tool calling in OpenAI.
-
-### Agent Examples
-
-- A coding Agent to resolve [SWE-bench tasks](https://www.anthropic.com/research/swe-bench-sonnet), which involve edits to many files based on a task description;
-  - ![image-20250226015736553](./AI/image-20250226015736553.png)
-- Our [“computer use” reference implementation](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo), where Claude uses a computer to accomplish tasks.
-- Customer support
-  - Support interactions naturally follow a conversation flow while requiring access to external information and actions;
-  - Tools can be integrated to pull customer data, order history, and knowledge base articles;
-  - Actions such as issuing refunds or updating tickets can be handled programmatically; and
-  - Success can be clearly measured through user-defined resolutions.
-
-* 模版
-
-![agent-flowchart](./AI/agent-flowchart.png)
-
-
-
-
-
-
 
 ## Assistants API
 
@@ -2596,7 +2495,7 @@ runnable = (
 
 ### Intro
 
-#### Anthropic: Building effective agents
+#### [Anthropic: Building effective agents](https://www.anthropic.com/research/building-effective-agents)
 
 * Consistently, the most successful implementations weren't using complex frameworks or specialized libraries. Instead, they were **building with simple, composable patterns.** 
 * Agent和workflow
@@ -2734,7 +2633,12 @@ runnable = (
 
 
 
+### Workflow的优化
 
+- 一个基础假设：
+  - 强能力LLM模型（doubao-1.5）解决不好的问题，基于这些问题设计的优化手段，对未来更强能力的LLM模型（doubao-2、doubao-3），也可能具备关键的优化作用
+- LLM类比人，人解决不好的问题，可能是问题抽象不合理、关键信息不到位
+- 本质上AI应用的优化，是合理化问题抽象、补充关键信息
 
 
 
@@ -2760,6 +2664,154 @@ https://agently.cn/guides/workflow/index.html
   * ![story_design](./AI/story_design.png)
 
 * 每日新闻生成 https://github.com/AgentEra/Agently-Daily-News-Collector
+
+
+
+
+
+## Agent
+
+### Intro
+
+* 和Workflow的对比，见workflow章节中的甲骨文文章
+* Intro
+  * understanding complex inputs, engaging in reasoning and planning, using tools reliably, and recovering from errors.
+  * it's crucial for the agents to gain “ground truth” from the environment at each step (such as tool call results or code execution) to assess its progress
+  * **When to use agents:** Agents can be used for open-ended problems where it’s difficult or impossible to predict the required number of steps, and where you can’t hardcode a fixed path. The LLM will potentially operate for many turns, and you must have some level of trust in its decision-making. Agents' autonomy makes them ideal for scaling tasks in trusted environments.
+
+![image-20250226015431648](./AI/image-20250226015431648.png)
+
+* [Google 白皮书分析](https://ppc.land/ai-agents-google-unveils-framework-for-next-gen-systems/)
+  * 白皮书：https://ppc.land/content/files/2025/01/Newwhitepaper_Agents2.pdf
+  * ![image-20250227192024868](./AI/image-20250227192024868.png)
+  * model layer
+  * orchestration layer
+    * ReAct, Chain-of-Thought, and Tree-of-Thoughts
+    * "agent chaining"
+
+  * Tools layer
+    * Extensions
+      * provide standardized API interactions
+
+    * Functions
+      * enable client-side execution control
+
+    * Data Stores
+      * facilitate access to various types of information
+
+  * ![image-20250227191217604](./AI/image-20250227191217604.png)
+
+* 吴恩达：系统可以具有不同程度的Agentic特性
+  * **Reflection（反思）**：类似于AI的自我纠错和迭代。例如，AI系统会检查自己编写的代码，并提出修改建议。
+  * **Tool Use（工具使用）**：大语言模型调用插件，扩展了其能力。例如，使用Copilot进行联网搜索或调用代码插件解决数理逻辑问题。
+  * **Planning（规划）**：AI根据用户输入的任务，拆解流程、选择工具、调用、执行并输出结果。例如，根据一张图片中的姿态生成一张新图片，并进行描述。
+  * **Multi-agent（多智能体协作）**：多个Agent协作完成任务，每个Agent可能扮演不同的角色，如CEO、产品经理或程序员。这种模式模拟了现实生活中的工作场景，能够处理复杂系统处理复杂系统
+* OpenAI开源多智能体agent框架swarm https://mp.weixin.qq.com/s/ysUzxUYV-lsQ6aiYPU0KdA
+  * https://github.com/openai/swarm
+  * 自动将函数转成适配格式的json描述
+  * 上下文的管理有多种模式可以轻松传递
+  * 10行代码构建出多智能体系统
+
+![agent-overview](./AI/agent-overview.png)
+
+- [LangGraph](https://langchain-ai.github.io/langgraph/) from LangChain;
+- Amazon Bedrock's [AI Agent framework](https://aws.amazon.com/bedrock/agents/);
+- [Rivet](https://rivet.ironcladapp.com/), a drag and drop GUI LLM workflow builder; and
+- [Vellum](https://www.vellum.ai/), another GUI tool for building and testing complex workflows.
+
+### Function Calling
+
+https://www.anthropic.com/news/tool-use-ga
+
+*  Anthropic's suggestions for deciding on tool formats are the following:
+
+   - Give the model enough tokens to "think" before it writes itself into a corner.
+
+   - Keep the format close to what the model has seen naturally occurring in text on the internet.
+
+   - Make sure there's no formatting "overhead" such as having to keep an accurate count of thousands of lines of code, or string-escaping any code it writes.
+
+*  *agent*-computer interfaces (ACI)
+
+   * Put yourself in the model's shoes
+   * writing a great docstring for a junior developer on your team
+   * https://console.anthropic.com/workbench
+   * [Poka-yoke](https://en.wikipedia.org/wiki/Poka-yoke) your tools
+   * e.g. SWE Bench，文件tool仅输入绝对路径
+
+### ReAct
+
+```
+Answer the following questions as best you can. You have access to the following tools:
+
+{tools}
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+Begin!
+
+Question: {input}
+Thought:{agent_scratchpad}
+```
+
+### **SelfAskWithSearch**
+
+* 适合知识图谱这样的层层推理场景
+
+
+
+### Plan-And-Execute
+
+> https://blog.langchain.dev/planning-agents/
+
+* 好处
+  * Generating the full reasoning steps is a tried-and-true prompting technique to improve outcomes.
+  * 性能、成本
+* Naive版本
+  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb
+
+![img](./AI/plan-and-execute-0915298.png)
+
+* ReWOO：Reasoning WithOut Observations
+  * the planner can reference previous outputs using syntax like `#E2` 
+  * more effective than a naive plan-and-execute agent since each task can have only the required context (its input and variable values).
+
+* LLMCompiler
+  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/llm-compiler/LLMCompiler.ipynb
+  * **Planner**: streams a DAG of tasks. Each task contains a tool, arguments, and list of dependencies.
+  * **Task Fetching Unit** schedules and executes the tasks. This accepts a stream of tasks. This unit schedules tasks once their dependencies are met. Since many tools involve other calls to search engines or LLMs, the extra parallelism can grant a significant speed boost (the paper claims 3.6x).
+  * **Joiner**: dynamically replan or finish based on the entire graph history (including task execution results) is an LLM step that decides whether to respond with the final answer or whether to pass the progress back to the (re-)planning agent to continue work.
+  * 好处：
+    * **Planner** outputs are ***streamed;\*** the output parser eagerly yields task parameters and their dependencies.
+    * The **task fetching unit** receives the parsed task stream and schedules tasks once all their dependencies are satisfied.
+    * Task arguments can be *variables,* which are the outputs of previous tasks in the DAG. For instance, the model can call `search("${1}")` to search for queries generated by the output of task 1. This lets the agent work even faster than the "embarrassingly parallel" tool calling in OpenAI.
+
+### Agent Examples
+
+* Agentic RAG
+  * ![image-20250227201733347](./AI/image-20250227201733347.png)
+
+- A coding Agent to resolve [SWE-bench tasks](https://www.anthropic.com/research/swe-bench-sonnet), which involve edits to many files based on a task description;
+  - ![image-20250226015736553](./AI/image-20250226015736553.png)
+- Our [“computer use” reference implementation](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo), where Claude uses a computer to accomplish tasks.
+- Customer support
+  - Support interactions naturally follow a conversation flow while requiring access to external information and actions;
+  - Tools can be integrated to pull customer data, order history, and knowledge base articles;
+  - Actions such as issuing refunds or updating tickets can be handled programmatically; and
+  - Success can be clearly measured through user-defined resolutions.
+
+* 模版
+
+![agent-flowchart](./AI/agent-flowchart.png)
 
 
 

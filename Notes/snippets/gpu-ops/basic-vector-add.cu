@@ -1,13 +1,30 @@
+dim3 grid(32, 1, 1);
+dim3 block(128, 1, 1);
+kernelFunction<<<grid, block>>>(..);
+// Number of threads: 128 * 32=4096
+
+
 #include <stdio.h>
 #include <assert.h>
 
-inline cudaError_t checkCuda(cudaError_t result)
-{
-  if (result != cudaSuccess) {
-    fprintf(stderr, "CUDA Runtime Error: %s\n", cudaGetErrorString(result));
-    assert(result == cudaSuccess);
+// inline cudaError_t checkCuda(cudaError_t result)
+// {
+//   if (result != cudaSuccess) {
+//     fprintf(stderr, "CUDA Runtime Error: %s\n", cudaGetErrorString(result));
+//     assert(result == cudaSuccess);
+//   }
+//   return result;
+// }
+
+// https://stackoverflow.com/questions/14038589/what-is-the-canonical-way-to-check-for-errors-using-the-cuda-runtime-api
+#define checkCuda(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort = true) {
+  if (code != cudaSuccess) {
+    fprintf(stderr, "GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+    if (abort) {
+      exit(code);
+    }
   }
-  return result;
 }
 
 void initWith(float num, float *a, int N)

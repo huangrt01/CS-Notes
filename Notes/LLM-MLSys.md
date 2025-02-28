@@ -1,4 +1,6 @@
-## LLM MLSys
+# LLM MLSys
+
+[toc]
 
 ## 资源
 
@@ -205,3 +207,29 @@ with IO-Awareness
 
 * Dinov2
   * Batch_size=4, qps=50: 显存 14G，120W
+
+## 分布式 Agent
+
+* [蚂蚁 Ray](https://mp.weixin.qq.com/s/TFxzMJyQVoffV4SpiTh9AQ?open_in_browser=true)
+
+  * 解决的问题：agent的负载、形式多样，从POC到上线的gap
+  * Ray-Agent （ragent）
+    * 主要考虑点如下：①该框架需提供 Agent 的 API；②利用 Ray 实现从本地代码到支持异构资源的分布式代码的扩展；③在多 Agent 场景中，每个 Agent 都是一个分布式进程，我们需要一个框架来协调这些进程，即所谓的 environment；④要兼容不同的库，如 MetaGPT 和 AutoGen；⑤希望利用 Ray 的沙箱（sandbox）、批处理能力和跨源调度功能。
+
+  * ![image-20250228002001015](./LLM-MLSys/image-20250228002001015.png)
+
+  * ![image-20250228002616025](./LLM-MLSys/image-20250228002616025.png)
+
+  * ![image-20250228003128059](./LLM-MLSys/image-20250228003128059.png)
+  * ![image-20250228003143293](./LLM-MLSys/image-20250228003143293.png)
+
+  * ![image-20250228005839274](./LLM-MLSys/image-20250228005839274.png)
+
+  * ![image-20250228010735262](./LLM-MLSys/image-20250228010735262.png)
+  * 未来期望：
+    * Agent Mesh/Agent Protocol
+    * 离在线一体架构：可以用 Ray Data pipeline 完成离线工作
+
+## LLMOps
+
+[Observability in LLMOps pipeline - Different Levels of Scale](https://www.newsletter.swirlai.com/p/observability-in-llmops-pipeline)
