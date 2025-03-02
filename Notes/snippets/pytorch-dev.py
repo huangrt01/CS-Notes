@@ -21,3 +21,9 @@ setup(
     cmdclass={
         'build_ext': BuildExtension
     })
+
+
+
+### gradient hook
+
+https://www.digitalocean.com/community/tutorials/pytorch-hooks-gradient-clipping-debugging

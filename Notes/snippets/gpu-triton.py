@@ -1,19 +1,13 @@
-### Intro & Benchmarking
-
+### Intro & 
 # https://github.com/triton-lang/triton
 
 # https://triton-lang.org/main/getting-started/tutorials/02-fused-softmax.html
 
 # https://www.youtube.com/watch?v=DdTsX6DQk24
 
-import triton
-import triton.language as tl
-import torch
 
 
-# import os
-# os.environ["TRITON_INTERPRET"] = "1"
-
+### Benchmarking Square Op
 
 @triton.autotune(
   configs=[

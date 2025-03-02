@@ -414,7 +414,7 @@ nvidia-smi --query-gpu=name --format=csv,noheader
     * **All** operations in triton kernels are vectorized: Loading data, operating on data, storing data, and creating masks.
   * 不感知shared memory
 
-
+![image-20250302005036701](./GPU/image-20250302005036701.png)
 
 #### Debugging
 

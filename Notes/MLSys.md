@@ -401,6 +401,173 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 * 用精排模型参数来初始化参数，fine-tune 加速训练
 * $\gamma_3=10^{-7}$ 描述候选数量，也是一个衡量特征复杂度的参数
 
+### 量化、混合精度训练推理
+
+#### Intro
+
+* 为什么量化？
+  * 优化计算、内存带宽、显存
+    * 显存包括 参数、activations（存储用于backward）等
+
+#### Mixed Precision Training (ICLR 2018)
+
+> 也参考上面表格
+
+* Baseline (FP32) : Single-precision storage is used for activations, weights and gradients. All arithmetic is also in FP32. 
+* Mixed Precision (MP): 
+  * ![image-20250301234600987](./MLSys/image-20250301234600987.png)
+
+* Loss Scaling
+
+  * if gradient statistics are available, directly by choosing a factor so that its product with the maximum absolute gradient value is below 65,504 (the maximum value representable in FP16).
+  * 只要没有overflow，就没有副作用
+
+* 解决的问题：
+
+  * fp16训练，梯度被忽略：
+    1. updates (weight gradients multiplied by the learning rate) become too small to be represented in FP16 - any value whose magnitude is smaller than 2−24 becomes zero in FP16.
+    2. when the magnitude of a normalized weight value is at least 2048 times larger that of the weight update. Since FP16 has 10 bits of mantissa, the implicit bit must be right-shifted by 11 or more positions to potentially create a zero
+
+  * 同上：侧重利用fp16的exponential位数
+  * 累加、reduce等操作的梯度噪声大
+
+* Arithmetic precision的分析
+  * three categories: vector dot-products, reductions,
+    and point-wise operations
+  * To maintain model accuracy, we found that some networks require that FP16 vector dot-product accumulates the partial products into an FP32 value, which is converted to FP16 before writing to memory.
+  * Large reductions (sums across elements of a vector) should be carried out in FP32. Such reductions mostly come up in batch-normalization layers when accumulating statistics and softmax layers.
+    Both of the layer types in our implementations still read and write FP16 tensors from memory, performing the arithmetic in FP32. **This did not slow down the training process since these layers are memory-bandwidth limited and not sensitive to arithmetic speed**
+  * Point-wise operations, such as non-linearities and element-wise matrix products, are memory-bandwidth limited. Since arithmetic precision does not impact the speed of these operations, either
+    FP16 or FP32 math can be used
+
+* 实现：scale系数8，实现时在forward scale，在backward之后、gradient clipping之前rescale。 确保weight decay不受影响
+* 结论：
+  * 技术1保住CV CNN backbone精度
+  * Loss Scaling
+    * Scaling factor of 8 保住Faster R-CNN、Multibox SSD精度
+    * Scaling factor of 128 保住 LSTM 精度
+    * 语音模型场景 the half-precision storage format may act as a regularizer during training
+    * gan不需要scaling
+
+#### 模型量化介绍
+
+* 神经网络：多函数的嵌套表示
+  * 越来越不规则
+
+* Serving 量化
+
+  * 用于存储的模型量化：
+    * 传统问题局限性：求解量化误差最小，不面向loss函数，面向策略，不可解
+
+
+  * 用于计算的模型量化
+    * 权重和输入都有delta（预估时认为权重delta为零）
+      * 偏微分公式 -> 每层的输出到下一层的输入很重要
+        * 同样的量化方式，相同量化精度给不同层的输入带来不同的误差
+        * 存储量化 v.s 计算量化，后者更强调在存储约束下求解最优精度
+      * 一种可求闭式解（分层量化模型）：量化标准排序、梯度排序，一一对应，排序不等式证明
+        * e.g. HAWQ-v2
+
+
+* Training 量化
+
+  * 量化感知训练的原理：李沐的ps文章《communication efficient distributed machine learning with the parameter server》https://www.cs.cmu.edu/~muli/file/parameter_server_nips14.pdf
+
+  * 结论：控制梯度噪音的范数
+    * 小结论：量化训练完后要恢复全精度进行计算，再用训练后量化手段进行量化
+      * 实现上：量化的正传，量化/全精度的反传，量化的更新
+        * 全精度反传，与自动求导模块的实现有关，可能存在
+
+
+* 工具：https://github.com/NVIDIA/apex
+
+* 总结：
+
+  * 量化问题本质是NP难问题，部分情况下可转换成指数规划问题
+
+  * 量化训练和预测是两个目标，训练结果应该恢复成全精度再用预测压缩的过程压缩一遍
+
+
+
+#### Deep Learning Inference in Facebook Data Centers: Characterization, Performance Optimizations and Hardware Implications
+
+1. Introduction
+
+* general requirements for new DL hardware designs:
+  * High memory bandwidth and capacity for embeddings 
+  * Support for powerful matrix and vector engines 
+  * Large on-chip memory for inference with small batches 
+  * Support for half-precision floating-point computation
+
+2. Characterization of DL Inference
+
+* Ranking and Recommendation
+  * embedding lookup 硬件层面分析
+    * 特点是 low spatial locality，caching 难度高
+    * High-bandwidth memory (HBM): 性能高，容量不够
+    * Non-volatile memory (NVM): bandwidth低 不可行、成本低
+* CV: 图像识别、目标检测、视频理解
+  * number of operations per weight 高
+  * number of operations per activation 不高
+* NLP: NMT(Neural machine translation) uses seq2seq
+  * parallelism: 针对 RNN-based approaches 的并行化方案，比如 stacked conv, transformer
+
+* computation kernels 分析
+  * 数据中心成本：fc > embedding lookup > tensor manipulation > conv
+  * fc layer 分析：图内第一层运算抽象成矩阵乘（当batch size M 较小时，BLAS3 趋近于 BLAS2，matrix multiplication engine 效果削弱）
+    * When an M×K matrix activation matrix is multiplied with a K×N weight matrix, we compute 2MKN operations while reading KN weights, leading to 2M operations per weight.
+    * Similarly, the number of operations per activation is 2N.
+
+3. Performance Optimizations
+
+* bf16 sum pooling 是优化方向
+* intel int8 multiplication with 16-bit accumulation 提升一倍吞吐
+
+* FBGEMM, an algebra engine
+  * outlier-aware quantization: $W = W_{main}+W_{outlier}$
+    * outlier uses 32-bit accumulation. We find that Woutlier becomes a sparse matrix, often with density less than 0.1%, especially when combined with symmetric quantization [39].
+
+* accuracy challenges
+  * Fine-grain Quantization
+  * Quantization-aware Training
+  * Selective Quantization
+  * Outlier-aware Quantization: 更精细、更窄地选取 quantize range
+  * Net-aware Quantization: if an operator is only followed by ReLU, we can narrow down the range by excluding negative values
+
+* HPC challenges
+  * HPC 习惯 “pack” a block of input matrices into a format friendly for vectorization and cache locality, 但对于DL领域 tall-skinny matrices，pack 会带来 overhead
+  * DL不完全是矩阵乘：比如conv op，转化为矩阵乘需要提前做 `im2col` 操作，有 overhead，因此需要专门做 kernel fusion 提供 conv interface
+    * This will also enable algorithmic optimizations such as Winograd or FFT-based convolution as in cuDNN with automatic choice of the best algorithm for given tensor shapes.
+    * reduced-precision 计算也需要专门的 fusion，一些库未能满足
+
+```c++
+template<typename T_PACK_A, typename T_PACK_B, typename T_C, typename OUT_FUNCTOR>
+void gemmPacked(
+  // packed inputs
+  T_PACK_A& packA, T_PACK_B& packedB,
+  // output
+  T_C* C, uint32_t ldc,
+  // post-processing functor, e.g. Relu
+  OUT_FUNCTOR& outProcess);
+```
+
+* The packing of matrix A can be specialized and fused with memory bandwidth bound operations such as `im2col`, row-wise sum for asymmetric quantization, or depth-wise convolution.
+
+* whole graph optimization
+  * 手动 fusion 仍有必要
+
+4. Application Driven HW Co-design Directions
+
+* Recommendation models not only require a huge memory capacity but also high bandwidth.
+* 优化的副作用：比如 avx512 降频，见 「Computer-Architecture.md」
+* 增加 tiers 的 trade-offs：传输、压缩解压开销，a hypothetical accelerator with 100 TOP/s compute throughput would require a few GB/s PCIe and/or network bandwidth
+
+5. Related Work
+
+* matrix-vector engine、FPGA、TPU
+
+* ML benchmark
+
 ### 算力优化
 
 * 边缘计算
@@ -2279,87 +2446,6 @@ https://hardwarelottery.github.io/
     * one way is to focus on the development of domain-specific languages which cater to a narrow domain.
     * another way is to automatically auto-tune the algorithmic parameters of a program based upon the downstream choice of hardware.
 * 另一篇强调 General Method + 算力 大力出奇迹的 blog: http://www.incompleteideas.net/IncIdeas/BitterLesson.html
-
-
-
-#### Deep Learning Inference in Facebook Data Centers: Characterization, Performance Optimizations and Hardware Implications
-
-1. Introduction
-
-* general requirements for new DL hardware designs:
-  * High memory bandwidth and capacity for embeddings 
-  * Support for powerful matrix and vector engines 
-  * Large on-chip memory for inference with small batches 
-  * Support for half-precision floating-point computation
-
-2. Characterization of DL Inference
-
-* Ranking and Recommendation
-  * embedding lookup 硬件层面分析
-    * 特点是 low spatial locality，caching 难度高
-    * High-bandwidth memory (HBM): 性能高，容量不够
-    * Non-volatile memory (NVM): bandwidth低 不可行、成本低
-* CV: 图像识别、目标检测、视频理解
-  * number of operations per weight 高
-  * number of operations per activation 不高
-* NLP: NMT(Neural machine translation) uses seq2seq
-  * parallelism: 针对 RNN-based approaches 的并行化方案，比如 stacked conv, transformer
-
-* computation kernels 分析
-  * 数据中心成本：fc > embedding lookup > tensor manipulation > conv
-  * fc layer 分析：图内第一层运算抽象成矩阵乘（当batch size M 较小时，BLAS3 趋近于 BLAS2，matrix multiplication engine 效果削弱）
-    * When an M×K matrix activation matrix is multiplied with a K×N weight matrix, we compute 2MKN operations while reading KN weights, leading to 2M operations per weight.
-    * Similarly, the number of operations per activation is 2N.
-
-3. Performance Optimizations
-
-* bf16 sum pooling 是优化方向
-* intel int8 multiplication with 16-bit accumulation 提升一倍吞吐
-
-* FBGEMM, an algebra engine
-  * outlier-aware quantization: $W = W_{main}+W_{outlier}$
-    * outlier uses 32-bit accumulation. We find that Woutlier becomes a sparse matrix, often with density less than 0.1%, especially when combined with sym-metric quantization [39].
-
-* accuracy challenges
-  * Fine-grain Quantization
-  * Quantization-aware Training
-  * Selective Quantization
-  * Outlier-aware Quantization: 更精细、更窄地选取 quantize range
-  * Net-aware Quantization: if an operator is only followed by ReLU, we can narrow down the range by excluding negative values
-
-* HPC challenges
-  * HPC 习惯 “pack” a block of input matrices into a format friendly for vectorization and cache locality, 但对于DL领域 tall-skinny matrices，pack 会带来 overhead
-  * DL不完全是矩阵乘：比如conv op，转化为矩阵乘需要提前做 `im2col` 操作，有 overhead，因此需要专门做 kernel fusion 提供 conv interface
-    * This will also enable algorithmic optimizations such as Winograd or FFT-based convolution as in cuDNN with automatic choice of the best algorithm for given tensor shapes.
-    * reduced-precision 计算也需要专门的 fusion，一些库未能满足
-
-```c++
-template<typename T_PACK_A, typename T_PACK_B, typename T_C, typename OUT_FUNCTOR>
-void gemmPacked(
-  // packed inputs
-  T_PACK_A& packA, T_PACK_B& packedB,
-  // output
-  T_C* C, uint32_t ldc,
-  // post-processing functor, e.g. Relu
-  OUT_FUNCTOR& outProcess);
-```
-
-* The packing of matrix A can be specialized and fused with memory bandwidth bound operations such as `im2col`, row-wise sum for asymmetric quantization, or depth-wise convolution.
-
-* whole graph optimization
-  * 手动 fusion 仍有必要
-
-4. Application Driven HW Co-design Directions
-
-* Recommendation models not only require a huge memory capacity but also high bandwidth.
-* 优化的副作用：比如 avx512 降频，见 Computer-Architecture.md
-* 增加 tiers 的 trade-offs：传输、压缩解压开销，a hypothetical accelerator with 100 TOP/s compute throughput would require a few GB/s PCIe and/or network bandwidth
-
-5. Related Work
-
-* matrix-vector engine、FPGA、TPU
-
-* ML benchmark
 
 #### DCAF: A Dynamic Computation Allocation Framework for Online Serving System, DLP-KDD 2020
 

@@ -110,7 +110,9 @@ print(a.is_contiguous()) ## True
 print(a_t.is_contiguous()) ## False
 # 对一个 tensor 进行转置操作之后会改变它的 contiguous 特性
 
-# 当对张量进行一些操作（如 transpose()、permute() 等）后，张量在内存中的存储可能不再连续，此时如果直接使用 view() 方法，就会抛出错误
+# 当对张量进行一些操作（如 transpose()、permute()、split(..., dim=1) 等）后，张量在内存中的存储可能不再连续
+
+# 此时如果直接使用 view() 方法，就会抛出错误
 
 a_t_v = a_t.view(-1) ## 会报错
 a_t = a.t().contiguous()

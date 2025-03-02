@@ -2,6 +2,8 @@
 
 #define N  64
 
+# k对应的维度做tiling（phases）
+
 __global__ void sharedMatMult( float * a, float * b, float *c){
   __shared__ float aTile[BLOCK_SIZE][BLOCK_SIZE];
   __shared__ float bTile[BLOCK_SIZE][BLOCK_SIZE];
