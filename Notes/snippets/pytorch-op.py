@@ -1,5 +1,7 @@
 ### 写Op
 
+TODO： https://pytorch.org/tutorials/advanced/cpp_extension.html
+
 * 关于非contiguous
 
 如果我们只是用[]/(), 索引，他们都是操作符重载，内部考虑了shape, stride, order, offset等，不会出错。在很多情况下可以节省大量内存

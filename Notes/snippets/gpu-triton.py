@@ -1,11 +1,24 @@
-### Intro & 
-# https://github.com/triton-lang/triton
+### Intro
+https://github.com/triton-lang/triton
 
-# https://triton-lang.org/main/getting-started/tutorials/02-fused-softmax.html
+https://triton-lang.org/main/getting-started/tutorials/02-fused-softmax.html
 
-# https://www.youtube.com/watch?v=DdTsX6DQk24
+https://www.youtube.com/watch?v=DdTsX6DQk24
+
+### tutorials
 
 
+The official documentation: https://triton-lang.org/
+The LightLLM repo has a ton of real-world triton kernels: https://github.com/ModelTC/lightllm/tree/main/lightllm/common/basemodel/triton_kernel
+So does the Unsloth repo: https://github.com/unslothai/unsloth/tree/main/unsloth/kernels
+
+
+
+### Autotune
+
+代码参考下面
+
+tricks&configs可参考 https://www.youtube.com/watch?v=SGhfUhlowB4
 
 ### Benchmarking Square Op
 

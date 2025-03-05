@@ -1,4 +1,8 @@
 ### grad
+
+https://pytorch.org/docs/stable/notes/autograd.html#locally-disabling-gradient-computation
+
+
 x = torch.tensor([[1., -1.], [1., 1.]], requires_grad=True)
 x.grad
 

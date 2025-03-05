@@ -405,6 +405,14 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 
 >  snippets/gpu-triton.py
 
+* Square
+
+> Snippets/gpu-triton-ops.py
+
+* Matmul
+
+![image-20250302192301222](./GPU/image-20250302192301222.png)
+
 #### Programming Model
 
 * Triton v.s. CUDA

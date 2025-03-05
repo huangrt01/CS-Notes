@@ -1,5 +1,7 @@
 
 class Circle:
+    class_attribute = 10  # 类属性，被共享
+
     def __init__(self, radius):
         self._radius = radius
 

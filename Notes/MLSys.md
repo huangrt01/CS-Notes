@@ -409,6 +409,14 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
   * 优化计算、内存带宽、显存
     * 显存包括 参数、activations（存储用于backward）等
 
+* FP16
+
+  - FP64: 用8个字节来表达一个数字, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
+
+  - FP32: 用4个字节来表达一个数字, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
+
+  - FP16: 用2个字节来表达一个数字, 1位符号, 5位指数, 10位小数，**有效位数为3位**. 常用于精度更低的机器学习等
+
 #### Mixed Precision Training (ICLR 2018)
 
 > 也参考上面表格
@@ -449,7 +457,47 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
     * 语音模型场景 the half-precision storage format may act as a regularizer during training
     * gan不需要scaling
 
-#### 模型量化介绍
+#### [工程] [GPU Mode Lecture 7: Advanced Quantization](https://www.youtube.com/watch?v=1u9xUK3G4VM)
+
+> GPU/Quantization Cuda vs Triton.pdf
+
+- 迭代路线：
+
+  - dynamic(per tensor/per token/per channel)->weight only->QAT、GPTQ
+
+- TorchAO - https://github.com/pytorch-labs/ao
+
+  - Int8 Dynamic Quantization
+    - i8i8->i32 vs i8i8->bf16
+
+  - Int 8 Weight Only Quantization
+    - bf16i8->bf16
+  - Int 4 Weight Only Quantization
+    - bf16i4->bf16
+
+- Techniques：明确量化的目的
+
+  - dynamic: 针对compute bound
+  - weight only: 针对memory h2d bound、显存瓶颈的场景，去除了对activation做quantize的系列操作，适合llama等
+  - --> dynamic quantize在llama成为瓶颈，内存操作多
+
+![image-20250302195633990](./MLSys/image-20250302195633990.png)
+
+* Dynamic Quantization Flow
+  * ![image-20250303021206950](./MLSys/image-20250303021206950.png)
+  * 问题1：显存增长，原因是int8乘法的accumulation矩阵需要是int32
+    * 解法：fusion，直接用bf16作为accumulate矩阵
+    * 代码：config.force_fuse_int_mm_with_mul
+  * 问题2: 量化精度损失
+    * 解法：per-token、per-channel
+* Side Note:
+  * Weight Only Quantization中，Dequantize是可选的，可以int4直接和float的fractional part相乘
+
+
+
+
+
+#### [学术]模型量化介绍
 
 * 神经网络：多函数的嵌套表示
   * 越来越不规则

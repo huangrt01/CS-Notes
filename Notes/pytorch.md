@@ -58,6 +58,12 @@
   * 当反向传播完成，计算图默认会被清除，所以只能用生成的计算图进行一次反向传播。
   * `retain_graph` 参数可以保持计算图，从而避免别清除掉，其用法为：`loss.backward(retain_graph=True)`
 
+## Module
+
+* 源码解读：https://zhuanlan.zhihu.com/p/340453841
+  * ![image-20250305012942113](./pytorch/image-20250305012942113.png)
+  * ![v2-2233d8b647f1b56e2ad9ef92d90e1706_1440w](./pytorch/v2-2233d8b647f1b56e2ad9ef92d90e1706_1440w.jpg)
+
 
 
 ## Serving
