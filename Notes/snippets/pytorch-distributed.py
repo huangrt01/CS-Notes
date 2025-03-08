@@ -1,3 +1,34 @@
+详细介绍：https://pytorch.org/docs/stable/distributed.html
+- 不同backend+CPU/GPU支持通信原语的情况
+- Common environment variables
+
+tutorial：https://pytorch.org/tutorials/intermediate/dist_tuto.html
+tutorial2: https://pytorch.org/tutorials/intermediate/ddp_tutorial.html
+
+overview: https://pytorch.org/tutorials/beginner/dist_overview.html
+Distributed Data-Parallel (DDP)
+Fully Sharded Data-Parallel Training (FSDP) when your model cannot fit on one GPU.
+- https://pytorch.org/tutorials/intermediate/FSDP_tutorial.html
+Tensor Parallel (TP)  if you reach scaling limitations with FSDP.
+Pipeline Parallel (PP)
+
+* Sharding primitives
+- DTensor and DeviceMesh are primitives used to build parallelism in terms of sharded or replicated tensors on N-dimensional process groups.
+- DTensor represents a tensor that is sharded and/or replicated, and communicates automatically to reshard tensors as needed by operations.
+- DeviceMesh abstracts the accelerator device communicators into a multi-dimensional array, which manages the underlying ProcessGroup instances for collective communications in multi-dimensional parallelisms. Try out our Device Mesh Recipe to learn more.
+
+torchrun
+
+
+DDP和DP的区别：
+- Each process maintains its own optimizer and performs a complete optimization step with each iteration. While this may appear redundant, since the gradients have already been gathered together and averaged across processes and are thus the same for every process, this means that no parameter broadcast step is needed, reducing time spent transferring tensors between nodes.
+- 多进程，Python性能好
+
+### DP
+
+model = nn.DataParallel(model)
+
+
 ### DDP
 
 # 细节：DDP仅支持所有worker同一设备类型，不支持部分worker GPU、部分worker CPU

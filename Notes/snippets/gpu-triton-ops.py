@@ -1,3 +1,11 @@
+Great at composing “simple” operations together
+○ Fused_int_mm_mul
+○ SAM flash attention
+■ https://github.com/facebookresearch/segment-anything/blob/main/segmen
+t_anything/modeling/image_encoder.py#L358
+■ https://github.com/pytorch-labs/segment-anything-fast/blob/main/segment
+_anything_fast/flash_4.py#L13
+
 import os
 
 # os.environ["TRITON_INTERPRET"] = "1"

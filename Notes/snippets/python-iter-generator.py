@@ -1,3 +1,28 @@
+class Fibs:
+    def __init__(self, n=20):
+        self.a = 0
+        self.b = 1
+        self.n = n
+    def __iter__(self):
+        return self
+    def __next__(self):
+        self.a, self.b = self.b, self.a + self.b
+        if self.a > self.n:
+            raise StopIteration
+        return self.a
+
+fibs = Fibs()
+for each in fibs:
+    print(each)
+
+# 输出 
+# 1 1 2 3 5 8 13
+
+Python 中， next() 内置函数调⽤的是对象的 next() ⽅法，iter() 内置函数调⽤的是对象的 iter() ⽅法
+
+- 每次调用iter()，返回的是一个新的迭代器！
+
+
 
 def named_parameters(
         self, prefix: str = "", recurse: bool = True, remove_duplicate: bool = True

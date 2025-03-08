@@ -5,6 +5,8 @@ https://triton-lang.org/main/getting-started/tutorials/02-fused-softmax.html
 
 https://www.youtube.com/watch?v=DdTsX6DQk24
 
+支持AMD
+
 ### tutorials
 
 

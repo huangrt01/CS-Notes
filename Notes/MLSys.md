@@ -490,8 +490,33 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
     * 代码：config.force_fuse_int_mm_with_mul
   * 问题2: 量化精度损失
     * 解法：per-token、per-channel
-* Side Note:
-  * Weight Only Quantization中，Dequantize是可选的，可以int4直接和float的fractional part相乘
+* INT8 Weight Only Quantization
+  * 矩阵计算，fp32和bf16皆可，fp16容易overflow; accumulation也可考虑bf16
+  * ![image-20250306022930749](./MLSys/image-20250306022930749.png)
+  * 问题：一开始比cublas慢一半
+    * 分析1: 额外做了cast、rescale
+    * 分析2: The Blocksize is limited to be >= 16, meaning The grid for this launch is configured to execute only 64 blocks, which is less than the GPU's 108 multiprocessors. This can underutilize some multiprocessors. If you do not intend to execute this kernel
+      * 解法：config.coordinate_descent_tuning优化
+      * ![image-20250306031254122](./MLSys/image-20250306031254122.png)
+    * ![image-20250306031735121](./MLSys/image-20250306031735121.png)
+  * Side Note:
+    * Weight Only Quantization中，Dequantize是可选的，可以int4直接和float的fractional part相乘
+
+* **Int4 Weight Only Quantization**
+
+  * ![image-20250306215423050](./MLSys/image-20250306215423050.png)
+  * 问题：no torch dtype
+    * 解法：用uint8=int4*2存两个int4
+  * 问题：如何unpack/pack
+    * 解法：右下角的排布，unpack一列只需要load一列
+    * ![image-20250306215741041](./MLSys/image-20250306215741041.png)
+
+  * 问题：性能差
+    * 解法：int4 groupwise quant
+    * ![image-20250307025857799](./MLSys/image-20250307025857799.png)
+
+* GPT-Q
+  * ![image-20250307033049737](./MLSys/image-20250307033049737.png)
 
 
 
@@ -501,11 +526,8 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 
 * 神经网络：多函数的嵌套表示
   * 越来越不规则
-
-* Serving 量化
-
-  * 用于存储的模型量化：
-    * 传统问题局限性：求解量化误差最小，不面向loss函数，面向策略，不可解
+* 用于存储的模型量化：Serving 量化
+  * 传统问题局限性：求解量化误差最小，不面向loss函数，面向策略，不可解
 
 
   * 用于计算的模型量化
@@ -651,6 +673,33 @@ void gemmPacked(
   * 模型算力利用率是指 模型一次前反向计算消耗的矩阵算力 与机器算力的比值
   * 硬件算力利用率是指 考虑重计算后，模型一次前反向计算消耗的矩阵算力 与机器算力的比值
 
+### 并行训练
+
+#### DP
+
+> PyTorch DP
+>
+> https://zhuanlan.zhihu.com/p/343951042
+
+![image-20250308203837702](./MLSys/image-20250308203837702.png)
+
+- 原理：
+  - 和PS非常接近
+- 过程
+  - 过程一（图中红色部分）：各卡分别计算损失和梯度
+  - 过程二（图中蓝色部分）：所有梯度整合到 device[0]
+  - 过程三（图中绿色部分）：device[0] 进行参数更新，其他卡拉取 device[0] 的参数进行更新
+
+![image-20250308204304450](./MLSys/image-20250308204304450.png)
+
+
+
+#### DDP
+
+#### FSDP
+
+#### TP & PP
+
 ### Parameter Server
 
 #### Intro
@@ -733,7 +782,7 @@ PS架构的优势主要还是高可用(system efficiency)
 
 ### PyTorch
 
-
+参考「pytorch.md」
 
 ### Go+Torch
 

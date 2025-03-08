@@ -1,4 +1,3 @@
-
 ### PyTorch Profiling
 
 # 1
@@ -88,6 +87,11 @@ with torch.profiler.profile(
             p.step()
 
 --> void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::pow_tensor_scalar_kernel_impl<float, float>(at::TensorIteratorBase&, float)::{lambda(float)#1}, 
+
+
+### Holistic Trace Analysis
+
+https://pytorch.org/tutorials/beginner/hta_intro_tutorial.html
 
 
 ### load_inline

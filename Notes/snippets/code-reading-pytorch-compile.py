@@ -1,4 +1,4 @@
 
-### dynamic quantization
+### mm.py
 
-config.force_fuse_int_mm_with_mul -> 对int8 matmul和pointwise scale操作进行fusion
+部分参考 「code-reading-pytorch-quantization.py」
