@@ -2,14 +2,22 @@
 
 ### MLSys
 
-#### PyTorch
+
+
+#### 框架
 
 https://github.com/pytorch/pytorch
+
+#### 通信库
+
+https://github.com/baidu-research/baidu-allreduce
 
 
 ### GPU
 
-#### GPU-Mode
+#### Intro
+
+GPU-Mode
 
 https://github.com/gpu-mode/lectures.git
 

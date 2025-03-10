@@ -1,3 +1,6 @@
+dev论坛：https://dev-discuss.pytorch.org/
+torchscript：https://pytorch.org/docs/stable/jit.html
+
 ### Installation
 
 pip3 install torch torchvision torchaudio
@@ -8,6 +11,47 @@ https://download.pytorch.org/whl/torch_stable.html
 https://download.pytorch.org/whl/cu118/
 https://download.pytorch.org/whl/cu121/
 
+### Intro
+
+class LinearLayer(Module):
+  def __init__(self, in_sz, out_sz):
+    super().__init__()
+    t1 = torch.randn(in_sz, out_sz)
+    self.w = nn.Parameter(t1)
+    t2 = torch.randn(out_sz)
+    self.b = nn.Parameter(t2)
+  def forward(self, activations):
+    t = torch.mm(activations, self.w)
+    return t + self.b
+  
+class FullBasicModel(nn.Module):
+  def __init__(self):
+    super().__init__()
+    self.conv = nn.Conv2d(1, 128, 3)
+    self.fc = LinearLayer(128, 10)
+  def forward(self, x):
+    t1 = self.conv(x)
+    t2 = nn.functional.relu(t1)
+    t3 = self.fc(t1)
+    return nn.functional.softmax(t3)
+
+
+discriminator = create_discriminator()
+generator = create_generator()
+optimD = optim.Adam(discriminator.parameters())
+optimG = optim.Adam(generator.parameters())
+def step(real_sample):
+    # (1) Update Discriminator
+    errD_real = loss(discriminator(real_sample), real_label)
+    errD_real.backward()
+    fake = generator(get_noise())
+    errD_fake = loss(discriminator(fake.detach(), fake_label)
+    errD_fake.backward()
+    optimD.step()
+    # (2) Update Generator
+    errG = loss(discriminator(fake), real_label)
+    errG.backward()
+    optimG.step()
 
 ### tensor
 
@@ -82,7 +126,9 @@ output = torch.tensor(output)
 print(output)
 
 
-# to numpy
+# to numpy/DLPack
+
+零成本开销！
 
 x = np.ones(3)
 y = torch.tensor(x)
@@ -92,6 +138,7 @@ x = torch.ones(3)
 y = x.detach().numpy() # gpu->cpu->numpy
 
 y = x.numpy()
+
 
 
 ### tensor operation

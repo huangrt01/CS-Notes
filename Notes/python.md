@@ -70,6 +70,20 @@ python --version
 
 https://onecompiler.com/
 
+#### GIL
+
+https://zhuanlan.zhihu.com/p/20953544
+
+https://opensource.com/article/17/4/grok-gil
+
+https://wiki.python.org/moin/GlobalInterpreterLock
+
+主要是cpu密集型效率低
+
+在python3.x中，GIL不使用ticks计数，改为使用计时器（执行时间达到阈值后，当前线程释放GIL），这样对CPU密集型程序更加友好，**但依然没有解决GIL导致的同一时间只能执行一个线程的问题，所以效率依然不尽如人意。**
+
+
+
 #### 基础数据
 
 * int类型的大小是无限的

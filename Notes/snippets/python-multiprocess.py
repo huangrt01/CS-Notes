@@ -1,3 +1,9 @@
+### GIL
+
+https://opensource.com/article/17/4/grok-gil
+
+### consumer-producer
+
 - 基础实现：https://stackoverflow.com/questions/67363793/correct-way-to-implement-producer-consumer-pattern-in-python-multiprocessing-pool
   - 解决logging死锁：
     - 工业版 https://blog.csdn.net/weixin_68789096/article/details/135546285

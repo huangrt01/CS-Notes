@@ -23,6 +23,27 @@ torchrun
 DDP和DP的区别：
 - Each process maintains its own optimizer and performs a complete optimization step with each iteration. While this may appear redundant, since the gradients have already been gathered together and averaged across processes and are thus the same for every process, this means that no parameter broadcast step is needed, reducing time spent transferring tensors between nodes.
 - 多进程，Python性能好
+- 通信效率: DP 的通信成本随着 GPU 数量线性增长，而 DDP 支持 Ring AllReduce，其通信成本是恒定的，与 GPU 数量无关。
+- 同步参数: DP 通过收集梯度到 device[0]，在device[0] 更新参数，然后其他设备复制 device[0] 的参数实现各个模型同步；
+  DDP 通过保证初始状态相同并且改变量也相同（指同步梯度） ，保证模型同步。
+  Ring AllReduce
+
+  baidu allreduce: https://andrew.gibiansky.com/blog/machine-learning/baidu-allreduce/
+
+### 通信库
+
+Gloo: a collective communications library.
+https://github.com/facebookincubator/gloo, 2019.
+
+NVIDIA Collective Communications Library (NCCL).
+https://developer.nvidia.com/nccl, 2019.
+
+NVLINK AND NVSWITCH: The Building Blocks of
+Advanced Multi-GPU Communication. https:
+//www.nvidia.com/en-us/data-center/nvlink/,
+2019.
+
+Open MPI: A High Performance Message Passing Library. https://www.open-mpi.org/, 2019
 
 ### DP
 
@@ -30,6 +51,55 @@ model = nn.DataParallel(model)
 
 
 ### DDP
+
+细节：优化器同一随机种子 For optimizers with intrinsic randomness, diﬀerent pro-
+cesses can initialize their states using the same random seed
+
+import torch
+import torch.distributed as dist
+import torch.multiprocessing as mp
+import torch.nn as nn
+import torch.optim as optim
+import os
+from torch.nn.parallel import DistributedDataParallel as DDP
+
+
+def example(rank, world_size):
+  # create default process group
+  dist.init_process_group("gloo", rank=rank, world_size=world_size)
+  # create local model
+  model = nn.Linear(10, 10).to(rank)
+  # construct DDP model
+  ddp_model = DDP(model, device_ids=[rank])
+  # define loss function and optimizer
+  loss_fn = nn.MSELoss()
+  optimizer = optim.SGD(ddp_model.parameters(), lr=0.001)
+
+  # forward pass
+  outputs = ddp_model(torch.randn(20, 10).to(rank))
+  labels = torch.randn(20, 10).to(rank)
+  # backward pass
+  loss_fn(outputs, labels).backward()
+  # update parameters
+  optimizer.step()
+  dist.barrier()
+  print(ddp_model.state_dict(), rank)
+
+def main():
+  world_size = 2
+  mp.spawn(example,
+           args=(world_size,),
+           nprocs=world_size,
+           join=True)
+
+if __name__=="__main__":
+  # Environment variables which need to be
+  # set when using c10d's default "env"
+  # initialization mode.
+  os.environ["MASTER_ADDR"] = "localhost"
+  os.environ["MASTER_PORT"] = "29500"
+  main()
+
 
 # 细节：DDP仅支持所有worker同一设备类型，不支持部分worker GPU、部分worker CPU
 

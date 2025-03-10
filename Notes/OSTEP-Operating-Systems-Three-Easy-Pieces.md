@@ -180,6 +180,12 @@ hugepage必须预先一次分配2M或者1GB的内存空间，并且使用mmap的
 
 
 
+### 内存优化
+
+* garbage collection
+  * 《Quantifying the performance of garbage collection vs.
+    explicit memory management.》
+
 
 
 ### Intro

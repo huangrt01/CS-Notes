@@ -1,4 +1,6 @@
+### GIL
 
+https://wiki.python.org/moin/GlobalInterpreterLock
 
 
 ### Decorator

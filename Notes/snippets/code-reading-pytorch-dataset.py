@@ -187,6 +187,9 @@ Data loader combines a dataset and a sampler, and provides an iterable over the 
 
 注意，通常不建议在多进程加载中返回CUDA张量，因为在使用CUDA和在多处理中共享CUDA张量时存在许多微妙之处
 （文档中提出：只要接收进程保留张量的副本，就需要发送进程来保留原始张量）。
+可能和“Another unique feature of this system is that it transparently handles sharing of CUDA tensors, 
+making it easy to implement techniques like Hogwild [42].” 有关
+
 建议采用 pin_memory=True ，以将数据快速传输到支持CUDA的GPU。简而言之，不建议在使用多线程的情况下返回CUDA的tensor。
 
 class DataLoader(Generic[T_co]):

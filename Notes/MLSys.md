@@ -675,6 +675,44 @@ void gemmPacked(
 
 ### 并行训练
 
+#### Literature Review
+
+* DDP (PyTorch DDP Paper)
+
+  * Jayarajan et al. [22] proposed to prioritize gradient synchronizations and **parameter updates based on the forward order** instead of the backward order
+    * 可能让下一次计算提前
+
+  * ByteScheduler https://i.cs.hku.hk/~cwu/papers/yhpeng-sosp19.pdf
+
+* sparse & dense分离
+
+  * Parallax [24] explored a hybrid structure
+    that combines parameter-server [27] and collective commu-
+    nications.
+    * Models are partitioned based on sparsity, where
+      dense parameters are communicated using AllReduce and
+      sparse tensors are placed to parameter servers. This design
+      avoids densifying sparse tensors and communicating empty
+      values, which is especially helpful for NLP models.
+
+* 模型并行
+
+  * ZeRO [32] also combines data parallelism with model parallelism, but with minimum model replication to support fast training on su-
+    per large models. The authors observed that main memory
+    consumption contributors are input data, model parame-
+    ters, gradients, optimizer states, and activations. Splitting
+    input data is trivial. However, model parameters and ac-
+    tivations are compulsory ingredients for backward passes.
+    ZeRO addressed this problem by partitioning parameters,
+    gradients, and optimizer states on each DDP instance.
+    * Parameters are broadcast from the owner DDP instance to all
+      others when necessary. Activations are recomputed during
+      the backward pass. Compared to PyTorch DDP, ZeRO can
+      scale to much larger models as each process only needs to
+      maintain a small partition of the model. The high scalabil-
+      ity is achieved by sacriﬁcing the training speed, as the ad-
+      ditional re-computation, broadcast, and gather overhead
+
 #### DP
 
 > PyTorch DP
@@ -692,9 +730,96 @@ void gemmPacked(
 
 ![image-20250308204304450](./MLSys/image-20250308204304450.png)
 
-
+![image-20250309012139694](./MLSys/image-20250309012139694.png)
 
 #### DDP
+
+##### AllReduce
+
+* The AllReduce operation expects each participating pro-
+  cess to provide an equally-sized tensor, collectively applies
+  a given arithmetic operation (**e.g., sum, prod, min, max**) to
+  input tensors from all processes, and **returns the same re-**
+  **sult tensor to each participant**
+  * AllReduce = AllGather + LocalReduce
+* Tree-based AllReduce:
+  * https://developer.nvidia.com/blog/massively-scale-deep-learning-training-nccl-2-4/
+
+* Ring AllReduce分为两个步骤：Scatter Reduce和All Gather
+  * All Reduce的通信成本为：$$T=2(N-1)\frac{K}{N}$$
+  * https://andrew.gibiansky.com/blog/machine-learning/baidu-allreduce/
+  * https://zhuanlan.zhihu.com/p/72939003
+
+![image-20250309030219921](./MLSys/image-20250309030219921.png)
+
+##### PyTorch Distributed: Experiences on Accelerating Data Parallel Training
+
+* Intro
+
+  * bucketing gradients, overlapping compu-
+    tation with communication, and skipping gradient synchro-
+    nization
+
+  * 要点：Mathematical equivalence、Non-intrusive and interceptive API、High performance
+
+* parameter averaging 技术的问题：
+
+  * 不等价，尤其when the optimizer relies on past local gradients val-
+    ues (e.g., momentum)
+  * causing conﬂicting gradient descent directions
+  * orchestrates computation (i.e., backward pass) and communication (i.e.,
+    computing average) into **non-overlapping phases**,
+
+* ![image-20250310160918593](./MLSys/image-20250310160918593.png)
+
+* **bucketing gradients**
+
+  * motivated by the observation that collective communications are more efficient on large tensors
+  * ![image-20250310155726634](./MLSys/image-20250310155726634.png)
+  * 实验insight：bucket num比较大的时候，从16 gpu scaling到32gpu，通信速度衰减少
+
+* **overlapping computation with communication**
+
+  * DDP registers one autograd hook for each gradient accumulator. The hook fires after its corresponding accumulator updating the gradients, and will inspect the bucket it pertains. If hooks of all gradients in the same buckets have fired, the last hook will trigger an asynchronous AllReduce on that bucket
+  * ![image-20250310160223744](./MLSys/image-20250310160223744.png)
+  * using the reverse order of model.parameters() as the bucketing order
+  * 解决执行subgraph部分梯度不存在的问题：
+    * DDP traverses the autograd graph from the output
+      tensors of the forward pass to ﬁnd all participating param-
+      eters.
+    * proactively marking them ready at the end of the forward pass
+
+* **skipping gradient synchronization**
+
+  * 问题：上面的algorithm would mark unused pa-
+    rameters as ready at the end of every forward pass, while
+    those unused parameters in one iteration still could partici-
+    pate in subsequent iterations.
+  * no_sync
+
+* 结论：
+
+  * near-linear scalability using 256 GPUs.
+  * communication is the dominant
+    training latency contributor, and its impact increases with
+    model sizes; 
+    * ![image-20250310220751232](./MLSys/image-20250310220751232.png)
+  * bucket sizes considerably aﬀect communica-
+    tion eﬃciency, which could lead to more than 2X speedup if
+    conﬁgured properly; 
+  * skipping synchronizations appropri-
+    ately would signiﬁcantly reduce amortized communication
+    overhead without noticeably degrading convergence speed.
+  *  round robin process groups，卡多+模型复杂，3-5 groups比较好![image-20250311015454643](./MLSys/image-20250311015454643.png)
+
+* 讨论：
+  * keep the DDP group within the same machine，单机N卡，效率最高
+  * 提升方向：
+    * Gradient Order Prediction
+    * Layer Dropping
+    * Gradient Compression
+
+
 
 #### FSDP
 
@@ -780,9 +905,73 @@ PS架构的优势主要还是高可用(system efficiency)
 
 
 
-### PyTorch
+### PyTorch: An Imperative Style, High-Performance Deep Learning Library
 
-参考「pytorch.md」
+> 参考「pytorch.md」、「snippets」
+
+* PyTorch builds on these trends by providing an **array-based programming model accelerated by GPUs**
+  **and differentiable via automatic differentiation integrated in the Python ecosystem.**
+* PyTorch foregoes the potential beneﬁts of a graph-metaprogramming based approach to preserve the imperative
+  programming model of Python
+
+```Python
+class LinearLayer(Module):
+  def __init__(self, in_sz, out_sz):
+    super().__init__()
+    t1 = torch.randn(in_sz, out_sz)
+    self.w = nn.Parameter(t1)
+    t2 = torch.randn(out_sz)
+    self.b = nn.Parameter(t2)
+  def forward(self, activations):
+    t = torch.mm(activations, self.w)
+    return t + self.b
+  
+class FullBasicModel(nn.Module):
+  def __init__(self):
+    super().__init__()
+    self.conv = nn.Conv2d(1, 128, 3)
+    self.fc = LinearLayer(128, 10)
+  def forward(self, x):
+    t1 = self.conv(x)
+    t2 = nn.functional.relu(t1)
+    t3 = self.fc(t1)
+    return nn.functional.softmax(t3)
+```
+
+* autograd
+  * PyTorch uses the operator overloading approach, which builds up a representation of the computed function every
+    time it is executed.
+  * In its current implementation [30], PyTorch performs **reverse-mode automatic differentiation**, which computes the gradient of a scalar output with respect to a multivariate input.
+    Differentiating functions with more outputs than inputs is more efﬁciently executed using forward-mode automatic differentiation, but this use case is less common for machine learning applications.
+    PyTorch can be easily extended to perform forward-mode differentiation using array-level dual
+    numbers [31, 32].
+
+* 性能优化：
+
+  * An efﬁcient C++ core
+    * Python bindings are generated using YAML meta-data ﬁles.
+    * 比如可以用torchscript单独跑 https://pytorch.org/docs/stable/jit.html
+  * Separate control and data ﬂow
+    * PyTorch is designed to execute operators asynchronously on GPU by leveraging the CUDA stream mechanism [38] to queue CUDA kernel invocations to the GPUs hardware FIFO
+  * Custom caching tensor allocator
+    * cache cuda memory
+      * rounds up allocations to multiples of 512 bytes to avoid fragmentation issues.
+    * One-pool-per-stream Design：
+      * Moreover, it maintains a distinct pool of memory for every CUDA stream (work queue).
+      * 只要新的内存分配操作与之前释放的内存区域使用在同一个流中，内存分配器就可以立即重新分配这块已经在 CPU 端释放的内存
+        * 利用CPU释放更快的特点、流的序列化执行特性
+      * limit：the allocations end up fragmented per stream
+        * 很少用多流，Data loading and distributed computing utilities are exceptions，精心实现
+  * multiprocessing：
+    * PyTorch extends the Python
+      multiprocessing module into torch.multiprocessing, which is a drop-in replacement for the
+      built in package and automatically moves the data of tensors sent to other processes to shared memory
+      instead of sending it over the communication channel.
+    * Another unique feature of this system is that it transparently handles sharing of CUDA tensors, making it easy to implement techniques like Hogwild [42].
+
+  * ref count
+    * PyTorch tracks both references internal to the libtorch library and external references made by
+      users in their Python code by integrating with Python’s own reference counting mechanism
 
 ### Go+Torch
 

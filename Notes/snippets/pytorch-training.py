@@ -102,7 +102,6 @@ model.to(torch.device("cuda"))
 tensors = torch.load("tensors.pt", map_location={"cuda:1":"cuda:0"})
 # 这样指定为了避免cuda:1异常导致加载到cuda:0失败
 
-
 ### parameter
 
 torch.nn.parameter.Parameter(data=None, requires_grad=True)

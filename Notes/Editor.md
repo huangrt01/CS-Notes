@@ -6,6 +6,10 @@
 
 * ctrl + 左右箭头：切屏
 
+#### 豆包App 快捷键
+
+* option + A: 语音输入
+
 
 
 ### Vim
@@ -324,17 +328,24 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 #### 代码辅助
 
 * 还原代码： 右键 本地历史记录
-* **Format: option + shift + F**
-  * **设置：command + Option + shift + L**
 * **显示方法签名：**
   * **command + shift + space**
 * 右键 显示汇编
 * 打开文档：command K + command I，连续点
-
 * 类型匹配补全 (custom)：
   * command + shift + 下箭头
 * 后缀补全：输入`.`，比如生成make_unique
 * 补全建议：Command I + Tab
+
+#### Format
+
+* **Format: option + shift + F**
+
+* **设置：command + Option + shift + L**
+
+![image-20250310171321679](./Editor/image-20250310171321679.png)
+
+
 
 
 
