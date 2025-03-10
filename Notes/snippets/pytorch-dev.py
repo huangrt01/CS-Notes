@@ -1,3 +1,8 @@
+### write op
+
+二次开发autograd
+* non-tensor在backward时一定返回None
+
 
 ### load_inline
 
