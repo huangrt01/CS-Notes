@@ -1,3 +1,9 @@
+### flash attn varlen
+
+https://github.com/Dao-AILab/flash-attention/blob/main/flash_attn/flash_attn_interface.py#L1375
+
+### flash attn v1/v2
+
 @triton.jit
 def flash_attention_v1_kernel(
     # 输入指针

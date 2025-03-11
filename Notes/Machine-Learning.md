@@ -376,48 +376,6 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
 
 
 
-### 大 Batch 训练
-
-分布式SGD在算法方面的挑战
-
-* throughput ~ GPU num
-  * 深度学习的大规模训练通常以线性增加的理想情况为基准，Horovod和NCCL库在保持高吞吐量方面做得很好，但是他们的性能与所使用的硬件有着千丝万缕的联系。高带宽和低延迟的要求导致了NVLink互连的开发，它是本课程所使用的服务器用来互连一个节点上的多个GPU的方法。 NVIDIA DGX-2通过NVSwitch将这种互连又推进一步，该互连结构可以300GB/s的峰值双向带宽连接多达16个GPU。
-
-* critical batch size ~ gradient noise scale (openai)
-* 对精度的影响：朴素的方法（比如不加data augmentation）会降低精度
-  * ImageNet training in minutes. CoRR
-  * [Train longer, generalize better: closing the generalization gap in large batch training of neural networks](https://arxiv.org/abs/1705.08741)
-  * [On large-batch training for deep learning: Generalization gap and sharp minima](https://arxiv.org/abs/1609.04836)
-  * [Visualizing the Loss Landscape of Neural Nets](https://arxiv.org/abs/1712.09913)
-
-* 应对策略
-
-  * 提高学习率：One weird trick for parallelizing convolutional neural networks
-  * 早期学习率热身： Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour.
-* Batch Normalization
-  * BN通过最小化每个层的输入分布中的漂移来改善学习过程
-    * 缓解了深层网络中“梯度弥散”的问题（Internal Covariate Shift）
-  * 提高学习速度并减少使用 Dropout 的需求
-  * 想法是针对每批数据对**所有层**的输入 进行规一化（这比简单地只对输入数据集进行规一化更为复杂）
-    * 为了保持模型的表达能力，引入可学习的参数，缩放因子和平移因子
-* Ghost BN
-  * 计算更小批量的统计数据（“ghost 批量”）
-    * 引入其他噪声
-  * 按 GPU 逐个单独执行批量归一化，解决同步 BN 通信开销问题
-* 将噪声添加至梯度
-  * 确保权重更新的协方差随着批量大小的变动保持不变 
-  * 不会改变权重更新的平均值 
-  * $$\hat{g}=\frac{1}{M}\sum^{N}_{n\in B}g_n z_n$$
-* 更长的高学习率训练时间
-* 增加批量大小代替学习率衰减
-* LARS – 按层自适应学习率调整
-  *  [LARS论文](https://arxiv.org/abs/1904.00962): 大LR -> LR warm-up -> LARS，只是能保证大batch训练能训，关于效果问题，作者认为“increasing the batch does not give much additional gradient information comparing to smaller batches.”
-  *  [LARC](https://github.com/NVIDIA/apex/blob/master/apex/parallel/LARC.py): 带梯度裁剪的分层自适应学习率，以具有动力的SGD作为基础优化器
-  *  [LAMB](https://arxiv.org/abs/1904.00962): 分层自适应学习率，以 Adam 作为基础优化器，在BERT等语言模型上比LARC更成功
-  *  [NovoGrad](https://arxiv.org/abs/1905.11286): 按层计算的移动平均值，在几个不同的领域也有不错的表现
-
-![training_result](Machine-Learning/training_result.png)
-
 ### 训练采样
 
 * Intro

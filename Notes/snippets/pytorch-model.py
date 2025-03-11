@@ -1,4 +1,21 @@
-# Rank Model
+### 写Module
+
+class MyModule(Module):
+    def __repr__(self):
+        s = self.__class__.__name__
+        s += f'(in_channels={self.in_channels},\n'
+        s += f'out_channels={self.out_channels},\n'
+        s += f'kernel_size={self.kernel_size},\n'
+        s += f'stride={self.stride},\n'
+        s += f'padding={self.padding},\n'
+        s += f'dilation={self.dilation},\n'
+        s += f'groups={self.groups},\n'
+        s += f'deform_groups={self.deform_groups},\n'
+        # bias is not supported in DeformConv2d.
+        s += 'bias=False)'
+        return s
+
+### Rank Model
 https://github.com/allegro/allRank/tree/master
 
 

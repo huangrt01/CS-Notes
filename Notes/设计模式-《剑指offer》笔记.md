@@ -1,4 +1,22 @@
+[toc]
+
 ### 设计模式
+
+#### High-Level Thoughts
+
+* [The Rise of Worse is Better by Richard P. Gabriel](https://dreamsongs.com/RiseOfWorseIsBetter.html)
+  * MIT/Stanford style of design
+    * Correctness = Consistency = Completeness > Simplicity
+  * The worse-is-better philosophy
+    * Simplicity > Correctness > Completeness > Consistency
+      * It is more important for the implementation to be simple than the interface
+  * e.g. 讨论 OS 中 PC loser-ing problem 的解决
+    * The PC loser-ing problem occurs when a user program invokes a system routine to perform a lengthy operation that might have significant state, such as IO buffers. If an interrupt occurs during the operation, the state of the user program must be saved. Because the invocation of the system routine is usually a single instruction, the PC of the user program does not adequately capture the state of the process. The system routine must either back out or press forward. The right thing is to back out and restore the user program PC to the instruction that invoked the system routine so that resumption of the user program after the interrupt, for example, re-enters the system routine. It is called *PC loser-ing* because the PC is being coerced into *loser mode*, where *loser* is the affectionate name for *user* at MIT.
+    * unix的方案：抛出错误码，用户重试
+      * implementation simplicity was more important than interface simplicity.
+  * C is a programming language designed for writing Unix, and it was designed using the New Jersey approach. C is therefore a language for which it is easy to write a decent compiler, and it requires the programmer to write text that is easy for the compiler to interpret. Some have called C a fancy assembly language
+    * A further benefit of the worse-is-better philosophy is that the programmer is conditioned to **sacrifice some safety, convenience, and hassle to get good performance and modest resource use**. Programs written using the New Jersey approach will work well both in small machines and large ones, and the code will be portable because it is written on top of a virus.
+  * The lesson to be learned from this is that it is often undesirable to go for the right thing first. It is better to get half of the right thing available so that it spreads like a virus. 
 
 #### refactoring.guru
 

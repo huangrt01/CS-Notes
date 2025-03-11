@@ -7,6 +7,28 @@ TODO： https://pytorch.org/tutorials/advanced/cpp_extension.html
 如果我们只是用[]/(), 索引，他们都是操作符重载，内部考虑了shape, stride, order, offset等，不会出错。在很多情况下可以节省大量内存
 但是我们拿指针出来操作数据的所有情况，都要保证是contiguous的， 否则可能出错。
 
+### jagged/padding
+
+
+def generate_row_splits_from_row_lengths(
+    row_lengths: torch.Tensor) -> torch.Tensor:
+  row_splits = torch.cat([
+      torch.tensor([0], dtype=torch.int32, device=row_lengths.device),
+      torch.cumsum(row_lengths, dim=0, dtype=torch.int32)
+  ])
+  return row_splits
+
+
+q = torch.ops.fbgemm.jagged_to_padded_dense(values=q_varlen,
+                                          offsets=[row_splits],
+                                          max_lengths=[max_length],
+                                          padding_value=0)
+
+### rearrange
+
+from einops import rearrange
+
+q = rearrange(q, 'b t (h d) -> b t h d', h=nheads)
 
 ### Example
 

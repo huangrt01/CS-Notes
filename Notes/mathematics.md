@@ -564,6 +564,12 @@ https://arxiv.org/pdf/2206.13446
 
 * $$E_U^T E_U=\left(U_1,U_2,U_3, ... U_u\right)\left(\begin{array}{c}{U_1}^T\\{U_2}^T\\{U_3}^T\\...\\{U_u}^T\end{array}\right) = \sum_{i=1}^uU_i{U_i}^T$$
 
+### matrix vector derivatives for machine learning
+
+> matrix vector derivatives for machine learning.pdf
+
+
+
 ## SVD、矩阵分解
 
 ### Application
