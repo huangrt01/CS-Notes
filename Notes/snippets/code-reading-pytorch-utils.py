@@ -1,3 +1,50 @@
+### c++
+
+#include <torch/torch.h>
+
+for (auto i : c10::irange(variable_count)) {
+    std::cout << "当前索引: " << i << std::endl;
+}
+
+
+### find tensor
+
+def _find_tensors(obj):
+    r"""Recursively find all tensors contained in the specified object."""
+    if RPC_AVAILABLE and isinstance(obj, RRef):
+        # If the current node is the owner of the RRef, unwrap it and try to
+        # find Tensors.
+        # TODO: Expand to remote RRefs.
+        if obj.is_owner():
+            return _find_tensors(obj.local_value())
+    if isinstance(obj, torch.Tensor):
+        return [obj]
+    if isinstance(obj, (list, tuple)):
+        return itertools.chain.from_iterable(map(_find_tensors, obj))
+    if isinstance(obj, dict):
+        return itertools.chain.from_iterable(map(_find_tensors, obj.values()))
+    if is_dataclass(obj):
+        return itertools.chain.from_iterable(
+            map(_find_tensors, (getattr(obj, f.name) for f in fields(obj)))
+        )
+
+    return []
+
+### model
+
+# replicate module's state to devices
+state_dict = model.state_dict(keep_vars=True)
+state_dicts = [state_dict]
+for device in devices[1:]:
+    new_state_dict = torch.utils._pytree.tree_map(lambda x: x.clone().to(device), state_dict)
+    state_dicts.append(new_state_dict)
+
+# call forward in devices separately
+ys = []
+for t, state_dict in zip(xs, state_dicts):
+    output = torch.func.functional_call(model, state_dict, t)
+    ys.append(output)
+
 ### hooks
 
 class RemovableHandle:

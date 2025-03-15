@@ -1,3 +1,8 @@
+### 查找大文件
+
+sudo find / \( -path /root/newrec -prune \) -o \( -type f -size +100M -exec ls -lh {} \; \) | awk '{ print $9 ": " $5 }'
+
+
 ### 文件传输
 
 xxd -p myfile > tmp

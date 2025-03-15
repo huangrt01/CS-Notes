@@ -7,10 +7,49 @@ _fire_reducer_autograd_hook
 DP&DDP源码解析 https://zhuanlan.zhihu.com/p/343951042
 
 
+
+
 原理也参考「MLSys.md - 并行训练」
 
 
 ### DP
+
+DP原理解析 https://zhuanlan.zhihu.com/p/675217571
+
+只有前向传播在K卡之间并行，损失函数计算（loss_f）以及反向传播的启动(.backward())、优化器更新都只进行了一次，都不需要更改。
+
+def simulate_dp(model, x, K, cpu=False):
+    """
+    model: nn.Module to use
+    x: input tensor
+    K: number of devices
+    cpu: whether to use cpu devices
+    """
+    if cpu:
+        devices = [torch.device("cpu") for i in range(K)] # simulate data parallel in cpu
+    else:
+        devices = [torch.device(f"cuda:{i}") for i in range(K)]
+
+    # split the input and scatter to devices
+    xs = torch.chunk(x, K)
+    xs = [t.to(d) for t, d in zip(xs, devices)]
+    
+    # replicate module's state to devices
+    state_dict = model.state_dict(keep_vars=True)
+    state_dicts = [state_dict]
+    for device in devices[1:]:
+        new_state_dict = torch.utils._pytree.tree_map(lambda x: x.clone().to(device), state_dict)
+        state_dicts.append(new_state_dict)
+    
+    # call forward in devices separately
+    ys = []
+    for t, state_dict in zip(xs, state_dicts):
+        output = torch.func.functional_call(model, state_dict, t)
+        ys.append(output)
+    
+    # gather outputs to one device and concat
+    y = torch.cat([each.to(devices[0]) for each in ys])
+    return y
 
 nn/parallel/data_parallel.py
 
@@ -393,15 +432,15 @@ The mapping from parameter gradients to buckets is determined at the constructio
 
 Forward Pass:
 
-解决执行subgraph部分梯度不存在的问题：proactively marking them ready at the end of the forward pass
-
-获知梯度存在信息：
+解决执行subgraph部分梯度不存在的问题
+proactively marking them ready at the end of the forward pass, 获知梯度存在信息
 find_unused_parameters： During the backward pass, the Reducer would only wait for unready parameters, but it would still reduce all buckets.
 - when the optimizer uses gradient absence information to skip updating momentum values.
-- 坏处是遍历autograd graph有开销
-- DDP uses a bitmap to keep track of local param-
-eter participants and launches one additional AllReduce to
+- DDP uses a bitmap to keep track of local parameter participants and launches one additional AllReduce to
 collect globally unused parameters.
+训练时有可能某次迭代只用到整个模型的一个 subgraph， 并且这个 subgraph 迭代时可能会改变，
+就是说某些参数可能会在训练时被跳过。但因为所有parameters 在一开始就被分好桶了，而我们的 hook 又规定了只有整个桶 ready 了（pending==0）才会通信，
+如果我们不将 unused parameter 标记为 ready，整个过程会没法进行。
 
 
 
@@ -416,6 +455,10 @@ From the optimizer’s perspective, it is optimizing a local model.
 Model replicas on all DDP processes can keep in sync because they all start from the same state
 and they have the same averaged gradients in every iteration.
 - optimizer开销大吗？比完整参数传输开销小
+
+# find_unused_parameters小实验
+
+参考「pytorch-distributed-example.py」
 
 
 # Gradient Accumulation
@@ -444,6 +487,9 @@ should tune this knob to optimize training speed,
 
 find_unused_parameters: to toggle whether DDP should detect unused parameters by traversing the autograd graph.
 
+gradient_as_bucket_view: 优化显存
+delay_all_reduce_named_params
+
 2.Model Device Aﬃnity
 treats the multi-device model as one entirety
 
@@ -465,19 +511,329 @@ then broadcast buﬀers prior to the subsequent forward pass
 
 # 代码
 
-def forward
+class DistributedDataParallel(Module):       
+    def __init__(self, module, device_ids=None,
+                 output_device=None, dim=0, broadcast_buffers=True,
+                 process_group=None,  
+                 bucket_cap_mb=25,       
+                 find_unused_parameters=False,       
+                 check_reduction=False,      
+                 gradient_as_bucket_view=False):
+
+        super(DistributedDataParallel, self).__init__()
+
+        assert any((p.requires_grad for p in module.parameters())), (
+            "DistributedDataParallel is not needed when a module "
+            "doesn't have any parameter that requires a gradient."
+        )
+
+        self.is_multi_device_module = len({p.device for p in module.parameters()}) > 1
+        distinct_device_types = {p.device.type for p in module.parameters()}
+        assert len(distinct_device_types) == 1, (
+            "DistributedDataParallel's input module must be on "
+            "the same type of devices, but input module parameters locate in {}."
+        ).format(distinct_device_types)
+        self.device_type = list(distinct_device_types)[0]
+
+        if self.device_type == "cpu" or self.is_multi_device_module:
+            assert not device_ids and not output_device, (
+                "DistributedDataParallel device_ids and output_device arguments "
+                "only work with single-device GPU modules, but got "
+                "device_ids {}, output_device {}, and module parameters {}."
+            ).format(device_ids, output_device, {p.device for p in module.parameters()})
+
+            self.device_ids = None
+            self.output_device = None
+        else:
+            # Use all devices by default for single-device GPU modules
+            if device_ids is None:
+                device_ids = _get_all_device_indices()
+
+            self.device_ids = list(map(lambda x: _get_device_index(x, True), device_ids))
+
+            if output_device is None:
+                output_device = device_ids[0]
+
+            self.output_device = _get_device_index(output_device, True)
+
+        if process_group is None:
+            self.process_group = _get_default_group()
+        else:
+            self.process_group = process_group
+
+        self.dim = dim
+        self.module = module
+        self.device = list(self.module.parameters())[0].device
+        self.broadcast_buffers = broadcast_buffers
+        self.find_unused_parameters = find_unused_parameters
+        self.require_backward_grad_sync = True
+        self.require_forward_param_sync = True
+        self.ddp_join_enabled = False
+        self.gradient_as_bucket_view = gradient_as_bucket_view
+
+        if check_reduction:
+            # This argument is no longer used since the reducer
+            # will ensure reduction completes even if some parameters
+            # do not receive gradients.
+            warnings.warn(
+                "The `check_reduction` argument in `DistributedDataParallel` "
+                "module is deprecated. Please avoid using it."
+            )
+            pass
+
+        # used for intra-node param sync and inter-node sync as well
+        self.broadcast_bucket_size = int(250 * 1024 * 1024)
+
+        #
+        # reduction bucket size
+        self.bucket_bytes_cap = int(bucket_cap_mb * 1024 * 1024)
+
+        # 保证初始状态一样
+        # All collectives during initialization are gated by this flag.
+        if init_sync:
+            # Verify model equivalence.
+            _verify_param_shape_across_processes(self.process_group, parameters)
+            # Sync params and buffers. Ensures all DDP models start off at the same value.
+            _sync_module_states(
+                module=self.module,
+                process_group=self.process_group,
+                broadcast_bucket_size=self.broadcast_bucket_size,
+                src=0,
+                params_and_buffers_to_ignore=self.parameters_to_ignore,
+                broadcast_buffers=self.broadcast_buffers,
+            )
+
+        # 下拉看源码
+        self._ddp_init_helper()
 
 
-intra-process parameter synchronization when one DDP process works on multiple devices,
-and it also broadcasts model buffers from the process with rank 0 to all other processes
-def _sync_param
+    def _ddp_init_helper(self):
+        """
+        Initialization helper function that does the following:
+
+        (1) replicating the module from device[0] to the other devices （前文提到 DDP 也支持一个进程多线程利用多卡，类似 DP ，这时候就会用到第一步）
+        (2) bucketing the parameters for reductions （把 parameter 分组，梯度通讯时，先得到梯度的会通讯）
+        (3) resetting the bucketing states
+        (4) registering the grad hooks （创建管理器）
+        (5) passing a handle of DDP to SyncBatchNorm Layer （为 SyncBN 准备）
+        """
+
+        def parameters(m, recurse=True):
+            def model_parameters(m):
+                ps = m._former_parameters.values() \
+                    if hasattr(m, "_former_parameters") \
+                    else m.parameters(recurse=False)
+                for p in ps:
+                    yield p
+
+            for m in m.modules() if recurse else [m]:
+                for p in model_parameters(m):
+                    yield p
+
+        if self.device_ids and len(self.device_ids) > 1:
+
+            warnings.warn(
+                "Single-Process Multi-GPU is not the recommended mode for "
+                "DDP. In this mode, each DDP instance operates on multiple "
+                "devices and creates multiple module replicas within one "
+                "process. The overhead of scatter/gather and GIL contention "
+                "in every forward pass can slow down training. "
+                "Please consider using one DDP instance per device or per "
+                "module replica by explicitly setting device_ids or "
+                "CUDA_VISIBLE_DEVICES. "
+            )
+
+            # only create replicas for single-device CUDA modules
+            #
+            # TODO: we don't need to replicate params in here. they're always going to
+            # be broadcasted using larger blocks in broadcast_coalesced, so it might be
+            # better to not pollute the caches with these small blocks
+            self._module_copies = replicate(self.module, self.device_ids, detach=True)
+            self._module_copies[0] = self.module
+
+            for module_copy in self._module_copies[1:]:
+                for param, copy_param in zip(self.module.parameters(), parameters(module_copy)):
+                    # Reducer requires param copies have the same strides across replicas.
+                    # Fixes up copy_param strides in case replicate didn't match param strides.
+                    if param.layout is torch.strided and param.stride() != copy_param.stride():
+                        with torch.no_grad():
+                            copy_param.set_(copy_param.clone()
+                                                      .as_strided(param.size(), param.stride())
+                                                      .copy_(copy_param))
+                    copy_param.requires_grad = param.requires_grad
+
+        else:
+            self._module_copies = [self.module]
+
+        self.modules_params = [list(parameters(m)) for m in self._module_copies]
+        self.modules_buffers = [list(m.buffers()) for m in self._module_copies]
+
+        # Build tuple of (module, parameter) for all parameters that require grads.
+        modules_and_parameters = [
+            [
+                (module, parameter)
+                for module in replica.modules()
+                for parameter in filter(
+                    lambda parameter: parameter.requires_grad,
+                    parameters(module, recurse=False))
+            ] for replica in self._module_copies]
+
+        # Build list of parameters.
+        parameters = [
+            list(parameter for _, parameter in replica)
+            for replica in modules_and_parameters]
+
+        # Checks if a module will produce a sparse gradient.
+        def produces_sparse_gradient(module):
+            if isinstance(module, torch.nn.Embedding):
+                return module.sparse
+            if isinstance(module, torch.nn.EmbeddingBag):
+                return module.sparse
+            return False
+
+        # Build list of booleans indicating whether or not to expect sparse
+        # gradients for the corresponding parameters.
+        expect_sparse_gradient = [
+            list(produces_sparse_gradient(module) for module, _ in replica)
+            for replica in modules_and_parameters]
+
+        # The bucket size limit is specified in the constructor.
+        # Additionally, we allow for a single small bucket for parameters
+        # that are defined first, such that their gradients don't spill into
+        # a much larger bucket, adding unnecessary latency after gradient
+        # computation finishes. Experiments showed 1MB is a reasonable value.
+        bucket_indices = dist._compute_bucket_assignment_by_size(
+            parameters[0],
+            [dist._DEFAULT_FIRST_BUCKET_BYTES, self.bucket_bytes_cap],
+            expect_sparse_gradient[0])
+
+        # Note: reverse list of buckets because we want to approximate the
+        # order in which their gradients are produced, and assume they
+        # are used in the forward pass in the order they are defined.
+        # 管理器
+        self.reducer = dist.Reducer(
+            parameters,
+            list(reversed(bucket_indices)),
+            self.process_group,
+            expect_sparse_gradient,
+            self.bucket_bytes_cap,
+            self.find_unused_parameters,
+            self.gradient_as_bucket_view)
+
+        # passing a handle to torch.nn.SyncBatchNorm layer
+        self._passing_sync_batchnorm_handle(self._module_copies)
+
+        if self.mixed_precision is not None:
+            ...
+
+    def _pre_forward
+        # Calling _rebuild_buckets before forward computation,
+        # It may allocate new buckets before deallocating old buckets
+        # inside _rebuild_buckets. To save peak memory usage,
+        # call _rebuild_buckets before the peak memory usage increases
+        # during forward computation.
+        # This should be called only once during whole training period.
+        if torch.is_grad_enabled() and self.reducer._rebuild_buckets():
+            logger.info("Reducer buckets have been rebuilt in this iteration.")
+            self._has_rebuilt_buckets = True
+
+        # sync params according to location (before/after forward) user
+        # specified as part of hook, if hook was specified.
+        if self._check_sync_bufs_pre_fwd():
+            self._sync_buffers()
 
 
-the inter-process parameter synchronization happens in Reducer.cpp.
+    def forward(self, *inputs, **kwargs):
+        with torch.autograd.profiler.record_function("DistributedDataParallel.forward"):
+            inputs, kwargs = self._pre_forward(*inputs, **kwargs)
+            output = (
+                self.module.forward(*inputs, **kwargs)
+                if self._delay_all_reduce_all_params
+                else self._run_ddp_forward(*inputs, **kwargs)
+            )
+            return self._post_forward(output)
+
+        intra-process parameter synchronization when one DDP process works on multiple devices,
+        and it also broadcasts model buffers from the process with rank 0 to all other processes
+
+    def _post_forward(self, output):
+        ...
+        if self._delay_all_reduce_all_params:
+            self._clear_grad_buffer()
+            return output
+
+        # sync params according to location (before/after forward) user
+        # specified as part of hook, if hook was specified.
+        if self._check_sync_bufs_post_fwd():
+            self._sync_buffers()
+
+        if torch.is_grad_enabled() and self.require_backward_grad_sync:
+            self.require_forward_param_sync = True
+            # We'll return the output object verbatim since it is a freeform
+            # object. We need to find any tensors in this object, though,
+            # because we need to figure out which parameters were used during
+            # this forward pass, to ensure we short circuit reduction for any
+            # unused parameters. Only if `find_unused_parameters` is set.
+            # 当DDP参数 find_unused_parameter 为 true 时，其会在 forward 结束时，启动一个回溯，
+            # 标记出所有没被用到的 parameter，提前把这些设定为 ready，这样 backward 就可以在一个 subgraph 进行，但这样会牺牲一部分时间。
+            if self.find_unused_parameters and not self.static_graph:
+                # Do not need to populate this for static graph.
+                self.reducer.prepare_for_backward(list(_find_tensors(output)))
+            else:
+                self.reducer.prepare_for_backward([])
+        else:
+            self.require_forward_param_sync = False
+
+        # TODO: DDPSink is currently enabled for unused parameter detection and
+        # static graph training for first iteration.
+        if (self.find_unused_parameters and not self.static_graph) or (
+            self.static_graph and not self._static_graph_delay_allreduce_enqueued
+        ):
+            (
+                output_tensor_list,
+                treespec,
+                output_is_rref,
+            ) = _tree_flatten_with_rref(output)
+            output_placeholders: list[Optional[torch.Tensor]] = [
+                None for _ in range(len(output_tensor_list))
+            ]
+            # Do not touch tensors that have no grad_fn, which can cause issues
+            # such as https://github.com/pytorch/pytorch/issues/60733
+            for i, output in enumerate(output_tensor_list):
+                if torch.is_tensor(output) and output.grad_fn is None:
+                    output_placeholders[i] = output
+
+            # When find_unused_parameters=True, makes tensors which require grad
+            # run through the DDPSink backward pass. When not all outputs are
+            # used in loss, this makes those corresponding tensors receive
+            # undefined gradient which the reducer then handles to ensure
+            # param.grad field is not touched and we don't error out.
+            passthrough_tensor_list = _DDPSink.apply(
+                weakref.ref(self),
+                *output_tensor_list,
+            )
+            for i in range(len(output_placeholders)):
+                if output_placeholders[i] is None:
+                    output_placeholders[i] = passthrough_tensor_list[i]
+
+            # Reconstruct output data structure.
+            output = _tree_unflatten_with_rref(
+                output_placeholders, treespec, output_is_rref
+            )
+
+        # At the end of the forward pass, reset the grad buffer and grad views
+        self._clear_grad_buffer()
+        return output
+
+    def _sync_module_states
+        the inter-process parameter synchronization happens in Reducer.cpp.
 
 
 
 ### reducer.h, comm.h
+
+调用  torch.distributed.init_process_group
+--> 生成c10d ProcessGroup实例
 
 # comm.h
 
@@ -511,6 +867,252 @@ DDP marks a bucket as ready when that count reaches zero.
 -- 存在CPU上
 -- DDP maintains another bitmap on the same device as the ﬁrst model parameter,
   and invokes a non-blocking copy to move the CPU bitmap to the device bitmap for collective communications.
+
+
+注册autograd hook
+
+// All variables are expected to have their `grad_fn` set to the gradient
+  // accumulation function (since they are leafs in the autograd graph).
+  // We store pointers to these functions such that we can check if they are
+  // used in an autograd pass. If they are not, we know their grad tensors
+  // can be marked as ready for reduction.
+  {
+    const auto variable_count = params_.size();
+    grad_accumulators_.resize(variable_count);
+    for (const auto variable_index : c10::irange(variable_count)) {
+      auto& variable = params_[variable_index];
+
+      // The gradient accumulator function is lazily initialized once.
+      // Therefore we can use its presence in the autograd graph as
+      // evidence that the parameter has participated in an iteration.
+      auto grad_accumulator = torch::autograd::impl::grad_accumulator(variable);
+
+      using torch::distributed::autograd::ThreadLocalDistAutogradContext;
+      // Hook to execute after the gradient accumulator has executed.
+
+     // grad_accumulator 执行完后，autograd_hook 就会运行
+      hooks_.emplace_back(
+          grad_accumulator->add_post_hook(std::make_unique<
+                                          torch::autograd::utils::
+                                              LambdaPostHook>(
+              [this, variable_index](
+                  const torch::autograd::variable_list& outputs,
+                  const torch::autograd::variable_list& /* unused */) {
+                this->rpc_context_.set(
+                    ThreadLocalDistAutogradContext::getContextPtr());
+                this->autograd_hook(variable_index);
+                return outputs;
+              },
+              [=](torch::autograd::CompiledNodeArgs& args) {
+                TORCH_INTERNAL_ASSERT(
+                    "Compiled autograd is not compatible with C++ DDP Reducer, please use torch._dynamo.config.optimize_ddp=\"python_reducer\".");
+              })),
+          grad_accumulator);
+
+      // Map raw function pointer to parameter index.
+      // This is used later on when the autograd graph is traversed
+      // to check for parameters for which no gradient is computed, if
+      // find_unused_parameters=True.
+      // Note that the mapping of gradient accumulator to variable should be
+      // one to one as we deduplicate shared parameters before constructing
+      // Reducer.
+      if (find_unused_parameters_) {
+        gradAccToVariableMap_[grad_accumulator.get()] = variable_index;
+      }
+
+      numGradHooksTriggeredMap_[variable_index] = 0;
+
+      // The gradient accumulator is stored as weak_ptr in the autograd
+      // metadata of the variable, so we have to keep it alive here for
+      // the raw pointer to be valid.
+      REDUCER_CHECK(
+          grad_accumulators_[variable_index] == nullptr,
+          logger_,
+          c10::str(
+              "Reducer tried to register duplicate grad accumulator for variable ",
+              variable_index));
+
+      grad_accumulators_[variable_index] = std::move(grad_accumulator);
+    }
+
+    std::unordered_map<torch::autograd::Node*, VariableIndex> func_;
+    // func_ 存了grad_accumulator & index 的对应，方便我们之后在 autograd graph 寻找 unused parameters
+
+    std::vector<std::vector<std::shared_ptr<torch::autograd::Node>>> grad_accumulators_;
+    //  grad_accumulators_ 对应的 index 存了相应的 grad_accumulator
+
+    std::vector<std::pair<uintptr_t, std::shared_ptr<torch::autograd::Node>>> hooks_;
+
+
+void Reducer::autograd_hook(VariableIndex index) {
+     std::lock_guard lock(this->mutex_);
+     if (find_unused_parameters_) {
+       // 在 no_sync 时，只要参数被用过一次，就会被标记为用过
+       // Since it gets here, this param has been used for this iteration. We want
+       // to mark it in local_used_maps_. During no_sync session, the same var can
+       // be set multiple times, which is OK as does not affect correctness. As
+       // long as it is used once during no_sync session, it is marked as used.
+       local_used_maps_[index.replica_index][index.variable_index] = 1;
+     }
+
+    // Ignore if we don't expect to be called.
+    // This may be the case if the user wants to accumulate gradients
+    // for number of iterations before reducing them.
+    if (!expect_autograd_hooks_) {
+      return;
+    }
+
+    // Rebuild bucket only if 1) it is the first time to rebuild bucket 2)
+    // find_unused_parameters_ is false, currently it does not support when there
+    // are unused parameters 3) this backward pass needs to run allreduce. Here,
+    // we just dump tensors and their parameter indices into rebuilt_params_ and
+    // rebuilt_param_indices_ based on gradient arriving order, and then at the
+    // end of finalize_backward(), buckets will be rebuilt based on
+    // rebuilt_params_ and rebuilt_param_indices_, and then will be broadcasted
+    // and initialized. Also we only need to dump tensors and parameter indices of
+    // one replica.
+    push_rebuilt_params(index);
+
+    // If `find_unused_parameters_` is true there may be model parameters that
+    // went unused when computing the model output, they won't be part of the
+    // autograd graph, and won't receive gradients. These parameters are
+    // discovered in the `prepare_for_backward` function and their indexes stored
+    // in the `unused_parameters_` vector.
+    if (!has_marked_unused_parameters_ && find_unused_parameters_) {
+      has_marked_unused_parameters_ = true;
+      for (const auto& unused_index : unused_parameters_) {
+        mark_variable_ready(unused_index);
+      }
+    }
+
+    // Finally mark variable for which this function was originally called.
+    mark_variable_ready(index);
+}
+
+- 核心逻辑：如何启动all reduce
+
+struct Bucket {
+  std::vector replicas;
+    
+  // Global indices of participating variables in the bucket
+  std::vector<size_t> variable_indices;
+
+  // Number of replicas to be marked done before this bucket is ready.
+  // 计数
+  size_t pending;
+
+  // Keep work handle around when this set of buckets is being reduced.
+  std::shared_ptr<c10d::ProcessGroup::Work> work;
+
+  // Keep future work handle around if DDP comm hook is registered.
+  c10::intrusive_ptr<torch::jit::Future> future_work;
+
+  // If this bucket should expect a single sparse gradient.
+  // Implies: replicas[i].variables.size() == 1.
+  bool expect_sparse_gradient = false;
+};
+
+void Reducer::mark_variable_ready(VariableIndex index) {
+    const auto replica_index = index.replica_index;
+    const auto variable_index = index.variable_index;
+    TORCH_CHECK(replica_index < replicas_.size(), "Out of range replica index.");
+    TORCH_CHECK(variable_index < variable_locators_.size(), "Out of range variable index.");
+    backward_stats_[replica_index][variable_index] = current_time_in_nanos() - backward_stats_base_;
+    // 每当变量被标记成 ready 了，都要调用一下 finalize
+    require_finalize_ = true;
+
+    const auto& bucket_index = variable_locators_[variable_index];
+    auto& bucket = buckets_[bucket_index.bucket_index];
+    auto& replica = bucket.replicas[replica_index];
+
+
+    // If it was scheduled, wait on allreduce in forward pass that tells us
+    // division factor based on no. of currently participating processes.
+    if (divFactor_ == kUnsetDivFactor) {
+      divFactor_ = process_group_->getSize();
+      auto& workHandle = forwardPassWorkHandle_.workHandle;
+      if (workHandle && !forwardPassWorkHandle_.useStaticWorldSize) {
+        workHandle->wait();
+        auto results = workHandle->result();
+        // Guard against the results being empty
+        TORCH_INTERNAL_ASSERT(results.size() > 0);
+        at::Tensor& res = results.front();
+        divFactor_ = res.item().to<int>();
+      }
+    }
+
+    if (bucket.expect_sparse_gradient) {
+      mark_variable_ready_sparse(index);
+    } else {
+      mark_variable_ready_dense(index);
+    }
+
+    // 检查桶里的变量是不是都ready了，如果没有东西 pending，那就是都 ready了
+    if (--replica.pending == 0) {
+      if (--bucket.pending == 0) {
+        mark_bucket_ready(bucket_index.bucket_index);
+      }
+    }
+
+    // Run finalizer function and kick off reduction for local_used_maps once the
+    // final bucket was marked ready.
+    if (next_bucket_ == buckets_.size()) {
+      if (find_unused_parameters_) {
+        // H2D from local_used_maps_ to local_used_maps_dev_
+        for (size_t i = 0; i < local_used_maps_.size(); i++) {
+          // We do async H2D to avoid the blocking overhead. The async copy and
+          // allreduce respect the current stream, so will be sequenced correctly.
+          local_used_maps_dev_[i].copy_(local_used_maps_[i], true);
+        }
+        local_used_work_ = process_group_->allreduce(local_used_maps_dev_);
+      }
+
+      // The autograd engine uses the default stream when running callbacks, so we
+      // pass in the current CUDA stream in case it is not the default.
+      c10::DeviceType deviceType = replica.contents.device().type();
+      const c10::impl::VirtualGuardImpl guard =
+          c10::impl::VirtualGuardImpl{deviceType};
+      const c10::Stream currentStream =
+          guard.getStream(replica.contents.device());
+      torch::autograd::Engine::get_default_engine().queue_callback([=] {
+        std::lock_guard<std::mutex> lock(this->mutex_);
+        // Run callback with the current stream
+        c10::OptionalStreamGuard currentStreamGuard{currentStream};
+        this->finalize_backward();
+      });
+    }
+}
+
+// Called when the bucket at the specified index is ready to be reduced.
+void Reducer::mark_bucket_ready(size_t bucket_index) {
+  TORCH_INTERNAL_ASSERT(bucket_index >= next_bucket_);
+
+  // Buckets are reduced in sequence. Ignore this bucket if
+  // it's not its turn to be reduced.
+  if (bucket_index > next_bucket_) {
+    return;
+  }
+
+  // Keep going, until we either:
+  // - have kicked off reduction for all buckets, or
+  // - found a bucket that's not yet ready for reduction.
+  for (; next_bucket_ < buckets_.size() && buckets_[next_bucket_].pending == 0;
+       next_bucket_++) {
+    num_buckets_ready_++;
+    if (num_buckets_ready_ == 1 && should_collect_runtime_stats()) {
+      record_backward_comm_start_time();
+    }
+    auto& bucket = buckets_[next_bucket_];
+    all_reduce_bucket(bucket);
+  }
+}
+
+
+
+all_reduce_bucket() {
+    
+}
+
 
 
 

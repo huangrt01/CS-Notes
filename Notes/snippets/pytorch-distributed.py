@@ -49,6 +49,22 @@ Advanced Multi-GPU Communication. https:
 
 Open MPI: A High Performance Message Passing Library. https://www.open-mpi.org/, 2019
 
+
+MPI的讨论，若干库和优化，引入pytorch的步骤：https://pytorch.org/tutorials/intermediate/dist_tuto.html#communication-backends
+
+
+# nccl
+
+use shared file system to init: the file system must support locking through fcntl.
+
+dist.init_process_group(
+    init_method='file:///mnt/nfs/sharedfile',
+    rank=args.rank,
+    world_size=4)
+
+tcp: init_method='tcp://10.1.1.20:23456'
+
+
 ### DP
 
 model = nn.DataParallel(model)
@@ -59,6 +75,9 @@ model = nn.DataParallel(model)
 细节
 - 优化器同一随机种子 For optimizers with intrinsic randomness, diﬀerent processes can initialize their states using the same random seed
 - GPU devices cannot be shared across DDP processes (i.e. one GPU for one DDP process).
+
+Currently, find_unused_parameters=True must be passed into torch.nn.parallel.DistributedDataParallel() initialization
+if there are parameters that may be unused in the forward pass,
 
 import torch
 import torch.distributed as dist
@@ -106,7 +125,12 @@ if __name__=="__main__":
   main()
 
 
-# 细节：DDP仅支持所有worker同一设备类型，不支持部分worker GPU、部分worker CPU
+# 细节：
+
+- DDP仅支持所有worker同一设备类型，不支持部分worker GPU、部分worker CPU
+
+- 是否需要torch.cuda.set_device
+https://discuss.pytorch.org/t/does-ddp-with-torchrun-need-torch-cuda-set-device-device/178723
 
 
 ### DDP Example
@@ -126,10 +150,22 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 def setup(rank: int, world_size: int):
   os.environ['MASTER_ADDR'] = 'localhost'
   os.environ['MASTER_PORT'] = '12355'
-  device = torch.device(f"cuda:{rank}" if torch.cuda.is_available() and
-                        world_size < torch.cuda.device_count() else "cpu")
+  if torch.cuda.is_available() and world_size <= torch.cuda.device_count():
+    device = torch.device(f"cuda:{rank}")
+    device_ids = [rank]
+    torch.cuda.set_device(device)
+  else:
+    print(
+        f"invalid cuda device count: {torch.cuda.device_count()}, use cpu instead"
+    )
+    device = torch.device("cpu")
+    device_ids = None
   backend = "nccl" if device.type == "cuda" else "gloo"
   dist.init_process_group(backend, rank=rank, world_size=world_size)
+  print(
+      f"DDP setup, device: {device}, backend: {backend}, rank: {rank}, world_size: {world_size}"
+  )
+  return device, device_ids
 
 
 def cleanup():
@@ -271,6 +307,86 @@ if __name__ == "__main__":
 
 ### distributed
 
+"""run.py:"""
+#!/usr/bin/env python
+import os
+import sys
+import torch
+import torch.distributed as dist
+import torch.multiprocessing as mp
+
+
+def init_process(rank, size, fn, backend='gloo'):
+  """ Initialize the distributed environment. """
+  os.environ['MASTER_ADDR'] = '127.0.0.1'
+  os.environ['MASTER_PORT'] = '29500'
+  dist.init_process_group(backend, rank=rank, world_size=size)
+  fn(rank, size)
+
+
+"""Blocking point-to-point communication."""
+
+
+def run_1(rank, size):
+  print("Blocking point-to-point communication.")
+  tensor = torch.zeros(1).to(rank)
+  if rank == 0:
+    tensor += 1
+    # Send the tensor to process 1
+    dist.send(tensor=tensor, dst=1)
+  else:
+    # Receive tensor from process 0
+    dist.recv(tensor=tensor, src=0)
+  print('Rank ', rank, ' has data ', tensor[0])
+
+"""Non-blocking point-to-point communication."""
+
+# 用于实现：
+# 1. https://github.com/baidu-research/baidu-allreduce
+# 2. Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour
+
+def run_2(rank, size):
+  print("Non-blocking point-to-point communication.")
+  tensor = torch.zeros(1).to(rank)
+  req = None
+  if rank == 0:
+    tensor += 1
+    # Send the tensor to process 1
+    req = dist.isend(tensor=tensor, dst=1)
+    print('Rank 0 started sending')
+  else:
+    # Receive tensor from process 0
+    req = dist.irecv(tensor=tensor, src=0)
+    print('Rank 1 started receiving')
+  req.wait()
+  print('Rank ', rank, ' has data ', tensor[0])
+
+""" All-Reduce example."""
+def run_3(rank, size):
+  """ Simple collective communication. """
+  print("All-Reduce example.")
+  group = dist.new_group([0, 1])
+  tensor = torch.ones(1).to(rank)
+  dist.all_reduce(tensor, op=dist.ReduceOp.SUM, group=group)
+  print('Rank ', rank, ' has data ', tensor[0])
+
+if __name__ == "__main__":
+  world_size = 2
+  processes = []
+  if "google.colab" in sys.modules:
+    print("Running in Google Colab")
+    mp.get_context("spawn")
+  else:
+    mp.set_start_method("spawn")
+  for rank in range(world_size):
+    p = mp.Process(target=init_process, args=(rank, world_size, run_3, 'nccl'))
+    p.start()
+    processes.append(p)
+
+  for p in processes:
+    p.join()
+
+
 
 ### 通信原语、Group 的运用
 
@@ -334,6 +450,34 @@ def _distributed_task(rank, world_size, ckpt_dir, task_name, result_dir):
   if rank == 0:
     ...
   dist.destroy_process_group()
+
+
+### all_reduce
+
+""" Implementation of a ring-reduce with addition. """
+def allreduce(send, recv):
+  rank = dist.get_rank()
+  size = dist.get_world_size()
+  send_buff = send.clone()
+  recv_buff = send.clone()
+  accum = send.clone()
+
+  left = ((rank - 1) + size) % size
+  right = (rank + 1) % size
+
+  for i in range(size - 1):
+    if i % 2 == 0:
+      # Send send_buff
+      send_req = dist.isend(send_buff, right)
+      dist.recv(recv_buff, left)
+      accum[:] += recv_buff[:]
+    else:
+      # Send recv_buff
+      send_req = dist.isend(recv_buff, right)
+      dist.recv(send_buff, left)
+      accum[:] += send_buff[:]
+    send_req.wait()
+  recv[:] = accum[:]
 
 
 ### TorchRun

@@ -14,3 +14,24 @@ class Circle:
         if value < 0:
             raise ValueError("Radius cannot be negative")
         self._radius = value
+
+
+    _instance = None
+
+    @staticmethod
+    def getInstance(*args, **kwargs):
+        if Circle._instance is None:
+            Circle._instance = Circle(*args, **kwargs)
+        return Circle._instance
+
+
+class Singleton(type):
+  _instances: Dict[type, "Singleton"] = {}
+
+  def __call__(cls, *args, **kwargs):
+    if cls not in cls._instances:
+      cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+    return cls._instances[cls]
+
+  def instance(cls: Any, *args: Any, **kwargs: Any) -> "Singleton":
+    return cls(*args, **kwargs)

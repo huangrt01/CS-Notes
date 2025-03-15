@@ -19,6 +19,10 @@ class Test(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
 
+    @classmethod
+    def setUpClass(cls):
+        cls.xx = XX()
+
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
 

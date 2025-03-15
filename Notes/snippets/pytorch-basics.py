@@ -147,6 +147,16 @@ y = x.numpy()
 buf.mul_(momentum).add_(grad, alpha=1 - dampening)
 param.add_(grad, alpha=-lr)
 
+// Note [local_used_map_ -> local_used_map_dev copying]
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// We do async H2D to avoid the blocking overhead. The async copy and
+// allreduce respect the current stream, so will be sequenced
+// correctly.
+
+local_used_map_tmp.copy_(local_used_map_);
+local_used_map_dev_.copy_(local_used_map_tmp, true);
+
+
 在旧版本的 PyTorch 中，使用 .data 属性来获取张量中的数据，现在更推荐使用 .item() 方法。
 
 a = torch.arange(1, 13).view(4, 3)

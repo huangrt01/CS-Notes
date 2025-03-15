@@ -401,6 +401,8 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 * 用精排模型参数来初始化参数，fine-tune 加速训练
 * $\gamma_3=10^{-7}$ 描述候选数量，也是一个衡量特征复杂度的参数
 
+
+
 ### 量化、混合精度训练推理
 
 #### Intro
@@ -743,6 +745,12 @@ void gemmPacked(
 
 #### DDP
 
+##### Intro
+
+* An Introduction to Distributed Deep Learning https://sebarnold.net/dist_blog/
+
+
+
 ##### AllReduce —— Collective Communication 原语
 
 ![image-20250312023205177](./MLSys/image-20250312023205177.png)
@@ -944,7 +952,21 @@ PS架构的优势主要还是高可用(system efficiency)
 
   * 简化版读写锁，优化系统态开销
 
-### 训练框架
+#### HugeCTR SoK
+
+>  https://medium.com/@kuwarkapur/guide-to-embeddings-in-recommender-systems-with-hugectr-fc4f413bd624
+
+* 基于 Model Parallel
+* slot的概念
+  * To reduce the overhead when looking up multiple embedding tables with identical embedding vector sizes, the embedding combines them as one huge embedding table. Each sub-embedding table is called a slot, which is also known as a feature field. 
+
+* Sparse Emb Layer
+  * 类似 **tf.nn.embedding_lookup_sparse** ，增加了MP的设计
+  * The distributed sparse embedding scatters keys across GPUs by computing `gpu_id = key % number_of_gpus`
+
+
+
+### 训练框架 Intro
 
 * spark MLlib
   * 参考「深度学习推荐系统」6.2.1

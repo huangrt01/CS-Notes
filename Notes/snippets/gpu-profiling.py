@@ -7,7 +7,7 @@ https://github.com/XuehaiPan/nvitop
 
 ### PyTorch Profiling
 
-# 1
+# Profiler
 
 with torch.profiler.profile() as prof:
     torch.square(b)
@@ -15,8 +15,7 @@ with torch.profiler.profile() as prof:
 print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))
 
 
-# 2
-
+# time
 def time_pytorch_function(func, input):
     # CUDA IS ASYNC so can't use python time module
     start = torch.cuda.Event(enable_timing=True)
@@ -34,6 +33,16 @@ def time_pytorch_function(func, input):
 
 b = torch.randn(10000, 10000).cuda()
 print(time_pytorch_function(torch.square, b))
+
+
+# DDP
+seed = 0   
+torch.manual_seed(seed)   
+torch.cuda.manual_seed(seed)   
+torch.cuda.manual_seed_all(seed)   
+os.environ['PYTHONHASHSEED'] = str(seed)   
+torch.backends.cudnn.deterministic = True   
+torch.backends.cudnn.benchmark = False
 
 
 ### pytorch profiler
