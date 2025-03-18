@@ -78,13 +78,26 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 
 #### GPU Architecture
 
+##### Intro
+
+* SM之上的高层封装
+  * GPC、TPC（纹理处理clusters）
+
+![image-20250316033709934](./GPU/image-20250316033709934.png)
+
 ##### GPU Compute Architecture
 
-* GPU内部很多functional units: SMs(Streaming Multiprocessors)，一个SM可以schedule多个block，但同一时间只能执行一个
+* GPU内部很多functional units:
+  * SMs(Streaming Multiprocessors)，一个SM可以schedule多个block，但同一时间只能执行一个
 
 * SP (Streaming Processor) <-> CUDA Core<->Thread
 
-  * 资源：registers & local memory
+  * 资源：
+    * registers & local memory
+
+    * cuda core
+
+    * tensor core
 
   * Tensor core相比CUDA core，实现了MMA operations，支持2:4 sparsity，支持in8和int4，更高效
 
@@ -179,7 +192,7 @@ cudaMemcpyHostToDevice
 
 * Intro
 
-  * SIMT，同一个warp里的线程执行相同的指令
+  * SIMT，一个时钟周期内，一个warp被调度到一个SM上，内部32个线程执行相同的指令
 
     * execution on a set of cores called a **processing block**.
   * 一个warp是successive 32 threads in a block
@@ -212,6 +225,14 @@ cudaMemcpyHostToDevice
 
 ##### GPU Network
 
+* 内存通常是显存的2倍以上比较合理
+* 内存 - pin memory - 显存 - GPU
+  * 通常由CPU负责调度
+  * pin memory和内存的传输：由GPU上的DMA负责调度
+* 硬盘 - 显存：
+  * GPU Direct Storage
+
+* 网络 - 显存： RDMA
 * PCIe / NVLINk 与CPU Chipset交互
 
 ![nvlink](./GPU/nvlink.png)
@@ -255,10 +276,20 @@ cudaMemcpyHostToDevice
 | Tesla architecture (特斯拉)     | 1    | ~        |                                                              |                                                              |                              |                   |
 
 * A100
+  * https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/
   * 192KB of on-chip SRAM per each of 108 SMs
+  * Float32 Tensor Core：156 TFlops
+  * Float16 Tensor Core：314 TFlops
+  * Float32 CUDA Core：19.5 TFlops
+  * GPU Memory：80 GB
+  * GPU Memory Bandwidth：2039 GB/s
+  * Interconnect：
+    * NVLink：600GB/s （50GB/s，12 links）
+    * PCIe Gen4: 64GB/s
+  
   * 《Dissecting the Ampere GPU architecture via microbenchmarking》
   * 《Nvidia A100 tensor core GPU architecture》
-
+  
 * H100 GPU
   * 132 SMs with 64 cores per SM, totalling a whopping 8448 cores.
   * each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
@@ -293,6 +324,19 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 #### 显卡驱动
 
 * 英伟达的显卡驱动程序通常会随CUDA Toolkit一起安装。但是，这个驱动程序是为了开发目的而安装的。这意味着它主要用于开发和调试CUDA应用程序，以帮助开发人员在其工作站上进行开发和测试。这个驱动程序不建议在生产环境中与英伟达的GPU一起使用。在生产环境中，通常需要专门的、经过验证的驱动程序以确保系统的稳定性和性能。
+
+#### 通信：NVLink等
+
+* NVLink
+  * 高速、低延迟的通用串行总线接口技术，GPU卡间通信，带宽很高
+  * H100:
+    * 50GB/link
+    * 18links
+* 多机
+  * Ethernet
+  * InfiniBand
+  * OmniPath
+  * RoCE（RDMA over Converged Ethernet）
 
 #### cuDNN
 

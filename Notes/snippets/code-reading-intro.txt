@@ -4,29 +4,50 @@
 
 #### PyTorch 二次开发
 
-# PyTorch
+- PyTorch
 https://github.com/pytorch/pytorch
 
-# TorchRec
+- TorchRec
 https://pytorch.org/torchrec/overview.html
 
 
 #### Tf 二次开发
 
-# HugeCTR
+- HugeCTR
+
+
 
 #### 通信库
 
-# AllReduce
+- AllReduce
 https://github.com/baidu-research/baidu-allreduce
 
 
+#### 量化
+
+- TorchAO
+https://github.com/pytorch/ao/tree/main
+# Current best way to access all the pytorch native gpu quantization work,
+# Used by sdxl-fast and segment-anything-fast
+
+- GPT-Fast
+https://github.com/pytorch-labs/gpt-fast
+# (has GPTQ support for int4)
+# Best for weight only quant
+
+- Segment-Anything-Fast
+https://github.com/pytorch-labs/segment-anything-fast
+# Best for dynamic quant
 
 
 ### GPU
 
 #### Intro
 
-# GPU-Mode
+- GPU-Mode
 https://github.com/gpu-mode/lectures.git
 
+#### Triton
+
+- MicroBenchmark
+https://gist.github.com/HDCharles/287ac5e997c7a8cf031004aad0e3a941

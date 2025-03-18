@@ -1,5 +1,7 @@
 ### torchao
+
 speed-first
+依赖torch.compile做算子优化
 
 * https://github.com/pytorch-labs/ao
 - Current best way to access all the pytorch native gpu quantization work,
@@ -110,6 +112,72 @@ if guard_size_oblivious(self.shape[0] == 1) or guard_size_oblivious(
         ):
    return (self.unsqueeze(2) * input2.unsqueeze(0)).sum(dim=1)
 
+
+### low bit optimizer
+
+背景：
+pytorch optimizer不支持fp32 param + bf16 optimizer
+
+特性：
+- Stochastic rounding for BF16 weight： bf16_stochastic_round=True
+
+
+torchao/prototype/low_bit_optim/adam.py
+
+def single_param_adam():
+    # compute in FP32 for accurate calculations
+    p_f32 = p.float()
+    grad_f32 = grad.float()
+
+    ...
+    # keep high precision copy for param update
+    exp_avg_f32 = exp_avg.float().lerp(grad_f32, 1 - beta1)
+    exp_avg_sq_f32 = exp_avg_sq.float().lerp(grad_f32.square(), 1 - beta2)
+
+    exp_avg.copy_(exp_avg_f32)
+    exp_avg_sq.copy_(exp_avg_sq_f32)
+    ...
+
+torchao/prototype/low_bit_optim/subclass_8bit.py
+- aten.lerp.Scalar
+- aten.copy_.default
+
+@OptimState8bit.implements(aten.lerp.Scalar)
+def _(func, types, args, kwargs):
+    # 进行dequant
+    args = [x.dequantize() if isinstance(x, OptimState8bit) else x for x in args]
+    return func(*args, **kwargs)
+
+
+@OptimState8bit.implements(aten.copy_.default)
+def _(func, types, args, kwargs):
+    dst = args[0]
+    src = args[1]
+
+    if isinstance(dst, OptimState8bit) and isinstance(src, OptimState8bit):
+        assert dst.signed == src.signed and dst.block_size == src.block_size
+        dst.codes.copy_(src.codes)
+        dst.scale.copy_(src.scale)
+        # qmap should be the same, don't need to copy
+
+    # 进行量化
+    elif isinstance(dst, OptimState8bit):
+        scaled_src, scale = scale_tensor(src, dst.block_size)
+        codes = quantize_8bit_with_qmap(scaled_src, dst.qmap)
+        dst.codes.copy_(codes)
+        dst.scale.copy_(scale)
+
+    else:
+        dst.copy_(src.dequantize())
+
+    return dst
+
+
+### utils
+
+utils.py
+
+包装tensor，支持dispatch方法
 
 
 ### bitsandbytes

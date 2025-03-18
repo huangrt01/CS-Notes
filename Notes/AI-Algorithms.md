@@ -5,6 +5,7 @@
 ## 历史发展
 
 * 计算智能 -> 感知智能 -> 通用智能
+* Scaling Law: https://arxiv.org/abs/2001.08361
 * emergent ability
   * [How much bigger can/should LLMs become?](https://cmte.ieee.org/futuredirections/2023/04/24/how-much-bigger-can-should-llms-become/)
   * https://arxiv.org/abs/2206.07682
@@ -575,6 +576,12 @@ https://github.com/OpenNMT/OpenNMT-py/
   * 传统的视觉解释方法不能scale well
     * https://openai.com/research/microscope
     * https://distill.pub/2020/circuits/curve-detectors/
+
+## Datasets
+
+* 100B token：Common Crawl数据集
+
+
 
 ## MLLM(Multimodal LLM)
 
@@ -2473,7 +2480,7 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 ![img](https://s3.cn-north-1.amazonaws.com.cn/awschinablog/build-an-e-commerce-intelligent-shopping-guide-robot-based-on-large-language-model-and-recommendation-system8.png)
 
-#### 阿里[**LLM在电商推荐系统的探索与实践**](https://www.53ai.com/news/qianyanjishu/357.html)、LLM4REC综述
+#### 阿里[LLM在电商推荐系统的探索与实践](https://www.53ai.com/news/qianyanjishu/357.html)、LLM4REC综述
 
 > LLM+RS、LLM As RS
 >

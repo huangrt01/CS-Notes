@@ -241,7 +241,16 @@ pipeline.fit(trainingData)
 val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
 ```
 
-### 数据流
+### 数据流、数据存储
+
+* 分布式存储：
+  * HDFS
+  * NFS： Network File System
+    * 私有化
+    * 手动备份数据
+  * 云存储：对象存储服务
+    * 公有云
+    * 扩展性、持久性高，自动副本、多区域存储
 
 * 数据流，四种架构：批处理、流计算、Lambda、Kappa
   * 批处理：分布式文件系统（HDFS）+Map Reduce
@@ -519,6 +528,35 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 
 * GPT-Q
   * ![image-20250307033049737](./MLSys/image-20250307033049737.png)
+
+#### GPU Mode Lecture 30: Quantized Training
+
+* overview
+  * forward
+    * weight only
+    * dynamic act-weight
+    * static act-weight
+      * llm通常不会对activations做static quant
+  * backward、optimizer
+    * fuse gradients + optimizer step
+    * activation ckpt
+  * distributed通信，也占用显存
+
+![image-20250315203511421](./MLSys/image-20250315203511421.png)
+
+* low-bit optimizer
+  * 问题：pytorch optimizer不支持fp32 param + bf16 optimizer，强制要求param-gradients-optimizer三者的dtype一致
+  * 《Memory Efficient Optimizers with 4-bit States》
+  * 《8-bit Optimizers via Block-wise Quantization》
+    * 8bit: bitandbytes
+  * ![image-20250315205836858](./MLSys/image-20250315205836858.png)
+  * ![image-20250315210506126](./MLSys/image-20250315210506126.png)
+    * 思路：fuse kernel，不将中间状态存入gpu的global memory
+      * block-wise而不是tensor-wise，才能确保计算scale时在shared memory进行
+      * 可能考虑 TMA （tensor memory accelerator）？
+
+* **Low-bit weight-only training**
+  * 核心问题：Can we train quantized weights without high precision copy?
 
 
 
@@ -967,6 +1005,16 @@ PS架构的优势主要还是高可用(system efficiency)
 
 
 ### 训练框架 Intro
+
+* 流程：
+  * 数据加载
+    * prefetch
+  * 数据预处理
+    * 离线
+  * forward
+  * backward
+  * （节点通信）
+  * optimize
 
 * spark MLlib
   * 参考「深度学习推荐系统」6.2.1

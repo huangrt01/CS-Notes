@@ -6,8 +6,73 @@ for (auto i : c10::irange(variable_count)) {
     std::cout << "当前索引: " << i << std::endl;
 }
 
+### tensor
 
-### find tensor
+# torchao tensor utils
+
+包装tensor，支持dispatch方法
+
+class TorchAOBaseTensor(torch.Tensor):
+    """A util tensor subclass that provides commonly used functions
+       new tensor subclass can inherit it to get all the utility functions
+
+       class MyTensor(TorchAOBaseTensor):
+           pass
+
+    This includes:
+       `_get_to_kwargs` that can get the kwargs for `to`
+            class MyTensor(TorchAOBaseTensor):
+                def to(self, *args, **kwargs):
+                    kwargs = _get_to_kwargs(*args, **kwargs)
+                    ...
+        `implements`:
+            implements = MyTensor.implements
+
+            @implements(torch.nn.functional.linear):
+            def _(func, types, args, kwargs):
+                ...
+
+        `register_layout`:
+            register_layout = MyTensor.register_layout
+
+            @register_layout(PlainLayout)
+            class PlainAQTTensorImpl(...):
+                ...
+
+         `get_tensor_impl_constructor`:
+            get_tensor_impl_constructor = MyTensor.get_tensor_impl_constructor
+            # in constructor of MyTensor:
+            tensor_impl_ctr = get_tensor_impl_constructor(type(_layout))
+            tensor_impl = tensor_impl_ctr(data, scale, zero_point, _layout)
+
+    """
+
+    implements = classmethod(_implements)
+    __torch_dispatch__ = classmethod(_dispatch__torch_dispatch__)
+    __torch_function__ = classmethod(_dispatch__torch_function__)
+    register_layout = classmethod(_register_layout)
+    get_tensor_impl_constructor = classmethod(_get_tensor_impl_constructor)
+    _get_to_kwargs = _get_to_kwargs
+
+    def __tensor_flatten__(self):
+        raise NotImplementedError("Subclasses must implement __tensor_flatten__")
+
+    @classmethod
+    def __tensor_unflatten__(
+        cls, tensor_data_dict, tensor_attributes, outer_size, outer_stride
+    ):
+        raise NotImplementedError("Subclasses must implement __tensor_unflatten__")
+
+    def __repr__(self):
+        raise NotImplementedError("Subclasses must implement __repr__")
+
+    def get_layout(self):
+        if not hasattr(self, "_layout"):
+            return None
+        return self._layout
+
+
+# find tensor
 
 def _find_tensors(obj):
     r"""Recursively find all tensors contained in the specified object."""

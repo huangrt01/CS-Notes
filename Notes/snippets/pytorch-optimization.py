@@ -1,3 +1,23 @@
+### activation ckpt
+
+import torch
+import torch.nn as nn
+from torch.utils.checkpoint import checkpoint_sequential
+
+model = nn.Sequential(
+    nn.Linear(10, 20),
+    nn.ReLU(),
+    nn.Linear(20, 30),
+    nn.ReLU(),
+    nn.Linear(30, 40)
+)
+
+x = torch.randn(16, 10)
+output = checkpoint_sequential(model, segments=2, input=x)
+
+print("Output shape:", output.shape)
+
+
 ### pin_memory
 
 https://zhuanlan.zhihu.com/p/9616453650

@@ -52,6 +52,19 @@ constexpr size_t CACHE_LINE_SIZE =
 
 [Using the extra 16 bits in 64-bit pointers](https://stackoverflow.com/questions/16198700/using-the-extra-16-bits-in-64-bit-pointers)
 
+### CPU
+
+#### Intro
+
+* 核心性能因素
+  * 单核性能
+    * 频率 clock speed
+      * boost clock
+    * 流水线设计
+    * 指令发射数 issue width
+  * 核心数量
+  * 多级缓存
+
 ### 各种微架构
 
 #### Intel
@@ -279,10 +292,26 @@ https://www.slideshare.net/am_sharifian/intel-hyper-threading-technology/1
     - https://www.intel.com/content/www/us/en/analytics/in-memory-data-and-analytics.html
     - 场景如presto：https://engineering.fb.com/2019/06/10/data-infrastructure/aria-presto/
 
-### 存储
+### 存储：内存、硬盘
 
+* 硬盘：分为HDD和SSD
+  * 读写模式
+    * 随机读写：高频、小文件
+      * IOPS
+      * 瓶颈：磁盘读取到缓冲区
+  
+    * 连续读写：顺序、大文件
+      * MB/s
+      * 瓶颈：缓冲区传输到内存
+  
+  * 典型数据（NVMe）：
+    * 1TB
+    * 700000 IOPS
+    * 7000 GB/s
+  
 * NVMe
   * [NVMe vs SATA: What’s the difference and which is faster?](https://www.microcontrollertips.com/why-nvme-ssds-are-faster-than-sata-ssds/)
+    * 使用传输速率更高的PCIe通道
   * [Bandana: Using Non-volatile Memory for Storing Deep Learning Models, SysML 2019](https://arxiv.org/pdf/1811.05922.pdf)
     * https://www.youtube.com/watch?v=MSaD8DFsMAg
   * Persistent Memory
@@ -291,6 +320,9 @@ https://www.slideshare.net/am_sharifian/intel-hyper-threading-technology/1
       * pmem: https://pmem.io/pmdk/
       * DWPD: 衡量 SSD 寿命
       * 《Spitfire: A Three-Tier Buffer Manager for Volatile and Non-Volatile Memory》
+
+* 内存
+  * 双通道、四通道，将内存带宽提升相应倍数
 
 ### jemalloc
 
