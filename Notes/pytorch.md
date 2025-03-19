@@ -7,6 +7,11 @@
 
 
 
+* PyTorch Internals
+  * https://blog.ezyang.com/2019/05/pytorch-internals/
+
+
+
 ## API
 
 > [PyTorch官方的API接口文档](https://pytorch.org/docs/stable/index.html)
@@ -35,11 +40,28 @@
 * 参考 GPU-Mode Lecture 1
   * load_inline
   * torch.profile
+* operator call
+  * ![image-20250320022630969](./pytorch/image-20250320022630969.png)
+  
 
 ## Tensor
 
+* stride
+  * ![20250319-223852](pytorch/20250319-223852.jpeg)
+  * ![20250319-223859](./pytorch/20250319-223859.jpeg)
+  * ![20250319-223904](./pytorch/20250319-223904.jpeg)
+    * 这样的设计不同于numpy
+  
+* Dispatch
+  * The first dispatch is based on the device type and layout of a tensor: e.g., whether or not it is a CPU tensor or a CUDA tensor (and also, e.g., whether or not it is a strided tensor or a sparse one).
+  * ![image-20250319225317174](./pytorch/image-20250319225317174.png)
+  * ![image-20250319225337097](./pytorch/image-20250319225337097.png)
+  * 一种拓展思路：tensor的wrapper class，参考torchao
+
 * Gather index
+  * torch.gather
   * 数组深加工
+
 
 ![image-20241217021330875](./pytorch/image-20241217021330875.png)
 
@@ -57,6 +79,16 @@
   * Pytorch的计算图就是动态的，几乎每进行一次运算都会拓展原先的计算图，最后生成完成。
   * 当反向传播完成，计算图默认会被清除，所以只能用生成的计算图进行一次反向传播。
   * `retain_graph` 参数可以保持计算图，从而避免别清除掉，其用法为：`loss.backward(retain_graph=True)`
+
+## Autograd
+
+* Grad:  Jacobians left-multiplied by a vector,
+
+![image-20250319225735790](pytorch/image-20250319225735790.png)
+
+* ![image-20250319231025721](./pytorch/image-20250319231025721.png)
+  * **在多输出操作的反向传播中，前向传播的输出会作为反向传播对应模块的输入**。通过 `output_nr`（前向输出编号）和 `input_nr`（反向输入编号）的映射，PyTorch 的自动求导系统能准确传递梯度，保证复杂计算图（如特征值分解 + 矩阵乘法）的反向传播正确执行。
+* ![image-20250320020726734](./pytorch/image-20250320020726734.png)
 
 ## Module
 

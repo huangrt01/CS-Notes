@@ -4,6 +4,14 @@
 * non-tensor在backward时一定返回None
 
 
+
+### cuda kernel
+
+https://github.com/pytorch/pytorch/blob/main/CONTRIBUTING.md#cuda-development-tips
+
+https://github.com/pytorch/pytorch/wiki/CUDA-basics
+
+
 ### load_inline
 
 #include <torch/extension.h>

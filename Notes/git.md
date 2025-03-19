@@ -374,7 +374,9 @@ ssh-keygen -t rsa -b 4096 -C "huangrt01@163.com" # 如果rsa已占用，可用ss
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_rsa --apple-use-keychain # MacOS带
 pbcopy < ~/.ssh/id_rsa.pub  # MacOS , Linux用xclip
-# 上github添加SSH Key
+
+上github添加SSH Key
+
 ssh -T git@github.com
 # ssh-keygen -y -f ~/.ssh/id_rsa
 
@@ -410,7 +412,7 @@ Github被墙
 
 
 
-#### some bugs!
+#### 坑!
 
 * 如果设置ssh key后，git push仍然要求输入邮箱密码
   * `git remote -v`查看origin使用的是https还是ssh

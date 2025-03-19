@@ -8,7 +8,9 @@
 
 #### 豆包App 快捷键
 
-* option + A: 语音输入
+* option + S: 语音输入
+* option + space: 唤起豆包
+* ctrl + option + A: 截图
 
 
 
@@ -306,12 +308,12 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 * **切换Tab：**
   * **command + shift + 【/】**
 * **展开**
-  * **到级别（custom）**
+  * expand to **到级别（custom）**
     * **command + shift + J/K 1/2/3/4/5**
   * **某块区域**
     * **command + option + [或]**
   * 全部区域：
-    * command + option + -/=
+    * Command K-J、K-0
 * 搜索：
   * 随处搜索：两次shift 或者 `F1`
   * 查文件：command + P
