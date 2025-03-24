@@ -12,6 +12,11 @@ PYTHONFAULTHANDLER=1
 CUDA_LAUNCH_BLOCKING=1
 
 
+### params
+
+print(f"params sum is: {sum(model.parameters()).sum()}")
+
+
 ### op
 
 TORCH_SHOW_CPP_STACKTRACES=1
@@ -27,7 +32,7 @@ torch.distributed.breakpoint(rank)
 
 * TORCH_DISTRIBUTED_DEBUG = OFF (default), INFO, or DETAIL
 
-# 非常有用！
+非常有用！
 
 For fine-grained control of the debug level during runtime the functions torch.distributed.set_debug_level(),
 torch.distributed.set_debug_level_from_env(), and torch.distributed.get_debug_level() can also be used.
@@ -53,7 +58,7 @@ if __name__ == "__main__":
     mp.spawn(worker, nprocs=2, args=())
 
 
-# debug rank hang: dist.monitored_barrier
+### debug rank hang: dist.monitored_barrier
 
 import os
 from datetime import timedelta

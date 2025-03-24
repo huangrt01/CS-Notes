@@ -15,6 +15,7 @@
     * 微调：考虑中间结果，100GB以上
   * gpt-3：
     * 175B 700GB
+      * Fp16 326GB
     * 算上adam优化器2100GB
 * 技术发展
   * Memory Efficient Attention with Online Softmax (2021) -> FlashAttention in Megatron-LM (2022) 

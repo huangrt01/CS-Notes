@@ -7,6 +7,11 @@ TODO： https://pytorch.org/tutorials/advanced/cpp_extension.html
 如果我们只是用[]/(), 索引，他们都是操作符重载，内部考虑了shape, stride, order, offset等，不会出错。在很多情况下可以节省大量内存
 但是我们拿指针出来操作数据的所有情况，都要保证是contiguous的， 否则可能出错。
 
+
+### concat split
+split的输出是tuple，经常需要转为list
+
+
 ### jagged/padding
 
 

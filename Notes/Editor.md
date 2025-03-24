@@ -12,7 +12,15 @@
 * option + space: 唤起豆包
 * ctrl + option + A: 截图
 
+### Trae
 
+#### 插件
+
+* BasedPyright
+  * BasedPyright 默认设置了较为严格的类型检查，为避免被过度干扰，建议将其调低 。步骤如下：
+    * 打开 Editor 设置，搜索 pyright type checking mode。
+    * 将默认的 recommended 模式修改为 basic 模式。
+* ruff
 
 ### Vim
 

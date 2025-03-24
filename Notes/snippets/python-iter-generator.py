@@ -24,6 +24,16 @@ Python 中， next() 内置函数调⽤的是对象的 next() ⽅法，iter() �
 
 
 
+
+### itertools
+
+ PARAM_COMBINATIONS = [(*t, mode) for t, mode in
+                        itertools.product([(4, 2), (4, 7), (2, 4), (3, 9), (1, 3), (1, 10), (2, 1), (1, 2)],
+                                          [FILE_DISPATCH_MODE, ALL_TO_ALL_MODE])]
+
+
+###
+
 def named_parameters(
         self, prefix: str = "", recurse: bool = True, remove_duplicate: bool = True
     ) -> Iterator[Tuple[str, Parameter]]:

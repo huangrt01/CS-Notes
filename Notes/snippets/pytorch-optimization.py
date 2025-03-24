@@ -18,6 +18,31 @@ output = checkpoint_sequential(model, segments=2, input=x)
 print("Output shape:", output.shape)
 
 
+### ZERO
+
+https://pytorch.org/tutorials/recipes/zero_redundancy_optimizer.html
+
+
+from torch.distributed.optim import ZeroRedundancyOptimizer
+
+def print_peak_memory(prefix, device):
+    if device == 0:
+        print(f"{prefix}: {torch.cuda.max_memory_allocated(device) // 1e6}MB ")
+
+def example(rank, world_size, use_zero):
+    ...
+    # construct DDP model
+    ddp_model = DDP(model, device_ids=[rank])
+    if use_zero:
+        optimizer = ZeroRedundancyOptimizer(
+            ddp_model.parameters(),
+            optimizer_class=torch.optim.Adam,
+            lr=0.01
+        )
+    ...
+    print(f"params sum is: {sum(model.parameters()).sum()}")
+
+
 ### pin_memory
 
 https://zhuanlan.zhihu.com/p/9616453650
@@ -32,6 +57,7 @@ only when the target is a CUDA-enabled device and the original tensor is in page
 In summary, copying data from CPU to GPU is safe when using non_blocking=True,
 but for any other direction, non_blocking=True can still be used but the user must make sure that a device synchronization
 is executed before the data is accessed. (torch.cuda.synchronize())
+
 
 
 ### distributed ckpt

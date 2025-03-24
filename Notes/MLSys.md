@@ -427,10 +427,29 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
   - FP32: 用4个字节来表达一个数字, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
 
   - FP16: 用2个字节来表达一个数字, 1位符号, 5位指数, 10位小数，**有效位数为3位**. 常用于精度更低的机器学习等
+* 训练量化
+  * 常见思路：
+    - W8A8: smoothQuant、DeepSeek Fp8
+    - W4A16: DecoupleQ、GPTQ
+  
+
+### Literature Review
+
+* 训练后量化 PTQ 【GPTQ】
+  * AdaRound method (Nagel et al., 2020) computes a data-dependent rounding by annealing a penalty term, which encourages weights to move towards grid points corresponding to quantization levels
+  * BRECQ (Li et al., 2021) introduces Fisher information into the objective, and optimizes layers within a single residual block jointly.
+  * Optimal Brain Quantization (OBQ) (Frantar et al., 2022) generalizes the classic
+    Optimal Brain Surgeon (OBS) second-order weight pruning framework to apply to quantization.
+    * OBQ quantizes weights one-by-one, in order of quantization error, always adjusting the remaining weights.
+    * While these approaches can
+      produce good results for models up to ≈ 100 million parameters in a few GPU hours, scaling them to networks orders of magnitude larger is challenging.
+* Large-model Quantization
+  * While all existing works—ZeroQuant (Yao et al., 2022), LLM.int8() (Dettmers et al., 2022), and nuQmm (Park et al., 2022)— carefully select quantization granularity, e.g., vector-wise, they ultimately just round weights to the nearest (RTN) quantization level, in order to maintain acceptable runtimes for very large models.
+  * **ZeroQuant further proposes layer-wise knowledge distillation**, similar to AdaQuant, but the largest model it can apply this approach to has only 1.3 billion parameters. At this scale, **ZeroQuant already takes ≈ 3 hours of compute; GPTQ quantizes models 100× larger in ≈ 4 hours**.
+  * LLM.int8() observes that **activation outliers in a few feature dimensions break the quantization of larger models**, and proposes to fix this problem by keeping those dimensions in higher precision. Lastly, nuQmm develops efficient GPU kernels for a specific **binary-coding based quantization scheme**.
+* 推理量化
 
 #### Mixed Precision Training (ICLR 2018)
-
-> 也参考上面表格
 
 * Baseline (FP32) : Single-precision storage is used for activations, weights and gradients. All arithmetic is also in FP32. 
 * Mixed Precision (MP): 
@@ -567,7 +586,8 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 * 神经网络：多函数的嵌套表示
   * 越来越不规则
 * 用于存储的模型量化：Serving 量化
-  * 传统问题局限性：求解量化误差最小，不面向loss函数，面向策略，不可解
+  * 推理量化本质上是误差最小化求解
+  * 传统问题局限性：不面向loss函数，面向策略，不可解
 
 
   * 用于计算的模型量化
@@ -585,8 +605,8 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 
   * 结论：控制梯度噪音的范数
     * 小结论：量化训练完后要恢复全精度进行计算，再用训练后量化手段进行量化
-      * 实现上：量化的正传，量化/全精度的反传，量化的更新
-        * 全精度反传，与自动求导模块的实现有关，可能存在
+    * 实现上：量化的正传，量化/全精度的反传，量化的更新
+      * 全精度反传，与自动求导模块的实现有关，可能存在
 
 
 * 工具：https://github.com/NVIDIA/apex
@@ -596,6 +616,35 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
   * 量化问题本质是NP难问题，部分情况下可转换成指数规划问题
 
   * 量化训练和预测是两个目标，训练结果应该恢复成全精度再用预测压缩的过程压缩一遍
+
+#### GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers
+
+> PTQ，主要应用于推理场景
+>
+> W4A16
+
+* GPTQ, a new one-shot weight quantization method based on approximate second-order information
+
+  * reducing the bitwidth down to 3 or 4 bits per weight
+  * It therefore remains open whether one-shot **post-training quantization** to higher compression rates is generally-feasible.
+
+  * gptq = gpt + ptq
+  * LLM量化：参数越多，量化越有效
+
+* 结论：
+  * Further, we show that our model can also provide robust results in the extreme quantization regime, in which models are quantized to 2 bits per component, or even ternary values
+  * reducing the bitwidth down to 3 or 4 bits per weight
+  * **本质上是LLM参数量非常大，存在参数冗余**
+* 方法：layer-wise
+  * ![image-20250325020148022](./MLSys/image-20250325020148022.png)
+  * 假设：the quantization grid for W is ﬁxed before the process
+* Optimal Brain Quantization
+  * 问题分解：将训练后量化的目标转化为最小化损失误差，通过泰勒级数近似，将损失误差表示为与海森矩阵相关的形式，并将其分解为逐层独立的凸问题，进一步按行分解为独立问题。
+  * 迭代量化：在每一步中，选择单行中的单个权重进行量化。计算该行中每个权重量化后的损失误差，公式为$$\delta L_{q}=\frac{1}{2}\frac{w_{q}^{2}}{(H^{-1})_{qq}}$$，其中$$w_{q}$$是权重，$$(H^{-1})_{qq}$$是逆海森矩阵的第q个对角元素。贪心地选择具有最小损失误差的权重进行量化。 
+  * 权重更新：将选中的权重四舍五入到量化网格上的最近值，然后更新同一行中尚未量化的剩余权重以补偿引入的误差。更新公式通过求解拉格朗日函数得到，量化后的最优权重扰动为$$\delta W^{\top}=-\frac{w_{q}}{(H^{-1})_{qq}}e_{q}^{\top}H^{-1}$$，其中$$e_{q}$$是第q个标准基向量。 
+  * 矩阵更新：更新剩余权重的逆海森矩阵，通过移除已量化权重对应的行和列来实现。 
+  * 重复迭代：继续上述迭代过程，直到所有权重都被量化。 
+* 在实际应用中，为了提高计算效率和防止数值不准确性累积，GPTQ算法对OBQ进行了改进，如采用**固定的非贪心顺序对所有行进行量化**、**一次保持权重更新在列的块内**、**对海森矩阵的对角项应用轻微阻尼**以及**利用逆海森矩阵的Cholesky分解**等。
 
 
 
@@ -1842,7 +1891,7 @@ http://dlsys.cs.washington.edu/schedule
 
 ##### Lecture 5: GPU Programming
 
-* 内容融入【nvidia笔记】
+* 内容融入【GPU.md】
 
 ##### Lecture 6: Optimize for Hardware Backends
 
@@ -2351,7 +2400,7 @@ for i in range(num_layers):
       * Sub-second latency SLA that limits the batch size
       * Model optimization and multi-tenancy causes long tail
 
-  * "Nexus: efficient neural network serving system"
+  * 《Nexus: efficient neural network serving system》
 
     * Frontend runtime library allows arbitrary app logic
 
