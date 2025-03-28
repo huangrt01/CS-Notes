@@ -250,305 +250,33 @@
 
 
 
-## [Deprecated] GAME THEORY: AN INTRODUCTION - Steven Tadelis
-
 ### Intro
 
 * Game theory provides a framework based on the construction of rigorous models that describe situations of conflict and cooperation between *rational* decision makers.
-
 * 大家有没有比较推荐的博弈论的书？ - 子不语D的回答 - 知乎
   https://www.zhihu.com/question/446554214/answer/1751901215
-
 * 学习博弈论，从入门、进阶到精通，如何列书单？ - 食其的回答 - 知乎
   https://www.zhihu.com/question/20266302/answer/76445562
 
-* 官网：https://press.princeton.edu/books/hardcover/9780691129082/game-theory
-* 习题：https://pup-assets.s3.amazonaws.com/public/resources/9780691129082/Tadelis-Game-Theory-Student-Solutions.pdf
+## ML Theory
 
-### PART I: RATIONAL DECISION MAKING
+* 神经网络扰动
+  * [Hessian-based Analysis of Large Batch Training and Robustness to Adversaries](https://arxiv.org/pdf/1802.08241) 分析了Hessian特征值和神经网络扰动的关系
+    * Q-Bert 计算最大特征值：通过两次反向传播计算Hv，[幂迭代法 Power Iteration](https://en.wikipedia.org/wiki/Power_iteration)
+    * [Training Deep and Recurrent Networks with Hessian-Free Optimization](https://www.cs.toronto.edu/~jmartens/docs/HF_book_chapter.pdf) 完整综述
+  * 应用：量化分析，Q-Bert
+* 2024 诺贝尔物理学奖授予人工神经网络机器学习，为什么会颁给 AI 领域？ - SIY.Z的回答 - 知乎
+  https://www.zhihu.com/question/777943030/answer/4508673022
+  * RBM 受限玻尔兹曼机
+  * sigmoid 函数有了自然的解释：玻尔兹曼分布下隐含层神经元激活的条件概率的激活函数。
+* 大模型是不是能够稀疏化? 
+  * 从物理和能量密度/信息密度的角度来看, 似乎是可以的. 
+  * 但是从范畴论的角度, 特别是预层范畴的角度来看待,Dense的Foundation Model训练是必须要做的, 因为只有在相对Dense的模型结构上才能更好的捕获所有的态射. 
 
-### Chpt 1: The Single-Person Decision Problem
-
-> 关于decision making的基础假设和有关推导
-
-#### Actions, Outcomes, and Preferences
-
-* 对 **The Decision Problem** 的定义
-* Preferences
-  * **preference relation**
-  * **indifference relation**
-* **The Completeness Axiom**： 任何outcome之间存在preference relation
-* **The Transitivity Axiom**
-* a preference relation that is complete and transitive is called a **rational preference relation**
-* Payoff functions
-  * the **profit function** 
-  * payoff function <-> preference relation 
-    * an *ordinal* construct
-* **Proposition 1.1** If the set of  outcomes X is **finite** then any rational preference relation over X can be represented by a payoff function.
-  * representation theorems: 构造payoff function
-* *decision trees*
-  * **decision node**、**terminal nodes**
-* Note:
-  * As with any theoretical framework, the value of our conclusions will be only as good as the sensibility of our assumptions.
-  * group indecisiveness (P6)： it is possible to have a group of rational individual players who, when put together to make decisions as a group, will become an “irrational” group
-    * 投票悖论 *Condorcet Paradox*
-
-#### The Rational Choice Paradigm
-
-* *Homo economicus* or “economic man.”
-  * *Homo economicus* is “rational” in that he chooses actions that maximize his well-being as defined by his payoff function over the resulting outcomes.7
-  * a formal definition of *Homo economicus:* a player who has rational preferences and is rational in that he understands all the aspects of his decision problem and always chooses an option that yields him the highest payoff from the set of possible actions.
-* **Rational Choice Assumptions** The player fully understands the decision problem by knowing:
-  *  all possible actions,A;
-  * all possible outcomes,X;
-  * exactly how each action affects which outcome will materialize
-  * his rational preferences(payoffs) over outcomes.
-* 单人决策，action和outcome是一一对应关系
-* **Definition 1.2** A player facing a decision problem with a payoff function v(.) over actions is **rational** if he chooses an action a ∈ A that maximizes his payoff.
+* TOPOS理论 在ML的应用
+  * on the diagram of thought https://github.com/diagram-of-thought/diagram-of-thought
 
 
-
-### Chpt 2: Introducing Uncertainty and Time
-
-#### Risk, Nature, and Random Outcomes
-
-* example：R&D project
-  * no one-to-one correspondence here between actions and outcomes.
-  * 用 random variables 来描述结果
-* Finite Outcomes and Simple Lotteries
-* **Definition 2.1** **A simple lottery** over outcomes X = {x1, x2, . . . , xn} is defined as a probability distribution p=(p(x ),p(x ),...,p(x )), where 概率和为1
-* Simple versus Compound Lotteries
-  * **compound lotteries**
-* Lotteries over Continuous Outcomes
-* **Definition 2.2**： 用CDF定义simple lottery
-
-#### Evaluating Random Outcomes
-
-* Expected Payoff: The Finite Case
-* **Definition 2.3**： we define the player’s **expected payoff from the lottery** p
-  * v(s)
-* Expected Payoff: The Continuous Case
-  * **Definition 2.4**
-* Caveat: It’s Not Just the Order Anymore
-  * the expected payoff representation involves a *cardi- nal ranking,* in which values matter just as much as order
-* Risk Attitudes
-  *  **risk neutral**
-  * **risk averse**
-  * **risk loving**
-* The St. Petersburg Paradox: 无限价值的lottery硬币
-  * He correctly anticipated that the value of this lottery should not be measured in its **expected monetary value**, but instead in **the monetary value of its *expected payoff.***
-
-#### Rational Decision Making with Uncertainty
-
-* **Definition 2.5** A player facing a decision problem with a payoff function u(.) over outcomes is rational if he chooses an action a ∈ A that maximizes his expected payoff.
-* Maximizing Expected Payoffs
-
-#### Decisions over Time
-
-* 之前讨论的特点：has a timeless, static structure
-  * Many decision problems, however, are more involved; they require some decisions to follow others, and the sequencing of the decision making is imposed by the problem at hand.
-* Backward Induction
-  * 例子：the fate of the R&D project is determined by Nature.
-  * **dynamic programming** or **backward induction**
-    * 从后往前倒退最优决策
-* Discounting Future Payoffs
-  * 存款：$100 × (1.02)^t in t years，反过来，未来的收益要除以系数 \delta^t
-  * *discounted sum of future payoffs*
-
-#### Applications
-
-* The Value of Information 信息的价值
-  * all-knowing oracle
-  * comparing the decision problem with the added information to the decision problem without the additional information
-*  Discounted Future Consumption
-  * *choosing consumption over time*
-
-![image-20240718022424400](mathematics/game-theory-consumption1.png)
-
-![image-20240718022456554](mathematics/game-theory-consumption2.png)
-
-* Theory versus Practice
-  * Yet Amos Tversky and Daniel Kahneman (1981) have shown that “framing,” or **the way in which a problem is presented**, can affect the choices made by a decision maker.
-  * preference reversals
-
-### PART II: STATIC GAMES OF COMPLETE INFORMATION
-
-### Chpt 3: Preliminaries
-
-* 以大学考试为例，成绩受多位决策者影响
-  * 自己的投入
-  * 出题人心情
-  * 同学的发挥
-* *strategic environment*： 不能视其他人为噪声
-  * **games.**
-* 主线是引入并定义 **static games of complete information**
-* **static game**
-  * *Step 1:* Each player *simultaneously and independently* chooses an action.
-    * 信息互不泄漏
-  * *Step 2:* Conditional on the players’ choices of actions, payoffs are distributed to each player.
-* **Games of Complete Information**: A **game of complete information** requires that the following four components be common knowledge among all the players of the game:
-  * all the possible actions of all the players,
-  * all the possible outcomes,
-  * how each combination of actions of all players affects which outcome will materialize, and
-  * the preferences of each and every player over outcomes.
-* **Definition 3.1** An event E is **common knowledge** if (1) everyone knows E, (2) everyone knows that everyone knows E, and so on *ad infinitum.*
-  * 这个定义也很微妙，因为很多情况下 *cannot be sure*
-  * 帮助 *strategic reasoning*，比如角色A基于对角色B的游戏理解的belief，做决策
-
-#### Normal-Form Games with Pure Strategies
-
-* **strategy**： *a plan of action intended to accomplish a specific goal*
-* **Definition 3.2**： A **pure strategy** for player i is a deterministic plan of action. The set of all **pure strategies** for player i is denoted Si. A **profile of pure strategies** s=(s1,s2,...,sn),si ∈Si foralli=1,2,...,n,describes a particular combination of pure strategies chosen by all n players in the game.
-  * pure的含义：排除随机*stochastically*决策的角色
-  * 为什么随机有利：朋友问去哪吃，我拿出硬币
-  * We will introduce *stochastic* or *mixed strategies* in Chapter 6
-  * strategy的含义：侧重观察其他玩家的决策
-* **Definition 3.3** A **normal-form game** includes three components as follows:
-  1. A finite **set of players,** N={1,2,...,n}.
-  2. A **collection of sets of pure strategies,** {S1, S2, . . . , Sn}.
-  3. A **set of payoff functions,** {v1, v2, . . . , vn}, each assigning a payoff value to each combination of chosen strategies, that is, a set of functions vi : S1 × S2 × . . . × Sn → R for each i ∈ N .
-* Example: The Prisoner’s Dilemma
-  * a static game of complete information
-  * 表达成normal-form game的形式化形式
-* Example: Cournot Duopoly 古诺双寡头模型
-* Example: Voting on a New Agenda
-  * status quo：现状
-
-#### Matrix Representation: Two-Player Finite Game
-
-* **Definition 3.4** A **finite game** is a game with a finite number of players, in which the number of strategies in Si is finite for all players i ∈ N .
-  * 现实中常常有方法限定strategy为有限（比如场景中整数更合理）
-* 矩阵表示 *bi-matrix*
-  * **Rows** Each row represents one of player 1’s strategies. If there are k strategies in S1 then the matrix will have k rows.
-  *  **Columns** Each column represents one of player 2’s strategies. If there are m strate- gies in S2 then the matrix will have m columns.
-  * **Matrix entries** Each entry in this matrix contains a two-element vector (v1, v2), where vi is player i’s payoff when the actions of both players correspond to the row and column of that entry.
-
-#### Solution Concepts
-
-* 分析囚徒困境
-
-  * The altruistic game有不同的结论
-
-* the *Battle of the Sexes* : 较难有直接结论
-
-* A solution concept is a method of analyzing games with the objective of restricting the set of *all possible outcomes* to those that are *more reasonable than others.*
-
-  * 针对*no strategy* that is always best
-
-* **equilibrium**： any one of the strategy profiles that emerges as one of the solution concept’s predictions
-
-* Assumptions and Setup
-
-  * rational、intelligent、common knowledge
-
-  * **Self-enforcement:**Any prediction (or equilibrium)of a solution concept must
-
-    be *self-enforcing.*
-
-    * the heart of **noncooperative game theory**
-
-* Evaluating Solution Concepts
-
-  * **Existence：How Often Does It Apply?**
-    * an ad hoc solution concept that offers the following predic- tion: “Players always choose the action that they think their opponent will choose.”
-  * **Uniqueness: How Much Does It Restrict Behavior?**
-    * It turns out that the nature of games makes the uniqueness requirement quite hard to meet. The reason, as we will learn to appreciate, lies in the nature of strategic interaction in a noncooperative environment.
-    * 因此通常是策略组合
-  * **Invariance: How Sensitive Is It to Small Changes?**
-    * payoff function的微小变化不改变解
-
-* Evaluating Outcomes
-
-  * 标准是to improve the social outcomes of the players.
-  * An outcome is considered to be **socially undesirable** if there is a different outcome that would make some people better off *without harming anyone else*
-  *  turn to the criterion of ***Pareto optimality**,* which is in tune with the idea of efficiency or “no waste.” That is, we would like all the possible value deriving from a given interaction to be distributed among the players. To put this formally:
-
-* **Definition 3.5** A strategy profile s ∈ S **Pareto dominates** strategy profile s′ ∈ S if vi(s) ≥ vi(s′)∀ i ∈ N and vi(s) > vi(s′) for at least one i ∈ N (in which case, we will also say that s′ is **Pareto dominated** by s). A strategy profile is **Pareto optimal** if it is not Pareto dominated by any other strategy profile.
-
-  * Don’t confuse Pareto optimality with the best “symmetric” outcome that leaves all players “equally” happy
-  * 囚徒困境为例，(M,M) (M,F) (F,M)是pareto最优，相反(F,F)pareto dominated by (M,M)
-  * 帕累托准则强调的是资源配置的效率，而不是公平性。
-  * 尽管帕累托准则告诉我们哪些结果在理论上是优越的，但在实际中，只有那些参与者愿意并能够自发遵守的策略组合才是合理的结果。
-
-### Chpt 4: Rationality and Common Knowledge
-
-#### Dominance in Pure Strategies
-
-![image-20240720052139793](mathematics/game-theory-4.1-definition.png)
-
-* Dominated Strategies
-  * Definition 4.1: **strictly dominated**，对于个体，两个策略的关系
-  * **Claim 4.1** *A rational player will never play a strictly dominated strategy.*
-
-* Dominant Strategy Equilibrium
-  * **Definition 4.2**： **strictly dominant strategy**
-  * **Definition 4.3** The strategy profile sD ∈ S is a **strict dominant strategy equilibrium** if siD ∈ Si is a strict dominant strategy for all i ∈ N .
-    * Prisoner’s Dilemma
-  * **Proposition 4.1**：strict dominant strategy equilibrium的unique特点
-
-* Evaluating Dominant Strategy Equilibrium
-  * existence：不行
-  * uniqueness：可以
-  * invariance：可以
-  * The failure of Pareto optimality implies that the players would benefit from modifying the environment in which they find themselves to create other enforcement mechanisms—for example, creating a “mafia” with norms of conduct that enforce implicit agreements so as to punish those who fink.
-  * --> external enforcer, or institution 有助于实现pareto最优，提升资源配置效率
-  * However, we need to be suspicious of whether such an institution will be *self-enforcing,* that is, whether the mafia will indeed enforce the punishments.
-    * -> 引入了更多角色，贪腐的可能
-    * we will explore at length when we consider multistage and repeated games in Chapters Chapters 9 and 10.
-* **weak dominance**： 相比strict版本，不一定unique
-
-
-
-### Chpt 19: Mathematical Appendix
-
-* Sets and Sequences
-  * N = {n: n > 0 is an integer}
-  * For example, the set of **real numbers** R (any number that is positive, negative, or zero) has a greater cardinality than the set N.
-  * set的countable属性
-  * 真子集 **proper subset** 
-  * **Cartesian product**
-    *  if Si is the set of all possible strategies of player i and there are n players then the Cartesian product of the strategy sets is the set
-  * A **partition **of a set A is a set of non-empty subsets of A, P ={A1,A2,...An}, such that every element a ∈ A is in exactly one of these subsets, Ai ∈ P 
-* Functions
-  * f : X → Y.     domain->codomain
-    * The set of all outputs that can occur is called the **range** or **image** of the function, which is often a subset of a set of codomains
-    * Ifthedomainandcodomainoff areboththe set of real numbers, R (which will often be the case in this textbook), then we call f a **real-valued function.**
-    * a function is **invertible** if and only if it has two properties: (1) It is **one-to-one** (also called an injection), which has the property that if f (x) = f (z) then x = z (this means that every output is associated with only one input). (2) It is an **onto function** (also called a surjection), which has the property that for every y ∈Y there exists an x ∈X such that f(x)=y, so that every element in the codomain has an associated element in the domain.
-  * Continuity
-    * f到x0的极限等于f(x0)
-    * linear function的 **slope**和intercept
-    * **quadratic function**
-      * U-shaped
-      * inverse U-shaped
-      * 求根公式
-
-* Calculus and Optimization
-  * An **optimum** is either a maximum or a minimum
-  * Differentiation and Optimization
-    * 极限、求导、极值点optimum
-    * 根据二阶导判断max和min
-    * A differentiable function f (x) is **concave** if its second derivative is negative for all values of x, and it is **convex**(凸) if its second derivative is positive for all values of x.
-    * 凹函数/凸函数-> 极值点是最大值/最小值
-      * -> 寻求 concave payoff functions，方便找最大值
-  * Integration
-    * **indefinite integral** 不定积分
-    * **definite integral**
-    * **fundamental theorem of calculus** ： F(b)-F(a)=...
-    * -> computing the expected value of a continuous random variable
-* Probability and Random Variables
-  * **probability distribution**
-    * The set of possible outcomes is typically called the **sample space** of the distribution, and if the sample space consists of real numbers it is often called the **support** of the distribution 支撑集
-  * Cumulative Distribution and Density Functions
-    * 离散概率分布 -> CDF是step function
-    * **uniform distribution**
-    * **probability density function**
-  * Independence, Conditional Probability, and Bayes’ Rule
-    * two events A and B are **independent** 
-    * 条件概率：先验P(A) 后验P(A|B)
-    * ![image-20240719021323821](mathematics/bayes-rule.png)
-    * ![image-20240719021541130](mathematics/bayes-rule2.png)
-    * heavily used in Section 15.2 to define beliefs of players in their information sets
-  * Expected Values
 
 ## Exercises in Machine Learning
 
@@ -564,6 +292,12 @@ https://arxiv.org/pdf/2206.13446
 
 * $$E_U^T E_U=\left(U_1,U_2,U_3, ... U_u\right)\left(\begin{array}{c}{U_1}^T\\{U_2}^T\\{U_3}^T\\...\\{U_u}^T\end{array}\right) = \sum_{i=1}^uU_i{U_i}^T$$
 
+### 特征值
+
+* 特征值求解
+  * [幂迭代法 Power Iteration](https://en.wikipedia.org/wiki/Power_iteration) 求解最大特征值
+  * QR算法
+
 ### matrix vector derivatives for machine learning
 
 > matrix vector derivatives for machine learning.pdf
@@ -577,8 +311,6 @@ https://en.wikipedia.org/wiki/Cholesky_decomposition
   * 解方程：提升数值计算稳定性
   * non linear optimization
     * GPTQ
-
-
 
 ## SVD、矩阵分解
 

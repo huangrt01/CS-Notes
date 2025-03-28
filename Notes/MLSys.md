@@ -421,7 +421,6 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
     * 显存包括 参数、activations（存储用于backward）等
   * 内存带宽瓶颈的场景：
     * Increasing the speed at which **the user receives generated results** is challenging, as compute is **dominated by matrix-vector products**. Unlike matrix-matrix products, these are primarily limited by memory bandwidth.
-  
 * FP16
 
   - FP64: 用8个字节来表达一个数字, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
@@ -429,15 +428,21 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
   - FP32: 用4个字节来表达一个数字, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
 
   - FP16: 用2个字节来表达一个数字, 1位符号, 5位指数, 10位小数，**有效位数为3位**. 常用于精度更低的机器学习等
-* 训练量化
+* Post Training Quantization (PTQ)
   * 常见思路：
     - W8A8: smoothQuant、DeepSeek Fp8
     - W4A16: DecoupleQ、GPTQ
   
+* Quantization Aware Training (QAT)
+* Quantized Training (QT)
+  * only seen success up to 8-bits, whereas QAT is effective even at lower bit-widths.
+    * https://cloud.google.com/blog/products/compute/accurate-quantized-training-aqt-for-tpu-v5e
+
+* 硬件支持：参考「GPU.md —— 硬件精度支持」
 
 #### Literature Review
 
-* 训练后量化 PTQ 【GPTQ】
+* PTQ（训练后量化） 【GPTQ】
   * AdaRound method (Nagel et al., 2020) computes a data-dependent rounding by annealing a penalty term, which encourages weights to move towards grid points corresponding to quantization levels
   * BRECQ (Li et al., 2021) introduces Fisher information into the objective, and optimizes layers within a single residual block jointly.
   * Optimal Brain Quantization (OBQ) (Frantar et al., 2022) generalizes the classic
@@ -445,13 +450,40 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
     * OBQ quantizes weights one-by-one, in order of quantization error, always adjusting the remaining weights.
     * While these approaches can
       produce good results for models up to ≈ 100 million parameters in a few GPU hours, scaling them to networks orders of magnitude larger is challenging.
+  * 研究Outlier
+    * Gobo: Quantizing attention-
+      based nlp models for low latency and energy eﬃcient inference
+      * introduce centroid-based quantization method, where outlier numbers use FP32 format and the rest numbers are quantized using non-uniform quantization.
+      * As such, it is hard to get the real inference latency benefit on general compute accelerators, e.g., CPU and GPU, because the parallel processing units in these hardware do not support efficient computation of mixed data types.
+  * 其它：
+    * 《Post-training quantization for vision transformer》（NIPS 2021）
+    * 《Up or down? adaptive rounding for post-training quantization》
+* QAT
+  * Q-Bert and 《Q8BERT: Quantized 8bit bert》 are the first few works to quantize BERT models using integer numbers for both weight and activations.
+    * Q-Bert utilizes Hessian information to push the weight bit-precision to even INT2/INT4, and it also proposes group-wise quantization to quantize the weight matrix in a more fine-grained granularity compared to single matrix quantization.
+  
+  * 《Training with quantization noise for extreme ﬁxed-point compression》 introduces quantization noise to alleviate the variations of QAT.
+  
+* Zero-shot Quantization
+  * 《Zeroq: A novel zero shot quantization framework.》
+  * 《Data-free quantization through weight equalization and bias correction》
+
 * Weight Only Quant
   * developing a quantized-matrix full-precision-vector product kernel which performs a matrix vector product by dynamically dequantizing weights when needed. Most notably, this does not require any activation quantization. While dequantization consumes extra compute, the kernel has to access a lot less memory, leading to significant speedups, as shown in Table 6 【GPTQ】
 * Large-model Quantization
   * While all existing works—ZeroQuant (Yao et al., 2022), LLM.int8() (Dettmers et al., 2022), and nuQmm (Park et al., 2022)— carefully select quantization granularity, e.g., vector-wise, they ultimately just round weights to the nearest (RTN) quantization level, in order to maintain acceptable runtimes for very large models.
   * **ZeroQuant further proposes layer-wise knowledge distillation**, similar to AdaQuant, but the largest model it can apply this approach to has only 1.3 billion parameters. At this scale, **ZeroQuant already takes ≈ 3 hours of compute; GPTQ quantizes models 100× larger in ≈ 4 hours**.
   * LLM.int8() observes that **activation outliers in a few feature dimensions break the quantization of larger models**, and proposes to fix this problem by keeping those dimensions in higher precision. Lastly, nuQmm develops efficient GPU kernels for a specific **binary-coding based quantization scheme**.
-* 推理量化
+* 学术向分类
+  * both PTQ and QAT were susceptible to outliers. In addition to simple clamping and regularization during fine-tuning, we can explore techniques that allow the network to learn how to control these outliers (e.g. [learned quantization ranges](https://arxiv.org/pdf/1902.08153), [clipped softmax](https://arxiv.org/pdf/2306.12929), and [gated attention](https://arxiv.org/pdf/2306.12929)), or possibly even borrow outlier suppression techniques from post-training settings (e.g. [SpinQuant](https://arxiv.org/pdf/2405.16406), [SmoothQuant](https://arxiv.org/pdf/2211.10438)) and apply them sparingly throughout the fine-tuning process.
+
+* 模型结构分类
+  * KV Cache
+    * [LLM-QAT](https://arxiv.org/pdf/2305.17888) explored quantizing the KV cache alongside activations and weights.
+
+  * Embedding Layer
+    * [Prior work](https://arxiv.org/pdf/2109.12948) has also had success with quantizing the embedding layer down to 2-bits in other transformer-based models.
+
 
 #### Mixed Precision Training (ICLR 2018)
 
@@ -491,9 +523,11 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
     * 语音模型场景 the half-precision storage format may act as a regularizer during training
     * gan不需要scaling
 
-#### [GPU Mode Lecture 7: Advanced Quantization](https://www.youtube.com/watch?v=1u9xUK3G4VM)
+#### [TorchAO - Advanced Quantization](https://www.youtube.com/watch?v=1u9xUK3G4VM)
 
 > GPU/Quantization Cuda vs Triton.pdf
+>
+> GPU Mode Lecture 7
 
 - 迭代路线：
 
@@ -552,7 +586,13 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 * GPT-Q
   * ![image-20250307033049737](./MLSys/image-20250307033049737.png)
 
-#### GPU Mode Lecture 30: Quantized Training
+#### TorchAO - Quantized Training
+
+> [GPU Mode Lecture 30](https://www.youtube.com/watch?v=Br07GsnnvWc&t=798s)
+>
+> [Quantization-Aware Training for Large Language Models with PyTorch](https://pytorch.org/blog/quantization-aware-training/)
+
+##### Intro
 
 * overview
   * forward
@@ -567,19 +607,59 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 
 ![image-20250315203511421](./MLSys/image-20250315203511421.png)
 
-* low-bit optimizer
-  * 问题：pytorch optimizer不支持fp32 param + bf16 optimizer，强制要求param-gradients-optimizer三者的dtype一致
-  * 《Memory Efficient Optimizers with 4-bit States》
-  * 《8-bit Optimizers via Block-wise Quantization》
-    * 8bit: bitandbytes
-  * ![image-20250315205836858](./MLSys/image-20250315205836858.png)
-  * ![image-20250315210506126](./MLSys/image-20250315210506126.png)
-    * 思路：fuse kernel，不将中间状态存入gpu的global memory
-      * block-wise而不是tensor-wise，才能确保计算scale时在shared memory进行
-      * 可能考虑 TMA （tensor memory accelerator）？
+##### low-bit optimizer
 
-* **Low-bit weight-only training**
-  * 核心问题：Can we train quantized weights without high precision copy?
+* 问题：pytorch optimizer不支持fp32 param + bf16 optimizer，强制要求param-gradients-optimizer三者的dtype一致
+* 《Memory Efficient Optimizers with 4-bit States》
+* 《8-bit Optimizers via Block-wise Quantization》
+  * 8bit: bitandbytes
+* ![image-20250315205836858](./MLSys/image-20250315205836858.png)
+* ![image-20250315210506126](./MLSys/image-20250315210506126.png)
+  * 思路：fuse kernel，不将中间状态存入gpu的global memory
+    * block-wise而不是tensor-wise，才能确保计算scale时在shared memory进行
+    * 可能考虑 TMA （tensor memory accelerator）？
+
+##### Low-bit weight-only training
+
+* 核心问题：Can we train quantized weights without high precision copy?
+
+
+
+##### QAT 应用
+
+>  [Quantization-Aware Training for Large Language Models with PyTorch](https://pytorch.org/blog/quantization-aware-training/)
+
+* ![image-20250328174952301](./MLSys/image-20250328174952301.png)
+
+  * W4A8: int8 per token dynamic activations + int4 grouped per channel weights
+
+* 结论
+
+  * **8da4w**：Table 1
+    * QAT achieved 16.8% lower perplexity and unchanged model sizes and on-device inference and generation speeds on the Llama3-8B model lowered to XNNPACK.
+  * Lower Bit Weight Only Quantization
+    * group size 32
+    * **applying QAT while skipping quantization for the first 3 and last 2 layers** 效果可接受
+
+* QAT: **8da4w**, only applied to linear layers
+
+  * > 似乎和 ZeroQuant 的结论对齐
+
+  * int8 per token dynamic activations
+
+  * int4 grouped per channel weights
+
+    - use a group size of 256 for weights
+
+  * 技巧：disable fake quantization for the first 1000 steps
+
+* PTQ
+
+  - embeddings are additionally quantized to int4 using a group size of 32
+
+* QAT overhead
+  * ~34% slower
+  * 显存增长，开activation checkpointing缓解
 
 
 
@@ -589,25 +669,57 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 >
 > https://www.deepspeed.ai/tutorials/MoQ-tutorial/
 
-##### Q-Bert
-
-* use **the second-order gradient (eigenvalue) of the parameters** to adjust the quantization schedule during training.
-* **use grouped quantization with a large grouping size (128)** when quantizing a parameter matrix to gain higher accuracy, but they are still inferior to the baseline.
-
-##### MoQ
+**MoQ**
 
 * 和Q-Bert结合
+
+  * Q-Bert
+
+    * use **the second-order gradient (eigenvalue) of the parameters** to adjust the quantization schedule during training.
+
+    * **use grouped quantization with a large grouping size (128)** when quantizing a parameter matrix to gain higher accuracy, but they are still inferior to the baseline.
+
   * To combine this with MoQ, we **cluster the eigenvalues into several regions based on their absolute values and tune the quantization period for each region accordingly**, the higher the magnitude of eigenvalue, the larger the factor and the slower the precision decreases.
+
 * Stochastic Rounding
+
 * 工程技巧：
+
   * weight only方法，kernel实现dequant
   * **support both symmetric and asymmetric quantization** as the two mostly used schemes. We applied both techniques for QAT and see very similar results, however since symmetric approach is simpler to implement, we implement our inference kernels based on that. Regarding the rounding, we support **stochastic rounding** as another option besides the normal rounding. We have seen that for reducing the precision to as low as 4-bit or lower, stochastic rounding is more helpful as it has an unbiased random behavior during training.
+
 * 结论：
+
   * 精度比直接用 W8A16 高
   * 不同layer对精度的敏感度有差异，且不同任务不一样
     - Bert + GLUE Task: 0-4层最敏感
     - Bert-Large for SQuAD finetuning： 后面层敏感
   * Enabling eigenvalue doesn’t guarantee better accuracy result, usually it needs tuning with other settings, such as `start_bits`, `quantize_period` and `quantize_groups`.
+
+#### DeepSpeed —— ZeroQuant
+
+> ZeroQuant: Efficient and Affordable Post-Training Quantization for Large-Scale Transformers
+
+* 要点：
+  * W8A8、W8A8（LKD下，FFC支持W4A8）
+    * 5.19x/4.16x speedup
+    * 3x memory footprint reduction
+  * a fine-grained hardware-friendly quantization scheme for both weight and activations;
+    * **group- wise quantization for weight and token-wise quantization for activations.** 
+  * a novel affordable layer-by-layer knowledge distillation algorithm (LKD) even without the access to the original training data;
+  * a highly-optimized quantization system backend support to remove the quantization/dequantization overhead
+
+##### PTQ基础
+
+![image-20250329010304813](./MLSys/image-20250329010304813.png)
+
+* S的选取
+  * weight matrix：max(abs(X))
+  * activation：
+    * dynamic
+    * static：calibrated using training data (e.g., momentum based
+      averaging) and ﬁxed during inference [23]
+      * ![image-20250329010432713](./MLSys/image-20250329010432713.png)
 
 
 
@@ -689,7 +801,94 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 * “混合”精度训练：
   * 在 CIFAR10 数据集训练时，低精度定点运算（如 16 位定点数）结合随机舍入，前期训练能保持一定稳定性，但随着精度降低（如 12 位），收敛速度会变慢，学习效果变差。此时切换到更高精度（如 20 位），网络性能可快速提升。这是因为前期低精度训练能利用其计算优势，后期高精度训练可弥补低精度带来的梯度信息损失，提高最终性能。
 
+##### QAT
 
+> 《Quantization and Training of Neural Networks for Efﬁcient
+> Integer-Arithmetic-Only Inference》
+
+* Intro:
+
+  * achieved by simulating quantization numerics during training while keeping the weights and/or activations in the original data type, typically float, effectively “fake quantizing” the values instead of actually casting them to lower bit-widths
+
+  * ![image-20250328190021045](./MLSys/image-20250328190021045.png)
+
+  * ```Python
+    # PTQ: x_q is quantized and cast to int8
+    # scale and zero point (zp) refer to parameters used to quantize x_float
+    # qmin and qmax refer to the range of quantized values
+    x_q = (x_float / scale + zp).round().clamp(qmin, qmax).cast(int8)
+    
+    # QAT: x_fq is still in float
+    # Fake quantize simulates the numerics of quantize + dequantize
+    x_fq = (x_float / scale + zp).round().clamp(qmin, qmax)
+    x_fq = (x_fq - zp) * scale
+    ```
+
+#### Q-BERT: Hessian Based Ultra Low Precision Quantization of BERT
+
+* **Q-BERT**通过**Hessian 分析**提出了一种针对 BERT 模型的**超低精度量化方法**，结合**混合精度策略**和**分组量化方案**，在保持模型性能的同时实现了**13 倍参数压缩**和**4 倍激活 / 嵌入压缩**。实验表明，在 SST-2、MNLI、CoNLL-03 和 SQuAD 任务中，Q-BERT 的性能损失最大仅为**2.3%**，显著优于直接量化方法。研究发现，SQuAD 任务的性能下降与模型未收敛至局部极小点有关，而分组量化通过精细化调整量化范围有效缓解了精度损失。
+  * 首次实现了 BERT 模型在**2-bit 精度下的有效压缩**，为边缘设备部署提供了可行方案。
+* **Hessian 矩阵计算与分析**
+  - 计算方法
+    - 使用**矩阵自由幂迭代法**（Matrix-Free Power Iteration）[39] 估计 Hessian 的最大特征值，无需显式构造 Hessian 矩阵。
+      - https://arxiv.org/pdf/1802.08241 分析了Hessian特征值和神经网络扰动的关系
+    - 具体步骤：
+      1. 随机初始化向量v，与当前层参数维度一致。
+      2. 计算梯度$$g_i = \nabla L$$。
+      3. 迭代更新$$v = \frac{Hv}{\|Hv\|_2}$$，其中Hv通过反向传播梯度$$g_i^T v$$得到（式 3.1）。
+      4. 重复多次迭代后，v近似为最大特征值对应的特征向量。
+  - 关键发现
+    - BERT 各层 Hessian 特征值分布差异显著（图 2），中间层（4-8 层）均值和方差最大，末层最稳定。
+    - SQuAD 任务的 Hessian 存在负特征值（图 3），表明模型未收敛至局部极小点。
+
+![image-20250328155538247](./MLSys/image-20250328155538247.png)
+
+* 混合精度量化策略
+
+  - 敏感性指标
+    - \(\Omega_i = |\text{mean}(\lambda_i)| + \text{std}(\lambda_i)\)，综合特征值的均值和方差。
+    - **示例**：SQuAD 第 7 层\(\lambda_i\)均值为 1.0，但方差高达 61.6，需分配更高精度。
+
+  - 位分配规则
+    - 按\(\Omega_i\)降序排列各层，前 50% 分配 3-bit，后 50% 分配 2-bit（2/3-bit 混合）。
+    - 针对不同任务调整分配比例（如 SQuAD 更保守）。
+
+  - 消融实验
+    - **反向分配（Q-BERTMP-rev）**：将敏感层分配低位，导致性能显著下降（MNLI 准确率下降 2.8%，表 4），验证 Hessian 指导的必要性。
+
+* **分组量化技术**
+
+  - 分组策略
+
+    - **层次分组**：将多头自注意力层的矩阵按头分组（12 组），每组**再按输出神经元划分子组**（每组 6 个神经元，共 128 组）。
+    - **动态范围调整**：每组独立计算量化范围，减少跨组数据分布差异的影响（图 4）。
+    - group-wise量化在 4-bit 下比layer-wise量化在 SST-2 任务中提升 7% 准确率（表 2）。
+
+  - ![image-20250328152923360](./MLSys/image-20250328152923360.png)
+
+    - d/Nh是每个头的输出维度
+
+  - | **任务** | **压缩比（参数）** | **性能损失（F1 / 准确率）** | **关键观察**                 |
+    | -------- | ------------------ | --------------------------- | ---------------------------- |
+    | SST-2    | 13×                | ≤1.1%                       | 混合精度（2/3-bit）效果最佳  |
+    | MNLI     | 13×                | ≤2.3%                       | 中间层对量化更敏感           |
+    | CoNLL-03 | 13×                | ≤1.1%                       | 位置嵌入量化敏感性高于词嵌入 |
+    | SQuAD    | 13×                | ≤2.3%                       | 模型未收敛导致性能下降更显著 |
+
+* 算法细节：
+
+  * backward使用Straight-Through Estimators
+
+* 工程实现细节
+
+  - Group-wise的LUT实现：增加**查找表（LUT）**数量，但通过实验发现 128 组时性能增益饱和（表 2），平衡精度与复杂度。
+  - dequant：先矩阵计算，再rescale
+
+* 结论：
+
+  - **参数压缩**：权重从 32-bit 降至 2/3-bit，实现 13× 压缩（BERT-Base 从 410MB→30.5MB）。
+  - **激活压缩**：激活值量化至 8-bit，减少 4× 内存占用。
+  - **嵌入压缩**：词嵌入 4-bit + 位置嵌入 8-bit 混合，嵌入层从 91MB→11.6MB（8× 压缩）。
 
 #### GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers
 
@@ -890,6 +1089,18 @@ void gemmPacked(
       ity is achieved by sacriﬁcing the training speed, as the ad-
       ditional re-computation, broadcast, and gather overhead
 
+#### 通信成本对比
+
+| **阶段**                     | **通信量**（单卡 communication volume） | **与 DP 对比** | **与 MP 对比**                                 |
+| ---------------------------- | --------------------------------------- | -------------- | ---------------------------------------------- |
+| 基线 DP                      | 2Ψ（All-Reduce）                        | 1x             | -                                              |
+| ZeRO-DP (P<sub>os+g</sub>)   | 2Ψ（Reduce-Scatter+All-Gather）         | 1x             | 远低于 MP 跨节点通信（如 12.5GB/s vs 300GB/s） |
+| ZeRO-DP (P<sub>os+g+p</sub>) | 3Ψ（广播 + All-Gather）                 | 1.5x           | 仍优于 MP（如 3Ψ vs 12Ψ/ 层）                  |
+
+- 激活分片通信
+  - **MP 基线**：每 Transformer 层 12×seq×hidden 通信（All-Reduce）。
+  - **ZeRO-R**：每激活检查点 1×seq×hidden 通信（All-Gather），仅为 MP 的 1/12。
+
 #### DP
 
 > PyTorch DP
@@ -1050,9 +1261,68 @@ void gemmPacked(
 
 ![training_result](./MLSys/training_result.png)
 
+#### ZeRO-DP、ZeRO-R
+
+* **ZeRO**通过**三阶段内存优化**（优化器状态分区、梯度分区、参数分区），显著提升深度学习模型训练的内存效率，支持在现有硬件上训练超大规模模型（如万亿参数级别）。其**ZeRO-DP**消除了数据并行中的冗余内存，结合**ZeRO-R**优化激活内存和碎片管理，实现了**8 倍模型尺寸增长**和**10 倍训练速度提升**，并成功训练出世界最大的 17B 参数语言模型 Turing-NLG，同时保持易用性。
+
+* **研究背景与挑战**
+
+  - **模型规模增长**：自然语言处理（NLP）领域模型从 BERT-large（0.3B）发展到 T5（11B），但万亿参数模型训练面临**内存瓶颈**。
+
+  - 现有方法局限性
+    - **数据并行（DP）**：内存冗余，无法扩展。
+    - **模型并行（MP）**：通信开销大，跨节点效率低（如 40B 模型跨节点效率仅 5% 硬件峰值）。
+
+* ![image-20250328142209236](./MLSys/image-20250328142209236.png)
+  * K=12，原因是mixed precision training要保留fp32 copy
+
+* Zero-DP
+
+  * os、g分区
+  * 参数p分区：
+    * 前向传播时，按层顺序广播参数分片。
+    * 反向传播后，All-Gather 参数分片。
+
+* **ZeRO-R（激活与碎片优化）**
+
+  - **激活分区（Pa）**：结合激活检查点，通过 All-Gather 按需重构，内存节省与 MP 度数成正比。
+    - **案例**：100B 模型 + 16-way MP，激活内存从 33GB/GPU 降至 2GB/GPU。
+
+  - **CPU 卸载（Pa+cpu）**：极端情况下将激活转移至 CPU，内存接近零。
+    - 适用于开启Pa后仍然是通信瓶颈的场景
+
+  - **内存碎片管理（MD）**：预分配连续内存块，减少分配失败。
+    - interleaving of short term and long term memory causes memory fragmentation
+
 #### FSDP
 
 #### TP & PP
+
+* **PP splits a model horizontally across layers running each partition on a different device and use micro-batching to hide the pipeline bubble** [10, 11]. Model functionalities such as tied-weights and batch-normalization are difficult to implement due to horizontal splitting and micro-batching, respectively. Popular PP implementation such as **G-pipe** [10] partitions both model parameters and total activations but **requires a batch size proportional to number of pipeline partitions to hide the pipeline bubble**. **The large batch size can affect the convergence rate, while also requiring significant memory to store activations.** A different implementation of PP in PipeDream [12] keeps multiple copies of stale parameters to hide the pipeline bubble without increasing the batch size significantly, making it less memory efficient. Additionally, the implementation is not equivalent to the standard DL training and has implications on training convergence. In contrast, ZeRO obtains the same or better memory efficiency than PP without incurring functionality, performance and convergence related restrictions of PP. 【ZeRO论文】
+
+* **实验数据与配置**
+
+  - 硬件配置
+    - 400 NVIDIA V100（32GB），25 DGX-2 节点，800 Gbps Infiniband。
+
+  - 模型配置（示例）
+
+    | **模型大小** | **层数** | **隐藏维度** | **注意力头** | **批大小** | **总批大小** |
+    | ------------ | -------- | ------------ | ------------ | ---------- | ------------ |
+    | 170B         | 212      | 8192         | 64           | 12         | 300          |
+    | 60B          | 75       | 8192         | 32           | 64         | 1600         |
+
+  - 性能结果
+    - **吞吐量**：15 PetaFlops（30% 硬件峰值）。
+    - **扩展性**：400 GPU vs 64 GPU，速度提升 2.3 倍（超线性）
+
+- 当前限制
+  - **参数分区阶段**：通信量增加 50%，可能成为超大规模集群瓶颈。
+  - **CPU 卸载开销**：激活传输延迟可能抵消批大小增加的收益。
+- 未来计划
+  - **万亿参数支持**：实现 ZeRO-DP 全三阶段（P<sub>os+g+p</sub>），结合 MP（如 16-way）和 DP（64-way）。
+  - **动态优化策略**：根据硬件条件自动选择 Pa/cpu 模式。
+  - **异构支持**：扩展至 CPU/TPU 集群。
 
 ### Parameter Server
 

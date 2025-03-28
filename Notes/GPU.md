@@ -543,6 +543,10 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 
 #### Shared Memory利用
 
+### 硬件精度支持
+
+* Blackwell GPUs will [no longer support int4 tensor cores](https://www.nvidia.com/en-us/data-center/tensor-cores/).
+
 
 
 ### PMPP: Programming Massively Parallel Processors

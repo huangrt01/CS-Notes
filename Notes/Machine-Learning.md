@@ -299,6 +299,16 @@ Materials
 
 
 
+### 训练技巧
+
+#### (STE) Straight-Through Estimators
+
+> [《》]((https://arxiv.org/pdf/1308.3432))
+
+https://hassanaskary.medium.com/intuitive-explanation-of-straight-through-estimators-with-pytorch-implementation-71d99d25d9d0
+
+
+
 ### 激活函数
 
 * Intro
@@ -383,17 +393,7 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
 
 ### ML Theory
 
-* 2024 诺贝尔物理学奖授予人工神经网络机器学习，为什么会颁给 AI 领域？ - SIY.Z的回答 - 知乎
-  https://www.zhihu.com/question/777943030/answer/4508673022
-  * RBM 受限玻尔兹曼机
-  * sigmoid 函数有了自然的解释：玻尔兹曼分布下隐含层神经元激活的条件概率的激活函数。
-* 大模型是不是能够稀疏化? 
-  * 从物理和能量密度/信息密度的角度来看, 似乎是可以的. 
-  * 但是从范畴论的角度, 特别是预层范畴的角度来看待,Dense的Foundation Model训练是必须要做的, 因为只有在相对Dense的模型结构上才能更好的捕获所有的态射. 
-  
-* TOPOS理论 在ML的应用
-  * on the diagram of thought https://github.com/diagram-of-thought/diagram-of-thought
-  
+* 参考「mathematics.md」
 
 
 
@@ -440,47 +440,6 @@ https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html
   * Obtaining real relevance degrees for query results is an expensive and strenuous, requiring human labelers to label all results one by one. When such labeling task is infeasible, we might want to train the learning-to-rank model on user click data instead, as it is relatively easy to collect. Another advantage of using click data directly is that it can reflect the most up-to-date user preferences [[1\]](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references). However, user clicks are often biased, as users tend to choose results that are displayed in higher positions. User clicks are also noisy, where users might accidentally click on irrelevant documents. To ameliorate these issues, XGBoost implements the `Unbiased LambdaMART` [[4\]](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references) algorithm to debias the position-dependent click data. The feature can be enabled by the `lambdarank_unbiased` parameter; see [Parameters for learning to rank (rank:ndcg, rank:map, rank:pairwise)](https://xgboost.readthedocs.io/en/stable/parameter.html#ltr-param) for related options and [Getting started with learning to rank](https://xgboost.readthedocs.io/en/stable/python/examples/learning_to_rank.html#sphx-glr-python-examples-learning-to-rank-py) for a worked example with simulated user clicks.
 
   
-
-
-
-
-
-
-
-### Quantization
-
-#### 模型量化介绍
-
-* 神经网络：多函数的嵌套表示
-  * 越来越不规则
-
-Serving 量化
-
-* 用于存储的模型量化：
-  * 传统问题局限性：求解量化误差最小，不面向loss函数，面向策略，不可解
-
-* 用于计算的模型量化
-  * 权重和输入都有delta（预估时认为权重delta为零）
-  * 偏微分公式 -> 每层的输出到下一层的输入很重要
-    * 同样的量化方式，相同量化精度给不同层的输入带来不同的误差
-    * 存储量化 v.s 计算量化，后者更强调在存储约束下求解最优精度
-  * 一种可求闭式解（分层量化模型）：量化标准排序、梯度排序，一一对应，排序不等式证明
-    * e.g. HAWQ-v2
-
-Training 量化
-
-* 量化感知训练的原理：李沐的ps文章《communication efficient distributed machine learning with the parameter server》https://www.cs.cmu.edu/~muli/file/parameter_server_nips14.pdf
-* 结论：控制梯度噪音的范数
-  * 小结论：量化训练完后要恢复全精度进行计算，再用训练后量化手段进行量化
-  * 实现上：量化的正传，量化/全精度的反传，量化的更新
-    * 全精度反传，与自动求导模块的实现有关，可能存在
-
-* 工具：https://github.com/NVIDIA/apex
-
-总结：
-
-* 量化问题本质是NP难问题，部分情况下可转换成指数规划问题
-* 量化训练和预测是两个目标，训练结果应该恢复成全精度再用预测压缩的过程压缩一遍
 
 ### RNN/LSTM/GRU
 

@@ -185,8 +185,28 @@ with IO-Awareness
 
 ## 模型训练
 
+### 显存优化
+
+* Activations can take up a significant amount of memory [7] during training. As a concrete
+  example, the 1.5B parameter GPT-2 model trained with sequence length of 1K and batch size of
+  32 requires about 60 GB of memory.  【ZeRO paper】
+  * Activation checkpointing (or activation recomputation)
+    is a common approach to reduce the activation memory by approximately the square root of
+    the total activations at the expense of 33% re-computation overhead [7]. This would reduce
+    the activation memory consumption of this model to about 8 GB.
+  * 12 × hidden dim × batch × seq length × transformer layers.
+
+* ZeRO，参考 「MLSys.md」
+
+
+
+### 大规模集群
+
 * [ByteDance] MegaScale: Scaling Large Language Model Training to More Than 10,000 GPUs 
   * https://arxiv.org/pdf/2402.15627
+
+### Ckpt
+
 * 字节Ckpt https://mp.weixin.qq.com/s/4pIAZqH01Ib_OGGGD9OWQg
   * ByteCheckpoint ，一个 PyTorch 原生，兼容多个训练框架，支持 Checkpoint 的高效读写和自动重新切分的大模型 Checkpointing 系统。
 

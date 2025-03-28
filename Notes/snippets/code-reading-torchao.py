@@ -65,6 +65,11 @@ def tuned_fused_int_mm_mul(mat1, mat2, mat3, out_dtype, *, layout=None):
     return autotune_select_algorithm("int_mm", choices, [mat1, mat2, mat3], layout)
 
 
+# 8da4w quantization
+mixed 4-bit/8-bit GEMM is added in cutlass.
+https://github.com/NVIDIA/cutlass/pull/1413
+
+
 ### weight-only quantization
 
 from torchao.quantization import apply_weight_only_int8_quant
@@ -95,9 +100,14 @@ triton缺点：
 L2 cache optimization, quantization时不好弄;
 config heuristic
 
+# int4 weight mm kernel with bitpacking
+https://github.com/pytorch/pytorch/blob/v2.3.1/aten/src/ATen/native/cuda/int4mm.cu#L865
+
+integrated in torchao https://github.com/pytorch/ao/pull/383
 
 
-int4 CPULayout
+
+# int4 CPULayout
 https://github.com/pytorch/ao/pull/1278/files
 https://github.com/pytorch/ao/issues/1117#issuecomment-2451252756.
 
@@ -111,6 +121,17 @@ if guard_size_oblivious(self.shape[0] == 1) or guard_size_oblivious(
             input2.shape[1] == 1
         ):
    return (self.unsqueeze(2) * input2.unsqueeze(0)).sum(dim=1)
+
+
+
+### GPTQ
+
+https://github.com/pytorch/ao/blob/main/torchao/quantization/GPTQ.py#L968
+
+Int8DynActInt4WeightGPTQQuantizer::quantize -> _convert_for_runtime -> _replace_linear_8da4w(linear_class=Int8DynActInt4WeightLinear)
+
+* from torchao.quantization.quant_api import _replace_with_custom_fn_if_matches_filter 替换linear层
+
 
 
 ### low bit optimizer

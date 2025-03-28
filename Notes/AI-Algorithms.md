@@ -577,9 +577,19 @@ https://github.com/OpenNMT/OpenNMT-py/
     * https://openai.com/research/microscope
     * https://distill.pub/2020/circuits/curve-detectors/
 
-## Datasets
+## Datasets and Evaluation
+
+### Datasets
 
 * 100B token：Common Crawl数据集
+* hellaswag, a commonsense sentence completion task
+* wikitext, a next token/byte prediction task, and a few question-answering tasks such as arc, openbookqa, and piqa.
+  * For wikitext, **perplexity** refers to the inverse of how well the model can predict the next word or byte (lower is better), and **bits_per_byte** refers to how many bits are needed to predict the next byte (lower is also better here). For all other tasks, **acc_norm** refers to the accuracy normalized by the byte-length of the target string.
+
+
+### Evaluation
+
+* lm-evaluation-harness: https://github.com/EleutherAI/lm-evaluation-harness
 
 
 
