@@ -568,6 +568,16 @@ https://arxiv.org/pdf/2206.13446
 
 > matrix vector derivatives for machine learning.pdf
 
+### Cholesky decomposition
+
+https://en.wikipedia.org/wiki/Cholesky_decomposition
+
+* 分解 a [Hermitian](https://en.wikipedia.org/wiki/Hermitian_matrix) [positive-definite matrix](https://en.wikipedia.org/wiki/Positive-definite_matrix) A
+* e.g.
+  * 解方程：提升数值计算稳定性
+  * non linear optimization
+    * GPTQ
+
 
 
 ## SVD、矩阵分解

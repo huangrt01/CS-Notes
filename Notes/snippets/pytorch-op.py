@@ -8,6 +8,10 @@ TODO： https://pytorch.org/tutorials/advanced/cpp_extension.html
 但是我们拿指针出来操作数据的所有情况，都要保证是contiguous的， 否则可能出错。
 
 
+### argsort
+
+sort_indices = torch.argsort(shard_ids, stable=True)
+
 ### concat split
 split的输出是tuple，经常需要转为list
 

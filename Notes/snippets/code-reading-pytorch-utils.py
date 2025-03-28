@@ -71,6 +71,141 @@ class TorchAOBaseTensor(torch.Tensor):
             return None
         return self._layout
 
+# PackedTensor
+
+import torch
+from dataclasses import dataclass
+from typing import List, Union
+from functools import reduce
+
+
+@dataclass
+class TensorMeta:
+  shape: torch.Size
+  dtype: torch.dtype
+  device: Union[str, torch.device]
+
+
+class PackedTensor:
+
+  def __init__(self):
+    self._meta = []
+    self._offsets = []
+    self.data = None
+
+  @classmethod
+  def build_from_tensors_with_offset(cls, tensor_list):
+    packed_tensor = cls()
+    offset = 0
+    for i, tensor in enumerate(tensor_list):
+      packed_tensor._meta.append((TensorMeta(tensor.shape, tensor.dtype,
+                                             tensor.device)))
+      element_size = tensor.element_size()
+      num_bytes = element_size * tensor.numel()
+      packed_tensor._offsets.append(offset)
+      offset += num_bytes
+    packed_tensor._offsets.append(offset)
+
+    new_tensor_list = []
+    new_tensor_offset = []
+    for tensor in tensor_list:
+      new_tensor = tensor.view(-1).view(torch.uint8)
+      new_tensor_offset.append(new_tensor.size(0))
+      new_tensor_list.append(new_tensor)
+
+    packed_tensor.data = torch.cat(new_tensor_list)
+
+    return packed_tensor, new_tensor_offset
+
+  @classmethod
+  def build_from_meta_with_offset(cls, meta_list: List[TensorMeta]):
+    packed_tensor = cls()
+    offset = 0
+    new_tensor_offset = []
+    for i, meta in enumerate(meta_list):
+      packed_tensor._meta.append(meta)
+      packed_tensor._offsets.append(offset)
+      num_elements = torch.prod(torch.tensor(meta.shape)).item()
+      element_size = torch.tensor([], dtype=meta.dtype).element_size()
+      num_bytes = num_elements * element_size
+      new_tensor_offset.append(num_bytes)
+      offset += num_bytes
+    packed_tensor._offsets.append(offset)
+
+    packed_tensor.data = torch.empty([offset],
+                                     dtype=torch.uint8,
+                                     device=meta_list[0].device)
+    # new_tensor_offset = [
+    #     j - i
+    #     for i, j in zip(packed_tensor._offsets[:-1], packed_tensor._offsets[1:])
+    # ]
+
+    return packed_tensor, new_tensor_offset
+
+  @classmethod
+  def build_from_tensors(cls, tensor_list):
+    packed_tensor = cls()
+    offset = 0
+    for i, tensor in enumerate(tensor_list):
+      packed_tensor._meta.append((TensorMeta(tensor.shape, tensor.dtype,
+                                             tensor.device)))
+      element_size = tensor.element_size()
+      num_bytes = element_size * tensor.numel()
+      packed_tensor._offsets.append(offset)
+      offset += num_bytes
+    packed_tensor._offsets.append(offset)
+
+    new_tensor_list = []
+    for tensor in tensor_list:
+      new_tensor = tensor.view(-1).view(torch.uint8)
+      new_tensor_list.append(new_tensor)
+
+    packed_tensor.data = torch.cat(new_tensor_list)
+    return packed_tensor
+
+  @classmethod
+  def build_from_meta(cls, meta_list: List[TensorMeta]):
+    packed_tensor = cls()
+    offset = 0
+    for i, meta in enumerate(meta_list):
+      packed_tensor._meta.append(meta)
+      num_elements = reduce(lambda a, b: a * b, meta.shape)
+      if isinstance(num_elements, torch.Tensor):
+        num_elements = num_elements.item()
+
+      element_size = meta.dtype.itemsize
+      num_bytes = num_elements * element_size
+      packed_tensor._offsets.append(offset)
+      if offset % element_size != 0:
+        packed_tensor._offsets[i] += element_size - offset % element_size
+        offset += element_size - offset % element_size
+      offset += num_bytes
+
+    packed_tensor._offsets.append(offset)
+    packed_tensor.data = torch.empty([offset],
+                                     dtype=torch.uint8,
+                                     device=meta_list[0].device)
+    return packed_tensor
+
+  def unpack(self):
+    ret = []
+
+    for i, meta in enumerate(self._meta):
+      num_elements = reduce(lambda a, b: a * b, meta.shape)
+      if isinstance(num_elements, torch.Tensor):
+        num_elements = num_elements.item()
+      element_size = meta.dtype.itemsize
+      num_bytes = num_elements * element_size
+      st = self._offsets[i]
+      try:
+        ret.append(self.data[st:st + num_bytes].view(meta.dtype).view(
+            meta.shape))
+      except Exception:
+        ret.append(self.data[st:st + num_bytes].clone().view(meta.dtype).view(
+            meta.shape))
+    return ret
+
+
 
 # find tensor
 

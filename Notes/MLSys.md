@@ -419,7 +419,9 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 * 为什么量化？
   * 优化计算、内存带宽、显存
     * 显存包括 参数、activations（存储用于backward）等
-
+  * 内存带宽瓶颈的场景：
+    * Increasing the speed at which **the user receives generated results** is challenging, as compute is **dominated by matrix-vector products**. Unlike matrix-matrix products, these are primarily limited by memory bandwidth.
+  
 * FP16
 
   - FP64: 用8个字节来表达一个数字, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
@@ -433,7 +435,7 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
     - W4A16: DecoupleQ、GPTQ
   
 
-### Literature Review
+#### Literature Review
 
 * 训练后量化 PTQ 【GPTQ】
   * AdaRound method (Nagel et al., 2020) computes a data-dependent rounding by annealing a penalty term, which encourages weights to move towards grid points corresponding to quantization levels
@@ -443,6 +445,8 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
     * OBQ quantizes weights one-by-one, in order of quantization error, always adjusting the remaining weights.
     * While these approaches can
       produce good results for models up to ≈ 100 million parameters in a few GPU hours, scaling them to networks orders of magnitude larger is challenging.
+* Weight Only Quant
+  * developing a quantized-matrix full-precision-vector product kernel which performs a matrix vector product by dynamically dequantizing weights when needed. Most notably, this does not require any activation quantization. While dequantization consumes extra compute, the kernel has to access a lot less memory, leading to significant speedups, as shown in Table 6 【GPTQ】
 * Large-model Quantization
   * While all existing works—ZeroQuant (Yao et al., 2022), LLM.int8() (Dettmers et al., 2022), and nuQmm (Park et al., 2022)— carefully select quantization granularity, e.g., vector-wise, they ultimately just round weights to the nearest (RTN) quantization level, in order to maintain acceptable runtimes for very large models.
   * **ZeroQuant further proposes layer-wise knowledge distillation**, similar to AdaQuant, but the largest model it can apply this approach to has only 1.3 billion parameters. At this scale, **ZeroQuant already takes ≈ 3 hours of compute; GPTQ quantizes models 100× larger in ≈ 4 hours**.
@@ -487,7 +491,7 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
     * 语音模型场景 the half-precision storage format may act as a regularizer during training
     * gan不需要scaling
 
-#### [工程] [GPU Mode Lecture 7: Advanced Quantization](https://www.youtube.com/watch?v=1u9xUK3G4VM)
+#### [GPU Mode Lecture 7: Advanced Quantization](https://www.youtube.com/watch?v=1u9xUK3G4VM)
 
 > GPU/Quantization Cuda vs Triton.pdf
 
@@ -579,6 +583,32 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 
 
 
+#### DeepSpeed —— Mixture-of-Quantization (MoQ)
+
+> https://www.deepspeed.ai/2021/05/04/MoQ.html
+>
+> https://www.deepspeed.ai/tutorials/MoQ-tutorial/
+
+##### Q-Bert
+
+* use **the second-order gradient (eigenvalue) of the parameters** to adjust the quantization schedule during training.
+* **use grouped quantization with a large grouping size (128)** when quantizing a parameter matrix to gain higher accuracy, but they are still inferior to the baseline.
+
+##### MoQ
+
+* 和Q-Bert结合
+  * To combine this with MoQ, we **cluster the eigenvalues into several regions based on their absolute values and tune the quantization period for each region accordingly**, the higher the magnitude of eigenvalue, the larger the factor and the slower the precision decreases.
+* Stochastic Rounding
+* 工程技巧：
+  * weight only方法，kernel实现dequant
+  * **support both symmetric and asymmetric quantization** as the two mostly used schemes. We applied both techniques for QAT and see very similar results, however since symmetric approach is simpler to implement, we implement our inference kernels based on that. Regarding the rounding, we support **stochastic rounding** as another option besides the normal rounding. We have seen that for reducing the precision to as low as 4-bit or lower, stochastic rounding is more helpful as it has an unbiased random behavior during training.
+* 结论：
+  * 精度比直接用 W8A16 高
+  * 不同layer对精度的敏感度有差异，且不同任务不一样
+    - Bert + GLUE Task: 0-4层最敏感
+    - Bert-Large for SQuAD finetuning： 后面层敏感
+  * Enabling eigenvalue doesn’t guarantee better accuracy result, usually it needs tuning with other settings, such as `start_bits`, `quantize_period` and `quantize_groups`.
+
 
 
 #### [学术]模型量化介绍
@@ -617,6 +647,50 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 
   * 量化训练和预测是两个目标，训练结果应该恢复成全精度再用预测压缩的过程压缩一遍
 
+##### [(Stochastic Rounding): Deep Learning with Limited Numerical Precision](https://arxiv.org/abs/1502.02551)
+
+* 当前大规模深度学习系统**未充分利用神经网络的容错性**。
+* 本文 **发现采用随机舍入时，16 位定点数表示训练深度网络分类精度几乎无下降**。
+  * 通过 MNIST 和 CIFAR10 数据集实验验证了该方法
+  * 设计了基于 FPGA 的硬件加速器
+    * 利用大量定点运算单元、数据流架构和随机舍入模块，实现高吞吐量和低功耗，为软硬件协同设计的机器学习系统发展提供了思路。
+* 结论：
+  * 8位fractional length，MNIST + DNN精度下降小
+  * CIFAR10，FL14精度都不够......但随机舍入很有用
+  * FPGA：**脉动阵列架构**：每个节点含 DSP 单元，实现乘积累加操作。结果经随机舍入和截断处理后存储。随机舍入硬件开销小于 4%。
+* 理论 Setting
+  * 定点数表示：标准深度学习训练常用 32 位浮点数，本文采用广义定点数表示 [QI.QF]，用⟨IL, FL⟩表示，其精度为 FL 位，范围是$$[-2^{IL - 1}, 2^{IL - 1} - 2^{-FL}]$$ ，最小正数$$\epsilon = 2^{-FL}$$。
+  * 舍入模式
+    - **就近舍入**：根据数与相邻整数倍$$\epsilon$$的距离决定舍入值。
+    - **随机舍入**：数舍入到$$\lfloor x\rfloor$$的概率与它和$$\lfloor x\rfloor$$的接近程度成正比，是无偏舍入，预期舍入误差为 0。
+    - **饱和处理**：若数超出⟨IL, FL⟩范围，将结果饱和到上下限。
+  * **乘积累加（MACC）操作**：分两步，先计算向量内积和$$z=\sum_{i = 1}^{d}a_{i}b_{i}$$ ，再将z转换为目标定点格式$$c_{0}=Convert(z,<\tilde{IL}, \tilde{IF}>)$$。该方法模拟硬件行为，减少随机舍入硬件开销，便于使用 CPU/GPU 和 BLAS 库模拟定点计算。
+
+* 对比就近舍入：
+
+  * 梯度统计信息保留
+
+    * 传统舍入将 $$\Delta W \in (-\epsilon/2, \epsilon/2)$$ 强制归零，完全丢失梯度信息。
+    * 随机舍入通过概率机制（如 $$p = \frac{\Delta W}{\epsilon}$$）保留非零更新的可能性，确保梯度方向的统计正确性。
+
+  * 噪声正则化效应
+
+    - 随机舍入引入的噪声等价于在训练过程中注入随机扰动，类似于 Dropout 或数据增强，可提升模型泛化能力。
+    - 数学上，噪声使优化过程更易跳出局部极小值，增强鲁棒性（参考 Bishop, 1995）
+
+  * 传统舍入的误差方向固定，可能导致误差累积（如梯度消失或爆炸）。
+
+  * 浮点格式的局限性
+
+    - 浮点数（如 32 位）的精度由尾数决定，低精度定点数的舍入误差可能更显著。
+
+    - 随机舍入通过概率机制将误差均匀分布在量化步长 $$\epsilon$$ 内，减少对模型的系统性干扰。
+
+* “混合”精度训练：
+  * 在 CIFAR10 数据集训练时，低精度定点运算（如 16 位定点数）结合随机舍入，前期训练能保持一定稳定性，但随着精度降低（如 12 位），收敛速度会变慢，学习效果变差。此时切换到更高精度（如 20 位），网络性能可快速提升。这是因为前期低精度训练能利用其计算优势，后期高精度训练可弥补低精度带来的梯度信息损失，提高最终性能。
+
+
+
 #### GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers
 
 > PTQ，主要应用于推理场景
@@ -635,6 +709,7 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
   * Further, we show that our model can also provide robust results in the extreme quantization regime, in which models are quantized to 2 bits per component, or even ternary values
   * reducing the bitwidth down to 3 or 4 bits per weight
   * **本质上是LLM参数量非常大，存在参数冗余**
+  * Practical Speedups. Finally, we study practical applications. As an interesting use-case, we focus on the OPT-175B model: **quantized to 3 bits, this model takes approximately 63GB of memory**, including the embeddings and the output layer, which are kept in full FP16 precision. Additionally, storing the **complete history of keys and values for all layers,** a common optimization for generation tasks, **consumes another ≈ 9GB for the maximum of 2048 tokens**. Hence, we can actually fit the entire quantized model into a single 80GB A100 GPU, which can be executed by dynamically dequantizing layers as they are required during inference (the model would not fully fit using 4 bits). For reference, standard FP16 execution requires 5x80GB GPUs, and the state-of-the-art 8bit LLM.int8() quantizer (Dettmers et al., 2022) requires 3 such GPUs
 * 方法：layer-wise
   * ![image-20250325020148022](./MLSys/image-20250325020148022.png)
   * 假设：the quantization grid for W is ﬁxed before the process
@@ -644,7 +719,11 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
   * 权重更新：将选中的权重四舍五入到量化网格上的最近值，然后更新同一行中尚未量化的剩余权重以补偿引入的误差。更新公式通过求解拉格朗日函数得到，量化后的最优权重扰动为$$\delta W^{\top}=-\frac{w_{q}}{(H^{-1})_{qq}}e_{q}^{\top}H^{-1}$$，其中$$e_{q}$$是第q个标准基向量。 
   * 矩阵更新：更新剩余权重的逆海森矩阵，通过移除已量化权重对应的行和列来实现。 
   * 重复迭代：继续上述迭代过程，直到所有权重都被量化。 
-* 在实际应用中，为了提高计算效率和防止数值不准确性累积，GPTQ算法对OBQ进行了改进，如采用**固定的非贪心顺序对所有行进行量化**、**一次保持权重更新在列的块内**、**对海森矩阵的对角项应用轻微阻尼**以及**利用逆海森矩阵的Cholesky分解**等。
+* 在实际应用中，为了提高计算效率和防止数值不准确性累积，GPTQ算法对OBQ进行了改进，如采用**固定的非贪心顺序对所有行进行量化**(减少计算量)、**一次保持权重更新在列的块内**(一次128个column，batch操作)、**对海森矩阵的对角项应用轻微阻尼**(增加数值稳定性)以及**利用逆海森矩阵的Cholesky分解**(逆海森矩阵容易inf)等。
+  * ![image-20250325141614872](./MLSys/image-20250325141614872.png)
+
+* 算法
+  * ![image-20250325143626232](./MLSys/image-20250325143626232.png)
 
 
 
