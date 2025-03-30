@@ -303,7 +303,7 @@ Materials
 
 #### (STE) Straight-Through Estimators
 
-> [《》]((https://arxiv.org/pdf/1308.3432))
+> [《Estimating or Propagating Gradients Through Stochastic Neurons for Conditional Computation》](https://arxiv.org/pdf/1308.3432)
 
 https://hassanaskary.medium.com/intuitive-explanation-of-straight-through-estimators-with-pytorch-implementation-71d99d25d9d0
 

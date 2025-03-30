@@ -16,6 +16,8 @@ speed-first
 
 * https://gist.github.com/HDCharles/287ac5e997c7a8cf031004aad0e3a941 ■ triton microbenchmarks
 
+# TorchAOBastTensor参考code-reading-pytorch-utils.py
+
 
 
 # float 8 
@@ -130,9 +132,78 @@ https://github.com/pytorch/ao/blob/main/torchao/quantization/GPTQ.py#L968
 
 Int8DynActInt4WeightGPTQQuantizer::quantize -> _convert_for_runtime -> _replace_linear_8da4w(linear_class=Int8DynActInt4WeightLinear)
 
-* from torchao.quantization.quant_api import _replace_with_custom_fn_if_matches_filter 替换linear层
+from torchao.quantization.quant_api import _replace_with_custom_fn_if_matches_filter 替换linear层
 
 
+### quantized training
+
+- 当前是dequant的实现，没有用int8 matmul
+- Still not very attractive: memory reduction is not yet ideal (might be due to row-wise
+scaling) + slower training due to quantization overhead + accuracy is slightly lower
+- For fine-tuning, QLoRA is simpler
+
+# int8
+
+int8.py
+https://github.com/pytorch/ao/pull/644
+
+class _Int8WeightOnlyLinear(torch.autograd.Function):
+    @staticmethod
+    def forward(
+        ctx,
+        input: Tensor,
+        weight: Int8QuantizedTrainingLinearWeight,
+        bias: Optional[Tensor] = None,
+    ):
+        ctx.save_for_backward(input, weight)
+        ctx.bias = bias is not None 
+
+        # NOTE: we have to .T before .to(input.dtype) for torch.compile() mixed matmul to work
+        out = (input @ weight.int_data.T.to(input.dtype)) * weight.scale
+        out = out + bias if bias is not None else out
+        return out
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, weight = ctx.saved_tensors
+
+        grad_input = (grad_output * weight.scale) @ weight.int_data.to(
+            grad_output.dtype
+        )
+        grad_weight = grad_output.view(-1, weight.shape[0]).T @ input.view(
+            -1, weight.shape[1]
+        )
+        grad_bias = grad_output.view(-1, weight.shape[0]).sum(0) if ctx.bias else None
+        return grad_input, grad_weight, grad_bias
+
+
+@implements(aten.copy_.default)
+def _(func, types, args, kwargs):
+    if isinstance(args[0], Int8QuantizedTrainingLinearWeight) and isinstance(
+        args[1], Int8QuantizedTrainingLinearWeight
+    ):
+        args[0].int_data.copy_(args[1].int_data, **kwargs)
+        args[0].scale.copy_(args[1].scale, **kwargs)
+
+    elif isinstance(args[0], Int8QuantizedTrainingLinearWeight):
+        int_data, scale = quantize_int8_rowwise(args[1], stochastic_rounding=True)
+        args[0].int_data.copy_(int_data, **kwargs)
+        args[0].scale.copy_(scale, **kwargs)
+
+    else:
+        args[0].copy_(args[1].dequantize(), **kwargs)
+
+    return args[0]
+
+# bf16 w/ SR
+
+https://github.com/karpathy/llm.c/blob/7ecd8906afe6ed7a2b2cdb731c042f26d525b820/llmc/adamw.cuh#L19-L46
+https://github.com/gau-nernst/quantized-training/blob/c42a7842ff6a9fe97bea54d00489e597600ae683/other_optim/bf16_sr.py#L108-L122
+
+# Note on optimizer
+existing PyTorch optimizers may modify the param in-place multiple times. e.g. AdamW
+https://github.com/pytorch/pytorch/blob/32be3e942c3251dc50892334c6614a89327c122c/torch/optim/adamw.py#L384
+ Therefore, this PR also adds an alternative implementation of AdamW in torchao.prototype.low_bit_optim.AdamW, which only applies in-place update of param in the final step.
 
 ### low bit optimizer
 

@@ -194,7 +194,7 @@ with IO-Awareness
     is a common approach to reduce the activation memory by approximately the square root of
     the total activations at the expense of 33% re-computation overhead [7]. This would reduce
     the activation memory consumption of this model to about 8 GB.
-  * 12 × hidden dim × batch × seq length × transformer layers.
+  * The activation memory of a transformer-based model is proportional to the number of transformer layers × hidden dimensions × sequence length × batch size. For a GPT-2 like architecture the total activations is about 12 × hidden dim × batch × seq length × transformer layers.
 
 * ZeRO，参考 「MLSys.md」
 

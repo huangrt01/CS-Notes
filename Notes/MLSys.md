@@ -417,28 +417,47 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 #### Intro
 
 * 为什么量化？
-  * 优化计算、内存带宽、显存
-    * 显存包括 参数、activations（存储用于backward）等
-  * 内存带宽瓶颈的场景：
+  * 优化显存
+    * 显存包括 params、grads、activations（存储用于backward）等
+    * The activation memory of a transformer-based model is proportional to the number of transformer layers × hidden dimensions × sequence length × batch size. For a GPT-2 like architecture the total activations is about 12 × hidden dim × batch × seq length × transformer layers.
+  * 优化计算
+    * Int8 matmul
+  * 优化内存带宽
     * Increasing the speed at which **the user receives generated results** is challenging, as compute is **dominated by matrix-vector products**. Unlike matrix-matrix products, these are primarily limited by memory bandwidth.
-* FP16
+* 量化精度
+  * ![image-20250331001017183](./MLSys/image-20250331001017183.png)
 
-  - FP64: 用8个字节来表达一个数字, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
+  * FP64: 用8个字节来表达一个数字, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
 
-  - FP32: 用4个字节来表达一个数字, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
+  * FP32: 用4个字节来表达一个数字, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
 
-  - FP16: 用2个字节来表达一个数字, 1位符号, 5位指数, 10位小数，**有效位数为3位**. 常用于精度更低的机器学习等
+  * FP16: 用2个字节来表达一个数字, 1位符号, 5位指数, 10位小数，**有效位数为3位**. 常用于精度更低的机器学习等
+
+* 硬件支持：参考「GPU.md —— 硬件精度支持」
+
+#### 量化技术分类
+
+* Mixed Precision Training
+  * weight/activation量化
+  * weight update用fp32/bf16
+
 * Post Training Quantization (PTQ)
+  * weight/activation量化，推理精度和性能的最优解
   * 常见思路：
     - W8A8: smoothQuant、DeepSeek Fp8
     - W4A16: DecoupleQ、GPTQ
-  
 * Quantization Aware Training (QAT)
+  * 训练用全精度，并模拟量化，以优化推理量化精度，PTQ的效果升级版
 * Quantized Training (QT)
+  * 全部步骤量化，包括weight/activation/weight update
+
   * only seen success up to 8-bits, whereas QAT is effective even at lower bit-widths.
     * https://cloud.google.com/blog/products/compute/accurate-quantized-training-aqt-for-tpu-v5e
 
-* 硬件支持：参考「GPU.md —— 硬件精度支持」
+
+* Q-Lora
+  * Quantize base weight to NF4, while LoRA weights are in high precision (FP32 or BF16)
+  *  Quantized base weights are not trained.
 
 #### Literature Review
 
@@ -455,6 +474,12 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
       based nlp models for low latency and energy eﬃcient inference
       * introduce centroid-based quantization method, where outlier numbers use FP32 format and the rest numbers are quantized using non-uniform quantization.
       * As such, it is hard to get the real inference latency benefit on general compute accelerators, e.g., CPU and GPU, because the parallel processing units in these hardware do not support efficient computation of mixed data types.
+  * expensive hidden-states knowledge distillation [2, 36] is used
+    for ultra-low precision quantization to close the accuracy gap【ZeroQuant】
+    * (1) KD needs to hold a teacher and a student model together during the training, which dramatically increases the memory and compute cost;
+    * (2) KD usually requires full training of the student model. Therefore, several copies (gradient, first/second order momentum) of the weight parameters need to be stored in memory to update the model;
+    * (3) KD generally requires original training data, which sometimes are not accessible due to privacy/confidential issues.
+    * --> ZeroQuant LKD
   * 其它：
     * 《Post-training quantization for vision transformer》（NIPS 2021）
     * 《Up or down? adaptive rounding for post-training quantization》
@@ -613,15 +638,29 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 * 《Memory Efficient Optimizers with 4-bit States》
 * 《8-bit Optimizers via Block-wise Quantization》
   * 8bit: bitandbytes
-* ![image-20250315205836858](./MLSys/image-20250315205836858.png)
+  * ![image-20250315205836858](./MLSys/image-20250315205836858.png)
 * ![image-20250315210506126](./MLSys/image-20250315210506126.png)
   * 思路：fuse kernel，不将中间状态存入gpu的global memory
-    * block-wise而不是tensor-wise，才能确保计算scale时在shared memory进行
+    * **block-wise**而不是tensor-wise，才能**确保计算scale时在shared memory进行**
     * 可能考虑 TMA （tensor memory accelerator）？
 
 ##### Low-bit weight-only training
 
 * 核心问题：Can we train quantized weights without high precision copy?
+* 解法：stochastic rounding in optimizer，SR用于梯度更新
+* 结论：
+  * 1B以上的LLM模型，相比bf16训练的loss差距小
+  * finetune某个模型，Lr 1e-5时，bf16训练精度低于int8 SR
+    * https://github.com/pytorch/ao/pull/644
+    * ![image-20250331011617617](./MLSys/image-20250331011617617.png)
+
+* Bf16 w/ SR
+
+  * https://arxiv.org/abs/2010.06192
+
+  * https://github.com/karpathy/llm.c/blob/7ecd8906afe6ed7a2b2cdb731c042f26d525b820/llmc/adamw.cuh#L19-L46
+
+    https://github.com/gau-nernst/quantized-training/blob/c42a7842ff6a9fe97bea54d00489e597600ae683/other_optim/bf16_sr.py#L108-L122
 
 
 
@@ -663,6 +702,62 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 
 
 
+#### DeepSpeed —— ZeroQuant
+
+> ZeroQuant: Efficient and Affordable Post-Training Quantization for Large-Scale Transformers
+
+* 要点：
+  * W8A8、W8A8（LKD下，FFC支持W4A8）
+    * 5.19x/4.16x speedup
+    * 3x memory footprint reduction
+  * a fine-grained hardware-friendly quantization scheme for both weight and activations;
+    * **group-wise quantization for weight and token-wise quantization for activations.** 
+  * a novel affordable layer-by-layer knowledge distillation algorithm (LKD) even without the access to the original training data;
+  * a highly-optimized quantization system backend support to remove the quantization/dequantization overhead
+* 结论：
+  * 直接PTQ + GPT-3/Bert：W8A16效果无损，接下来有损 （table1）
+    * ![image-20250329011956361](./MLSys/image-20250329011956361.png)
+    * 每一层内，不同token的range分布差距大 --> token-wise
+    * output attn matrix，不同行的分布差异大
+  * generation task比eval task更敏感
+  * Table2、Table4:
+    * W8A8、W4/8A16效果好
+    * W4/8A16在zeroquant+lkd后可用
+    * for W4/8, we quantize the MHSA’s weight to INT8 and FFC’s weight to INT4; for A8/16, we use FP16 activation for self-attention calculation (i.e., the GeMM related to Wq/k/v) and use INT8 for the rest calculation
+  * table 6: w8a8的加速比，小batch2-3，64batch 4-5
+  * 5.6 No Access to The Original Training Data，影响不大
+
+* 4.1 Fine-grained Hardware-friendly Quantization Scheme
+  * group-wise quantization for weight
+    * 借鉴Q-Bert
+  * Token-wise Quantization for Activations
+* 工程优化（4.3 Quantization-Optimized Transformer Kernels）
+  * ![image-20250330153101483](./MLSys/image-20250330153101483.png)
+  * quant：kernel fusion technique to fuse quantization operator with its previous operator, like layer normalization, to alleviate the data movement cost from token-wise quantization
+    * 每个SM可以quantize one row/token
+  * dequant：the dequantization cost of the different GeMMs’ output is alleviated by scaling the INT32 accumulation using both the weight and activation quantization scales, before writing the final FP16 result back to the main memory for the next FP16 operator (like GeLU)
+    * 异步读取量化scale
+  * CUTLASS INT8 GeMM：相比cudnn的优势是容易和dequant做fuse
+    * https://developer.nvidia.com/blog/cutlass-linear-algebra-cuda/
+    * use the CUTLASS profiler tool that explores the tiling dimensions on the thread-blocks, WARPs, and WMMA (Tensor cores), as the three compute hierarchies available within the Ampere GPU architecture
+  * 开启cuda graph，优化小模型性能
+* LKD
+  * ![image-20250330153038937](./MLSys/image-20250330153038937.png)
+
+
+
+##### PTQ基础
+
+![image-20250329010304813](./MLSys/image-20250329010304813.png)
+
+* S的选取
+  * weight matrix：max(abs(X))
+  * activation：
+    * dynamic
+    * static：calibrated using training data (e.g., momentum based
+      averaging) and ﬁxed during inference [23]
+      * ![image-20250329010432713](./MLSys/image-20250329010432713.png)
+
 #### DeepSpeed —— Mixture-of-Quantization (MoQ)
 
 > https://www.deepspeed.ai/2021/05/04/MoQ.html
@@ -696,49 +791,22 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
     - Bert-Large for SQuAD finetuning： 后面层敏感
   * Enabling eigenvalue doesn’t guarantee better accuracy result, usually it needs tuning with other settings, such as `start_bits`, `quantize_period` and `quantize_groups`.
 
-#### DeepSpeed —— ZeroQuant
-
-> ZeroQuant: Efficient and Affordable Post-Training Quantization for Large-Scale Transformers
-
-* 要点：
-  * W8A8、W8A8（LKD下，FFC支持W4A8）
-    * 5.19x/4.16x speedup
-    * 3x memory footprint reduction
-  * a fine-grained hardware-friendly quantization scheme for both weight and activations;
-    * **group- wise quantization for weight and token-wise quantization for activations.** 
-  * a novel affordable layer-by-layer knowledge distillation algorithm (LKD) even without the access to the original training data;
-  * a highly-optimized quantization system backend support to remove the quantization/dequantization overhead
-
-##### PTQ基础
-
-![image-20250329010304813](./MLSys/image-20250329010304813.png)
-
-* S的选取
-  * weight matrix：max(abs(X))
-  * activation：
-    * dynamic
-    * static：calibrated using training data (e.g., momentum based
-      averaging) and ﬁxed during inference [23]
-      * ![image-20250329010432713](./MLSys/image-20250329010432713.png)
-
-
-
 #### [学术]模型量化介绍
 
 * 神经网络：多函数的嵌套表示
   * 越来越不规则
-* 用于存储的模型量化：Serving 量化
-  * 推理量化本质上是误差最小化求解
-  * 传统问题局限性：不面向loss函数，面向策略，不可解
-
-
-  * 用于计算的模型量化
-    * 权重和输入都有delta（预估时认为权重delta为零）
-      * 偏微分公式 -> 每层的输出到下一层的输入很重要
-        * 同样的量化方式，相同量化精度给不同层的输入带来不同的误差
-        * 存储量化 v.s 计算量化，后者更强调在存储约束下求解最优精度
-      * 一种可求闭式解（分层量化模型）：量化标准排序、梯度排序，一一对应，排序不等式证明
-        * e.g. HAWQ-v2
+* 训练量化和推理量化的异同
+  - 训练量化：用于计算的模型量化
+    - 权重和输入都有delta（预估时认为权重delta为零）
+    - 偏微分公式 -> 每层的输出到下一层的输入很重要
+      - 同样的量化方式，相同量化精度给不同层的输入带来不同的误差
+      - 存储量化 v.s 计算量化，后者更强调在存储约束下求解最优精度
+    - 核心：控制梯度噪音的范数
+    - 一种可求闭式解（分层量化模型）：量化标准排序、梯度排序，一一对应，排序不等式证明
+      * e.g. HAWQ-v2
+  - 推理量化：用于存储的模型量化
+    - 传统问题局限性：求解量化误差最小，不面向loss函数，面向策略，不可解
+  - 量化训练和预测是两个目标，训练结果应该恢复成全精度再用预测压缩的过程压缩一遍
 
 
 * Training 量化
@@ -798,8 +866,12 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 
     - 随机舍入通过概率机制将误差均匀分布在量化步长 $$\epsilon$$ 内，减少对模型的系统性干扰。
 
-* “混合”精度训练：
-  * 在 CIFAR10 数据集训练时，低精度定点运算（如 16 位定点数）结合随机舍入，前期训练能保持一定稳定性，但随着精度降低（如 12 位），收敛速度会变慢，学习效果变差。此时切换到更高精度（如 20 位），网络性能可快速提升。这是因为前期低精度训练能利用其计算优势，后期高精度训练可弥补低精度带来的梯度信息损失，提高最终性能。
+* 应用
+
+  * **前向传播中的 Activation 计算**
+    * “混合”精度训练：
+      * 在 CIFAR10 数据集训练时，低精度定点运算（如 16 位定点数）结合随机舍入，前期训练能保持一定稳定性，但随着精度降低（如 12 位），收敛速度会变慢，学习效果变差。此时切换到更高精度（如 20 位），网络性能可快速提升。这是因为前期低精度训练能利用其计算优势，后期高精度训练可弥补低精度带来的梯度信息损失，提高最终性能。
+  * 用于梯度更新
 
 ##### QAT
 
@@ -1004,6 +1076,12 @@ void gemmPacked(
 * matrix-vector engine、FPGA、TPU
 
 * ML benchmark
+
+#### Q-Lora
+
+![image-20250330233937812](./MLSys/image-20250330233937812.png)
+
+
 
 ### 算力优化
 
@@ -1294,12 +1372,6 @@ void gemmPacked(
   - **内存碎片管理（MD）**：预分配连续内存块，减少分配失败。
     - interleaving of short term and long term memory causes memory fragmentation
 
-#### FSDP
-
-#### TP & PP
-
-* **PP splits a model horizontally across layers running each partition on a different device and use micro-batching to hide the pipeline bubble** [10, 11]. Model functionalities such as tied-weights and batch-normalization are difficult to implement due to horizontal splitting and micro-batching, respectively. Popular PP implementation such as **G-pipe** [10] partitions both model parameters and total activations but **requires a batch size proportional to number of pipeline partitions to hide the pipeline bubble**. **The large batch size can affect the convergence rate, while also requiring significant memory to store activations.** A different implementation of PP in PipeDream [12] keeps multiple copies of stale parameters to hide the pipeline bubble without increasing the batch size significantly, making it less memory efficient. Additionally, the implementation is not equivalent to the standard DL training and has implications on training convergence. In contrast, ZeRO obtains the same or better memory efficiency than PP without incurring functionality, performance and convergence related restrictions of PP. 【ZeRO论文】
-
 * **实验数据与配置**
 
   - 硬件配置
@@ -1323,6 +1395,12 @@ void gemmPacked(
   - **万亿参数支持**：实现 ZeRO-DP 全三阶段（P<sub>os+g+p</sub>），结合 MP（如 16-way）和 DP（64-way）。
   - **动态优化策略**：根据硬件条件自动选择 Pa/cpu 模式。
   - **异构支持**：扩展至 CPU/TPU 集群。
+
+#### FSDP
+
+#### TP & PP
+
+* **PP splits a model horizontally across layers running each partition on a different device and use micro-batching to hide the pipeline bubble** [10, 11]. Model functionalities such as tied-weights and batch-normalization are difficult to implement due to horizontal splitting and micro-batching, respectively. Popular PP implementation such as **G-pipe** [10] partitions both model parameters and total activations but **requires a batch size proportional to number of pipeline partitions to hide the pipeline bubble**. **The large batch size can affect the convergence rate, while also requiring significant memory to store activations.** A different implementation of PP in PipeDream [12] keeps multiple copies of stale parameters to hide the pipeline bubble without increasing the batch size significantly, making it less memory efficient. Additionally, the implementation is not equivalent to the standard DL training and has implications on training convergence. In contrast, ZeRO obtains the same or better memory efficiency than PP without incurring functionality, performance and convergence related restrictions of PP. 【ZeRO论文】
 
 ### Parameter Server
 

@@ -71,6 +71,41 @@ class TorchAOBaseTensor(torch.Tensor):
             return None
         return self._layout
 
+
+def _implements(cls, aten_ops_or_torch_fns):
+    """Use this decorator to implement a function for an aten ops in __torch_dispatch__
+    (if user passed in a list of ops)
+    or torch function in __torch_function__ (if user passed in a single object)
+
+    class MyTensor(torch.Tensor):
+        ...
+        implements = classmethod(_implements)
+
+    implements = MyTensor.implements
+
+    @implements(torch.nn.functional.linear):
+    def _(func, types, args, kwargs):
+        ...
+
+    """
+    if not hasattr(cls, "_ATEN_OP_OR_TORCH_FN_TABLE"):
+        cls._ATEN_OP_OR_TORCH_FN_TABLE = {}
+
+    if not isinstance(aten_ops_or_torch_fns, (list, tuple)):
+        aten_ops_or_torch_fns = [aten_ops_or_torch_fns]
+
+    def decorator(func):
+        for op in aten_ops_or_torch_fns:
+
+            @functools.wraps(op)
+            def wrapper(f, types, args, kwargs):
+                return func(f, types, args, kwargs)
+
+            cls._ATEN_OP_OR_TORCH_FN_TABLE[op] = wrapper
+        return func
+
+    return decorator
+
 # PackedTensor
 
 import torch
