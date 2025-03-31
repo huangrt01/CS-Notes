@@ -427,11 +427,14 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 * 量化精度
   * ![image-20250331001017183](./MLSys/image-20250331001017183.png)
 
-  * FP64: 用8个字节来表达一个数字, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
+  * FP64: 8个字节, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
 
-  * FP32: 用4个字节来表达一个数字, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
+  * FP32: 4个字节, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
 
-  * FP16: 用2个字节来表达一个数字, 1位符号, 5位指数, 10位小数，**有效位数为3位**. 常用于精度更低的机器学习等
+  * FP16: 2个字节 1位符号, 5位指数, 10位小数，**有效位数为3位**. 常用于精度更低的机器学习等
+
+* 精度范围：
+  * ![image-20250331122231657](./MLSys/image-20250331122231657.png)
 
 * 硬件支持：参考「GPU.md —— 硬件精度支持」
 
@@ -489,6 +492,18 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
   
   * 《Training with quantization noise for extreme ﬁxed-point compression》 introduces quantization noise to alleviate the variations of QAT.
   
+* Quantized Training
+  * 《Pareto-Optimal Quantized ResNet Is Mostly 4-bit》
+    * INT8 ResNet outperforms BF16 ResNet (at the same params count)
+    * INT4 ResNet is the best (for a given model size in MB/GB)
+
+  * Binarized Neural Machine Translation
+    * Inspired BitNet
+
+  * Jetfire: Efficient and Accurate Transformer Pretraining with INT8 Data Flow and Per-Block Quantization
+    * Tile-wise quantization, with quantized matmul outputs
+    * INT8 LayerNorm and INT8 GELU
+
 * Zero-shot Quantization
   * 《Zeroq: A novel zero shot quantization framework.》
   * 《Data-free quantization through weight equalization and bias correction》
@@ -632,7 +647,7 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 
 ![image-20250315203511421](./MLSys/image-20250315203511421.png)
 
-##### low-bit optimizer
+##### Low-bit optimizer
 
 * 问题：pytorch optimizer不支持fp32 param + bf16 optimizer，强制要求param-gradients-optimizer三者的dtype一致
 * 《Memory Efficient Optimizers with 4-bit States》
@@ -662,7 +677,42 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 
     https://github.com/gau-nernst/quantized-training/blob/c42a7842ff6a9fe97bea54d00489e597600ae683/other_optim/bf16_sr.py#L108-L122
 
+##### Low-bit mixed-precision training
 
+* 问题：如何int8、fp8训练
+* 解法：
+  * scaled matmul
+    * tensorwise
+    * 左乘matrix用row-wise、右乘matrix用column-wise
+  * 工程实现：triton kernel
+    * torch compile的问题：1）无法fuse两个scaling；2）auto config不好
+  * ![image-20250331123031392](./MLSys/image-20250331123031392.png)
+
+* 结论：
+  * int8矩阵计算加速比，a100在2左右
+  * Comparing BF16 w/ padding and INT8 mixed-precision w/ padding, there is ~20% speedup
+
+##### 讨论
+
+* INT8 weight-only + INT8 matmul?
+  * Row-wise scaling in forward pass become column-wise scaling in backward pass
+  * Tensor-wise scaling won’t have this issue.
+  * Also possible to dequant and re-quant in the other axis, but will incur extra overhead.
+  * QLoRA + FP8/INT8 matmul: need to dequant weight before matmul anyway.
+* Ideas to explore
+  * low-bit allreduce using Stochastic Rounding
+  * INT4 Tensor Cores 👀 (requires cutlass)
+  * Output low-bit activations from matmul -> low-bit RMSNorm / GELU / SiLU
+
+##### BitNet 支持
+
+* BitNet 1.58-bit https://arxiv.org/abs/2402.17764
+  * Weight: tensor-wise abs-mean scaling to ternary (-1, 0, 1)
+  * Activation: per-token (row-wise) abs-max scaling to INT8
+  * Originally trained with Quantization-Aware Training (QAT)
+  * We can use INT8 Tensor Cores! (and 2-bit all-gather for FSDP)
+  * https://github.com/pytorch/ao/pull/930
+  * ![image-20250331153107702](./MLSys/image-20250331153107702.png)
 
 ##### QAT 应用
 
@@ -918,11 +968,11 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 * 混合精度量化策略
 
   - 敏感性指标
-    - \(\Omega_i = |\text{mean}(\lambda_i)| + \text{std}(\lambda_i)\)，综合特征值的均值和方差。
-    - **示例**：SQuAD 第 7 层\(\lambda_i\)均值为 1.0，但方差高达 61.6，需分配更高精度。
+    - $$\Omega_i = |\text{mean}(\lambda_i)| + \text{std}(\lambda_i)$$，综合特征值的均值和方差。
+    - **示例**：SQuAD 第 7 层$$\lambda_i$$均值为 1.0，但方差高达 61.6，需分配更高精度。
 
   - 位分配规则
-    - 按\(\Omega_i\)降序排列各层，前 50% 分配 3-bit，后 50% 分配 2-bit（2/3-bit 混合）。
+    - 按$$\Omega_i$$降序排列各层，前 50% 分配 3-bit，后 50% 分配 2-bit（2/3-bit 混合）。
     - 针对不同任务调整分配比例（如 SQuAD 更保守）。
 
   - 消融实验
@@ -1080,6 +1130,20 @@ void gemmPacked(
 #### Q-Lora
 
 ![image-20250330233937812](./MLSys/image-20250330233937812.png)
+
+#### Fp8训练
+
+![image-20250331122321267](./MLSys/image-20250331122321267.png)
+
+#### BitNet b1.58
+
+* 结论：
+  * BitNet b1.58 can match full precision (i.e., FP16) baselines in terms of both perplexity and end-task performance, **starting from a 3B size**, when using the same configuration
+* 方案：
+  * 1.58-bit weights and INT8 activations.
+  * activation采用对称量化
+
+![image-20250331150031977](./MLSys/image-20250331150031977.png)
 
 
 
@@ -1512,8 +1576,7 @@ PS架构的优势主要还是高可用(system efficiency)
 
 * PyTorch builds on these trends by providing an **array-based programming model accelerated by GPUs**
   **and differentiable via automatic differentiation integrated in the Python ecosystem.**
-* PyTorch foregoes the potential beneﬁts of a graph-metaprogramming based approach to preserve the imperative
-  programming model of Python
+* PyTorch foregoes the potential beneﬁts of a graph-metaprogramming based approach to preserve the imperative programming model of Python
 
 ```Python
 class LinearLayer(Module):
@@ -1564,15 +1627,12 @@ class FullBasicModel(nn.Module):
       * limit：the allocations end up fragmented per stream
         * 很少用多流，Data loading and distributed computing utilities are exceptions，精心实现
   * multiprocessing：
-    * PyTorch extends the Python
-      multiprocessing module into torch.multiprocessing, which is a drop-in replacement for the
-      built in package and automatically moves the data of tensors sent to other processes to shared memory
-      instead of sending it over the communication channel.
+    * PyTorch extends the Python multiprocessing module into torch.multiprocessing, which is a drop-in replacement for the built in package and automatically moves the data of tensors sent to other processes to shared memory instead of sending it over the communication channel.
     * Another unique feature of this system is that it transparently handles sharing of CUDA tensors, making it easy to implement techniques like Hogwild [42].
-
+    
   * ref count
     * PyTorch tracks both references internal to the libtorch library and external references made by
-      users in their Python code by integrating with Python’s own reference counting mechanism
+    users in their Python code by integrating with Python’s own reference counting mechanism
 
 ### Go+Torch
 
@@ -1634,7 +1694,10 @@ OneFlow架构
 * 范式：
   * 预训练Embedding+轻量化线上模型
 
+### 图优化
 
+* 静态图的优势：
+  * 移除无用op、跨op优化、op fusion
 
 ### MLOps
 

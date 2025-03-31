@@ -1,3 +1,8 @@
+### op执行
+
+gpu op是异步的（需要h2d触发或者主动调用torch.cuda.synchronize），cpu op是主进程同步的
+
+
 ### 写Op
 
 TODO： https://pytorch.org/tutorials/advanced/cpp_extension.html

@@ -142,7 +142,9 @@ from torchao.quantization.quant_api import _replace_with_custom_fn_if_matches_fi
 scaling) + slower training due to quantization overhead + accuracy is slightly lower
 - For fine-tuning, QLoRA is simpler
 
-# int8
+# int8 with SR
+
+tensor-wise scale
 
 int8.py
 https://github.com/pytorch/ao/pull/644
@@ -200,10 +202,112 @@ def _(func, types, args, kwargs):
 https://github.com/karpathy/llm.c/blob/7ecd8906afe6ed7a2b2cdb731c042f26d525b820/llmc/adamw.cuh#L19-L46
 https://github.com/gau-nernst/quantized-training/blob/c42a7842ff6a9fe97bea54d00489e597600ae683/other_optim/bf16_sr.py#L108-L122
 
-# Note on optimizer
+- Note on optimizer
 existing PyTorch optimizers may modify the param in-place multiple times. e.g. AdamW
 https://github.com/pytorch/pytorch/blob/32be3e942c3251dc50892334c6614a89327c122c/torch/optim/adamw.py#L384
  Therefore, this PR also adds an alternative implementation of AdamW in torchao.prototype.low_bit_optim.AdamW, which only applies in-place update of param in the final step.
+
+
+# int8 mixed precision 优化compute
+
+https://github.com/pytorch/ao/pull/748
+
+ Many of optimization of FP8 training can be applied here too. Namely, delayed scaling (my current INT8 mixed-precision here is basically dynamic scaling), 
+ quantize before FSDP all-gather to reduce communication bandwidth. I leave this for future PRs.
+
+@torch.compiler.allow_in_graph  # this is required for module-swap, but not for tensor subclass
+class _Int8MixedPrecisionTrainingLinearFunction(torch.autograd.Function):
+    @staticmethod
+    def forward(...
+        if config.output:
+            out = _dynamic_int8_mm(input, weight.T)
+
+def scaled_int8_mm(
+    A: Tensor, B: Tensor, row_scale: Tensor, col_scale: Tensor
+) -> Tensor:
+    """Compute `(A @ B) * row_scale * col_scale`, where `A` and `B` are INT8 to utilize
+    INT8 tensor cores. `col_scale` can be a scalar.
+    """
+    assert A.dtype is torch.int8 and B.dtype is torch.int8
+    assert row_scale.dtype is col_scale.dtype
+    assert A.shape[1] == B.shape[0]
+    assert row_scale.squeeze().shape == (A.shape[0],)
+    assert col_scale.squeeze().shape in ((B.shape[1],), ())
+    assert row_scale.is_contiguous()
+    assert col_scale.is_contiguous()
+    return torch.ops.torchao.scaled_int8_mm(A, B, row_scale, col_scale)
+
+
+# BitNet b1.58 Training
+https://github.com/pytorch/ao/pull/930
+- 暂未对backward做量化
+
+class _BitNetTrainingLinear(torch.autograd.Function):
+    @staticmethod
+    def forward(
+        ctx,
+        input: Tensor,
+        weight: BitNetTrainingLinearWeight,
+        bias: Optional[Tensor] = None,
+    ):
+        batch_dims = input.shape[:-1]
+        input = input.view(-1, weight.shape[1])
+
+        # https://github.com/microsoft/unilm/blob/master/bitnet/The-Era-of-1-bit-LLMs__Training_Tips_Code_FAQ.pdf
+        # Figure 3
+        input_i8, row_scale = quantize_int8_rowwise(input, eps=1e-5)
+
+        # NOTE: use FP32 scale for weight quantization, but cast scale to possibly lower precision
+        # for matmul and backward
+        tensor_scale = get_bitnet_scale(weight._data)
+        weight_i8 = quantize_bitnet_weight(weight._data, tensor_scale)
+        tensor_scale = tensor_scale.to(weight.dtype)
+
+        ctx.save_for_backward(input_i8, row_scale, weight_i8, tensor_scale)
+
+        # use int8 tensor cores
+        out = scaled_int8_mm(
+            input_i8.contiguous(), weight_i8.contiguous().T, row_scale, tensor_scale
+        )
+        out = out.view(*batch_dims, weight.shape[0])
+
+        out = out + bias if bias is not None else out
+        return out
+
+
+class BitNetTrainingLinearWeight(TorchAOBaseTensor):
+    ...
+    # FSDP all-gather extension v1
+    def fsdp_pre_all_gather(self, mesh):
+        # quantize and pack into 2-bit to save comm bandwidth
+        if self._precomputed_scale is not None:
+            scale = self._precomputed_scale
+
+        else:
+            scale = get_bitnet_scale(self._data)
+            dist.all_reduce(scale, op=dist.ReduceOp.AVG)
+
+        # NOTE: scale is in FP32
+        data_i8 = quantize_bitnet_weight(self._data, scale)
+        data_i2 = _pack_i2_in_i8(data_i8)
+        return (data_i2,), (scale,)
+
+    def fsdp_post_all_gather(
+        self,
+        all_gather_outputs: Tuple[Tensor, ...],
+        metadata: Any,
+        param_dtype: torch.dtype,
+        *,
+        out: Optional[Tensor] = None,
+    ):
+        (data_i2,) = all_gather_outputs
+        (scale,) = metadata
+        scale = scale.to(param_dtype)
+        if out is not None:
+            assert isinstance(out, BitNetPacked2bitLinearWeight)
+            out.scale = scale
+            return
+        return BitNetPacked2bitLinearWeight(data_i2, scale), all_gather_outputs
 
 ### low bit optimizer
 

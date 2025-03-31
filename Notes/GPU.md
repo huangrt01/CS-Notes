@@ -124,6 +124,14 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 
 ![0f4c3f5e-1d1c-4556-8c7e-2725cc82d2df_971x593](./GPU/0f4c3f5e-1d1c-4556-8c7e-2725cc82d2df_971x593.webp)
 
+###### TensorCore
+
+https://resources.nvidia.com/en-us-tensor-core
+
+相比CUDA core，实现了MMA operations，支持2:4 sparsity，支持in8和int4，更高效
+
+
+
 ##### GPU Memory Architecture
 
 ![image-20250226190716305](./GPU/image-20250226190716305.png)
@@ -259,68 +267,6 @@ cudaMemcpyHostToDevice
     * --> 通过大量warp来hide memory latency
 * Copying of Result Data From Device to Host Memory
 
-#### 机型基础
-
-* Nvidia GPU的算力([Compute Capability](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#compute-capability)), 只是一个版本号, 用来表示核心架构. 一般用`X.X`的方式表示, 第一位是主版本号, 第二位是次版本号, 如下:
-
-| 架构                            | 算力 | 上市时间 | 产品                                                         | NVLink                                                       | NVSwitch                     | PCIe              |
-| ------------------------------- | ---- | -------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------------------- | ----------------- |
-| Hopper architecture (霍普)      | 9    |          | H100, 训练卡                                                 | 3td-NVLink, SXM2/SXM4900GB/s最多18个                         | 3td-NVSwitch: 900GB/s最多8个 |                   |
-| Ampere architecture (安培)      | 8    | 2020     | A100, 训练卡, 80G HBM2e 显存19.5 TFLOPSCuda Cores: 6912Tensor Cores: 432 | 3td-NVLink, SXM2/SXM3 600GB/s最多12个                        | 2nd-NVSwitch: 600GB/s最多8个 | PCIe Gen4 64 GB/s |
-| Turing architecture (图灵)      | 7.5  | 2018     | T4, 推理卡, 16GB GDDR6 显存8.1 TFLOPSCuda Cores: 2560Tensor Cores: 320 |                                                              |                              | PCIe Gen332 GB/s  |
-| Volta architecture (伏特)       | 7    | 2017     | V100, 训练卡, 24G HBM2显存14~16.4 TFLOPSCuda Cores: 5120Tensor Cores: 640 | 2nd-NVLink, SXM2300GB/s最多6个                               | 1st-NVSwitch: 300GB/s最多8个 | PCIe Gen332 GB/s  |
-| Pascal architecture (帕斯卡)    | 6    | 2016     | **P100, 训练卡, 16G HBM2显存**9.3 ~ 10.6 TFLOPSCuda Cores: 3840P40, 训练卡, 24G GDDR5 显存P4, 推理卡, 8G GDDR5 显存 | 1st-NVLink, SXMP100: 732 GB/s160 GB/sP40: 346 GB/sP4: 192 GB/s |                              | PCIe Gen332 GB/s  |
-| Maxwell architecture (麦克斯韦) | 5    | 2014     | M40, M60                                                     |                                                              |                              |                   |
-| Kepler architecture (开普勒)    | 3    | 2010     | K10, K20, K40, K80                                           |                                                              |                              |                   |
-| Fermi architecture (费米)       | 2    | 2010     |                                                              |                                                              |                              |                   |
-| Tesla architecture (特斯拉)     | 1    | ~        |                                                              |                                                              |                              |                   |
-
-* A100
-  * https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/
-  * 192KB of on-chip SRAM per each of 108 SMs
-  * Float32 Tensor Core：156 TFlops
-  * Float16 Tensor Core：314 TFlops
-  * Float32 CUDA Core：19.5 TFlops
-  * GPU Memory：80 GB
-  * GPU Memory Bandwidth：2039 GB/s
-  * Interconnect：
-    * NVLink：600GB/s （50GB/s，12 links）
-    * PCIe Gen4: 64GB/s
-  
-  * 《Dissecting the Ampere GPU architecture via microbenchmarking》
-  * 《Nvidia A100 tensor core GPU architecture》
-  
-* H100 GPU
-  * 132 SMs with 64 cores per SM, totalling a whopping 8448 cores.
-  * each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
-
-
-
-Nvidia GPU 产品根据使用场景不同分为不同的序列:
-
-- GeForce: 用于家庭和个人电脑，包括游戏和娱乐等;
-  - **前缀**: 显卡档次与代号. GT: 频率提升版本; GS: GT的缩减版，级别在GT之后; GTX: 一般可以理解为GT eXtreme，代表了极端、极致的意思; GTS: GTX的缩减版，级别在GTX之后. RTX-> GTX > GTS > GT > GS
-  - **数字**: 例如1060, 10代表的是第几代, 6代表显卡性能档次的定位
-  - **后缀**: SE的意思是阉割版, TI表示增强版, M表示移动端, LE表示
-- Quadro: 用于工业渲染、艺术设计，工作站等场合
-- Tesla: 用于科学计算，深度学习加速等场景, 对于15年以后的产品, 一般或以省去Tesla, 或用NVIDIA代替, 如P100, T4, V100, A100等.
-
-GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件的版本. 
-
-![h100](./GPU/h100.png)
-
-
-
-* [A10 v.s. A10G](https://www.baseten.co/blog/nvidia-a10-vs-a10g-for-ml-model-inference/)
-  * The A10 is an Ampere-series datacenter GPU well-suited to many model inference tasks, such as running seven billion parameter LLMs. However, AWS users run those same workloads on the A10G, a variant of the graphics card created specifically for AWS. The A10 and A10G have somewhat different specs — most notably around tensor compute — but are interchangeable for most model inference tasks because they share the same GPU memory and bandwidth, and most model inference is memory bound.
-  * the A10 prioritizes tensor compute, while the A10G has a higher CUDA core performance
-  * 根据ops_to_byte分析是compute bound还是memory bound
-    * arithmetic_intensity (Llama 2 7B, Single-Headed Attention Operation)
-          ~= total compute / total memory movement
-          = 4d(N^2) + 3N^2 ops / 8N^2 + 8Nd bytes
-          = 62 ops/byte
-  * [A guide to LLM inference and performance](https://www.baseten.co/blog/llm-transformer-inference-guide/) TODO
-
 #### 显卡驱动
 
 * 英伟达的显卡驱动程序通常会随CUDA Toolkit一起安装。但是，这个驱动程序是为了开发目的而安装的。这意味着它主要用于开发和调试CUDA应用程序，以帮助开发人员在其工作站上进行开发和测试。这个驱动程序不建议在生产环境中与英伟达的GPU一起使用。在生产环境中，通常需要专门的、经过验证的驱动程序以确保系统的稳定性和性能。
@@ -402,6 +348,100 @@ nvidia-smi --query-gpu=name --format=csv,noheader
     - NV switch: 整个switch提供 600GB/s 带宽 
     - 单机八卡时，OAM 和 NV switch 差不多；卡数少时 nvsiwtch 效率高
 
+### 机型 & 硬件 & 精度 & 吞吐
+
+#### 精度支持
+
+* Blackwell GPUs will [no longer support int4 tensor cores](https://www.nvidia.com/en-us/data-center/tensor-cores/).
+
+#### 吞吐
+
+* ![image-20250331121025135](./GPU/image-20250331121025135.png)
+
+* INT8加速比：
+  * https://github.com/pytorch/ao/pull/748
+  * a100加速比2，
+  * ![image-20250331133109379](./GPU/image-20250331133109379.png)
+
+#### Engegy Model
+
+![image-20250331151735124](./GPU/image-20250331151735124.png)
+
+* 《1.1 computing’s energy problem (and what we can do about it)》
+* 《PokeBNN: A binary pursuit of lightweight accuracy.》
+
+
+
+
+
+#### 机型基础
+
+* Nvidia GPU的算力([Compute Capability](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#compute-capability)), 只是一个版本号, 用来表示核心架构. 一般用`X.X`的方式表示, 第一位是主版本号, 第二位是次版本号, 如下:
+
+| 架构                                                         | 算力 | 上市时间 | 产品                                                         | NVLink                                                       | NVSwitch                     | PCIe              |
+| ------------------------------------------------------------ | ---- | -------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------------------- | ----------------- |
+| [Blackwell](https://resources.nvidia.com/en-us-blackwell-architecture/blackwell-architecture-technical-brief) |      |          |                                                              |                                                              |                              |                   |
+| [Ada](https://images.nvidia.com/aem-dam/Solutions/Data-Center/l4/nvidia-ada-gpu-architecture-whitepaper-V2.02.pdf) |      |          | L40、L4                                                      |                                                              |                              |                   |
+| Hopper architecture (霍普)                                   | 9    |          | H100, 训练卡                                                 | 3td-NVLink, SXM2/SXM4900GB/s最多18个                         | 3td-NVSwitch: 900GB/s最多8个 |                   |
+| [Ampere architecture ](https://images.nvidia.com/aem-dam/en-zz/Solutions/data-center/nvidia-ampere-architecture-whitepaper.pdf) | 8    | 2020     | A100, 训练卡, 80G HBM2e 显存19.5 TFLOPSCuda Cores: 6912Tensor Cores: 432 | 3td-NVLink, SXM2/SXM3 600GB/s最多12个                        | 2nd-NVSwitch: 600GB/s最多8个 | PCIe Gen4 64 GB/s |
+| Turing architecture (图灵)                                   | 7.5  | 2018     | T4, 推理卡, 16GB GDDR6 显存8.1 TFLOPSCuda Cores: 2560Tensor Cores: 320 |                                                              |                              | PCIe Gen332 GB/s  |
+| Volta architecture (伏特)                                    | 7    | 2017     | V100, 训练卡, 24G HBM2显存14~16.4 TFLOPSCuda Cores: 5120Tensor Cores: 640 | 2nd-NVLink, SXM2300GB/s最多6个                               | 1st-NVSwitch: 300GB/s最多8个 | PCIe Gen332 GB/s  |
+| Pascal architecture (帕斯卡)                                 | 6    | 2016     | P100, 训练卡, 16G HBM2显存 9.3 ~ 10.6 TFLOPSCuda Cores: 3840P40, 训练卡, 24G GDDR5 显存P4, 推理卡, 8G GDDR5 显存 | 1st-NVLink, SXMP100: 732 GB/s160 GB/sP40: 346 GB/sP4: 192 GB/s |                              | PCIe Gen332 GB/s  |
+| Maxwell architecture (麦克斯韦)                              | 5    | 2014     | M40, M60                                                     |                                                              |                              |                   |
+| Kepler architecture (开普勒)                                 | 3    | 2010     | K10, K20, K40, K80                                           |                                                              |                              |                   |
+| Fermi architecture (费米)                                    | 2    | 2010     |                                                              |                                                              |                              |                   |
+| Tesla architecture (特斯拉)                                  | 1    | ~        |                                                              |                                                              |                              |                   |
+
+
+
+* A100
+  * https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/
+  * 192KB of on-chip SRAM per each of 108 SMs
+  * Float32 Tensor Core：156 TFlops
+  * Float16 Tensor Core：314 TFlops
+  * Float32 CUDA Core：19.5 TFlops
+  * GPU Memory：80 GB
+  * GPU Memory Bandwidth：2039 GB/s
+  * Interconnect：
+    * NVLink：600GB/s （50GB/s，12 links）
+    * PCIe Gen4: 64GB/s
+
+  * 《Dissecting the Ampere GPU architecture via microbenchmarking》
+  * 《Nvidia A100 tensor core GPU architecture》
+
+* H100 GPU
+  * 132 SMs with 64 cores per SM, totalling a whopping 8448 cores.
+  * each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
+
+
+
+Nvidia GPU 产品根据使用场景不同分为不同的序列:
+
+- GeForce: 用于家庭和个人电脑，包括游戏和娱乐等;
+  - **前缀**: 显卡档次与代号. GT: 频率提升版本; GS: GT的缩减版，级别在GT之后; GTX: 一般可以理解为GT eXtreme，代表了极端、极致的意思; GTS: GTX的缩减版，级别在GTX之后. RTX-> GTX > GTS > GT > GS
+  - **数字**: 例如1060, 10代表的是第几代, 6代表显卡性能档次的定位
+  - **后缀**: SE的意思是阉割版, TI表示增强版, M表示移动端, LE表示
+- Quadro: 用于工业渲染、艺术设计，工作站等场合
+- Tesla: 用于科学计算，深度学习加速等场景, 对于15年以后的产品, 一般或以省去Tesla, 或用NVIDIA代替, 如P100, T4, V100, A100等.
+
+GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件的版本. 
+
+![h100](./GPU/h100.png)
+
+
+
+* [A10 v.s. A10G](https://www.baseten.co/blog/nvidia-a10-vs-a10g-for-ml-model-inference/)
+  * The A10 is an Ampere-series datacenter GPU well-suited to many model inference tasks, such as running seven billion parameter LLMs. However, AWS users run those same workloads on the A10G, a variant of the graphics card created specifically for AWS. The A10 and A10G have somewhat different specs — most notably around tensor compute — but are interchangeable for most model inference tasks because they share the same GPU memory and bandwidth, and most model inference is memory bound.
+  * the A10 prioritizes tensor compute, while the A10G has a higher CUDA core performance
+  * 根据ops_to_byte分析是compute bound还是memory bound
+    * arithmetic_intensity (Llama 2 7B, Single-Headed Attention Operation)
+          ~= total compute / total memory movement
+          = 4d(N^2) + 3N^2 ops / 8N^2 + 8Nd bytes
+          = 62 ops/byte
+  * [A guide to LLM inference and performance](https://www.baseten.co/blog/llm-transformer-inference-guide/) TODO
+
+
+
 ### CUDA
 
 #### Intro
@@ -477,6 +517,10 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 
 * crash the kernel then get all the information
 
+#### 经验和细节
+
+* triton autotune目前对dynamic shape的支持不好，性能较差，原因是autotune会对每个新shape重新tune
+
 ### Torch.compile
 
 #### Intro
@@ -542,12 +586,6 @@ nvidia-smi --query-gpu=name --format=csv,noheader
   * 线程块的线程数量是 32 的倍数，更好地组织线程能减少分支分歧的发生概率
 
 #### Shared Memory利用
-
-### 硬件精度支持
-
-* Blackwell GPUs will [no longer support int4 tensor cores](https://www.nvidia.com/en-us/data-center/tensor-cores/).
-
-
 
 ### PMPP: Programming Massively Parallel Processors
 

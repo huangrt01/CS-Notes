@@ -577,6 +577,11 @@ https://github.com/OpenNMT/OpenNMT-py/
     * https://openai.com/research/microscope
     * https://distill.pub/2020/circuits/curve-detectors/
 
+## LLAMA
+
+* Intro
+  * uses RMSNorm [ZS19], SwiGLU [Sha20], rotary embedding [SAL+24], and removes all biases
+
 ## Datasets and Evaluation
 
 ### Datasets

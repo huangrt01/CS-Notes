@@ -55,8 +55,6 @@ def step(real_sample):
 
 ### tensor
 
-import torch
-
 input = torch.ones(3, 5)
 print(input)
 
@@ -68,6 +66,12 @@ image = torch.rand(3, 64, 64)
 
 # 输出：torch.Size([3, 64, 64])
 print(image.size()) 
+
+
+empty/zeros/ones/arange/linspace/rand/rand_like/randn
+
+arange和linspace的区别：1)linspace包含尾部节点，arange不包含;2)linspace是生成N个元素
+rand 01均匀分布；randn均值0方差1正态分布
 
 
 result1 = torch.sum(input, dim=0)
@@ -143,21 +147,45 @@ y = x.numpy()
 
 ### tensor operation
 
-# 原地更新，破坏梯度传播
+# 原地更新: 破坏梯度传播、不分配内存
 buf.mul_(momentum).add_(grad, alpha=1 - dampening)
-param.add_(grad, alpha=-lr)
+param = param.add_(grad, alpha=-lr)
 
-// Note [local_used_map_ -> local_used_map_dev copying]
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// We do async H2D to avoid the blocking overhead. The async copy and
-// allreduce respect the current stream, so will be sequenced
-// correctly.
+param += (- lr * grad) # 也会触发原地操作
+
+Note [local_used_map_ -> local_used_map_dev copying]
+We do async H2D to avoid the blocking overhead. The async copy and
+allreduce respect the current stream, so will be sequenced correctly.
 
 local_used_map_tmp.copy_(local_used_map_);
 local_used_map_dev_.copy_(local_used_map_tmp, true);
 
 
 在旧版本的 PyTorch 中，使用 .data 属性来获取张量中的数据，现在更推荐使用 .item() 方法。
+
+
+# 视图操作
+基础索引
+expand（虚拟增加向量维度）
+transpose/permute
+narrow
+squeeze/unsqueeze
+chunk/split
+as_strided
+view
+detach
+
+视图操作的细节：
+- torch.save会存储storage而不是tensor，因此存储的文件大小可能大于自身的数据量
+- reshape和flatten的行为不确定，可能返回view可能返回copy
+
+
+# 高级索引
+x[x < 10]、x[torch.tensor([0,1,2]), torch.tensor([2,3,4])]
+高级索引会copy内存
+
+- 高级索引的赋值会影响原向量
+
 
 a = torch.arange(1, 13).view(4, 3)
 a_t = a.t()
@@ -185,8 +213,14 @@ torch.cat(tensors, dim=0, out=None)
 特征融合：在深度学习模型中，经常需要将来自不同层或不同路径的特征合并起来，以增强模型的表示能力。
 批处理操作：在处理批数据时，可以用torch.cat来合并来自不同批次的输出结果。
 
+# 其它
+
+bool tensor的all方法
 
 ### tensor index
+
+x[1:9:3]
+x[:, None, :]
 
 torch.gather(input, dim, index, *, sparse_grad=False, out=None)
 

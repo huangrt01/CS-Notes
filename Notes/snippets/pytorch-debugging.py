@@ -28,6 +28,10 @@ torch.set_printoptions(profile='full')
 
 print(f"params sum is: {sum(model.parameters()).sum()}")
 
+### grad
+
+retain_grad
+
 
 ### op
 
