@@ -5,9 +5,17 @@ https://dev-discuss.pytorch.org/t/clarification-of-pytorch-quantization-flow-sup
 ### 也参考code-reading-xxx
 
 
-### AMP Examples
+### AMP
+- https://pytorch.org/tutorials/recipes/recipes/amp_recipe.html
+- https://pytorch.org/docs/stable/notes/amp_examples.html#working-with-multiple-gpus
+- https://pytorch.org/docs/stable/amp.html
+- https://www.digitalocean.com/community/tutorials/automatic-mixed-precision-using-pytorch
+- https://towardsdatascience.com/the-mystery-behind-the-pytorch-automatic-mixed-precision-library-d9386e4b787e/
+- 源码阅读：https://zhuanlan.zhihu.com/p/348554267
+- NVIDIA https://www.cs.toronto.edu/ecosystem/documents/AMP-Tutorial.pdf
 
-https://pytorch.org/docs/stable/notes/amp_examples.html#working-with-multiple-gpus
+
+核心API：torch.autocast and torch.cuda.amp.GradScaler
 
 
 

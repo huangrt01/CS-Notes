@@ -402,6 +402,17 @@ https://en.wikipedia.org/wiki/Cholesky_decomposition
 
       2、Word2Vec最后接的是softmax来预测概率，也就是说实现了一个非线性变换，而自编码器或者SVD并没有。
 
+## 微分方程 ODE
+
+### 基础技巧
+
+* [用特征线方法与傅里叶变换求解偏微分方程](https://www.bilibili.com/video/BV16JFTeVEGj)
+
+### 应用
+
+* [玻色爱因斯坦凝聚与Boltzmann-Nordheim方程](https://www.bilibili.com/video/BV1YwNHeSEbp)
+  * 利用测试函数，求弱解
+
 
 
 ## 数学在工科的应用

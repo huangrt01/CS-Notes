@@ -137,6 +137,14 @@ plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, 
 	      * 100000 qubits ~ 100 logical qubits: a quantum computer
 	    * TFQ: https://www.tensorflow.org/quantum
 
+### 成本和性能评估
+
+* [MFU与FLOPs计算](https://zhuanlan.zhihu.com/p/690804699?utm_psn=1830997251394240513)
+  * 模型算力利用率（Model FLOPs Utilization， MFU）和硬件算力利用率（Hardware FLOPs Utilization， HFU）
+  * 模型算力利用率是指 模型一次前反向计算消耗的矩阵算力 与机器算力的比值
+  * 硬件算力利用率是指 考虑重计算后，模型一次前反向计算消耗的矩阵算力 与机器算力的比值
+  * llm的flops：https://xffxff.github.io/posts/flops
+
 ### 算法工程协同
 
 * embedding和特征带来的在线内存成本：
@@ -410,7 +418,13 @@ Feature Selection method based on feature Complexity and variational Dropout (FS
 * 用精排模型参数来初始化参数，fine-tune 加速训练
 * $\gamma_3=10^{-7}$ 描述候选数量，也是一个衡量特征复杂度的参数
 
+### 性能优化 Performance Tuning
 
+https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html
+
+https://huggingface.co/docs/transformers/v4.15.0/performance
+
+https://docs.nvidia.com/deeplearning/performance/index.html
 
 ### 量化、混合精度训练推理
 
@@ -1175,13 +1189,6 @@ void gemmPacked(
 
 * perceptual hashing for images to cache similar input images.
 
-### 成本和性能评估
-
-* [MFU与FLOPs计算](https://zhuanlan.zhihu.com/p/690804699?utm_psn=1830997251394240513)
-  * 模型算力利用率（Model FLOPs Utilization， MFU）和硬件算力利用率（Hardware FLOPs Utilization， HFU）
-  * 模型算力利用率是指 模型一次前反向计算消耗的矩阵算力 与机器算力的比值
-  * 硬件算力利用率是指 考虑重计算后，模型一次前反向计算消耗的矩阵算力 与机器算力的比值
-
 ### 并行训练
 
 #### Literature Review
@@ -1262,15 +1269,16 @@ void gemmPacked(
 
 ![image-20250309012139694](./MLSys/image-20250309012139694.png)
 
-#### DDP
+#### Distributed Training and Communication Protocols
+
+> MLSys CSE 599W Lecture 11
 
 ##### Intro
 
-* An Introduction to Distributed Deep Learning https://sebarnold.net/dist_blog/
+* Recap: Parallel Scheduling Engine
+* 通信原语：
 
 
-
-##### AllReduce —— Collective Communication 原语
 
 ![image-20250312023205177](./MLSys/image-20250312023205177.png)
 
@@ -1278,21 +1286,77 @@ void gemmPacked(
 
 ![image-20250312025718940](./MLSys/image-20250312025718940.png)
 
-* The AllReduce operation expects each participating pro-
-  cess to provide an equally-sized tensor, collectively applies
-  a given arithmetic operation (**e.g., sum, prod, min, max**) to
-  input tensors from all processes, and **returns the same re-**
-  **sult tensor to each participant**
+##### AllReduce
+
+* How to do Synchronization over Network
+  * Distributed Gradient Aggregation, Local Update
+* The AllReduce operation expects each participating process to provide an equally-sized tensor, collectively applies a given arithmetic operation (**e.g., sum, prod, min, max**) to
+  input tensors from all processes, and **returns the same result tensor to each participant**
   * AllReduce = AllGather + LocalReduce
-* Tree-based AllReduce:
-  * https://developer.nvidia.com/blog/massively-scale-deep-learning-training-nccl-2-4/
+  * with TF: TFOptimizer 的 ApplyGradient 方法更新梯度，易于直接使用TF原生与layerwise的Optimizer
 
-* Ring AllReduce分为两个步骤：Scatter Reduce和All Gather
-  * All Reduce的通信成本为：$$T=2(N-1)\frac{K}{N}$$
-  * https://andrew.gibiansky.com/blog/machine-learning/baidu-allreduce/
-  * https://zhuanlan.zhihu.com/p/72939003
+![all-reduce](./MLSys/all-reduce.png)
 
-![image-20250309030219921](./MLSys/image-20250309030219921.png)
+```python
+grad = gradient(net, w)
+for epoch, data in enumerate(dataset):
+  g = net.run(grad, in=data)
+  gsum = comm.allreduce(g, op=sum)
+  w -= lr * gsum / num_workers 
+```
+
+![network-topology](./MLSys/network-topology.png)
+
+* How to implement AllReduce
+  * Tree-Shape
+    * Logically form a reduction tree between nodes
+    * Aggregate to root then broadcast
+    * https://developer.nvidia.com/blog/massively-scale-deep-learning-training-nccl-2-4/
+  * Ring
+    * Form a logical ring between nodes
+    * Streaming aggregation
+    * 分为两个步骤：Scatter Reduce和All Gather
+      * Scatter Reduce
+        * Each node have correctly reduced result of one segment!
+      * All Reduce的通信成本为：$$T=2(N-1)\frac{K}{N}$$
+      * https://andrew.gibiansky.com/blog/machine-learning/baidu-allreduce/
+      * https://zhuanlan.zhihu.com/p/72939003
+    * ![image-20250309030219921](./MLSys/image-20250309030219921.png)
+
+* AllReduce Libraries
+  * MPI offers efficient CPU allreduce
+  * dmlc/rabit: fault tolerant variant
+  * facebookincubator/gloo
+  * Parameter Hub: from UW
+  * NCCL: Nvidia’ efficient multiGPU collective
+* GPUDirect and RMDA
+  * 前者不经过网卡
+* NCCL: Nvidia’s Efficient Multi-GPU Collective
+  * Uses unified GPU direct memory accessing
+  * Each GPU launch a working kernel, cooperate with each other to do ring based reduction
+  * A single C++ kernel implements intra GPU synchronization and Reduction
+* Schedule Allreduce Asynchronously
+  * `B = comm.allreduce(A)`
+  * `engine.push( lambda: B.data=allreduce(A.data), read=[A.var], mutate=[B.var, comm.var])`
+
+* Discussion: What’s Special about Communication Requirements for Model Parallel Training?
+  * Track dependency correctly
+  * Resolve resource contention and allocation
+  * Some special requirement on channel
+    * Allreduce: ordered call
+
+```python
+for i in range(num_layers):
+  for t in range(num_time_stamp):
+    out, state = layer[i].forward(data[i][t], state)
+    data[i+1][t] = out.copyto(device[i])
+```
+
+#### DDP
+
+##### Intro
+
+* An Introduction to Distributed Deep Learning https://sebarnold.net/dist_blog/
 
 ##### PyTorch Distributed: Experiences on Accelerating Data Parallel Training
 
@@ -1470,8 +1534,25 @@ void gemmPacked(
 
 #### Intro
 
-* 异步训练，staleness
-  * 可设置“最大延迟”，N轮迭代内，模型参数必须更新一次
+* PS Interface for Data Parallel Training
+  * Synchronous: bulk synchronous parallel (BSP)
+  * Asynchronous
+    * gradient staleness
+    * 可设置“最大延迟”，N轮迭代内，模型参数必须更新一次
+  * Integrate Schedule with Networking using Events
+    * Use the callback to notify engine that data receive is finished
+
+```python
+grad = gradient(net, w)
+for epoch, data in enumerate(dataset):
+  g = net.run(grad, in=data)
+  ps.push(weight_index, g)
+  w = ps.pull(weight_index)
+```
+
+* The Cost of PS Model: All to All Pattern
+  * Each worker talks to all servers
+  * Shard the parameters over different servers
 
 #### Scaling distributed machine learning with the parameter server, OSDI 2014
 
@@ -2191,17 +2272,15 @@ for prediction, label, img in zip(p,l,i):
           ...
       ```
 
-### MLSys Courses
+### MLSys Courses —— CSE 599W: Systems for ML
 
 [cs294-2022](https://ucbrise.github.io/cs294-ai-sys-sp22/)
 
 [cs294-2019](https://ucbrise.github.io/cs294-ai-sys-fa19/)
 
-#### CSE 599W: Systems for ML
-
 http://dlsys.cs.washington.edu/schedule
 
-##### Lecture 1: Introduction to Deep Learning
+#### Lecture 1: Introduction to Deep Learning
 
 * Ingredients in DL
   * 模型、目标函数、技巧、数据
@@ -2232,7 +2311,7 @@ http://dlsys.cs.washington.edu/schedule
   * ResNet: F(x) + x
 * [lab1_mnist.ipynb](http://dlsys.cs.washington.edu/pdf/lab1_mnist.ipynb): MXNet入门，包括Gluon API、写模型、训练推理api
 
-##### Lecture 3: Overview of Deep Learning System
+#### Lecture 3: Overview of Deep Learning System
 
 ![dlsys-stack](./MLSys/dlsys-stack.png)
 
@@ -2258,20 +2337,27 @@ http://dlsys.cs.washington.edu/schedule
   * Each Hardware backend requires a software stack
   * New Trend: Compiler based Approach
 
-##### Lecture 4: Backpropagation and Automatic Differentiation
+#### Lecture 4: Backpropagation and Automatic Differentiation
 
-* Symbolic Differentiation
+* Symbolic Differentiation 基于符号微分
+  * 只能处理 closed-form expression
   * For complicated functions, the resultant expression can be exponentially large
   * Wasteful to keep around intermediate symbolic expressions if we only need a numeric value of the gradient in the end
   * Prone to error
-* Numerical Differentiation
+  
+* Numerical Differentiation 基于有限差分
   * Bad: rounding error, and slow to compute
   * A powerful tool to check the correctness of implementation, usually use h = 1e-6
-* Backpropogation
+* Backpropogation 自动微分
+  * 思路：
+    * 将基础操作梯度公式hardcode在系统中
+    * 梯度累加数值，从而能兼容模型结构中的逻辑判断
+
   * Easy to understand and implement
   * Bad for memory use and schedule optimization
     * You always need to keep intermediate data in the memory during the forward pass in case it will be used in the backpropagation.
     * Lack of flexibility, e.g., compute the gradient of gradient.
+
 * Automatic Differentiation (autodiff)
   * Generate gradient computation to **entire** computation graph，计算过程全图化
   * Better for system optimization
@@ -2341,31 +2427,36 @@ http://dlsys.cs.washington.edu/schedule
 * Introduction
   * 现状：operator overloading (OO) and source transformation (ST) used for AD
   * drawing insights from functional languages, graph-based IRs, and AD
-* Background:
-  * Forward mode has constant memory requirements and its runtime complexity scales with the number of inputs. Reverse mode’s runtime complexity scales with the number of outputs, and its memory complexity grows with the number of intermediate variables. In principle, forward and reverse mode can be mixed, but finding the optimal way of doing so is NP-complete [27].
+* Forward mode和Reverse mode
+  * Forward mode has constant memory requirements and its runtime complexity scales with the number of inputs.
+    * 科学计算场景，计算高阶导数
+
+  * Reverse mode’s runtime complexity scales with the number of outputs, and its memory complexity grows with the number of intermediate variables.
+  * In principle, forward and reverse mode can be mixed, but finding the optimal way of doing so is NP-complete [27].
   * Since the number of inputs is significantly larger than the number of outputs, reverse mode AD is to be preferred
-  * Automatic differentiation: Two methods
-    * Operator overloading (OO): record a tape
-      * downside: Having an embedded interpreter inside of the host language can complicate debugging and performance analysis.
-      * PyTorch, Autograd, and Chainer
-    * source transformation (ST)
-      * explicitly construct a program with a reversed control flow, which means that it needs transformation rules for function calls and control flow statements such as loops and conditionals 偏静态
-      * still ensure that intermediate variables from the forward pass are accessible by the adjoint
-        * Tape-based
-          * The tape used in ST stores only the intermediate variables, whereas the tape in OO is a program trace that stores the executed primitives as well.
-        * Closure-based
-          * no AD-specific compiler passes are needed: a functional language compiler will recognize the non-local use of the intermediate variables by the fact that they are free variables in the generated closure or continuation.
-  * Dataflow programming
-    * Theano, TensorFlow, and MXNet
-    * follow the dataflow program- ming paradigm [21] and use computation graphs as their **intermediate representation**
-    * These graph representations do not have scoping or recursive function calls, which means that AD is much easier to implement with ST
-    * 设计取舍
-      * Function Calls: TensorFlow and Theano implement a type of subroutine through their Defun and OpFromGraph constructs, but these must be explicitly constructed by the user and don’t support recursion.
-      * Scoping: TensorFlow has a concept it refers to as ‘scoping’, but these scopes are not lexical and can be reentered at any time, so the lifetime of a value is not affected by its scope.
-  * Programming languages and compilers
-    * The dataflow graph is an intermediate representation which is optimized using a series of compiler passes. The resulting program is compiled (e.g., XLA) and/or interpreted (e.g., the TensorFlow/Theano runtimes). Similarly, PyTorch has started optimizing its traced Python programs using just-in-time (JIT) compiler approaches.
-    * Python because of its flexibility with the need for high performance and speed is an open question. ML frameworks have focused on metaprogramming and using C extensions, but other approaches are possible. For example, Cython [6] is a superset
-    * performance and speed is an open question.
+
+* Automatic differentiation: Two methods
+  * Operator overloading (OO): record a tape
+    * downside: Having an embedded interpreter inside of the host language can complicate debugging and performance analysis.
+    * PyTorch, Autograd, and Chainer
+  * source transformation (ST)
+    * explicitly construct a program with a reversed control flow, which means that it needs transformation rules for function calls and control flow statements such as loops and conditionals 偏静态
+    * still ensure that intermediate variables from the forward pass are accessible by the adjoint
+      * Tape-based
+        * The tape used in ST stores only the intermediate variables, whereas the tape in OO is a program trace that stores the executed primitives as well.
+      * Closure-based
+        * no AD-specific compiler passes are needed: a functional language compiler will recognize the non-local use of the intermediate variables by the fact that they are free variables in the generated closure or continuation.
+* Dataflow programming
+  * Theano, TensorFlow, and MXNet
+  * follow the dataflow program- ming paradigm [21] and use computation graphs as their **intermediate representation**
+  * These graph representations do not have scoping or recursive function calls, which means that AD is much easier to implement with ST
+  * 设计取舍
+    * Function Calls: TensorFlow and Theano implement a type of subroutine through their Defun and OpFromGraph constructs, but these must be explicitly constructed by the user and don’t support recursion.
+    * Scoping: TensorFlow has a concept it refers to as ‘scoping’, but these scopes are not lexical and can be reentered at any time, so the lifetime of a value is not affected by its scope.
+* Programming languages and compilers
+  * The dataflow graph is an intermediate representation which is optimized using a series of compiler passes. The resulting program is compiled (e.g., XLA) and/or interpreted (e.g., the TensorFlow/Theano runtimes). Similarly, PyTorch has started optimizing its traced Python programs using just-in-time (JIT) compiler approaches.
+  * Python because of its flexibility with the need for high performance and speed is an open question. ML frameworks have focused on metaprogramming and using C extensions, but other approaches are possible. For example, Cython [6] is a superset
+  * performance and speed is an open question.
 * Graph-based direct intermediate representation
   * graph based, purely functional, closure representation, strongly typed
   * IR specification
@@ -2379,11 +2470,9 @@ http://dlsys.cs.washington.edu/schedule
   * Type inference
   * Optimization
 
-##### Lecture 5: GPU Programming
+> Lecture 5: GPU Programming，内容融入【GPU.md】
 
-* 内容融入【GPU.md】
-
-##### Lecture 6: Optimize for Hardware Backends
+#### Lecture 6: Optimize for Hardware Backends
 
 * Where are we: gap between computation graph and hardware
   * Goal: High Level Program to Bare Metal Code
@@ -2422,7 +2511,7 @@ for (int i = 0; i < n/b1; ++i) {
   * Different data layout
   * Different hardware backends
 
-##### Lecture 7: Automatic Code Generation --- TVM Stack
+#### Lecture 7: Automatic Code Generation --- TVM Stack
 
 https://tvm.apache.org/
 
@@ -2589,9 +2678,7 @@ module.get_output(0, output)
   * [Ansor : Generating High-Performance Tensor Programs for Deep Learning](https://arxiv.org/abs/2006.06762)
   * [NIMBLE: EFFICIENTLY COMPILING DYNAMIC NEURAL NETWORKS FOR MODEL INFERENCE](https://arxiv.org/pdf/2006.03031.pdf)
 
-
-
-##### Lecture 8: Hardware Specialization in Deep Learning
+#### Lecture 8: Hardware Specialization in Deep Learning
 
 * Hardware Specialization
   * • Idea: tailor your chip architecture to the characteristics of a **stable** workload
@@ -2695,9 +2782,7 @@ module.get_output(0, output)
       s[OUT_L].bind(tx, thread_axis(“cthread”))
       ```
 
-
-
-##### Lecture 9: Memory Optimization
+#### Lecture 9: Memory Optimization
 
 * DL stack 中的 Computational Graph Optimization and Execution 环节
 * Question for this lecture:
@@ -2735,9 +2820,7 @@ module.get_output(0, output)
 
 ![memory-opt-recursion](./MLSys/memory-opt-recursion.png)
 
-
-
-##### Lecture 10: Parallel Scheduling
+#### Lecture 10: Parallel Scheduling
 
 * Questions to be answered
   * What are common patterns of parallelization
@@ -2774,85 +2857,9 @@ module.get_output(0, output)
   * Maintain a pending operation queue，再给每个资源维护一个queue
   * Schedule new operations with event update
 
-##### Lecture 11: Distributed Training and Communication Protocols
+> Lecture 11  Distributed Training and Communication Protocols 融入上面的笔记
 
-* Recap: Parallel Scheduling Engine
-* How to do Synchronization over Network
-  * Distributed Gradient Aggregation, Local Update
-
-![all-reduce](./MLSys/all-reduce.png)
-
-```python
-grad = gradient(net, w)
-for epoch, data in enumerate(dataset):
-  g = net.run(grad, in=data)
-  gsum = comm.allreduce(g, op=sum)
-  w -= lr * gsum / num_workers 
-```
-
-![network-topology](./MLSys/network-topology.png)
-
-* How to implement AllReduce
-  * Tree-Shape
-    * Logically form a reduction tree between nodes
-    * Aggregate to root then broadcast
-  * Ring
-    * Form a logical ring between nodes
-    * Streaming aggregation
-    * 算法：
-      * 先 reduce_scatter：Each node have correctly reduced result of one segment!
-      * 再 all_gather
-* with TF: TFOptimizer 的 ApplyGradient 方法更新梯度，易于直接使用TF原生与layerwise的Optimizer
-
-* AllReduce Libraries
-  * MPI offers efficient CPU allreduce
-  * dmlc/rabit: fault tolerant variant
-  * facebookincubator/gloo
-  * Parameter Hub: from UW
-  * NCCL: Nvidia’ efficient multiGPU collective
-* GPUDirect and RMDA
-  * 前者不经过网卡
-* NCCL: Nvidia’s Efficient Multi-GPU Collective
-  * Uses unified GPU direct memory accessing
-  * Each GPU launch a working kernel, cooperate with each other to do ring based reduction
-  * A single C++ kernel implements intra GPU synchronization and Reduction
-* Schedule Allreduce Asynchronously
-  * `B = comm.allreduce(A)`
-  * `engine.push( lambda: B.data=allreduce(A.data), read=[A.var], mutate=[B.var, comm.var])`
-* PS Interface for Data Parallel Training
-  * Synchronous: bulk synchronous parallel (BSP)
-  * Asynchronous
-    * gradient staleness
-  * Integrate Schedule with Networking using Events
-    * Use the callback to notify engine that data receive is finished
-
-```python
-grad = gradient(net, w)
-for epoch, data in enumerate(dataset):
-  g = net.run(grad, in=data)
-  ps.push(weight_index, g)
-  w = ps.pull(weight_index)
-```
-
-* The Cost of PS Model: All to All Pattern
-  * Each worker talks to all servers
-  * Shard the parameters over different servers
-* Discussion: What’s Special about Communication Requirements for Model Parallel Training?
-  * Track dependency correctly
-  * Resolve resource contention and allocation
-  * Some special requirement on channel
-    * Allreduce: ordered call
-
-```python
-for i in range(num_layers):
-  for t in range(num_time_stamp):
-    out, state = layer[i].forward(data[i][t], state)
-    data[i+1][t] = out.copyto(device[i])
-```
-
-
-
-##### Lecture 12: Model Serving
+#### Lecture 12: Model Serving
 
 * Model Compression
   * Tensor decomposition

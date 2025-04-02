@@ -36,7 +36,7 @@
     prompting methods in natural language processing》
 
 * LLM capability
-  * in- context learning
+  * in-context learning
     * 《few-shot learners》
   * instruction following
   * planning and reasoning
@@ -583,6 +583,12 @@ https://github.com/OpenNMT/OpenNMT-py/
   * uses RMSNorm [ZS19], SwiGLU [Sha20], rotary embedding [SAL+24], and removes all biases
 
 ## Datasets and Evaluation
+
+### Intro
+
+* 小数据集：快速验证收敛性
+
+![20250402-184503](./AI-Algorithms/20250402-184503.jpeg)
 
 ### Datasets
 

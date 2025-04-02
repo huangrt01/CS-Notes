@@ -1,21 +1,45 @@
+### Overview
+
+1.pytorch Profiler
+
+2. Nsight systems
+- 非侵入
+- OS、CUDA API、通信信息，多GPU性能分析支持更完善
+
+3. Nsight Compute
+- 优化GPU算子
+
+
 ### GPU Monitoring
 
-nvitop
+# nvitop
 
 https://github.com/XuehaiPan/nvitop
 
+# nvidia-smi
 
-### PyTorch Profiling
+https://gist.github.com/padeoe/771c4972ae185c9a7d3d497fa4e1ecab
 
-# Profiler
-
-with torch.profiler.profile() as prof:
-    torch.square(b)
-
-print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))
+alias nvidia-info='nvidia-smi && (nvidia-smi |tr -s " "|grep -Eo "| [0123456789]+ N/A N/A [0-9]{3,} .*"|awk -F" " '\''{system("s=$(cat /proc/"$4"/cmdline| tr \"\\0\" \" \");u=$(ps -o uname= -p "$4");echo "$1"sep"$4"sep$u sep"$7"sep$s" ) }'\''|sed "s/sep/\t/g")'
 
 
-# time、显存
+# 查询频率
+nvidia-smi --query-gpu=pstate,clocks.mem,clocks.sm,clocks.gr --format=csv
+
+# clocks.current.memory [MHz], clocks.current.sm [MHz], clocks.current.graphics [MHz]
+# 9751 MHz, 1695 MHz, 1695 MHz
+
+# 查询GPU支持的clock组合
+nvidia-smi --query-supported-clocks=gpu_name,mem,gr --format=csv
+
+# 设置persistent mode
+sudo nvidia-smi -pm 1
+
+# 固定GPU时钟
+nvidia-smi -ac 9751,1530 # <memory, graphics>
+
+
+### time
 def time_pytorch_function(func, input):
     # CUDA IS ASYNC so can't use python time module
     start = torch.cuda.Event(enable_timing=True)
@@ -34,40 +58,52 @@ def time_pytorch_function(func, input):
 b = torch.randn(10000, 10000).cuda()
 print(time_pytorch_function(torch.square, b))
 
+### PyTorch Profiler
+
+def set_seed(seed: int = 37) -> None:
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)  # 适用于所有PyTorch后端，包括CPU和所有CUDA设备
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    print(f"设置随机数种子为{seed}")
+
+
+from torch.profiler import profile, record_function, ProfilerActivity
+
+model = torchvision.models.resnet18().cuda()
+inputs = torch.randn(5, 3, 224, 224, device="cuda")
+
+for _ in range(5):
+  model(inputs)
+
+with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], profile_memory=True) as prof:
+  with record_function("model_inference"):
+    model(inputs)
+
+print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=40))
+print(prof.key_averages().table(sort_by="self_cuda_memory_usage", row_limit=15))
+prof.export_chrome_trace("trace.json")
+
+
+### 显存
+
 def print_peak_memory(prefix, device):
     if device == 0:
         print(f"{prefix}: {torch.cuda.max_memory_allocated(device) // 1e6}MB ")
 
-
-# DDP
-seed = 0   
-torch.manual_seed(seed)   
-torch.cuda.manual_seed(seed)   
-torch.cuda.manual_seed_all(seed)   
-os.environ['PYTHONHASHSEED'] = str(seed)   
-torch.backends.cudnn.deterministic = True   
-torch.backends.cudnn.benchmark = False
+torch.cuda.memory._record_memory_history()
 
 
-### pytorch profiler
-
-# 打开chrome trace文件
+### 打开chrome trace文件
 https://ui.perfetto.dev/
 chrome://tracing
 
-import torch
-from torch.profiler import profile, record_function, ProfilerActivity
 
 
-# ## Default way to use profiler
-# with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]) as prof:
-#     for _ in range(10):
-#         a = torch.square(torch.randn(10000, 10000).cuda())
-
-# prof.export_chrome_trace("trace.json")
-
-
-## With warmup and skip
+### With warmup and skip
 # https://pytorch.org/docs/stable/profiler.html
 
 # Non-default profiler schedule allows user to turn profiler on and off
@@ -184,5 +220,12 @@ print(square_matrix_extension.square_matrix(a))
 
 
 ### ncu profiler
-ncu python train.py
-ncu --set full -o output $(which python) train.py
+
+ncu --target-processes all sudo python gpu_op_test.py
+ncu --set full -o output $(which python) train.py     # basic模式和full模式
+
+
+profiling心得
+* active occupancy低，可能是：
+1）线程计算任务简单，导致warp的创建和调度开销显著大于计算开销  --> 考虑合并简单线程
+2）warp的负载不均衡，不同分支的warp无法同步执行 --> 分析代码

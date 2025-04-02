@@ -1,6 +1,9 @@
-### toolkit
+# 关于驱动
 
-# 根据nvidia-smi的驱动版本
+dpkg -l | grep nvidia
+cat /proc/driver/nvidia/version
+
+根据nvidia-smi的驱动版本
 
 https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html
 

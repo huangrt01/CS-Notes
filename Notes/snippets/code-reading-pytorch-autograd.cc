@@ -7,8 +7,12 @@
   but this use case is less common for machine learning applications.
   PyTorch can be easily extended to perform forward-mode differentiation using array-level dual
   numbers [31, 32].
+
 * 细节：
 - 修改tensor，有tensor version
+-- Only check version counter in the case without hooks If user provides hooks, we cant track versions through the hooks
+-- saved_version_ = variable._version();
+-- Note [Inference tensor cannot be saved for backward]
 
 
 ### Autograd Engine

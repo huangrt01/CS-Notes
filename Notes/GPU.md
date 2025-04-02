@@ -82,6 +82,10 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 
 * SM之上的高层封装
   * GPC、TPC（纹理处理clusters）
+  * V100: 6 GPC * 14 SM = 84 SM
+  * A100: 8 GPC * 16 SM = 128 SM
+
+![image-20250402120227882](./GPU/image-20250402120227882.png)
 
 ![image-20250316033709934](./GPU/image-20250316033709934.png)
 
@@ -125,6 +129,8 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 ![0f4c3f5e-1d1c-4556-8c7e-2725cc82d2df_971x593](./GPU/0f4c3f5e-1d1c-4556-8c7e-2725cc82d2df_971x593.webp)
 
 ###### TensorCore
+
+paper https://arxiv.org/pdf/1803.04014
 
 https://resources.nvidia.com/en-us-tensor-core
 
@@ -354,6 +360,15 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 
 * Blackwell GPUs will [no longer support int4 tensor cores](https://www.nvidia.com/en-us/data-center/tensor-cores/).
 
+#### 浮点计算精度
+
+* 浮点计算
+  * 硬件机制：结合律可能不适用，大量累加的顺序，会有精度差异
+  * cuDNN：
+    * deterministic=True：尽量消除算子底层实现的随机性
+    * benchmark=False：仅使用同一种卷积算法
+  * 算子实现：随机采样
+
 #### 吞吐
 
 * ![image-20250331121025135](./GPU/image-20250331121025135.png)
@@ -439,6 +454,10 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
           = 4d(N^2) + 3N^2 ops / 8N^2 + 8Nd bytes
           = 62 ops/byte
   * [A guide to LLM inference and performance](https://www.baseten.co/blog/llm-transformer-inference-guide/) TODO
+
+#### 硬件降频
+
+* 聊一聊英伟达GPU的降频问题 https://zhuanlan.zhihu.com/p/13866293937
 
 
 

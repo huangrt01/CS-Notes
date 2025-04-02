@@ -80,6 +80,15 @@
   * 当反向传播完成，计算图默认会被清除，所以只能用生成的计算图进行一次反向传播
   * `retain_graph` 参数可以保持计算图，从而避免别清除掉，其用法为：`loss.backward(retain_graph=True)`
 
+### 异步执行
+
+* CPU：同步执行
+* GPU Op：
+  * 任务分配
+    * GPU执行算子计算
+    * CPU推导输出信息、创建输出tensor、定位算子
+  * 核心：CPU给GPU提交任务，不等待，直接返回
+
 ## Autograd
 
 * Grad:  Jacobians left-multiplied by a vector,

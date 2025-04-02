@@ -70,65 +70,6 @@
 
 ![structure](./AI/structure.png)
 
-## 成本和性能
-
-* Intro
-  * AIGC是大国的游戏
-    * 欧洲受欧盟法案影响，ai发展没跟上
-
-  * AI系统：记录数据、与人交互、机器学习分析、预测、干预人的决策
-
-### Token
-
-```python
-import tiktoken
-
-def count_tokens(prompt):
-    encoding = tiktoken.get_encoding("cl100k_base")
-    num_tokens = len(encoding.encode(prompt))
-    return num_tokens
-
-prompt_text = "这是一个示例prompt"
-token_count = count_tokens(prompt_text)
-print(f"Prompt的token数量为: {token_count}")
-```
-
-### 性能
-
-* TTFT：time to first token，和input token长度相关
-
-
-### 训练成本
-
-* LLaMA：2048 A100 21d
-  * a100一个月几十刀，训一个几十万
-* 人力成本：训练基础大模型，团队20人
-  * 6个月准备、6个月训练、6个月微调，18个月训模型
-  * 上下文能力提升之后，时效性会显著增强
-
-* Note
-  * 和芯片的对比：This “growth” is strikingly similar to the one involved in chip evolution where as the number of transistors increases (higher density on a chip) the cost for plants manufacturing  those chips skyrocket.  In  the case of chip manufacturing  the economics remained viable because new plants did cost more but they also produced many more chips so that till the middle lf the last decade the cost per chip was actually  decreasing generation over generation (one effect captured in the Moore’s law).
-  * As with chips one may  wonder if there is a limit to the economic affordability (there sure is, it is just difficult  to pinpoint!).
-  * TODO: https://www.wired.com/story/openai-ceo-sam-altman-the-age-of-giant-ai-models-is-already-over/
-
-### GPU
-
-* 存量和增量
-
-![image-20241019195324985](./AI/image-20241019195324985.png)
-
-* 分布：
-
-![image-20241019195345714](./AI/image-20241019195345714.png)
-
-### 售价
-
-* https://tiktoken.aigc2d.com/
-  * 统计token数量
-  * GPT-4o
-    * output：15刀/1M token
-    * input：5刀/1M token
-
 ## 产品
 
 ### 模型能力

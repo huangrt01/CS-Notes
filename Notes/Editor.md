@@ -353,7 +353,7 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 
 * **设置：command + Option + shift + L**
 
-![image-20250310171321679](./Editor/image-20250310171321679.png)
+![-](./Editor/image-20250310171321679.png)
 
 
 
