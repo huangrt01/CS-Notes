@@ -40,23 +40,35 @@ nvidia-smi -ac 9751,1530 # <memory, graphics>
 
 
 ### time
-def time_pytorch_function(func, input):
-    # CUDA IS ASYNC so can't use python time module
-    start = torch.cuda.Event(enable_timing=True)
-    end = torch.cuda.Event(enable_timing=True)
+class TimePytorchFunction:
 
-    # Warmup
+  def __init__(self, func, *args):
+    self.start = torch.cuda.Event(enable_timing=True)
+    self.end = torch.cuda.Event(enable_timing=True)
+    self.result = None
+    self.func = func
+    self.args = args
+
+  def __enter__(self):
+    # 预热
     for _ in range(5):
-        func(input)
+      self.func(*self.args)
+    self.start.record()
+    return self
 
-    start.record()
-    func(input)
-    end.record()
+  def __exit__(self, exc_type, exc_val, exc_tb):
+    self.end.record()
     torch.cuda.synchronize()
-    return start.elapsed_time(end)
+    elapsed_time = self.start.elapsed_time(self.end)
+    print(f"{self.func.__name__} elapsed time: {elapsed_time} ms")
+
+  def run(self):
+    self.result = self.func(*self.args)
+    return self.result
 
 b = torch.randn(10000, 10000).cuda()
-print(time_pytorch_function(torch.square, b))
+with TimePytorchFunction(torch.square, b) as timer:
+    result = timer.run()
 
 ### PyTorch Profiler
 
@@ -148,75 +160,6 @@ with torch.profiler.profile(
 ### Holistic Trace Analysis
 
 https://pytorch.org/tutorials/beginner/hta_intro_tutorial.html
-
-
-### load_inline
-
-import torch
-from torch.utils.cpp_extension import load_inline
-
-cpp_source = """
-std::string hello_world() {
-  return "Hello World!";
-}
-"""
-
-my_module = load_inline(
-    name='my_module',
-    cpp_sources=[cpp_source],
-    functions=['hello_world'],
-    verbose=True,
-    build_directory='./tmp'
-)
-
-print(my_module.hello_world())
-
-
-# Define the CUDA kernel and C++ wrapper
-cuda_source = '''
-__global__ void square_matrix_kernel(const float* matrix, float* result, int width, int height) {
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (row < height && col < width) {
-        int idx = row * width + col;
-        result[idx] = matrix[idx] * matrix[idx];
-    }
-}
-
-torch::Tensor square_matrix(torch::Tensor matrix) {
-    const auto height = matrix.size(0);
-    const auto width = matrix.size(1);
-
-    auto result = torch::empty_like(matrix);
-
-    dim3 threads_per_block(16, 16);
-    dim3 number_of_blocks((width + threads_per_block.x - 1) / threads_per_block.x,
-                          (height + threads_per_block.y - 1) / threads_per_block.y);
-
-    square_matrix_kernel<<<number_of_blocks, threads_per_block>>>(
-        matrix.data_ptr<float>(), result.data_ptr<float>(), width, height);
-
-    return result;
-    }
-'''
-
-cpp_source = "torch::Tensor square_matrix(torch::Tensor matrix);"
-
-# Load the CUDA kernel as a PyTorch extension
-square_matrix_extension = load_inline(
-    name='square_matrix_extension',
-    cpp_sources=cpp_source,
-    cuda_sources=cuda_source,
-    functions=['square_matrix'],
-    with_cuda=True,
-    extra_cuda_cflags=["-O2"],
-    build_directory='./load_inline_cuda',
-    # extra_cuda_cflags=['--expt-relaxed-constexpr']
-)
-
-a = torch.tensor([[1., 2., 3.], [4., 5., 6.]], device='cuda')
-print(square_matrix_extension.square_matrix(a))
 
 
 ### ncu profiler

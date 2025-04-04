@@ -11,13 +11,15 @@
 
 * Rooﬂine: an insightful visual performance model for multicore architectures.
 
-  * arithmetic intensity: which is the number of arithmetic operations per byte of memory access.
-
+  * **横轴：arithmetic intensity**: which is the number of arithmetic operations per byte of memory access.
     * Compute-bound: the time taken by the operation is determined by how many arithmetic operations there are, while time accessing HBM is much smaller. Typical examples are matrix multiply with large inner dimension, and convolution with large number of channels.
     * Memory-bound: the time taken by the operation is determined by the number of memory accesses, while time spent in computation is much smaller. Examples include most other operations: elementwise (e.g., activation, dropout), and reduction (e.g., sum, softmax, batch norm, layer norm).
-
+    
     * 算术操纵数量/内存访问字节数量
     * e.g. attention大于0.5接近1
+  * 纵轴：computational throughput
+
+![image-20250404195013648](./Computer-Architecture/image-20250404195013648.png)
 
 * IO-Aware Runtime Optimization 【flash-attention】
 

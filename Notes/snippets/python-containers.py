@@ -1,4 +1,9 @@
 
+from types import SimpleNamespace as ns
+person = ns(name="Alice", age=30, city="New York")
+ns.x = xxx
+
+
 def pin_memory(data):
     if isinstance(data, torch.Tensor):
         return data.pin_memory()

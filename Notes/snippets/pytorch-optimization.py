@@ -1,3 +1,20 @@
+### Intro
+
+Pytorch的框架开销：As long as you have Tensors with a few 100s of elements, “Python is slow” and data administrative
+overhead (allocate tensor structure) is single digit percentages
+
+
+### nvfuser
+
+https://pytorch.org/blog/introducing-nvfuser-a-deep-learning-compiler-for-pytorch/
+
+### Thunder
+
+https://lightning.ai/docs/thunder/latest/
+https://github.com/Lightning-AI/lightning-thunder
+https://www.nvidia.com/en-us/on-demand/session/gtc24-s62544/
+
+
 ### activation ckpt
 
 import torch

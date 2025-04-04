@@ -21,7 +21,9 @@ original_repr = torch.Tensor.__repr__
 torch.Tensor.__repr__ = custom_repr
 
 
-
+import numpy as np
+np.set_printoptions(precision=2, linewidth=140)
+torch.set_printoptions(precision=2, linewidth=140, sci_mode=False)
 torch.set_printoptions(profile='full')
 
 ### params

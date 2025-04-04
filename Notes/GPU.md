@@ -93,7 +93,8 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 
 * GPU内部很多functional units:
   * SMs(Streaming Multiprocessors)，一个SM可以schedule多个block，但同一时间只能执行一个
-
+  * ![image-20250404010805785](./GPU/image-20250404010805785.png)
+  
 * SP (Streaming Processor) <-> CUDA Core<->Thread
 
   * 资源：
@@ -144,6 +145,8 @@ https://resources.nvidia.com/en-us-tensor-core
 
 * Registers
   * 65536 per SM (A100/H100)
+    * 256KB Register File for GA10x、A100 (65536 * 4B)
+    * 512KB Register File for H100
   * allocated to cores dynamically depending on the requirement of the threads
   * private to the threads
 * Constant Caches
@@ -151,6 +154,8 @@ https://resources.nvidia.com/en-us-tensor-core
 * Shared Memory
   * a small amount of fast and low latency on-chip programmable SRAM memory
   * 192KB of on-chip SRAM per each of 108 SMs (A100)
+    * 192*108=20MB
+    * 128*82=10,496  for GA10x
   * Usage: 优化threads共享的访存、as a synchronization mechanism between threads executing within a block
 * L1 Cache
   * each SM
@@ -189,53 +194,95 @@ cudaMemcpyHostToDevice
 
 ![shared-memory](./GPU/shared_memory.png)
 
+###### CUDA视角
+
+![image-20250404200229175](./GPU/image-20250404200229175.png)
+
+
+
+
+
 ##### GPU Execution Model
+
+> GPU-Mode Lecture 4 https://www.youtube.com/watch?v=lTmYrKwjSOU
 
 * Grid
   * kernel launch grid of threads
   * All threads execute the same code: Single program multiple-data (SPMD)
   * Threads are hierarchically organized into **grid blocks** & **thread blocks**
-  * threads in same block can access **the same shared mem**
-  * up to 1024 threads can be in a thread block
-    * Hopper架构：每个维度上的最大线程数分别是 1024（x 维度）、1024（y 维度）和 64（z 维度），且乘积不能超过1024
-  * threads can be scheduled in any order
+  * threads in same block
+    * can access **the same shared mem**
+    * up to 1024 threads can be in a thread block
+      * Hopper架构：每个维度上的最大线程数分别是 1024（x 维度）、1024（y 维度）和 64（z 维度），且乘积不能超过1024
+    * threads can be scheduled in any order
 
 ![image-20250226194634249](./GPU/image-20250226194634249.png)
 
 **A warp is the basic schedule unit in kernel execution**
 
-* Intro
-
-  * SIMT，一个时钟周期内，一个warp被调度到一个SM上，内部32个线程执行相同的指令
-
-    * execution on a set of cores called a **processing block**.
+* block按32 cdiv，由多个warps执行
   * 一个warp是successive 32 threads in a block
-    * thread如果不能被32整除，余数占据one more warp
+  * Threads如果不能被32整除，余数占据one more warp
+* SIMT，一个时钟周期内，一个warp被调度到一个SM上，内部32个线程执行相同的指令
 
-  * Nvidia H100: each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
-  * threading blocks、warp、processing units、SM的关系
-    * threading blocks映射到SM
-    * warp由processing unit执行
-    * 一个threading block的thread数量通常是32的倍数（对应N个warp）
+  * execution on a set of cores called a **processing block**.
 
-* 一个SM有一个thread block pool，一个thread block有多个warp，一个warp scheduler 16个warp
-  * [How to choose how many threads/blocks to have?](https://forums.developer.nvidia.com/t/how-to-choose-how-many-threads-blocks-to-have/55529)
-  * The only thing that really matters for occupancy and if performance depends on occupancy is warps. You want to have as close to 64 active warps as possible, all other factors being equal.
-  * very small block sizes (e.g. 32 threads per block) may limit performance due to occupancy. Very large block sizes for example 1024 threads per block, may also limit performance, if there are resource limits (e.g. registers per thread usage, or shared memory usage) which prevent 2 threadblocks (in this example of 1024 threads per block) from being resident on a SM
-  * 推荐值：one thread block, 128~512 threads
+> AMD wavefronts: 64 threads (可 配置为更低）
+
 * Instructions are SIMD synchronous within a warp
+
   * 一个warp中的线程执行同一指令
+
     * e.g. 【code/reduce.cu】`reduce3()`
       * 各种优化技巧，包括unrolling、algorithm cascading
       * each thread should sum O(log n) elements
     * [Independent Thread Scheduling](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#simt-architecture): Volta架构之后，可以执行不同指令，但不同时
+
+  * **Latency hiding: having multiple warps on the SM allows warps to compute while others wait**
+
+    (i.e. the memory transfer “+” compute becomes a max(…, …))
+
+    → roofline model
+
   * 对于control flow，可能是周期T一半的线程执行if语句，周期T+1另一半的线程执行else语句
+
 * Instructions will be issued to execution units by warp.
+
   * warp scheduler: Decode and schedule the next instructions
   * Latency is caused by not able to issue next instruction to execution unit
+
+* threading blocks、warp、processing units、SM的关系
+  * threading blocks映射到SM
+  * warp由一个processing unit执行
+  * 一个threading block的thread数量通常是32的倍数（对应N个warp）
+  * thread block从x维开始按顺序分配给多个warp
+    * ![image-20250404020117023](./GPU/image-20250404020117023.png)
+* 限制：
+  * **Nvidia H100**:
+    * each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
+    * max 1536 threads assignable to one SM
+
+* 一个SM有一个thread block pool，一个thread block有多个warp，一个warp scheduler 16个warp
+  * [How to choose how many threads/blocks to have?](https://forums.developer.nvidia.com/t/how-to-choose-how-many-threads-blocks-to-have/55529)
+  * The only thing that really matters for occupancy and if performance depends on occupancy is warps. You want to have as close to 64 active warps as possible, all other factors being equal.
+  * very small block sizes (e.g. 32 threads per block) may limit performance due to occupancy.
+  * Very large block sizes for example **1024 threads per block, may also limit performance**
+    * if there are resource limits (e.g. registers per thread usage, or shared memory usage) which prevent 2 threadblocks (in this example of 1024 threads per block) from being resident on a SM
+    * **不能整除1536**
+  * 推荐值：one thread block, **128~512 threads**
 * 一些单元：
   * SFU: special function unit
   * Load/Store memory
+
+###### warp divergence
+
+* if、loop可能导致divergence
+
+* ![image-20250404021824460](./GPU/image-20250404021824460.png)
+  * divergence时，不能做sync操作
+* ![image-20250404022026152](./GPU/image-20250404022026152.png)
+
+* ![image-20250404022209555](./GPU/image-20250404022209555.png)
 
 ##### GPU Network
 
@@ -258,12 +305,10 @@ cudaMemcpyHostToDevice
 * Scheduling thread blocks on SMs
   * ![image-20250224192038955](./GPU/image-20250224192038955.png)
   * waitlisted blocks
-  * [Why only one of the warps is executed by a SM in cuda?](https://stackoverflow.com/questions/13463440/why-only-one-of-the-warps-is-executed-by-a-sm-in-cuda)
-    * 和warp scheduler数量有关
-    * Compute Capability 3.x (Kepler)
-      - 4 warp schedulers per SM
-      - Dispatch 1 or 2 instructions per warp scheduler
-
+  * Compute Capability 3.x (Kepler)
+    - **4 warp schedulers per SM**  ([Why only one of the warps is executed by a SM in cuda?](https://stackoverflow.com/questions/13463440/why-only-one-of-the-warps-is-executed-by-a-sm-in-cuda))
+    -  those SHARE one instruction (but Volta+ does have per-thread program counter)
+    - Dispatch 1 or 2 instructions per warp scheduler
 * Single Instruction Multiple Threads (SIMT) and Warps
   * 参考 「GPU Execution Model」
 * Warp Scheduling and Latency Tolerance
@@ -364,6 +409,7 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 
 * 浮点计算
   * 硬件机制：结合律可能不适用，大量累加的顺序，会有精度差异
+    * python: `1.0 + (-1.0 + 1e-17 )`
   * cuDNN：
     * deterministic=True：尽量消除算子底层实现的随机性
     * benchmark=False：仅使用同一种卷积算法
@@ -398,8 +444,8 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 | [Blackwell](https://resources.nvidia.com/en-us-blackwell-architecture/blackwell-architecture-technical-brief) |      |          |                                                              |                                                              |                              |                   |
 | [Ada](https://images.nvidia.com/aem-dam/Solutions/Data-Center/l4/nvidia-ada-gpu-architecture-whitepaper-V2.02.pdf) |      |          | L40、L4                                                      |                                                              |                              |                   |
 | Hopper architecture (霍普)                                   | 9    |          | H100, 训练卡                                                 | 3td-NVLink, SXM2/SXM4900GB/s最多18个                         | 3td-NVSwitch: 900GB/s最多8个 |                   |
-| [Ampere architecture ](https://images.nvidia.com/aem-dam/en-zz/Solutions/data-center/nvidia-ampere-architecture-whitepaper.pdf) | 8    | 2020     | A100, 训练卡, 80G HBM2e 显存19.5 TFLOPSCuda Cores: 6912Tensor Cores: 432 | 3td-NVLink, SXM2/SXM3 600GB/s最多12个                        | 2nd-NVSwitch: 600GB/s最多8个 | PCIe Gen4 64 GB/s |
-| Turing architecture (图灵)                                   | 7.5  | 2018     | T4, 推理卡, 16GB GDDR6 显存8.1 TFLOPSCuda Cores: 2560Tensor Cores: 320 |                                                              |                              | PCIe Gen332 GB/s  |
+| [Ampere architecture ](https://images.nvidia.com/aem-dam/en-zz/Solutions/data-center/nvidia-ampere-architecture-whitepaper.pdf) | 8    | 2020     | A100, 训练卡, 80G HBM2e 显存 19.5 TFLOPS Cuda Cores: 6912 Tensor Cores: 432, 108 SMs; | 3td-NVLink, SXM2/SXM3 600GB/s最多12个                        | 2nd-NVSwitch: 600GB/s最多8个 | PCIe Gen4 64 GB/s |
+| Turing architecture (图灵)                                   | 7.5  | 2018     | T4, 推理卡, 16GB GDDR6 显存 8.1 TFLOPS Cuda Cores: 2560 Tensor Cores: 320 |                                                              |                              | PCIe Gen332 GB/s  |
 | Volta architecture (伏特)                                    | 7    | 2017     | V100, 训练卡, 24G HBM2显存14~16.4 TFLOPSCuda Cores: 5120Tensor Cores: 640 | 2nd-NVLink, SXM2300GB/s最多6个                               | 1st-NVSwitch: 300GB/s最多8个 | PCIe Gen332 GB/s  |
 | Pascal architecture (帕斯卡)                                 | 6    | 2016     | P100, 训练卡, 16G HBM2显存 9.3 ~ 10.6 TFLOPSCuda Cores: 3840P40, 训练卡, 24G GDDR5 显存P4, 推理卡, 8G GDDR5 显存 | 1st-NVLink, SXMP100: 732 GB/s160 GB/sP40: 346 GB/sP4: 192 GB/s |                              | PCIe Gen332 GB/s  |
 | Maxwell architecture (麦克斯韦)                              | 5    | 2014     | M40, M60                                                     |                                                              |                              |                   |
@@ -424,9 +470,22 @@ nvidia-smi --query-gpu=name --format=csv,noheader
   * 《Dissecting the Ampere GPU architecture via microbenchmarking》
   * 《Nvidia A100 tensor core GPU architecture》
 
+* H20
+  * 132 SMs
+  
 * H100 GPU
   * 132 SMs with 64 cores per SM, totalling a whopping 8448 cores.
   * each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
+
+* GA10x：RTX 3090, has 82 SMs.
+
+  * Each SM in GA10x GPUs contain 128 CUDA Cores, 4 third-generation Tensor Cores, 2 FP64 Cores
+  * a 256 KB Register File, and 128 KB of L1/Shared Memory
+  * 4*32 FP32 units (one per thread), half  of which know INT32
+  * L1 cache and shared memory share hardware (128KB) directly on the SM shmem can be 0/8/16/32/64/100KB
+    * L1 Cache the remainder (>=28KB)
+
+  * ![image-20250404011658421](./GPU/image-20250404011658421.png)
 
 
 
@@ -466,7 +525,7 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 #### Intro
 
 * CUDA：Compute Unified Device Architect
-* CUDA C: extends ANSI C with minimal new syntax
+* CUDA C: extends ANSI C with minimal new  syntax
 
 #### Programming Model
 
@@ -483,11 +542,23 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 ![image-20250224190455058](./GPU/image-20250224190455058.png)
 
+![image-20250404200327944](./GPU/image-20250404200327944.png)
+
+
+
 #### CUDA Compiler
 
 * nvcc (NVIDIA C compiler) is used to compile kernels into PTX
 * Parallel Thread Execution (PTX) is a low-level VM & instruction set
 * graphics driver translates PTX into executable binary code (SASS)
+
+#### Hopper
+
+* Thread Block Group的概念
+
+
+
+
 
 ### Triton
 
@@ -540,37 +611,48 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 * triton autotune目前对dynamic shape的支持不好，性能较差，原因是autotune会对每个新shape重新tune
 
-### Torch.compile
-
-#### Intro
-
-* `torch.compile` makes your model faster by trying to **use existing kernels more effectively and creating simple new kernels.** 
-* 什么情况下torch.compile性能差
-  * 不能编译成一个cuda graph，有graph breaks
-
-#### 为什么 Square 算子性能差
-
-> snippets/gpu-triton.py
-
-* Triton（Autotune）和 Triton（No Autotune Large Block Size）性能差不多，且最好
-  - Triton（No Autotune Large Block Size）: `BLOCK_SIZE = triton.next_power_of_2(n_cols)`
-  - --> H20机器，大Block Size效果好？
-* torch原生实现 和 Triton（No Autotune Fixed Block Size）性能相当
-  - Triton（No Autotune Fixed Block Size）：固定Block Size为1024
-* Torch(compiled) 性能最差
-  * torch.compile的实现用一个kernel处理整个矩阵数据
-  * 主要差异是，手写代码按行生成多个kernel实例，每个实例并行处理一行数据
-
-![image-20250225191017217](./GPU/image-20250225191017217.png)
-
-- 考虑到矩阵内存连续，对于element-wise任务，可以将2d-matrix视为1d-tensor，因此torch.compile将这一任务抽象成1d并行任务是合理的
-  - 为什么性能有损呢，本质是生成的kernel实例数量影响了性能（这个例子中，每行一个kernel实例，性能有优化）
-  - Q：kernel实例数量影响性能，原理是什么？ 取舍是什么？kernel launch代价？
-  - Q：triton能否自动优化这个？
-
 
 
 ### GPU优化
+
+#### Overview
+
+> Getting good occupancy – balance resources
+
+##### Roofline Model
+
+* H20: 
+  * 4.8 TB/s
+  * FP32: 672 TFLOPS
+  * FLOPS/Byte = 140
+
+![image-20250404194640272](./GPU/image-20250404194640272.png)
+
+![image-20250404195020449](./GPU/image-20250404195020449.png)
+
+##### 细节
+
+● Have 82 SM → many blocks = good
+
+​	(for comparison Jetson Xavier has 8 Volta SM)
+
+● Can schedule up to 1536 threads per SM
+
+​	→ power of two block size <512 desirable
+
+​	(some other GPUs 2048)
+
+● Avoid divergence to execute an entire warp (32 threads) at each cycle
+
+● Avoid FP64/INT64 if you can on Gx102 (GeForce / Workstation GPUs)
+
+● Shared Memory and Register File → limits number of scheduled on SM
+
+(use __launch_bounds__ / C10_LAUNCH_BOUNDS to advise compiler of # of threads for register allocation, but register spill makes things slow) 
+
+● Use `torch.cuda.get_device_properties(<gpu_num>)` to get properties (e.g. max_threads_per_multi_processor)
+
+​	[even more in CUDA than in PyTorch](https://developer.download.nvidia.com/compute/DevZone/docs/html/C/doc/html/group__CUDART__DEVICE_g5aa4f47938af8276f08074d09b7d520c.html)
 
 #### Literature Review
 
@@ -589,22 +671,31 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 #### SM效率
 
-* SM Occupancy：the ratio of the number of warps assigned to an SM to the maximum number it can support
+* **SM Occupancy：the ratio of the number of warps assigned to an SM to the maximum number it can support**
 * 限制因素：主要是资源约束
   *  **SM能够同时处理的线程块数量**
-    - 每个线程块包含 32 个线程，而总共需要执行 2048 个线程。可知总共需要 2048/32 = 64 个线程块来容纳这 2048 个线程
-    - 每个 SM 在同一时刻最多只能处理 32 个线程块
-    - --> 50% SM Occupancy
+    - block size太小的情形
+      - block size=32，总共需要执行 2048 个线程。因此总共需要 2048/32 = 64 个线程块来容纳这 2048 个线程
+      - 每个 SM 在同一时刻最多只能处理 32 个线程块
+      - --> 50% SM Occupancy
   * **每个thread的register数量**
     - each SM has 65536 registers. To execute 2048 threads simultaneously, each thread can have a maximum of 32 registers (65536/2048 = 32). If a kernel needs 64 registers per thread, we can only run 1024 threads per SM,
     - --> resulting in 50% occupancy.
+  *  每个SM的共享内存 / **Shared Memory per Block**
 
 #### Warp效率
+
+* coalesce memory access
+  * 在CUDA中，如果一个线程束（warp，通常由32个线程组成）中的线程按顺序访问连续的内存地址，那么这些访问就可以被合并成一个内存事务
 
 * 如果 warp 内的线程执行不同的分支，会出现分支分歧，显著降低性能
   * 线程块的线程数量是 32 的倍数，更好地组织线程能减少分支分歧的发生概率
 
-#### Shared Memory利用
+#### Shared Memory利用 —— Tiling
+
+* 本质：In Matmul, each of the n² outputs uses 2n inputs
+  * n^2 * 2n / (2n^2) = n，每个input重复读n次
+  * 优化后：read each input only n/TILE_SIZE times from main memory
 
 ### PMPP: Programming Massively Parallel Processors
 
@@ -636,7 +727,42 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 * Multidimensional grids and data
 
+#### Ch4-5 Compute and Memory Basics
 
+> GPU-Mode Lecture 4: https://www.youtube.com/watch?v=lTmYrKwjSOU
+
+* Chapter 4: Compute Architecture and Scheduling
+  * aka: How to keep all of the GPU busy
+* Chapter 5: Memory architecture and data locality
+  * aka the basics of getting fast kernels
+
+### Torch.compile
+
+#### Intro
+
+* `torch.compile` makes your model faster by trying to **use existing kernels more effectively and creating simple new kernels.** 
+* 什么情况下torch.compile性能差
+  * 不能编译成一个cuda graph，有graph breaks
+
+#### 为什么 Square 算子性能差
+
+> snippets/gpu-triton.py
+
+* Triton（Autotune）和 Triton（No Autotune Large Block Size）性能差不多，且最好
+  - Triton（No Autotune Large Block Size）: `BLOCK_SIZE = triton.next_power_of_2(n_cols)`
+  - --> H20机器，大Block Size效果好？
+* torch原生实现 和 Triton（No Autotune Fixed Block Size）性能相当
+  - Triton（No Autotune Fixed Block Size）：固定Block Size为1024
+* Torch(compiled) 性能最差
+  * torch.compile的实现用一个kernel处理整个矩阵数据
+  * 主要差异是，手写代码按行生成多个kernel实例，每个实例并行处理一行数据
+
+![image-20250225191017217](./GPU/image-20250225191017217.png)
+
+- 考虑到矩阵内存连续，对于element-wise任务，可以将2d-matrix视为1d-tensor，因此torch.compile将这一任务抽象成1d并行任务是合理的
+  - 为什么性能有损呢，本质是生成的kernel实例数量影响了性能（这个例子中，每行一个kernel实例，性能有优化）
+  - Q：kernel实例数量影响性能，原理是什么？ 取舍是什么？kernel launch代价？
+  - Q：triton能否自动优化这个？
 
 ### GPU Profiling
 

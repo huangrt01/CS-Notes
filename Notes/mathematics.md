@@ -402,11 +402,28 @@ https://en.wikipedia.org/wiki/Cholesky_decomposition
 
       2、Word2Vec最后接的是softmax来预测概率，也就是说实现了一个非线性变换，而自编码器或者SVD并没有。
 
+## 数学分析
+
+### 一些定义
+
+* 完备的度量空间是泛函分析中的重要概念，其核心性质是**所有柯西序列都收敛到该空间中的某个点**。
+  * 核心在于确保 “所有潜在的极限点都存在于空间内”
+
+### 压缩映射原理
+
+![image-20250402221637163](./mathematics/image-20250402221637163.png)
+
+* [压缩映射与皮卡迭代的简单比较](https://www.bilibili.com/video/BV1pjAte2EwV )
+
+
+
 ## 微分方程 ODE
 
 ### 基础技巧
 
 * [用特征线方法与傅里叶变换求解偏微分方程](https://www.bilibili.com/video/BV16JFTeVEGj)
+* 皮卡迭代
+  * ![image-20250402222144436](./mathematics/image-20250402222144436.png)
 
 ### 应用
 

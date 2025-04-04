@@ -2,6 +2,95 @@
 
 gpu op是异步的（需要h2d触发或者主动调用torch.cuda.synchronize），cpu op是主进程同步的
 
+### load_inline
+
+pip3 install ninja
+
+import torch
+from torch.utils.cpp_extension import load_inline
+
+cpp_source = """
+std::string hello_world() {
+  return "Hello World!";
+}
+"""
+
+my_module = load_inline(
+    name='my_module',
+    cpp_sources=[cpp_source],
+    functions=['hello_world'],
+    verbose=True,
+    build_directory='./tmp'
+)
+
+print(my_module.hello_world())
+
+
+# Define the CUDA kernel and C++ wrapper
+
+cuda_begin = r'''
+#include <torch/extension.h>
+#include <stdio.h>
+#include <c10/cuda/CUDAException.h>
+
+#define CHECK_CUDA(x) TORCH_CHECK(x.device().is_cuda(), #x " must be a CUDA tensor")
+#define CHECK_CONTIGUOUS(x) TORCH_CHECK(x.is_contiguous(), #x " must be contiguous")
+#define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
+
+inline unsigned int cdiv(unsigned int a, unsigned int b) { return (a + b - 1) / b;}
+'''
+
+cuda_source = cuda_begin + '''
+__global__ void square_matrix_kernel(const float* matrix, float* result, int width, int height) {
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (row < height && col < width) { 
+        int idx = row * width + col;
+        result[idx] = matrix[idx] * matrix[idx];
+    }
+}
+
+torch::Tensor square_matrix(torch::Tensor matrix) {
+    CHECK_INPUT(matrix)
+    const auto height = matrix.size(0);
+    const auto width = matrix.size(1);
+
+    auto result = torch::empty_like(matrix);
+
+    dim3 threads_per_block(16, 16);
+    dim3 number_of_blocks(cdiv(width, threads_per_block.x), cdiv(height, threads_per_block.y));
+
+    square_matrix_kernel<<<number_of_blocks, threads_per_block>>>(
+        matrix.data_ptr<float>(), result.data_ptr<float>(), width, height);
+    C10_CUDA_KERNEL_LAUNCH_CHECK();
+
+    return result;
+    }
+'''
+
+cpp_source = "torch::Tensor square_matrix(torch::Tensor matrix);"
+
+def load_cuda(name, cuda_source, cpp_source, funcs, opt=False, verbose=False):
+  return load_inline(name=name,
+                     cuda_sources=[cuda_src],
+                     cpp_sources=[cpp_src],
+                     functions=funcs,
+                     extra_cuda_cflags=["-O2"] if opt else [],
+                     verbose=verbose,
+                     # extra_cuda_cflags=['--expt-relaxed-constexpr']
+                     build_directory='./load_inline_cuda')
+                     
+
+
+# Load the CUDA kernel as a PyTorch extension
+
+square_matrix_extension = load_cuda(cuda_src, cpp_source, ['square_matrix'], verbose=True)
+
+
+a = torch.tensor([[1., 2., 3.], [4., 5., 6.]], device='cuda')
+print(square_matrix_extension.square_matrix(a))
+
 
 ### 写Op
 

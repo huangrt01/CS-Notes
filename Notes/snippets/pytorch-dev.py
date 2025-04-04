@@ -1,3 +1,8 @@
+### 安装
+
+https://pytorch.org/get-started/locally/ 查看torch和cuda稳定版本
+
+
 ### write op
 
 二次开发autograd

@@ -19,6 +19,14 @@ nvcc是准确的。  nvidia-smi是最大支持版本
 
 ### basic
 
+>>> a = torch.cuda.get_device_properties(0)
+>>> a.
+a.L2_cache_size                    a.max_threads_per_multi_processor  a.total_memory
+a.gcnArchName                      a.minor                            a.uuid
+a.is_integrated                    a.multi_processor_count            a.warp_size
+a.is_multi_gpu_board               a.name
+a.major                            a.regs_per_multiprocessor
+
 CUDA_VISIBLE_DEVICES='0,1,2'
 
 import torch

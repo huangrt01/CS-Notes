@@ -1780,6 +1780,25 @@ OneFlow架构
 * 静态图的优势：
   * 移除无用op、跨op优化、op fusion
 
+#### PyTorch 图优化
+
+* PyTorch JIT – fusing pointwise operations into one kernel has been key
+  * e.g. to get LSTMs close to CuDNN perf.
+* 2nd gen PyTorch JIT fusers added contractions etc. 
+  * NVFuser going beyond PyTorch in https://github.com/NVIDIA/Fuser and learning new things every week
+  * NVFuser https://pytorch.org/blog/introducing-nvfuser-a-deep-learning-compiler-for-pytorch/
+* Today’s inductor / Triton based optimizations are also partly with that, but supports more complex ops
+
+##### Lightning Thunder
+
+https://www.nvidia.com/en-us/on-demand/session/gtc24-s62544/
+
+https://lightning.ai/docs/thunder/latest/
+
+
+
+
+
 ### MLOps
 
 * 磁盘U形故障率 ~ GPU故障率建模
