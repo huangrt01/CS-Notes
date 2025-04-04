@@ -131,11 +131,20 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 
 ###### TensorCore
 
-paper https://arxiv.org/pdf/1803.04014
+* Intro
+  * **Nvidia Tensor cores are dedicated to performing general matrix multiplication (GEMM) and half-precision matrix multiplication and accumulation (HMMA) operations.** In short, GEMM performs matrix operations in the format of A*B + C, and HMMA converts the operation into the half-precision format.
+  * https://resources.nvidia.com/en-us-tensor-core
+  * 相比CUDA core，实现了MMA operations，支持2:4 sparsity，支持in8和int4，更高效
+    * https://www.wevolver.com/article/tensor-cores-vs-cuda-cores
 
-https://resources.nvidia.com/en-us-tensor-core
+* paper
 
-相比CUDA core，实现了MMA operations，支持2:4 sparsity，支持in8和int4，更高效
+  * [NVIDIA Tensor Core Programmability, Performance & Precision](https://arxiv.org/pdf/1803.04014)
+
+  * [Analyzing GPU Tensor Core Potential for Fast Reductions](https://arxiv.org/pdf/1903.03640)
+
+* Guide:
+  * https://leimao.github.io/blog/NVIDIA-Tensor-Core-Programming/
 
 
 
@@ -151,7 +160,7 @@ https://resources.nvidia.com/en-us-tensor-core
   * private to the threads
 * Constant Caches
   * cache constant data used by the code executing on the SM
-* Shared Memory
+* **Shared Memory (SRAM)**
   * a small amount of fast and low latency on-chip programmable SRAM memory
   * 192KB of on-chip SRAM per each of 108 SMs (A100)
     * 192*108=20MB
@@ -163,7 +172,7 @@ https://resources.nvidia.com/en-us-tensor-core
 * L2 Cache
   * shared by all SMs
   * 作为Global Memory的Cache
-* Global Memory 
+* **Global Memory (HBM)**
   * SMs share a high capacity and high bandwidth DRAM
   * 80 GB high bandwidth memory (HBM) with bandwidth of 3000 GB/s (H100)
 
@@ -453,7 +462,8 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 | Fermi architecture (费米)                                    | 2    | 2010     |                                                              |                                                              |                              |                   |
 | Tesla architecture (特斯拉)                                  | 1    | ~        |                                                              |                                                              |                              |                   |
 
-
+* V100
+  * https://datacrunch.io/blog/nvidia-v100-gpu-specs
 
 * A100
   * https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/
@@ -696,6 +706,8 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 * 本质：In Matmul, each of the n² outputs uses 2n inputs
   * n^2 * 2n / (2n^2) = n，每个input重复读n次
   * 优化后：read each input only n/TILE_SIZE times from main memory
+
+![image-20250404222219317](./GPU/image-20250404222219317.png)
 
 ### PMPP: Programming Massively Parallel Processors
 

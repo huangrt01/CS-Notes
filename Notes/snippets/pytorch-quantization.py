@@ -6,17 +6,46 @@ https://dev-discuss.pytorch.org/t/clarification-of-pytorch-quantization-flow-sup
 
 
 ### AMP
+- Intro: https://towardsdatascience.com/the-mystery-behind-the-pytorch-automatic-mixed-precision-library-d9386e4b787e/
+
 - https://pytorch.org/tutorials/recipes/recipes/amp_recipe.html
 - https://pytorch.org/docs/stable/notes/amp_examples.html#working-with-multiple-gpus
 - https://pytorch.org/docs/stable/amp.html
 - https://www.digitalocean.com/community/tutorials/automatic-mixed-precision-using-pytorch
-- https://towardsdatascience.com/the-mystery-behind-the-pytorch-automatic-mixed-precision-library-d9386e4b787e/
 - 源码阅读：https://zhuanlan.zhihu.com/p/348554267
 - NVIDIA https://www.cs.toronto.edu/ecosystem/documents/AMP-Tutorial.pdf
 
 
-核心API：torch.autocast and torch.cuda.amp.GradScaler
+- 核心API：torch.autocast and torch.cuda.amp.GradScaler
 
+- 支持的CUDA op：https://pytorch.org/docs/stable/amp.html#autocast-op-reference
+
+ Most matrix multiplication, convolutions, and linear activations are fully covered by the amp.autocast,
+ however, for reduction/sum, softmax, and loss calculations, the calculations are still performed in FP32
+ as they are more sensitive to data range and precision.
+
+- loss scaling
+ 
+* 如何选择loss scale
+ - Choose a value so that its product with the maximum absolute gradient value is below 65,504 (the maximum value representable in FP16)
+ - dynamic: https://docs.nvidia.com/deeplearning/performance/mixed-precision-training/index.html#scalefactor
+
+scaler = torch.cuda.amp.GradScaler()
+# start your training code
+# ...
+with torch.autocast(device_type="cuda"):
+  # training code
+
+# wrapping loss and optimizer
+scaler.scale(loss).backward()
+scaler.step(optimizer)
+
+scaler.update()
+
+mixed precision training doesn’t really resolve the GPU memory issue if the model weight size is much larger than the data batch.
+For one thing, only certain layers of the model is casted into FP16 while the rest are still calculated in FP32;
+second, weight update need FP32 copies, which still takes much GPU memory;
+third, parameters from optimizers like Adam takes much GPU memory during training and the mixed precision training keeps the optimizer parameters unchanged.
 
 
 ### quantize optimizers DEMO

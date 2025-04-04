@@ -430,7 +430,35 @@ https://en.wikipedia.org/wiki/Cholesky_decomposition
 * [玻色爱因斯坦凝聚与Boltzmann-Nordheim方程](https://www.bilibili.com/video/BV1YwNHeSEbp)
   * 利用测试函数，求弱解
 
+## 抽象代数
 
+* **环（ring）**，是抽象代数的基本结构，指非空集合 $$ R $$ 配以加法与乘法两种二元运算，满足：   
+  * $$ (R, +) $$ 是阿贝尔群（加法交换、有逆元等）；   
+  * 乘法结合律 $$ (ab)c = a(bc) $$；   
+  * 乘法对加法的左右分配律 $$ a(b + c) = ab + ac $$、$$ (a + b)c = ac + bc $$。  
+  * 环在数学与工程领域应用广泛，为众多数学分支及实际应用提供了统一的代数框架，是理解和解决复杂问题的重要工具：
+    * 在密码学中，其结构用于设计加密算法；
+    * 代数几何里，环帮助刻画空间与函数性质；
+    * 编码理论中，借助环的特性构造高效编码，提升数据传输可靠性与效率。
+
+## 泛函分析
+
+[Hanner不等式与Lp空间的一致凸性](https://www.bilibili.com/video/BV18VZcYKEsz)
+
+* Lp空间
+
+![image-20250405000218965](./mathematics/image-20250405000218965.png)
+
+* 一致凸空间
+  * ![image-20250405000623658](./mathematics/image-20250405000623658.png)
+
+* Lp空间的一致凸性
+
+![image-20250405000829187](./mathematics/image-20250405000829187.png)
+
+
+
+![image-20250405000910294](./mathematics/image-20250405000910294.png)
 
 ## 数学在工科的应用
 

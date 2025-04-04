@@ -1,12 +1,12 @@
 # matmul-performance-matrix-size:
 # square_matrix_size      Naive    Grouped  Grouped & Auto-Tuned       Torch  Numpy-Broadcast  Cuda-Naive  Cuda-Shared
-# 0                32.0   2.053476   2.075676              1.959184    1.641026         0.016209    1.200000      1.443609
-# 1                64.0   7.603961   7.245283              7.349282    5.840304         0.031616    3.746341      4.938907
-# 2               128.0  25.077551  24.674698             26.369099   18.231454         0.062338   10.538593     15.095823
-# 3               256.0  60.383290  60.681482             72.495577   61.904283         0.123212    9.850101     38.641509
-# 4               512.0  59.290710  59.254975            140.034190  127.007750         0.246561    6.216461     41.920684
-# 5              1024.0  35.155656  35.146227            113.090598  130.074762         0.451891    3.345024     26.210031
-# 6              2048.0  18.051198  18.061873             68.486634   71.406181         0.823596    1.689025     13.825796
+# 0                32.0   2.098361   2.053476              1.959184    1.529881         0.016186    1.103448     1.310580
+# 1                64.0   7.566502   7.456311              7.349282    5.688889         0.031783    3.737226     4.938907
+# 2               128.0  24.575999  24.188975             26.256410   18.618181         0.062640   10.520548    15.133005
+# 3               256.0  60.235295  61.286783             73.801801   60.532019         0.119585    9.861958    38.763407
+# 4               512.0  59.254975  59.254975            136.913650  126.843867         0.247032    6.217050    42.136304
+# 5              1024.0  35.157225  35.146227            113.058081  130.074762         0.444391    3.344982    26.286249
+# 6              2048.0  18.051715  18.061354             68.464273   71.588183         0.823516    1.689136    13.834065
 
 # Analysis:
 # - shared memory: 128k/2k -> 64
@@ -22,9 +22,9 @@ np.set_printoptions(precision=2, linewidth=140)
 torch.set_printoptions(precision=2, linewidth=140, sci_mode=False)
 np.seterr(all="warn")
 
-from triton_utils import (cdiv, breakpoint_if, print_if,
+from gpu_utils import (cdiv, breakpoint_if, print_if,
                           check_tensors_gpu_ready, get_1d_offset, get_2d_offset,
-                          get_1d_mask, get_2d_mask, load_cuda)
+                          get_1d_mask, get_2d_mask, load_cuda, cuda_begin)
 from functools import partial
 
 
@@ -534,18 +534,6 @@ def numpy_matmul(a, b):
   return c
 
 
-cuda_begin = r'''
-#include <torch/extension.h>
-#include <stdio.h>
-#include <c10/cuda/CUDAException.h>
-
-#define CHECK_CUDA(x) TORCH_CHECK(x.device().is_cuda(), #x " must be a CUDA tensor")
-#define CHECK_CONTIGUOUS(x) TORCH_CHECK(x.is_contiguous(), #x " must be contiguous")
-#define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
-
-inline unsigned int cdiv(unsigned int a, unsigned int b) { return (a + b - 1) / b;}
-'''
-
 cuda_src = cuda_begin + r'''
 
 // k对应的维度做tiling（phases）
@@ -567,7 +555,7 @@ __global__ void sharedMatMult( float *a, float *b, float *c, int M, int K, int N
     float sum = 0.0f;
 
     if (row < M && col < N) {
-        for(int phase = 0; phase < (K + BLOCK_SIZE - 1) / BLOCK_SIZE; phase++){
+        for(int phase = 0; phase < cdiv(K, BLOCK_SIZE); phase++){
             int a_col = ic + phase * BLOCK_SIZE;
             int b_row = ir + phase * BLOCK_SIZE;
             aTile[ir][ic] = ((a_col < K) ? a[row * K + a_col] : 0.0f);
@@ -651,10 +639,11 @@ torch::Tensor naive_matmul(torch::Tensor m, torch::Tensor n);
 torch::Tensor group_matmul(torch::Tensor m, torch::Tensor n);
 '''
 
-mm_module = load_cuda("mm_load_inline",
-                      cuda_src,
+mm_module = load_cuda(cuda_src,
                       cpp_src, ['naive_matmul', 'group_matmul'],
-                      verbose=True)  # 'group_matmul'
+                      opt=True,
+                      verbose=True,
+                      name="mm_load_inline")  # 'group_matmul'
 
 cuda_output_1 = mm_module.naive_matmul(a, b)
 if torch.allclose(cuda_output_1, torch_output, atol=5e-2, rtol=0):
