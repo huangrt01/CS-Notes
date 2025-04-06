@@ -1,8 +1,8 @@
 https://zhuanlan.zhihu.com/p/346205754
 
-#
+GPU-Mode Lecture 6 Optimizing Optimizers
 
-### 其它注意点
+### Note
 只有parameter才会被自动优化，tensor(...,require_grad=True)只会计算梯度，不会自动更新
 
 ### usage
@@ -142,6 +142,95 @@ _single_tensor_sgd
 * _foreach_add_
 _fused_sgd_
 * _fused_sgd_
+
+### adamw
+
+def _single_tensor_adam
+    for i, param in enumerate(params):
+        ...
+
+
+def _multi_tensor_adam                       ** 默认实现 **
+    torch._foreach_add_(device_state_steps, 1)
+    # Perform stepweight decay
+    if weight_decay != 0:
+        torch._foreach_mul_(device_params, 1 - lr * weight_decay)
+
+    # Decay the first and second moment running average coefficient
+    torch._foreach_lerp_(device_exp_avgs, device_grads, 1 - beta1)
+
+    torch._foreach_mul_(device_exp_avg_sqs, beta2)
+    torch._foreach_addcmul_(device_exp_avg_sqs, device_grads, device_grads, 1 - beta2)
+
+    . . .
+
+    torch._foreach_div_(exp_avg_sq_sqrt, bias_correction2_sqrt)
+    torch._foreach_add_(exp_avg_sq_sqrt, eps)
+    torch._foreach_addcdiv_(device_params, device_exp_avgs, exp_avg_sq_sqrt, step_size)
+
+
+def _fused_adam
+    func = torch._fused_adam_ if not decoupled_weight_decay else torch._fused_adamw_
+
+
+### 问题：如何实现_foreach_add_的cuda kernel
+* 优化的历程：https://github.com/pytorch/pytorch/commits/main/aten/src/ATen/native/cuda/MultiTensorApply.cuh
+
+- attempt 1: 传入 std::vector<float*> self --> cuda不支持
+- attempt 2: 传入 float** self
+    Does this work?
+    Nope! This will cause an Illegal Memory Access (IMA)
+    because the outer pointer * is a CPU address!
+- attempt 3: 
+
+struct TensorListMetadata {
+  const float* addresses[3][NUM_TENSORS];
+};
+
+<add all the addresses into the struct>
+
+__device__ void _foreach_add_kernel(
+            TensorListMetadata tlm,
+            float alpha=1) {
+…
+}
+
+- attempt 3 bug: illegal memory access
+
+params = [torch.rand(2, 3, device="cuda") for _ in range(N)]
+torch._foreach_norm(params, ord=1)
+torch.cuda.synchronize()
+
+Only if NUM_TENSORS < 424, it works
+<-- CUDA Kernel argument space has a max limit of 4KB 
+--> 当前限制了110个tensor？
+--> 拆分结构的code在哪？    参考「code-reading-pytorch-gpu-op」
+static constexpr int64_t kChunkSize = 65536;
+static constexpr int64_t kBlockSize = 512;
+
+- revisit attempt 2: memcpy float** self 对应的tensor地址到cuda上
+
+- 未来规划：
+- 思路1: we will be doing a mix of struct + memcpy
+- 思路2: cuda unified memory，避免memcpy
+  e.g. bitsandbytes paged optimizer
+   https://github.com/bitsandbytes-foundation/bitsandbytes/blob/main/docs/source/explanations/optimizers.mdx
+   https://github.com/bitsandbytes-foundation/bitsandbytes/issues/962
+  pytorch由于有cuda cache allocator，因此使用unified memory比较麻烦
+
+
+### torch.compile优化
+
+optimizer = torch.optim.AdamW(params)
+
+@torch.compile(fullgraph=False)
+def compiled_step():
+    optimizer.step()
+
+All optimizers in pytorch/pytorch with a foreach implementation are now compilable
+So everything except L-BFGS（两次backward） and SparseAdam（sparse tensor）
+Vertical fusion of any sequence of supported _foreach_* ops should work!
+
 
 
 ### lr_scheduler

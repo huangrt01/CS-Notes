@@ -1,19 +1,23 @@
 # matmul-performance-matrix-size:
-# square_matrix_size      Naive    Grouped  Grouped & Auto-Tuned       Torch  Numpy-Broadcast  Cuda-Naive  Cuda-Shared
-# 0                32.0   2.098361   2.053476              1.959184    1.529881         0.016186    1.103448     1.310580
-# 1                64.0   7.566502   7.456311              7.349282    5.688889         0.031783    3.737226     4.938907
-# 2               128.0  24.575999  24.188975             26.256410   18.618181         0.062640   10.520548    15.133005
-# 3               256.0  60.235295  61.286783             73.801801   60.532019         0.119585    9.861958    38.763407
-# 4               512.0  59.254975  59.254975            136.913650  126.843867         0.247032    6.217050    42.136304
-# 5              1024.0  35.157225  35.146227            113.058081  130.074762         0.444391    3.344982    26.286249
-# 6              2048.0  18.051715  18.061354             68.464273   71.588183         0.823516    1.689136    13.834065
+# square_matrix_size      Naive    Grouped  Grouped & Auto-Tuned       Torch  Numpy-Broadcast  Cuda-Naive  Cuda-Shared     Numba
+# 0                32.0   2.053476   2.031746              1.969231    1.691630         0.015694    1.203762     1.488372  0.097141
+# 1                64.0   7.384615   7.492683              7.566502    5.840304         0.030587    3.746341     5.154362  0.388467
+# 2               128.0  25.077551  24.674698             25.815127   18.618181         0.060237   10.502565    16.125985  1.588623
+# 3               256.0  60.235295  60.532019             72.710056   61.904283         0.119366    9.861958    43.115791  6.101291
+# 4               512.0  59.290710  58.899939            140.233955  127.833554         0.237931    6.224924    44.582312  8.851431
+# 5              1024.0  35.174523  35.147798            113.123132  130.031747         0.434482    3.345067    27.341793  4.921167
+# 6              2048.0  18.050990  18.060733             68.480669   71.575155         0.812510    1.688949    14.263106  2.506318
 
 # Analysis:
 # - shared memory: 128k/2k -> 64
 # - threads: 1536/256 -> 6
 
-
+import os
 import numpy as np
+
+# os.environ['TRITON_INTERPRET'] = '1' # make sure set it before import triton
+# os.environ['NUMBA_ENABLE_CUDASIM'] = '1' # 目前无法开启，有报错
+
 import triton
 import triton.language as tl
 import torch
@@ -22,9 +26,10 @@ np.set_printoptions(precision=2, linewidth=140)
 torch.set_printoptions(precision=2, linewidth=140, sci_mode=False)
 np.seterr(all="warn")
 
-from gpu_utils import (cdiv, breakpoint_if, print_if,
-                          check_tensors_gpu_ready, get_1d_offset, get_2d_offset,
-                          get_1d_mask, get_2d_mask, load_cuda, cuda_begin)
+from gpu_kernel_utils import (cdiv, breakpoint_if, print_if,
+                              check_tensors_gpu_ready, get_1d_offset,
+                              get_2d_offset, get_1d_mask, get_2d_mask,
+                              load_cuda, cuda_begin)
 from functools import partial
 
 
@@ -113,6 +118,12 @@ if torch.allclose(triton_output, torch_output, atol=5e-2, rtol=0):
   print("✅ Triton and Torch match")
 else:
   print("❌ Triton and Torch differ")
+
+torch_compile_output = torch.compile(torch.matmul)(a, b)
+if torch.allclose(torch_compile_output, torch_output, atol=5e-2, rtol=0):
+  print("✅ Torch-Compile and Torch match")
+else:
+  print("❌ Torch-Compile and Torch differ")
 
 
 @triton.jit
@@ -538,13 +549,18 @@ cuda_src = cuda_begin + r'''
 
 // k对应的维度做tiling（phases）
 
-constexpr int TILE_SIZE = 16; // TILE_SIZE设为32会导致性能严重劣化
+// Analysis:
+// 1. TILE_WIDTH设为32会导致性能严重劣化, 1536
+// 2. 采用 sharedMatMult<<<blocks, tpb, 2 * TILE_WIDTH * TILE_WIDTH>>>, dynamic shared mem，性能劣化的一种原因是kernel内部编译时不知道TILE_WIDTH大小，无法最优化
+// 3. 改写用模版传入TILE_WIDTH，性能相比static有微小提升
 
-__global__ void sharedMatMult( float *a, float *b, float *c, int M, int K, int N, int BLOCK_SIZE){
+template<int TILE_WIDTH>
+__global__ void sharedMatMult( float *a, float *b, float *c, int M, int K, int N){
     C10_LAUNCH_BOUNDS_0;
-    __shared__ float aTile[TILE_SIZE][TILE_SIZE];  
-    __shared__ float bTile[TILE_SIZE][TILE_SIZE];
-    assert(BLOCK_SIZE <= TILE_SIZE);
+    extern __shared__ float aTile[];
+    float *bTile = &aTile[TILE_WIDTH*TILE_WIDTH];
+    // __shared__ float aTile[TILE_WIDTH][TILE_WIDTH];  
+    // __shared__ float bTile[TILE_WIDTH][TILE_WIDTH];
   
     // note how threadIdx.x is the fastest moving bit --> coalesced memory access, improve 7x at most
     int ir = threadIdx.y;
@@ -555,15 +571,15 @@ __global__ void sharedMatMult( float *a, float *b, float *c, int M, int K, int N
     float sum = 0.0f;
 
     if (row < M && col < N) {
-        for(int phase = 0; phase < cdiv(K, BLOCK_SIZE); phase++){
-            int a_col = ic + phase * BLOCK_SIZE;
-            int b_row = ir + phase * BLOCK_SIZE;
-            aTile[ir][ic] = ((a_col < K) ? a[row * K + a_col] : 0.0f);
-            bTile[ir][ic] = ((b_row < K) ? b[b_row * N + col] : 0.0f);
+        for(int phase = 0; phase < cdiv(K, TILE_WIDTH); phase++){
+            int a_col = ic + phase * TILE_WIDTH;
+            int b_row = ir + phase * TILE_WIDTH;
+            aTile[ir*TILE_WIDTH + ic] = ((a_col < K) ? a[row * K + a_col] : 0.0f);
+            bTile[ir*TILE_WIDTH + ic] = ((b_row < K) ? b[b_row * N + col] : 0.0f);
             __syncthreads();
 
-            for(int i = 0; i < BLOCK_SIZE; i++){
-                sum += aTile[ir][i] * bTile[i][ic];
+            for(int i = 0; i < TILE_WIDTH; i++){
+                sum += aTile[ir*TILE_WIDTH + i] * bTile[i*TILE_WIDTH + ic];
             }
             __syncthreads();
         }
@@ -617,18 +633,36 @@ torch::Tensor naive_matmul(torch::Tensor m, torch::Tensor n) {
     return output;
 }
 
-torch::Tensor group_matmul(torch::Tensor m, torch::Tensor n) {
+torch::Tensor shared_matmul(torch::Tensor m, torch::Tensor n) {
     CHECK_INPUT(m); CHECK_INPUT(n);
     int h = m.size(0);
     int w = n.size(1);
     int k = m.size(1);
     TORCH_CHECK(k==n.size(0), "Size mismatch!");
     auto output = torch::zeros({h, w}, m.options());
+    
+    // dynamic tile width
+    // cudaDeviceProp devProp;
+    // CUDA_ERR(cudaGetDeviceProperties(&devProp, 0));
+    // int maxThreads = devProp.maxThreadsPerBlock;
+    // int TILE_WIDTH = std::sqrt(maxThreads);
 
-    dim3 tpb(TILE_SIZE, TILE_SIZE);
+    int TILE_WIDTH = 16;
+    dim3 tpb(TILE_WIDTH, TILE_WIDTH);
     dim3 blocks(cdiv(h, tpb.y), cdiv(w, tpb.x));
-    sharedMatMult<<<blocks, tpb>>>(
-        m.data_ptr<float>(), n.data_ptr<float>(), output.data_ptr<float>(), h, k, w, tpb.x);
+    size_t size = TILE_WIDTH*TILE_WIDTH*2 * sizeof(float);
+    
+    auto f = [&](auto kf) { kf<<<blocks, tpb, size>>>(
+        m.data_ptr<float>(), n.data_ptr<float>(), output.data_ptr<float>(), h, k, w);
+    };
+    switch(TILE_WIDTH) {
+        case 8: f(sharedMatMult<8>); break;
+        case 16: f(sharedMatMult<16>); break;
+        case 32: f(sharedMatMult<32>); break;
+        default: break;
+    }
+        
+        
     C10_CUDA_KERNEL_LAUNCH_CHECK();
     return output;
 }
@@ -636,14 +670,14 @@ torch::Tensor group_matmul(torch::Tensor m, torch::Tensor n) {
 
 cpp_src = '''
 torch::Tensor naive_matmul(torch::Tensor m, torch::Tensor n);
-torch::Tensor group_matmul(torch::Tensor m, torch::Tensor n);
+torch::Tensor shared_matmul(torch::Tensor m, torch::Tensor n);
 '''
 
 mm_module = load_cuda(cuda_src,
-                      cpp_src, ['naive_matmul', 'group_matmul'],
+                      cpp_src, ['naive_matmul', 'shared_matmul'],
                       opt=True,
                       verbose=True,
-                      name="mm_load_inline")  # 'group_matmul'
+                      name="mm_load_inline")
 
 cuda_output_1 = mm_module.naive_matmul(a, b)
 if torch.allclose(cuda_output_1, torch_output, atol=5e-2, rtol=0):
@@ -651,11 +685,65 @@ if torch.allclose(cuda_output_1, torch_output, atol=5e-2, rtol=0):
 else:
   print("❌ Cuda_Naive_Matmul and Torch differ")
 
-cuda_output_2 = mm_module.group_matmul(a, b)
+cuda_output_2 = mm_module.shared_matmul(a, b)
 if torch.allclose(cuda_output_2, torch_output, atol=5e-2, rtol=0):
-  print("✅ Cuda_Group_Matmul and Torch match")
+  print("✅ Cuda_Shared_Matmul and Torch match")
 else:
-  print("❌ Cuda_Group_Matmul and Torch differ")
+  print("❌ Cuda_Shared_Matmul and Torch differ")
+
+import math
+from numba import cuda
+
+is_cuda_sim = os.environ.get('NUMBA_ENABLE_CUDASIM') == '1'
+if not is_cuda_sim:
+  from numba.cuda import as_cuda_array as ca
+else:
+
+  def ca(x):
+    return x
+
+
+@cuda.jit
+def matmul_k_numba(m, n, out, tw):
+  cbi, cbd, tid = cuda.blockIdx, cuda.blockDim, cuda.threadIdx
+  tc, tr = tid.x, tid.y
+  r, c = cbi.y * cbd.y + tr, cbi.x * cbd.x + tc
+  h, k = m.shape
+  k2, w = n.shape
+
+  shar = cuda.shared.array(0, dtype=np.float32)
+  ms, ns = shar[:tw * tw], shar[tw * tw:2 * tw * tw]
+
+  p = np.float32(0.0)
+  for ph in range(math.ceil(k / tw)):
+    idx = ph * tw
+    ms[tr * tw + tc] = m[r, tc + idx] if r < h and idx + tc < k else 0.
+    ns[tr * tw + tc] = n[tr + idx, c] if c < w and idx + tr < k else 0.
+    cuda.syncthreads()
+    for i in range(tw):
+      p += ms[tr * tw + i] * ns[i * tw + tc]
+    cuda.syncthreads()
+  if r < h and c < w:
+    out[r, c] = p
+
+
+def matmul_2d_numba(m, n, tw=16):
+  h, k = m.shape
+  k2, w = n.shape
+  assert k == k2, "Size mismatch!"
+  out = torch.zeros(h, w, dtype=m.dtype, device=m.device)
+  dyn_shared_mem_size = 2 * tw * tw * 4
+  tpb = tw, tw
+  blocks = cdiv(w, tpb[0]), cdiv(h, tpb[1])
+  matmul_k_numba[blocks, tpb, 0, dyn_shared_mem_size](ca(m), ca(n), ca(out), tw)
+  return out
+
+
+numba_output = matmul_2d_numba(a, b)
+if torch.allclose(numba_output, torch_output, atol=5e-2, rtol=0):
+  print("✅ Numba_Matmul and Torch match")
+else:
+  print("❌ Numba_Matmul and Torch differ")
 
 
 @triton.testing.perf_report(
@@ -668,16 +756,17 @@ else:
         line_arg=
         "provider",  # Argument name whose value corresponds to a different line in the plot.
         line_vals=[
-            "naive", "grouped", "grouped-autotuned", "torch", "numpy-broadcast",
-            "cuda-naive", "cuda-shared"
+            "naive", "grouped", "grouped-autotuned", "torch", "torch-compiled",
+            "numpy-broadcast", "cuda-naive", "cuda-shared", "numba"
         ],  # Possible values for `line_arg`.
         line_names=[
             "Naive", "Grouped", "Grouped & Auto-Tuned", "Torch",
-            "Numpy-Broadcast", "Cuda-Naive", "Cuda-Shared"
+            "Torch-Compiled", "Numpy-Broadcast", "Cuda-Naive", "Cuda-Shared",
+            "Numba"
         ],  # Label name for the lines.
         styles=[("blue", "-"), ("green", "-"), ("green", "--"), ("orange", "-"),
-                ("red", "-"), ("purple", "-"),
-                ("purple", "--")],  # Line styles.
+                ("orange", "--"), ("red", "-"), ("purple", "-"),
+                ("purple", "--"), ("brown", "-")],  # Line styles.
         ylabel="GB/s",  # Label name for the y-axis.
         plot_name=
         "matmul-performance-matrix-size",  # Name for the plot. Used also as a file name for saving the plot.
@@ -700,6 +789,10 @@ def benchmark_matrix_size(square_matrix_size, provider):
   elif provider == "torch":
     ms, min_ms, max_ms = triton.testing.do_bench(lambda: torch.matmul(a, b),
                                                  quantiles=quantiles)
+  elif provider == "torch-compiled":
+    compiled_matmul = torch.compile(torch.matmul)
+    ms, min_ms, max_ms = triton.testing.do_bench(lambda: compiled_matmul(a, b),
+                                                 quantiles=quantiles)
   elif provider == "numpy-broadcast":
     ms, min_ms, max_ms = triton.testing.do_bench(lambda: numpy_matmul(a, b),
                                                  quantiles=quantiles)
@@ -708,7 +801,10 @@ def benchmark_matrix_size(square_matrix_size, provider):
         lambda: mm_module.naive_matmul(a, b), quantiles=quantiles)
   elif provider == "cuda-shared":
     ms, min_ms, max_ms = triton.testing.do_bench(
-        lambda: mm_module.group_matmul(a, b), quantiles=quantiles)
+        lambda: mm_module.shared_matmul(a, b), quantiles=quantiles)
+  elif provider == "numba":
+    ms, min_ms, max_ms = triton.testing.do_bench(lambda: matmul_2d_numba(a, b),
+                                                 quantiles=quantiles)
 
   def gbps(ms):
     return 12 * sz * sz / ms * 1e-6

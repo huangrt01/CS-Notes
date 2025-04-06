@@ -132,6 +132,7 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 ###### TensorCore
 
 * Intro
+  * Volta, Turing, Ampere 开始的GPU架构
   * **Nvidia Tensor cores are dedicated to performing general matrix multiplication (GEMM) and half-precision matrix multiplication and accumulation (HMMA) operations.** In short, GEMM performs matrix operations in the format of A*B + C, and HMMA converts the operation into the half-precision format.
   * https://resources.nvidia.com/en-us-tensor-core
   * 相比CUDA core，实现了MMA operations，支持2:4 sparsity，支持in8和int4，更高效
@@ -145,6 +146,9 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 
 * Guide:
   * https://leimao.github.io/blog/NVIDIA-Tensor-Core-Programming/
+  * To employ Tensor Cores in [cuBLAS](https://docs.nvidia.com/cuda/cublas/index.html), the dimensions of a GEMM ([M, K] x [K, N] -> [M, N]) must be multiples of 8.
+    * convolution没有限制
+    * https://github.com/NVIDIA/apex/issues/221#issuecomment-478084841
 
 
 
@@ -207,7 +211,19 @@ cudaMemcpyHostToDevice
 
 ![image-20250404200229175](./GPU/image-20250404200229175.png)
 
+###### Unified Memory
 
+* Pascal之后有硬件支持
+* 解决cpu&gpu空间均需访问某一tensor的问题
+  * 本质上是通过地址映射，让GPU可以访问某块CPU Memory
+
+* 两种实现：
+  * 基于page fault
+  * 用load/store，UVA（Unified Virtual Addressing）或者zero copy access
+* e.g. bitsandbytes paged optimizer
+  * https://github.com/bitsandbytes-foundation/bitsandbytes/blob/main/docs/source/explanations/optimizers.mdx
+  * https://github.com/bitsandbytes-foundation/bitsandbytes/issues/962
+  * Compared to CPU offloading, a paged optimizer has zero overhead if all the memory fits onto the device and only some overhead if some of memory needs to be evicted. For offloading, you usually offload fixed parts of the model and need to off and onload all this memory with each iteration through the model (sometimes twice for both forward and backward pass).
 
 
 
@@ -546,6 +562,9 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 #### Host and Device Code
 
+* 细节：
+  * CUDA Kernel argument space has a max limit of 4KB
+
 ![image-20250226193631721](./GPU/image-20250226193631721.png)
 
 ![image-20250224190443112](./GPU/image-20250224190443112.png)
@@ -584,6 +603,14 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
   * Triton的初期版本以CUDA为起点而开发，为没有CUDA基础的编程者提供快速编写高效CUDA kernel的方案，而随着迭代已逐渐支持其他芯片和编程工具，如AMD的ROCm，并在继续支持其他的芯片，如Intel的CPU。
   * During the compilation, the Triton compiler tries to use clever tricks to **rearrange the parts of your program**
   * 利用ptx汇编可以将triton降级为ptx代码，在cuda上直接运行以达到极致计算性能的优化，Triton提供了块指针非常便捷的实现FA，对GPU IO感知类的实现进行了充分的支持。
+
+#### 和 numba 对比
+
+* numba：
+  * python
+  * 可以传入矩阵shape
+  * debug
+  * NUMBA_ENABLE_CUDASIM=1
 
 #### Basic
 
@@ -709,6 +736,10 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 ![image-20250404222219317](./GPU/image-20250404222219317.png)
 
+
+
+
+
 ### PMPP: Programming Massively Parallel Processors
 
 > * 书：Programming Massively Parallel Processors (PMPP) 3rd edition
@@ -755,6 +786,10 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 * `torch.compile` makes your model faster by trying to **use existing kernels more effectively and creating simple new kernels.** 
 * 什么情况下torch.compile性能差
   * 不能编译成一个cuda graph，有graph breaks
+* 能力：
+  * 支持dynamic shape
+  * 支持optimizer的vertical fusion
+    * 编译，没有optimizer IR，编译20s for 几千参数 AdamW
 
 #### 为什么 Square 算子性能差
 

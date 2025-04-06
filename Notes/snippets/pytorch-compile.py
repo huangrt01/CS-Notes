@@ -15,6 +15,7 @@ x = torch.randn(10, 10).cuda()
 result = compiled_square(x)
 
 TORCH_LOGS="output_code" python compile_square.py
+TORCH_LOGS="inductor"
 
 
 @torch.compile
@@ -33,3 +34,11 @@ https://pytorch.org/docs/main/notes/ddp.html#torchdynamo-ddpoptimizer
 
 ddp_model = DDP(model, device_ids=[rank])
 ddp_model = torch.compile(ddp_model)
+
+### optimizer
+
+optimizer = torch.optim.AdamW(params)
+
+@torch.compile(fullgraph=False)
+def compiled_step():
+    optimizer.step()

@@ -39,7 +39,7 @@ sudo nvidia-smi -pm 1
 nvidia-smi -ac 9751,1530 # <memory, graphics>
 
 
-### time
+### time - 1
 class TimePytorchFunction:
 
   def __init__(self, func, *args):
@@ -70,6 +70,29 @@ b = torch.randn(10000, 10000).cuda()
 with TimePytorchFunction(torch.square, b) as timer:
     result = timer.run()
 
+### time - 2
+
+# Timing utilities
+start_time = None
+
+
+def start_timer():
+  global start_time
+  gc.collect()
+  torch.cuda.empty_cache()
+  torch.cuda.reset_max_memory_allocated()
+  torch.cuda.synchronize()
+  start_time = time.time()
+
+
+def end_timer_and_print(local_msg):
+  torch.cuda.synchronize()
+  end_time = time.time()
+  print("\n" + local_msg)
+  print("Total execution time = {:.3f} sec".format(end_time - start_time))
+  print("Max memory used by tensors = {} bytes".format(
+      torch.cuda.max_memory_allocated()))
+
 ### PyTorch Profiler
 
 def set_seed(seed: int = 37) -> None:
@@ -83,7 +106,7 @@ def set_seed(seed: int = 37) -> None:
     print(f"设置随机数种子为{seed}")
 
 
-from torch.profiler import profile, record_function, ProfilerActivity
+
 
 model = torchvision.models.resnet18().cuda()
 inputs = torch.randn(5, 3, 224, 224, device="cuda")
@@ -91,6 +114,7 @@ inputs = torch.randn(5, 3, 224, 224, device="cuda")
 for _ in range(5):
   model(inputs)
 
+from torch.profiler import profile, record_function, ProfilerActivity
 with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], profile_memory=True) as prof:
   with record_function("model_inference"):
     model(inputs)

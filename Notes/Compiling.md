@@ -15,6 +15,11 @@ https://godbolt.org
   
 * 编译器有能力让不同 target 的 cpp 文件的不同编译选项，有区分地生效。但无法控制其它cpp文件对头文件的使用，因此头文件为主体的开源项目，经常不得不很小心地去处理各种使用情况。
 
+#### Compiling
+
+* AOT (Ahead-Of-Time Compilation)
+* JIT
+
 #### Linking
 
 linking with libraries: -lXXX

@@ -21,8 +21,9 @@
 
 ![image-20250404195013648](./Computer-Architecture/image-20250404195013648.png)
 
+* Memory optimization和runtime optimization
+  * 往往是互相制约的
 * IO-Aware Runtime Optimization 【flash-attention】
-
   * We draw the most direct connection to the literature of analyzing I/O complexity in this work [1], but concepts of memory hierarchies are fundamental and has appeared in many forms, from the working set model [21], to data locality [86], to the Rooﬂine model of arithmetic intensity [85], to analyses of scalability [59], to standard textbook treatments of computer architecture [40].
 
 ### Low Latency Guide

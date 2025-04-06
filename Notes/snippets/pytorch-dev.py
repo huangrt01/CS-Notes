@@ -1,6 +1,65 @@
-### 安装
+### 安装 - build from source
 
 https://pytorch.org/get-started/locally/ 查看torch和cuda稳定版本
+
+# https://github.com/pytorch/pytorch#from-source
+
+# anaconda
+# https://www.anaconda.com/download
+wget https://repo.anaconda.com/archive/Anaconda3-2024.10-1-Linux-x86_64.sh
+chmod +x Anaconda3-2024.10-1-Linux-x86_64.sh 
+./Anaconda3-2024.10-1-Linux-x86_64.sh
+
+source $HOME/anaconda3/bin/activate 
+conda create -n pytorch-debug
+conda activate pytorch-debug
+
+# cudnn
+cat /usr/include/cudnn_version.h 
+
+https://developer.nvidia.com/cudnn-downloads
+
+wget https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb
+sudo dpkg -i cuda-keyring_1.1-1_all.deb
+sudo apt-get update
+sudo apt-get -y install cudnn
+sudo apt-get -y install cudnn-cuda-12 # 11 or 12
+
+# cuda compiler
+https://gist.github.com/ax3l/9489132
+
+# pytorch
+https://github.com/pytorch/pytorch?tab=readme-ov-file#from-source
+
+git clone --recursive https://github.com/pytorch/pytorch --depth 1
+cd pytorch
+git submodule sync
+git submodule update --init --recursive
+
+conda install cmake ninja
+pip install -r requirements.txt
+
+pip install mkl-static mkl-include
+# CUDA only: Add LAPACK support for the GPU if needed
+conda install -c pytorch magma-cuda121  # or the magma-cuda* that matches your CUDA version from https://anaconda.org/pytorch/repo
+
+# (optional) If using torch.compile with inductor/triton, install the matching version of triton
+# Run from the pytorch directory after cloning
+# For Intel GPU support, please explicitly `export USE_XPU=1` before running command.
+make triton
+
+export CMAKE_PREFIX_PATH="${CONDA_PREFIX:-'$(dirname $(which conda))/../'}:${CMAKE_PREFIX_PATH}"
+CUDA_DEVICE_DEBUG=1 DEBUG=1 python setup.py develop
+
+
+
+### debug build
+
+CUDA_DEVICE_DEBUG=1
+DEBUG=1
+
+
+`cuda-gdb` and `cuda-memcheck`
 
 
 ### write op

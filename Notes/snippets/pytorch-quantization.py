@@ -9,7 +9,7 @@ https://dev-discuss.pytorch.org/t/clarification-of-pytorch-quantization-flow-sup
 - Intro: https://towardsdatascience.com/the-mystery-behind-the-pytorch-automatic-mixed-precision-library-d9386e4b787e/
 
 - https://pytorch.org/tutorials/recipes/recipes/amp_recipe.html
-- https://pytorch.org/docs/stable/notes/amp_examples.html#working-with-multiple-gpus
+- https://pytorch.org/docs/stable/notes/amp_examples.html
 - https://pytorch.org/docs/stable/amp.html
 - https://www.digitalocean.com/community/tutorials/automatic-mixed-precision-using-pytorch
 - 源码阅读：https://zhuanlan.zhihu.com/p/348554267
@@ -23,6 +23,10 @@ https://dev-discuss.pytorch.org/t/clarification-of-pytorch-quantization-flow-sup
  Most matrix multiplication, convolutions, and linear activations are fully covered by the amp.autocast,
  however, for reduction/sum, softmax, and loss calculations, the calculations are still performed in FP32
  as they are more sensitive to data range and precision.
+
+ CUDA Ops that can autocast to float16
+__matmul__, addbmm, addmm, addmv, addr, baddbmm, bmm, chain_matmul, multi_dot, conv1d, 
+conv2d, conv3d, conv_transpose1d, conv_transpose2d, conv_transpose3d, GRUCell, linear, LSTMCell, matmul, mm, mv, prelu, RNNCell
 
 - loss scaling
  
@@ -46,6 +50,54 @@ mixed precision training doesn’t really resolve the GPU memory issue if the mo
 For one thing, only certain layers of the model is casted into FP16 while the rest are still calculated in FP32;
 second, weight update need FP32 copies, which still takes much GPU memory;
 third, parameters from optimizers like Adam takes much GPU memory during training and the mixed precision training keeps the optimizer parameters unchanged.
+
+* 精度debug
+- advanced use cases
+- https://pytorch.org/docs/stable/amp.html#prefer-binary-cross-entropy-with-logits-over-binary-cross-entropy
+   In autocast-enabled regions, the forward input may be float16, which means the backward gradient must be representable in float16
+- Disable autocast or GradScaler individually (by passing enabled=False to their constructor) and see if infs/NaNs persist.
+
+with torch.autocast(device_type="cuda"):
+    e_float16 = torch.mm(a_float32, b_float32)
+    with torch.autocast(device_type="cuda", enabled=False):
+        # Calls e_float16.float() to ensure float32 execution
+        # (necessary because e_float16 was created in an autocasted region)
+        f_float32 = torch.mm(c_float32, e_float16.float())
+
+    # No manual casts are required when re-entering the autocast-enabled region.
+    # torch.mm again runs in float16 and produces float16 output, regardless of input types.
+    g_float16 = torch.mm(d_float32, f_float32)
+
+
+
+* Advanced use cases
+- https://pytorch.org/docs/stable/notes/amp_examples.html
+Gradient accumulation
+
+Gradient penalty/double backward
+
+Networks with multiple models, optimizers, or losses
+
+Multiple GPUs (torch.nn.DataParallel or torch.nn.parallel.DistributedDataParallel)
+
+Custom autograd functions (subclasses of torch.autograd.Function)
+
+
+* 实现AMP Kernel
+https://pytorch.org/tutorials/advanced/dispatcher.html#autocast
+
+// Autocast-specific helper functions
+#include <ATen/autocast_mode.h>
+
+Tensor mymatmul_autocast(const Tensor& self, const Tensor& other) {
+  c10::impl::ExcludeDispatchKeyGuard no_autocast(c10::DispatchKey::Autocast);
+  return mymatmul(at::autocast::cached_cast(at::kHalf, self),
+                  at::autocast::cached_cast(at::kHalf, other));
+}
+
+TORCH_LIBRARY_IMPL(myops, Autocast, m) {
+  m.impl("mymatmul", mymatmul_autocast);
+}
 
 
 ### quantize optimizers DEMO

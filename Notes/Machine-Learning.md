@@ -189,6 +189,9 @@ Materials
 * Intro
   * adaptive moment estimation
   * Momentum 善于处理梯度的方向和大小，而 RMSProp 善于调整学习率以应对数据的稀疏性。Adam 的提出是为了结合这两种算法的优点，同时减少它们的缺点，提供一种更加鲁棒的优化解决方案。
+  * AdamW
+    - AdamW 主要改进在于对权重衰减（weight decay）的处理方式。在传统的 Adam 中，权重衰减和 L2 正则化是等价的，但在 Adam 优化器中，这种等价性会导致一些问题，AdamW 就是为了解决这些问题而设计的。
+    - AdamW 对权重衰减的处理更加合理，它将权重衰减操作从梯度计算中分离出来，直接应用于权重本身，避免了 Adam 中权重衰减与梯度二阶矩估计的相互作用，从而在许多任务中取得更好的泛化性能。
 
 - Algorithm:
   - In step $$t$$
@@ -199,7 +202,8 @@ Materials
     - 动机是没有 learning rate decay
     - 可尝试去掉，等价于learning rate warmup，会有点接近AdaGrad
   - Bias-corrected 2nd moment: $$\hat{v}_t \leftarrow \frac{v_t}{1-\beta_2^t}$$
-  - Update model: $$w_{t} \leftarrow w_{t-1} - \eta \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon} $$
+  - Adam Update model: $$w_{t} \leftarrow w_{t-1} - \eta \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}$$
+  - AdamW Update model: 在 Adam 的基础上，增加了权重衰减的步骤。设权重衰减系数为 $$\lambda$$，则更新公式变为 $$w_{t} \leftarrow w_{t-1}(1 - \eta\lambda)- \eta \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}$$
   - Note: 
     - bias correction could be ignored
     - AdaGrad uses **uniformly weighted** average, while Adam assigns **larger weights for later** items

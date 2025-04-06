@@ -550,8 +550,13 @@ https://docs.nvidia.com/deeplearning/performance/index.html
   * Embedding Layer
     * [Prior work](https://arxiv.org/pdf/2109.12948) has also had success with quantizing the embedding layer down to 2-bits in other transformer-based models.
 
-
 #### Mixed Precision Training (ICLR 2018)
+
+> - 局限性：
+>   - 不是所有层都量化
+>   - 只能优化compute，不优化显存
+>   - 只优化到fp16
+>   - fp16的精度局限性，尽管有loss scaling解决underflow的问题，bf16-pretrained models会overflow
 
 * Baseline (FP32) : Single-precision storage is used for activations, weights and gradients. All arithmetic is also in FP32. 
 * Mixed Precision (MP): 
@@ -651,6 +656,17 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 * GPT-Q
   * ![image-20250307033049737](./MLSys/image-20250307033049737.png)
+
+* Triton Limitations
+  * It runs into trouble when trying to work with complicated operations and nonstandard dtypes
+    * Int4
+    * batchsize>1 int8/int4 weight only
+      * L2 Cache Optimization
+  * Config consistency
+    * Issues with Heuristics, in some of the tests
+    * the best configurations aren’t available or are heuristically discarded.
+
+
 
 #### TorchAO - Quantized Training
 

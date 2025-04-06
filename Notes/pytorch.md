@@ -107,6 +107,19 @@
 
 
 
+## Optimizer
+
+### Optimizing Optimizers —— [GPU Mode Lecture 6](https://www.youtube.com/watch?v=hIop0mWKPHc)
+
+> 优化runtime
+
+* kernel fusion —— vertical + horizontal
+  * for loop
+  * for each
+  * entirely fused
+
+![image-20250407020056387](./pytorch/image-20250407020056387.png)
+
 ## Serving
 
 * 如果追求性能，可以用torch.fx改一下图，把手写op改进去

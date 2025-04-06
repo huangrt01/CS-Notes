@@ -1,3 +1,16 @@
+### 基础操作
+
+from threading import Barrier, Thread
+
+Barrier可以传入executor.map的fn中
+num = 3
+sb = Barrier(num)
+with ThreadPoolExecutor(num) as ex: list(ex.map(lambda i: g(i,sb), range(1,num+1)))
+
+
+### example
+
+
 import threading
 import time
 
