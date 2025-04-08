@@ -1,10 +1,20 @@
 ### c++
 
+* c10::irange
+
 #include <torch/torch.h>
 
 for (auto i : c10::irange(variable_count)) {
     std::cout << "当前索引: " << i << std::endl;
 }
+
+* weak ref
+
+c10/util/intrusive_ptr.h
+
+using weakref_type = c10::weak_intrusive_ptr<TensorImpl, UndefinedTensorImpl>;
+get_cached_casts().emplace(arg.unsafeGetTensorImpl(), val_type{weakref_type(arg.getIntrusivePtr()), casted_arg});
+
 
 ### tensor
 

@@ -1,5 +1,17 @@
 ### Aten
 
+### native_functions.yaml
+
+构造函数的多种构建方式
+
+- func: sparse_coo_tensor.size(int[] size, *, ScalarType? dtype=None, Layout? layout=None, Device? device=None, bool? pin_memory=False) -> Tensor
+  dispatch:
+    CompositeExplicitAutograd: sparse_coo_tensor
+  autogen: sparse_coo_tensor.size_out
+- func: sparse_coo_tensor.indices(Tensor indices, Tensor values, *, ScalarType? dtype=None, Layout? layout=None, Device? device=None, bool? pin_memory=None, bool? is_coalesced=None) -> Tensor
+- func: sparse_coo_tensor.indices_size(Tensor indices, Tensor values, int[] size, *, ScalarType? dtype=None, Layout? layout=None, Device? device=None, bool? pin_memory=None, bool? is_coalesced=None) -> Tensor
+
+
 ### _foreach_add_
 
 * aten/src/ATen/native/native_functions.yaml

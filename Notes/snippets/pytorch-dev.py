@@ -11,7 +11,7 @@ chmod +x Anaconda3-2024.10-1-Linux-x86_64.sh
 ./Anaconda3-2024.10-1-Linux-x86_64.sh
 
 source $HOME/anaconda3/bin/activate 
-conda create -n pytorch-debug
+# conda create -n pytorch-debug
 conda activate pytorch-debug
 
 # cudnn
@@ -48,18 +48,60 @@ conda install -c pytorch magma-cuda121  # or the magma-cuda* that matches your C
 # For Intel GPU support, please explicitly `export USE_XPU=1` before running command.
 make triton
 
+
+
+./tools/nightly.py checkout -b my-nightly-branch -p my-env
+
 export CMAKE_PREFIX_PATH="${CONDA_PREFIX:-'$(dirname $(which conda))/../'}:${CMAKE_PREFIX_PATH}"
 CUDA_DEVICE_DEBUG=1 DEBUG=1 python setup.py develop
 
 
 
-### debug build
-
-CUDA_DEVICE_DEBUG=1
-DEBUG=1
-
+### debug
 
 `cuda-gdb` and `cuda-memcheck`
+
+
+### 部分构件相关
+
+#### 增量build
+python setup.py develop
+
+# 如果需要清理后重新构建（完全重建）
+python setup.py clean && python setup.py develop
+
+For subsequent builds (i.e., when build/CMakeCache.txt exists), the build options passed for the first time will persist; 
+please run ccmake build/, run cmake-gui build/, or directly edit build/CMakeCache.txt to adapt build options.
+
+#### 只构建test
+
+Working on a test binary?
+Run (cd build && ninja bin/test_binary_name) to rebuild only that test binary (without rerunning cmake). 
+(Replace ninja with make if you don't have ninja installed)
+
+#### ccache
+
+sudo apt install ccache
+# config: cache dir is ~/.ccache, conf file ~/.ccache/ccache.conf
+# max size of cache
+ccache -M 25Gi  # -M 0 for unlimited
+# unlimited number of files
+ccache -F 0
+
+To check this is working, do two clean builds of pytorch in a row. The second build should be substantially and noticeably faster than the first build. If this doesn't seem to be the case, check the CMAKE_<LANG>_COMPILER_LAUNCHER rules in build/CMakeCache.txt, where <LANG> is C, CXX and CUDA. Each of these 3 variables should contain ccache, e.g.
+
+//CXX compiler launcher
+CMAKE_CXX_COMPILER_LAUNCHER:STRING=/usr/bin/ccache
+
+If not, you can define these variables on the command line before invoking setup.py.
+
+export CMAKE_C_COMPILER_LAUNCHER=ccache
+export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+export CMAKE_CUDA_COMPILER_LAUNCHER=ccache
+python setup.py develop
+
+#### Rebuild few files with debug information
+
 
 
 ### write op

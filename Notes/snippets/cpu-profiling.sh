@@ -1,6 +1,6 @@
 ### py-spy
 
-py-spy record -o profile.svg -- python test.py
+py-spy record -o profile.svg --native -- python test.py
 
 100samples/s 采样数除以100是实际运行的时间
 

@@ -648,12 +648,40 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 * triton autotune目前对dynamic shape的支持不好，性能较差，原因是autotune会对每个新shape重新tune
 
+### GemLite —— Low-Bit Triton Kernels
 
+> /code-reading-gem-lite
+
+* Intro
+
+  - Support for various activation data types: fp16, int8 and fp8
+
+  - Compatibility: works seamlessly with non-packed (e.g., int8, fp8) and packed formats (e.g., uint4, uint2, uint1)
+
+  - Performance Optimization: includes optimized kernels and autotuning tools to achieve high performance across different hardware and batch sizes
+
+  - Integration: Compatible with torch.compile and CUDA graphs, ensuring support for advanced features like tensor parallelism
+
+* Kernel Selection
+  * For batch size = 1, a GEMV kernel performs best,
+    * for packed data, our experiments indicate that **loading scales and zero points only once per two consecutive blocks minimizes redundant operations**. Since these blocks share the same metadata, this approach results in:
+      - 5–8% end-to-end inference speedup compared to the default GEMV kernel
+      - 30–40% improvement over the traditional Split-K method
+    * for non packed: GEMV_SPLITK
+  * for larger batch sizes, GEMM kernels are more efficient.
+  * For batch sizes between 2 and 64, when matrices are “skinny,” a GEMM-SPLITK kernel is used to enable better GPU utilization ([arXiv](https://arxiv.org/abs/2402.00025)).
+
+* autotuning
+  * [Autotuning](https://triton-lang.org/main/python-api/generated/triton.autotune.html) is critical for achieving optimal kernel performance. Since this process can be time-intensive, GemLite **provides tools to automatically save and load autotuning results for all kernels**. This ensures that the autotuning process is performed only once per GPU device, minimizing runtime, reducing repetitive overhead, and maintaining consistent performance across runs.
+* Overcoming **Bit-Unpacking Bottlenecks**
+  * To mitigate these, various bit-packing configurations were explored, including **packing along columns** versus rows and experimenting with different bit-packing widths (e.g., 8-bit vs. 32-bit). Notably, **transitioning from 32-bit to 8-bit packing** delivered performance improvements of up to 18% on the A100 and 6% on the H100
 
 ### GPU优化
 
 #### Overview
 
+> Nvidia Guide: https://docs.nvidia.com/deeplearning/performance/dl-performance-fully-connected/index.html
+>
 > Getting good occupancy – balance resources
 
 ##### Roofline Model

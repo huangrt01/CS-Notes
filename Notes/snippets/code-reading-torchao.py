@@ -1,7 +1,15 @@
 ### torchao
 
-speed-first
-依赖torch.compile做算子优化
+- speed-first
+- 依赖torch.compile做算子优化
+- With Tensor Subclass, we extend PyTorch native Tensor abstractions and model quantization as dtype conversion, 
+    while different packing formats for custom kernels are handled through layouts.
+- with tinygemm or GemLite kernel implementations
+- compatibility with tensor parallel, torch.compile, and other PyTorch features.
+
+tutorial: https://pytorch.org/ao/stable/quick_start.html
+README: https://github.com/pytorch/ao/blob/main/torchao/quantization/README.md
+CONTRIBUTOR：https://pytorch.org/ao/stable/contributor_guide.html
 
 * https://github.com/pytorch-labs/ao
 - Current best way to access all the pytorch native gpu quantization work,
@@ -16,13 +24,26 @@ speed-first
 
 * https://gist.github.com/HDCharles/287ac5e997c7a8cf031004aad0e3a941 ■ triton microbenchmarks
 
-# TorchAOBastTensor参考code-reading-pytorch-utils.py
+TorchAOBaseTensor参考code-reading-pytorch-utils.py
+
+e.g. int4 quantized tensor
+- dtype: int4 AffineQuantizedTensor
+- layout: TensorCoreTiledLayout/GemlitePackedLayout
 
 
 
-# float 8 
+### serialization
+Save and load quantized weights into a state_dict just like a floating point model, 
+eliminating the need to transform floating point model to quantized model before the quantized weights are loaded. 
+This reduces friction of distributing and deploying quantized models.
+
+### GemLite
+
+quantize_(model, gemlite_uintx_weight_only(group_size, bit_width, packing_bitwidth))
+
+
+### float 8 
 https://github.com/pytorch-labs/float8_experimental
-
 
 
 

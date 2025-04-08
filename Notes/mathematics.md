@@ -260,6 +260,9 @@
 
 ## ML Theory
 
+* 神经网络的万能逼近公式
+  * ![image-20250408202259016](./mathematics/image-20250408202259016.png)（来源LHUC paper)
+
 * 神经网络扰动
   * [Hessian-based Analysis of Large Batch Training and Robustness to Adversaries](https://arxiv.org/pdf/1802.08241) 分析了Hessian特征值和神经网络扰动的关系
     * Q-Bert 计算最大特征值：通过两次反向传播计算Hv，[幂迭代法 Power Iteration](https://en.wikipedia.org/wiki/Power_iteration)

@@ -123,6 +123,34 @@ print(f"Prompt的token数量为: {token_count}")
     to help lengthen the context (e.g., Transformer-XL [14] and Compressive Transformer [69]). We recommend the survey [81] for more details.
     There are several lines of work on developing other modules instead of attention to model longer context. HiPPO [35] and its extensions, most notably S4 [31, 36, 37] projects the history on a polynomial basis, allowing accurate reconstruction of the history through state-space models. They combine the strengths of CNNs (eﬃcient training), RNNs (eﬃcient inference), and continuous models (robust to change in sampling rates). LambdaNetworks [2], AFT [93] and FLASH [42] are other attempts at replacing attention in the context of image classiﬁcation and language modeling.
 
+### Best Practices：使用 GemLite、TorchAO 和 SGLang 加速 LLM 推理
+
+> https://pytorch.org/blog/accelerating-llm-inference/
+
+* 现有的低精度推理方案在小 batch size 场景下表现良好，但存在以下问题：
+
+  - 当 batch size 增大时，性能下降
+
+  - 对量化类型的限制，例如，一些计算核（kernels）仅支持对称量化，这可能会影响模型在较低比特下的准确性
+
+  - 量化、序列化和张量并行（TP）的相互影响，使得加载量化模型变得困难，并且可能需要对用户模型进行修改
+
+* 集成：
+
+  * GemLite[1] ：一个基于 Triton 的计算核（kernel）库，解决了大 batch size 场景下的性能瓶颈，并支持更灵活的量化方式。
+  * TorchAO[2] ：一个原生 PyTorch 库，为量化、稀疏性和张量并行（与 DTensor 结合使用）提供了简化的用户体验。
+  * SGLang[3] ：一个快速、高效且可扩展的 LLM 和视觉语言模型（VLM）推理框架，支持广泛的模型类型。
+
+* a summary of the results in **8xH100 machine on Llama 3.1-8B for decode**. 
+
+![image-20250409022139221](./LLM-MLSys/image-20250409022139221.png)
+
+> 更详细的实验结论：https://developers.redhat.com/articles/2024/10/17/we-ran-over-half-million-evaluations-quantized-llms#real_world_benchmark_performance
+
+
+
+
+
 ### 访存优化
 
 #### FlashAttention: Fast and Memory-Eﬃcient Exact Attention

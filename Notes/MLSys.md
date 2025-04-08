@@ -430,14 +430,15 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 #### Intro
 
-* 为什么量化？
-  * 优化显存
-    * 显存包括 params、grads、activations（存储用于backward）等
-    * The activation memory of a transformer-based model is proportional to the number of transformer layers × hidden dimensions × sequence length × batch size. For a GPT-2 like architecture the total activations is about 12 × hidden dim × batch × seq length × transformer layers.
-  * 优化计算
-    * Int8 matmul
-  * 优化内存带宽
-    * Increasing the speed at which **the user receives generated results** is challenging, as compute is **dominated by matrix-vector products**. Unlike matrix-matrix products, these are primarily limited by memory bandwidth.
+* 量化的目标是什么？ —— 多目标优化
+  - 优化计算
+    - tensorcore，Int8/fp8/fp16/bf16 matmul
+  - 优化显存
+    - 显存包括 params、grads、activations（存储用于backward）等
+      - The activation memory of a transformer-based model is proportional to the number of transformer layers × hidden dimensions × sequence length × batch size. For a GPT-2 like architecture the total activations is about 12 × hidden dim × batch × seq length × transformer layers.
+  - 优化内存带宽
+    - e.g. Increasing the speed at which **the user receives generated results** is challenging, as compute is **dominated by matrix-vector products**. Unlike matrix-matrix products, these are primarily limited by memory bandwidth.
+  - 减少精度损失：先决条件
 * 量化精度
 * ![image-20250404210744334](./MLSys/image-20250404210744334.png)
   * [denormalized numbers](https://cs.stackexchange.com/questions/101632/understanding-denormalized-numbers-in-floating-point-representation)
@@ -554,7 +555,7 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 > - 局限性：
 >   - 不是所有层都量化
->   - 只能优化compute，不优化显存
+>   - 只能优化compute，显存的优化有限（取决于activation优化情况，且额外存fp16 copy）
 >   - 只优化到fp16
 >   - fp16的精度局限性，尽管有loss scaling解决underflow的问题，bf16-pretrained models会overflow
 
@@ -599,6 +600,8 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 > GPU/Quantization Cuda vs Triton.pdf
 >
 > GPU Mode Lecture 7
+
+![image-20250409025047175](./MLSys/image-20250409025047175.png)
 
 - 迭代路线：
 
