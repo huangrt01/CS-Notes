@@ -53,7 +53,9 @@ make triton
 ./tools/nightly.py checkout -b my-nightly-branch -p my-env
 
 export CMAKE_PREFIX_PATH="${CONDA_PREFIX:-'$(dirname $(which conda))/../'}:${CMAKE_PREFIX_PATH}"
-CUDA_DEVICE_DEBUG=1 DEBUG=1 python setup.py develop
+CUDA_DEVICE_DEBUG=1 DEBUG=1 USE_SYSTEM_NCCL=1 python setup.py develop
+
+# 需要use system nccl，否则会报错。system nccl具备find能力 https://github.com/pytorch/pytorch/pull/2853
 
 
 
@@ -146,3 +148,137 @@ setup(
 ### gradient hook
 
 https://www.digitalocean.com/community/tutorials/pytorch-hooks-gradient-clipping-debugging
+
+
+### build info
+
+--
+-- ******** Summary ********
+-- General:
+--   CMake version         : 4.0.0
+--   CMake command         : /root/anaconda3/envs/pytorch-debug/lib/python3.13/site-packages/cmake/data/bin/cmake
+--   System                : Linux
+--   C++ compiler          : /usr/bin/c++
+--   C++ compiler id       : GNU
+--   C++ compiler version  : 11.4.0
+--   Using ccache if found : ON
+--   Found ccache          : /usr/bin/ccache
+--   CXX flags             :  -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -DUSE_KINETO -DLIBKINETO_NOROCTRACER -DLIBKINETO_NOXPUPTI=ON -DUSE_FBGEMM -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -O2 -fPIC -Wall -Wextra -Werror=return-type -Werror=non-virtual-dtor -Werror=range-loop-construct -Werror=bool-operation -Wnarrowing -Wno-missing-field-initializers -Wno-unknown-pragmas -Wno-unused-parameter -Wno-strict-overflow -Wno-strict-aliasing -Wno-stringop-overflow -Wsuggest-override -Wno-psabi -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow
+--   Shared LD flags       :  -Wl,--no-as-needed -rdynamic
+--   Static LD flags       :
+--   Module LD flags       :
+--   Build type            : Debug
+--   Compile definitions   : ONNX_ML=1;ONNXIFI_ENABLE_EXT=1;ONNX_NAMESPACE=onnx_torch;IDEEP_USE_MKL;HAVE_MMAP=1;_FILE_OFFSET_BITS=64;HAVE_SHM_OPEN=1;HAVE_SHM_UNLINK=1;HAVE_MALLOC_USABLE_SIZE=1;USE_EXTERNAL_MZCRC;MINIZ_DISABLE_ZIP_READER_CRC32_CHECKS
+--   CMAKE_PREFIX_PATH     : /root/anaconda3/envs/pytorch-debug/lib/python3.13/site-packages;/root/anaconda3/envs/pytorch-debug:;/usr/local/cuda;/usr/local/cuda;/usr/local/cuda
+--   CMAKE_INSTALL_PREFIX  : /root/newrec/huangruiteng/pytorch/torch
+--   USE_GOLD_LINKER       : OFF
+--
+--   TORCH_VERSION         : 2.8.0
+--   BUILD_STATIC_RUNTIME_BENCHMARK: OFF
+--   BUILD_BINARY          : OFF
+--   BUILD_CUSTOM_PROTOBUF : ON
+--     Link local protobuf : ON
+--   BUILD_PYTHON          : True
+--     Python version      : 3.13.2
+--     Python executable   : /root/anaconda3/envs/pytorch-debug/bin/python
+--     Python library      :
+--     Python includes     : /root/anaconda3/envs/pytorch-debug/include/python3.13
+--     Python site-package : /root/anaconda3/envs/pytorch-debug/lib/python3.13/site-packages
+--   BUILD_SHARED_LIBS     : ON
+--   CAFFE2_USE_MSVC_STATIC_RUNTIME     : OFF
+--   BUILD_TEST            : True
+--   BUILD_JNI             : OFF
+--   BUILD_MOBILE_AUTOGRAD : OFF
+--   BUILD_LITE_INTERPRETER: OFF
+--   INTERN_BUILD_MOBILE   :
+--   TRACING_BASED         : OFF
+--   USE_BLAS              : 1
+--     BLAS                : mkl
+--     BLAS_HAS_SBGEMM     :
+--   USE_LAPACK            : 1
+--     LAPACK              : mkl
+--   USE_ASAN              : OFF
+--   USE_TSAN              : OFF
+--   USE_CPP_CODE_COVERAGE : OFF
+--   USE_CUDA              : ON
+--     Split CUDA          :
+--     CUDA static link    : OFF
+--     USE_CUDNN           : ON
+--     USE_CUSPARSELT      : OFF
+--     USE_CUDSS           : OFF
+--     USE_CUFILE          : ON
+--     CUDA version        : 12.4
+--     USE_FLASH_ATTENTION : ON
+--     USE_MEM_EFF_ATTENTION : ON
+--     cuDNN version       : 9.8.0
+--     cufile library    : /usr/local/cuda/lib64/libcufile.so
+--     CUDA root directory : /usr/local/cuda
+--     CUDA library        : /usr/local/cuda/lib64/stubs/libcuda.so
+--     cudart library      : /usr/local/cuda/lib64/libcudart.so
+--     cublas library      : /usr/local/cuda/lib64/libcublas.so
+--     cufft library       : /usr/local/cuda/lib64/libcufft.so
+--     curand library      : /usr/local/cuda/lib64/libcurand.so
+--     cusparse library    : /usr/local/cuda/lib64/libcusparse.so
+--     cuDNN library       : /usr/lib/x86_64-linux-gnu/libcudnn.so
+--     nvrtc               : /usr/local/cuda/lib64/libnvrtc.so
+--     CUDA include path   : /usr/local/cuda/include
+--     NVCC executable     : /usr/local/cuda/bin/nvcc
+--     CUDA compiler       : /usr/local/cuda/bin/nvcc
+--     CUDA flags          :  -DLIBCUDACXX_ENABLE_SIMPLIFIED_COMPLEX_OPERATIONS -Xfatbin -compress-all -DONNX_NAMESPACE=onnx_torch -gencode arch=compute_90,code=sm_90 -Xcudafe --diag_suppress=cc_clobber_ignored,--diag_suppress=field_without_dll_interface,--diag_suppress=base_class_has_different_dll_interface,--diag_suppress=dll_interface_conflict_none_assumed,--diag_suppress=dll_interface_conflict_dllexport_assumed,--diag_suppress=bad_friend_decl --expt-relaxed-constexpr --expt-extended-lambda  -Wno-deprecated-gpu-targets --expt-extended-lambda -DCUB_WRAPPED_NAMESPACE=at_cuda_detail -DCUDA_HAS_FP16=1 -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__
+--     CUDA host compiler  :
+--     CUDA --device-c     : OFF
+--     USE_TENSORRT        :
+--   USE_XPU               : OFF
+--   USE_ROCM              : OFF
+--   BUILD_NVFUSER         :
+--   USE_EIGEN_FOR_BLAS    :
+--   USE_FBGEMM            : ON
+--     USE_FAKELOWP          : OFF
+--   USE_KINETO            : ON
+--   USE_GFLAGS            : OFF
+--   USE_GLOG              : OFF
+--   USE_LITE_PROTO        : OFF
+--   USE_PYTORCH_METAL     : OFF
+--   USE_PYTORCH_METAL_EXPORT     : OFF
+--   USE_MPS               : OFF
+--   CAN_COMPILE_METAL     :
+--   USE_MKL               : ON
+--     USE_STATIC_MKL      : OFF
+--   USE_MKLDNN            : ON
+--   USE_MKLDNN_ACL        : OFF
+--   USE_MKLDNN_CBLAS      : OFF
+--   USE_UCC               : OFF
+--   USE_ITT               : ON
+--   USE_NCCL              : ON
+--     USE_SYSTEM_NCCL     : 1
+--   USE_NNPACK            : ON
+--   USE_NUMPY             : ON
+--   USE_OBSERVERS         : ON
+--   USE_OPENCL            : OFF
+--   USE_OPENMP            : ON
+--   USE_MIMALLOC          : OFF
+--   USE_VULKAN            : OFF
+--   USE_PROF              : OFF
+--   USE_PYTORCH_QNNPACK   : ON
+--   USE_XNNPACK           : ON
+--   USE_DISTRIBUTED       : ON
+--     USE_MPI               : OFF
+--     USE_GLOO              : ON
+--     USE_GLOO_WITH_OPENSSL : OFF
+--     USE_TENSORPIPE        : ON
+--   Public Dependencies  : caffe2::mkl
+--   Private Dependencies : Threads::Threads;pthreadpool;cpuinfo;pytorch_qnnpack;nnpack;XNNPACK;microkernels-prod;fbgemm;ittnotify;fp16;caffe2::openmp;tensorpipe;nlohmann;gloo;rt;fmt::fmt-header-only;kineto;gcc_s;gcc;dl
+--   Public CUDA Deps.    :
+--   Private CUDA Deps.   : caffe2::curand;caffe2::cufft;caffe2::cublas;torch::cudnn;torch::cufile;__caffe2_nccl;tensorpipe_cuda;gloo_cuda;fmt::fmt-header-only;/usr/local/cuda/lib64/libcudart.so;CUDA::cusparse;CUDA::cufft;ATEN_CUDA_FILES_GEN_LIB
+--   USE_COREML_DELEGATE     : OFF
+--   BUILD_LAZY_TS_BACKEND   : ON
+--   USE_ROCM_KERNEL_ASSERT : OFF
+
+
+
+
+
+
+
+
+

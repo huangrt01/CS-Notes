@@ -16,8 +16,29 @@ torch.set_printoptions(precision=2, linewidth=140, sci_mode=False)
 np.seterr(all='warn')
 
 
-from triton_util import cdiv, breakpoint_if, print_if, check_tensors_gpu_ready, get_1d_offset, get_2d_offset, \
+from gpu_kernel_utils import cdiv, breakpoint_if, print_if, check_tensors_gpu_ready, get_1d_offset, get_2d_offset, \
   get_1d_mask, get_2d_mask
+
+### backward用atomic_add，因为可能多个thread可能更新同一行
+- atomic_add不支持bf16: https://github.com/pytorch/pytorch/issues/97016
+
+@triton.jit
+def index_select_bwd(grad_outputs, indices, grad_unique_values, num_rows: int,
+                     num_cols: int, num_indices: int, BLOCK_SIZE: tl.constexpr):
+  pid = tl.program_id(axis=0)
+  off_m = get_1d_offset(BLOCK_SIZE, pid)
+  indices = tl.load(indices + off_m, mask=off_m < num_indices, other=-1)
+  row_mask = (indices >= 0) & (indices < num_rows) & (off_m < num_indices)
+
+  for i in range(num_cols):
+    block_grad_unique_values = tl.load(grad_outputs +
+                                       off_m[:, None] * num_cols + i,
+                                       mask=row_mask[:, None])
+    tl.atomic_add(grad_unique_values + indices[:, None] * num_cols + i,
+                  val=block_grad_unique_values,
+                  mask=row_mask[:, None])
+
+### 最简单的copy kernel、rgb2gray kernel
 
 # # This is a normal python function, which launches the triton kernels
 def copy(x, bs, kernel_fn):

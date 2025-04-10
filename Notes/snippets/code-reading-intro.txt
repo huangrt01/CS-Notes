@@ -10,6 +10,9 @@ https://github.com/pytorch/pytorch
 - TorchRec
 https://pytorch.org/torchrec/overview.html
 
+- SGLang
+https://github.com/sgl-project/sglang.git
+
 
 #### Tf 二次开发
 
@@ -39,8 +42,11 @@ https://github.com/pytorch-labs/gpt-fast
 https://github.com/pytorch-labs/segment-anything-fast
 # Best for dynamic quant
 
+- AutoAWQ
+https://github.com/casper-hansen/AutoAWQ
 
-### GPU
+
+### GPU Op
 
 #### Intro
 
@@ -48,6 +54,8 @@ https://github.com/pytorch-labs/segment-anything-fast
 https://github.com/gpu-mode/lectures.git
 
 #### Triton
+
+- GemLite https://github.com/mobiusml/gemlite
 
 - MicroBenchmark
 https://gist.github.com/HDCharles/287ac5e997c7a8cf031004aad0e3a941

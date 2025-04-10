@@ -480,6 +480,10 @@ def allreduce(send, recv):
   recv[:] = accum[:]
 
 
+### TP
+
+dtensor = _shard_tensor(mA, device_mesh, (Shard(0),))
+
 ### TorchRun
 
 https://pytorch.org/docs/stable/distributed.elastic.html

@@ -145,10 +145,20 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
   * [Analyzing GPU Tensor Core Potential for Fast Reductions](https://arxiv.org/pdf/1903.03640)
 
 * Guide:
+
   * https://leimao.github.io/blog/NVIDIA-Tensor-Core-Programming/
+
+  * Q: Does Matmul involve reduction sum? Why can it be done in FP16?
+
+    * A: In tensor core FP16 MAC (Multiply-Accumulate) unit, the accumulation is always done in full precision, which avoids the problem of arithmetic underflow.
+    * Reference: https://devblogs.nvidia.com/programming-tensor-cores-cuda-9/
+
   * To employ Tensor Cores in [cuBLAS](https://docs.nvidia.com/cuda/cublas/index.html), the dimensions of a GEMM ([M, K] x [K, N] -> [M, N]) must be multiples of 8.
+
     * convolution没有限制
     * https://github.com/NVIDIA/apex/issues/221#issuecomment-478084841
+
+    
 
 
 

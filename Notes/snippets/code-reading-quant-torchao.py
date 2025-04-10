@@ -31,11 +31,24 @@ e.g. int4 quantized tensor
 - layout: TensorCoreTiledLayout/GemlitePackedLayout
 
 
+### 支持哪些量化？
+
+- int4_weight_only quantization：it’s a 4 bit groupwise quantization with group size of 64, using tinygemm kernel
+- gemlite_uintx_weight_only：4 means 4 bit, and 64 is also the group size, using GemLite kernel
+- float8_dynamic_activation_float8_weight： quantization in TorchAO, both activation and weights are quantized with per row scales
+
+
 
 ### serialization
 Save and load quantized weights into a state_dict just like a floating point model, 
 eliminating the need to transform floating point model to quantized model before the quantized weights are loaded. 
 This reduces friction of distributing and deploying quantized models.
+
+
+### Tensor Parallel Support
+quantize the model first then distribute the Tensor
+QuantizedTensor should support the operators called when constructing a DTensor, including slice and view ops
+pack and slice operation should commute, otherwise the packing format is not compatible with tensor parallelism.
 
 ### GemLite
 

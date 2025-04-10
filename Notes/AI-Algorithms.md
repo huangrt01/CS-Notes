@@ -5,11 +5,24 @@
 ## 历史发展
 
 * 计算智能 -> 感知智能 -> 通用智能
+* AGI
+  * 头部公司预测3-5年，这个跨度的故事是好故事
+* Note
+  * GPT-3.5相比于GPT-3，参数量变化不大，效果差距很大，这是由于微调技术
+
+## Scaling Law
+
 * Scaling Law: https://arxiv.org/abs/2001.08361
 * emergent ability
   * [How much bigger can/should LLMs become?](https://cmte.ieee.org/futuredirections/2023/04/24/how-much-bigger-can-should-llms-become/)
   * https://arxiv.org/abs/2206.07682
   * 100TB=50000Billion
+* [Training Compute-Optimal Large Language Models](https://arxiv.org/abs/2203.15556)
+  * Google - Chinchilla
+  * 核心思路：
+    * loss = f(n=num_params, d=num_datas)
+    * 模型undertrained，n和d需要一起增长
+  * function form很重要
 
 ![截屏2023-11-19 05.00.35](./AI-Algorithms/emergent-1.png)
 
@@ -19,13 +32,9 @@
 
 ![Compute required for training LLMs](./AI-Algorithms/Compute-for-Training-LLMs-GPT3-paper-672x385.jpg)
 
+* 量化scaling law，参考Scaling Laws for Precision
 
 
-* AGI
-  * 头部公司预测3-5年，这个跨度的故事是好故事
-
-* Note
-  * GPT-3.5相比于GPT-3，参数量变化不大，效果差距很大，这是由于微调技术
 
 ## Literature Review
 
@@ -596,6 +605,7 @@ https://github.com/OpenNMT/OpenNMT-py/
 * hellaswag, a commonsense sentence completion task
 * wikitext, a next token/byte prediction task, and a few question-answering tasks such as arc, openbookqa, and piqa.
   * For wikitext, **perplexity** refers to the inverse of how well the model can predict the next word or byte (lower is better), and **bits_per_byte** refers to how many bits are needed to predict the next byte (lower is also better here). For all other tasks, **acc_norm** refers to the accuracy normalized by the byte-length of the target string.
+* Dolma：3T token https://huggingface.co/datasets/allenai/dolma
 
 
 ### Evaluation

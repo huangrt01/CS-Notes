@@ -428,7 +428,7 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 ### 量化、混合精度训练推理
 
-#### Intro
+#### Intro - 量化目标、精度
 
 * 量化的目标是什么？ —— 多目标优化
   - 优化计算
@@ -464,20 +464,24 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 * 精度范围：
   * ![image-20250331122231657](./MLSys/image-20250331122231657.png)
 * 硬件支持：参考「GPU.md —— 硬件精度支持」
+* eXmY https://arxiv.org/abs/2405.13938
 
 #### 量化技术分类
 
 * Mixed Precision Training
   * weight/activation量化
   * weight update用fp32/bf16
-
 * Post Training Quantization (PTQ)
-  * weight/activation量化，推理精度和性能的最优解
+  * weight/activation量化，推理精度和性能的最优解，但可能精度下降大
+  * 决策点：
+    * clipping error and the rounding error的平衡
+    * 最小误差的求解方法
+    * ...
   * 常见思路：
     - W8A8: smoothQuant、DeepSeek Fp8
-    - W4A16: DecoupleQ、GPTQ
+    - W4A16: DecoupleQ、AWQ、GPTQ
 * Quantization Aware Training (QAT)
-  * 训练用全精度，并模拟量化，以优化推理量化精度，PTQ的效果升级版
+  * 训练用全精度，并模拟量化，以优化推理量化精度，PTQ的效果升级版，但成本高
 * Quantized Training (QT)
   * 全部步骤量化，包括weight/activation/weight update
 
@@ -492,6 +496,7 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 #### Literature Review
 
 * PTQ（训练后量化） 【GPTQ】
+  * GPTQ 虽用二阶信息补偿误差，但重建过程易过拟合校准集，影响模型泛化能力。
   * AdaRound method (Nagel et al., 2020) computes a data-dependent rounding by annealing a penalty term, which encourages weights to move towards grid points corresponding to quantization levels
   * BRECQ (Li et al., 2021) introduces Fisher information into the objective, and optimizes layers within a single residual block jointly.
   * Optimal Brain Quantization (OBQ) (Frantar et al., 2022) generalizes the classic
@@ -513,12 +518,13 @@ https://docs.nvidia.com/deeplearning/performance/index.html
   * 其它：
     * 《Post-training quantization for vision transformer》（NIPS 2021）
     * 《Up or down? adaptive rounding for post-training quantization》
+  
 * QAT
   * Q-Bert and 《Q8BERT: Quantized 8bit bert》 are the first few works to quantize BERT models using integer numbers for both weight and activations.
     * Q-Bert utilizes Hessian information to push the weight bit-precision to even INT2/INT4, and it also proposes group-wise quantization to quantize the weight matrix in a more fine-grained granularity compared to single matrix quantization.
-  
+
   * 《Training with quantization noise for extreme ﬁxed-point compression》 introduces quantization noise to alleviate the variations of QAT.
-  
+
 * Quantized Training
   * 《Pareto-Optimal Quantized ResNet Is Mostly 4-bit》
     * INT8 ResNet outperforms BF16 ResNet (at the same params count)
@@ -553,6 +559,10 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 #### Mixed Precision Training (ICLR 2018)
 
+> - 技术：
+>   - 梯度更新用fp32, an FP32 master copy of weights is used for updates -> **针对梯度累加时被视作0**
+>   - Loss Scaling -> **针对****梯度****的表示下溢**
+>   - FP16 arithmetic used Tensor Core operations with accumulation into FP32 for convolutions
 > - 局限性：
 >   - 不是所有层都量化
 >   - 只能优化compute，显存的优化有限（取决于activation优化情况，且额外存fp16 copy）
@@ -991,6 +1001,26 @@ https://docs.nvidia.com/deeplearning/performance/index.html
     x_fq = (x_fq - zp) * scale
     ```
 
+##### Scaling Laws for Precision [ICLR 2025 Oral]
+
+> GPU Mode Lecture 52: https://www.youtube.com/watch?v=YCfzf0TunOM
+>
+> https://openreview.net/forum?id=wg1PCg3CUP
+
+* 问题：
+  * Scientific question; 1b with INT4 weights vs 500m in BF16, which wins?
+  * noise with variance O(2^{-P})
+
+* 要点1:
+  * overtrained models，受量化影响更大（参数少、数据多）
+    * overtrain的定义：参考chinchilla paper，tokens seen
+    * 和QLoRa的观察相符，这也是QLoRa为什么提出NF4
+
+* 实验setting
+  * dataset：dolma https://huggingface.co/datasets/allenai/dolma
+
+
+
 #### Q-BERT: Hessian Based Ultra Low Precision Quantization of BERT
 
 * **Q-BERT**通过**Hessian 分析**提出了一种针对 BERT 模型的**超低精度量化方法**，结合**混合精度策略**和**分组量化方案**，在保持模型性能的同时实现了**13 倍参数压缩**和**4 倍激活 / 嵌入压缩**。实验表明，在 SST-2、MNLI、CoNLL-03 和 SQuAD 任务中，Q-BERT 的性能损失最大仅为**2.3%**，显著优于直接量化方法。研究发现，SQuAD 任务的性能下降与模型未收敛至局部极小点有关，而分组量化通过精细化调整量化范围有效缓解了精度损失。
@@ -1057,9 +1087,32 @@ https://docs.nvidia.com/deeplearning/performance/index.html
   - **激活压缩**：激活值量化至 8-bit，减少 4× 内存占用。
   - **嵌入压缩**：词嵌入 4-bit + 位置嵌入 8-bit 混合，嵌入层从 91MB→11.6MB（8× 压缩）。
 
-#### GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers
+#### W4A16
+
+##### AWQ: ACTIVATION-AWARE WEIGHT QUANTIZATION
+
+> 比较实用，策略+观察，暴力计算搜索
+
+* Intro
+  * 激活感知权重量化（AWQ）方法，通过保留 1% 显著权重和channel-wise缩放降低量化误差，且不依赖反向传播或重建，泛化性强。
+  * 同时设计 TinyChat 推理框架，利用即时反量化、SIMD 感知权重打包和内核融合等技术，在桌面和移动 GPU 上相比 Huggingface FP16 实现有 3 倍以上加速，助力 LLMs 在边缘设备的部署。实验表明，AWQ 在多种任务、模型上性能优于现有方法，在指令调整和多模态模型量化中表现出色
+  * **低比特权重量化的困境**：低比特权重量化可减少内存占用，但QAT成本高，PTQ在低比特设置下精度下降大。GPTQ 虽用二阶信息补偿误差，但重建过程易过拟合校准集，影响模型泛化能力。
+* 核心思路：
+  * **保留 1% 显著权重提升量化性能**：发现 LLMs 中部分（0.1%-1%）显著权重对模型性能影响大，跳过这些权重的量化可减少量化损失。**基于激活幅度而非权重幅度选择显著权重**，能显著提升量化模型性能，但混合精度数据类型会增加系统实现难度。
+  * **激活感知缩放保护显著权重**：提出按通道缩放方法降低显著权重的量化误差。通过分析量化误差，得出**缩放显著通道**可减小相对误差的结论。为平衡显著和非显著权重，自动搜索最优缩放因子，采用简单搜索空间和快速网格搜索确定最佳超参数 α，并应用权重裁剪最小化量化均方误差。该方法不依赖回归或反向传播，对校准集依赖小，泛化性强
+    * 根据activation决策显著 -> scaling up显著的weight -> 相关input变小 -> 量化误差变小
+    * ![image-20250410131426026](./MLSys/image-20250410131426026.png)
+    * 基于一个假设：放大显著的channel后，量化scale变化不大
+    * ![image-20250410130650937](./MLSys/image-20250410130650937.png)
+* 相比GPTQ：
+  * 对校准集不敏感
+  * 效果好
+
+##### GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers
 
 > PTQ，主要应用于推理场景
+>
+> 用二阶信息补偿误差，但重建过程易过拟合校准集，影响模型泛化能力。
 >
 > W4A16
 
@@ -1180,7 +1233,9 @@ void gemmPacked(
 
 ![image-20250331122321267](./MLSys/image-20250331122321267.png)
 
-#### BitNet b1.58
+#### 4bit以下
+
+##### BitNet b1.58
 
 * 结论：
   * BitNet b1.58 can match full precision (i.e., FP16) baselines in terms of both perplexity and end-task performance, **starting from a 3B size**, when using the same configuration

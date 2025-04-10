@@ -126,6 +126,8 @@ print(f"Prompt的token数量为: {token_count}")
 ### Best Practices：使用 GemLite、TorchAO 和 SGLang 加速 LLM 推理
 
 > https://pytorch.org/blog/accelerating-llm-inference/
+>
+> 选型：int4 weight only quantization (both tinygemm and GemLite version), float8 dynamic quantization
 
 * 现有的低精度推理方案在小 batch size 场景下表现良好，但存在以下问题：
 
@@ -137,11 +139,14 @@ print(f"Prompt的token数量为: {token_count}")
 
 * 集成：
 
-  * GemLite[1] ：一个基于 Triton 的计算核（kernel）库，解决了大 batch size 场景下的性能瓶颈，并支持更灵活的量化方式。
-  * TorchAO[2] ：一个原生 PyTorch 库，为量化、稀疏性和张量并行（与 DTensor 结合使用）提供了简化的用户体验。
-  * SGLang[3] ：一个快速、高效且可扩展的 LLM 和视觉语言模型（VLM）推理框架，支持广泛的模型类型。
+  * GemLite ：一个基于 Triton 的计算核（kernel）库，解决了大 batch size 场景下的性能瓶颈，并支持更灵活的量化方式。
+  * TorchAO ：一个原生 PyTorch 库，为量化、稀疏性和张量并行（与 DTensor 结合使用）提供了简化的用户体验。
+  * SGLang ：一个快速、高效且可扩展的 LLM 和视觉语言模型（VLM）推理框架，支持广泛的模型类型。
 
 * a summary of the results in **8xH100 machine on Llama 3.1-8B for decode**. 
+
+  * **int4 Weight-Only Quantization**: This method significantly reduces memory footprint and **accelerates decode for memory-bound workloads**, with minimal impact on performance in compute-intensive scenarios like prefill or larger batch sizes. We present results for bf16, GemLite, and tinygemm kernels below, across various batch sizes and tensor parallel configurations
+  * **float8 Dynamic Quantization**: While offering less memory savings, this method often provides higher accuracy and balanced speedups for both memory-bound and compute-bound tasks. With Hopper-grade hardware and native fp8 support, the efficient cutlass/cuBLAS kernels used by AO contribute to a significant speedup
 
 ![image-20250409022139221](./LLM-MLSys/image-20250409022139221.png)
 
@@ -270,6 +275,11 @@ with IO-Awareness
 3. 块量化/非相干处理:  补偿FP8量化造成的精度损失。
 
 * Triton实现：显存上实现ringbuffer
+
+## SGLang
+
+* Intro
+  * known for its almost [zero-overhead batch scheduler](https://lmsys.org/blog/2024-12-04-sglang-v0-4/) and fast [constrained decoding](https://lmsys.org/blog/2024-02-05-compressed-fsm/)
 
 
 
