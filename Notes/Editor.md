@@ -14,6 +14,10 @@
 
 ### Trae
 
+#### 快捷键
+
+* 报告问题：Command + K Command + R
+
 #### 插件
 
 * BasedPyright
@@ -366,6 +370,9 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 #### 运行
 
 * ctrl + F5
+* conda环境配置
+  * ![image-20250411122027844](./Editor/image-20250411122027844.png)
+
 
 
 
@@ -378,6 +385,12 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 * Python AssertionError断点
 
 ![image-20250213180054012](./Editor/image-20250213180054012.png)
+
+* C++ Extension
+  * 尝试了一下clion官方的debug C++ extension的方法，没有成功
+    - https://www.jetbrains.com/help/clion/debugging-python-extensions.html#debug-custom-py
+
+
 
 #### 测试
 

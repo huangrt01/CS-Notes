@@ -58,8 +58,28 @@ CUDA_DEVICE_DEBUG=1 DEBUG=1 USE_SYSTEM_NCCL=1 python setup.py develop
 # 需要use system nccl，否则会报错。system nccl具备find能力 https://github.com/pytorch/pytorch/pull/2853
 
 
+### run
+
+Clion：新增conda python解释器
 
 ### debug
+
+一些讨论：https://news.ycombinator.com/item?id=35706687
+
+- 方法是：
+  - python程序的debug，使用Clion IDE
+  - c++ extension的debug，使用shell内的gdb
+  - 核心是clion python debugger和gdb debugger，二者保持其中一个在断点状态
+
+
+pytorch-gdb: 
+https://github.com/pytorch/pytorch/blob/main/CONTRIBUTING.md#gdb-integration
+https://github.com/pytorch/pytorch/blob/main/tools/gdb/pytorch-gdb.py
+
+#### Rebuild few files with debug information
+
+https://github.com/pytorch/pytorch/blob/main/CONTRIBUTING.md#rebuild-few-files-with-debug-information
+
 
 `cuda-gdb` and `cuda-memcheck`
 
@@ -90,7 +110,9 @@ ccache -M 25Gi  # -M 0 for unlimited
 # unlimited number of files
 ccache -F 0
 
-To check this is working, do two clean builds of pytorch in a row. The second build should be substantially and noticeably faster than the first build. If this doesn't seem to be the case, check the CMAKE_<LANG>_COMPILER_LAUNCHER rules in build/CMakeCache.txt, where <LANG> is C, CXX and CUDA. Each of these 3 variables should contain ccache, e.g.
+To check this is working, do two clean builds of pytorch in a row. The second build should be substantially and noticeably faster than the first build. 
+If this doesnt seem to be the case, check the CMAKE_<LANG>_COMPILER_LAUNCHER rules in build/CMakeCache.txt, where <LANG> is C, CXX and CUDA. E
+ach of these 3 variables should contain ccache, e.g.
 
 //CXX compiler launcher
 CMAKE_CXX_COMPILER_LAUNCHER:STRING=/usr/bin/ccache
@@ -102,7 +124,9 @@ export CMAKE_CXX_COMPILER_LAUNCHER=ccache
 export CMAKE_CUDA_COMPILER_LAUNCHER=ccache
 python setup.py develop
 
-#### Rebuild few files with debug information
+
+
+
 
 
 

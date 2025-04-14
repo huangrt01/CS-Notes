@@ -20,7 +20,9 @@
 * [Training Compute-Optimal Large Language Models](https://arxiv.org/abs/2203.15556)
   * Google - Chinchilla
   * 核心思路：
-    * loss = f(n=num_params, d=num_datas)
+    * $$L(N,D)=AN^{-\alpha}+BD^{\beta}+E$$
+      * Chinchilla-optimal
+      * $$D/N \approx 20$$
     * 模型undertrained，n和d需要一起增长
   * function form很重要
 

@@ -43,6 +43,10 @@ plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, 
   * end2end：强调模型一致性的收益
   * two stages：强调模型实时性的收益
 
+#### 成本和性能评估
+
+参考 「LLM-MLSys」
+
 
 #### [Google Research: Themes from 2021 and Beyond](https://ai.googleblog.com/2022/01/google-research-themes-from-2021-and.html)
 
@@ -431,16 +435,22 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 #### Intro - 量化目标、精度
 
 * 量化的目标是什么？ —— 多目标优化
+
   - 优化计算
     - tensorcore，Int8/fp8/fp16/bf16 matmul
   - 优化显存
     - 显存包括 params、grads、activations（存储用于backward）等
       - The activation memory of a transformer-based model is proportional to the number of transformer layers × hidden dimensions × sequence length × batch size. For a GPT-2 like architecture the total activations is about 12 × hidden dim × batch × seq length × transformer layers.
   - 优化内存带宽
-    - e.g. Increasing the speed at which **the user receives generated results** is challenging, as compute is **dominated by matrix-vector products**. Unlike matrix-matrix products, these are primarily limited by memory bandwidth.
+    - small-batch inference is bandwidth-bound by model weights; 
+    - long-sequence decoding is bandwidth-bound by KV cache
+      - e.g. Increasing the speed at which **the user receives generated results** is challenging, as compute is **dominated by matrix-vector products**. Unlike matrix-matrix products, these are primarily limited by memory bandwidth.
   - 减少精度损失：先决条件
+
 * 量化精度
+
 * ![image-20250404210744334](./MLSys/image-20250404210744334.png)
+
   * [denormalized numbers](https://cs.stackexchange.com/questions/101632/understanding-denormalized-numbers-in-floating-point-representation)
     * **指数固定为 - 126**（规格化数的指数通过 `exponent - 127` 计算）。
     * **尾数无隐含的 1**（直接使用尾数位的二进制小数部分）
@@ -448,6 +458,7 @@ https://docs.nvidia.com/deeplearning/performance/index.html
     * FP16 can represent precision up to 2^(10)*2^(-14)=2^(-24)
 
 * 
+
   * FP64: 8个字节, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
 
   * FP32: 4个字节, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
@@ -463,7 +474,20 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 * 精度范围：
   * ![image-20250331122231657](./MLSys/image-20250331122231657.png)
+
+* fp4
+
+  * | 符号（S） | 指数（E） | 尾数（M） | 数值（十进制）               | 相邻数间隔（与前一个正数的差） |
+    | --------- | --------- | --------- | ---------------------------- | ------------------------------ |
+    | 0         | -1        | 0         | $$1.0 \times 2^{-1} = 0.5$$  | -                              |
+    | 0         | -1        | 1         | $$1.1 \times 2^{-1} = 0.75$$ | 0.25                           |
+    | 0         | 0         | 0         | $$1.0 \times 2^{0} = 1$$     | 0.25                           |
+    | 0         | 0         | 1         | $$1.1 \times 2^{0} = 1.5$$   | 0.5                            |
+    | 0         | 1         | 0         | $$1.0 \times 2^{1} = 2$$     | 0.5                            |
+    | 0         | 1         | 1         | $$1.1 \times 2^{1} = 3$$     | 1                              |
+
 * 硬件支持：参考「GPU.md —— 硬件精度支持」
+
 * eXmY https://arxiv.org/abs/2405.13938
 
 #### 量化技术分类
@@ -471,6 +495,7 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 * Mixed Precision Training
   * weight/activation量化
   * weight update用fp32/bf16
+  * quantization lattice is non-uniform
 * Post Training Quantization (PTQ)
   * weight/activation量化，推理精度和性能的最优解，但可能精度下降大
   * 决策点：
@@ -572,12 +597,11 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 * Baseline (FP32) : Single-precision storage is used for activations, weights and gradients. All arithmetic is also in FP32. 
 * Mixed Precision (MP): 
   * ![image-20250301234600987](./MLSys/image-20250301234600987.png)
-
+  * bf16训练时，一般需要保留一份fp32的W，用来做累加
 * Loss Scaling
 
   * if gradient statistics are available, directly by choosing a factor so that its product with the maximum absolute gradient value is below 65,504 (the maximum value representable in FP16).
   * 只要没有overflow，就没有副作用
-
 * 解决的问题：
 
   * fp16训练，梯度被忽略：
@@ -586,7 +610,6 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
   * 同上：侧重利用fp16的exponential位数
   * 累加、reduce等操作的梯度噪声大
-
 * Arithmetic precision的分析
   * three categories: vector dot-products, reductions,
     and point-wise operations
@@ -595,7 +618,6 @@ https://docs.nvidia.com/deeplearning/performance/index.html
     Both of the layer types in our implementations still read and write FP16 tensors from memory, performing the arithmetic in FP32. **This did not slow down the training process since these layers are memory-bandwidth limited and not sensitive to arithmetic speed**
   * Point-wise operations, such as non-linearities and element-wise matrix products, are memory-bandwidth limited. Since arithmetic precision does not impact the speed of these operations, either
     FP16 or FP32 math can be used
-
 * 实现：scale系数8，实现时在forward scale，在backward之后、gradient clipping之前rescale。 确保weight decay不受影响
 * 结论：
   * 技术1保住CV CNN backbone精度
@@ -924,11 +946,9 @@ https://docs.nvidia.com/deeplearning/performance/index.html
       * 全精度反传，与自动求导模块的实现有关，可能存在
 
 
-* 工具：https://github.com/NVIDIA/apex
-
 * 总结：
 
-  * 量化问题本质是NP难问题，部分情况下可转换成指数规划问题
+  * 量化问题本质是NP-hard问题，部分情况下可转换成指数规划问题
 
   * 量化训练和预测是两个目标，训练结果应该恢复成全精度再用预测压缩的过程压缩一遍
 
@@ -1011,11 +1031,55 @@ https://docs.nvidia.com/deeplearning/performance/index.html
   * Scientific question; 1b with INT4 weights vs 500m in BF16, which wins?
   * noise with variance O(2^{-P})
 
-* 要点1:
+* 要点:
+  * ![image-20250411001753645](./MLSys/image-20250411001753645.png)
+  * lower precision reduces the model’s effective parameter count
+  * **training larger models in lower precision may be compute optimal**
   * overtrained models，受量化影响更大（参数少、数据多）
     * overtrain的定义：参考chinchilla paper，tokens seen
     * 和QLoRa的观察相符，这也是QLoRa为什么提出NF4
+* 理论分析：
+  * ![image-20250411001515823](./MLSys/image-20250411001515823.png)
+  * $$\delta_{\mathrm{PTQ}}(N, D, P_{\mathrm{post}}) = C_T \left( \frac{D^{\gamma_D}}{N^{\gamma_N}} \right) e^{-P_{\mathrm{post}} / \gamma_{\mathrm{post}}}$$
+    * 由于指数超参近似，类似于 D/N 的 power law
+  * Quantized training: $$L(N, D) = A[N(1 - e^{-P_{\mathrm{w}} / \gamma_{\mathrm{w}}})]^{-\alpha} + B D^{-\beta} + E$$
+  * ![image-20250411115840121](./MLSys/image-20250411115840121.png)
 
+* SCALING LAWS FOR PTQ
+  * ![image-20250411013134252](./MLSys/image-20250411013134252.png)
+  * 一种解释：D越大，N会学到越多信息，因此量化的损失增加
+  * 对GPTQ、AWQ、普通量化，均有效
+
+* Scaling law for quantized training
+  * ![image-20250411023740824](./MLSys/image-20250411023740824.png)
+  * 模型越大，量化可以越激进
+  * ![image-20250411025219080](./MLSys/image-20250411025219080.png)
+    * 敏感程度：a > w > kv cache
+* Guidance
+  * 4.3.1 IF YOU MUST TRAIN IN LOW PRECISION, INCREASE PARAMETERS BEFORE DATA
+    * ![image-20250411114729068](./MLSys/image-20250411114729068.png)
+  * 4.3.2 COMPUTE-OPTIMAL PRETRAINING PRECISION IS IN GENERAL INDEPENDENT OF
+    COMPUTE
+  * 4.3.3 BUT COMPUTE-OPTIMAL PRETRAINING PRECISION CAN INCREASE IN COMPUTE IF
+    MODEL SIZE N IS CONSTRAINED
+    * 计算参考 E.2 COMPUTE-OPTIMALITY CALCULATIONS
+* 细节、例子：
+  * 对Q + KV cache量化和仅对KV cache量化区别不大
+  * llama3量化比llama2更难，原因是llama3 overtrained
+  * per channel会改变系数，但不会改变scaling law
+* Literature Review
+  * On the theoretical front, work on scaling laws (Bahri et al., 2024; Bordelon et al., 2024; Lin et al., 2024b) finds that noise to various parts of model or data affects loss in a predictable way. While previous works have explored the scaling behavior of post-training quantization in terms of total model bits (Dettmers & Zettle-moyer, 2023) and knowledge capacity (Allen-Zhu & Li, 2024), we focus instead on data scaling.
+  * We note that in general the exact fitted values of all coefficients and exponents can vary drastically
+    based on **small implementation differences**: Besiroglu et al. (2024) find different constants when
+    attempting to replicate (Hoffmann et al., 2022), Sardana & Frankle (2023) fit coefficients A,B of
+    different orders of magnitude.
+  * **Overtraining.** In practice, accounting for inference costs means training smaller models for sub-
+    stantially longer than Chinchilla-optimal (Sardana & Frankle, 2023; Gadre et al., 2024). For in-
+    stance, Llama-3-8B is trained to **D/N ≈ 2000** (Dubey et al., 2024) and the Gemma-2 series up
+    to **D/N > 1000** (Team et al., 2024). We refer to such models as “overtrained” in this paper, with
+    the token/parameter ratio D/N being a key quantity throughout. Work on inference-time compute
+    (Snell et al., 2024; Brown et al., 2024) and on synthetic and multimodal data (Yang et al., 2024; Fan
+    et al., 2024; Bauer et al., 2024) suggests future models may be even more overtrained.
 * 实验setting
   * dataset：dolma https://huggingface.co/datasets/allenai/dolma
 

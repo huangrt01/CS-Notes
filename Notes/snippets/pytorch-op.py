@@ -103,6 +103,18 @@ https://pytorch.org/tutorials/advanced/python_custom_ops.html
 如果我们只是用[]/(), 索引，他们都是操作符重载，内部考虑了shape, stride, order, offset等，不会出错。在很多情况下可以节省大量内存
 但是我们拿指针出来操作数据的所有情况，都要保证是contiguous的， 否则可能出错。
 
+* accessor
+- One notable gotcha: TensorAccessor defaults to 64-bit indexing, which is much slower than 32-bit indexing in CUDA!
+- accessor：accessor = tensor.packed_accessor32()
+- If you're writing some sort of operator with very regular element access,' 
+ for example, a pointwise operation, you are much better off using a higher level of abstraction, 
+ the TensorIterator.
+ TensorIterator会自动处理：
+- 广播规则
+- 类型提升(type promotion)
+- 内存布局优化
+- 并行化策略
+
 
 ### argsort
 

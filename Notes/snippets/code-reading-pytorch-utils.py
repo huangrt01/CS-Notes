@@ -16,6 +16,13 @@ using weakref_type = c10::weak_intrusive_ptr<TensorImpl, UndefinedTensorImpl>;
 get_cached_casts().emplace(arg.unsafeGetTensorImpl(), val_type{weakref_type(arg.getIntrusivePtr()), casted_arg});
 
 
+* parallel cpu
+
+aten/src/ATen/Parallel-inl.h
+aten/src/ATen/Parallel.h
+实现在invoke_parallel，native实现用threadpool
+
+
 ### tensor
 
 # torchao tensor utils

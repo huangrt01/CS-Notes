@@ -10,19 +10,11 @@
 
 * Intro
   * 未来硬件，内存互连很关键
-  * 7B模型：
-    * float32: 70*10^8 * 4B = 26.7GB
-    * 微调：考虑中间结果，100GB以上
-  * gpt-3：
-    * 175B 700GB
-      * Fp16 326GB
-    * 算上adam优化器2100GB
 * 技术发展
   * Memory Efficient Attention with Online Softmax (2021) -> FlashAttention in Megatron-LM (2022) 
   * Continuous Batching (2022), Paged Attention (2023) -> vLLM, TensorRT-LLM (2023) 
   * Speculative Sampling (2023) -> Everywhere in LLM Serving (2023)
   * Sequence Parallel (2023) ->  Megatron-LLM (2023) 
-  
 * 业务目标：https://mp.weixin.qq.com/s/llalxX6miJRxy0-Vk8Ezpg
   * MFU（Model FLOPs Utilization）：评估GPU算力的有效利用率，就是GPU的算力到底有多少用来干活的。如果MFU低于50%，则属于异常，如果能达到70-80%，那效率就很高了；
   * 故障率：在大规模的集群中，推理请求的故障率，因为在一万张卡的集群中，如果每几分钟就有一张卡挂掉，那么这会影响整体效率，或者说看故障时间占在整个有效训练时间的占比，如果说是故障的时间占训练时间比例超过30%，也非常影响效率；
@@ -35,6 +27,11 @@
     * 欧洲受欧盟法案影响，ai发展没跟上
 
   * AI系统：记录数据、与人交互、机器学习分析、预测、干预人的决策
+
+### FLOPS
+
+* Am,k * Bk,n : `2*m*n*k` FLOPS
+  * 乘和加各算一次
 
 ### Token
 
@@ -286,6 +283,18 @@ with IO-Awareness
 ## 模型训练
 
 ### 显存优化
+
+*  Intro
+  * 7B模型：
+    * float32: 70*10^8 * 4B = 26.7GB
+    * 微调：考虑中间结果，100GB以上
+  * gpt-3：
+    * 175B 700GB
+      * Fp16 326GB
+    * 算上adam优化器2100GB
+    * 混合精度训练：
+      * fp16参数、fp32参数copy、fp16梯度、fp32梯度、fp32历史梯度滑动平均、fp32历史梯度平方和滑动平均
+      * `(1+2+1+2+2+2)*2*175=3,500 GB`
 
 * Activations can take up a significant amount of memory [7] during training. As a concrete
   example, the 1.5B parameter GPT-2 model trained with sequence length of 1K and batch size of
