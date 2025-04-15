@@ -32,6 +32,97 @@
 
 * Am,k * Bk,n : `2*m*n*k` FLOPS
   * 乘和加各算一次
+* transformer
+  * 设C为emb size、T为seq len
+  * 一层Transformer
+    * FLOPS： `24BTC^2 + 4BCT^2` 
+    * Params：`12C^2+13C`
+  
+  * attn的计算占比是$$\frac{4BCT^2}{24BTC^2+4BCT^2} = \frac{T}{6C+T}$$
+  * GPT3-175B C = 12288, T = 8192
+  
+
+```Python
+# x : [B, T, C]
+# B : batch_size
+# T : seq_len
+# C : dimension
+
+x = layernorm(x)
+q, k, v = qkv_proj(x).split()
+# [B, T, C] x [C, 3C] -> [B, T, 3C]: 6BTC^2 FLOPS
+attn = q @ k.T
+# [B, T, C] x [B, C, T] = [B, T, T] : 2BT^2C FLOPS
+attn = softmax(attn)
+# 3BT^2*n_h, softmax计算量被忽略
+y = attn @ v
+# [B, T, T] x [B, T, C] -> [B,T, C] : 2BT^2C FLOPS
+y = proj(y)
+# [B, T, C] x [C, C] -> [B, T, C] : 2BTC^2
+y = layernorm(y)
+y = fc1(y)
+# [B, T, C] x [C, 4C] -> [B, T, 4C] : 8BTC^2
+y = gelu(y)
+y = fc2(y)
+# [B, T, 4C] x [4C, C] -> [B, T, C] : 8BTC^2
+```
+
+* GPT decoder推理
+  * 结合GPU的FLOPS和DRAM内存带宽，容易计算得到GPT的训练是compute bound，推理是MBW bound
+
+```Python
+# qkv_cache : [B, T-1, 3C]
+# x : [B, 1, C]
+# B : batch_size
+# T : seq_len
+# C : dimension
+
+x = layernorm(x)
+qkv = qkv_proj(x)
+# [B, 1, C] x [C, 3C] -> [B, 1, 3C]: 6BC^2 FLOPS
+qkv = concat(qkv, qkv_cache)
+# [B, 1, 3C], [B, T-1, 3C] -> [B, T, 3C]
+q, k, v = qkv.split()
+attn = q[:, -1, :] @ k.T
+# [B, 1, C] x [B, C, T] = [B, 1, T] : 2BTC FLOPS
+attn = softmax(attn)
+y = attn @ v
+# [B, 1, T] x [B, T, C] -> [B,1, C] : 2BTC FLOPS
+y = proj(y)
+# [B, 1, C] x [C, C] -> [B, 1, C] : 2BC^2
+y = layernorm(y)
+y = fc1(y)
+# [B, 1, C] x [C, 4C] -> [B, 1, 4C] : 8BC^2
+y = gelu(y)
+y = fc2(y)
+# [B, 1, 4C] x [4C, C] -> [B, 1, C] : 8BC^2
+```
+
+
+
+### 显存
+
+* 7B模型：
+  
+  * float32: 70*10^8 * 4B = 26.7GB
+  * 微调：考虑中间结果，100GB以上
+* gpt-3：
+  * 175B 700GB
+    * Fp16 326GB
+  * 算上adam优化器2100GB
+  * 混合精度训练：
+    * fp16参数、fp32参数copy、fp16梯度、fp32梯度、fp32历史梯度滑动平均、fp32历史梯度平方和滑动平均
+    * `(1+2+1+2+2+2)*2*175=3,500 GB`
+
+* the 1.5B parameter GPT-2 model trained with sequence length of 1K and batch size of
+  
+  32 requires about 60 GB of memory. 
+  
+  * Activation checkpointing reduce the activation memory by approximately the square root of
+  
+  the total activations. -> 8GB
+  
+  * For a GPT-2 like architecture the total activations is about 12 × hidden dim × batch × seq length × transformer layers.
 
 ### Token
 
@@ -48,7 +139,7 @@ token_count = count_tokens(prompt_text)
 print(f"Prompt的token数量为: {token_count}")
 ```
 
-### 性能
+### 性能、延时
 
 * TTFT：time to first token，和input token长度相关
 * TPOT
@@ -283,27 +374,6 @@ with IO-Awareness
 ## 模型训练
 
 ### 显存优化
-
-*  Intro
-  * 7B模型：
-    * float32: 70*10^8 * 4B = 26.7GB
-    * 微调：考虑中间结果，100GB以上
-  * gpt-3：
-    * 175B 700GB
-      * Fp16 326GB
-    * 算上adam优化器2100GB
-    * 混合精度训练：
-      * fp16参数、fp32参数copy、fp16梯度、fp32梯度、fp32历史梯度滑动平均、fp32历史梯度平方和滑动平均
-      * `(1+2+1+2+2+2)*2*175=3,500 GB`
-
-* Activations can take up a significant amount of memory [7] during training. As a concrete
-  example, the 1.5B parameter GPT-2 model trained with sequence length of 1K and batch size of
-  32 requires about 60 GB of memory.  【ZeRO paper】
-  * Activation checkpointing (or activation recomputation)
-    is a common approach to reduce the activation memory by approximately the square root of
-    the total activations at the expense of 33% re-computation overhead [7]. This would reduce
-    the activation memory consumption of this model to about 8 GB.
-  * The activation memory of a transformer-based model is proportional to the number of transformer layers × hidden dimensions × sequence length × batch size. For a GPT-2 like architecture the total activations is about 12 × hidden dim × batch × seq length × transformer layers.
 
 * ZeRO，参考 「MLSys.md」
 

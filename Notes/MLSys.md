@@ -255,6 +255,23 @@ val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
 
 ### 数据流、数据存储
 
+> 可利用大模型
+
+* 数据清洗
+  * 无标签：低分辨率、高噪声、高曝光；奇怪符号标点
+* 数据离线预处理
+  * 数值范围标准化：min-max scaling
+  * 数据编码：one-hot
+  * 数据分布不均衡
+    * 升降采样
+    * 数据增强：
+      * 图片：改变亮度、对比度、旋转、翻转、随机crop
+      * 文本：同义词替换、句子重排
+  * 特征提取：
+    * e.g. stable diffusion，先VAE提取64*64特征
+
+#### 数据流
+
 * 分布式存储：
   * HDFS
   * NFS： Network File System
@@ -1619,7 +1636,12 @@ for i in range(num_layers):
 
 #### ZeRO-DP、ZeRO-R
 
-* **ZeRO**通过**三阶段内存优化**（优化器状态分区、梯度分区、参数分区），显著提升深度学习模型训练的内存效率，支持在现有硬件上训练超大规模模型（如万亿参数级别）。其**ZeRO-DP**消除了数据并行中的冗余内存，结合**ZeRO-R**优化激活内存和碎片管理，实现了**8 倍模型尺寸增长**和**10 倍训练速度提升**，并成功训练出世界最大的 17B 参数语言模型 Turing-NLG，同时保持易用性。
+* Intro
+  * **ZeRO**通过**三阶段内存优化**（优化器状态分区、梯度分区、参数分区），显著提升深度学习模型训练的内存效率，支持在现有硬件上训练超大规模模型（如万亿参数级别）。其**ZeRO-DP**消除了数据并行中的冗余内存，结合**ZeRO-R**优化激活内存和碎片管理，实现了**8 倍模型尺寸增长**和**10 倍训练速度提升**，并成功训练出世界最大的 17B 参数语言模型 Turing-NLG，同时保持易用性。
+
+  * Zero3把参数也切了，为啥还说他是一个DP（数据并行）框架，而不是模型并行的框架。是因为，区分数据并行和模型并行的本质，不是模型参数有没有切开存储。而是：
+    - 输入数据有没有切分开发送到不同的计算节点，**如果是数据并行，输入就要切开，如果是模型并行，输入就不需要切开。**
+
 
 * **研究背景与挑战**
 
@@ -1676,9 +1698,18 @@ for i in range(num_layers):
 
 #### FSDP
 
-#### TP & PP
+#### DP & TP & PP
 
-* **PP splits a model horizontally across layers running each partition on a different device and use micro-batching to hide the pipeline bubble** [10, 11]. Model functionalities such as tied-weights and batch-normalization are difficult to implement due to horizontal splitting and micro-batching, respectively. Popular PP implementation such as **G-pipe** [10] partitions both model parameters and total activations but **requires a batch size proportional to number of pipeline partitions to hide the pipeline bubble**. **The large batch size can affect the convergence rate, while also requiring significant memory to store activations.** A different implementation of PP in PipeDream [12] keeps multiple copies of stale parameters to hide the pipeline bubble without increasing the batch size significantly, making it less memory efficient. Additionally, the implementation is not equivalent to the standard DL training and has implications on training convergence. In contrast, ZeRO obtains the same or better memory efficiency than PP without incurring functionality, performance and convergence related restrictions of PP. 【ZeRO论文】
+* DP + TP + PP
+  * 把机器分成N组，组之间用DP
+  * 一组机器有M台机器，不同台之间用PP
+  * 一台机器有8张卡，不同卡之间用TP
+* TP:
+  * 拆分W
+
+* **PP splits a model horizontally across layers** running each partition on a different device and **use micro-batching to hide the pipeline bubble** [10, 11]. Model functionalities such as tied-weights and batch-normalization are difficult to implement due to horizontal splitting and micro-batching, respectively. Popular PP implementation such as **G-pipe** [10] partitions both model parameters and total activations but **requires a batch size proportional to number of pipeline partitions to hide the pipeline bubble**. **The large batch size can affect the convergence rate, while also requiring significant memory to store activations.** A different implementation of PP in PipeDream [12] keeps multiple copies of stale parameters to hide the pipeline bubble without increasing the batch size significantly, making it less memory efficient. Additionally, the implementation is not equivalent to the standard DL training and has implications on training convergence. In contrast, ZeRO obtains the same or better memory efficiency than PP without incurring functionality, performance and convergence related restrictions of PP. 【ZeRO论文】
+  * ![image-20250415030814219](./MLSys/image-20250415030814219.png)
+
 
 ### Parameter Server
 
