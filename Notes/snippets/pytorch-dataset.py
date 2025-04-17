@@ -71,9 +71,9 @@ def load_data(paths, features_config, num_workers, batch_size):
             yield examples[idx_from : idx_from + batch_size]
 
 
-DistributedSampler 要求输入的数据集是可索引的（map-style dataset）
+- DistributedSampler 要求输入的数据集是可索引的（map-style dataset）
 
-to_map_style_dataset 函数的作用是将迭代式数据集转换为可索引的数据集，使得数据集可以被 DistributedSampler 使用。
+- to_map_style_dataset 函数的作用是将迭代式数据集转换为可索引的数据集，使得数据集可以被 DistributedSampler 使用。
 通过这种转换，我们可以为数据集添加 __getitem__ 和 __len__ 方法，从而满足 DistributedSampler 的要求。
 
 
@@ -128,3 +128,13 @@ for batch_ndx, sample in enumerate(loader):
 最早见于nvidia apex
 
 https://blog.csdn.net/weiman1/article/details/125610786
+
+### predefined dataset
+
+import torchvision.datasets as datasets
+import torchvision.transforms as transforms
+
+transform = transforms.Compose([transforms.ToTensor()])
+
+train_dataset = datasets.CIFAR10(root="./data", train=True, download=True, transform=transform)
+test_dataset = datasets.CIFAR10(root="./data", train=False, download=True, transform=transform)

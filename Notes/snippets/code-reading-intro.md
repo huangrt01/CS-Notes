@@ -73,3 +73,13 @@
 
 - MicroBenchmark
   - https://gist.github.com/HDCharles/287ac5e997c7a8cf031004aad0e3a941
+
+- FlagAttention
+ - https://github.com/FlagOpen/FlagAttention
+
+- SparseAttention
+ - https://github.com/epfml/dynamic-sparse-flash-attention 
+
+- SAM flash attention
+ - https://github.com/facebookresearch/segment-anything/blob/main/segment_anything/modeling/image_encoder.py#L358
+ - https://github.com/pytorch-labs/segment-anything-fast/blob/main/segment_anything_fast/flash_4.py#L13

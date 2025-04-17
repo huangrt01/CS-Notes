@@ -12,6 +12,9 @@
 # - shared memory: 128k/2k -> 64
 # - threads: 1536/256 -> 6
 
+
+# SGEMM walkthrough: https://github.com/NervanaSystems/maxas/wiki/SGEMM
+
 import os
 import numpy as np
 

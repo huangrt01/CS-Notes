@@ -19,6 +19,8 @@ loss.retain_grad()   # loss grad为1
 loss.backward()
 print(x.grad)
 
+- loss非标量，backward需要知道梯度形状：output.backward(gradient=grad_output)
+
 ### 利用Function创建customized backward func
 
 class Exp(torch.autograd.Function):

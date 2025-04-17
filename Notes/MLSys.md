@@ -270,6 +270,10 @@ val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
   * 特征提取：
     * e.g. stable diffusion，先VAE提取64*64特征
 
+#### 数据格式
+
+![20250416-011642](./MLSys/20250416-011642.jpeg)
+
 #### 数据流
 
 * 分布式存储：
@@ -658,12 +662,12 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 - TorchAO - https://github.com/pytorch-labs/ao
 
-  - Int8 Dynamic Quantization
+  - Int8 Dynamic Quantization：W8A8
     - i8i8->i32 vs i8i8->bf16
 
-  - Int 8 Weight Only Quantization
+  - Int 8 Weight Only Quantization：W8A16
     - bf16i8->bf16
-  - Int 4 Weight Only Quantization
+  - Int 4 Weight Only Quantization：W4A16
     - bf16i4->bf16
 
 - Techniques：明确量化的目的
@@ -718,7 +722,144 @@ https://docs.nvidia.com/deeplearning/performance/index.html
     * Issues with Heuristics, in some of the tests
     * the best configurations aren’t available or are heuristically discarded.
 
+#### W8A8 - Dynamic Weight and Act
 
+##### SmoothQuant
+
+![image-20250416153941610](./MLSys/image-20250416153941610.png)
+
+![image-20250416155502889](./MLSys/image-20250416155502889.png)
+
+* Intro
+  * SmoothQuant smooths the activation outliers by offline migrating the quantization difficulty from activations to weights with a mathematically equivalent transformation.
+  * SmoothQuant relies on a key observation: even if activations are much harder to quantize than weights due to the presence of outliers (Dettmers et al., 2022), **different tokens exhibit similar variations across their channels.**
+* 一些分析：
+  * Activations are harder to quantize than weights.
+  * Outliers make activation quantization difficult
+  * Outliers persist in fixed channels
+* 结论
+  * 在175B模型，精度优于zeroquant （section5.2）
+
+
+
+​    
+
+##### DeepSpeed —— ZeroQuant
+
+> ZeroQuant: Efficient and Affordable Post-Training Quantization for Large-Scale Transformers
+
+* 要点：
+  * W8A8（LKD下，FFC支持W4A8）
+    * 5.19x/4.16x speedup
+    * 3x memory footprint reduction
+  * a fine-grained hardware-friendly quantization scheme for both weight and activations;
+    * **group-wise quantization for weight and token-wise quantization for activations.** 
+  * a novel affordable layer-by-layer knowledge distillation algorithm (LKD) even without the access to the original training data;
+  * a highly-optimized quantization system backend support to remove the quantization/dequantization overhead
+* 结论：
+  * 直接PTQ + GPT-3/Bert：W8A16效果无损，接下来有损 （table1）
+    * ![image-20250329011956361](./MLSys/image-20250329011956361.png)
+    * 每一层内，不同token的range分布差距大 --> token-wise
+    * output attn matrix，不同行的分布差异大
+  * generation task比eval task更敏感
+  * Table2、Table4:
+    * W8A8、W4/8A16效果好
+    * W4/8A16在zeroquant+lkd后可用
+    * for W4/8, we quantize the MHSA’s weight to INT8 and FFC’s weight to INT4; for A8/16, we use FP16 activation for self-attention calculation (i.e., the GeMM related to Wq/k/v) and use INT8 for the rest calculation
+  * table 6: w8a8的加速比，小batch2-3，64batch 4-5
+  * 5.6 No Access to The Original Training Data，影响不大
+
+* 4.1 Fine-grained Hardware-friendly Quantization Scheme
+  * group-wise quantization for weight
+    * 借鉴Q-Bert
+  * Token-wise Quantization for Activations
+* 工程优化（4.3 Quantization-Optimized Transformer Kernels）
+  * ![image-20250330153101483](./MLSys/image-20250330153101483.png)
+  * quant：kernel fusion technique to fuse quantization operator with its previous operator, like layer normalization, to alleviate the data movement cost from token-wise quantization
+    * 每个SM可以quantize one row/token
+  * dequant：the dequantization cost of the different GeMMs’ output is alleviated by scaling the INT32 accumulation using both the weight and activation quantization scales, before writing the final FP16 result back to the main memory for the next FP16 operator (like GeLU)
+    * 异步读取量化scale
+  * CUTLASS INT8 GeMM：相比cudnn的优势是容易和dequant做fuse
+    * https://developer.nvidia.com/blog/cutlass-linear-algebra-cuda/
+    * use the CUTLASS profiler tool that explores the tiling dimensions on the thread-blocks, WARPs, and WMMA (Tensor cores), as the three compute hierarchies available within the Ampere GPU architecture
+  * 开启cuda graph，优化小模型性能
+* LKD
+  * ![image-20250330153038937](./MLSys/image-20250330153038937.png)
+
+
+
+##### PTQ基础
+
+![image-20250329010304813](./MLSys/image-20250329010304813.png)
+
+* S的选取
+  * weight matrix：max(abs(X))
+  * activation：
+    * dynamic
+    * static：calibrated using training data (e.g., momentum based
+      averaging) and ﬁxed during inference [23]
+      * ![image-20250329010432713](./MLSys/image-20250329010432713.png)
+
+#### W4A16 - Weight Only
+
+##### AWQ: ACTIVATION-AWARE WEIGHT QUANTIZATION
+
+> 比较实用，策略+观察，暴力计算搜索
+
+* Intro
+  * 激活感知权重量化（AWQ）方法，通过保留 1% 显著权重和channel-wise缩放降低量化误差，且不依赖反向传播或重建，泛化性强。
+  * 同时设计 TinyChat 推理框架，利用即时反量化、SIMD 感知权重打包和内核融合等技术，在桌面和移动 GPU 上相比 Huggingface FP16 实现有 3 倍以上加速，助力 LLMs 在边缘设备的部署。实验表明，AWQ 在多种任务、模型上性能优于现有方法，在指令调整和多模态模型量化中表现出色
+  * **低比特权重量化的困境**：低比特权重量化可减少内存占用，但QAT成本高，PTQ在低比特设置下精度下降大。GPTQ 虽用二阶信息补偿误差，但重建过程易过拟合校准集，影响模型泛化能力。
+* 核心思路：
+  * **保留 1% 显著权重提升量化性能**：发现 LLMs 中部分（0.1%-1%）显著权重对模型性能影响大，跳过这些权重的量化可减少量化损失。**基于激活幅度而非权重幅度选择显著权重**，能显著提升量化模型性能，但混合精度数据类型会增加系统实现难度。
+  * **激活感知缩放保护显著权重**：提出按通道缩放方法降低显著权重的量化误差。通过分析量化误差，得出**缩放显著通道**可减小相对误差的结论。为平衡显著和非显著权重，自动搜索最优缩放因子，采用简单搜索空间和快速网格搜索确定最佳超参数 α，并应用权重裁剪最小化量化均方误差。该方法不依赖回归或反向传播，对校准集依赖小，泛化性强
+    * 根据activation决策显著 -> scaling up显著的weight -> 相关input变小 -> 量化误差变小
+    * ![image-20250410131426026](./MLSys/image-20250410131426026.png)
+    * 基于一个假设：放大显著的channel后，量化scale变化不大
+    * ![image-20250410130650937](./MLSys/image-20250410130650937.png)
+* 相比GPTQ：
+  * 对校准集不敏感
+  * 效果好
+
+##### GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers
+
+> PTQ，主要应用于推理场景
+>
+> 用二阶信息补偿误差，但重建过程易过拟合校准集，影响模型泛化能力。
+>
+> W4A16
+
+* GPTQ, a new one-shot weight quantization method based on approximate second-order information
+
+  * reducing the bitwidth down to 3 or 4 bits per weight
+  * It therefore remains open whether one-shot **post-training quantization** to higher compression rates is generally-feasible.
+
+  * gptq = gpt + ptq
+  * LLM量化：参数越多，量化越有效
+
+* 结论：
+  * Further, we show that our model can also provide robust results in the extreme quantization regime, in which models are quantized to 2 bits per component, or even ternary values
+  * reducing the bitwidth down to 3 or 4 bits per weight
+  * **本质上是LLM参数量非常大，存在参数冗余**
+  * Practical Speedups. Finally, we study practical applications. As an interesting use-case, we focus on the OPT-175B model: **quantized to 3 bits, this model takes approximately 63GB of memory**, including the embeddings and the output layer, which are kept in full FP16 precision. Additionally, storing the **complete history of keys and values for all layers,** a common optimization for generation tasks, **consumes another ≈ 9GB for the maximum of 2048 tokens**. Hence, we can actually fit the entire quantized model into a single 80GB A100 GPU, which can be executed by dynamically dequantizing layers as they are required during inference (the model would not fully fit using 4 bits). For reference, standard FP16 execution requires 5x80GB GPUs, and the state-of-the-art 8bit LLM.int8() quantizer (Dettmers et al., 2022) requires 3 such GPUs
+* 方法：layer-wise
+  * ![image-20250325020148022](./MLSys/image-20250325020148022.png)
+  * 假设：the quantization grid for W is ﬁxed before the process
+* Optimal Brain Quantization
+  * 问题分解：将训练后量化的目标转化为最小化损失误差，通过泰勒级数近似，将损失误差表示为与海森矩阵相关的形式，并将其分解为逐层独立的凸问题，进一步按行分解为独立问题。
+  * 迭代量化：在每一步中，选择单行中的单个权重进行量化。计算该行中每个权重量化后的损失误差，公式为$$\delta L_{q}=\frac{1}{2}\frac{w_{q}^{2}}{(H^{-1})_{qq}}$$，其中$$w_{q}$$是权重，$$(H^{-1})_{qq}$$是逆海森矩阵的第q个对角元素。贪心地选择具有最小损失误差的权重进行量化。 
+  * 权重更新：将选中的权重四舍五入到量化网格上的最近值，然后更新同一行中尚未量化的剩余权重以补偿引入的误差。更新公式通过求解拉格朗日函数得到，量化后的最优权重扰动为$$\delta W^{\top}=-\frac{w_{q}}{(H^{-1})_{qq}}e_{q}^{\top}H^{-1}$$，其中$$e_{q}$$是第q个标准基向量。 
+  * 矩阵更新：更新剩余权重的逆海森矩阵，通过移除已量化权重对应的行和列来实现。 
+  * 重复迭代：继续上述迭代过程，直到所有权重都被量化。 
+* 在实际应用中，为了提高计算效率和防止数值不准确性累积，GPTQ算法对OBQ进行了改进，如采用**固定的非贪心顺序对所有行进行量化**(减少计算量)、**一次保持权重更新在列的块内**(一次128个column，batch操作)、**对海森矩阵的对角项应用轻微阻尼**(增加数值稳定性)以及**利用逆海森矩阵的Cholesky分解**(逆海森矩阵容易inf)等。
+  * ![image-20250325141614872](./MLSys/image-20250325141614872.png)
+
+* 算法
+  * ![image-20250325143626232](./MLSys/image-20250325143626232.png)
+
+
+
+#### 
 
 #### TorchAO - Quantized Training
 
@@ -808,13 +949,13 @@ https://docs.nvidia.com/deeplearning/performance/index.html
   * https://github.com/pytorch/ao/pull/930
   * ![image-20250331153107702](./MLSys/image-20250331153107702.png)
 
-##### QAT 应用
+##### W4A8 + QAT
 
 >  [Quantization-Aware Training for Large Language Models with PyTorch](https://pytorch.org/blog/quantization-aware-training/)
 
 * ![image-20250328174952301](./MLSys/image-20250328174952301.png)
 
-  * W4A8: int8 per token dynamic activations + int4 grouped per channel weights
+  * **W4A8: int8 per token dynamic activations + int4 grouped per channel weights**
 
 * 结论
 
@@ -843,64 +984,6 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 * QAT overhead
   * ~34% slower
   * 显存增长，开activation checkpointing缓解
-
-
-
-#### DeepSpeed —— ZeroQuant
-
-> ZeroQuant: Efficient and Affordable Post-Training Quantization for Large-Scale Transformers
-
-* 要点：
-  * W8A8、W8A8（LKD下，FFC支持W4A8）
-    * 5.19x/4.16x speedup
-    * 3x memory footprint reduction
-  * a fine-grained hardware-friendly quantization scheme for both weight and activations;
-    * **group-wise quantization for weight and token-wise quantization for activations.** 
-  * a novel affordable layer-by-layer knowledge distillation algorithm (LKD) even without the access to the original training data;
-  * a highly-optimized quantization system backend support to remove the quantization/dequantization overhead
-* 结论：
-  * 直接PTQ + GPT-3/Bert：W8A16效果无损，接下来有损 （table1）
-    * ![image-20250329011956361](./MLSys/image-20250329011956361.png)
-    * 每一层内，不同token的range分布差距大 --> token-wise
-    * output attn matrix，不同行的分布差异大
-  * generation task比eval task更敏感
-  * Table2、Table4:
-    * W8A8、W4/8A16效果好
-    * W4/8A16在zeroquant+lkd后可用
-    * for W4/8, we quantize the MHSA’s weight to INT8 and FFC’s weight to INT4; for A8/16, we use FP16 activation for self-attention calculation (i.e., the GeMM related to Wq/k/v) and use INT8 for the rest calculation
-  * table 6: w8a8的加速比，小batch2-3，64batch 4-5
-  * 5.6 No Access to The Original Training Data，影响不大
-
-* 4.1 Fine-grained Hardware-friendly Quantization Scheme
-  * group-wise quantization for weight
-    * 借鉴Q-Bert
-  * Token-wise Quantization for Activations
-* 工程优化（4.3 Quantization-Optimized Transformer Kernels）
-  * ![image-20250330153101483](./MLSys/image-20250330153101483.png)
-  * quant：kernel fusion technique to fuse quantization operator with its previous operator, like layer normalization, to alleviate the data movement cost from token-wise quantization
-    * 每个SM可以quantize one row/token
-  * dequant：the dequantization cost of the different GeMMs’ output is alleviated by scaling the INT32 accumulation using both the weight and activation quantization scales, before writing the final FP16 result back to the main memory for the next FP16 operator (like GeLU)
-    * 异步读取量化scale
-  * CUTLASS INT8 GeMM：相比cudnn的优势是容易和dequant做fuse
-    * https://developer.nvidia.com/blog/cutlass-linear-algebra-cuda/
-    * use the CUTLASS profiler tool that explores the tiling dimensions on the thread-blocks, WARPs, and WMMA (Tensor cores), as the three compute hierarchies available within the Ampere GPU architecture
-  * 开启cuda graph，优化小模型性能
-* LKD
-  * ![image-20250330153038937](./MLSys/image-20250330153038937.png)
-
-
-
-##### PTQ基础
-
-![image-20250329010304813](./MLSys/image-20250329010304813.png)
-
-* S的选取
-  * weight matrix：max(abs(X))
-  * activation：
-    * dynamic
-    * static：calibrated using training data (e.g., momentum based
-      averaging) and ﬁxed during inference [23]
-      * ![image-20250329010432713](./MLSys/image-20250329010432713.png)
 
 #### DeepSpeed —— Mixture-of-Quantization (MoQ)
 
@@ -1167,65 +1250,6 @@ https://docs.nvidia.com/deeplearning/performance/index.html
   - **参数压缩**：权重从 32-bit 降至 2/3-bit，实现 13× 压缩（BERT-Base 从 410MB→30.5MB）。
   - **激活压缩**：激活值量化至 8-bit，减少 4× 内存占用。
   - **嵌入压缩**：词嵌入 4-bit + 位置嵌入 8-bit 混合，嵌入层从 91MB→11.6MB（8× 压缩）。
-
-#### W4A16
-
-##### AWQ: ACTIVATION-AWARE WEIGHT QUANTIZATION
-
-> 比较实用，策略+观察，暴力计算搜索
-
-* Intro
-  * 激活感知权重量化（AWQ）方法，通过保留 1% 显著权重和channel-wise缩放降低量化误差，且不依赖反向传播或重建，泛化性强。
-  * 同时设计 TinyChat 推理框架，利用即时反量化、SIMD 感知权重打包和内核融合等技术，在桌面和移动 GPU 上相比 Huggingface FP16 实现有 3 倍以上加速，助力 LLMs 在边缘设备的部署。实验表明，AWQ 在多种任务、模型上性能优于现有方法，在指令调整和多模态模型量化中表现出色
-  * **低比特权重量化的困境**：低比特权重量化可减少内存占用，但QAT成本高，PTQ在低比特设置下精度下降大。GPTQ 虽用二阶信息补偿误差，但重建过程易过拟合校准集，影响模型泛化能力。
-* 核心思路：
-  * **保留 1% 显著权重提升量化性能**：发现 LLMs 中部分（0.1%-1%）显著权重对模型性能影响大，跳过这些权重的量化可减少量化损失。**基于激活幅度而非权重幅度选择显著权重**，能显著提升量化模型性能，但混合精度数据类型会增加系统实现难度。
-  * **激活感知缩放保护显著权重**：提出按通道缩放方法降低显著权重的量化误差。通过分析量化误差，得出**缩放显著通道**可减小相对误差的结论。为平衡显著和非显著权重，自动搜索最优缩放因子，采用简单搜索空间和快速网格搜索确定最佳超参数 α，并应用权重裁剪最小化量化均方误差。该方法不依赖回归或反向传播，对校准集依赖小，泛化性强
-    * 根据activation决策显著 -> scaling up显著的weight -> 相关input变小 -> 量化误差变小
-    * ![image-20250410131426026](./MLSys/image-20250410131426026.png)
-    * 基于一个假设：放大显著的channel后，量化scale变化不大
-    * ![image-20250410130650937](./MLSys/image-20250410130650937.png)
-* 相比GPTQ：
-  * 对校准集不敏感
-  * 效果好
-
-##### GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers
-
-> PTQ，主要应用于推理场景
->
-> 用二阶信息补偿误差，但重建过程易过拟合校准集，影响模型泛化能力。
->
-> W4A16
-
-* GPTQ, a new one-shot weight quantization method based on approximate second-order information
-
-  * reducing the bitwidth down to 3 or 4 bits per weight
-  * It therefore remains open whether one-shot **post-training quantization** to higher compression rates is generally-feasible.
-
-  * gptq = gpt + ptq
-  * LLM量化：参数越多，量化越有效
-
-* 结论：
-  * Further, we show that our model can also provide robust results in the extreme quantization regime, in which models are quantized to 2 bits per component, or even ternary values
-  * reducing the bitwidth down to 3 or 4 bits per weight
-  * **本质上是LLM参数量非常大，存在参数冗余**
-  * Practical Speedups. Finally, we study practical applications. As an interesting use-case, we focus on the OPT-175B model: **quantized to 3 bits, this model takes approximately 63GB of memory**, including the embeddings and the output layer, which are kept in full FP16 precision. Additionally, storing the **complete history of keys and values for all layers,** a common optimization for generation tasks, **consumes another ≈ 9GB for the maximum of 2048 tokens**. Hence, we can actually fit the entire quantized model into a single 80GB A100 GPU, which can be executed by dynamically dequantizing layers as they are required during inference (the model would not fully fit using 4 bits). For reference, standard FP16 execution requires 5x80GB GPUs, and the state-of-the-art 8bit LLM.int8() quantizer (Dettmers et al., 2022) requires 3 such GPUs
-* 方法：layer-wise
-  * ![image-20250325020148022](./MLSys/image-20250325020148022.png)
-  * 假设：the quantization grid for W is ﬁxed before the process
-* Optimal Brain Quantization
-  * 问题分解：将训练后量化的目标转化为最小化损失误差，通过泰勒级数近似，将损失误差表示为与海森矩阵相关的形式，并将其分解为逐层独立的凸问题，进一步按行分解为独立问题。
-  * 迭代量化：在每一步中，选择单行中的单个权重进行量化。计算该行中每个权重量化后的损失误差，公式为$$\delta L_{q}=\frac{1}{2}\frac{w_{q}^{2}}{(H^{-1})_{qq}}$$，其中$$w_{q}$$是权重，$$(H^{-1})_{qq}$$是逆海森矩阵的第q个对角元素。贪心地选择具有最小损失误差的权重进行量化。 
-  * 权重更新：将选中的权重四舍五入到量化网格上的最近值，然后更新同一行中尚未量化的剩余权重以补偿引入的误差。更新公式通过求解拉格朗日函数得到，量化后的最优权重扰动为$$\delta W^{\top}=-\frac{w_{q}}{(H^{-1})_{qq}}e_{q}^{\top}H^{-1}$$，其中$$e_{q}$$是第q个标准基向量。 
-  * 矩阵更新：更新剩余权重的逆海森矩阵，通过移除已量化权重对应的行和列来实现。 
-  * 重复迭代：继续上述迭代过程，直到所有权重都被量化。 
-* 在实际应用中，为了提高计算效率和防止数值不准确性累积，GPTQ算法对OBQ进行了改进，如采用**固定的非贪心顺序对所有行进行量化**(减少计算量)、**一次保持权重更新在列的块内**(一次128个column，batch操作)、**对海森矩阵的对角项应用轻微阻尼**(增加数值稳定性)以及**利用逆海森矩阵的Cholesky分解**(逆海森矩阵容易inf)等。
-  * ![image-20250325141614872](./MLSys/image-20250325141614872.png)
-
-* 算法
-  * ![image-20250325143626232](./MLSys/image-20250325143626232.png)
-
-
 
 #### Deep Learning Inference in Facebook Data Centers: Characterization, Performance Optimizations and Hardware Implications
 

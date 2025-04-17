@@ -93,7 +93,7 @@ def end_timer_and_print(local_msg):
   print("Max memory used by tensors = {} bytes".format(
       torch.cuda.max_memory_allocated()))
 
-### PyTorch Profiler
+### set seed
 
 def set_seed(seed: int = 37) -> None:
     np.random.seed(seed)
@@ -105,8 +105,7 @@ def set_seed(seed: int = 37) -> None:
     os.environ["PYTHONHASHSEED"] = str(seed)
     print(f"设置随机数种子为{seed}")
 
-
-
+### PyTorch Profiler
 
 model = torchvision.models.resnet18().cuda()
 inputs = torch.randn(5, 3, 224, 224, device="cuda")
@@ -119,7 +118,7 @@ with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], profile_m
   with record_function("model_inference"):
     model(inputs)
 
-print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=40))
+print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=25))
 print(prof.key_averages().table(sort_by="self_cuda_memory_usage", row_limit=15))
 prof.export_chrome_trace("trace.json")
 

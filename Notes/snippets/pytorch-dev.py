@@ -1,3 +1,14 @@
+### 安装 - pip
+
+pip3 install torch torchvision torchaudio
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+https://download.pytorch.org/whl/torch_stable.html
+https://download.pytorch.org/whl/cu118/
+https://download.pytorch.org/whl/cu121/
+
+
 ### 安装 - build from source
 
 https://pytorch.org/get-started/locally/ 查看torch和cuda稳定版本

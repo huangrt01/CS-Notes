@@ -306,12 +306,16 @@ https://www.slideshare.net/am_sharifian/intel-hyper-threading-technology/1
     * 连续读写：顺序、大文件
       * MB/s
       * 瓶颈：缓冲区传输到内存
-  
   * 典型数据（NVMe）：
     * 1TB
     * 700000 IOPS
     * 7000 GB/s
-  
+  * 优化硬盘读写的技术：
+    * 利用内存
+      * mmap，尤其随机访问场景
+      * RAMDisk
+    * 尽量连续读写
+    * NVMe
 * NVMe
   * [NVMe vs SATA: What’s the difference and which is faster?](https://www.microcontrollertips.com/why-nvme-ssds-are-faster-than-sata-ssds/)
     * 使用传输速率更高的PCIe通道
@@ -323,7 +327,6 @@ https://www.slideshare.net/am_sharifian/intel-hyper-threading-technology/1
       * pmem: https://pmem.io/pmdk/
       * DWPD: 衡量 SSD 寿命
       * 《Spitfire: A Three-Tier Buffer Manager for Volatile and Non-Volatile Memory》
-
 * 内存
   * 双通道、四通道，将内存带宽提升相应倍数
 

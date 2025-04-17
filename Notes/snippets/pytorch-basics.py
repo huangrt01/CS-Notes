@@ -1,16 +1,6 @@
 dev论坛：https://dev-discuss.pytorch.org/
 torchscript：https://pytorch.org/docs/stable/jit.html
 
-### Installation
-
-pip3 install torch torchvision torchaudio
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-
-https://download.pytorch.org/whl/torch_stable.html
-https://download.pytorch.org/whl/cu118/
-https://download.pytorch.org/whl/cu121/
-
 ### Intro
 
 class LinearLayer(Module):
@@ -142,6 +132,9 @@ x = torch.ones(3)
 y = x.detach().numpy() # gpu->cpu->numpy
 
 y = x.numpy()
+
+* Note
+- 不支持负数stride x = np.random.random(size=(4, 4, 2)) y = np.flip(x, axis=0)
 
 
 

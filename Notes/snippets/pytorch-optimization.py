@@ -3,6 +3,13 @@
 Pytorch的框架开销：As long as you have Tensors with a few 100s of elements, “Python is slow” and data administrative
 overhead (allocate tensor structure) is single digit percentages
 
+### dataset
+
+num_workers、prefetch_factor
+
+优化数据预处理：pillow-simd
+
+减少不必要的CPU线程：numpy偷偷创建cpu核数的线程
 
 ### nvfuser
 

@@ -144,21 +144,26 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 
   * [Analyzing GPU Tensor Core Potential for Fast Reductions](https://arxiv.org/pdf/1903.03640)
 
+  * Demystifying Tensor Cores to Optimize Half-Precision Matrix Multiply
+
 * Guide:
+
+  * GTC 教程：https://developer.nvidia.com/gtc/2020/video/s21745-vid
 
   * https://leimao.github.io/blog/NVIDIA-Tensor-Core-Programming/
 
   * Q: Does Matmul involve reduction sum? Why can it be done in FP16?
-
+  
     * A: In tensor core FP16 MAC (Multiply-Accumulate) unit, the accumulation is always done in full precision, which avoids the problem of arithmetic underflow.
     * Reference: https://devblogs.nvidia.com/programming-tensor-cores-cuda-9/
 
   * To employ Tensor Cores in [cuBLAS](https://docs.nvidia.com/cuda/cublas/index.html), the dimensions of a GEMM ([M, K] x [K, N] -> [M, N]) must be multiples of 8.
-
+  
     * convolution没有限制
     * https://github.com/NVIDIA/apex/issues/221#issuecomment-478084841
-
+  
     
+  
 
 
 
@@ -595,19 +600,38 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 * Thread Block Group的概念
 
+#### 写 Op
 
+* SGEMM：https://github.com/NervanaSystems/maxas/wiki/SGEMM
 
+##### 难点
 
+- Memory transfers from DRAM must be *coalesced* into large transactions to leverage the large bus width of modern memory interfaces.
+- Data must be manually stashed to SRAM prior to being re-used, and managed so as to minimize shared memory bank conflicts upon retrieval.
+- Computations must be partitioned and scheduled carefully, both across and within Streaming Multiprocessors (SMs), so as to promote instruction/thread-level parallelism and leverage special-purpose ALUs (e.g., tensor cores).
 
 ### Triton
 
 #### Intro
 
+> https://openai.com/index/triton/
+
 * Triton v.s. CUDA
   * pythonish
+  
   * easy to write and debug
-  * 二者均生成PTX
 
+  * 二者均生成PTX
+  
+  * triton的核心思路：block操作，而不是SIMT
+  
+  * |                          | **CUDA** | **TRITON** |
+    | ------------------------ | -------- | ---------- |
+    | Memory Coalescing        | Manual   | Automatic  |
+    | Shared Memory Management | Manual   | Automatic  |
+    | Scheduling (Within SMs)  | Manual   | Automatic  |
+    | Scheduling (Across SMs)  | Manual   | Manual     |
+  
 * Triton是OpenAI 推出的以python为编程语言基础，专门为深度学习研发和高性能计算而设计的编程语言和编译器，旨在简化和优化GPU编程的复杂操作，降低高性能优化的门槛。它允许开发者在Triton框架内更灵活地编写和优化自定义的算子（operators）或处理复杂的数据流程。
   * 生成PTX（Cuda Assembly）而不是cuda
   * Triton的初期版本以CUDA为起点而开发，为没有CUDA基础的编程者提供快速编写高效CUDA kernel的方案，而随着迭代已逐渐支持其他芯片和编程工具，如AMD的ROCm，并在继续支持其他的芯片，如Intel的CPU。
@@ -644,6 +668,19 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
   * 不感知shared memory
 
 ![image-20250302005036701](./GPU/image-20250302005036701.png)
+
+#### 优化原理
+
+* shared memory
+  * data can be automatically **stashed to shared memory by looking at the operands of computationally intensive block-level operations** (e.g., `tl.dot`)—and **allocated/synchronized using standard liveness analysis techniques.**
+  * ![image-20250417144519785](./GPU/image-20250417144519785.png)
+
+* parallel
+  * (1) across SMs by executing different kernel instances concurrently
+  * (2) within SMs by analyzing the iteration space of each block-level operation and partitioning it adequately across different SIMD units
+  * ![image-20250417144848673](./GPU/image-20250417144848673.png)
+
+
 
 #### Debugging
 
