@@ -120,11 +120,14 @@ strace -p $PID
 -f 监控所有子线程   -ff
 ```
 
-```shell
 # On macOS
 sudo dtruss -t lstat64_extended ls -l > /dev/null
 
 # 与之配合的技术
 readlink /proc/22067/fd/3
 lsof | grep /tmp/foobar.lock
-```
+
+
+### 磁盘
+
+df -h

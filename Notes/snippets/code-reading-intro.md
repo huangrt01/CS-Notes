@@ -74,6 +74,9 @@
 - MicroBenchmark
   - https://gist.github.com/HDCharles/287ac5e997c7a8cf031004aad0e3a941
 
+- FlagGems
+  - https://github.com/FlagOpen/FlagGems
+
 - FlagAttention
  - https://github.com/FlagOpen/FlagAttention
 

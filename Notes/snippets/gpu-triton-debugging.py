@@ -25,8 +25,13 @@ def square_kernel(output_ptr, input_ptr, input_row_stride, output_row_stride, n_
   tl.store(output_ptrs, square_output, mask=col_offsets < n_cols)
 
 
+### debug autotune
+
+TRITON_PRINT_AUTOTUNING=1
+
 ### profiling
 
 https://developer.nvidia.com/nvidia-development-tools-solutions-err_nvgpuctrperm-permission-issue-performance-counters#AllUsersTag
 
 ncu --target-processes all sudo python triton_test.py
+

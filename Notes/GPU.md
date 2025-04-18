@@ -669,6 +669,8 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 ![image-20250302005036701](./GPU/image-20250302005036701.png)
 
+* one important limitation of Triton is that **each block must have a power-of-two number of elements**, so we need to internally “pad” each row and guard the memory operations properly if we want to handle any possible input shapes:
+
 #### 优化原理
 
 * shared memory
