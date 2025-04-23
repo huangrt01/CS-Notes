@@ -54,6 +54,19 @@ pid_m, pid_n = tl.swizzle2d(
       pid_m, pid_n, num_pid_m, num_pid_n,
       group_sz)
 
+### benchmark
+- grad_to_none=[x]，避免累加开销
+
+if mode == 'forward':
+        gbps = lambda ms: 2 * x.numel() * x.element_size() * 1e-9 / (ms * 1e-3)
+        ms, min_ms, max_ms = triton.testing.do_bench(y_fwd, quantiles=quantiles, rep=500)
+    # backward pass
+    if mode == 'backward':
+        y = y_fwd()
+        gbps = lambda ms: 3 * x.numel() * x.element_size() * 1e-9 / (ms * 1e-3)  # noqa: F811, E704
+        ms, min_ms, max_ms = triton.testing.do_bench(lambda: y.backward(dy, retain_graph=True), quantiles=quantiles,
+                                                     grad_to_none=[x], rep=500)
+
 ### Autotune
 
 tricks&configs可参考 https://www.youtube.com/watch?v=SGhfUhlowB4

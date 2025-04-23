@@ -467,6 +467,8 @@ https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html
 * Transformer 具有 field reduce 能力，将 N 个 token reduce 成 M 个 token
 * [GELU](https://paperswithcode.com/method/gelu)
   * GELUs are used in [GPT-3](https://paperswithcode.com/method/gpt-3), [BERT](https://paperswithcode.com/method/bert), and most other Transformers.
+* Layer Normalization
+  * The LayerNorm operator was first introduced in [BA2016]() as a way to improve the performance of sequential models (e.g., Transformers) or neural networks with small batch size
 
 ![image-20241019021744575](./Machine-Learning/bert.png)
 

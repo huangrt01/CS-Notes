@@ -120,9 +120,7 @@ y = fc2(y)
   
   32 requires about 60 GB of memory. 
   
-  * Activation checkpointing reduce the activation memory by approximately the square root of
-  
-  the total activations. -> 8GB
+  * Activation checkpointing reduce the activation memory by approximately the square root of the total activations. -> 8GB
   
   * For a GPT-2 like architecture the total activations is about 12 × hidden dim × batch × seq length × transformer layers.
 

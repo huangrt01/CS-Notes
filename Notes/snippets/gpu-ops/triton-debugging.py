@@ -1,3 +1,16 @@
+### debug frontend
+https://triton-lang.org/main/programming-guide/chapter-3/debugging.html
+
+static_print and static_assert are intended for compile-time debugging.
+device_print and device_assert are used for runtime debugging.
+
+
+TRITON_DEBUG=1
+
+tl.device_print("all_tasks_done:" ,all_tasks_done) # 第一个是str，后面全是tensor
+
+
+
 ### interpret mode
 
 
@@ -25,6 +38,8 @@ def square_kernel(output_ptr, input_ptr, input_row_stride, output_row_stride, n_
   tl.store(output_ptrs, square_output, mask=col_offsets < n_cols)
 
 
+print(tensor.handle.data[idx])
+
 ### debug autotune
 
 TRITON_PRINT_AUTOTUNING=1
@@ -34,4 +49,13 @@ TRITON_PRINT_AUTOTUNING=1
 https://developer.nvidia.com/nvidia-development-tools-solutions-err_nvgpuctrperm-permission-issue-performance-counters#AllUsersTag
 
 ncu --target-processes all sudo python triton_test.py
+
+### visualization
+
+https://github.com/Deep-Learning-Profiling-Tools/triton-viz
+
+### debug backend
+
+https://github.com/triton-lang/triton?tab=readme-ov-file#tips-for-hacking
+
 

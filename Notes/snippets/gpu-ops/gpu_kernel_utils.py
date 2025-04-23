@@ -10,6 +10,8 @@ import torch
 import triton
 import triton.language as tl
 
+tl_print = print if os.environ.get("TRITON_INTERPRET", 0) else tl.device_print
+
 def custom_repr(self):
   return f'{{Tensor{tuple(self.shape)}: {original_repr(self)}}}'
 

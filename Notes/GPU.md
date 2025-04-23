@@ -646,7 +646,7 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
   * debug
   * NUMBA_ENABLE_CUDASIM=1
 
-#### Basic
+#### Op优化情况
 
 >  snippets/gpu-triton.py
 
@@ -657,6 +657,12 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 * Matmul
 
 ![image-20250302192301222](./GPU/image-20250302192301222.png)
+
+* Index select backward
+  * ![image-20250423115630485](./GPU/image-20250423115630485.png)
+  * 
+
+
 
 #### Programming Model
 
@@ -786,16 +792,18 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 #### SM效率
 
 * **SM Occupancy：the ratio of the number of warps assigned to an SM to the maximum number it can support**
+  * 提升 SM 占用率的关键通常在于 降低每个 Block 对 SM 资源的（寄存器、共享内存）需求 ，使得 SM 能够同时调度运行更多的 Block（以及更多的 Warp）。
+
 * 限制因素：主要是资源约束
-  *  **SM能够同时处理的线程块数量**
-    - block size太小的情形
-      - block size=32，总共需要执行 2048 个线程。因此总共需要 2048/32 = 64 个线程块来容纳这 2048 个线程
-      - 每个 SM 在同一时刻最多只能处理 32 个线程块
-      - --> 50% SM Occupancy
-  * **每个thread的register数量**
+  *  **每个thread的register数量**
     - each SM has 65536 registers. To execute 2048 threads simultaneously, each thread can have a maximum of 32 registers (65536/2048 = 32). If a kernel needs 64 registers per thread, we can only run 1024 threads per SM,
     - --> resulting in 50% occupancy.
   *  每个SM的共享内存 / **Shared Memory per Block**
+  *  **SM能够同时处理的线程块数量**
+     - block size太小的情形
+       - block size=32，总共需要执行 2048 个线程。因此总共需要 2048/32 = 64 个线程块来容纳这 2048 个线程
+       - **每个 SM 在同一时刻最多只能处理 32 个 thread block**
+       - --> 50% SM Occupancy
 
 #### Warp效率
 

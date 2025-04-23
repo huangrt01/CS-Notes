@@ -1,3 +1,7 @@
+### tools
+
+compute sanitizer: https://docs.nvidia.com/cuda/compute-sanitizer/index.html
+
 ### cuda debug
 
 CUDA_LAUNCH_BLOCKING=1
@@ -24,3 +28,6 @@ nor inverse are the root cause of the issue but are just reporting â€œan errorâ€
 
 pip3 install wurlitzer
 %load_ext wurlitzer
+
+
+

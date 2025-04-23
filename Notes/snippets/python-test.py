@@ -52,6 +52,8 @@ def test_task_decorator(*args, task_filter: Union[str, List[str]] = None, **kwar
 
 ### parametrized
 
+- absl
+
 from absl.testing import parameterized
 
 class MyOpTest(parameterized.TestCase):
@@ -68,3 +70,8 @@ class MyOpTest(parameterized.TestCase):
     def test_loader(self, N, M, task, task_name):
         ...
 
+
+- pytest
+
+@pytest.mark.parametrize("Z, H, N_CTX, HEAD_DIM", [(1, 2, 1024, 64)])
+@pytest.mark.parametrize("causal", [True])
