@@ -1660,6 +1660,13 @@ for i in range(num_layers):
 
 #### ZeRO-DP、ZeRO-R
 
+> * trivial: Reducescatter梯度 + allgather梯度 + apply全部梯度
+>
+> - Zero1: Reducescatter梯度 + apply部分梯度 + AllGather参数
+> - Zero2: 反向传播中ReduceScatter梯度 + apply部分梯度 + AllGather参数
+>   - zero2相比zero1，显存和速度都有优势：通信计算并行，并一定程度减小存储grad所需的显存
+> - Zero3: 前向/反向中AllGather参数 + 反向传播中ReduceScatter梯度 + apply部分梯度
+
 * Intro
   * **ZeRO**通过**三阶段内存优化**（优化器状态分区、梯度分区、参数分区），显著提升深度学习模型训练的内存效率，支持在现有硬件上训练超大规模模型（如万亿参数级别）。其**ZeRO-DP**消除了数据并行中的冗余内存，结合**ZeRO-R**优化激活内存和碎片管理，实现了**8 倍模型尺寸增长**和**10 倍训练速度提升**，并成功训练出世界最大的 17B 参数语言模型 Turing-NLG，同时保持易用性。
 
@@ -1721,6 +1728,8 @@ for i in range(num_layers):
   - **异构支持**：扩展至 CPU/TPU 集群。
 
 #### FSDP
+
+> https://pytorch.org/tutorials/intermediate/FSDP_tutorial.html
 
 #### DP & TP & PP
 
@@ -1985,6 +1994,11 @@ OneFlow架构
 * 静态图的优势：
   * 移除无用op、跨op优化、op fusion
 
+#### XLA
+
+* 常量折叠、公共表达式消除、死代码消除等经典编译优化
+* XLA 还支持Kernel Fusion，减少 Kernel Launch 成本和显存 IO 开销
+
 #### PyTorch 图优化
 
 * PyTorch JIT – fusing pointwise operations into one kernel has been key
@@ -1993,6 +2007,10 @@ OneFlow架构
   * NVFuser going beyond PyTorch in https://github.com/NVIDIA/Fuser and learning new things every week
   * NVFuser https://pytorch.org/blog/introducing-nvfuser-a-deep-learning-compiler-for-pytorch/
 * Today’s inductor / Triton based optimizations are also partly with that, but supports more complex ops
+
+##### Inductor
+
+https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747
 
 ##### Lightning Thunder
 

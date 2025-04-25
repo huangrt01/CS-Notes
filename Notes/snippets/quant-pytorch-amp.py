@@ -103,6 +103,9 @@ TORCH_LIBRARY_IMPL(myops, Autocast, m) {
 import torch
 from contextlib import nullcontext
 
+# todo(huangruiteng):
+# 支持scalar状态的load&save
+
 
 def nan_hook(self, inp, out):
   """
@@ -152,7 +155,8 @@ class AmpContext(object):
                dtype: torch.dtype = torch.bfloat16,
                grad_clip: float = 1000.0,
                enabled: bool = True,
-               debug: bool = False):
+               debug_fwd: bool = False,
+               debug_bwd: bool = False):
     self._model = model
     self._optim = optimizer
     self._dtype = dtype
@@ -161,8 +165,10 @@ class AmpContext(object):
     self._ctx = None
     self._scaler = None
     self._enabled = enabled
-    self._debug = debug
-    # torch.autograd.set_detect_anomaly(True)
+    self._debug_fwd = debug_fwd
+    self._debug = self._debug_fwd or debug_bwd
+    if debug_bwd:
+      torch.autograd.set_detect_anomaly(True)
 
     self._entered = False
     self._nan_found = False
@@ -199,9 +205,6 @@ class AmpContext(object):
           self._scaler = torch.amp.GradScaler('cuda', enabled=self._enabled)
     self._ctx.__enter__()
     self._entered = True
-    if self._nan_found:
-      for submodule in self._model.modules():
-        submodule.register_forward_hook(nan_hook)
     return self
 
   def __exit__(self, exc_type, exc_val, exc_tb):
@@ -212,7 +215,7 @@ class AmpContext(object):
   def zero_grad(self):
     self._optim.zero_grad(set_to_none=True)
 
-  def backward(self, losses: list[torch.Tensor] | torch.Tensor):
+  def backward(self, losses: list[torch.Tensor] | torch.Tensor, step: int):
     self.__exit__(None, None, None)
 
     if isinstance(losses, (list | tuple)):
@@ -220,9 +223,11 @@ class AmpContext(object):
     assert isinstance(losses, torch.Tensor)
     if torch.isnan(losses):
       if not self._nan_found:
-        print(f"{bcolors.FAIL}LOSS NAN FOUND{bcolors.ENDC}")
+        print(f"{bcolors.FAIL}LOSS NAN FOUND{bcolors.ENDC}, step: {step}")
         self._nan_found = True
-      if not self._debug:
+        for submodule in self._model.modules():
+          submodule.register_forward_hook(nan_hook)
+      if not self._debug_fwd:
         raise RuntimeError("LOSS NAN FOUND")
 
     if self._scaler is not None:
@@ -235,7 +240,7 @@ class AmpContext(object):
     # debug model parameters
     if self._debug:
       for name, param in self._model.named_parameters():
-        if param is not None:
+        if param is not None and not param.is_sparse:
           has_nan = torch.isnan(param).any()
           if has_nan:
             color = bcolors.FAIL
@@ -245,9 +250,7 @@ class AmpContext(object):
             print(
                 f'{color}value {name}: {param.min().item():.3e} ~ {param.max().item():.3e}\033[0m'
             )
-        if param.grad is not None and (
-            not name.startswith('embedding_dict')) and (not name.startswith(
-                'module.embedding_dict')):  # emb SparseTensor不支持max和min方法
+        if param.grad is not None and not param.grad.is_sparse:  # emb SparseTensor不支持max和min方法
           has_nan = torch.isnan(param.grad).any()
           if has_nan:
             color = bcolors.FAIL
@@ -264,11 +267,10 @@ class AmpContext(object):
       self._scaler.unscale_(self._optim)
     if self._grad_clip != 0.0:
       dense_params = (p for n, p in self._model.named_parameters()
-                      if not (n.startswith('embedding_dict') or
-                              n.startswith('module.embedding_dict')))
+                      if p.grad is not None and not p.grad.is_sparse)
       dense_params_iter = list(dense_params) if any(
           1 for _ in dense_params) else []
-      torch.nn.utils.clip_grad_norm_(dense_params_iter, self._grad_clip)
+      torch.nn.utils.clip_grad_norm_(dense_params_iter, max_norm=self._grad_clip, norm_type=2)
     if self._scaler is not None:
       self._scaler.step(self._optim)
       self._scaler.update()
@@ -276,6 +278,7 @@ class AmpContext(object):
       self._optim.step()
     if self._debug:
       print(f"AMP Debug Scaler State: {self._scaler.state_dict()}")
+
 
 
 ### example

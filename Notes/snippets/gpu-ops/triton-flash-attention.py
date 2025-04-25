@@ -22,17 +22,40 @@ Extra Credits:
 
 """
 code reading:
+- 基础写法：
+    - tl.make_block_ptr，order=(1, 0) 表示按行存储，order=(0, 1) 表示按列存储
+    - K_block_ptr = tl.advance(K_block_ptr, (0, lo))
+    - tl.trans(A)
 - forward
     - attn casual mask实现：tril: tri + lower; triu: tri + upper
     - assert HEAD_DIM_K in {16, 32, 64, 128, 256}, 确保放进shared memory
     - qk_scale *= 1.44269504 ： Triton 内核使用了 tl.math.exp2 （以 2 为底的指数）而不是标准的 exp （以 e 为底的指数）来计算 Softmax
-    - tl.make_block_ptr，order=(1, 0) 表示按行存储，order=(0, 1) 表示按列存储
     - 先load q: it will stay in SRAM throughout
     - 结构化的分离（由两个 if 实现）“makes it easier for compiler to schedule the two loops independently”
         让编译器更容易独立地调度这两个循环/计算阶段）。编译器可以更清晰地看到数据依赖关系，并分别优化每个阶段的指令执行和内存访问，
         而不需要处理一个混合了两种复杂逻辑（带掩码/不带掩码，处理不同范围的 K/V）的大循环。
 - backward
-    - BATCH * N_HEAD 作为grid的一维，充分并行    
+    - BATCH * N_HEAD 作为grid的一维，充分并行
+    - mask，dkdv的求解中，要对pT做，是未归一化的概率分布
+
+
+- _attn_fwd_inner
+    - STAGE == 1: 处理当前 Query 块（由 start_m 决定） 之前 的所有 Key/Value 块。
+    - STAGE == 2: 处理与当前 Query 块 对齐 的那个 Key/Value 块（即“对角线块”）。
+        - mask = offs_m[:, None] >= (start_n + offs_n[None, :])
+        - lo = tl.multiple_of(lo, BLOCK_M) : 
+    - STAGE == 3: 处理所有的 Key/Value 块，不应用任何因果掩码。
+    - 量化：p = p.to(tl.float16) acc = tl.dot(p, v, acc)，对QK做量化
+- _attn_bwd_dkdv
+    - Load m before computing qk to reduce pipeline stall.
+- _attn_bwd_dq
+    - dq += tl.dot(ds, tl.trans(kT))
+
+- TMA:
+    k = desc_k.load([offsetkv_y, 0]).T
+    qk = tl.dot(q, k)
+
+
 
 """
 
@@ -851,7 +874,7 @@ if __name__ == "__main__":
 ### 简化版 —— flash attn v1/v2
 
 @triton.jit
-def flash_attention_v1_kernel(
+def flash_attention_v2_kernel(
     # 输入指针
     q_ptr,      # Query 矩阵指针
     k_ptr,      # Key 矩阵指针
@@ -1048,7 +1071,7 @@ def flash_attention_v2(
     )
 
     # 启动 kernel 计算
-    flash_attention_v1_kernel[grid](
+    flash_attention_v2_kernel[grid](
         q, k, v, output,
         *q.stride(),      # (batch, heads, m_size, head_dim)
         *k.stride(),      # (batch, heads, n_size, head_dim)

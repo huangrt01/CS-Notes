@@ -376,6 +376,7 @@ with IO-Awareness
 ### 显存优化
 
 * ZeRO，参考 「MLSys.md」
+* 优化activation recomputation：https://arxiv.org/pdf/2205.05198
 
 
 

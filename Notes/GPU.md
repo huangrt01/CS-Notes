@@ -596,6 +596,10 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 * Parallel Thread Execution (PTX) is a low-level VM & instruction set
 * graphics driver translates PTX into executable binary code (SASS)
 
+#### Stream
+
+https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar.pdf
+
 #### Hopper
 
 * Thread Block Group的概念
@@ -788,6 +792,12 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
   * e.g. llm token by token效率低，需要batching
 * perf of parallel programs can vary dramatically based on input data characteristics
 * not all apps are "embarassingly parallel" - synchronization imposes overhead (waits)
+
+#### 充分利用 SM
+
+* 增大batch size
+
+
 
 #### SM效率
 

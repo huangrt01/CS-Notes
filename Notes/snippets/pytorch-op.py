@@ -115,6 +115,11 @@ https://pytorch.org/tutorials/advanced/python_custom_ops.html
 - 内存布局优化
 - 并行化策略
 
+### 融合op
+
+torch.addcmul
+torch.addmm
+
 
 ### argsort
 

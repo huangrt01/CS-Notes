@@ -89,6 +89,12 @@
     * CPU推导输出信息、创建输出tensor、定位算子
   * 核心：CPU给GPU提交任务，不等待，直接返回
 
+### 利用Stream
+
+![image-20250424023703685](./pytorch/image-20250424023703685.png)
+
+
+
 ## Autograd
 
 * Grad:  Jacobians left-multiplied by a vector,

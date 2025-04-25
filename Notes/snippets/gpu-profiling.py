@@ -73,6 +73,7 @@ with TimePytorchFunction(torch.square, b) as timer:
 ### time - 2
 
 # Timing utilities
+import gc, time
 start_time = None
 
 
@@ -82,12 +83,12 @@ def start_timer():
   torch.cuda.empty_cache()
   torch.cuda.reset_max_memory_allocated()
   torch.cuda.synchronize()
-  start_time = time.time()
+  start_time = time.perf_counter()
 
 
 def end_timer_and_print(local_msg):
   torch.cuda.synchronize()
-  end_time = time.time()
+  end_time = time.perf_counter()
   print("\n" + local_msg)
   print("Total execution time = {:.3f} sec".format(end_time - start_time))
   print("Max memory used by tensors = {} bytes".format(

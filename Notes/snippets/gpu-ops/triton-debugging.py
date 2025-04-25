@@ -9,6 +9,8 @@ TRITON_DEBUG=1
 
 tl.device_print("all_tasks_done:" ,all_tasks_done) # 第一个是str，后面全是tensor
 
+num_warps=1 也可能帮助
+
 
 
 ### interpret mode

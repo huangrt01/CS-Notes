@@ -32,6 +32,8 @@ def is_hip_cdna2():
 # CDNA2 devices use reduced precision fp16 and bf16 and flush input and output denormal values to zero.
 # Detailed info is at: https://pytorch.org/docs/stable/notes/numerical_accuracy.html#reduced-precision-fp16-and-bf16-gemms-and-convolutions-on-amd-instinct-mi200-devices
 RTOL = 1e-2 if is_hip_cdna2() else 0
+properties = driver.active.utils.get_device_properties(torch.device('cuda:0').index)
+NUM_SM = properties["multiprocessor_count"]
 
 
 def show_img(x, figsize=(4, 3), **kwargs):

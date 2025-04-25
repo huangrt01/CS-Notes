@@ -393,6 +393,12 @@ https://github.com/OpenNMT/OpenNMT-py/
   * 推理阶段的操作和训练阶段的解码器操作类似，但是训练阶段有目标序列的真实值作为输入来计算损失并进行反向传播训练，而推理阶段是根据之前生成的单词不断生成新的单词。
   * 在训练时，解码器的输入是已知的目标序列，在推理时，解码器的输入是逐步生成的单词序列。
 
+### 局限性
+
+* over-smoothing https://arxiv.org/abs/2202.08625
+  * 深层token间相似度增加
+  * 自回归+casual mask的非对称可以缓解
+
 ### Implementation
 
 * The Annotated Transformer https://nlp.seas.harvard.edu/annotated-transformer
@@ -425,6 +431,106 @@ https://github.com/OpenNMT/OpenNMT-py/
     * 运行时只跑2个专家网络
     * 相比GPT-3.5更像人脑
 * Additive Attention https://arxiv.org/abs/1409.0473
+
+## Bert
+
+> 完形填空的训练难度比NTP小
+
+* Transformer 具有 field reduce 能力，将 N 个 token reduce 成 M 个 token
+* [GELU](https://paperswithcode.com/method/gelu)
+  * GELUs are used in [GPT-3](https://paperswithcode.com/method/gpt-3), [BERT](https://paperswithcode.com/method/bert), and most other Transformers.
+* Layer Normalization
+  * The LayerNorm operator was first introduced in [BA2016]() as a way to **improve the performance of sequential models (e.g., Transformers) or neural networks with small batch size**
+  * 对比layernorm和BN
+    * LayerNorm 在特征维度上对单个样本进行归一化，不依赖 batch size，训练和推理行为一致，常用于 RNN、Transformer 等序列模型。
+    * BatchNorm 在 batch 维度上对channel进行归一化，对 batch size 敏感，训练和推理行为不同，常用于 CNN。
+
+![image-20241019021744575](./AI-Algorithms/bert-5434356.png)
+
+### Paper
+
+* Intro
+  * BERT: Bidirectional Encoder Representations from Transformers.
+  * task类型：sentence-level/paraphrasing/token-level
+  * 方法：feature-based and fine-tuning
+    *  In previous work, both approaches share the same objective function during pre-training, where they use unidirectional language models to learn general language representations.
+  * BERT addresses the previously mentioned uni-directional constraints by proposing a new pre-training objective:
+    * the “masked language model" (MLM)
+    * “next sentence prediction” task
+
+![image-20250102001058277](./AI-Algorithms/image-20250102001058277.png)
+
+![image-20250102001246772](./AI-Algorithms/image-20250102001246772.png)
+
+* 超参：
+  * BERTBASE: L=12, H=768, A=12, Total Parameters=110M
+  * BERTLARGE: L=24, H=1024, A=16, Total Parameters=340M
+  * In all cases we set the feed-forward/ﬁlter size to be 4H
+  * mask setting：
+    * mask 15%，只预测masked词
+  * training
+    * We train with batch size of 256 sequences (256
+      sequences * 512 tokens = 128,000 tokens/batch)
+      for 1,000,000 steps, which is approximately 40
+      epochs over the 3.3 billion word corpus.
+    * use Adam with learning rate of 1e-4, β1 = 0.9,
+      β2 = 0.999, L2 weight decay of 0.01，dropout 0.
+  * 微调
+    * Batch size: 16, 32
+    * Learning rate (Adam): 5e-5, 3e-5, 2e-5
+    * Number of epochs: 3, 4
+
+* 模型
+  * Emb初始化：We use WordPiece embeddings (Wu et al.,2016) with a 30,000 token vocabulary. We
+    denote split word pieces with ##
+  * 设计思想：
+    * masked的动机：看到两边，不泄露信息
+  * 问题1:训练和微调不一致
+    * 方案：8:1:1
+    * ![image-20250102001657033](./AI-Algorithms/image-20250102001657033.png)
+  * 问题2:每个batch只有15%的token被预测，训练代价大
+    * 效果收益更高
+  * 任务类型2:next sentence预测，一半对一半
+
+* 和GPT对比
+  *  GPT uses a sentence separator ([SEP]) and classifier token ([CLS]) which are only in-
+     troduced at fine-tuning time; BERT learns
+     [SEP], [CLS] and sentence A/B embeddings during pre-training
+  *  bert训练语料多、batch size大
+
+### model finetune
+
+* paper
+  * squad任务，学一个start和end vector预测start和end位置
+  * CoNLL 2003 Named Entity Recognition (NER) dataset
+  * swag任务，N选一
+    * 学一个V vector
+    * ![image-20250102002146508](./AI-Algorithms/image-20250102002146508.png)
+
+![image-20250102001936987](./AI-Algorithms/image-20250102001936987.png)
+
+* model finetune是基于BERT预训练模型强大的通用语义能力，使用具体业务场景的训练数据做finetune，从而针对性地修正网络参数，是典型的双阶段方法。（[BERT在美团搜索核心排序的探索和实践](https://zhuanlan.zhihu.com/p/158181085)）
+* 在BERT预训练模型结构相对稳定的情况下，算法工程师做文章的是模型的输入和输出。首先需要了解BERT预训练时输入和输出的特点，BERT的输入是词向量、段向量、位置向量的特征融合（embedding相加或拼接），并且有[CLS]开头符和[SEP]结尾符表示句间关系；输出是各个位置的表示向量。finetune的主要方法有双句分类、单句分类、问答QA、单句标注，区别在于输入是单句/双句；需要监督的输出是 开头符表示向量作为分类信息 或 结合分割符截取部分输出做自然语言预测。
+* 搜索中finetune的应用：model finetune应用于query-doc语义匹配任务，即搜索相关性问题和embedding服务。在召回and粗排之后，需要用BERT精排返回一个相关性分数，这一问题和语句分类任务有相似性。搜索finetune的手法有以下特点：
+  * 广泛挖掘有收益的finetune素材：有效的包括发布号embedding、文章摘要、作者名，训练手段包括直接输入、预处理。model finetune方法能在标注数据的基础上，利用更多的挖掘数据优化模型。
+  * 改造模型输入or输出
+    * 模型输入
+      * 简单的title+summary+username+query拼接
+      * 多域分隔：“考虑到title和summary对于query的相关性是类似的分布，username和query的相关性关联是潜在的。所以给user_name单独设了一个域，用sep分隔”
+    * 模型输出
+      * 门过滤机制，用某些表示向量的相应分数加权CLS的语句类型输出分
+      * 引入UE，直接和CLS输出向量concat
+  * 素材的进一步处理，引入无监督学习
+    * 在model finetune的有监督训练之前，利用text rank算法处理finetune素材，相当于利用无监督学习提升了挖掘数据 —— 喂入BERT的数据的质量。
+    * 截断摘要，实测有效
+  * Bert训练任务的设计方式对模型效果影响大
+    * 将finetune进一步分为两阶段，把质量较低、挖掘的数据放在第一阶段finetune，质量高的标注数据放在第二阶段finetune，优化finetune的整体效果。
+    * 这种递进的训练技巧在BERT中较常见，论文中也有将长度较短的向量放在第一阶段训练的方法。
+
+### 向量降维
+
+* 向量白化
+  * https://arxiv.org/pdf/2103.15316
 
 ## GPT
 
@@ -496,7 +602,11 @@ https://github.com/OpenNMT/OpenNMT-py/
     * 12288 -> 4*12288
     * Insight：512维存不下96层信息聚合，因此用12288维
 
-
+|      | N layers | Dim   | Head | Dim per Head |
+| ---- | -------- | ----- | ---- | ------------ |
+| 1.3B | 24       | 2048  | 16   | 128          |
+| 13B  | 40       | 5120  | 40   | 128          |
+| 175B | 96       | 12288 | 96   | 128          |
 
 ## GPT-3.5 (ChatGPT)
 
@@ -613,6 +723,27 @@ https://github.com/OpenNMT/OpenNMT-py/
 ### Evaluation
 
 * lm-evaluation-harness: https://github.com/EleutherAI/lm-evaluation-harness
+
+## MoE
+
+> 思路：扩参数量，保Flops不变
+
+* Intro
+  * https://huggingface.co/blog/moe
+
+### Paper
+
+#### SoftMoE
+
+> google paper
+
+* 对于输入的$$N$$个 tokens 通过线性组合（Dispatch）得到$$S$$个 slot，由$$E$$个 Expert 均匀处理$$S$$个 slot 后再映射回（Combine）$$N$$个 tokens，该方案可以看作是某种Merge Tokens的思想。当$$S<N$$可显著减少 FLOPS，同时可以通过 Expert 的数目来控制参数量。
+  * S == E 时，理解为 Merge Tokens
+
+#### HardMoE
+
+* N == S，不再对输入tokens进行dispatch，PertokensFFN
+  * 根据语义信息分配token
 
 
 
@@ -1008,6 +1139,227 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
   * 图表问答生成：ChartLlama-code
 
 ![image-20241207213052536](./AI-Algorithms/image-20241207213052536.png)
+
+## LRM (Large Recommendation Model)
+
+> Todo:
+>
+> wukong https://arxiv.org/abs/2403.02545
+
+### Intro
+
+* 业界：
+  * meta新闻：https://www.cnbc.com/2024/03/06/facebook-working-on-single-ai-model-to-power-all-video-recommendations.html
+
+### 长序列建模
+
+> Data->Sparse->Token->Dense
+
+### 生成式
+
+#### HLLM: Enhancing Sequential Recommendations via Hierarchical Large Language Models for Item and User Modeling
+
+> https://github.com/bytedance/HLLM/tree/main
+>
+> 思路：Item LLM和User LLM一起训
+>
+> 模型1: ItemEmb=F(Item)
+>
+> 模型2: UserProfile=G(List[ItemEmb])
+
+* Intro
+  * three critical questions remain under-explored:
+    * firstly, the real value of LLMs’ pre-trained weights, often considered to en-
+      capsulate world knowledge;
+    * secondly, the necessity of finetuning for recommendation tasks;
+    * lastly, whether LLMs can exhibit the same scalability benefits in recommendation systems as they do in other domains.
+
+![image-20241228023941859](./AI-Algorithms/image-20241228023941859.png)
+
+* Item LLM
+  * Inspired by previous works (Devlin 2018; Neelakantan et al. 2022), a special
+    token [ITEM] is added at the end of the item’s text descrip-
+    tion to extract features.
+* User LLM
+  * discard the word embeddings from
+    the pre-trained LLM but retain all other pre-trained weights.
+    Experiments show that these pre-trained weights are very
+    helpful for reasoning user interests.
+
+* 训练
+  * 生成式：本质上是生成一个embedding
+    * InfoNCE
+    * ![image-20241228124429924](./AI-Algorithms/image-20241228124429924.png)
+    * s is the similarity function with a learnable temper-
+      ature parameter
+  * 判别式
+    * ![image-20241228124550514](./AI-Algorithms/image-20241228124550514.png)
+    * ![image-20241228124712454](./AI-Algorithms/image-20241228124712454.png)
+  * pipeline：
+    * 先一起训：user seq len：150
+    * 单独训User LLM：seq len 1000
+  * ![image-20241228132412134](./AI-Algorithms/image-20241228132412134.png)
+* 相比HSTU的改动：
+  * the model architecture is
+    upgraded to large language models with pre-trained weights,
+    and the input features are changed from IDs to text-input
+    LLM features
+
+* 参数：
+
+  * LLM的pretrained token num：3T
+  * TinyLLM：1.1B Params
+
+* 实验结论：
+
+  * SFT mainly enhances instruction-following abilities, which
+    do not aid in recommendation tasks (Zhou et al. 2024)
+  * data scaling能力比HSTU强
+    * ![image-20241228131044343](./AI-Algorithms/image-20241228131044343.png)
+
+  * 附录：
+    * [ITEM] Token的方式效果比mean pooling好
+    * LLM Emb + Timestamp效果非常好
+      * ![image-20241228133059538](./AI-Algorithms/image-20241228133059538.png)
+    * 把ItemLLM Emb和ItemId Emb加起来，没效果，估计是text能丰富表达Item
+
+#### [Meta] [HSTU] Actions Speak Louder than Words: Trillion-Parameter Sequential Transducers for Generative Recommendations
+
+https://arxiv.org/pdf/2402.17152v1
+
+> - 算法创新点：改变了特征排列（序列构造方式）将用户行为视作一种新模态、将target item做进了模型底座
+> - 工程创新点：序列采样、 M-FALCON、激进的kernel fusion、casual mask（KV cache）
+
+* Intro
+  * reformulate recommendation problems as sequential transduction tasks within a generative modeling framework
+  * HSTU
+  * power-law of training compute
+* 分析难以scale的原因
+  * heterogeneous features的重要性大
+  * A billion-scale dynamic vocabulary，候选多
+  * 成本大：recommendation systems need to handle a few orders of magnitude more tokens per day than what language models process over 1-2 months.
+    * GPT-3 was trained on a total of 300B tokens over a period of 1-2 months with thousands of GPUs
+
+* In this work, we treat user actions as a new modality in generative modeling
+  * core ranking and retrieval tasks in industrial-scale recommenders can be cast as generative modeling problems given an appropriate new feature space
+  * this paradigm enables us to systematically leverage redundancies in features, training, and inference to improve efficiency
+  * --> **three orders of magnitude more computationally complex** than prior state-of-the-art,
+
+* Recommendation as Sequential Transduction Tasks: From DLRMs to GRs
+  * Generative Recommenders (GRs)
+    * 本质上似乎是用transformer学一个hidden embedding
+  * sparse features：
+    * **Target item从底层引入**
+  * dense features:
+    * an important observation is that the categorical features (e.g., item topics, locations) over which we perform these aggregations are already sequentialized and encoded in GRs. Hence, we can remove numerical features in GRs given a sufficiently expressive sequential transduction architecture coupled with a target-aware formulation
+  * 顺序转换任务
+    * 按时间merge主序列和user profile序列
+  * 辅助时间序列 - 随时间缓慢变化的时间序列
+    * 只在变的时候merge进去
+  * 当下一个token表示与参与无关的(non-engagement related)分类特征（例如人口统计学特征）时，$$y_i$$ 未定义, 对于这些情况，我们将 $$m_i$$ 设置为 0。
+  * 精排：**内容位置的预测**转换为**多任务预测**
+    * casual mask: https://zhuanlan.zhihu.com/p/698447429
+
+![image-20240716221553540](./AI-Algorithms/hstu1.png)
+
+* HSTU
+  * Pointwise aggregated attention
+    * HSTU在Transformer中采用了一种新的点对点（pointwise）聚集注意力机制，而不是softmax注意力。这是出于两个因素的考虑。
+    * 在推荐系统中，与目标相关的先前数据点的**数量**作为一个强大的特征，指示用户偏好的强度，在经过softmax归一化后很难捕捉到。这一点很关键，因为我们需要预测参与度的强度，例如在给定item上花费的时间，以及item的相对顺序，再例如预测候选的排序以最大化AUC。
+    * 虽然softmax激活函数对噪声具有鲁棒性，但它不太适合流式设置中的非平稳词汇表。
+  * 通过随机长度（Stochastic Length，SL）进一步从算法上增加用户历史序列的稀疏性
+    * 对用户序列做采样：
+      * 一种说法：在一个user的request/session结束时，以1/n的概率采样这个user，其中n是这个user的序列长度。
+      * 另一种说法：一个session采样一次
+
+![image-20240716222635364](./AI-Algorithms/hstu2.png)
+
+* 工程优化
+  * 优化activations的内存占用
+  * 单kernel
+  * M-FALCON 
+    * Microbatched-Fast Attention Leveraging Cacheable OperatioNs
+    * to perform inference for m candidates with an input sequence size of n
+    * We optionally divide the overall m candidates into ⌈m/bm⌉ microbatches of size bm to leverage encoder-level KV caching (Pope et al., 2022) either across forward passes to reduce cost, or across requests to minimize tail latency
+* 实验insight
+  * 生成式推荐模型与LLM一样遵循scaling law，但传统推荐模型不遵循
+  * 同等参数量的情况下，在参数达到一定规模的threshold后，生成式推荐模型才能有比传统推荐模型更好的效果。精排模型需要比召回模型更大的threshold(约100x)
+  * Scaling law的最大配置时：8,192 sequence length, 1,024 embedding dimension, 24 layers of HSTU。**对精排模型，约在最大配置的1/10处，GR表现超过传统模型，对应的配置约为：4000 sequence length, 1,024 embedding dimension, 6 layers**
+* Question
+  * 用户token数量n_i 和用户的时序行为数量（上张图中，老推荐模型的时序样本数量）是什么关系？
+  * 为什么在用户session结束时生成样本，相当于做采样？
+
+
+
+
+
+### 多模态
+
+#### [Where to Go Next for Recommender Systems? ID- vs. Modality-based Recommender Models Revisited](https://arxiv.org/pdf/2303.13835)
+
+* Intro：
+  * 结论是：MoRec is already comparable to its IDRec counterpart with an expensive end-to-end training method, **even for warm item recommendation**
+  * https://github.com/westlake-repl/IDvs.MoRec
+  * Q(i): Equipped with strong modality encoders (ME), can
+    MoRec be comparable to or even surpass IDRec in regular, especially in warm-start item recommendation scenario?
+    * two-tower based DSSM [24, 50] and session-based SASRec [25])，公平的实验setting对比
+  * Q(ii): If Q(i) is yes, can the recent technical advances devel-
+    oped in NLP and CV fields translate into accuracy improve- ment in MoRec when using text and visual features? 
+  * Q(iii): Are the representations learned by these founda-
+    tion models as general as claimed? How can we effectively use item modality representations derived from an NLP or CV encoder network?
+
+* 算法：
+  * User表征：User Emb、User BHV、User Profile
+  * Item表征：Item Emb、模态Emb
+  * 基于DSSM和SASREC研究IDRec和MoRec
+    * SASRec is a well-known se- quential recommendation model based on multi-head self-attention (MHSA) [59] which describes a user by her interacted item ID sequence.
+* 结论：
+  * seq2seq训练 + SASREC相比双塔，更能发挥MoRec的能力
+  * E2E训练效果比two stage好很多
+    * “唯一The good thing” is that by proper adaption (i.e., TS-DNN), TS-based MoRec have some potential to compete with E2E MoRec for text recommendation in the future (16.66 vs 18.23).
+    * representation fea- tures are not universal enough, at least for item recommendation.
+
+![image-20241003233046500](./AI-Algorithms/morec.png)
+
+* 关于Training Cost：
+  * the best MoRec (with SASRec as user encoder and Swin-B as ME) takes an astonishing more than 100x compute and training time than IDRec
+  * inference time差不多
+  * 优化思路：
+    * 只finetune top-layer
+* 其它算法相关：
+  * extra pre-training：在e2e morec的基础上，比较难做效果
+  * Combing ID & modality features：效果差
+  * it is sometimes necessary to set different learning rate for item ME and other modules. This may be because item ME has been pre-trained on NLP and CV datasets before, and its learning stride may be different from other modules trained from scratch.
+
+#### Exploring the Upper Limits of Text-Based Collaborative Filtering Using Large Language Models: Discoveries and Insights
+
+* Intro
+  * Text-based collaborative filtering (TCF)
+  * We examine whether these extremely large LMs could enable a universal item representation for the recommendation task.
+
+* 算法：
+  * loss：either be a pairwise BPR [38] loss or a cross-entropy classification loss [54].
+
+* 结论
+  * Q1: How does the recommender system’s performance respond to the continuous increase in the item encoder’s size? Is the performance limits attainable at the scale of hundreds of billions? 
+    * sasrec效果好于DSSM
+    * the TCF model with a 175B parameter LM may not have reached its performance ceiling
+  * Q2: Can super-large LMs, such as GPT-3 with 175-billion parameters, generate universal text representations?
+    * even the item representation learned by an extremely large LM (e.g., GPT-3) may not result in a universal representation, at least not for the text
+    * ![image-20241006172858506](./AI-Algorithms/tcf-result.png)
+    * Finetune LM效果好（top two layers）![image-20241006173055402](./AI-Algorithms/image-20241006173055402.png)
+  * Q3: Can recommender models with a 175-billion parameter LM as the item encoder easily beat the simplest ID embedding based models (IDCF), especially for warm item recommendation?
+    * ![image-20241006173158353](./AI-Algorithms/tcf-result2.png)
+  * Q4: How close is the TCF paradigm to a universal recommender model?
+    * while TCF models with large LMs do exhibit a certain degree of transfer learning capability, they still fall significantly short of being a universal recommender model, as we had initially envisioned
+    * Table 3
+    * For a universal recommender system model, not only should item representations be transferable, **but also the matching relationship between users and items needs to be transferable.** However, the matching relationship is closely related to the exposure strategy of the specific recommender system.
+  * Q5: Will the classic TCF paradigm be replaced by a recent prompt engineering based rec- ommendation method that utilizes ChatGPT (called ChatGPT4Rec)?
+
+![image-20241006171904133](./AI-Algorithms/TCF.png)
+
+* 其它：
+  * appendix有sasrec在不同数据集的训练超参
 
 
 
@@ -2749,72 +3101,6 @@ preference. The most preferred recommendation item should be listed first. The o
 * Evaluation
   * 倒数第一个：test； 倒数第二个：validation
 
-#### HLLM: Enhancing Sequential Recommendations via Hierarchical Large Language Models for Item and User Modeling
-
-> https://github.com/bytedance/HLLM/tree/main
->
-> 思路：Item LLM和User LLM一起训
->
-> 模型1: ItemEmb=F(Item)
->
-> 模型2: UserProfile=G(List[ItemEmb])
-
-* Intro
-  * three critical questions remain under-explored:
-    * firstly, the real value of LLMs’ pre-trained weights, often considered to en-
-      capsulate world knowledge;
-    * secondly, the necessity of finetuning for recommendation tasks;
-    * lastly, whether LLMs can exhibit the same scalability benefits in recommendation systems as they do in other domains.
-
-![image-20241228023941859](./AI-Algorithms/image-20241228023941859.png)
-
-* Item LLM
-  * Inspired by previous works (Devlin 2018; Neelakantan et al. 2022), a special
-    token [ITEM] is added at the end of the item’s text descrip-
-    tion to extract features.
-* User LLM
-  * discard the word embeddings from
-    the pre-trained LLM but retain all other pre-trained weights.
-    Experiments show that these pre-trained weights are very
-    helpful for reasoning user interests.
-
-* 训练
-  * 生成式：本质上是生成一个embedding
-    * InfoNCE
-    * ![image-20241228124429924](./AI-Algorithms/image-20241228124429924.png)
-    * s is the similarity function with a learnable temper-
-      ature parameter
-  * 判别式
-    * ![image-20241228124550514](./AI-Algorithms/image-20241228124550514.png)
-    * ![image-20241228124712454](./AI-Algorithms/image-20241228124712454.png)
-  * pipeline：
-    * 先一起训：user seq len：150
-    * 单独训User LLM：seq len 1000
-  * ![image-20241228132412134](./AI-Algorithms/image-20241228132412134.png)
-* 相比HSTU的改动：
-  * the model architecture is
-    upgraded to large language models with pre-trained weights,
-    and the input features are changed from IDs to text-input
-    LLM features
-
-* 参数：
-
-  * LLM的pretrained token num：3T
-  * TinyLLM：1.1B Params
-
-* 实验结论：
-
-  * SFT mainly enhances instruction-following abilities, which
-    do not aid in recommendation tasks (Zhou et al. 2024)
-  * data scaling能力比HSTU强
-    * ![image-20241228131044343](./AI-Algorithms/image-20241228131044343.png)
-
-  * 附录：
-    * [ITEM] Token的方式效果比mean pooling好
-    * LLM Emb + Timestamp效果非常好
-      * ![image-20241228133059538](./AI-Algorithms/image-20241228133059538.png)
-    * 把ItemLLM Emb和ItemId Emb加起来，没效果，估计是text能丰富表达Item
-
 #### [LLMRec] Is ChatGPT a Good Recommender ? A Preliminary Study
 
 > https://github.com/williamliujl/LLMRec
@@ -2857,146 +3143,6 @@ preference. The most preferred recommendation item should be listed first. The o
     * gpt有bias，更容易推荐prompt中排在前面和后面的item
 
 ![image-20241003202813843](./AI-Algorithms/llmrec1.png)
-
-
-
-
-
-#### [Where to Go Next for Recommender Systems? ID- vs. Modality-based Recommender Models Revisited](https://arxiv.org/pdf/2303.13835)
-
-* Intro：
-  * 结论是：MoRec is already comparable to its IDRec counterpart with an expensive end-to-end training method, **even for warm item recommendation**
-  * https://github.com/westlake-repl/IDvs.MoRec
-  * Q(i): Equipped with strong modality encoders (ME), can
-    MoRec be comparable to or even surpass IDRec in regular, especially in warm-start item recommendation scenario?
-    * two-tower based DSSM [24, 50] and session-based SASRec [25])，公平的实验setting对比
-  * Q(ii): If Q(i) is yes, can the recent technical advances devel-
-    oped in NLP and CV fields translate into accuracy improve- ment in MoRec when using text and visual features? 
-  * Q(iii): Are the representations learned by these founda-
-    tion models as general as claimed? How can we effectively use item modality representations derived from an NLP or CV encoder network?
-
-* 算法：
-  * User表征：User Emb、User BHV、User Profile
-  * Item表征：Item Emb、模态Emb
-  * 基于DSSM和SASREC研究IDRec和MoRec
-    * SASRec is a well-known se- quential recommendation model based on multi-head self-attention (MHSA) [59] which describes a user by her interacted item ID sequence.
-* 结论：
-  * seq2seq训练 + SASREC相比双塔，更能发挥MoRec的能力
-  * E2E训练效果比two stage好很多
-    * “唯一The good thing” is that by proper adaption (i.e., TS-DNN), TS-based MoRec have some potential to compete with E2E MoRec for text recommendation in the future (16.66 vs 18.23).
-    * representation fea- tures are not universal enough, at least for item recommendation.
-
-![image-20241003233046500](./AI-Algorithms/morec.png)
-
-* 关于Training Cost：
-  * the best MoRec (with SASRec as user encoder and Swin-B as ME) takes an astonishing more than 100x compute and training time than IDRec
-  * inference time差不多
-  * 优化思路：
-    * 只finetune top-layer
-* 其它算法相关：
-  * extra pre-training：在e2e morec的基础上，比较难做效果
-  * Combing ID & modality features：效果差
-  * it is sometimes necessary to set different learning rate for item ME and other modules. This may be because item ME has been pre-trained on NLP and CV datasets before, and its learning stride may be different from other modules trained from scratch.
-
-#### Exploring the Upper Limits of Text-Based Collaborative Filtering Using Large Language Models: Discoveries and Insights
-
-* Intro
-  * Text-based collaborative filtering (TCF)
-  * We examine whether these extremely large LMs could enable a universal item representation for the recommendation task.
-
-* 算法：
-  * loss：either be a pairwise BPR [38] loss or a cross-entropy classification loss [54].
-
-* 结论
-  * Q1: How does the recommender system’s performance respond to the continuous increase in the item encoder’s size? Is the performance limits attainable at the scale of hundreds of billions? 
-    * sasrec效果好于DSSM
-    * the TCF model with a 175B parameter LM may not have reached its performance ceiling
-  * Q2: Can super-large LMs, such as GPT-3 with 175-billion parameters, generate universal text representations?
-    * even the item representation learned by an extremely large LM (e.g., GPT-3) may not result in a universal representation, at least not for the text
-    * ![image-20241006172858506](./AI-Algorithms/tcf-result.png)
-    * Finetune LM效果好（top two layers）![image-20241006173055402](./AI-Algorithms/image-20241006173055402.png)
-  * Q3: Can recommender models with a 175-billion parameter LM as the item encoder easily beat the simplest ID embedding based models (IDCF), especially for warm item recommendation?
-    * ![image-20241006173158353](./AI-Algorithms/tcf-result2.png)
-  * Q4: How close is the TCF paradigm to a universal recommender model?
-    * while TCF models with large LMs do exhibit a certain degree of transfer learning capability, they still fall significantly short of being a universal recommender model, as we had initially envisioned
-    * Table 3
-    * For a universal recommender system model, not only should item representations be transferable, **but also the matching relationship between users and items needs to be transferable.** However, the matching relationship is closely related to the exposure strategy of the specific recommender system.
-  * Q5: Will the classic TCF paradigm be replaced by a recent prompt engineering based rec- ommendation method that utilizes ChatGPT (called ChatGPT4Rec)?
-
-![image-20241006171904133](./AI-Algorithms/TCF.png)
-
-* 其它：
-  * appendix有sasrec在不同数据集的训练超参
-
-
-
-#### [Meta] [HSTU] Actions Speak Louder than Words: Trillion-Parameter Sequential Transducers for Generative Recommendations
-
-https://arxiv.org/pdf/2402.17152v1
-
-> - 算法创新点：改变了特征排列（序列构造方式）将用户行为视作一种新模态、将target item做进了模型底座
-> - 工程创新点：序列采样、 M-FALCON、激进的kernel fusion、casual mask（KV cache）
-
-* Intro
-  * reformulate recommendation problems as sequential transduction tasks within a generative modeling framework
-  * HSTU
-  * power-law of training compute
-* 分析难以scale的原因
-  * heterogeneous features的重要性大
-  * A billion-scale dynamic vocabulary，候选多
-  * 成本大：recommendation systems need to handle a few orders of magnitude more tokens per day than what language models process over 1-2 months.
-    * GPT-3 was trained on a total of 300B tokens over a period of 1-2 months with thousands of GPUs
-
-* In this work, we treat user actions as a new modality in generative modeling
-  * core ranking and retrieval tasks in industrial-scale recommenders can be cast as generative modeling problems given an appropriate new feature space
-  * this paradigm enables us to systematically leverage redundancies in features, training, and inference to improve efficiency
-  * --> **three orders of magnitude more computationally complex** than prior state-of-the-art,
-
-* Recommendation as Sequential Transduction Tasks: From DLRMs to GRs
-  * Generative Recommenders (GRs)
-    * 本质上似乎是用transformer学一个hidden embedding
-  * sparse features：
-    * **Target item从底层引入**
-  * dense features:
-    * an important observation is that the categorical features (e.g., item topics, locations) over which we perform these aggregations are already sequentialized and encoded in GRs. Hence, we can remove numerical features in GRs given a sufficiently expressive sequential transduction architecture coupled with a target-aware formulation
-  * 顺序转换任务
-    * 按时间merge主序列和user profile序列
-  * 辅助时间序列 - 随时间缓慢变化的时间序列
-    * 只在变的时候merge进去
-  * 当下一个token表示与参与无关的(non-engagement related)分类特征（例如人口统计学特征）时，$$y_i$$ 未定义, 对于这些情况，我们将 $$m_i$$ 设置为 0。
-  * 精排：**内容位置的预测**转换为**多任务预测**
-    * casual mask: https://zhuanlan.zhihu.com/p/698447429
-
-![image-20240716221553540](./AI-Algorithms/hstu1.png)
-
-* HSTU
-  * Pointwise aggregated attention
-    * HSTU在Transformer中采用了一种新的点对点（pointwise）聚集注意力机制，而不是softmax注意力。这是出于两个因素的考虑。
-    * 在推荐系统中，与目标相关的先前数据点的**数量**作为一个强大的特征，指示用户偏好的强度，在经过softmax归一化后很难捕捉到。这一点很关键，因为我们需要预测参与度的强度，例如在给定item上花费的时间，以及item的相对顺序，再例如预测候选的排序以最大化AUC。
-    * 虽然softmax激活函数对噪声具有鲁棒性，但它不太适合流式设置中的非平稳词汇表。
-  * 通过随机长度（Stochastic Length，SL）进一步从算法上增加用户历史序列的稀疏性
-    * 对用户序列做采样：
-      * 一种说法：在一个user的request/session结束时，以1/n的概率采样这个user，其中n是这个user的序列长度。
-      * 另一种说法：一个session采样一次
-
-![image-20240716222635364](./AI-Algorithms/hstu2.png)
-
-* 工程优化
-  * 优化activations的内存占用
-  * 单kernel
-  * M-FALCON 
-    * Microbatched-Fast Attention Leveraging Cacheable OperatioNs
-    * to perform inference for m candidates with an input sequence size of n
-    * We optionally divide the overall m candidates into ⌈m/bm⌉ microbatches of size bm to leverage encoder-level KV caching (Pope et al., 2022) either across forward passes to reduce cost, or across requests to minimize tail latency
-* 实验insight
-  * 生成式推荐模型与LLM一样遵循scaling law，但传统推荐模型不遵循
-  * 同等参数量的情况下，在参数达到一定规模的threshold后，生成式推荐模型才能有比传统推荐模型更好的效果。精排模型需要比召回模型更大的threshold(约100x)
-  * Scaling law的最大配置时：8,192 sequence length, 1,024 embedding dimension, 24 layers of HSTU。**对精排模型，约在最大配置的1/10处，GR表现超过传统模型，对应的配置约为：4000 sequence length, 1,024 embedding dimension, 6 layers**
-* Question
-  * 用户token数量n_i 和用户的时序行为数量（上张图中，老推荐模型的时序样本数量）是什么关系？
-  * 为什么在用户session结束时生成样本，相当于做采样？
-
-
 
 #### GPT4Rec: A Generative Framework for Personalized Recommendation and User Interests Interpretation
 

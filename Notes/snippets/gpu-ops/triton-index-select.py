@@ -16,47 +16,24 @@ NUM_SM = properties["multiprocessor_count"]
 
 
 @triton.jit
-def index_select_fwd(
-    unique_values,
-    indices,
-    output,
-    num_rows: int,
-    num_cols: int,
-    num_indices: int,
-    BLOCK_SIZE: tl.constexpr,
-):
-  pid = tl.program_id(axis=0)
-  off_m = pid * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
-  indices = tl.load(indices + off_m, mask=off_m < num_indices, other=-1)
-  row_mask = (indices >= 0) & (indices < num_rows) & (off_m < num_indices)
-
-  for i in range(num_cols):
-    block_unique_values = tl.load(unique_values + indices[:, None] * num_cols +
-                                  i,
-                                  mask=row_mask[:, None])
-    tl.store(
-        output + off_m[:, None] * num_cols + i,
-        value=block_unique_values,
-        mask=row_mask[:, None],
-    )
-
-
-# impl1: cannot work
-# @triton.autotune(configs=[
-# triton.Config({'BLOCK_SIZE': 16}, num_warps=2),
-# triton.Config({'BLOCK_SIZE': 16}, num_warps=4),
-# triton.Config({'BLOCK_SIZE': 32}, num_warps=2),
-# triton.Config({'BLOCK_SIZE': 64}, num_warps=2),
-# triton.Config({'BLOCK_SIZE': 64}, num_warps=4),
-#     triton.Config({'BLOCK_SIZE': 128}, num_warps=4),
-#     triton.Config({'BLOCK_SIZE': 256}, num_warps=4),
-#     triton.Config({'BLOCK_SIZE': 512}, num_warps=4),
-#     triton.Config({'BLOCK_SIZE': 1024}, num_warps=4),
-#     triton.Config({'BLOCK_SIZE': 64}, num_warps=8),
-#     triton.Config({'BLOCK_SIZE': 128}, num_warps=8),
-#     triton.Config({'BLOCK_SIZE': 256}, num_warps=8),
-# ],
-#                  key=['num_indices', 'num_cols', 'num_rows'])
+def index_select_fwd(unique_values, indices, output, num_rows: int,
+                     num_cols: int, num_indices: int,
+                     BLOCK_M_SIZE: tl.constexpr, BLOCK_N_SIZE: tl.constexpr):
+  # unique_values: shape (num_rows, num_cols)
+  pid_m = tl.program_id(axis=0)
+  pid_n = tl.program_id(axis=1)
+  off_m = pid_m * BLOCK_M_SIZE + tl.arange(0, BLOCK_M_SIZE)
+  off_n = pid_n * BLOCK_N_SIZE + tl.arange(0, BLOCK_N_SIZE)
+  index_data = tl.load(indices + off_m, mask=off_m < num_indices, other=-1)
+  row_mask = (index_data >= 0) & (index_data < num_rows)
+  col_mask = (off_n < num_cols)
+  mask = row_mask[:, None] & col_mask[None, :]
+  block_unique_values = tl.load(unique_values + index_data[:, None] * num_cols +
+                                off_n[None, :],
+                                mask=mask)
+  tl.store(output + off_m[:, None] * num_cols + off_n[None, :],
+           value=block_unique_values,
+           mask=mask)
 
 
 def _index_select_forward_common(unique_values: torch.Tensor,
@@ -81,17 +58,19 @@ def _index_select_forward_common(unique_values: torch.Tensor,
   num_indices = indices.numel()
 
   if num_indices > 0 and num_rows > 0 and num_cols > 0:
-    FWD_BLOCK_SIZE = min(128, triton.next_power_of_2(num_indices))
-    grid = ((num_indices + FWD_BLOCK_SIZE - 1) // FWD_BLOCK_SIZE,)
-    index_select_fwd[grid](
-        unique_values,
-        indices,
-        output,
-        num_rows,
-        num_cols,
-        num_indices,
-        BLOCK_SIZE=FWD_BLOCK_SIZE,
-    )
+    BLOCK_M_SIZE, BLOCK_N_SIZE = 128, min(128,
+                                          triton.next_power_of_2(num_indices))
+    grid = ((num_indices + BLOCK_M_SIZE - 1) // BLOCK_M_SIZE,
+            (num_cols + BLOCK_N_SIZE - 1) // BLOCK_N_SIZE)
+    index_select_fwd[grid](unique_values,
+                           indices,
+                           output,
+                           num_rows,
+                           num_cols,
+                           num_indices,
+                           BLOCK_M_SIZE=BLOCK_M_SIZE,
+                           BLOCK_N_SIZE=BLOCK_N_SIZE,
+                           num_warps=4)
   else:
     logging.info(
         f"IndexSelect fwd skipped: num_indices={num_indices}, num_rows={num_rows}, num_cols={num_cols}"
@@ -581,59 +560,6 @@ class IndexSelect_TritonBatchLock(torch.autograd.Function):
     return grad_unique_values, None
 
 
-class IndexSelect_NativeIndexAdd(torch.autograd.Function):
-
-  @staticmethod
-  @custom_fwd(device_type="cuda", cast_inputs=torch.float32)
-  def forward(ctx, unique_values: torch.Tensor, indices: torch.Tensor):
-    output, num_rows, num_cols, num_indices = _index_select_forward_common(
-        unique_values, indices)
-    ctx.save_for_backward(indices)
-    ctx.input_shape = unique_values.shape
-    ctx.input_dtype = unique_values.dtype
-    ctx.input_device = unique_values.device
-    return output
-
-  @staticmethod
-  @custom_bwd(device_type="cuda")
-  def backward(ctx, *grad_outputs: list[torch.Tensor]):
-    (indices,) = ctx.saved_tensors
-    grad_output = grad_outputs[0].contiguous()
-    grad_unique_values = torch.zeros(ctx.input_shape,
-                                     dtype=ctx.input_dtype,
-                                     device=ctx.input_device)
-
-    # indices [num_indices] or [B, num_indices], grad_unique_values [N, D], grad_output [num_indices, D] or [B, num_indices, D]
-
-    # Flatten indices and grad_output if they are batched
-    if indices.dim() > 1:
-      indices_flat = indices.flatten()
-      # Reshape grad_output to (B * num_indices, D)
-      grad_output_flat = grad_output.reshape(-1, grad_output.shape[-1])
-    else:
-      indices_flat = indices
-      grad_output_flat = grad_output
-
-    # Get unique indices and their inverse mapping from the flattened indices
-    unique_idx, inverse_idx = torch.unique(indices_flat,
-                                           return_inverse=True,
-                                           return_counts=False)
-
-    # Sum gradients for each unique index using flattened grad_output
-    # summed_grads shape: (num_unique_indices, D)
-    summed_grads = torch.zeros(
-        len(unique_idx),
-        grad_output_flat.
-        shape[-1],  # Use the last dim (D) from flattened grad_output
-        dtype=grad_output_flat.dtype,
-        device=grad_output_flat.device,
-    )
-    summed_grads.index_add_(0, inverse_idx, grad_output_flat)
-    grad_unique_values[unique_idx] = summed_grads
-
-    return grad_unique_values, None
-
-
 class IndexSelect_NativeScatterAdd(torch.autograd.Function):
 
   @staticmethod
@@ -888,7 +814,8 @@ class IndexSelect_TritonSorted(torch.autograd.Function):
     return grad_unique_values, None
 
 
-index_select_torch_native_index_add = IndexSelect_NativeIndexAdd.apply
+index_select_torch = lambda unique_values, indices: torch.index_select(
+    unique_values, 0, indices)
 index_select_torch_native_scatter_add = IndexSelect_NativeScatterAdd.apply
 index_select_torch_compiled = torch.compile(
     index_select_torch_native_scatter_add)
