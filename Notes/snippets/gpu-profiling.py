@@ -91,8 +91,8 @@ def end_timer_and_print(local_msg):
   end_time = time.perf_counter()
   print("\n" + local_msg)
   print("Total execution time = {:.3f} sec".format(end_time - start_time))
-  print("Max memory used by tensors = {} bytes".format(
-      torch.cuda.max_memory_allocated()))
+  print("Max memory used by tensors = {} MB, reserved = {} MB".format(
+      torch.cuda.max_memory_allocated() // 1e6, torch.cuda.max_memory_reserved() // 1e6))
 
 ### set seed
 
@@ -126,11 +126,26 @@ prof.export_chrome_trace("trace.json")
 
 ### 显存
 
-def print_peak_memory(prefix, device):
-    if device == 0:
-        print(f"{prefix}: {torch.cuda.max_memory_allocated(device) // 1e6}MB ")
+https://pytorch.org/memory_viz
+
+import torch
 
 torch.cuda.memory._record_memory_history()
+torch.cuda.reset_max_memory_allocated() # 可传入device
+
+with torch.inference_mode():
+    shape = [256, 1024, 1024, 1]
+    x1 = torch.randn(shape, device="cuda:0")
+    x2 = torch.randn(shape, device="cuda:0")
+
+    # Multiplication
+    y = x1 * x2
+
+torch.cuda.memory._dump_snapshot("logs/traces/vram_profile_example.pickle")
+print("Max memory used by tensors = {} MB, reserved = {} MB".format(
+      torch.cuda.max_memory_allocated() // 1e6, torch.cuda.max_memory_reserved() // 1e6))
+
+- 无法profile第三方库比如nccl的显存占用
 
 
 ### 打开chrome trace文件

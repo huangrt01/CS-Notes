@@ -86,3 +86,11 @@
 - SAM flash attention
  - https://github.com/facebookresearch/segment-anything/blob/main/segment_anything/modeling/image_encoder.py#L358
  - https://github.com/pytorch-labs/segment-anything-fast/blob/main/segment_anything_fast/flash_4.py#L13
+
+
+### C++
+
+#### 通信相关
+
+- Protobuf
+  - https://github.com/protocolbuffers/protobuf

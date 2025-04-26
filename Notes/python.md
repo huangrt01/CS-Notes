@@ -82,6 +82,17 @@ https://wiki.python.org/moin/GlobalInterpreterLock
 
 在python3.x中，GIL不使用ticks计数，改为使用计时器（执行时间达到阈值后，当前线程释放GIL），这样对CPU密集型程序更加友好，**但依然没有解决GIL导致的同一时间只能执行一个线程的问题，所以效率依然不尽如人意。**
 
+#### GC 垃圾回收
+
+* 基础的基于refcount
+* 循环垃圾回收机制
+  * 触发不定期
+  * 依赖上次gc以来新分配的变量数量
+  * 变量年龄组、阈值设置
+
+* 循环依赖：即使del也无法触发gc
+  * Python-gc.py
+
 
 
 #### 基础数据
@@ -100,48 +111,6 @@ bool(int(str(0))) -> False
     * `instance(u'abc', str)` 返回 `False`，因为它们是不同的类型。
   * 在 Python 3 中，所有字符串都是 Unicode，因此这种区分不再存在。
 
-##### 前向声明
-
-```python
-from typing import List, Dict, Optional, Any
-from pydantic import BaseModel
-
-class Schema(BaseModel):
-    title: Optional[str] = None
-    default: Optional[Any] = None
-    type: Optional[str] = None
-    anyOf: Optional[List['Schema']] = None  # 前向声明
-    items: Optional['Schema'] = None  # 前向声明
-    properties: Optional[Dict[str, 'Schema']] = None  # 前向声明
-```
-
-#### 数据结构
-
-```python
-range和xrange的区别：xrange返回生成器，可以转化成list
-
-list.extend(list)
-list.append(item)
-list.index(item)
-
-# split不加参数，默认为所有的空字符，包括空格、换行(\n)、制表符(\t)等
-list = [x.strip() for x in list_string.split() if x.strip()]
-list = filter(lambda x: x != 2, iterable)
-
-# dict: 同一dict中存储的value类型可以不一样
-
-# 普通dict的default插入方式（类似于C++的[]）
-obj = dict.setdefault(key, default=None)
-dict.get(key, 'default')
-
-# set
-unique_elements = list(set([2,1,2])) # Remove duplicates
-myset.remove(elem)
-if not myset: # 判断set是否空
-
-# set operations: https://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html
-&, |, -, ^
-```
 #### 基础算法
 
 * sorted

@@ -733,6 +733,15 @@ https://github.com/OpenNMT/OpenNMT-py/
 
 ### Paper
 
+#### SparseMoE
+
+* 每个token分配到Gate分数最高的k个Experts上进行计算
+* 问题：
+  * load balance
+  * 访存bound：Expert parallelism
+
+
+
 #### SoftMoE
 
 > google paper

@@ -513,6 +513,12 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 #### 量化技术分类
 
+> * PTQ v.s. QAT
+>
+> * 在线量化 v.s. 离线量化
+>   * 在线量化:实时统计 inputs 的 max，算出scale具有实时性高，精度好等优点，实时统计input数据，会带来一定的性能开销
+>   * 离线量化: 计算好inputs 的max，在量化时直接使用，性能好，但需要预先计算的max和实际input不一致，导致量化误差
+
 * Mixed Precision Training
   * weight/activation量化
   * weight update用fp32/bf16
@@ -1836,6 +1842,17 @@ PS架构的优势主要还是高可用(system efficiency)
 * Sparse Emb Layer
   * 类似 **tf.nn.embedding_lookup_sparse** ，增加了MP的设计
   * The distributed sparse embedding scatters keys across GPUs by computing `gpu_id = key % number_of_gpus`
+
+### 显存优化
+
+* ZeRO
+* 优化activation recomputation：https://arxiv.org/pdf/2205.05198
+  * 间隔着存，比如存2、5、8层，选择合适的层（激活值大、计算简单）做重计算
+
+### 通信优化
+
+* allreduce，参考「并行训练」
+* grad acc
 
 
 

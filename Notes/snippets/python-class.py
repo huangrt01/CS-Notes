@@ -24,6 +24,7 @@ class Circle:
             Circle._instance = Circle(*args, **kwargs)
         return Circle._instance
 
+### singleton
 
 class Singleton(type):
   _instances: Dict[type, "Singleton"] = {}
@@ -35,3 +36,16 @@ class Singleton(type):
 
   def instance(cls: Any, *args: Any, **kwargs: Any) -> "Singleton":
     return cls(*args, **kwargs)
+
+### 前向声明
+
+from typing import List, Dict, Optional, Any
+from pydantic import BaseModel
+
+class Schema(BaseModel):
+    title: Optional[str] = None
+    default: Optional[Any] = None
+    type: Optional[str] = None
+    anyOf: Optional[List['Schema']] = None  # 前向声明
+    items: Optional['Schema'] = None  # 前向声明
+    properties: Optional[Dict[str, 'Schema']] = None  # 前向声明

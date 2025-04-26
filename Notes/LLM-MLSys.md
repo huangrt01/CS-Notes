@@ -364,6 +364,12 @@ with IO-Awareness
 
 * Triton实现：显存上实现ringbuffer
 
+### MoE 推理 —— Expert Parallelism
+
+* Seed：https://arxiv.org/abs/2504.02263
+
+
+
 ## SGLang
 
 * Intro
@@ -372,13 +378,6 @@ with IO-Awareness
 
 
 ## 模型训练
-
-### 显存优化
-
-* ZeRO，参考 「MLSys.md」
-* 优化activation recomputation：https://arxiv.org/pdf/2205.05198
-
-
 
 ### 大规模集群
 

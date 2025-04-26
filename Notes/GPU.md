@@ -497,20 +497,23 @@ nvidia-smi --query-gpu=name --format=csv,noheader
   * https://datacrunch.io/blog/nvidia-v100-gpu-specs
 
 * A100
-  * https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/
-  * 192KB of on-chip SRAM per each of 108 SMs
-  * Float32 Tensor Core：156 TFlops
-  * Float16 Tensor Core：314 TFlops
-  * Float32 CUDA Core：19.5 TFlops
-  * GPU Memory：80 GB
-  * GPU Memory Bandwidth：2039 GB/s
+  * GPU
+    * GPU Memory：80 GB
+    * GPU Memory Bandwidth：2039 GB/s
+    * https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/
+    * 192KB of on-chip SRAM per each of 108 SMs
+    * Float32 Tensor Core：156 TFlops
+    * Float16 Tensor Core：314 TFlops
+    * Float32 CUDA Core：19.5 TFlops
+  * CPU：2 socket
+    * 内存TB级别
   * Interconnect：
     * NVLink：600GB/s （50GB/s，12 links）
     * PCIe Gen4: 64GB/s
 
   * 《Dissecting the Ampere GPU architecture via microbenchmarking》
   * 《Nvidia A100 tensor core GPU architecture》
-
+  
 * H20
   * 132 SMs
   

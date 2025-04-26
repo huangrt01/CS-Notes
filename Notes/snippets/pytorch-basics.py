@@ -156,6 +156,8 @@ local_used_map_dev_.copy_(local_used_map_tmp, true);
 
 在旧版本的 PyTorch 中，使用 .data 属性来获取张量中的数据，现在更推荐使用 .item() 方法。
 
+sigmoid_()
+
 
 # 视图操作
 基础索引

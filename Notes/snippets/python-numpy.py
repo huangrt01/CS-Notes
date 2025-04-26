@@ -14,3 +14,11 @@ import pdb
 
 pdb.set_trace()
 x = np.zeros((1024, 1024))
+
+
+
+
+
+### 存储
+
+npy格式存tensor
