@@ -326,6 +326,8 @@ cudaMemcpyHostToDevice
 
 ##### GPU Network
 
+> 基于 [ICI(tpu)](https://cloud.google.com/tpu/docs/system-architecture-tpu-vm)/[RoCE](https://en.wikipedia.org/wiki/InfiniBand)/IB 实现高速网络互联
+
 * 内存通常是显存的2倍以上比较合理
 * 内存 - pin memory - 显存 - GPU
   * 通常由CPU负责调度
@@ -335,6 +337,8 @@ cudaMemcpyHostToDevice
 
 * 网络 - 显存： RDMA
 * PCIe / NVLINk 与CPU Chipset交互
+  * nvlink的带宽 > GPU-CPU offload带宽
+
 
 ![nvlink](./GPU/nvlink.png)
 
@@ -439,7 +443,7 @@ nvidia-smi --query-gpu=name --format=csv,noheader
     - NV switch: 整个switch提供 600GB/s 带宽 
     - 单机八卡时，OAM 和 NV switch 差不多；卡数少时 nvsiwtch 效率高
 
-### 机型 & 硬件 & 精度 & 吞吐
+### 机型 & 硬件 & 精度 & 吞吐 & 故障
 
 #### 精度支持
 
@@ -562,7 +566,9 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 * 聊一聊英伟达GPU的降频问题 https://zhuanlan.zhihu.com/p/13866293937
 
+#### 故障率 0.5% 以上
 
+* https://www.pugetsystems.com/labs/articles/puget-systems-most-reliable-hardware-of-2024
 
 ### CUDA
 

@@ -12,6 +12,15 @@
 
 ## Scaling Law
 
+|            | 1代  | 2代  | 3代  | 4代                                                          |
+| :--------- | :--- | :--- | :--- | :----------------------------------------------------------- |
+| GPT 系列   | 117M | 1.5B | 175B | 1.7T as [rumoured](https://the-decoder.com/gpt-4-architecture-datasets-costs-and-more-leaked/) |
+| LIama 系列 | 65B  | 70B  | 70B  | (3.1代）405B                                                 |
+
+| 模型 | Gopher | LaMDA | Chinchilla | PaLM |
+| :--- | :----- | :---- | :--------- | :--- |
+| 参数 | 280B   | 127B  | 79B        | 540B |
+
 * Scaling Law: https://arxiv.org/abs/2001.08361
 * emergent ability
   * [How much bigger can/should LLMs become?](https://cmte.ieee.org/futuredirections/2023/04/24/how-much-bigger-can-should-llms-become/)
@@ -93,6 +102,19 @@
 * CoT、ToT
   * 挖掘LLM的implicit知识
   * 相应地，MindMap同时挖掘explicit and implicit知识
+
+### 生成式模型
+
+* 判别式，即根据用户和物品的特征预测用户与物品交互的**条件**概率；而生成式模型预测的是**联合概率**：
+
+  * 判别式关注预测给定条件下的结果，生成式理解所有变量如何共同出现
+  * 文本生成：ChatGPT，Gemini
+
+  - 图片生成：Stable Diffusion，DALL-E
+
+  - 视频生成：Sora，Kling
+
+
 
 ## Intro
 
@@ -698,10 +720,12 @@ https://github.com/OpenNMT/OpenNMT-py/
     * https://openai.com/research/microscope
     * https://distill.pub/2020/circuits/curve-detectors/
 
-## LLAMA
+## LLAMA 3
 
 * Intro
   * uses RMSNorm [ZS19], SwiGLU [Sha20], rotary embedding [SAL+24], and removes all biases
+* https://hasgeek.com/simrathanspal/the-llama3-guide/sub
+* https://ai.meta.com/blog/meta-llama-3/
 
 ## Datasets and Evaluation
 
@@ -1148,155 +1172,6 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
   * 图表问答生成：ChartLlama-code
 
 ![image-20241207213052536](./AI-Algorithms/image-20241207213052536.png)
-
-## LRM (Large Recommendation Model)
-
-> Todo:
->
-> wukong https://arxiv.org/abs/2403.02545
-
-### Intro
-
-* 业界：
-  * meta新闻：https://www.cnbc.com/2024/03/06/facebook-working-on-single-ai-model-to-power-all-video-recommendations.html
-
-### 长序列建模
-
-> Data->Sparse->Token->Dense
-
-### 生成式
-
-#### HLLM: Enhancing Sequential Recommendations via Hierarchical Large Language Models for Item and User Modeling
-
-> https://github.com/bytedance/HLLM/tree/main
->
-> 思路：Item LLM和User LLM一起训
->
-> 模型1: ItemEmb=F(Item)
->
-> 模型2: UserProfile=G(List[ItemEmb])
-
-* Intro
-  * three critical questions remain under-explored:
-    * firstly, the real value of LLMs’ pre-trained weights, often considered to en-
-      capsulate world knowledge;
-    * secondly, the necessity of finetuning for recommendation tasks;
-    * lastly, whether LLMs can exhibit the same scalability benefits in recommendation systems as they do in other domains.
-
-![image-20241228023941859](./AI-Algorithms/image-20241228023941859.png)
-
-* Item LLM
-  * Inspired by previous works (Devlin 2018; Neelakantan et al. 2022), a special
-    token [ITEM] is added at the end of the item’s text descrip-
-    tion to extract features.
-* User LLM
-  * discard the word embeddings from
-    the pre-trained LLM but retain all other pre-trained weights.
-    Experiments show that these pre-trained weights are very
-    helpful for reasoning user interests.
-
-* 训练
-  * 生成式：本质上是生成一个embedding
-    * InfoNCE
-    * ![image-20241228124429924](./AI-Algorithms/image-20241228124429924.png)
-    * s is the similarity function with a learnable temper-
-      ature parameter
-  * 判别式
-    * ![image-20241228124550514](./AI-Algorithms/image-20241228124550514.png)
-    * ![image-20241228124712454](./AI-Algorithms/image-20241228124712454.png)
-  * pipeline：
-    * 先一起训：user seq len：150
-    * 单独训User LLM：seq len 1000
-  * ![image-20241228132412134](./AI-Algorithms/image-20241228132412134.png)
-* 相比HSTU的改动：
-  * the model architecture is
-    upgraded to large language models with pre-trained weights,
-    and the input features are changed from IDs to text-input
-    LLM features
-
-* 参数：
-
-  * LLM的pretrained token num：3T
-  * TinyLLM：1.1B Params
-
-* 实验结论：
-
-  * SFT mainly enhances instruction-following abilities, which
-    do not aid in recommendation tasks (Zhou et al. 2024)
-  * data scaling能力比HSTU强
-    * ![image-20241228131044343](./AI-Algorithms/image-20241228131044343.png)
-
-  * 附录：
-    * [ITEM] Token的方式效果比mean pooling好
-    * LLM Emb + Timestamp效果非常好
-      * ![image-20241228133059538](./AI-Algorithms/image-20241228133059538.png)
-    * 把ItemLLM Emb和ItemId Emb加起来，没效果，估计是text能丰富表达Item
-
-#### [Meta] [HSTU] Actions Speak Louder than Words: Trillion-Parameter Sequential Transducers for Generative Recommendations
-
-https://arxiv.org/pdf/2402.17152v1
-
-> - 算法创新点：改变了特征排列（序列构造方式）将用户行为视作一种新模态、将target item做进了模型底座
-> - 工程创新点：序列采样、 M-FALCON、激进的kernel fusion、casual mask（KV cache）
-
-* Intro
-  * reformulate recommendation problems as sequential transduction tasks within a generative modeling framework
-  * HSTU
-  * power-law of training compute
-* 分析难以scale的原因
-  * heterogeneous features的重要性大
-  * A billion-scale dynamic vocabulary，候选多
-  * 成本大：recommendation systems need to handle a few orders of magnitude more tokens per day than what language models process over 1-2 months.
-    * GPT-3 was trained on a total of 300B tokens over a period of 1-2 months with thousands of GPUs
-
-* In this work, we treat user actions as a new modality in generative modeling
-  * core ranking and retrieval tasks in industrial-scale recommenders can be cast as generative modeling problems given an appropriate new feature space
-  * this paradigm enables us to systematically leverage redundancies in features, training, and inference to improve efficiency
-  * --> **three orders of magnitude more computationally complex** than prior state-of-the-art,
-
-* Recommendation as Sequential Transduction Tasks: From DLRMs to GRs
-  * Generative Recommenders (GRs)
-    * 本质上似乎是用transformer学一个hidden embedding
-  * sparse features：
-    * **Target item从底层引入**
-  * dense features:
-    * an important observation is that the categorical features (e.g., item topics, locations) over which we perform these aggregations are already sequentialized and encoded in GRs. Hence, we can remove numerical features in GRs given a sufficiently expressive sequential transduction architecture coupled with a target-aware formulation
-  * 顺序转换任务
-    * 按时间merge主序列和user profile序列
-  * 辅助时间序列 - 随时间缓慢变化的时间序列
-    * 只在变的时候merge进去
-  * 当下一个token表示与参与无关的(non-engagement related)分类特征（例如人口统计学特征）时，$$y_i$$ 未定义, 对于这些情况，我们将 $$m_i$$ 设置为 0。
-  * 精排：**内容位置的预测**转换为**多任务预测**
-    * casual mask: https://zhuanlan.zhihu.com/p/698447429
-
-![image-20240716221553540](./AI-Algorithms/hstu1.png)
-
-* HSTU
-  * Pointwise aggregated attention
-    * HSTU在Transformer中采用了一种新的点对点（pointwise）聚集注意力机制，而不是softmax注意力。这是出于两个因素的考虑。
-    * 在推荐系统中，与目标相关的先前数据点的**数量**作为一个强大的特征，指示用户偏好的强度，在经过softmax归一化后很难捕捉到。这一点很关键，因为我们需要预测参与度的强度，例如在给定item上花费的时间，以及item的相对顺序，再例如预测候选的排序以最大化AUC。
-    * 虽然softmax激活函数对噪声具有鲁棒性，但它不太适合流式设置中的非平稳词汇表。
-  * 通过随机长度（Stochastic Length，SL）进一步从算法上增加用户历史序列的稀疏性
-    * 对用户序列做采样：
-      * 一种说法：在一个user的request/session结束时，以1/n的概率采样这个user，其中n是这个user的序列长度。
-      * 另一种说法：一个session采样一次
-
-![image-20240716222635364](./AI-Algorithms/hstu2.png)
-
-* 工程优化
-  * 优化activations的内存占用
-  * 单kernel
-  * M-FALCON 
-    * Microbatched-Fast Attention Leveraging Cacheable OperatioNs
-    * to perform inference for m candidates with an input sequence size of n
-    * We optionally divide the overall m candidates into ⌈m/bm⌉ microbatches of size bm to leverage encoder-level KV caching (Pope et al., 2022) either across forward passes to reduce cost, or across requests to minimize tail latency
-* 实验insight
-  * 生成式推荐模型与LLM一样遵循scaling law，但传统推荐模型不遵循
-  * 同等参数量的情况下，在参数达到一定规模的threshold后，生成式推荐模型才能有比传统推荐模型更好的效果。精排模型需要比召回模型更大的threshold(约100x)
-  * Scaling law的最大配置时：8,192 sequence length, 1,024 embedding dimension, 24 layers of HSTU。**对精排模型，约在最大配置的1/10处，GR表现超过传统模型，对应的配置约为：4000 sequence length, 1,024 embedding dimension, 6 layers**
-* Question
-  * 用户token数量n_i 和用户的时序行为数量（上张图中，老推荐模型的时序样本数量）是什么关系？
-  * 为什么在用户session结束时生成样本，相当于做采样？
 
 
 
@@ -1772,11 +1647,46 @@ https://www.zhihu.com/question/603488576/answer/3178990801
 
 
 
-## Long-Context
+## Long-Context 长上下文
 
 * 早期GPT的上下文只有4K
 * 超大的上下文窗口=超长的短期记忆
 * 128K Token = 124K Input Token + 4096 Output Token
+
+### “Train Short, Test Long”, Positional Embedding
+
+* TSTL指的是一种训练和评估大型语言模型（LLM）或其他序列处理模型的方法和期望能力。具体含义如下：
+
+  * Train Short (短序列训练) ：在模型训练阶段，主要使用相对较短的文本序列（例如，上下文长度为 512 或 1024 个 token）进行训练。这样做可以：
+
+    - 节省计算资源 ：处理短序列需要更少的内存和计算时间，训练速度更快。
+
+    - 利用现有数据 ：很多现有的训练数据集可能包含大量中短长度的文本。
+
+  * Test Long (长序列测试/推理) ：在模型训练完成后，期望它能够在处理比训练时所见过的序列 更长 的文本时，依然保持良好的性能和稳定性。例如，一个在 1024 token 长度上训练的模型，希望它在处理 2048、4096 甚至更长 token 的输入时，也能理解上下文、生成连贯的文本，并且不会出现性能急剧下降或崩溃的情况。
+  * 传统的绝对位置编码（如 Transformer 原始论文中的正弦/余弦编码或学习的绝对位置嵌入）在 TSTL 方面表现不佳。因为它们要么为每个绝对位置学习一个特定的嵌入向量，要么其编码方式在超过训练长度后无法自然外推。当遇到比训练时更长的序列时，模型没有见过这些新位置的编码，导致性能下降。
+
+#### Alibi
+
+https://arxiv.org/abs/2108.12409
+
+- 它不直接向词嵌入添加位置信息，而是在计算注意力分数时，给每个 query-key 对添加一个 与它们之间距离成正比的惩罚项（bias） 。
+- 这个惩罚是 相对的 、 局部的 ，并且是 非学习 的（或者说，其斜率是固定的，按注意力头分配）。
+- 因为惩罚只依赖于相对距离，而不是绝对位置编号，所以当序列变长时，这种相对距离的惩罚机制仍然有效。模型自然地倾向于关注更近的 token，这种倾向性不依赖于序列的总长度。因此，Alibi 表现出很好的长度外推能力。
+
+#### RoPE
+
+https://arxiv.org/abs/2104.09864
+
+- 它通过将位置信息编码为 旋转矩阵 ，并应用于 query 和 key 向量。
+- 两个 token 之间的注意力分数依赖于它们向量的点积，而 RoPE 的设计使得这个点积主要取决于它们的 相对位置 （通过旋转角度的差值体现）。
+- 虽然 RoPE 编码的是绝对位置（通过旋转角度），但其核心机制使得相对位置信息得以保留和利用。这种基于旋转的相对位置编码方式，相比于学习绝对位置嵌入，具有更好的外推性，因为它不依赖于为训练长度内的每个绝对位置分配特定编码。
+
+#### 其它
+
+[LongRoPE](https://arxiv.org/abs/2402.13753), [NTK-RoPE](https://www.reddit.com/r/LocalLLaMA/comments/14lz7j5/ntkaware_scaled_rope_allows_llama_models_to_have/), [ReRoPE](https://github.com/bojone/rerope?tab=readme-ov-file),
+
+
 
 ## Interpretability
 
@@ -3863,6 +3773,12 @@ https://webkul.com/ai-semantic-search-services/
   * 算法细节：https://www.algolia.com/doc/guides/algolia-recommend/overview/
   * [归因](https://www.algolia.com/doc/guides/sending-events/getting-started/)
     * Client-side versus server-side events
+
+#### ChatGPT Shopping
+
+https://www.bbc.com/news/articles/c87p2rppx4po
+
+
 
 #### ACCIO（电商导购搜索）
 

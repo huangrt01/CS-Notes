@@ -732,6 +732,12 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 ##### SmoothQuant
 
+> 本质上是为了解决GPU计算per-channel activation quantization不高效，所以将outlier平移到weight。 
+
+$$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$$
+
+保持数学等价性：$$Y = \hat{X} \cdot \hat{W}$$
+
 ![image-20250416153941610](./MLSys/image-20250416153941610.png)
 
 ![image-20250416155502889](./MLSys/image-20250416155502889.png)
@@ -745,7 +751,26 @@ https://docs.nvidia.com/deeplearning/performance/index.html
   * Outliers persist in fixed channels
 * 结论
   * 在175B模型，精度优于zeroquant （section5.2）
+  * ![image-20250430154044610](./MLSys/image-20250430154044610.png)
+  * ![image-20250430154148177](./MLSys/image-20250430154148177.png)
+  
+* 关于per channel activation quantization的分析
 
+  * per-channel activation quantization（需要对激活值的每个通道进行独立的缩放）与硬件加速的 GEMM kernels（通常利用 Tensor Core 执行 MMA）不太兼容。
+  * 原因就在于：
+    * Tensor Core MMA 设计用于高速处理 整块矩阵 的乘加运算，形成高效的指令流水线。
+    * Per-channel scaling 是一个 粒度更细 的操作，需要在矩阵乘法过程中或之后，对结果矩阵的特定维度（通道维度）进行 逐元素或逐向量 的乘法。
+    * 如果试图在 Tensor Core 的 MMA 指令序列 中间 插入这种低吞吐量的、通常由 CUDA Core 执行的 FMA 或其他标量/向量指令（例如，加载缩放因子并进行乘法），就会打断 Tensor Core 的高效流水线，导致性能下降。
+    * 因此，硬件加速库通常选择在整个 Tensor Core MMA 计算 完成之后 ，再对输出矩阵的“外部维度”（如 token 维度或输出通道维度）进行统一的缩放，这样可以保持 Tensor Core 的高效率。而 Triton 这样的工具则提供了更灵活的 kernel fusion 能力，允许在 MMA 计算 tile 之后、写回内存之前，融合进这些 per-channel 操作，从而在一定程度上缓解这个问题。
+
+
+  * 新硬件支持：
+    * 《Fused FP8 4-Way Dot Product With Scaling and FP32 Accumulation》 [https://www.ac.uma.es/arith2024/papers/Fused%20FP8%204-Way%20Dot%20Product%20with%20Scaling%20and%20FP32%20Accumulation.pdf](https://www.ac.uma.es/arith2024/papers/Fused FP8 4-Way Dot Product with Scaling and FP32 Accumulation.pdf)
+
+* 方案：
+
+  * ![image-20250430153746632](./MLSys/image-20250430153746632.png)
+    * activation outliers are more significant的场景，调大alpha
 
 
 ​    
@@ -1408,17 +1433,15 @@ void gemmPacked(
 
 * sparse & dense分离
 
-  * Parallax [24] explored a hybrid structure
-    that combines parameter-server [27] and collective commu-
-    nications.
+  * Parallax [24] explored a hybrid structure that combines parameter-server [27] and collective communications.
     * Models are partitioned based on sparsity, where
       dense parameters are communicated using AllReduce and
       sparse tensors are placed to parameter servers. This design
       avoids densifying sparse tensors and communicating empty
       values, which is especially helpful for NLP models.
-
+  
 * 模型并行
-
+  * TP、PP是MP的特殊形式
   * ZeRO [32] also combines data parallelism with model parallelism, but with minimum model replication to support fast training on su-
     per large models. The authors observed that main memory
     consumption contributors are input data, model parame-
@@ -1434,6 +1457,8 @@ void gemmPacked(
       maintain a small partition of the model. The high scalabil-
       ity is achieved by sacriﬁcing the training speed, as the ad-
       ditional re-computation, broadcast, and gather overhead
+    * ZeRO obtains the same or better memory efficiency than PP without incurring functionality, performance and convergence related restrictions of PP. 【ZeRO论文】
+  
 
 #### 通信成本对比
 
@@ -1466,14 +1491,20 @@ void gemmPacked(
 
 ![image-20250309012139694](./MLSys/image-20250309012139694.png)
 
-#### Distributed Training and Communication Protocols
+#### Distributed Training and Communication Protocols 通信原语
 
 > MLSys CSE 599W Lecture 11
 
 ##### Intro
 
-* Recap: Parallel Scheduling Engine
-* 通信原语：
+* 互为反向：
+  * Broadcast <-> Reduce Sum互为反向
+  * scatter <-> gather
+  * All gather <-> all reduce sum 
+    * e.g. DDP
+* 互相转换：
+  * All reduce = reduce + broadcast
+  * All gather = scatter + gather
 
 
 
@@ -1737,18 +1768,56 @@ for i in range(num_layers):
 
 > https://pytorch.org/tutorials/intermediate/FSDP_tutorial.html
 
-#### DP & TP & PP
+#### DP + TP + PP，并行训练组合
 
 * DP + TP + PP
   * 把机器分成N组，组之间用DP
   * 一组机器有M台机器，不同台之间用PP
   * 一台机器有8张卡，不同卡之间用TP
-* TP:
-  * 拆分W
+* https://huggingface.co/docs/transformers/v4.15.0/en/parallelism
 
-* **PP splits a model horizontally across layers** running each partition on a different device and **use micro-batching to hide the pipeline bubble** [10, 11]. Model functionalities such as tied-weights and batch-normalization are difficult to implement due to horizontal splitting and micro-batching, respectively. Popular PP implementation such as **G-pipe** [10] partitions both model parameters and total activations but **requires a batch size proportional to number of pipeline partitions to hide the pipeline bubble**. **The large batch size can affect the convergence rate, while also requiring significant memory to store activations.** A different implementation of PP in PipeDream [12] keeps multiple copies of stale parameters to hide the pipeline bubble without increasing the batch size significantly, making it less memory efficient. Additionally, the implementation is not equivalent to the standard DL training and has implications on training convergence. In contrast, ZeRO obtains the same or better memory efficiency than PP without incurring functionality, performance and convergence related restrictions of PP. 【ZeRO论文】
+#### PP
+
+* **PP splits a model horizontally across layers** running each partition on a different device and **use micro-batching to hide the pipeline bubble** [10, 11]. Model functionalities such as tied-weights and batch-normalization are difficult to implement due to horizontal splitting and micro-batching, respectively. 
+* G-pipe
+  * 思路：大batch拆成若干个小batch，这样每个节点可以pipeline执行多个小batch
+  * partitions both model parameters and total activations but **requires a batch size proportional to number of pipeline partitions to hide the pipeline bubble**. **The large batch size can affect the convergence rate, while also requiring significant memory to store activations.** 
+* PipeDream
+  * 思路：每个节点交替进行forward、backward，尽早启动backward的流水线
+  * keeps multiple copies of stale parameters to hide the pipeline bubble without increasing the batch size significantly, making it less memory efficient. 
+  * the implementation is not equivalent to the standard DL training and has implications on training convergence.
   * ![image-20250415030814219](./MLSys/image-20250415030814219.png)
 
+
+
+#### SP (sequence parallelism)
+
+[2021] Colossal AI 提出了Sequence Parallelsim，论文 https://arxiv.org/pdf/2105.13120
+
+[2022] Megatron-LM 在序列维度拆分 Dropout 和 LayerNorm，论文 https://arxiv.org/abs/2205.05198
+
+[2023] DeepSpeed Ulysses，论文 https://arxiv.org/abs/2309.14509
+
+[2023] UCB Ring Attention，论文 https://arxiv.org/abs/2310.01889
+
+[2024] Megatron-LM 提出了 [Context Parallelism](https://docs.nvidia.com/megatron-core/developer-guide/latest/api-guide/context_parallel.html)。
+
+1/3/4/5是从输入层开始在拆分序列，2 则是在中间层
+
+
+
+#### TP
+
+* 动机：PP下，单卡无法容纳模型中显存占用最大的层
+* 本质：拆分W
+  * 按列拆分W：
+    * 最后all gather
+  * 按行拆分W：
+    * X只需要部分
+    * 最后all reduce
+* 局限性：传输大量数据，通常只在单机多卡内的nvlink使用
+
+![20250427-033638](./MLSys/20250427-033638.jpeg)
 
 ### Parameter Server
 
@@ -1844,6 +1913,11 @@ PS架构的优势主要还是高可用(system efficiency)
   * The distributed sparse embedding scatters keys across GPUs by computing `gpu_id = key % number_of_gpus`
 
 ### 显存优化
+
+|              | 单卡              | 多卡      |
+| ------------ | ----------------- | --------- |
+| 降低静态显存 | offload           | ZeRO/FSDP |
+| 降低动态显存 | act recomputation | 模型并行  |
 
 * ZeRO
 * 优化activation recomputation：https://arxiv.org/pdf/2205.05198

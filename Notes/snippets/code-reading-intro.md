@@ -74,6 +74,9 @@
 - MicroBenchmark
   - https://gist.github.com/HDCharles/287ac5e997c7a8cf031004aad0e3a941
 
+- TritonIndex
+  - https://github.com/gpu-mode/triton-index
+
 - FlagGems
   - https://github.com/FlagOpen/FlagGems
 
@@ -87,6 +90,11 @@
  - https://github.com/facebookresearch/segment-anything/blob/main/segment_anything/modeling/image_encoder.py#L358
  - https://github.com/pytorch-labs/segment-anything-fast/blob/main/segment_anything_fast/flash_4.py#L13
 
+
+### Data Pipeline
+
+- ConcurrentDataLoader
+  - https://github.com/iarai/concurrent-dataloader/tree/master
 
 ### C++
 

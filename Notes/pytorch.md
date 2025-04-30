@@ -95,6 +95,8 @@
 
 
 
+
+
 ## Autograd
 
 * Grad:  Jacobians left-multiplied by a vector,
@@ -111,7 +113,11 @@
   * ![image-20250305012942113](./pytorch/image-20250305012942113.png)
   * ![v2-2233d8b647f1b56e2ad9ef92d90e1706_1440w](./pytorch/v2-2233d8b647f1b56e2ad9ef92d90e1706_1440w.jpg)
 
+## DataLoader
 
+* concurrent
+  * https://arxiv.org/pdf/2211.04908
+* torchdata
 
 ## Optimizer
 

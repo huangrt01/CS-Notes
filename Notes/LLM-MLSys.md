@@ -16,7 +16,7 @@
   * Speculative Sampling (2023) -> Everywhere in LLM Serving (2023)
   * Sequence Parallel (2023) ->  Megatron-LLM (2023) 
 * 业务目标：https://mp.weixin.qq.com/s/llalxX6miJRxy0-Vk8Ezpg
-  * MFU（Model FLOPs Utilization）：评估GPU算力的有效利用率，就是GPU的算力到底有多少用来干活的。如果MFU低于50%，则属于异常，如果能达到70-80%，那效率就很高了；
+  * MFU（Model FLOPs Utilization）
   * 故障率：在大规模的集群中，推理请求的故障率，因为在一万张卡的集群中，如果每几分钟就有一张卡挂掉，那么这会影响整体效率，或者说看故障时间占在整个有效训练时间的占比，如果说是故障的时间占训练时间比例超过30%，也非常影响效率；
   
 
@@ -27,6 +27,23 @@
     * 欧洲受欧盟法案影响，ai发展没跟上
 
   * AI系统：记录数据、与人交互、机器学习分析、预测、干预人的决策
+
+### MFU、HFU
+
+* Hardware FLOPS Utilization
+
+  * 考虑了计算换空间
+
+* MFU（Model FLOPs Utilization）：
+
+  * 评估GPU算力的有效利用率
+
+* | 模型          | 参数规模 | MFU    | 硬件配置   |
+  | ------------- | -------- | ------ | ---------- |
+  | PaLM          | 540B     | 46.2%  | 6144 TPUv4 |
+  | Megatron-LM   | 530B     | 56.0％ | 3072 A100  |
+  | Mosaic ML     | 70B      | 43.36% | 128 H100   |
+  | 字节MegaScale | 175B     | 55.2%  | 12,288 GPU |
 
 ### FLOPS
 
@@ -147,6 +164,7 @@ print(f"Prompt的token数量为: {token_count}")
 
 ### 训练成本
 
+* O(10k) 规模的 GPU / TPU 集群
 * LLaMA：2048 A100 21d
   * a100一个月几十刀，训一个几十万
 * 人力成本：训练基础大模型，团队20人
@@ -364,6 +382,12 @@ with IO-Awareness
 
 * Triton实现：显存上实现ringbuffer
 
+### Decoding优化
+
+* Speculative Decoding, Lookahead Decoding, Flash-Decoding, Flash-decoding++, Deja Vu, Atom, Continunous Batching，Prefill-Decode Disaggregating
+
+
+
 ### MoE 推理 —— Expert Parallelism
 
 * Seed：https://arxiv.org/abs/2504.02263
@@ -379,10 +403,14 @@ with IO-Awareness
 
 ## 模型训练
 
+> 并行训练参考 MLSys.md
+
 ### 大规模集群
 
-* [ByteDance] MegaScale: Scaling Large Language Model Training to More Than 10,000 GPUs 
-  * https://arxiv.org/pdf/2402.15627
+- [Meta LIama 3](https://engineering.fb.com/2024/03/12/data-center-engineering/building-metas-genai-infrastructure/)，16k GPU 并行训练，背靠（独立的）两个规模达24K 的 H100 集群，分别基于 RoCE 和 IB 构建单链路带宽400Gbps的节点互联。
+- [Google Gemini 1.5](https://storage.googleapis.com/deepmind-media/gemini/gemini_v1_5_report.pdf)，基于数十个 4k TPUv4 Pod 并行训练，Pod 内部 3D-Torus ICI 互联，单链路带宽 800Gbps。
+  - TPU有SuperPod大规模ICI的优势
+- [字节 MegaScale](https://arxiv.org/abs/2402.15627)，12k GPU 并行训练。
 
 ### Ckpt
 

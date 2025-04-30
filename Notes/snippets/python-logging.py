@@ -28,3 +28,8 @@ if __name__ == '__main__':
         os.path.basename(__file__).split('.')[0], tag,
         datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
     init_logging(log_file)
+
+
+from absl import logging
+
+logging.log_every_n_seconds(logging.INFO, 'Get a mini-batch time: %.4f', 60, end_time - start_time)

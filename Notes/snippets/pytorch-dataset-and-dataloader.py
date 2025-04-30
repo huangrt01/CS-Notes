@@ -129,6 +129,70 @@ for batch_ndx, sample in enumerate(loader):
 
 https://blog.csdn.net/weiman1/article/details/125610786
 
+class data_prefetcher():
+    def __init__(self, loader, device):
+        self.loader = iter(loader)
+        self.stream = torch.cuda.Stream()
+        self.device = device
+        self.preload()
+
+    def preload(self):
+        try:
+            self.next_input, self.next_target = next(self.loader)
+        except StopIteration:
+            self.next_input = None
+            self.next_target = None
+            return
+        with torch.cuda.stream(self.stream):
+            self.next_input, self.next_target = ensure_device(self.device, self.next_input, self.next_target, non_blocking=True)
+
+    def next(self):
+        torch.cuda.current_stream().wait_stream(self.stream)
+        input = self.next_input
+        target = self.next_target
+        if input is not None:
+          if isinstance(input, dict):
+            for k, v in input.items():
+              if isinstance(v, torch.Tensor):
+                v.record_stream(torch.cuda.current_stream())
+          else:
+            input.record_stream(torch.cuda.current_stream())
+        if target is not None:
+            target.record_stream(torch.cuda.current_stream())
+        self.preload()
+        return input, target
+
+### prefetch generator
+
+https://stackoverflow.com/questions/7323664/python-generator-pre-fetch
+
+DDP不work
+
+### DDP + queue
+
+- DDP 和 dataloader中Queue的使用不兼容
+  - DDP自己管理了共享内存，有些比较深的hack操作
+  - https://discuss.pytorch.org/t/communicating-with-dataloader-workers/11473/9
+  - things break predictably when you nest shared memory structures within other nested shared memory structures. The ideal way to have asynchronous communication between PyTorch dataloader workers is to use process Queues, which shuttle active child process state information to the next active worker which then in turn shuttles new information to the next.
+  - 需要结合torch.multiprocessing.Manager().RLock()进行实现
+
+### torch.data
+
+https://pytorch.org/data/main/what_is_torchdata_nodes.html
+https://github.com/pytorch/data?tab=readme-ov-file#what-is-torchdata
+  - 性能上受益于 Python No-GIL的趋势
+  - stateful dataset
+
+- torchdata.nodes performs on-par or better with torch.utils.data.DataLoader when using multi-processing (see Migrating to torchdata.nodes from torch.utils.data)
+- With GIL python, torchdata.nodes with multi-threading performs better than multi-processing in some scenarios, but makes features like GPU pre-proc easier to perform, which can boost throughput for many use cases.
+- With No-GIL / Free-Threaded python (3.13t), we ran a benchmark loading the Imagenet dataset from disk, and manage to saturate main-memory bandwidth at a significantly lower CPU utilization than with multi-process workers (blogpost expected eary 2025). See imagenet_benchmark.py to try on your own hardware.
+
+
+### concurrent dataloader
+
+- paper：https://arxiv.org/pdf/2211.04908
+- 代码：https://github.com/iarai/concurrent-dataloader/blob/master/src/concurrent_dataloader/dataloader_mod/worker.py
+
 ### predefined dataset
 
 import torchvision.datasets as datasets

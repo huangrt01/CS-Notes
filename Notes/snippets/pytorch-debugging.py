@@ -63,6 +63,14 @@ torch.distributed.breakpoint(rank)
 For fine-grained control of the debug level during runtime the functions torch.distributed.set_debug_level(),
 torch.distributed.set_debug_level_from_env(), and torch.distributed.get_debug_level() can also be used.
 
+
+# debug速度
+https://pytorch.org/docs/stable/ddp_comm_hooks.html
+
+from torch.distributed.algorithms.ddp_comm_hooks.debugging_hooks import noop_hook
+model.register_comm_hook(None, noop_hook)
+
+
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp

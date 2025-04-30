@@ -9,6 +9,10 @@
 
 ### 性能优化理论
 
+> - 业务流程分析：是否有冗余计算，是否能实现场景需求，比如pointwise、listwise
+> - 整体代码性能分析：design是否有更优解，比如pipeline的编排能否更合理、no padding等能否达成
+> - 关键处代码瓶颈分析：例如folding、unique、gradient reduce等操作
+
 * Rooﬂine: an insightful visual performance model for multicore architectures.
 
   * **横轴：arithmetic intensity**: which is the number of arithmetic operations per byte of memory access.
