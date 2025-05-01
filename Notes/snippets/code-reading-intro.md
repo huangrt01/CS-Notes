@@ -51,6 +51,9 @@
 * nanoGPT
   * https://github.com/karpathy/nanoGPT
 
+* DeepSeek-V3
+  * https://github.com/deepseek-ai/DeepSeek-V3
+
 #### LM
 
 * the Annotated Transformer

@@ -602,6 +602,10 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 * 学术向分类
   * both PTQ and QAT were susceptible to outliers. In addition to simple clamping and regularization during fine-tuning, we can explore techniques that allow the network to learn how to control these outliers (e.g. [learned quantization ranges](https://arxiv.org/pdf/1902.08153), [clipped softmax](https://arxiv.org/pdf/2306.12929), and [gated attention](https://arxiv.org/pdf/2306.12929)), or possibly even borrow outlier suppression techniques from post-training settings (e.g. [SpinQuant](https://arxiv.org/pdf/2405.16406), [SmoothQuant](https://arxiv.org/pdf/2211.10438)) and apply them sparingly throughout the fine-tuning process.
 
+* 在线量化 vs delayed量化
+  * Delayed quantization is employed in tensor-wise quantization frame-
+    works (NVIDIA, 2024b; Peng et al., 2023b), which maintains a history of the maximum absolute values across prior iterations to infer the current value 【DeepSeek-v3】
+
 * 模型结构分类
   * KV Cache
     * [LLM-QAT](https://arxiv.org/pdf/2305.17888) explored quantizing the KV cache alongside activations and weights.
@@ -653,6 +657,80 @@ https://docs.nvidia.com/deeplearning/performance/index.html
     * Scaling factor of 128 保住 LSTM 精度
     * 语音模型场景 the half-precision storage format may act as a regularizer during training
     * gan不需要scaling
+
+#### Bf16-Mixed-Precision-Training
+
+https://arxiv.org/pdf/1905.12322
+
+#### Fp8-Mixed-Precision-Training
+
+![image-20250331122321267](./MLSys/image-20250331122321267.png)
+
+##### DeepSeek-V3
+
+* Inspired by recent advances in low-precision training (Dettmers et al., 2022; Noune et al., 2022;
+  Peng et al., 2023b), While low-precision training holds great promise, it
+  is often limited by the presence of outliers in activations, weights, and gradients (Fishman
+  et al., 2024; He et al.; Sun et al., 2024).
+* To address this challenge and effectively extend the dynamic
+  range of the FP8 format, we introduce **a fine-grained quantization strategy: tile-wise grouping**
+  **with 1 × 𝑁𝑐 elements or block-wise grouping with 𝑁𝑐 × 𝑁𝑐 elements**
+
+* Moreover, to further reduce memory and communication overhead in MoE training, we **cache and dispatch activations in FP8, while storing low-precision optimizer states in BF16**
+
+![image-20250501183219211](./MLSys/image-20250501183219211.png)
+
+* 收益：
+  * compute
+  * activation显存
+* 稳定性：
+  * we maintain the original precision (e.g., BF16 or FP32) for the following components:
+    * the embedding module, the output head, MoE gating modules, normalization operators, and attention operators
+* ![image-20250501185219385](./MLSys/image-20250501185219385.png)
+* 量化方式：
+  * (1) for activations, we group and scale elements on a 1x128 tile basis (i.e., **per token per 128 channels**); 
+    * the introduction of **per-group scaling factors along the inner dimension of GEMM operations**
+    * 思路对齐 《Microscaling data formats for deep learning.》、https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
+  * (2) for weights, we group and scale elements on a 128x128 block basis (i.e., **per 128 input channels per 128 output channels**)
+  * Bf16 optimizer
+  * the master weights (stored by the optimizer) and gradients (used for batch size accumulation) are still retained in FP32 to ensure numerical stability throughout training.
+* Increasing Accumulation Precision
+  * It is worth noting that **this modification reduces the WGMMA (Warpgroup-level Matrix-Multiply-Accumulate) instruction issue rate for a single warpgroup. However, on the H800**
+    **architecture, it is typical for two WGMMA to persist concurrently: while one warpgroup**
+    **performs the promotion operation, the other is able to execute the MMA operation.** This design enables overlapping of the two operations, maintaining high utilization of Tensor Cores. Based on our experiments, setting 𝑁𝐶 = 128 elements, equivalent to 4 WGMMAs, represents the
+    minimal accumulation interval that can significantly improve precision without introducing substantial overhead.
+  * WGMMA 的异步能力 https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
+* 其它特点
+  * Mantissa over Exponents.
+    * In contrast to the hybrid FP8 format adopted by prior work
+      (NVIDIA, 2024b; Peng et al., 2023b; Sun et al., 2019b), which uses E4M3 (4-bit exponent and
+      3-bit mantissa) in Fprop and E5M2 (5-bit exponent and 2-bit mantissa) in Dgrad and Wgrad,
+      **we adopt the E4M3 format on all tensors for higher precision.**
+  
+  * Online Quantization
+  * Activation的量化细节
+    * (1) **Inputs of the Linear after the attention operator**. These activations are also
+      used in the backward pass of the attention operator, which makes it sensitive to
+      precision. We adopt a customized **E5M6** data format exclusively for these activations.
+      Additionally, these activations will be converted from an 1x128 quantization tile to
+      an 128x1 tile in the backward pass. To avoid introducing extra quantization error,
+      all the scaling factors are round scaled, i.e., integral power of 2.
+    * (2) **Inputs of the SwiGLU operator in MoE**. To further reduce the memory cost, we
+      cache the inputs of the SwiGLU operator and recompute its output in the backward
+      pass. These activations are also stored in **FP8** with our fine-grained quantization
+      method, striking a balance between memory efficiency and computational accuracy.
+  
+  * 通信的量化细节：
+    * **Fp8**: activation before MoE up-projections、activation gradient before MoE down-projections
+    * **Bf16:** both the forward and backward combine components
+  
+
+* 硬件提升方向：
+  * To address this inefficiency, we recommend that future chips **integrate FP8 cast and TMA (Tensor Memory Accelerator) access into a single fused operation**, so quantization can be completed during the transfer of activations from global memory to shared memory, avoiding frequent memory reads and writes.
+  * We also recommend supporting a **warp-level cast instruction** for speedup, which further facilitates the better fusion of layer normalization and FP8 cast. Alternatively, a near-memory computing approach can be adopted, where compute logic is placed near the HBM. In this case, BF16 elements can be cast to FP8 directly as they are read from HBM into the GPU, reducing off-chip memory access by roughly 50%.
+  * Support for Transposed GEMM Operations.
+
+
 
 #### [TorchAO - Advanced Quantization](https://www.youtube.com/watch?v=1u9xUK3G4VM)
 
@@ -1365,10 +1443,6 @@ void gemmPacked(
 
 ![image-20250330233937812](./MLSys/image-20250330233937812.png)
 
-#### Fp8训练
-
-![image-20250331122321267](./MLSys/image-20250331122321267.png)
-
 #### 4bit以下
 
 ##### BitNet b1.58
@@ -1788,7 +1862,17 @@ for i in range(num_layers):
   * the implementation is not equivalent to the standard DL training and has implications on training convergence.
   * ![image-20250415030814219](./MLSys/image-20250415030814219.png)
 
-
+* DualPipe
+  * compared with ZB1P (Qi et al., 2023b) and 1F1B (Harlap et al., 2018), DualPipe significantly reduces the pipeline bubbles
+    while only increasing the peak activation memory by 1
+    𝑃𝑃 times. Although DualPipe requires
+    keeping two copies of the model parameters, this does not significantly increase the memory
+    consumption since we use a large EP size during training. Compared with Chimera (Li and
+    Hoefler, 2021), DualPipe only requires that the pipeline stages and micro-batches be divisible by
+    2, without requiring micro-batches to be divisible by pipeline stages. In addition, for DualPipe,
+    neither the bubbles nor activation memory will increase as the number of micro-batches grows.
+  * ![image-20250501025515656](./MLSys/image-20250501025515656.png)
+  * ![image-20250501025502918](./MLSys/image-20250501025502918.png)
 
 #### SP (sequence parallelism)
 
@@ -1818,6 +1902,10 @@ for i in range(num_layers):
 * 局限性：传输大量数据，通常只在单机多卡内的nvlink使用
 
 ![20250427-033638](./MLSys/20250427-033638.jpeg)
+
+
+
+
 
 ### Parameter Server
 
@@ -1922,11 +2010,28 @@ PS架构的优势主要还是高可用(system efficiency)
 * ZeRO
 * 优化activation recomputation：https://arxiv.org/pdf/2205.05198
   * 间隔着存，比如存2、5、8层，选择合适的层（激活值大、计算简单）做重计算
+  * deepseek-v3：Recomputation of RMSNorm and MLA Up-Projection.
+* cpu offload
+  * deepseek-v3：Exponential Moving Average in CPU.
+* 模型并行
+  * PP 时的显存优化：
+    * deepseek-v3：**Shared Embedding and Output Head for Multi-Token Prediction**. With the DualPipe strategy, we deploy the shallowest layers (including the embedding layer) and deepest layers (including the output head) of the model on the same PP rank. This arrangement enables the physical sharing of parameters and gradients, of the shared embedding and output head, between the MTP module and the main model. This physical sharing mechanism further enhances our memory efficiency.
 
 ### 通信优化
 
 * allreduce，参考「并行训练」
 * grad acc
+* leverage the IBGDA (NVIDIA, 2022) technology to further minimize latency and enhance communication efficiency. 【deepseek-v3】
+* customize **efficient cross-node all-to-all communication kernels (including dispatching and combining)** to conserve the number of SMs dedicated to communication.【deepseek-v3】
+  * In detail, we employ the **warp specialization technique** (Bauer et al., 2014) and partition
+    20 SMs into 10 communication channels. 
+  * During the dispatching process, (1) IB sending, (2)
+    IB-to-NVLink forwarding, and (3) NVLink receiving are handled by respective warps. The
+    number of warps allocated to each communication task is dynamically adjusted according to the
+    actual workload across all SMs. Similarly, during the combining process, (1) NVLink sending,
+    (2) NVLink-to-IB forwarding and accumulation, and (3) IB receiving and accumulation are also
+    handled by dynamically adjusted warps.
+  * In addition, both dispatching and combining kernels overlap with the computation stream, so we also consider their impact on other SM computation kernels. Specifically, we employ customized PTX (Parallel Thread Execution) instructions and auto-tune the communication chunk size, which significantly reduces the use of the L2 cache and the interference to other SMs.
 
 
 

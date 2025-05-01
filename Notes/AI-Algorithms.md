@@ -267,8 +267,6 @@
 >
 > - 动机：缓解全局attention的信息丢失
 
-
-
 * The Transformer follows this overall architecture using **stacked self-attention and point-wise**, fully connected layers for both the encoder and decoder, shown in the left and right halves of Figure 1
   * 左边encoder，右边decoder
     * Encoder: 自注意力
@@ -312,6 +310,16 @@
 
 对seq_len维度上的每一个embedding（768维）做LN
 
+##### Pre-LN
+
+* 将归一化层放在子层（Attention 或 FFN） 之前 的结构被称为 Pre-LN (Pre-Layer Normalization) 。
+
+  主要原因和优点如下：
+
+  1. 训练稳定性 ：这是采用 Pre-LN 最主要的原因。在原始的 Post-LN 结构 (Input -> Sublayer -> Add -> LayerNorm) 中，随着网络层数加深，每一层的输出在累加（Add 操作）后才进行归一化，可能导致梯度在反向传播时出现剧烈变化（梯度消失或爆炸），使得训练过程不稳定，尤其是在模型很深的时候。Pre-LN 结构 (Input -> LayerNorm -> Sublayer -> Add) 通过在每个子层的输入处进行归一化，稳定了传递给子层的激活值范围，从而也稳定了反向传播时的梯度流。这使得训练过程更加平滑，不易发散。
+  2. 减少对学习率 Warmup 的依赖
+  3. 更快的收敛（有时）
+
 ### Decoder
 
 #### 因果掩码机制
@@ -329,6 +337,18 @@
 * Q来自Decoder：考虑已经生成的内容
 * K、V来自Encoder：考虑上下文
   * **传统 Transformer Decoder 的局限性**：传统 Transformer Decoder 主要依靠输入的 K、V 与 Q 计算注意力，进而生成输出。当输入短，K、V 提供的信息不足，注意力机制可聚焦的范围窄，解码器难以跳出有限信息的限制，导致预测结果单一。
+
+#### KV Cache的可行性
+
+* 能否直接更新历史 KV？
+  * 理论上，你可以设计一种机制，在生成第 t 个 token 时，不仅计算 Q_t , K_t , V_t ，还去修改缓存中 K_1...K_{t-1} 和 V_1...V_{t-1} 的值。
+* 为什么通常不这样做？
+
+1. 破坏 KV Cache 的核心优势 ：如果每一步都要更新所有历史 K/V，推理成本将急剧增加，从 O(N)（N 为序列长度，使用 Cache）变回 O(N^2)（每次都重新计算或更新所有历史 K/V），失去了 Transformer 推理效率的关键优化。
+2. 改变了注意力机制的含义 ：标准的自注意力机制假设一个 token 的 K 和 V 代表其在 那个时间点 的上下文表示。基于 未来 的 token 来修改 过去 token 的 K/V 表示，改变了这种前向因果关系，使得模型结构和信息流变得复杂。这更像是双向模型（如 BERT）在编码整个序列时做的事情，而不是自回归生成模型逐词生成时的工作方式。
+3. 实现复杂且收益不明确 ：设计一个有效且稳定的更新历史 K/V 的机制会非常复杂，并且不清楚这样做是否能带来足够的好处来抵消巨大的计算成本和复杂性增加。
+
+
 
 
 
@@ -727,6 +747,176 @@ https://github.com/OpenNMT/OpenNMT-py/
 * https://hasgeek.com/simrathanspal/the-llama3-guide/sub
 * https://ai.meta.com/blog/meta-llama-3/
 
+## DeepSeek-V3
+
+> DeepSeek-V3 Technical Report
+
+* DeepSeek-V3, a strong Mixture-of-Experts (MoE) language model with 671B total
+  parameters with 37B activated for each token
+  * 关键技术
+    * Multi-head Latent Attention (MLA)
+    * DeepSeekMoE architectures
+    * an auxiliary-loss-free strategy for load balancing and sets a multi-token prediction training
+      objective for stronger performance
+    * fp8 training
+    * DualPipe：overcome the communication bottleneck in cross-node MoE training
+    * cross-node all-to-all communication kernels
+    * 显存优化
+    * MTP
+  * 数据量：14T tokens
+  * 训练成本：
+    * 2.788M H800 GPU hours for its full training
+    * 558万刀
+  * 训练流程：
+    * pretrain 14T tokens
+    * a two-stage context length extension for DeepSeek-V3. In the first stage, the maximum context length is extended to 32K, and in the second stage, it is further extended to 128K.
+    * post-training, including Supervised Fine-Tuning (SFT) and Reinforcement Learning (RL)
+
+![image-20250501010935207](./AI-Algorithms/image-20250501010935207.png)
+
+### MLA
+
+* The core of MLA is the **low-rank joint compression for attention keys and values to reduce Key-Value (KV) cache during inference**
+  * 从 ht 到 ctKV，进行一次低秩变换
+
+
+
+![image-20250501011323591](./AI-Algorithms/image-20250501011323591.png)
+
+### DeepSeekMoE
+
+* shared experts
+  * ![image-20250501014015449](./AI-Algorithms/image-20250501014015449.png)
+
+* Auxiliary-Loss-Free Load Balancing
+  * 每个step进行策略调节
+  * ![image-20250501014407504](./AI-Algorithms/image-20250501014407504.png)
+* Complementary Sequence-Wise Auxiliary Loss.
+  * ![image-20250501021522251](./AI-Algorithms/image-20250501021522251.png)
+
+* Node-Limited Routing.
+  * 至多M nodes，每个node选 Kr/M 个专家
+
+### MTP
+
+> Gloeckle et al. (2024)
+
+* Different from Gloeckle et al. (2024), which parallelly predicts 𝐷 additional tokens using independent
+  output heads, we sequentially predict additional tokens and keep the complete causal chain at
+  each prediction depth.
+
+![image-20250501023813072](./AI-Algorithms/image-20250501023813072.png)
+
+* Our principle of maintaining the causal chain of predictions is similar to that of EAGLE (Li et al., 2024b), but its primary objective is speculative decoding (Leviathan et al., 2023; Xia et al., 2023), whereas we
+utilize MTP to improve training.
+
+* the acceptance rate of the second token prediction ranges between 85% and 90%
+
+### DualPipe + Efficient communication kernels
+
+* On the whole, DeepSeek-V3 applies 16-way Pipeline Parallelism (PP) (Qi et al., 2023a), 64-way Expert Parallelism (EP) (Lepikhin et al., 2021) spanning 8 nodes, and ZeRO-1 Data Parallelism (DP) (Rajb-
+  handari et al., 2020).
+  * ![image-20250501025054344](./AI-Algorithms/image-20250501025054344.png)
+  * ![image-20250501025258887](./AI-Algorithms/image-20250501025258887.png)
+
+* customize efficient cross-node all-to-all communication kernels (including dispatching and combining) to conserve the number of SMs dedicated to communication.
+  * In detail, we employ the **warp specialization technique** (Bauer et al., 2014) and partition
+    20 SMs into 10 communication channels. 
+  * During the dispatching process, (1) IB sending, (2)
+    IB-to-NVLink forwarding, and (3) NVLink receiving are handled by respective warps. The
+    number of warps allocated to each communication task is dynamically adjusted according to the
+    actual workload across all SMs. Similarly, during the combining process, (1) NVLink sending,
+    (2) NVLink-to-IB forwarding and accumulation, and (3) IB receiving and accumulation are also
+    handled by dynamically adjusted warps.
+  * In addition, both dispatching and combining kernels overlap with the computation stream, so we also consider their impact on other SM computation kernels. Specifically, we employ customized PTX (Parallel Thread Execution) instructions and auto-tune the communication chunk size, which significantly reduces the use of the L2 cache and the interference to other SMs.
+
+### Fp8-Training、推理部署
+
+参考其它笔记
+
+### 硬件讨论
+
+* the **SMs** primarily perform the following tasks for **all-to-all communication:** （ 20/132 SMs for H800）
+  • Forwarding data between the IB (InfiniBand) and NVLink domain while aggregating IB
+  traffic destined for multiple GPUs within the same node from a single GPU.
+  • Transporting data between RDMA buffers (registered GPU memory regions) and in-
+  put/output buffers.
+  • Executing reduce operations for all-to-all combine.
+  • Managing fine-grained memory layout during chunked data transferring to multiple
+  experts across the IB and NVLink domain.
+  * 期望用类似 NVIDIA SHARP Graham et al. (2016). 来做
+  * aim for this hardware to unify the IB (scale-out) and NVLink
+    (scale-up) networks from the perspective of the computation units
+
+### Pretraining
+
+* data
+  * Inspired by Ding et al. (2024), we implement the document
+    packing method for data integrity but do not incorporate cross-sample attention masking during
+    training
+  * Fill-in-Middle (FIM) strategy does not compromise the next-token prediction capability while
+    enabling the model to accurately predict middle text based on contextual cues
+    * ![image-20250501215109853](./AI-Algorithms/image-20250501215109853.png)
+  * The tokenizer for DeepSeek-V3 employs Byte-level BPE (Shibata et al., 1999) with an extended
+    vocabulary of 128K tokens.
+    * the new pretokenizer introduces tokens that combine punctuations and line breaks. However,
+      this trick may introduce the token boundary bias (Lundberg, 2023) when the model processes
+      multi-line prompts without terminal line breaks, particularly for few-shot evaluation prompts.
+      To address this issue, we randomly split a certain proportion of such combined tokens during
+      training, which exposes the model to a wider array of special cases and mitigates this bias.
+
+* model
+  * We set the number of Transformer layers to 61 and the hidden
+    dimension to 7168. All learnable parameters are randomly initialized with a standard deviation
+    of 0.006.
+  * In MLA, we set the number of attention heads 𝑛ℎ to 128 and the per-head dimension 𝑑ℎ
+    to 128. The KV compression dimension 𝑑𝑐 is set to 512, and the query compression dimension 𝑑′𝑐
+    is set to 1536. For the decoupled queries and key, we set the per-head dimension 𝑑𝑅ℎ to 64. We
+    **substitute all FFNs except for the first three layers with MoE layers**. Each MoE layer consists of 1 shared expert and 256 routed experts, where the intermediate hidden dimension of each expert
+    is 2048. Among the routed experts, 8 experts will be activated for each token, and each token
+    will be ensured to be sent to at most 4 nodes. The multi-token prediction depth 𝐷 is set to 1, i.e.,
+    besides the exact next token, each token will predict one additional token. As DeepSeek-V2,
+    DeepSeek-V3 also employs additional RMSNorm layers after the compressed latent vectors,
+    and multiplies additional scaling factors at the width bottlenecks. Under this configuration,
+    DeepSeek-V3 comprises 671B total parameters, of which 37B are activated for each token.
+  * 4.3. Long Context Extension
+
+* evaluation
+  * MTP提升效果
+  * auxiliary-loss-free balancing strategy提升效果
+
+### Post-Training
+
+#### SFT
+
+* RL training phase
+  * R1生成reasoning data
+    * <problem, original response>, <system prompt, problem, R1 response>.
+  * Non-Reasoning Data.
+    * For non-reasoning data, such as creative writing, role-play, and sim-
+      ple question answering, we utilize DeepSeek-V2.5 to generate responses and enlist human
+      annotators to verify the accuracy and correctness of the data.
+* SFT Settings：We fine-tune DeepSeek-V3-Base for two epochs using the SFT dataset, using the
+  cosine decay learning rate scheduling that starts at 5 × 10−6 and gradually decreases to 1 × 10−6.
+  During training, **each single sequence is packed from multiple samples**. However, we adopt a
+  sample masking strategy to ensure that these examples remain isolated and mutually invisible.
+
+#### RL
+
+* Rule-Based RM.
+* Model-Based RM.
+  * The reward model is trained from the DeepSeek-V3 SFT checkpoints. To enhance its
+    reliability, we construct preference data that not only provides the final reward but also includes
+    the chain-of-thought leading to the reward.
+
+#### 其它
+
+* Distillation from DeepSeek-R1
+
+* Self-Rewarding
+
+  
+
 ## Datasets and Evaluation
 
 ### Intro
@@ -755,25 +945,28 @@ https://github.com/OpenNMT/OpenNMT-py/
 * Intro
   * https://huggingface.co/blog/moe
 
-### Paper
-
-#### SparseMoE
+### SparseMoE
 
 * 每个token分配到Gate分数最高的k个Experts上进行计算
 * 问题：
   * load balance
   * 访存bound：Expert parallelism
 
+#### Load Balance
 
+* For MoE models, an unbalanced expert load will lead to routing collapse (Shazeer et al., 2017) and diminish computational efficiency in scenarios with expert parallelism. Conventional solutions usually rely on the auxiliary loss (Fedus et al., 2021; Lepikhin et al., 2021) to avoid unbalanced load. However, too large an auxiliary loss will impair the model performance (Wang et al., 2024a). To achieve a better trade-off between load balance and model performance, we pioneer an auxiliary-loss-free load balancing strategy (Wang et al., 2024a) to ensure load balance.【deepseek-v3】
+  * Auxiliary-Loss-Free Load Balancing.
+    * 每个step进行策略调节
+    * ![image-20250501014407504](./AI-Algorithms/image-20250501014407504.png)
 
-#### SoftMoE
+### SoftMoE
 
 > google paper
 
 * 对于输入的$$N$$个 tokens 通过线性组合（Dispatch）得到$$S$$个 slot，由$$E$$个 Expert 均匀处理$$S$$个 slot 后再映射回（Combine）$$N$$个 tokens，该方案可以看作是某种Merge Tokens的思想。当$$S<N$$可显著减少 FLOPS，同时可以通过 Expert 的数目来控制参数量。
   * S == E 时，理解为 Merge Tokens
 
-#### HardMoE
+### HardMoE
 
 * N == S，不再对输入tokens进行dispatch，PertokensFFN
   * 根据语义信息分配token

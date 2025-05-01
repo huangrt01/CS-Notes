@@ -194,7 +194,39 @@ print(f"Prompt的token数量为: {token_count}")
     * output：15刀/1M token
     * input：5刀/1M token
 
+## 推理部署
 
+### DeepSeek-V3 (MoE)
+
+* prefill
+  * The minimum deployment unit of the prefilling stage consists of 4 nodes with 32 GPUs. The
+    attention part employs 4-way Tensor Parallelism (TP4) with Sequence Parallelism (SP), com-
+    bined with 8-way Data Parallelism (DP8). Its small TP size of 4 limits the overhead of TP
+    communication. For the MoE part, we use 32-way Expert Parallelism (EP32), which ensures that
+    each expert processes a sufficiently large batch size, thereby enhancing computational efficiency.
+    For the MoE all-to-all communication, we use the same method as in training: first transferring
+    tokens across nodes via IB, and then forwarding among the intra-node GPUs via NVLink. In
+    particular, we use 1-way Tensor Parallelism for the dense MLPs in shallow layers to save TP
+    communication.
+    * **redundant experts**：For each GPU, besides the original 8 experts it
+      hosts, it will also host one additional redundant expert
+  * simultaneously process two micro-batches with similar computational workloads, **overlapping the attention and MoE of one micro-batch with the dispatch and combine of another.**
+    * exploring a dynamic redundancy strategy for experts, where each GPU hosts
+      more experts (e.g., 16 experts), but only 9 will be activated during each inference step
+
+* decoding
+  * The minimum deployment unit of the decoding stage consists of 40 nodes with 320 GPUs.
+  * The attention part employs TP4 with SP, combined with DP80,
+  * the MoE part uses EP320.
+    * each GPU hosts only one expert, and 64 GPUs
+      are responsible for hosting redundant experts and shared experts
+    * the batch size per expert is relatively small (usually within 256 tokens), and the bottleneck is memory access rather than computation
+      * **allocate only a small portion of SMs to dispatch+MoE+combine.**
+  * 通信优化
+    * leverage the IBGDA (NVIDIA, 2022) technology to further
+      minimize latency and enhance communication efficiency.
+    * **overlap the attention of one micro-batch with**
+      **the dispatch+MoE+combine of another.**
 
 ## 推理优化
 
@@ -386,15 +418,26 @@ with IO-Awareness
 
 * Speculative Decoding, Lookahead Decoding, Flash-Decoding, Flash-decoding++, Deja Vu, Atom, Continunous Batching，Prefill-Decode Disaggregating
 
+#### Speculative Decoding
+
+《Speculative Decoding: Exploiting Speculative Execution for Accelerating Seq2seq Generation》
+
+《Fast Inference from Transformers via Speculative Decoding》
+
 
 
 ### MoE 推理 —— Expert Parallelism
 
 * Seed：https://arxiv.org/abs/2504.02263
 
+## 推理框架
 
+* MLLM推理
+  * SGLang
+  * LMDeploy
+  * vLLM
 
-## SGLang
+### SGLang
 
 * Intro
   * known for its almost [zero-overhead batch scheduler](https://lmsys.org/blog/2024-12-04-sglang-v0-4/) and fast [constrained decoding](https://lmsys.org/blog/2024-02-05-compressed-fsm/)
@@ -416,13 +459,6 @@ with IO-Awareness
 
 * 字节Ckpt https://mp.weixin.qq.com/s/4pIAZqH01Ib_OGGGD9OWQg
   * ByteCheckpoint ，一个 PyTorch 原生，兼容多个训练框架，支持 Checkpoint 的高效读写和自动重新切分的大模型 Checkpointing 系统。
-
-## 推理框架
-
-* MLLM推理
-  * SGLang
-  * LMDeploy
-  * vLLM
 
 
 

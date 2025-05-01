@@ -63,8 +63,10 @@ pack and slice operation should commute, otherwise the packing format is not com
 quantize_(model, gemlite_uintx_weight_only(group_size, bit_width, packing_bitwidth))
 
 
-### float 8 
+### float 8 (fp8)
 https://github.com/pytorch-labs/float8_experimental
+
+FBGEMM-fp8-rowwise: https://github.com/pytorch/FBGEMM/commit/1b5a7018a935f6ffbe29898e3413b36df5843521
 
 
 

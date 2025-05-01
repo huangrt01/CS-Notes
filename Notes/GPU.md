@@ -328,13 +328,14 @@ cudaMemcpyHostToDevice
 
 > 基于 [ICI(tpu)](https://cloud.google.com/tpu/docs/system-architecture-tpu-vm)/[RoCE](https://en.wikipedia.org/wiki/InfiniBand)/IB 实现高速网络互联
 
-* 内存通常是显存的2倍以上比较合理
+* NVLink offers a bandwidth of 160 GB/s, roughly 3.2 times that of IB
+  (50 GB/s).
 * 内存 - pin memory - 显存 - GPU
   * 通常由CPU负责调度
   * pin memory和内存的传输：由GPU上的DMA负责调度
+  * 内存通常是显存的2倍以上比较合理
 * 硬盘 - 显存：
   * GPU Direct Storage
-
 * 网络 - 显存： RDMA
 * PCIe / NVLINk 与CPU Chipset交互
   * nvlink的带宽 > GPU-CPU offload带宽
@@ -447,7 +448,15 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 
 #### 精度支持
 
-* Blackwell GPUs will [no longer support int4 tensor cores](https://www.nvidia.com/en-us/data-center/tensor-cores/).
+* Int4
+  * Blackwell GPUs will [no longer support int4 tensor cores](https://www.nvidia.com/en-us/data-center/tensor-cores/).
+
+* fp8
+  * FP8 GEMM Accumulation Precision in Tensor Cores：
+    * After aligning 32 mantissa products by right-shifting based on the maximum
+      exponent, the Tensor Core only uses the highest 14 bits of each mantissa product for addition, and truncates bits exceeding this range. The accumulation of addition results into registers also
+      employs **14-bit mantissa precision**.
+
 
 #### 浮点计算精度
 
@@ -467,6 +476,21 @@ nvidia-smi --query-gpu=name --format=csv,noheader
   * https://github.com/pytorch/ao/pull/748
   * a100加速比2，
   * ![image-20250331133109379](./GPU/image-20250331133109379.png)
+
+#### 新硬件架构
+
+##### Hopper
+
+* Thread Block Group的概念
+* WGMMA 的异步能力 https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
+
+
+
+##### Blackwell
+
+https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
+
+
 
 #### Engegy Model
 
@@ -584,6 +608,10 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 ![image-20250224190231769](./GPU/image-20250224190231769.png)
 
+##### Warp Specialization
+
+《Singe: Leveraging Warp Specialization for High Performance on GPUs》
+
 #### Host and Device Code
 
 * 细节：
@@ -608,10 +636,6 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 #### Stream
 
 https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar.pdf
-
-#### Hopper
-
-* Thread Block Group的概念
 
 #### 写 Op
 
