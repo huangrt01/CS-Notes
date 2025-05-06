@@ -13,8 +13,9 @@
 > - 整体代码性能分析：design是否有更优解，比如pipeline的编排能否更合理、no padding等能否达成
 > - 关键处代码瓶颈分析：例如folding、unique、gradient reduce等操作
 
-* Rooﬂine: an insightful visual performance model for multicore architectures.
+#### Roofline Model
 
+* Rooﬂine: an insightful visual performance model for multicore architectures.
   * **横轴：arithmetic intensity**: which is the number of arithmetic operations per byte of memory access.
     * Compute-bound: the time taken by the operation is determined by how many arithmetic operations there are, while time accessing HBM is much smaller. Typical examples are matrix multiply with large inner dimension, and convolution with large number of channels.
     * Memory-bound: the time taken by the operation is determined by the number of memory accesses, while time spent in computation is much smaller. Examples include most other operations: elementwise (e.g., activation, dropout), and reduction (e.g., sum, softmax, batch norm, layer norm).
@@ -25,12 +26,25 @@
 
 ![image-20250404195013648](./Computer-Architecture/image-20250404195013648.png)
 
+* 硬件例子：
+  * V100: 125/0.9 =139FLOPS/Byte
+  
 * Memory optimization和runtime optimization
   * 往往是互相制约的
 * IO-Aware Runtime Optimization 【flash-attention】
   * We draw the most direct connection to the literature of analyzing I/O complexity in this work [1], but concepts of memory hierarchies are fundamental and has appeared in many forms, from the working set model [21], to data locality [86], to the Rooﬂine model of arithmetic intensity [85], to analyses of scalability [59], to standard textbook treatments of computer architecture [40].
 
-### Low Latency Guide
+#### 为什么优化 Latency 困难
+
+* [It's the Latency, Stupid](http://www.stuartcheshire.org/rants/latency.html)
+  * internet latency
+    * Ethernet connection: 0.3ms
+    * modem link: 100ms
+    * modem link传输：典型值 33kbit/sec
+  * 磁盘的seek time
+  * 在低带宽的专用连接和高带宽连接的一小部分份额之间做选择，应该选择后者。
+
+#### Low Latency Guide
 
 https://rigtorp.se/low-latency-guide/
 
@@ -71,6 +85,10 @@ constexpr size_t CACHE_LINE_SIZE =
     * 指令发射数 issue width
   * 核心数量
   * 多级缓存
+
+#### Branch Predictor
+
+[**Zen5的2-Ahead Branch Predictor**](https://chipsandcheese.com/p/zen-5s-2-ahead-branch-predictor-unit-how-30-year-old-idea-allows-for-new-tricks)
 
 ### 各种微架构
 
@@ -114,6 +132,21 @@ constexpr size_t CACHE_LINE_SIZE =
 #### AMD 课程
 
 ROCm：https://developer.amd.com/resources/rocm-learning-center/
+
+### 内存
+
+#### DRAM vs SRAM
+
+* DRAM: 1 transistor, 1 capacitor
+
+* SRAM: 6 transistors
+  * So SRAM is faster but more expensive, takes up more space and gets hotter
+
+* https://siliconvlsi.com/why-sram-is-faster-than-dram/
+
+![image-20250502153520363](./Computer-Architecture/image-20250502153520363.png)
+
+
 
 ### Cache 系列科普 ~ Latency
 
@@ -299,7 +332,7 @@ https://www.slideshare.net/am_sharifian/intel-hyper-threading-technology/1
     - https://www.intel.com/content/www/us/en/analytics/in-memory-data-and-analytics.html
     - 场景如presto：https://engineering.fb.com/2019/06/10/data-infrastructure/aria-presto/
 
-### 存储：内存、硬盘
+### 存储：硬盘、NVMe
 
 * 硬盘：分为HDD和SSD
   * 读写模式

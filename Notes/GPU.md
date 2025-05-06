@@ -162,14 +162,16 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
     * convolution没有限制
     * https://github.com/NVIDIA/apex/issues/221#issuecomment-478084841
   
-    
   
+  ![image-20250502214129368](./GPU/image-20250502214129368.png)
 
 
 
 ##### GPU Memory Architecture
 
 ![image-20250226190716305](./GPU/image-20250226190716305.png)
+
+<img src="./GPU/image-20250502161610622.png" alt="image-20250502161610622" style="zoom:50%;" />
 
 * Registers
   * 65536 per SM (A100/H100)
@@ -503,7 +505,7 @@ https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
 
 
 
-#### 机型基础
+#### **机型基础
 
 * Nvidia GPU的算力([Compute Capability](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#compute-capability)), 只是一个版本号, 用来表示核心架构. 一般用`X.X`的方式表示, 第一位是主版本号, 第二位是次版本号, 如下:
 
@@ -523,7 +525,8 @@ https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
 
 * V100
   * https://datacrunch.io/blog/nvidia-v100-gpu-specs
-
+  * roofline: 125/0.9 =139FLOPS/Byte
+  
 * A100
   * GPU
     * GPU Memory：80 GB
@@ -637,16 +640,6 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar.pdf
 
-#### 写 Op
-
-* SGEMM：https://github.com/NervanaSystems/maxas/wiki/SGEMM
-
-##### 难点
-
-- Memory transfers from DRAM must be *coalesced* into large transactions to leverage the large bus width of modern memory interfaces.
-- Data must be manually stashed to SRAM prior to being re-used, and managed so as to minimize shared memory bank conflicts upon retrieval.
-- Computations must be partitioned and scheduled carefully, both across and within Streaming Multiprocessors (SMs), so as to promote instruction/thread-level parallelism and leverage special-purpose ALUs (e.g., tensor cores).
-
 ### Triton
 
 #### Intro
@@ -740,34 +733,6 @@ https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar
 
 * triton autotune目前对dynamic shape的支持不好，性能较差，原因是autotune会对每个新shape重新tune
 
-### GemLite —— Low-Bit Triton Kernels
-
-> /code-reading-gem-lite
-
-* Intro
-
-  - Support for various activation data types: fp16, int8 and fp8
-
-  - Compatibility: works seamlessly with non-packed (e.g., int8, fp8) and packed formats (e.g., uint4, uint2, uint1)
-
-  - Performance Optimization: includes optimized kernels and autotuning tools to achieve high performance across different hardware and batch sizes
-
-  - Integration: Compatible with torch.compile and CUDA graphs, ensuring support for advanced features like tensor parallelism
-
-* Kernel Selection
-  * For batch size = 1, a GEMV kernel performs best,
-    * for packed data, our experiments indicate that **loading scales and zero points only once per two consecutive blocks minimizes redundant operations**. Since these blocks share the same metadata, this approach results in:
-      - 5–8% end-to-end inference speedup compared to the default GEMV kernel
-      - 30–40% improvement over the traditional Split-K method
-    * for non packed: GEMV_SPLITK
-  * for larger batch sizes, GEMM kernels are more efficient.
-  * For batch sizes between 2 and 64, when matrices are “skinny,” a GEMM-SPLITK kernel is used to enable better GPU utilization ([arXiv](https://arxiv.org/abs/2402.00025)).
-
-* autotuning
-  * [Autotuning](https://triton-lang.org/main/python-api/generated/triton.autotune.html) is critical for achieving optimal kernel performance. Since this process can be time-intensive, GemLite **provides tools to automatically save and load autotuning results for all kernels**. This ensures that the autotuning process is performed only once per GPU device, minimizing runtime, reducing repetitive overhead, and maintaining consistent performance across runs.
-* Overcoming **Bit-Unpacking Bottlenecks**
-  * To mitigate these, various bit-packing configurations were explored, including **packing along columns** versus rows and experimenting with different bit-packing widths (e.g., 8-bit vs. 32-bit). Notably, **transitioning from 32-bit to 8-bit packing** delivered performance improvements of up to 18% on the A100 and 6% on the H100
-
 ### GPU优化
 
 #### Overview
@@ -818,21 +783,53 @@ https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar
 
 #### 写好GPU程序的难点
 
-* "if you do not care about performance, parallel programming is very easy"
-* designing parallel algorithms in practice harder than sequential algorithms
-  * e.g. parallelizing recurrent computations requires nonintuitive thinking (like prefix sum)
-* speed is often limited by memory latency/throughput (memory bound)
-  * e.g. llm token by token效率低，需要batching
-* perf of parallel programs can vary dramatically based on input data characteristics
-* not all apps are "embarassingly parallel" - synchronization imposes overhead (waits)
+* 思路
 
-#### 充分利用 SM
+  * "if you do not care about performance, parallel programming is very easy"
 
-* 增大batch size
+    * designing parallel algorithms in practice harder than sequential algorithms
+      * e.g. parallelizing recurrent computations requires nonintuitive thinking (like prefix sum)
+
+    * speed is often limited by memory latency/throughput (memory bound)
+      * e.g. llm token by token效率低，需要batching
 
 
+  * perf of parallel programs can vary dramatically based on input data characteristics
 
-#### SM效率
+  * not all apps are "embarassingly parallel" - synchronization imposes overhead (waits)
+
+* 性能
+
+  * Memory transfers from DRAM must be *coalesced* into large transactions to leverage the large bus width of modern memory interfaces.
+  * Data must be manually stashed to SRAM prior to being re-used, and managed so as to minimize shared memory bank conflicts upon retrieval.
+  * Computations must be partitioned and scheduled carefully, both across and within Streaming Multiprocessors (SMs), so as to promote instruction/thread-level parallelism and leverage special-purpose ALUs (e.g., tensor cores).
+
+#### [CUDA Performance Checklist (GPU Mode Lecture 8)](https://www.youtube.com/watch?v=SGhfUhlowB4)
+
+> https://docs.google.com/presentation/d/1cvVpf3ChFFiY4Kf25S4e4sPY6Y5uRUO-X-A4nJ7IhFE/edit?slide=id.p#slide=id.p
+
+* Coalesced Global Memory Access
+
+* Maximize occupancy
+
+* *Understand if memory or compute bound*
+
+* Minimize control divergence
+
+* Tiling of reused data
+
+* Privatization
+  * local copy, avoid hitting global memory
+
+* Thread Coarsening
+  * compute bound通常每个thread做尽可能少的事情
+  * memory bound每个thread做更多事情
+
+* *Rewrite your algorithm using better math*
+
+
+
+#### SM Occupancy
 
 * **SM Occupancy：the ratio of the number of warps assigned to an SM to the maximum number it can support**
   * 提升 SM 占用率的关键通常在于 降低每个 Block 对 SM 资源的（寄存器、共享内存）需求 ，使得 SM 能够同时调度运行更多的 Block（以及更多的 Warp）。
@@ -847,6 +844,14 @@ https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar
        - block size=32，总共需要执行 2048 个线程。因此总共需要 2048/32 = 64 个线程块来容纳这 2048 个线程
        - **每个 SM 在同一时刻最多只能处理 32 个 thread block**
        - --> 50% SM Occupancy
+
+> https://docs.nvidia.com/deeplearning/performance/dl-performance-matrix-multiplication/index.html
+
+![image-20250502214010222](./GPU/image-20250502214010222.png)
+
+* 充分利用 SM
+  * cuda occupancy calculator
+  * 增大batch size
 
 #### Warp效率
 
@@ -864,7 +869,9 @@ https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar
 
 ![image-20250404222219317](./GPU/image-20250404222219317.png)
 
+#### TensorCore利用
 
+https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9926-tensor-core-performance-the-ultimate-guide.pdf
 
 
 
@@ -907,38 +914,6 @@ https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar
 * Chapter 5: Memory architecture and data locality
   * aka the basics of getting fast kernels
 
-### Torch.compile
-
-#### Intro
-
-* `torch.compile` makes your model faster by trying to **use existing kernels more effectively and creating simple new kernels.** 
-* 什么情况下torch.compile性能差
-  * 不能编译成一个cuda graph，有graph breaks
-* 能力：
-  * 支持dynamic shape
-  * 支持optimizer的vertical fusion
-    * 编译，没有optimizer IR，编译20s for 几千参数 AdamW
-
-#### 为什么 Square 算子性能差
-
-> snippets/gpu-triton.py
-
-* Triton（Autotune）和 Triton（No Autotune Large Block Size）性能差不多，且最好
-  - Triton（No Autotune Large Block Size）: `BLOCK_SIZE = triton.next_power_of_2(n_cols)`
-  - --> H20机器，大Block Size效果好？
-* torch原生实现 和 Triton（No Autotune Fixed Block Size）性能相当
-  - Triton（No Autotune Fixed Block Size）：固定Block Size为1024
-* Torch(compiled) 性能最差
-  * torch.compile的实现用一个kernel处理整个矩阵数据
-  * 主要差异是，手写代码按行生成多个kernel实例，每个实例并行处理一行数据
-
-![image-20250225191017217](./GPU/image-20250225191017217.png)
-
-- 考虑到矩阵内存连续，对于element-wise任务，可以将2d-matrix视为1d-tensor，因此torch.compile将这一任务抽象成1d并行任务是合理的
-  - 为什么性能有损呢，本质是生成的kernel实例数量影响了性能（这个例子中，每行一个kernel实例，性能有优化）
-  - Q：kernel实例数量影响性能，原理是什么？ 取舍是什么？kernel launch代价？
-  - Q：triton能否自动优化这个？
-
 ### GPU Profiling
 
 > [tf-timeline](https://zhuanlan.zhihu.com/p/40156908)
@@ -950,7 +925,13 @@ https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar
 * Intro
   * cuda是async，因此用python的time模块，测的包含kernel launch时间，不包含execute时间
 
+#### Dissecting the NVIDIA Volta GPU Architecture via Microbenchmarking
 
+https://arxiv.org/pdf/1804.06826
+
+#### Demystifying the Nvidia Ampere Architecture through Microbenchmarking and Instruction-level Analysis
+
+microbenchmark using ptx
 
 #### Nvidia Lecture 5: Introduction to Nsight Profiling Tools
 
@@ -986,9 +967,65 @@ Support:
 
 ![warp-scheduler](./GPU/warp-scheduler.png)
 
+### GemLite —— Low-Bit Triton Kernels
 
+> /code-reading-gem-lite
 
+* Intro
 
+  - Support for various activation data types: fp16, int8 and fp8
+
+  - Compatibility: works seamlessly with non-packed (e.g., int8, fp8) and packed formats (e.g., uint4, uint2, uint1)
+
+  - Performance Optimization: includes optimized kernels and autotuning tools to achieve high performance across different hardware and batch sizes
+
+  - Integration: Compatible with torch.compile and CUDA graphs, ensuring support for advanced features like tensor parallelism
+
+* Kernel Selection
+  * For batch size = 1, a GEMV kernel performs best,
+    * for packed data, our experiments indicate that **loading scales and zero points only once per two consecutive blocks minimizes redundant operations**. Since these blocks share the same metadata, this approach results in:
+      - 5–8% end-to-end inference speedup compared to the default GEMV kernel
+      - 30–40% improvement over the traditional Split-K method
+    * for non packed: GEMV_SPLITK
+  * for larger batch sizes, GEMM kernels are more efficient.
+  * For batch sizes between 2 and 64, when matrices are “skinny,” a GEMM-SPLITK kernel is used to enable better GPU utilization ([arXiv](https://arxiv.org/abs/2402.00025)).
+
+* autotuning
+  * [Autotuning](https://triton-lang.org/main/python-api/generated/triton.autotune.html) is critical for achieving optimal kernel performance. Since this process can be time-intensive, GemLite **provides tools to automatically save and load autotuning results for all kernels**. This ensures that the autotuning process is performed only once per GPU device, minimizing runtime, reducing repetitive overhead, and maintaining consistent performance across runs.
+* Overcoming **Bit-Unpacking Bottlenecks**
+  * To mitigate these, various bit-packing configurations were explored, including **packing along columns** versus rows and experimenting with different bit-packing widths (e.g., 8-bit vs. 32-bit). Notably, **transitioning from 32-bit to 8-bit packing** delivered performance improvements of up to 18% on the A100 and 6% on the H100
+
+### Torch.compile
+
+#### Intro
+
+* `torch.compile` makes your model faster by trying to **use existing kernels more effectively and creating simple new kernels.** 
+* 什么情况下torch.compile性能差
+  * 不能编译成一个cuda graph，有graph breaks
+* 能力：
+  * 支持dynamic shape
+  * 支持optimizer的vertical fusion
+    * 编译，没有optimizer IR，编译20s for 几千参数 AdamW
+
+#### 为什么 Square 算子性能差
+
+> snippets/gpu-triton.py
+
+* Triton（Autotune）和 Triton（No Autotune Large Block Size）性能差不多，且最好
+  - Triton（No Autotune Large Block Size）: `BLOCK_SIZE = triton.next_power_of_2(n_cols)`
+  - --> H20机器，大Block Size效果好？
+* torch原生实现 和 Triton（No Autotune Fixed Block Size）性能相当
+  - Triton（No Autotune Fixed Block Size）：固定Block Size为1024
+* Torch(compiled) 性能最差
+  * torch.compile的实现用一个kernel处理整个矩阵数据
+  * 主要差异是，手写代码按行生成多个kernel实例，每个实例并行处理一行数据
+
+![image-20250225191017217](./GPU/image-20250225191017217.png)
+
+- 考虑到矩阵内存连续，对于element-wise任务，可以将2d-matrix视为1d-tensor，因此torch.compile将这一任务抽象成1d并行任务是合理的
+  - 为什么性能有损呢，本质是生成的kernel实例数量影响了性能（这个例子中，每行一个kernel实例，性能有优化）
+  - Q：kernel实例数量影响性能，原理是什么？ 取舍是什么？kernel launch代价？
+  - Q：triton能否自动优化这个？
 
 ### Nvidia Lectures
 

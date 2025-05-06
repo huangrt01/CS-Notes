@@ -13,6 +13,32 @@ internet layer: Internet Protocol, IP address, packet's path
 
 用`ping`和`traceroute`看IP地址; 光纤2/3光速，8637km -> RTT=86ms
 
+> [It's the Latency, Stupid](http://www.stuartcheshire.org/rants/latency.html)
+
+- The distance from Stanford to Boston is 4320km.
+
+- The speed of light in vacuum is 300 x 10^6 m/s.
+
+- The speed of light in fibre is roughly 66% of the speed of light in vacuum.
+
+- The speed of light in fibre is 300 x 10^6 m/s * 0.66 = 200 x 10^6 m/s.
+
+- The one-way delay to Boston is 4320 km / 200 x 10^6 m/s = 21.6ms.
+
+- The round-trip time to Boston and back is 43.2ms.
+
+- The current ping time from Stanford to Boston over today's Internet is about 85ms:
+
+  ```
+  [cheshire@nitro]$ ping -c 1 lcs.mit.edu
+  PING lcs.mit.edu (18.26.0.36): 56 data bytes
+  64 bytes from 18.26.0.36: icmp_seq=0 ttl=238 time=84.5 ms
+  ```
+
+- So: the hardware of the Internet can currently achieve within a factor of two of the speed of light.
+
+
+
 ##### 1-1 A day in the life of an application
 * Networked Applications: connectivity, bidirectional and reliable data stream
 * Byte Stream Model: A - Internet - B, server和A、B均可中断连接
@@ -832,6 +858,9 @@ icmp.code == 0
 
 * WIFI5 的连接速度最高 866.7 Mbps，只有开启 WIFI6 模式，并且启用160MHZ，才能突破 866.7 Mbps
 * 路由器 LAN-LAN 级联
+* 路由器的延时问题
+  * One major modem manufacturer has contacted me, and we've been investigating where the time goes. It seems that there is room for improvement, but unfortunately modems will never be able to match ISDN. The problem is that over a telephone line, electrical signals get "blurred" out. In order to decode just one single bit, a 33.6kb/s modem needs to take not just a single reading of the voltage on the phone line at that instant, but that single reading plus another 79 like it, spaced 1/6000 of a second apart. A mathematical function of those 80 readings gives the actual result. This process is called **"line equalization"**. Better line equalization allows higher data rates, but the more "taps" the equalizer has the more delay it adds. The V.34 standard also specifies particular scrambling and descrambling of the data, which also take time. According to this company, the theoretical best round-trip delay for a 14.4kb/s modem (no compression or error recovery) should be 40ms, and for a 33.6kb/s modem 64ms. The irony here is that as the capacity goes up, the best-case latency gets worse instead of better. **For a small packet, it would be faster for your modem to send it at 9.6kb/s than at 33.6kb/s!**
+
 
 #### TCP 吞吐研究
 
@@ -876,9 +905,15 @@ Ethane的优势
 * Replicating the Controller: Fault-Tolerance and Scalability
   * cold-standby (having no network binding state) or warm-standby (having network binding state) modes
 
+### Computer-Networking-A-Top-Down-Approach
 
+#### 0.资料
 
+* [Stanford CS144](https://github.com/huangrt01/Markdown-Transformer-and-Uploader/blob/master/Notes/Output/Stanford-CS144.md)
 
+* [质量最高的pdf](https://download.csdn.net/download/mnt248/10350433)
 
-
-
+* 习题
+  * https://github.com/moranzcw/Computer-Networking-A-Top-Down-Approach-NOTES
+  * https://github.com/HanochShi/Supplements-ComputerNetworking-ATopDownApproach-7th-ed
+  * https://github.com/myk502/Top-Down-Approach

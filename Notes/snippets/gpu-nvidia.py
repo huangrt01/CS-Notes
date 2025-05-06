@@ -42,6 +42,10 @@ else:
 
 print(torch.cuda.current_device())
 
+### nvcc
+
+nvcc -o output xx.cu
+
 
 ### utils
 

@@ -1,12 +1,12 @@
 # matmul-performance-matrix-size:
-#    square_matrix_size      Naive    Grouped  Grouped & Auto-Tuned  Grouped & Auto-Tuned (Leaky ReLU)       Torch  Torch-Compiled  Numpy-Broadcast  Cuda-Naive  Cuda-Shared     Numba  Grouped & Auto-Tuned (FP16)  Torch (FP16)  Grouped (FP8)
-# 0                32.0   2.075676   1.979382              1.920000                           1.929648    1.627119        0.521031         0.015547    1.324138     1.471264  0.096847                     1.989637      1.910448       2.042553
-# 1                64.0   7.420290   7.013699              7.492683                           7.492683    5.667897        2.189594         0.030265    4.266667     5.120000  0.397618                     7.529412      7.641791       7.718593
-# 2               128.0  23.630769  23.450383             26.144681                          26.033898   17.912537        9.253012         0.059935   12.142292    16.083770  1.549168                    27.927273     28.444444      26.369099
-# 3               256.0  61.134328  61.748743             71.859646                          70.418336   60.532019       38.886077         0.118427   30.415842    42.815331  5.899892                   102.400003     99.497980      79.277419
-# 4               512.0  59.832013  59.326492            138.651625                         134.295085  125.148315      115.651763         0.236435   30.538676    44.643052  8.846652                   325.509933    244.537310     117.870503
-# 5              1024.0  35.472801  35.460006            110.422912                         107.730408  130.117804      129.859973         0.423964   18.126400    27.411364  4.921105                   483.066322    441.815718      82.056758
-# 6              2048.0  18.226173  18.245413             64.740234                          64.283805   71.610998       71.609364         0.810390    9.520969    14.290320  2.505554                   369.130244    316.407973      43.467293
+# square_matrix_size      Naive    Grouped  Grouped & Auto-Tuned  Grouped & Auto-Tuned (Leaky ReLU)       Torch  Torch-Compiled  Numpy-Broadcast  Cuda-Naive  Cuda-Shared     Numba  Grouped & Auto-Tuned (FP16)  Torch (FP16)  Grouped (FP8)
+# 0                32.0   1.979382   1.959184              1.969231                           1.989637    1.669565        0.607595         0.015510    1.301695     1.460076  0.094791                     2.098361      1.873171       2.098361
+# 1                64.0   7.111111   6.981818              7.314286                           7.314286    5.818182        2.526316         0.030401    4.096000     5.102990  0.378512                     7.603961      7.384615       7.456311
+# 2               128.0  23.722008  23.361217             26.713043                          26.713043   18.285714       10.378378         0.059785   11.906977    16.041775  1.512928                    28.054795     28.710280      26.369099
+# 3               256.0  61.134328  60.681482             68.456825                          69.818181   59.219279       43.613133         0.118581   29.970731    42.815331  5.861197                   103.696202    101.975103      79.022505
+# 4               512.0  59.506053  59.506053            135.032965                         135.966810  124.751268      122.726594         0.236279   32.833668    44.122083  8.825209                   330.989909    245.147134     118.012005
+# 5              1024.0  35.469601  35.463204            108.743361                         102.990048  130.117804      129.817101         0.424992   20.599629    27.417097  4.921167                   493.370129    445.823118      81.954144
+# 6              2048.0  18.227651  18.244142             64.488067                          62.255889   71.679536       71.689333         0.803120   10.965844    14.287204  2.505760                   368.697619    316.599027      43.451681
 
 # * Block-level matrix multiplications.
 
@@ -39,7 +39,8 @@ np.seterr(all="warn")
 from gpu_kernel_utils import (cdiv, breakpoint_if, print_if,
                               check_tensors_gpu_ready, get_1d_offset,
                               get_2d_offset, get_1d_mask, get_2d_mask,
-                              load_cuda, cuda_begin, is_cuda, is_hip_cdna2, RTOL, check_implementation)
+                              load_cuda, cuda_begin, is_cuda, is_hip_cdna2,
+                              RTOL, check_implementation)
 from functools import partial
 
 
@@ -52,25 +53,23 @@ def matmul(a, b, matmul_k_fn, bs=16, GROUP_SZ=None, activation=''):
   GROUP_SZ = ({} if GROUP_SZ is None else {
       "GROUP_SZ": GROUP_SZ
   })  # not used in naive_matmul, but will be in grouped_matmul further below
-  matmul_k_fn[grid](
-      a,
-      b,
-      c,
-      M,
-      N,
-      K,
-      a.stride(0),
-      a.stride(1),
-      b.stride(0),
-      b.stride(1),
-      c.stride(0),
-      c.stride(1),
-      BM=bs,
-      BN=bs,
-      BK=
-      bs,
-      **GROUP_SZ,
-      ACTIVATION=activation)
+  matmul_k_fn[grid](a,
+                    b,
+                    c,
+                    M,
+                    N,
+                    K,
+                    a.stride(0),
+                    a.stride(1),
+                    b.stride(0),
+                    b.stride(1),
+                    c.stride(0),
+                    c.stride(1),
+                    BM=bs,
+                    BN=bs,
+                    BK=bs,
+                    **GROUP_SZ,
+                    ACTIVATION=activation)
   return c
 
 
@@ -96,7 +95,7 @@ def naive_matmul_k(a_ptr, b_ptr, c_ptr, M, N, K, stride_am, stride_ak,
     acc += tl.dot(
         a, b, allow_tf32=(a.dtype != tl.float32)
     )  # matmul in block ; Weirdness: allow_tf32 must be set to False for older GPUs, otherwise won't compile
-       # allow_tf32=False when fp32, True when fp16/fp8
+    # allow_tf32=False when fp32, True when fp16/fp8
     a_ptrs += BK * stride_ak
     b_ptrs += BK * stride_bk
   c = c_ptr + get_2d_offset(rm, rn, stride_cm, stride_cn)
@@ -109,6 +108,7 @@ naive_matmul = partial(matmul, matmul_k_fn=naive_matmul_k)
 torch.manual_seed(0)
 a = torch.randn((511, 513), device="cuda", dtype=torch.float32)
 b = torch.randn((513, 1231), device="cuda", dtype=torch.float32)
+
 
 @triton.jit
 def leaky_relu(x):
@@ -617,6 +617,7 @@ cuda_src = cuda_begin + r'''
 // 1. TILE_WIDTH设为32会导致性能严重劣化, 1536
 // 2. 采用 sharedMatMult<<<blocks, tpb, 2 * TILE_WIDTH * TILE_WIDTH>>>, dynamic shared mem，性能劣化的一种原因是kernel内部编译时不知道TILE_WIDTH大小，无法最优化
 // 3. 改写用模版传入TILE_WIDTH，性能相比static有微小提升
+// 4. 对于NaiveMatmul, 当square_matrix_size >= 1024时，block=(32,32)相比(16,16)有提升
 
 template<int TILE_WIDTH>
 __global__ void sharedMatMult( float *a, float *b, float *c, int M, int K, int N){
@@ -688,8 +689,25 @@ torch::Tensor naive_matmul(torch::Tensor m, torch::Tensor n) {
     TORCH_CHECK(k==n.size(0), "Size mismatch!");
     auto output = torch::zeros({h, w}, m.options());
 
-    dim3 tpb(16, 16);
-    dim3 blocks(cdiv(w, tpb.x), cdiv(h, tpb.y));
+    // int minGridSize, optimalBlockSize;
+    // cudaError_t occupancy_status = cudaOccupancyMaxPotentialBlockSize(
+       // &minGridSize,
+       // &optimalBlockSize,
+       // (void*)matrixMulGPU, // Pointer to the kernel function
+       // 0,                   // Dynamic shared memory per block (assuming 0 for matrixMulGPU)
+       // 0                    // block size limit (0 means no limit beyond hardware)
+    // );
+    // C10_CUDA_CHECK(occupancy_status);
+
+    dim3 tpb;
+    tpb.x = 32;
+    tpb.y = 32;
+    // tpb.y = std::max(1, optimalBlockSize / (int)tpb.x); // Ensure at least 1 thread in y-dim
+    // if (tpb.x * tpb.y > optimalBlockSize) {
+    //     tpb.y = optimalBlockSize / (int)tpb.x;
+    //     tpb.y = std::max(1, (int)tpb.y);
+    // }
+    dim3 blocks(cdiv(w, tpb.x), cdiv(h, tpb.y)); 
     matrixMulGPU<<<blocks, tpb>>>(
         m.data_ptr<float>(), n.data_ptr<float>(), output.data_ptr<float>(), h, k, w);
     C10_CUDA_KERNEL_LAUNCH_CHECK();
@@ -742,7 +760,6 @@ mm_module = load_cuda(cuda_src,
                       verbose=True,
                       name="mm_load_inline")
 
-
 import math
 from numba import cuda
 
@@ -790,76 +807,110 @@ def matmul_2d_numba(m, n, tw=16):
   matmul_k_numba[blocks, tpb, 0, dyn_shared_mem_size](ca(m), ca(n), ca(out), tw)
   return out
 
+
 check_implementation(
-    naive_matmul, torch.matmul,
-    "Triton-Naive", "Torch",
+    naive_matmul,
+    torch.matmul,
+    "Triton-Naive",
+    "Torch",
     common_args=(a, b),
 )
 check_implementation(
-    grouped_matmul, torch.matmul,
-    "Triton-Grouped", "Torch",
+    grouped_matmul,
+    torch.matmul,
+    "Triton-Grouped",
+    "Torch",
     common_args=(a, b),
-    kwargs_a={'GROUP_SZ': 32, 'activation': ''},
+    kwargs_a={
+        'GROUP_SZ': 32,
+        'activation': ''
+    },
 )
 # check_implementation(
 #     grouped_autotuned_matmul, torch.matmul,
 #     "Triton-Grouped-Autotuned", "Torch",
 #     common_args=(a, b)
 # )
+check_implementation(torch.compile(torch.matmul),
+                     torch.matmul,
+                     "Torch-Compiled",
+                     "Torch",
+                     common_args=(a, b))
 check_implementation(
-    torch.compile(torch.matmul), torch.matmul,
-    "Torch-Compiled", "Torch",
-    common_args=(a, b)
-)
-check_implementation(
-    mm_module.naive_matmul, torch.matmul,
-    "Cuda-Naived", "Torch",
+    mm_module.naive_matmul,
+    torch.matmul,
+    "Cuda-Naived",
+    "Torch",
     common_args=(a, b),
     dtypes=[torch.float32],
 )
 check_implementation(
-    mm_module.shared_matmul, torch.matmul,
-    "Cuda-Shared", "Torch",
+    mm_module.shared_matmul,
+    torch.matmul,
+    "Cuda-Shared",
+    "Torch",
     common_args=(a, b),
     dtypes=[torch.float32],
 )
-check_implementation(
-    matmul_2d_numba, torch.matmul,
-    "Numba", "Torch",
-    common_args=(a, b),
-    atol = 6e-2
-)
+check_implementation(matmul_2d_numba,
+                     torch.matmul,
+                     "Numba",
+                     "Torch",
+                     common_args=(a, b),
+                     atol=6e-2)
 
 
 @triton.testing.perf_report(
     triton.testing.Benchmark(
-        x_names=["square_matrix_size"
-                ],
-        x_vals=[2**i for i in range(5, 12, 1)
-               ],
+        x_names=["square_matrix_size"],
+        x_vals=[2**i for i in range(5, 12, 1)],
         x_log=True,  # x axis is logarithmic.
-        line_arg=
-        "provider",
+        line_arg="provider",
         line_vals=[
-            "naive", "grouped", "grouped-autotuned",
-            "grouped-autotuned-leaky-relu", "torch", "torch-compiled",
-            "numpy-broadcast", "cuda-naive", "cuda-shared", "numba",
-            "grouped-autotuned-fp16", "torch-fp16",
-            "grouped-fp8", # "grouped-autotuned-fp8"
+            "naive",
+            "grouped",
+            "grouped-autotuned",
+            "grouped-autotuned-leaky-relu",
+            "torch",
+            "torch-compiled",
+            "numpy-broadcast",
+            "cuda-naive",
+            "cuda-shared",
+            "numba",
+            "grouped-autotuned-fp16",
+            "torch-fp16",
+            "grouped-fp8",  # "grouped-autotuned-fp8"
         ],
         line_names=[
-            "Naive", "Grouped", "Grouped & Auto-Tuned",
-            "Grouped & Auto-Tuned (Leaky ReLU)", "Torch", "Torch-Compiled",
-            "Numpy-Broadcast", "Cuda-Naive", "Cuda-Shared", "Numba",
-            "Grouped & Auto-Tuned (FP16)", "Torch (FP16)",
+            "Naive",
+            "Grouped",
+            "Grouped & Auto-Tuned",
+            "Grouped & Auto-Tuned (Leaky ReLU)",
+            "Torch",
+            "Torch-Compiled",
+            "Numpy-Broadcast",
+            "Cuda-Naive",
+            "Cuda-Shared",
+            "Numba",
+            "Grouped & Auto-Tuned (FP16)",
+            "Torch (FP16)",
             "Grouped (FP8)",  # "Grouped & Auto-Tuned (FP8)"
         ],  # Label name for the lines.
-        styles=[("blue", "-"), ("green", "-"), ("green", "--"), ("green", ":"),
-                ("orange", "-"), ("orange", "--"), ("red", "-"),
-                ("purple", "-"), ("purple", "--"),
-                ("brown", "-"),
-                ("cyan", "--"), ("magenta", "-"),
-                ("cyan", ":"), ],  # Line styles. ("cyan", "-.")
+        styles=[
+            ("blue", "-"),
+            ("green", "-"),
+            ("green", "--"),
+            ("green", ":"),
+            ("orange", "-"),
+            ("orange", "--"),
+            ("red", "-"),
+            ("purple", "-"),
+            ("purple", "--"),
+            ("brown", "-"),
+            ("cyan", "--"),
+            ("magenta", "-"),
+            ("cyan", ":"),
+        ],  # Line styles. ("cyan", "-.")
         ylabel="GB/s",  # Label name for the y-axis.
         plot_name=
         "matmul-performance-matrix-size",  # Name for the plot. Used also as a file name for saving the plot.
@@ -869,17 +920,18 @@ def benchmark_matrix_size(square_matrix_size, provider):
   sz = square_matrix_size
   dtype = torch.float32
   if "fp16" in provider:
-      dtype = torch.float16
+    dtype = torch.float16
   elif 'fp8' in provider:
-      TORCH_HAS_FP8 = hasattr(torch, "float8_e5m2")
-      if not TORCH_HAS_FP8:
-          print(f"Skipping {provider} benchmark: float8_e5m2 not supported.")
-          return 0, 0, 0
-      dtype = torch.float8_e5m2
+    TORCH_HAS_FP8 = hasattr(torch, "float8_e5m2")
+    if not TORCH_HAS_FP8:
+      print(f"Skipping {provider} benchmark: float8_e5m2 not supported.")
+      return 0, 0, 0
+    dtype = torch.float8_e5m2
   a = torch.rand((sz, sz), device="cuda").to(dtype)
   b_fp32 = torch.rand((sz, sz), device="cuda")
   # Note: pre-transpose b for efficiency.
-  b = b_fp32.T.to(dtype) if ('fp16' in provider or 'fp8' in provider) else b_fp32
+  b = b_fp32.T.to(dtype) if ('fp16' in provider or
+                             'fp8' in provider) else b_fp32
   quantiles = [0.5, 0.2, 0.8]
   if provider == "naive":
     ms, min_ms, max_ms = triton.testing.do_bench(lambda: naive_matmul(a, b),
@@ -915,15 +967,13 @@ def benchmark_matrix_size(square_matrix_size, provider):
                                                  quantiles=quantiles)
   elif provider == "grouped-autotuned-fp16":
     ms, min_ms, max_ms = triton.testing.do_bench(
-        lambda: grouped_autotuned_matmul(a, b),
-        quantiles=quantiles)
+        lambda: grouped_autotuned_matmul(a, b), quantiles=quantiles)
   elif provider == "torch-fp16":
     ms, min_ms, max_ms = triton.testing.do_bench(lambda: torch.matmul(a, b),
                                                  quantiles=quantiles)
   elif provider == "grouped-fp8":
     ms, min_ms, max_ms = triton.testing.do_bench(
-        lambda: grouped_matmul(a, b, GROUP_SZ=8),
-        quantiles=quantiles)
+        lambda: grouped_matmul(a, b, GROUP_SZ=8), quantiles=quantiles)
   # TRITON LLVM Error: size mismatch when packing elements for LLVM struct expected 4 but got 8
   # elif provider == "grouped-autotuned-fp8":
   #   ms, min_ms, max_ms = triton.testing.do_bench(
@@ -934,7 +984,7 @@ def benchmark_matrix_size(square_matrix_size, provider):
   # elif provider == "torch-fp8":
   #   ms, min_ms, max_ms = triton.testing.do_bench(lambda: torch.matmul(a, b),
   #                                                quantiles=quantiles)
-  
+
   else:
     raise ValueError("Unknown provider")
 

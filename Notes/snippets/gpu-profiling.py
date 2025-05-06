@@ -203,8 +203,22 @@ https://pytorch.org/tutorials/beginner/hta_intro_tutorial.html
 
 ### ncu profiler
 
+# install
+https://www.bilibili.com/opus/898996578463776788
+
+https://developer.nvidia.com/tools-downloads#?dn=nsight-compute-2025.1.1
+wget https://developer.nvidia.com/tools-downloads#?dn=nsight-compute-2025.1.1 
+再运行
+export PATH=$PATH:/usr/local/NVIDIA-Nsight-Compute-2025.1
+
+
+
+# usage
+
 ncu --target-processes all sudo python gpu_op_test.py
 ncu --set full -o output $(which python) train.py     # basic模式和full模式
+
+ncu --set full divergence
 
 
 profiling心得

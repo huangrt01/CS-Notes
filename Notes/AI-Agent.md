@@ -2,7 +2,7 @@
 
 [toc]
 
-## 概要
+## Intro
 
 * Intro
   * 做大模型，很难理解全部，退而求其次，理解其能力的边界很关键
@@ -17,6 +17,10 @@
   * https://arxiv.org/pdf/2304.13712
   * BERT pretrain的概念
   * 2018年英伟达可以生成图片的StyleGAN模型、2019年DeepMind可以自动生成连续视频的DVD-GAN模型和2022年OpenAI聊天机器人ChatGPT是AIGC在应用层面的三个重要节点。
+
+### 场景
+
+![image-20250506022138609](./AI-Agent/image-20250506022138609.png)
 
 ### 大模型简要介绍
 
@@ -53,7 +57,7 @@
   * **Software Engineers** - they are great! Capable of crafting complex high throughput, low latency systems that are deterministic. Translating business requirements into complex software flows. Masters of DevOps and software engineering best practices, capable of high velocity development and shipping to production in a safe way.
     - What they might initially lack in skills is the ability to reason in non-deterministic systems and knowledge how to observe and evaluate them. Also, it is not in their nature to continuously learn non software related topics that could completely shift in a day, requiring re-architecture of the entire system.
 
-![image-20250227193138998](./AI/image-20250227193138998.png)
+![image-20250227193138998](./AI-Agent/image-20250227193138998.png)
 
 ### 技能点
 
@@ -68,25 +72,27 @@
   - Prompt tracking and versioning.
   - Feedback and the continuous system improvement flywheel.
 
-![structure](./AI/structure.png)
+![structure](./AI-Agent/structure.png)
 
 ## 产品
 
 ### 模型能力
 
-![image-20241218105153242](./AI/image-20241218105153242.png)
+![image-20241218105153242](./AI-Agent/image-20241218105153242.png)
 
 
 
 ### 产品架构
 
-![business_arch](./AI/business_arch.webp)
+![business_arch](./AI-Agent/business_arch.webp)
 
 * 实现 Copilot 的主流架构是 **多 Agent 架构**
   * 模仿人做事，将业务拆成工作流（workflow、SOP、pipeline）
   * 每个 Agent 负责一个工作流节点
 
 ### 产品逻辑
+
+#### 产品逻辑
 
 * 不看好的大模型公司类型
   * 打补丁：大模型做错了数学题，因此在外面加了一堆东西，目的是算对数学题；
@@ -154,65 +160,7 @@
       * **Launch your product with product evangelists**
       * **Get your product in front of individual users before going after businesses**
 
-### 天花板分析
-
-TODO
-
-* https://darioamodei.com/machines-of-loving-grace
-* https://epoch.ai/blog/can-ai-scaling-continue-through-2030
-
-
-
-### App
-
-* 展望Killer App
-  * AI暂时只是对旧场景的增强
-* 新产品类型
-  * 助手类：打不过Siri们
-  * 搜索类
-    * 秘塔AI
-  * 情感陪伴类
-    * 星野
-  * 定制Agent
-    * GPTs
-    * 扣子
-* 手握场景的
-  * 拍照答题
-    * Gauth
-    * Question AI
-  * 英语学习
-    * 有道 Hi Echo
-  * 图像处理
-    * 美图秀秀
-  * 办公
-    * WPS AI
-    * 飞书智能伙伴
-  * 编程
-    * Copilot
-  * 全家桶
-    * Google
-    * Microsoft
-    * ByteDance
-* 公司内部提效
-  * 营销
-    - AI 做营销创意，人再加工
-    - AI 批量生产营销素材
-    - 多语言翻译
-  - 客服/销售
-    - 全 AI，适合本来没人做，AI 来补位
-    - 半 AI，适合本来有人做，AI 来提效
-  - 办公
-    - 公文撰写/总结/翻译
-    - 知识库
-      - 内部客服
-      - 辅助决策
-    - 情报分析
-    - BI (business intelligence)
-  - 产品研发
-    - 创意、头脑风暴
-    - IT 研发提效
-
-### 变现逻辑
+#### 变现逻辑
 
 * [陆奇对话高科技营销之父：从技术到市场，ChatGPT还需跨越“鸿沟”](https://mp.weixin.qq.com/s/xvWzQ73Dg0XzJ5LxwmyWsA)
   * 近期出现的真正具有颠覆性的技术，我认为一个是基因编辑，另一个就是OpenAI的ChatGPT
@@ -251,9 +199,9 @@ TODO
 * ToB场景示例
   * 大模型相关的ToB场景研发成本下降
 
-![image-20231025201548103](./AI/tob.png)
+![image-20231025201548103](./AI-Agent/tob.png)
 
-### 难点
+#### 难点
 
 * 认知不对齐
   * [复盘大模型的一次成功落地，代替了百万年薪的人](https://mp.weixin.qq.com/s?__biz=MzAwNDk3NjUxMg==&mid=2247484174&idx=1&sn=ce1bed131385fd9bf71bc9ffa3bd5592&chksm=9b22f9e1ac5570f721ac2480d7010607139aa7ba5d95a604be44d32c790fd911d2f91bc0e21c#rd)
@@ -269,9 +217,117 @@ TODO
       * 别求大而全。将任务拆解，先解决小任务、小场景
       * 让 AI 学最厉害员工的能力，再让 ta 辅助其他员工，实现降本增效
 
+#### 天花板分析
+
+TODO
+
+* https://darioamodei.com/machines-of-loving-grace
+* https://epoch.ai/blog/can-ai-scaling-continue-through-2030
 
 
-## 应用
+
+### App
+
+* 展望Killer App
+  * AI暂时只是对旧场景的增强
+* 新产品类型
+  * 助手类：打不过Siri们
+  * 搜索类
+    * [Perplexity](https://perplexity.ai)
+    * [秘塔 AI](https://metaso.cn/)
+    * [Devv](https://devv.ai/)
+  * 情感陪伴类
+    * [Character.AI](https://character.ai)（已被 Google 收购）
+    * [星野](https://www.xingyeai.com/)
+    * [Replika](https://replika.ai)
+  * 定制Agent
+    * GPTs
+    * 扣子
+    * dify
+  * AI编程 ，目前最成功的AI应用
+    - [Cursor](https://www.cursor.com/)
+    - [Windsurf](https://codeium.com/windsurf)
+    - [InsCode](https://inscode.csdn.net/)
+    - [marscode](https://www.marscode.cn/)
+* 手握场景的
+  * 拍照答题
+    * Gauth
+    * Question AI
+  * 英语学习
+    * [多邻国](https://www.duolingo.cn/)
+    * 有道 Hi Echo
+  * 图像处理
+    * 美图秀秀
+    * [Adobe Firefly](https://www.adobe.com/products/firefly.html)
+  * 办公
+    - [WPS AI](https://ai.wps.cn/)
+    - [Copilot for Microsoft 365](https://adoption.microsoft.com/en-us/copilot/)
+    - [钉钉魔法棒](https://alidocs.dingtalk.com/i/p/Pl2AmoVbakq8Xdb9BpLmk7jYdkVEvm2g)
+    - [飞书智能伙伴](https://www.feishu.cn/product/ai_companion)
+    - [腾讯会议智能助手](https://meeting.tencent.com/ai/)
+  * 编程
+    * Copilot
+  * 全家桶
+    * Google
+    * Microsoft
+    * ByteDance
+
+### 公司内部提效
+
+#### 常见场景
+
+* 营销
+  - AI 做营销创意，人再加工
+  - AI 批量生产营销素材
+  - 多语言翻译
+* 客服/销售
+  - 全 AI，适合本来没人做，AI 来补位
+  - 半 AI，适合本来有人做，AI 来提效
+* 办公
+  - 公文撰写/总结/翻译
+  - 知识库
+    - 内部客服
+    - 辅助决策
+  - 情报分析
+  - BI (business intelligence)
+* 产品研发
+  - 创意、头脑风暴
+  - IT 研发提效
+
+#### 寻找落地场景
+
+##### 业务流程解构
+
+- 明确目标 ：确定解构的目标是什么，是否是提升效率、降低成本，还是增强产品或服务的质量。
+- 分析现有流程 ：通过与相关部门和团队沟通，了解当前的业务流程，使用流程图、价值流图等工具。
+- 收集数据 ：收集与流程相关的数据，包括时间、资源、瓶颈等，识别出目前流程中的问题和改进点。
+- 识别关键环节：确定每个环节对业务结果的影响，识别哪些环节最能推动价值产生，哪些是浪费或低效的环节。
+
+##### 绘制企业价值流图
+
+- 识别关键流程：将企业流程分为不同的关键环节，如供应链管理、生产流程、销售等。
+- 标记价值增值活动：明确哪些环节增加了实际价值，哪些是纯粹的支持性或非增值活动。
+- 流程中的浪费：识别流程中出现的浪费，如等待、过度处理、运输、库存、动作等。
+- 时间与资源：标注每个环节的时间、资源消耗，以及这些消耗如何影响最终的交付。
+- 改进方案：通过价值流图，找到需要优化的环节，提出改善措施。
+
+##### 识别大模型应用场景
+
+- 数据驱动的决策：大模型可以帮助企业分析大量数据，提供更精确的决策支持，示例：通过AI分析客户数据，优化市场营销策略。
+- 自动化与智能化：大模型可以应用于自动化任务，如智能客服、语音识别、图像识别等，减少人工成本并提升效率。
+- 个性化服务：通过大模型实现个性化推荐系统，基于用户历史行为或偏好为其推荐个性化的产品或服务，提高客户满意度和转化率。
+- 预测与优化：利用大模型对历史数据进行分析，预测未来趋势，优化生产计划、库存管理等业务环节。
+- 业务流程改进：利用大模型分析当前业务流程中的瓶颈和效率低下的环节，提出改进措施，优化资源配置。
+
+#### 案例
+
+* 智能供应链与需求预测优化
+  * ![image-20250506150714634](./AI-Agent/image-20250506150714634.png)
+
+* 智能客服
+* 智能生产线
+
+## 应用开发
 
 ### 基础能力
 
@@ -297,7 +353,7 @@ TODO
   - 向量数据库：把向量存起来，方便查找
   - 当人看：考试答题时，到书上找相关内容，再结合题目组成答案，然后，**就都忘了**
 
-![embeddings_arch](./AI/embeddings_arch.png)
+![embeddings_arch](./AI-Agent/embeddings_arch.png)
 
 * Finetuning
   * 值得尝试 Fine-tuning 的情况：
@@ -307,7 +363,7 @@ TODO
     * 需要私有部署
   * 一种手段：先用大模型服务，积攒输入输出数据，再用这些数据对小模型做微调
 
-![tech_arch](./AI/tech_arch.png)
+![tech_arch](./AI-Agent/tech_arch.png)
 
 
 
@@ -604,7 +660,7 @@ pip3 install --upgrade openai
     * [大模型如何使用长上下文信息？斯坦福大学最新论文证明，你需要将重要的信息放在输入的开始或者结尾处！](https://www.datalearner.com/blog/1051688829605194)
     * [Lost in the Middle: How Language Models Use Long Contexts](https://arxiv.org/abs/2307.03172)
 
-![lost_middle](./AI/lost_middle.jpg)
+![lost_middle](./AI-Agent/lost_middle.jpg)
 
 ### 常用Prompt
 
@@ -855,7 +911,7 @@ Assistant：
   * The Operational Focus of Traditional Product Catalogs
   * Unlocking the Power of Untapped Data Sources
 
-![66a73231a81895c66be5c687_669ab3b0b570c6869c1069d4_blog_ai_de_product_catalog_enriched](./AI/66a73231a81895c66be5c687_669ab3b0b570c6869c1069d4_blog_ai_de_product_catalog_enriched.png)
+![66a73231a81895c66be5c687_669ab3b0b570c6869c1069d4_blog_ai_de_product_catalog_enriched](./AI-Agent/66a73231a81895c66be5c687_669ab3b0b570c6869c1069d4_blog_ai_de_product_catalog_enriched.png)
 
 
 
@@ -901,7 +957,7 @@ Assistant：
 * Actions
   * 官方文档：https://platform.openai.com/docs/actions
 
-![actions](./AI/actions.png)
+![actions](./AI-Agent/actions.png)
 
 ```yaml
 openapi: 3.1.0
@@ -1168,7 +1224,7 @@ else:
     print(run.status)
 ```
 
-![statuses](./AI/statuses.png)
+![statuses](./AI-Agent/statuses.png)
 
 * 流式运行
 
@@ -1438,7 +1494,7 @@ for hat in queue:
 
 ### 对话机器人
 
-![dialog_system](./AI/dialog_system.png)
+![dialog_system](./AI-Agent/dialog_system.png)
 
 
 
@@ -1523,9 +1579,9 @@ for hat in queue:
   4. 优先级：根据一些代码常识判断补全输入内容的优先级
   5. 补全格式：在函数定义、类定义、if-else 等之后，会补全整段代码，其它时候只补全当前行
 
-![copilot_snippet_structure](./AI/copilot_snippet_structure.webp)
+![copilot_snippet_structure](./AI-Agent/copilot_snippet_structure.webp)
 
-![life-of-a-completion](./AI/life-of-a-completion.webp)
+![life-of-a-completion](./AI-Agent/life-of-a-completion.webp)
 
 * 有效性：
   * Telemetry(远程遥测[如何取消](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement))
@@ -1534,13 +1590,13 @@ for hat in queue:
   * A/B Test
   * 智谱的度量方式：
 
-![efficency](./AI/copilot-efficency.png)
+![efficency](./AI-Agent/copilot-efficency.png)
 
 
 
 ### 度量
 
-![info_collection](./AI/info_collection.png)
+![info_collection](./AI-Agent/info_collection.png)
 
 ### 本机部署
 
@@ -1556,7 +1612,7 @@ for hat in queue:
   - 可以做RAG
 
 
-![image-20240726034021852](./AI/tabby.png)
+![image-20240726034021852](./AI-Agent/tabby.png)
 
 * Tabby RAG
 
@@ -1723,7 +1779,7 @@ _「 LlamaIndex is a framework for building context-augmented LLM applications. 
   - TS API 接口文档：https://ts.llamaindex.ai/api/
 
 
-![llamaindex](./AI/llamaindex.png)
+![llamaindex](./AI-Agent/llamaindex.png)
 
 * **大语言模型开发框架的价值是什么？**
   * 所有开发框架（SDK）的核心价值，都是降低开发、维护成本。
@@ -2272,9 +2328,9 @@ while True:
 * Note：
   * 使用 LangChain 要注意维护自己的 Prompt，尽量 Prompt 与代码逻辑解依赖
 
-![langchain](./AI/langchain-1166937.png)
+![langchain](./AI-Agent/langchain-1166937.png)
 
-![image-20240716203733207](./AI/langchain.png)
+![image-20240716203733207](./AI-Agent/langchain.png)
 
 ### I/O Module 
 
@@ -2399,7 +2455,7 @@ runnable = (
     * Generation 是用于记录与 AI 模型交互的 span，例如：调用 embedding 模型、调用 LLM。
   * Observation 可以嵌套使用。
 
-![span](./AI/span.png)
+![span](./AI-Agent/span.png)
 
 * 基本使用
   * observe
@@ -2409,7 +2465,7 @@ runnable = (
 * 数据集和评测
   * 模型评估：https://langfuse.com/docs/scores/model-based-evals
 
-![annotation](./AI/annotation.png)
+![annotation](./AI-Agent/annotation.png)
 
 * Prompt 版本管理
 
@@ -2456,26 +2512,26 @@ runnable = (
 * Building blocks, workflows, and agents
   * Building block: The augmented LLM
     * 介绍了[MCP Protocol](https://www.anthropic.com/news/model-context-protocol)，没看懂
-    * ![image-20250225200935839](./AI/image-20250225200935839.png)
+    * ![image-20250225200935839](./AI-Agent/image-20250225200935839.png)
   * Workflow: Prompt chaining
-    * ![image-20250225201109142](./AI/image-20250225201109142.png)
+    * ![image-20250225201109142](./AI-Agent/image-20250225201109142.png)
     * **When to use this workflow:** This workflow is ideal for situations where the task can be easily and cleanly decomposed into fixed subtasks. The main goal is to trade off latency for higher accuracy, by making each LLM call an easier task.
     * e.g. query改写->检索->生成答案
   * Workflow: Routing
-    * ![image-20250225201254482](./AI/image-20250225201254482.png)
+    * ![image-20250225201254482](./AI-Agent/image-20250225201254482.png)
     * **When to use this workflow:** Routing works well for complex tasks where there are distinct categories that are better handled separately, and where classification can be handled accurately, either by an LLM or a more traditional classification model/algorithm.
     * e.g.
       * 意图识别&不同的解决路径
       * 难度识别&不同能力的模型
   * Workflow: Parallelization
-    * ![image-20250225203052636](./AI/image-20250225203052636.png)
+    * ![image-20250225203052636](./AI-Agent/image-20250225203052636.png)
     * **When to use this workflow:** Parallelization is effective when the divided subtasks can be parallelized for speed, or when multiple perspectives or attempts are needed for higher confidence results. For complex tasks with multiple considerations, LLMs generally perform better when each consideration is handled by a separate LLM call, allowing focused attention on each specific aspect.
   * Workflow: Orchestrator-workers
-    * ![image-20250225203956357](./AI/image-20250225203956357.png)
+    * ![image-20250225203956357](./AI-Agent/image-20250225203956357.png)
     * **When to use this workflow:** This workflow is well-suited for complex tasks where you can’t predict the subtasks needed (in coding, for example, the number of files that need to be changed and the nature of the change in each file likely depend on the task). Whereas it’s topographically similar, the key difference from parallelization is its flexibility—subtasks aren't pre-defined, but determined by the orchestrator based on the specific input.
     * 应用：多数据源、coding task多文件
   * Workflow: Evaluator-optimizer
-    * ![image-20250226015106312](./AI/image-20250226015106312.png)
+    * ![image-20250226015106312](./AI-Agent/image-20250226015106312.png)
     * **When to use this workflow:** This workflow is particularly effective when we have clear evaluation criteria, and when **iterative refinement** provides measurable value. The two signs of good fit are, first, that LLM responses can be demonstrably improved when a human articulates their feedback; and second, that the LLM can provide such feedback. This is analogous to the iterative writing process a human writer might go through when producing a polished document.
       * 本质：判断比生成简单的任务
       * 应用：翻译、深度搜索
@@ -2542,7 +2598,7 @@ runnable = (
         - 块间数据传递
         - 工作流内数据传递
 
-![basic_elements](./AI/basic_elements.png)
+![basic_elements](./AI-Agent/basic_elements.png)
 
 * 需求特性
 
@@ -2587,14 +2643,14 @@ runnable = (
 
 ### LangGraph
 
-![LangGraph_key_features](./AI/LangGraph_key_features.png)
+![LangGraph_key_features](./AI-Agent/LangGraph_key_features.png)
 
 ### Agently
 
 https://github.com/Maplemx/Agently
 https://agently.cn/guides/workflow/index.html
 
-![Agently_Workflow_key_features](./AI/Agently_Workflow_key_features.png)
+![Agently_Workflow_key_features](./AI-Agent/Agently_Workflow_key_features.png)
 
 ### Examples
 
@@ -2602,7 +2658,7 @@ https://agently.cn/guides/workflow/index.html
 * agently-workflow.py
 
 * 故事创作
-  * ![story_design](./AI/story_design.png)
+  * ![story_design](./AI-Agent/story_design.png)
 
 * 每日新闻生成 https://github.com/AgentEra/Agently-Daily-News-Collector
 
@@ -2620,11 +2676,11 @@ https://agently.cn/guides/workflow/index.html
   * it's crucial for the agents to gain “ground truth” from the environment at each step (such as tool call results or code execution) to assess its progress
   * **When to use agents:** Agents can be used for open-ended problems where it’s difficult or impossible to predict the required number of steps, and where you can’t hardcode a fixed path. The LLM will potentially operate for many turns, and you must have some level of trust in its decision-making. Agents' autonomy makes them ideal for scaling tasks in trusted environments.
 
-![image-20250226015431648](./AI/image-20250226015431648.png)
+![image-20250226015431648](./AI-Agent/image-20250226015431648.png)
 
 * [Google 白皮书分析](https://ppc.land/ai-agents-google-unveils-framework-for-next-gen-systems/)
   * 白皮书：https://ppc.land/content/files/2025/01/Newwhitepaper_Agents2.pdf
-  * ![image-20250227192024868](./AI/image-20250227192024868.png)
+  * ![image-20250227192024868](./AI-Agent/image-20250227192024868.png)
   * model layer
   * orchestration layer
     * ReAct, Chain-of-Thought, and Tree-of-Thoughts
@@ -2640,7 +2696,7 @@ https://agently.cn/guides/workflow/index.html
     * Data Stores
       * facilitate access to various types of information
 
-  * ![image-20250227191217604](./AI/image-20250227191217604.png)
+  * ![image-20250227191217604](./AI-Agent/image-20250227191217604.png)
 
 * 吴恩达：系统可以具有不同程度的Agentic特性
   * **Reflection（反思）**：类似于AI的自我纠错和迭代。例如，AI系统会检查自己编写的代码，并提出修改建议。
@@ -2653,7 +2709,7 @@ https://agently.cn/guides/workflow/index.html
   * 上下文的管理有多种模式可以轻松传递
   * 10行代码构建出多智能体系统
 
-![agent-overview](./AI/agent-overview.png)
+![agent-overview](./AI-Agent/agent-overview.png)
 
 - [LangGraph](https://langchain-ai.github.io/langgraph/) from LangChain;
 - Amazon Bedrock's [AI Agent framework](https://aws.amazon.com/bedrock/agents/);
@@ -2720,7 +2776,7 @@ Thought:{agent_scratchpad}
 * Naive版本
   * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb
 
-![img](./AI/plan-and-execute-0915298.png)
+![img](./AI-Agent/plan-and-execute-0915298.png)
 
 * ReWOO：Reasoning WithOut Observations
   * the planner can reference previous outputs using syntax like `#E2` 
@@ -2739,10 +2795,10 @@ Thought:{agent_scratchpad}
 ### Agent Examples
 
 * Agentic RAG
-  * ![image-20250227201733347](./AI/image-20250227201733347.png)
+  * ![image-20250227201733347](./AI-Agent/image-20250227201733347.png)
 
 - A coding Agent to resolve [SWE-bench tasks](https://www.anthropic.com/research/swe-bench-sonnet), which involve edits to many files based on a task description;
-  - ![image-20250226015736553](./AI/image-20250226015736553.png)
+  - ![image-20250226015736553](./AI-Agent/image-20250226015736553.png)
 - Our [“computer use” reference implementation](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo), where Claude uses a computer to accomplish tasks.
 - Customer support
   - Support interactions naturally follow a conversation flow while requiring access to external information and actions;
@@ -2752,7 +2808,7 @@ Thought:{agent_scratchpad}
 
 * 模版
 
-![agent-flowchart](./AI/agent-flowchart.png)
+![agent-flowchart](./AI-Agent/agent-flowchart.png)
 
 
 
@@ -2799,13 +2855,13 @@ Thought:{agent_scratchpad}
   * 多模态非必要，但绝对有用
   * 预测具有不确定性的高维向量：给定某书中的一页，预测下一页
 
-![图片](./AI/gpt-3.png)
+![图片](./AI-Agent/gpt-3.png)
 
 ## 有趣的使用例子
 
 ### 宗教
 
-* 如果你穿越到中世纪，并希望利用现代人的知诗优势创立自己的宗教并招揽一百名以上的信徒，你可以通过以下步骤来实现这个目标：
+* 如果你穿越到中世纪，并希望利用现代人的知识优势创立自己的宗教并招揽一百名以上的信徒，你可以通过以下步骤来实现这个目标：
 
   ### 第一步：了解历史背景和文化环境
 
@@ -2841,7 +2897,9 @@ Thought:{agent_scratchpad}
 
   通过上述步骤，你不仅能够利用自己的现代知识在中世纪创立一种新的宗教，还能有效地吸引并维系一定数量的信徒。这需要精心的策划与执行，同时也需要不断地调整和应对各种挑战。
 
-在中世纪，科技和魔法在人们的眼中常常是难以区分的。若要展示奇迹，可以利用当时不太为人知的自然现象和简单科学技术。下面，我将详细描述如何使用四种方法，包括镜子和放大镜制造焦点火，化学反应制造彩色烟雾，以及另外两种类似的手段。
+
+
+* 在中世纪，科技和魔法在人们的眼中常常是难以区分的。若要展示奇迹，可以利用当时不太为人知的自然现象和简单科学技术。下面，我将详细描述如何使用四种方法，包括镜子和放大镜制造焦点火，化学反应制造彩色烟雾，以及另外两种类似的手段。
 
 ### 发明创造
 

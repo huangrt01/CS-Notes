@@ -306,6 +306,8 @@ with IO-Awareness
 > 动画：https://www.bilibili.com/video/BV1HJWZeSEF4
 >
 > 核心洞察：attention矩阵N^2太大了，无法利用192KB的SRAM缓存
+>
+> 直观理解：分块计算注意力，前面块的注意力是一个局部注意力，当进一步计算后面注意力时，需要对前面的局部注意力加权，和后面的注意力权重相加
 
 * Intro
   * uses tiling to reduce the number of memory reads/writes
@@ -344,7 +346,7 @@ with IO-Awareness
 
 ![image-20250201015720233](./LLM-MLSys/image-20250201015720233.png)
 
-
+![image-20250503014225408](./LLM-MLSys/image-20250503014225408.png)
 
 * **IO复杂度对比：**
   * ![image-20250201022049588](./LLM-MLSys/image-20250201022049588.png)
@@ -358,18 +360,21 @@ with IO-Awareness
     * Block-sparse FlashAttention: 64k seq len
   * 性能相比其它transformer![image-20250201025905877](./LLM-MLSys/image-20250201025905877.png)
 
-##### From Online Softmax to FlashAttention
+##### 《From Online Softmax to FlashAttention》、《Online normalizer calculation for softmax》
 
 * (Safe) Softmax
 
-  * 问题：SRAM存不下N^2的logit，因此need to access Q and K three times
+  * 问题：SRAM存不下N^2的logit，因此**need to access Q and K three times**
+  * **3 read + 1 store per element**
+  * ![image-20250503020010235](./LLM-MLSys/image-20250503020010235.png)
 
 * Online Softmax
-
+  * **2 read + 1 store per element**
   * 理解：di'是注意力权重的累积和
   * ![image-20250201033508793](./LLM-MLSys/image-20250201033508793.png)
 
   * ![image-20250201160812250](./LLM-MLSys/image-20250201160812250.png)
+  
 
 #### FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning
 
@@ -460,7 +465,56 @@ with IO-Awareness
 * 字节Ckpt https://mp.weixin.qq.com/s/4pIAZqH01Ib_OGGGD9OWQg
   * ByteCheckpoint ，一个 PyTorch 原生，兼容多个训练框架，支持 Checkpoint 的高效读写和自动重新切分的大模型 Checkpointing 系统。
 
+## 软硬协同
 
+### [Trends in Deep Learning Hardware: Bill Dally (NVIDIA)](https://www.youtube.com/watch?v=kLiwvnr4L80)
+
+### DeepSeek-V3 的硬件畅想
+
+* the **SMs** primarily perform the following tasks for **all-to-all communication:** （ 20/132 SMs for H800）
+  • Forwarding data between the IB (InfiniBand) and NVLink domain while aggregating IB
+  traffic destined for multiple GPUs within the same node from a single GPU.
+  • Transporting data between RDMA buffers (registered GPU memory regions) and in-
+  put/output buffers.
+  • Executing reduce operations for all-to-all combine.
+  • Managing fine-grained memory layout during chunked data transferring to multiple
+  experts across the IB and NVLink domain.
+  * 期望用类似 NVIDIA SHARP Graham et al. (2016). 来做
+  * aim for this hardware to unify the IB (scale-out) and NVLink
+    (scale-up) networks from the perspective of the computation units
+* ScaleUP和ScaleOut语义的融合是一个非常重要的工作, 准确的来说在ScaleOut使用RDMA就是一个错误, 并且想简单的在ScaleUP使用RDMA也是一个错误.
+  * [《HotChip2024后记: 谈谈加速器互联及ScaleUP为什么不能用RDMA》](https://mp.weixin.qq.com/s?__biz=MzUxNzQ5MTExNw==&mid=2247492300&idx=1&sn=8a239883c831233e7e06659ec3425ea2&scene=21#wechat_redirect)
+
+### Fire-Flyer AI-HPC: **A Cost-Effective** Software-Hardware Co-Design for Deep Learning
+
+> https://blog.csdn.net/m0_59163425/article/details/143349082
+
+* 使用了Pcle接口的A100芯片（便宜版本，而非更昂贵的NVIDIA DGX），比原来AI训练的专用芯片直接少了一半的成本。在10,000 GPU集群上，实现了DGX-A100 80%的性能，同时降低50%成本和40%能耗，证明了该设计的成本效益。
+* 核心技术包括：
+  * 自研**HFReduce 通信库**提升 AllReduce 效率，通过 CPU 异步处理减少 PCIe 带宽占用；
+  * 优化**HaiScale 框架**支持数据、流水线、张量并行等多种并行策略；
+  * 设计**两层 Fat-Tree 网络**整合计算与存储流量，通过 3FS 分布式文件系统实现 8TB/s 读取吞吐量；HAI 平台提供任务调度与故障恢复，保障大规模集群稳定性。
+* HF Reduce
+  * **异步梯度聚合**：通过 CPU 预处理梯度（D2H 传输 + 节点内 Reduce），再经 IB 网络跨节点 AllReduce，较 NCCL 提升 2-3 倍带宽利用率（图 7a）。
+  * **NVLink 增强**：集成 NVLink 桥接后，跨区通信带宽突破 10GB/s（图 7b），支持张量并行高效计算。
+  * ![image-20250502121007854](./LLM-MLSys/image-20250502121007854.png)
+* **HaiScale 训练框架**：
+  - 多并行策略
+    - 数据并行（DDP）：异步 AllReduce 重叠计算通信，VGG16 训练时间较 PyTorch DDP 减半（图 8a）。
+    - 流水线并行（PP）：通过节点内 GPU 分属不同 DP 组，减少网络拥塞，LLaMA-13B 训练并行效率达 91%（图 9a）。
+  - **FSDP 优化**：内存管理更高效，GPT2-Medium 训练并行 scalability 达 95%（图 8b）。
+* **3FS 分布式文件系统**：
+  - **硬件配置**：180 节点 ×16 NVMe SSD，提供**8TB/s 读取吞吐量**与 20PiB 存储容量。
+  - 技术亮点
+    - 链式复制（CRAQ）保证数据一致性，请求 - 发送控制机制避免网络拥塞。
+    - 集成 3FS-KV 支持键值存储，降低 LLM 服务成本一个数量级。
+* **HAI 平台**：
+  - **时间共享调度**：按节点粒度分配资源，利用率达 99%，支持任务断点续传。
+  - **故障恢复**：Checkpoint Manager 每 5 分钟异步保存，仅丢失最新 5 分钟数据；Validator 工具周检硬件状态，提前识别 GPU Xid 错误（表 VI）。
+
+### 其它
+
+MTP ~ [**Zen5的2-Ahead Branch Predictor**](https://chipsandcheese.com/p/zen-5s-2-ahead-branch-predictor-unit-how-30-year-old-idea-allows-for-new-tricks)
 
 ## Vision Model 推理
 

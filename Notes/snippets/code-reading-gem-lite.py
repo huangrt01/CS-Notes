@@ -1,3 +1,5 @@
+也参考 GPU.md —— GemLite
+
 ### intro
 
 allow for weight only quantization at 4 and 8 bits,

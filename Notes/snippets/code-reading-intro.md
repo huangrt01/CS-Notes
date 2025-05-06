@@ -61,6 +61,13 @@
 * OpenNMT
   * https://github.com/OpenNMT/OpenNMT-py.git
 
+### Applied Algo
+
+#### Agent
+
+* Qwen Agent
+  * https://github.com/QwenLM/Qwen-Agent
+
 ### GPU Op
 
 #### Intro
@@ -92,6 +99,12 @@
 - SAM flash attention
  - https://github.com/facebookresearch/segment-anything/blob/main/segment_anything/modeling/image_encoder.py#L358
  - https://github.com/pytorch-labs/segment-anything-fast/blob/main/segment_anything_fast/flash_4.py#L13
+
+#### Assembler
+
+- Assembler for NVIDIA Maxwell architecture
+  - https://github.com/NervanaSystems/maxas.git
+  - SGEMM Impl
 
 
 ### Data Pipeline
