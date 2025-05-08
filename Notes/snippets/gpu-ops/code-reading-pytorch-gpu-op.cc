@@ -1,6 +1,6 @@
 ### Aten
 
-### native_functions.yaml
+*** native_functions.yaml
 
 构造函数的多种构建方式
 
@@ -12,7 +12,21 @@
 - func: sparse_coo_tensor.indices_size(Tensor indices, Tensor values, int[] size, *, ScalarType? dtype=None, Layout? layout=None, Device? device=None, bool? pin_memory=None, bool? is_coalesced=None) -> Tensor
 
 
-### _foreach_add_
+*** reduce_ops
+
+* min的实现：
+aten/src/ATen/native/cuda/ReduceOps.cpp
+->
+aten/src/ATen/native/cuda/ReduceMinValuesKernel.cu
+->
+aten/src/ATen/native/cuda/Reduce.cuh: 
+
+gpu_reduce_kernel
+struct ReduceOp
+
+
+
+*** _foreach_add_
 
 * aten/src/ATen/native/native_functions.yaml
 
@@ -130,7 +144,7 @@ aten/src/ATen/native/ForeachOpsKernels.cpp： for循环
 
 
 
-### fused实现
+*** fused实现
 
 aten/src/ATen/native/cuda/fused_adamw_impl.cu
 
@@ -171,7 +185,7 @@ void _fused_adamw_cuda_impl_ ... {
 struct FusedAdamMathFunctor
 
 
-### foreach kernel中的内存对齐优化
+*** foreach kernel中的内存对齐优化
 
 * aten/src/ATen/native/cuda/MultiTensorApply.cuh
 
@@ -212,7 +226,7 @@ __device__ void load_args(
 }
 
 
-### vectorized_elementwise_kernel
+*** vectorized_elementwise_kernel
 
 void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::pow_tensor_scalar_kernel_impl<float, float>(at::TensorIteratorBase&, float)::{lambda(float)#1},
 

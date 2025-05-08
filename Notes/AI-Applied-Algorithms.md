@@ -1853,6 +1853,15 @@ values = [token.word for token in jieba.posseg.cut(query)
 
 
 
+#### BaseModel.ai by Synerise
+
+* 技术相关见「深度学习推荐系统.md」
+* 一共融了3000万美金，24年7月估值1.2亿美金
+  * https://www.financedirectoreurope.com/news/polish-deep-tech-firm-synerise-raises-8-5m-in-series-b-round/?cf-view 
+  * https://pitchbook.com/profiles/company/89839-00#comparisons
+
+
+
 #### WebKul
 
 https://webkul.com/ai-semantic-search-services/

@@ -119,6 +119,8 @@ y = fc2(y)
 
 ### 显存
 
+#### 训练显存
+
 ![image-20250416153914190](./LLM-MLSys/image-20250416153914190.png)
 
 * 7B模型：
@@ -140,6 +142,10 @@ y = fc2(y)
   * Activation checkpointing reduce the activation memory by approximately the square root of the total activations. -> 8GB
   
   * For a GPT-2 like architecture the total activations is about 12 × hidden dim × batch × seq length × transformer layers.
+
+#### 推理显存
+
+* 8bit量化模型： 参数量1B 占用 1G 显存以上
 
 ### Token
 
@@ -194,7 +200,303 @@ print(f"Prompt的token数量为: {token_count}")
     * output：15刀/1M token
     * input：5刀/1M token
 
-## 推理部署
+## 推理&训练部署
+
+### Intro —— 模型&资源决策
+
+> * 微调的显存消耗小
+> * 对于许多不需要 H 系列所有高级功能（如最高带宽的 NVLink、全面的 ECC 内存、特定的虚拟化支持或单卡最大显存）的场景，4090 是一个更经济的选择
+>   * 注意4090功耗&散热吃亏，32B+ 模型需高功率电源（1000W+）和散热系统
+
+![image-20250507030154296](./LLM-MLSys/image-20250507030154296.png)
+
+* **低配使用（计算资源有限）**
+  * Int4量化，约2K上下文
+
+<table align="left">
+<thead>
+<tr>
+<th style="text-align:center">模型（int4）</th>
+<th style="text-align:center">所需显存GB</th>
+<th>推荐GPU</th>
+<th>参考模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">0.5B</td>
+<td style="text-align:center">&lt;5G</td>
+<td></td>
+<td>Qwen2-0.5B-Instruct</td>
+</tr>
+<tr>
+<td style="text-align:center">1.5B</td>
+<td style="text-align:center">&lt;3G</td>
+<td></td>
+<td>Qwen-1_8B-Chat, Qwen2-1.5B-Instruct</td>
+</tr>
+<tr>
+<td style="text-align:center">6B</td>
+<td style="text-align:center">4G</td>
+<td></td>
+<td>Yi-6B-Chat-4bits</td>
+</tr>
+<tr>
+<td style="text-align:center">7B</td>
+<td style="text-align:center">&lt;11G</td>
+<td></td>
+<td>Qwen2-7B-Instruct，Qwen-7B-Chat-Int4</td>
+</tr>
+<tr>
+<td style="text-align:center">14B</td>
+<td style="text-align:center">13G</td>
+<td></td>
+<td>Qwen-14B-Chat-Int4</td>
+</tr>
+<tr>
+<td style="text-align:center">34B</td>
+<td style="text-align:center">20G</td>
+<td></td>
+<td>Yi-34B-Chat-4bits</td>
+</tr>
+<tr>
+<td style="text-align:center">57B</td>
+<td style="text-align:center">&lt;35G</td>
+<td></td>
+<td>Qwen2-57B-A14B-Instruct</td>
+</tr>
+<tr>
+<td style="text-align:center">72B</td>
+<td style="text-align:center">&lt;47G</td>
+<td></td>
+<td>Qwen2-72B-Instruct</td>
+</tr>
+<tr>
+<td style="text-align:center">130B</td>
+<td style="text-align:center">-</td>
+<td>8 * RTX 2080 Ti(11G) <br> 4 * RTX 3090(24G)</td>
+<td>GLM-130B</td>
+</tr>
+<tr>
+<td style="text-align:center">236B</td>
+<td style="text-align:center">130G</td>
+<td>8xA100(80G)</td>
+<td>DeepSeek-V2-Chat</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+* 中配
+  * int8、4k/6k上下文
+
+<table align="left">
+<thead>
+<tr>
+<th style="text-align:center">模型（int8）</th>
+<th style="text-align:center">所需显存GB</th>
+<th>推荐GPU</th>
+<th>参考模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">0.5B</td>
+<td style="text-align:center">6G</td>
+<td></td>
+<td>Qwen2-0.5B-Instruct</td>
+</tr>
+<tr>
+<td style="text-align:center">1.5B</td>
+<td style="text-align:center">8G</td>
+<td></td>
+<td>Qwen2-1.5B-Instruct</td>
+</tr>
+<tr>
+<td style="text-align:center">6B</td>
+<td style="text-align:center">8G</td>
+<td></td>
+<td>Yi-6B-Chat-8bits</td>
+</tr>
+<tr>
+<td style="text-align:center">7B</td>
+<td style="text-align:center">14G</td>
+<td></td>
+<td>Qwen2-7B-Instruct</td>
+</tr>
+<tr>
+<td style="text-align:center">14B</td>
+<td style="text-align:center">27G</td>
+<td></td>
+<td>Qwen-14B-Chat-Int8</td>
+</tr>
+<tr>
+<td style="text-align:center">34B</td>
+<td style="text-align:center">38G</td>
+<td></td>
+<td>Yi-34B-Chat-8bits</td>
+</tr>
+<tr>
+<td style="text-align:center">57B</td>
+<td style="text-align:center">117G (bf16)</td>
+<td></td>
+<td>Qwen2-57B-A14B-Instruct</td>
+</tr>
+<tr>
+<td style="text-align:center">72B</td>
+<td style="text-align:center">80G</td>
+<td></td>
+<td>Qwen2-72B-Instruct</td>
+</tr>
+<tr>
+<td style="text-align:center">130B</td>
+<td style="text-align:center">-</td>
+<td>8xRTX3090 (24G)</td>
+<td>GLM-130B</td>
+</tr>
+<tr>
+<td style="text-align:center">236B</td>
+<td style="text-align:center">490G(bf16)</td>
+<td>8xA100 (80G)</td>
+<td>DeepSeek-V2-Chat</td>
+</tr>
+<tr>
+<td style="text-align:center">340B</td>
+<td style="text-align:center">-</td>
+<td>16xA100(80G) <br>  16xH100(80G) <br>  8xH200</td>
+<td>Nemotron-4-340B-Instruct</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+* 高配
+  * Bf16，32K上下文
+
+<table align="left">
+<thead>
+<tr>
+<th style="text-align:center">模型（fb16）</th>
+<th style="text-align:center">所需显存GB</th>
+<th>推荐GPU</th>
+<th>参考模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">0.5B</td>
+<td style="text-align:center">27G</td>
+<td></td>
+<td>Qwen2-0.5B-Instruct</td>
+</tr>
+<tr>
+<td style="text-align:center">1.5B</td>
+<td style="text-align:center">30G</td>
+<td></td>
+<td>Qwen2-1.5B-Instruct</td>
+</tr>
+<tr>
+<td style="text-align:center">6B</td>
+<td style="text-align:center">20G</td>
+<td></td>
+<td>Yi-6B-200K</td>
+</tr>
+<tr>
+<td style="text-align:center">7B</td>
+<td style="text-align:center">43G</td>
+<td></td>
+<td>Qwen2-7B-Instruct</td>
+</tr>
+<tr>
+<td style="text-align:center">14B</td>
+<td style="text-align:center">39G(8k)</td>
+<td></td>
+<td>Qwen-14B-Chat</td>
+</tr>
+<tr>
+<td style="text-align:center">34B</td>
+<td style="text-align:center">200G(200k)</td>
+<td>4 x A800 (80 GB)</td>
+<td>Yi-34B-200K</td>
+</tr>
+<tr>
+<td style="text-align:center">57B</td>
+<td style="text-align:center">117G</td>
+<td></td>
+<td>Qwen2-57B-A14B-Instruct</td>
+</tr>
+<tr>
+<td style="text-align:center">72B</td>
+<td style="text-align:center">209G</td>
+<td></td>
+<td>Qwen2-72B-Instruct</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### DeepSeek-V3 (MoE)
 
@@ -447,7 +749,11 @@ with IO-Awareness
 * Intro
   * known for its almost [zero-overhead batch scheduler](https://lmsys.org/blog/2024-12-04-sglang-v0-4/) and fast [constrained decoding](https://lmsys.org/blog/2024-02-05-compressed-fsm/)
 
+### ollama
 
+* 更适合本地实验
+* [ollama deepseek-r1](https://ollama.com/library/deepseek-r1:8b)
+* open-webui 版本：dyrnq/open-webui:latest
 
 ## 模型训练
 

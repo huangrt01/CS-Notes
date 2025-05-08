@@ -7,7 +7,8 @@ list.extend(list)
 list.append(item)
 list.index(item)
 
-# split不加参数，默认为所有的空字符，包括空格、换行(\n)、制表符(\t)等
+- split不加参数，默认为所有的空字符，包括空格、换行(\n)、制表符(\t)等
+
 list = [x.strip() for x in list_string.split() if x.strip()]
 list = filter(lambda x: x != 2, iterable)
 
@@ -25,6 +26,7 @@ if not myset: # 判断set是否空
 
 # set operations: https://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html
 &, |, -, ^
+异或操作
 
 
 

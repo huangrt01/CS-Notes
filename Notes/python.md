@@ -1489,22 +1489,6 @@ class PeriodicRunner(object):
         self._thread.join()
 ```
 
-
-
-#### pandas
-
-https://pandas.pydata.org/pandas-docs/stable/index.html
-
-`crosstab` 统计分组频率
-
-`drop`
-
-`get_dummies` convert categorical variables to sets of indicator
-
-```python
-data['not_working'] = np.where(np.in1d(data['job'], ['student', 'retired', 'unemployed']), 1, 0)
-```
-
 #### pdb
 
 https://docs.python.org/zh-cn/3/library/pdb.html

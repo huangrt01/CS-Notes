@@ -206,7 +206,6 @@ https://pytorch.org/tutorials/beginner/hta_intro_tutorial.html
 # install
 https://www.bilibili.com/opus/898996578463776788
 
-https://developer.nvidia.com/tools-downloads#?dn=nsight-compute-2025.1.1
 wget https://developer.nvidia.com/tools-downloads#?dn=nsight-compute-2025.1.1 
 再运行
 export PATH=$PATH:/usr/local/NVIDIA-Nsight-Compute-2025.1

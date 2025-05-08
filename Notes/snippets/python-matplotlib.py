@@ -19,3 +19,20 @@ def plot_trainings(skiprows=1):
     plt.show()
     
 plot_trainings()
+
+
+# 柱状图
+
+plt.bar(x, y, color='green')
+
+# subplot
+
+plt.subplot(1, 2, 1)
+plt.plot(x, y)
+plt.title('Left Plot')
+
+plt.subplot(1, 2, 2)
+plt.scatter(x, y)
+plt.title('Right Plot')
+
+plt.show()

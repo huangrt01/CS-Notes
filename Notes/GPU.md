@@ -465,9 +465,27 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 * 浮点计算
   * 硬件机制：结合律可能不适用，大量累加的顺序，会有精度差异
     * python: `1.0 + (-1.0 + 1e-17 )`
+    
+    * 比如reduction操作
+    
+      * ```python
+        # We'll use several small numbers that, when added together first, could show a difference
+        numbers = [1e-20] * 10 + [1e20, -1e20]  # 10 small numbers followed by a large positive and negative number
+        
+        # Sum the list from left to right
+        sum_left_to_right_adjusted = sum(numbers)
+        
+        # Sum the list from right to left
+        sum_right_to_left_adjusted = sum(reversed(numbers))
+        
+        # 0.0 9.999999999999997e-20
+        print(sum_left_to_right_adjusted, sum_right_to_left_adjusted)
+        ```
+    
   * cuDNN：
     * deterministic=True：尽量消除算子底层实现的随机性
     * benchmark=False：仅使用同一种卷积算法
+    
   * 算子实现：随机采样
 
 #### 吞吐
@@ -523,10 +541,12 @@ https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
 | Fermi architecture (费米)                                    | 2    | 2010     |                                                              |                                                              |                              |                   |
 | Tesla architecture (特斯拉)                                  | 1    | ~        |                                                              |                                                              |                              |                   |
 
-* V100
-  * https://datacrunch.io/blog/nvidia-v100-gpu-specs
-  * roofline: 125/0.9 =139FLOPS/Byte
-  
+* H20
+  * 132 SMs
+  * 96GB
+* H100 GPU
+  * 132 SMs with 64 cores per SM, totalling a whopping 8448 cores.
+  * each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
 * A100
   * GPU
     * GPU Memory：80 GB
@@ -544,23 +564,17 @@ https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
 
   * 《Dissecting the Ampere GPU architecture via microbenchmarking》
   * 《Nvidia A100 tensor core GPU architecture》
-  
-* H20
-  * 132 SMs
-  
-* H100 GPU
-  * 132 SMs with 64 cores per SM, totalling a whopping 8448 cores.
-  * each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
-
+* V100
+  * https://datacrunch.io/blog/nvidia-v100-gpu-specs
+  * roofline: 125/0.9 =139FLOPS/Byte
 * GA10x：RTX 3090, has 82 SMs.
-
-  * Each SM in GA10x GPUs contain 128 CUDA Cores, 4 third-generation Tensor Cores, 2 FP64 Cores
+* Each SM in GA10x GPUs contain 128 CUDA Cores, 4 third-generation Tensor Cores, 2 FP64 Cores
   * a 256 KB Register File, and 128 KB of L1/Shared Memory
   * 4*32 FP32 units (one per thread), half  of which know INT32
   * L1 cache and shared memory share hardware (128KB) directly on the SM shmem can be 0/8/16/32/64/100KB
     * L1 Cache the remainder (>=28KB)
-
-  * ![image-20250404011658421](./GPU/image-20250404011658421.png)
+  
+* ![image-20250404011658421](./GPU/image-20250404011658421.png)
 
 
 
@@ -588,6 +602,12 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
           = 4d(N^2) + 3N^2 ops / 8N^2 + 8Nd bytes
           = 62 ops/byte
   * [A guide to LLM inference and performance](https://www.baseten.co/blog/llm-transformer-inference-guide/) TODO
+
+##### 显存一览
+
+<img src="./GPU/image-20250507025921271.png" alt="image-20250507025921271" style="zoom:50%;" />
+
+* H20: 96G
 
 #### 硬件降频
 
@@ -639,6 +659,33 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 #### Stream
 
 https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar.pdf
+
+#### Case Study: Reduce Kernel
+
+> GPU Mode Lecture 9: Reductions https://www.youtube.com/watch?v=09wntC6BT5o
+>
+> cuda lecture：https://www.youtube.com/watch?v=D4l1YMsGNlU&t=1763s
+
+* 什么是reduction
+
+  * min, max, argmax, argmin, norm, sum, prod, mean, unique
+
+  * ```python
+    def reduce(data, identity, op):
+        result = identity
+        for element in data:
+            result = op(result, element)
+        return result
+    ```
+
+  * 应用：
+    * Mean/Max pooling
+    * Classification: Argmax
+    * Loss calculations
+    * Softmax、normalization
+
+* parallel reduction tree
+  * inactive warps
 
 ### Triton
 

@@ -1,3 +1,7 @@
+class Shape(ABC):
+    @abstractmethod
+    def area(self):
+        pass
 
 class Circle:
     class_attribute = 10  # 类属性，被共享
@@ -15,6 +19,9 @@ class Circle:
             raise ValueError("Radius cannot be negative")
         self._radius = value
 
+    def area(self):
+        return 3.14 * self._radius * self._radius
+
 
     _instance = None
 
@@ -23,6 +30,12 @@ class Circle:
         if Circle._instance is None:
             Circle._instance = Circle(*args, **kwargs)
         return Circle._instance
+
+    @classmethod
+    def class_method(cls, new_value_for_attribute, radius_for_new_instance):
+        cls.class_attribute = new_value_for_attribute
+        print(f"Class attribute changed to: {cls.class_attribute}")
+        return cls(radius_for_new_instance)
 
 ### singleton
 

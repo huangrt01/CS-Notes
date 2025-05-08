@@ -453,7 +453,7 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 ### 量化、混合精度训练推理
 
-#### Intro - 量化目标、精度
+#### Intro - 量化目标、精度介绍
 
 * 量化的目标是什么？ —— 多目标优化
 
@@ -477,8 +477,6 @@ https://docs.nvidia.com/deeplearning/performance/index.html
     * **尾数无隐含的 1**（直接使用尾数位的二进制小数部分）
     * FP32 can represent precision up to 2^(-23)*2^(-126)=2^(-149)
     * FP16 can represent precision up to 2^(10)*2^(-14)=2^(-24)
-
-* 
 
   * FP64: 8个字节, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
 
@@ -665,6 +663,50 @@ https://arxiv.org/pdf/1905.12322
 #### Fp8-Mixed-Precision-Training
 
 ![image-20250331122321267](./MLSys/image-20250331122321267.png)
+
+##### Literature Review
+
+* per tensor scale
+  * tensor scaling techniques are proposed (Sun et al., 2019;
+    Micikevicius et al., 2022)【FP8-LM】
+
+##### FP8-LM by 微软
+
+> FP8-LM: Training FP8 Large Language Models
+
+* **three levels** gradually incorporate
+  * FP8 communication
+  * FP8 optimizer
+  * FP8 distributed training.
+
+* 精度技术
+  * **precision decoupling**
+    * decoupling the influence of data precision
+      on parameters such as weights, gradients, optimizer states, and assigning reduced precision to components that are not precision sensitive
+
+* FP8 communication
+  * **automatic scaling**
+    * to preserve gradient values within the representation range
+      of FP8 data formats through the dynamic adjustment of tensor scaling factors, thereby alleviating underflow and overflow occurrences during all-reduce communication.
+    * pre-scaling and post-scaling
+      * pre-scaling underflow，post-scaling overflow
+      * <img src="./MLSys/image-20250507132354443.png" alt="image-20250507132354443" style="zoom:50%;" />
+    * auto-scaling
+      * 这个简化有点离谱，直接取global scaling最小值，可能造成精度损失
+      * ![image-20250507133406617](./MLSys/image-20250507133406617.png)
+* fp8 optimizer
+  * the gradient statistics can use lower precision, while the master weights necessitate high precision
+    * 仅限first order，因为second-order代表方向更敏感
+    * 存fp32 master weights等价为存fp16+scaling
+    * ![image-20250507192731407](./MLSys/image-20250507192731407.png)
+* 结论：
+  * 显存：29% reduction for GPT-7B while 39% for GPT-175B
+  * weight-related communication: -63%~65%
+  * E2e: during the training of GPT-175B model, our FP8 mix-precision
+    framework reduces training time by 37% compared to TE (Nvidia, 2022b), while consuming 42% less memory on H100 GPU platform
+  * RLHF：yield a 32% reduction in model weights and a 62% reduction in optimizer states’ memory consumption
+
+
 
 ##### DeepSeek-V3
 
@@ -1438,6 +1480,18 @@ void gemmPacked(
 * matrix-vector engine、FPGA、TPU
 
 * ML benchmark
+
+#### 量化和并行训练的关系
+
+> FP8-LM paper
+
+![image-20250507193147805](./MLSys/image-20250507193147805.png)
+
+* ZeRO，改变了distribution方式
+
+![image-20250507193223244](./MLSys/image-20250507193223244.png)
+
+
 
 #### Q-Lora
 
