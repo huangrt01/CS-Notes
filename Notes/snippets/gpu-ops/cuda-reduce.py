@@ -1,15 +1,28 @@
 # TODO:
-# reduce6
-# total_reduce: reduce5
-# total_reduce: thread_coarsning
+# 1.COARSE_FACTOR templated
+# 2.torch.compile的性能和第一次的shape强相关，有坑
 
-# reduce-performance(gbps):
-# size  torch.sum  torch.compile(sum)  ReduceSum0  ReduceSum1  ReduceSum2  ReduceSum3  ReduceSum4  ReduceSum5
-# 0    64.0   0.028470            0.046784    0.041667    0.043716    0.043716    0.045714    0.045977    0.045455
-# 1   128.0   0.056140            0.088889    0.082902    0.087432    0.089385    0.088398    0.089888    0.092486
-# 2   256.0   0.106312            0.175824    0.160804    0.174863    0.176796    0.174863    0.181818    0.183908
-# 3   512.0   0.187134            0.336842    0.300469    0.338624    0.342246    0.351648    0.357542    0.355556
-# 4  1024.0   0.368876            0.589862    0.528926    0.643216    0.649746    0.670157    0.691892    0.699454
+# reduce-performance(gbps): compile dynamic=None
+#         size   torch.sum  torch.compile(sum)  ReduceSum0  ReduceSum1  ReduceSum2  ReduceSum3  ReduceSum4  ReduceSum5  ReduceSum6(BLOCK_SIZE=128,COARSE_FACTOR=8)
+# 0  1048576.0  203.527946          426.944612  124.593159  216.647931  219.551087  322.837433  355.208685  362.077356                                  424.181236
+
+# reduce-performance(gbps): compile dynamic=False
+#          size   torch.sum  torch.compile(sum)  ReduceSum0  ReduceSum1  ReduceSum2  ReduceSum3  ReduceSum4  ReduceSum5  ReduceSum6(BLOCK_SIZE=128,COARSE_FACTOR=8)
+# 0       128.0    0.060150            0.095238    0.066667    0.070175    0.070485    0.071111    0.071749    0.072398                                    0.070485
+# 1       256.0    0.113475            0.196319    0.129555    0.138528    0.139130    0.141593    0.144144    0.144796                                    0.140351
+# 2       512.0    0.198758            0.383234    0.244275    0.270042    0.272340    0.279476    0.283186    0.285714                                    0.280702
+# 3      1024.0    0.389058            0.748538    0.435374    0.509960    0.509960    0.531120    0.544681    0.549356                                    0.524590
+# 4      2048.0    0.744186            1.479769    0.859060    1.003922    1.007874    1.040650    1.071130    1.084746                                    1.019920
+# 5      4096.0    1.442254            2.860335    1.735593    2.039841    2.039841    2.115703    2.169491    2.188034                                    2.064516
+# 6      8192.0    2.760108            5.626374    3.436242    4.015686    4.015686    4.179592    4.284519    4.320675                                    4.063492
+# 7     16384.0    5.132832            8.291498    6.849498    8.031373    8.000000    8.325203    8.533334    8.677966                                    8.126984
+# 8     32768.0    8.982456            9.002198   13.473685   15.753846   15.693486   16.253968   16.718367   16.855967                                   15.875970
+# 9     65536.0   14.422535           14.422535   26.771242   31.148290   31.148290   32.379446   33.300812   33.436734                                   31.629344
+# 10   131072.0   32.572565           32.315581   46.545454   58.099292   58.306053   62.534354   64.758892   64.758892                                   61.363297
+# 11   262144.0   64.377213           64.377213   69.571124   96.093840   97.234420  118.296023  125.547889  126.517378                                  120.029299
+# 12   524288.0  122.956852          123.187975  100.515335  153.121496  154.202351  201.030670  215.578957  217.727580                                  231.575971
+# 13  1048576.0  202.584242          202.584242  124.356737  215.934094  219.183942  322.044215  353.293799  361.079891                                  424.181236
+
 
 
 import torch
@@ -40,7 +53,7 @@ __global__ void reduce0(int *g_idata, int *g_odata) {
 		__syncthreads();
 	}
 	// write result for this block to global mem
-	if (tid == 0) g_odata[blockIdx.x] = sdata[0];
+	if (tid == 0) atomicAdd(g_odata, sdata[0]);
 }
 
 // reduce1: 优化 % operator
@@ -60,7 +73,7 @@ __global__ void reduce1(int *g_idata, int *g_odata) {
         __syncthreads();
     }
     if (tid == 0) {
-        g_odata[blockIdx.x] = sdata[0];
+        atomicAdd(g_odata, sdata[0]);
     }
 }
 
@@ -82,7 +95,7 @@ __global__ void reduce2(int *g_idata, int *g_odata) {
 		__syncthreads();
 	}
 	// write result for this block to global mem
-	if (tid == 0) g_odata[blockIdx.x] = sdata[0];
+	if (tid == 0) atomicAdd(g_odata, sdata[0]);
 }
 
 // reduce3: first add during global load
@@ -104,7 +117,7 @@ __global__ void reduce3(int *g_idata, int *g_odata) {
 		__syncthreads();
 	}
 	// write result for this block to global mem
-	if (tid == 0) g_odata[blockIdx.x] = sdata[0];
+	if (tid == 0) atomicAdd(g_odata, sdata[0]);
 }
 
 // Instruction Bottleneck
@@ -146,7 +159,7 @@ __global__ void reduce4(int *g_idata, int *g_odata) {
 	}
 	if (tid < 32) warpReduce(sdata, tid);
 	// write result for this block to global mem
-	if (tid == 0) g_odata[blockIdx.x] = sdata[0];
+	if (tid == 0) atomicAdd(g_odata, sdata[0]);
 }
 
 // reduce5: Completely unrolled with Templates
@@ -191,8 +204,9 @@ __global__ void reduce5(int *g_idata, int *g_odata) {
 	}
 	if (tid < 32) warpReduce<blockSize>(sdata, tid);
 	// write result for this block to global mem
-	if (tid == 0) g_odata[blockIdx.x] = sdata[0];
+	if (tid == 0) atomicAdd(g_odata, sdata[0]);
 }
+
 
 // O(N)
 // O(N/P + log N)
@@ -219,33 +233,36 @@ __global__ void reduce5(int *g_idata, int *g_odata) {
 // reduce 6: Multiple Adds Per Thread
 
 template <unsigned int blockSize>
-__global__ void reduce6(int *g_idata, int *g_odata, unsigned int n) {
+__global__ void reduce6(int *g_idata, int *g_odata, unsigned int n, unsigned int COARSE_FACTOR) {
 	extern __shared__ int sdata[];
 	unsigned int tid = threadIdx.x;
-	unsigned int i = blockIdx.x*(blockSize*2) + tid;
-	unsigned int gridSize = blockSize*2*gridDim.x;
-	sdata[tid] = 0;
-	while (i < n) {
-		sdata[tid] += g_idata[i] + g_idata[i+blockSize];
-		i += gridSize; // gridSize loop stride to maintain coalescing!
-	}
+    sdata[tid] = 0;
+    unsigned int i = blockIdx.x * blockSize * COARSE_FACTOR + tid;
+    for (unsigned int tile = 0; tile < COARSE_FACTOR; ++tile) {
+        unsigned int index = i + tile * blockDim.x;
+        if (index < n) {
+            sdata[tid] += g_idata[index];
+        }
+    }
+
 	__syncthreads();
+	if (blockSize >= 1024) { if (tid < 512) { sdata[tid] += sdata[tid + 512]; } __syncthreads(); }
 	if (blockSize >= 512) { if (tid < 256) { sdata[tid] += sdata[tid + 256]; } __syncthreads(); }
 	if (blockSize >= 256) { if (tid < 128) { sdata[tid] += sdata[tid + 128]; } __syncthreads(); }
 	if (blockSize >= 128) { if (tid < 64) { sdata[tid] += sdata[tid + 64]; } __syncthreads(); }
 	if (tid < 32) warpReduce(sdata, tid);
-	if (tid == 0) g_odata[blockIdx.x] = sdata[0];
+	if (tid == 0) atomicAdd(g_odata, sdata[0]);
 }
 
 
-void ReduceSum(torch::Tensor input, torch::Tensor output, int version) {
+void ReduceSum(torch::Tensor input, torch::Tensor output, int version, unsigned int BLOCK_SIZE, unsigned int COARSE_FACTOR) {
     CHECK_INPUT(input);
     CHECK_INPUT(output);
 
     const auto size = input.numel();
-    int threads_per_block = (size >= 1024) ? 1024 : size;
+    int threads_per_block = (size >= BLOCK_SIZE) ? BLOCK_SIZE : size;
     int blocks = cdiv(size, threads_per_block);
-    const int smem_size = threads_per_block * sizeof(int);
+    int smem_size = threads_per_block * sizeof(int);
     if (version == 0) {
         reduce0<<<blocks, threads_per_block, smem_size>>>(
             input.data_ptr<int>(),
@@ -300,6 +317,35 @@ void ReduceSum(torch::Tensor input, torch::Tensor output, int version) {
                 reduce5< 1><<< blocks, threads_per_block, smem_size >>>(d_idata, d_odata); break;
         }
     }
+    else if (version == 6) {
+        blocks = (size + threads_per_block * COARSE_FACTOR - 1) / (threads_per_block * COARSE_FACTOR);
+        auto d_idata = input.data_ptr<int>();
+        auto d_odata = output.data_ptr<int>();
+        switch (threads_per_block) {
+            case 1024:
+                reduce6<1024><<< blocks, threads_per_block, smem_size >>>(d_idata, d_odata, size, COARSE_FACTOR); break;
+            case 512:
+                reduce6<512><<< blocks, threads_per_block, smem_size >>>(d_idata, d_odata, size, COARSE_FACTOR); break;
+            case 256:
+                reduce6<256><<< blocks, threads_per_block, smem_size >>>(d_idata, d_odata, size, COARSE_FACTOR); break;
+            case 128:
+                reduce6<128><<< blocks, threads_per_block, smem_size >>>(d_idata, d_odata, size, COARSE_FACTOR); break;
+            case 64:
+                reduce6< 64><<< blocks, threads_per_block, smem_size >>>(d_idata, d_odata, size, COARSE_FACTOR); break;
+            case 32:
+                reduce6< 32><<< blocks, threads_per_block, smem_size >>>(d_idata, d_odata, size, COARSE_FACTOR); break;
+            case 16:
+                reduce6< 16><<< blocks, threads_per_block, smem_size >>>(d_idata, d_odata, size, COARSE_FACTOR); break;
+            case 8:
+                reduce6< 8><<< blocks, threads_per_block, smem_size >>>(d_idata, d_odata, size, COARSE_FACTOR); break;
+            case 4:
+                reduce6< 4><<< blocks, threads_per_block, smem_size >>>(d_idata, d_odata, size, COARSE_FACTOR); break;
+            case 2:
+                reduce6< 2><<< blocks, threads_per_block, smem_size >>>(d_idata, d_odata, size, COARSE_FACTOR); break;
+            case 1:
+                reduce6< 1><<< blocks, threads_per_block, smem_size >>>(d_idata, d_odata, size, COARSE_FACTOR); break;
+        }
+    }
     C10_CUDA_KERNEL_LAUNCH_CHECK();
 }
 
@@ -307,7 +353,7 @@ void ReduceSum(torch::Tensor input, torch::Tensor output, int version) {
 '''
 
 cpp_src = r'''
-void ReduceSum(torch::Tensor input, torch::Tensor output, int version);
+void ReduceSum(torch::Tensor input, torch::Tensor output, int version, unsigned int BLOCK_SIZE = 1024, unsigned int COARSE_FACTOR = 1);
 '''
 
 reduce_module = load_cuda(
@@ -320,22 +366,25 @@ reduce_module = load_cuda(
 )
 
 
-def cuda_reduce_sum(A, version):
-  output = torch.empty(cdiv(A.numel(), REDUCE_SIZE),
+def cuda_reduce_sum(A, version, BLOCK_SIZE=1024, COARSE_FACTOR=1):
+  output = torch.zeros(1,
                        dtype=A.dtype,
                        device='cuda')
-  reduce_module.ReduceSum(A, output, version)
+  assert A.numel() % 2 == 0, A.numel()
+  if version == 4:
+    assert A.numel() >= 128, A.numel()
+  assert isinstance(COARSE_FACTOR, int), type(COARSE_FACTOR)
+  reduce_module.ReduceSum(A, output, version, BLOCK_SIZE, COARSE_FACTOR)
   return output
 
 
 def test_reduce():
   torch.manual_seed(0)
-  test_sizes = [128, 256, 512, 1024, 2048, 4096]
+  test_sizes = [2**i for i in range(7, 18, 1)]
   for total_size in test_sizes:
     x = torch.randint(0, 100, (total_size,), dtype=torch.int32, device='cuda')
 
-    expected_output = x.reshape(-1, REDUCE_SIZE).sum(
-      dim=1) if total_size > 1024 else x.sum().unsqueeze(0)
+    expected_output = x.sum().unsqueeze(0)
     assert expected_output.dtype == torch.int64, expected_output.dtype  # sum of ints is int
 
     output0 = cuda_reduce_sum(x, 0)
@@ -386,23 +435,31 @@ def test_reduce():
     ), f"ReduceSum5 failed.\nOutput:\n{output5}\nExpected:\n{expected_output}"
     print("ReduceSum5 test passed.")
 
+    output6 = cuda_reduce_sum(x, 6, BLOCK_SIZE=128, COARSE_FACTOR=8)
+    assert output6.dtype == torch.int32, f"ReduceSum6 output dtype mismatch: expected torch.int32, got {output6.dtype}"
+    assert output6.shape == expected_output.shape, f"ReduceSum6 output shape mismatch: expected {expected_output.shape}, got {output6.shape}"
+    assert torch.equal(
+        output6.long(), expected_output
+    ), f"ReduceSum6 failed.\nOutput:\n{output6}\nExpected:\n{expected_output}"
+    print("ReduceSum6 test passed.")
+
     print(f"All reduce tests passed successfully! total_size: {total_size}")
 
 
 @triton.testing.perf_report(
   triton.testing.Benchmark(
     x_names=['size'],
-    x_vals=[2**i for i in range(6, 11, 1)],
+    x_vals=[2**i for i in range(7, 21, 1)],
     line_arg='operation',
     line_vals=[
-      'torch', 'torch_compile', 'cuda0', 'cuda1', 'cuda2', 'cuda3', 'cuda4', 'cuda5'
+      'torch', 'torch_compile', 'cuda0', 'cuda1', 'cuda2', 'cuda3', 'cuda4', 'cuda5', 'cuda6'
     ],
     line_names=[
       'torch.sum', 'torch.compile(sum)', 'ReduceSum0', 'ReduceSum1', 'ReduceSum2',
-      'ReduceSum3', 'ReduceSum4', 'ReduceSum5'
+      'ReduceSum3', 'ReduceSum4', 'ReduceSum5', 'ReduceSum6(BLOCK_SIZE=128,COARSE_FACTOR=8)'
     ],
     styles=[('blue', '-'), ('blue', '--'), ('green', '-'), ('red', '-'), ('purple', '-'),
-            ('orange', '-'), ('cyan', '-'), ('magenta', '-')],
+            ('orange', '-'), ('cyan', '-'), ('magenta', '-'), ('yellow', '-')],
     ylabel='us',
     plot_name='reduce-performance(gbps)',
     args={},
@@ -410,18 +467,10 @@ def test_reduce():
 def benchmark(size, operation):
   x = torch.randint(0, 100, (size,), device='cuda', dtype=torch.int32)
   if operation == 'torch':
-    if size <= 1024:
-      fn = lambda: x.sum()
-    else:
-      reshaped_x = x.reshape(-1, REDUCE_SIZE)
-      fn = lambda: reshaped_x.sum(dim=1)
+    fn = lambda: torch.sum(x)
   elif operation == 'torch_compile':
-    compiled_sum = torch.compile(torch.sum)
-    if size <= 1024:
-      fn = lambda: compiled_sum(x)
-    else:
-      reshaped_x = x.reshape(-1, REDUCE_SIZE)
-      fn = lambda: compiled_sum(reshaped_x, dim=1)
+    compiled_sum = torch.compile(torch.sum, dynamic=False)
+    fn = lambda: compiled_sum(x)
   elif operation == 'cuda0':
     fn = lambda: cuda_reduce_sum(x, 0)
   elif operation == 'cuda1':
@@ -434,6 +483,8 @@ def benchmark(size, operation):
     fn = lambda: cuda_reduce_sum(x, 4)
   elif operation == 'cuda5':
     fn = lambda: cuda_reduce_sum(x, 5)
+  elif operation == 'cuda6':
+    fn = lambda: cuda_reduce_sum(x, 6, BLOCK_SIZE=128, COARSE_FACTOR=8)
   else:
     raise ValueError(f"Invalid operation: {operation}")
   ms, min_ms, max_ms = triton.testing.do_bench(fn, quantiles=[0.5, 0.2, 0.8])
@@ -442,6 +493,13 @@ def benchmark(size, operation):
   # return ms * 1e3, max_ms * 1e3, min_ms * 1e3
 
 
+# TORCH_LOGS="output_code"
+@torch.compile
+def f(a):
+  c = torch.sum(a)
+  return c
+
 if __name__ == '__main__':
+  f(torch.randn(100000).cuda())
   test_reduce()
   benchmark.run(print_data=True, save_path='.')

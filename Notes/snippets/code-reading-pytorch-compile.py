@@ -1,4 +1,5 @@
-https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html
+tutorial: https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html
+API: https://docs.pytorch.org/docs/stable/generated/torch.compile.html#torch.compile
 
 ### depyf: Debugging Tool
 

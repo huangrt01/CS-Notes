@@ -14,6 +14,14 @@
 
 *** reduce_ops
 
+- Implementation is accumulator and reduction op agnostic
+- TensorIterator to iterate over tensor elements
+- ReduceConfig: Has kernel launch parameters like block size and number of threads, grid etc.. and its set in setReduceConfig
+- Reduce_kernel is where it gets launched
+- Reduction strategies: thread level, block level x,y, or global reduce
+- Vectorization: Over input and/or output
+
+
 * min的实现：
 aten/src/ATen/native/cuda/ReduceOps.cpp
 ->
@@ -21,8 +29,52 @@ aten/src/ATen/native/cuda/ReduceMinValuesKernel.cu
 ->
 aten/src/ATen/native/cuda/Reduce.cuh: 
 
-gpu_reduce_kernel
 struct ReduceOp
+
+auto config = ReduceConfig(sizeof(arg_t), num_outputs, inputs_per_output);
+
+template<int max_threads, typename R>
+static void launch_reduce_kernel(const ReduceConfig& config, const R& reduction) {
+  dim3 block = config.block();
+  dim3 grid = config.grid();
+
+  auto stream = at::cuda::getCurrentCUDAStream();
+  int shared_memory = config.shared_memory_size();
+
+  switch(config.output_vec_size) {
+  case 4:
+    reduce_kernel<max_threads / 4, 4, R><<<grid, block, shared_memory, stream>>>(reduction);
+    C10_CUDA_KERNEL_LAUNCH_CHECK();
+    break;
+  case 2:
+    reduce_kernel<max_threads / 2, 2, R><<<grid, block, shared_memory, stream>>>(reduction);
+    C10_CUDA_KERNEL_LAUNCH_CHECK();
+    break;
+  default:
+    reduce_kernel<max_threads / 1, 1, R><<<grid, block, shared_memory, stream>>>(reduction);
+    C10_CUDA_KERNEL_LAUNCH_CHECK();
+  }
+}
+
+gpu_reduce_kernel
+  - can_accumulate_in_output
+  // at::Half/at::ComplexHalf overflows easily as it's range is very small.
+  // So when scalar_t and out_scalar_t are at::Half/at::ComplexHalf, we
+  // set can_accumulate_in_output to False.
+  static constexpr bool is_inp_out_type_half_or_chalf =
+      (std::is_same_v<at::Half, scalar_t> &&
+       std::is_same_v<at::Half, out_scalar_t>) ||
+      (std::is_same_v<c10::complex<Half>, scalar_t> &&
+       std::is_same_v<c10::complex<Half>, out_scalar_t>);
+  // at::BFloat16 has lower precision and can lead to rounding errors.
+  // So when scalar_t and out_scalar_t are at::BFloat16, we
+  // set can_accumulate_in_output to False.
+  static constexpr bool is_inp_out_type_bfloat16 =
+      (std::is_same_v<at::BFloat16, scalar_t> &&
+       std::is_same_v<at::BFloat16, out_scalar_t>);
+  static constexpr bool can_accumulate_in_output =
+      std::is_convertible_v<arg_t, out_scalar_t> &&
+      !(is_inp_out_type_half_or_chalf || is_inp_out_type_bfloat16);
 
 
 
