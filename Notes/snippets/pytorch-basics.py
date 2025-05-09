@@ -120,6 +120,11 @@ output = torch.tensor(output)
 print(output)
 
 
+# long tensor
+
+torch.LongTensor 储存int64
+
+
 # to numpy/DLPack
 
 零成本开销！

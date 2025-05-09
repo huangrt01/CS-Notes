@@ -34,6 +34,26 @@
 * IO-Aware Runtime Optimization 【flash-attention】
   * We draw the most direct connection to the literature of analyzing I/O complexity in this work [1], but concepts of memory hierarchies are fundamental and has appeared in many forms, from the working set model [21], to data locality [86], to the Rooﬂine model of arithmetic intensity [85], to analyses of scalability [59], to standard textbook treatments of computer architecture [40].
 
+#### 并行计算理论
+
+> CME323 https://stanford.edu/~rezab/dao/notes/lecture01/cme323_lec1.pdf
+
+* 并行算法的“成本”（Cost）通常被认为是 **处理器数量 × 时间复杂度** 。
+  在GPU编程中，我们通常分配线程（threads）而不是直接控制物理处理器（processors）。
+
+  - 初始想法 ：对于一个包含N个元素的规约操作，一个直接的想法是为每个元素分配一个线程，即使用 O(N) 个线程。
+
+  - 时间复杂度 ：使用树形结构进行两两相加的规约，其时间复杂度是 O(log N)。
+
+  - 成本计算 ：因此，这种策略的成本是 O(N) * O(log N) = O(N log N)。
+
+  - 结论 ：这个成本高于顺序算法的成本 O(N)，因此被认为是“非成本高效的”（not cost efficient）。这意味着并行化并没有带来理论上最佳的加速比。
+
+* Brent's theorem
+
+  * ![image-20250509140316594](./Computer-Architecture/image-20250509140316594.png)
+  * 用于分析reduce sum的优化
+
 #### 为什么优化 Latency 困难
 
 * [It's the Latency, Stupid](http://www.stuartcheshire.org/rants/latency.html)

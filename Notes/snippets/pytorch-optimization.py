@@ -83,6 +83,8 @@ export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128 # 128-500
 # grad acc
 牺牲训练速度，保batch size+显存
 
+is_sync_step = (step + 1) % int(args.grad_accum_step) == 0 if int(args.grad_accum_step) > 0 else True
+sync_context = contextlib.nullcontext() if is_sync_step else model.no_sync()
 
 # act recomputation
 
