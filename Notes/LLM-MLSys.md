@@ -530,7 +530,7 @@ print(f"Prompt的token数量为: {token_count}")
     * **overlap the attention of one micro-batch with**
       **the dispatch+MoE+combine of another.**
 
-## 推理优化
+## 推理&训练优化
 
 ### Intro
 
@@ -598,10 +598,10 @@ print(f"Prompt的token数量为: {token_count}")
 
 ### 访存优化
 
-#### FlashAttention: Fast and Memory-Eﬃcient Exact Attention
-with IO-Awareness
-
+#### FlashAttention: Fast and Memory-Eﬃcient Exact Attention with IO-Awareness
 > https://github.com/HazyResearch/flash-attention
+>
+> **flashattn + flash-decoding https://zhuanlan.zhihu.com/p/685020608**
 >
 > FlashAttn V1/V2/V3论文精读 https://www.bilibili.com/video/BV1ExFreTEYa
 >
@@ -610,6 +610,25 @@ with IO-Awareness
 > 核心洞察：attention矩阵N^2太大了，无法利用192KB的SRAM缓存
 >
 > 直观理解：分块计算注意力，前面块的注意力是一个局部注意力，当进一步计算后面注意力时，需要对前面的局部注意力加权，和后面的注意力权重相加
+
+##### Attn计算
+
+* 1 SM: “1 head + no batch dimension"
+  * 因此attn的head dim较小，否则无法map到一个SM完成
+* tiling优化思路
+  * 对contraction axis做tiling
+
+```
+for t_tile:
+    load(Q[t_tile]) to shared, init O[t, d] = o
+    for s_tile:
+        load(K[s_tile], V[stile]) to shared;
+        compute I[t, s] = Q[t_tile] @ Kᵀ[s_tile] (compute p[t, s])
+        O[t, d] += p[t_tile, s_tile] @ V[s_tile]
+    write O[t, d] 
+```
+
+##### FlashAttn
 
 * Intro
   * uses tiling to reduce the number of memory reads/writes
@@ -662,7 +681,9 @@ with IO-Awareness
     * Block-sparse FlashAttention: 64k seq len
   * 性能相比其它transformer![image-20250201025905877](./LLM-MLSys/image-20250201025905877.png)
 
-##### 《From Online Softmax to FlashAttention》、《Online normalizer calculation for softmax》
+##### Online Softmax
+
+> 《From Online Softmax to FlashAttention》、《Online normalizer calculation for softmax》
 
 * (Safe) Softmax
 
@@ -671,10 +692,13 @@ with IO-Awareness
   * ![image-20250503020010235](./LLM-MLSys/image-20250503020010235.png)
 
 * Online Softmax
+  * $$ \sum_{j} \left( \exp(l_j - m_{\text{new}}) \right) = \exp(m - m_{\text{new}}) \sum_{j} \left( \exp(l_j - m) \right) $$ 
+    * can also do this for partial sum $\to$ do summing and max in one go 
+  
   * **2 read + 1 store per element**
   * 理解：di'是注意力权重的累积和
   * ![image-20250201033508793](./LLM-MLSys/image-20250201033508793.png)
-
+  
   * ![image-20250201160812250](./LLM-MLSys/image-20250201160812250.png)
   
 
@@ -691,6 +715,11 @@ with IO-Awareness
 >     - 除了batch和head维度，序列长度也要支持并行化，这样能提高GPU占用率。
 >   - 线程块内部，通过合理的编排warp来减少共享内存不必要的访问以及通信。
 > - 经过上面三个改造点，性能上v2比v1提升来2倍，效率接近GEMM,达到理论FLOPS的70%
+> - 使用了cutlass
+
+
+
+![image-20250511165841859](./LLM-MLSys/image-20250511165841859.png)
 
 * 计算重排序：将外循环改为遍历Q的块内循环遍历K,V的块，提高了数据局部性和并行性。
   * Q比KV在SRAM可以驻留更长的时间，缓存的存活时间更长，更能减少HBM的访问次数。
@@ -736,6 +765,21 @@ with IO-Awareness
 ### MoE 推理 —— Expert Parallelism
 
 * Seed：https://arxiv.org/abs/2504.02263
+
+### Long-Context优化
+
+#### Ring Attention —— Sequence Parallel Attention Across Devices
+
+> GPU Mode Lecture 13 https://www.youtube.com/watch?v=ws7angQYIxI
+
+* 显存：flash-attn的显存随seq-len线性增长
+  * flash-attn将显存从O(s^2)降到了O(s)
+  * ![image-20250512023151453](./LLM-MLSys/image-20250512023151453.png)
+
+* FLOPS
+  * ![image-20250512024143990](./LLM-MLSys/image-20250512024143990.png)
+
+
 
 ## 推理框架
 

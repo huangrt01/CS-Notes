@@ -3,6 +3,7 @@ pip3 install numba-cuda
 https://numba.readthedocs.io/en/stable/cuda/simulator.html
 NUMBA_ENABLE_CUDASIM=1
 
+原理：通过 tensor.__cuda_array_interface__
 
 import math
 from numba import cuda

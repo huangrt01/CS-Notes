@@ -5,10 +5,7 @@
 coverage run --source=monotorch -m pytest tests/
 coverage html --show-contexts
 
-
-- @pytest.mark.benchmark
-
-
+### unittest
 
 import shutil
 import tempfile
@@ -27,8 +24,15 @@ class Test(unittest.TestCase):
         shutil.rmtree(self.temp_dir)
 
     def test1(self):
-    		new_ckpt_dir = f'{self.temp_dir}/new_saved'
-    		...
+            new_ckpt_dir = f'{self.temp_dir}/new_saved'
+            ...
+
+### pytest
+
+- @pytest.mark.benchmark
+
+pytest.main(["-x", __file__])
+
 
 ### Decorator
 

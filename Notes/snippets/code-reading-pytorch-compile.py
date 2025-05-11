@@ -30,6 +30,14 @@ def square_2(a):
 
 fused_model = torch.nn.utils.fusion.fuse_linear_bn_eval(model.linear, model.bn)
 
+#### fusion精度问题
+
+fma can cause drastically worse precision in torch.compile/Triton
+- https://github.com/pytorch/pytorch/issues/122260
+
+[inductor] Disable fp contraction and add option to use precise division #115435
+- https://github.com/pytorch/pytorch/pull/115435
+
 
 ### mm.py
 

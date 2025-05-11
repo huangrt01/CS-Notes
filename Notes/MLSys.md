@@ -766,7 +766,6 @@ https://arxiv.org/pdf/1905.12322
     * **Fp8**: activation before MoE up-projections、activation gradient before MoE down-projections
     * **Bf16:** both the forward and backward combine components
   
-
 * 硬件提升方向：
   * To address this inefficiency, we recommend that future chips **integrate FP8 cast and TMA (Tensor Memory Accelerator) access into a single fused operation**, so quantization can be completed during the transfer of activations from global memory to shared memory, avoiding frequent memory reads and writes.
   * We also recommend supporting a **warp-level cast instruction** for speedup, which further facilitates the better fusion of layer normalization and FP8 cast. Alternatively, a near-memory computing approach can be adopted, where compute logic is placed near the HBM. In this case, BF16 elements can be cast to FP8 directly as they are read from HBM into the GPU, reducing off-chip memory access by roughly 50%.
@@ -1509,7 +1508,144 @@ void gemmPacked(
 
 ![image-20250331150031977](./MLSys/image-20250331150031977.png)
 
+### Sparsity —— 模型压缩、稀疏化、剪枝
 
+#### Tensor decomposition
+
+* Matrix decompostion
+* "Compression of deep convolutional neural networks for fast and low power mobile applications." ICLR (2016)
+  * finetune减小效果损失
+
+#### [Sparsity —— GPU Mode Lecture 11](https://www.youtube.com/watch?v=mGDnOLcfE8g)
+
+> Email: [jessecai@meta.com](mailto:jessecai@meta.com) in PyTorch Core
+>
+> Github: @jcaip
+
+##### Intro
+
+* 性能：
+  * 用于训练，面临更复杂的问题，比如memory无法优化
+* 精度：
+  * 应用于LLM训练，无法使用retrain的方法，serving的精度下降可能无法接受？
+
+![image-20250510042754377](./MLSys/image-20250510042754377.png)
+
+##### Unstructured Sparsity
+
+* COO representation
+  * [ 1 2 3 
+      0 0 0    ->  index: < (0,0) (0,1) (0,2) >
+      0 0 0 ]      data:  < 1 2 3 >
+
+* Sparse matmul
+  * Only faster at high sparsity levels (>99%)
+* Unstructured sparsity is cool and accuracy preserving but you can’t make it fast on GPUs
+  * What if we remove a row instead of just a single param? structured pruning
+  * We can reuse dense kernels (yay) 
+  * But the accuracy impact is large and difficult to deal with
+
+##### Semi-structured (2:4) sparsity
+
+* Fixed 50% sparsity level, up to 2x theoretical max speedup
+* Relatively easy to recover accuracy. 
+  * prune一次再retrain
+* kernel性能
+  * K大、N小时，性能好
+    * N大时，load bit indices的相对开销增加
+
+![image-20250511024840934](./MLSys/image-20250511024840934.png)
+
+![image-20250511025913275](./MLSys/image-20250511025913275.png)
+
+
+
+* 结果：精度还是有问题，这里是直接prune没有经过retrain的
+
+![image-20250511030244529](./MLSys/image-20250511030244529.png)
+
+
+
+##### 2:4 sparse training
+
+[2:4 sparse training](https://docs.google.com/presentation/d/1zDtjQAlAa68q158hiNxgEQn7ZrdjG9YS5usatgnVyAk/edit)
+
+* Can we use 2:4 sparsity for training? Yes!
+
+* Main Idea:
+  * Sparsify + sparse_mm < dense_mm
+  * Need both W and W_t for forward / backward pass
+
+![image-20250511035325506](./MLSys/image-20250511035325506.png)
+
+![image-20250511034832998](./MLSys/image-20250511034832998.png)
+
+* 对比training & serving
+  * 显存上涨，原因是要存dense copy
+  * ![image-20250511034855017](./MLSys/image-20250511034855017.png)
+* xFormers ran experiments with DINO show 10-20% e2e speedup with 0.5% acc gap (81.6 -> 80.5) on ImageNet-1k
+  * **Applying 2:4 sparsity to activations**
+
+##### Block sparsity
+
+* Block based on block size, speedups of ~3.4x at 90% sparsity
+* Requires more advanced algorithms to recover accuracy
+  * [DRESS](https://arxiv.org/abs/2207.00670)
+  * Use [Superblock](https://github.com/pytorch-labs/superblock) to recover accuracy
+
+* 结论：
+  * ![image-20250511031308392](./MLSys/image-20250511031308392.png)
+
+
+
+##### Sparsity +  Quantization
+
+* [Performance](https://docs.google.com/document/d/12Qos8RlVuuqs9m8i_dA7r7JkMyVx_HXi2TPj86Hrkd8/edit)
+  * 视频 33分钟左右，讲解性能挑战在于operator fusion
+    * 问题：缺少 fused dequant + cusparse + bf16
+  * ![image-20250511033037908](./MLSys/image-20250511033037908.png)
+* [Accuracy](https://docs.google.com/presentation/d/1cWstH6lk3zVntNZ1YCkmtKYkwBIJ8AdM3uVAN9Ir9LY/edit)
+  * ![image-20250511033745707](./MLSys/image-20250511033745707.png)
+
+##### Future Work
+
+![image-20250511040932650](./MLSys/image-20250511040932650.png)
+
+* 和shuffle结合，很有意思
+
+![image-20250511040653106](./MLSys/image-20250511040653106.png)
+
+* ![image-20250511040709582](./MLSys/image-20250511040709582.png)
+
+#### [SparseGPT](https://arxiv.org/abs/2301.00774)
+
+> SparseGPT: Massive Language Models Can Be Accurately Pruned in One-Shot
+
+
+
+#### Network pruning
+
+* 核心思路：
+  * Accuracy: zero out parameters from the model 
+  * Performance: how to make multiplying by zero fast
+* 历史追溯到：Optimal Brain Damage (1989 by lecun)
+
+* Many types of pruning techniques are known, for example, structured versus unstructured pruning, randomly removing weights versus removing by size or rank, and iterative pruning versus one-shot pruning (Blalock et al., 2018). In case of CNNs, iterative filter pruning is known to achieve state of the art results
+* "Deep Compression: Compressing Deep Neural Networks with Pruning, Trained Quantization and Huffman Coding." ICLR (2016)
+* ![network-pruning](./MLSys/network-pruning.png)
+* ![network-pruning-2](./MLSys/network-pruning-2.png)
+
+* Pruning + Quantization
+  * pruning + quantization 效果最好（相比两者的单独使用以及SVD），大道至简？
+  * XNOR-Net: binary weights/binary input and weights
+  * quantize during training
+* Smaller model
+  * Knowledge distillation: "Fitnets: Hints for thin deep nets." ICLR (2015)
+* Others
+  * Specialized hardware for sparse models
+    * Song Han, et al. “EIE: Efficient Inference Engine on Compressed Deep Neural Network.” ISCA 2016
+  * Accuracy and resource trade-off
+    * Han, Seungyeop, et al. "MCDNN: An Approximation-Based Execution Framework for Deep Stream Processing Under Resource Constraints." MobiSys (2016).
 
 ### 算力优化
 
@@ -2392,7 +2528,6 @@ for prediction, label, img in zip(p,l,i):
 * Deployment Results and Insights
   * latent space + [t-SNE]()
   * Using Debugger for iterative model pruning
-    * Many types of pruning techniques are known, for example, structured versus unstructured prun-ing, randomly removing weights versus removing by size or rank, and iterative pruning versus one-shot pruning (Blalock et al., 2018). In case of CNNs, iterative filter pruning is known to achieve state of the art results
 
 
 
@@ -3354,25 +3489,7 @@ module.get_output(0, output)
 #### Lecture 12: Model Serving
 
 * Model Compression
-  * Tensor decomposition
-    * Matrix decompostion
-    * "Compression of deep convolutional neural networks for fast and low power mobile applications." ICLR (2016)
-      * finetune减小效果损失
-  * Network pruning
-    * "Deep Compression: Compressing Deep Neural Networks with Pruning, Trained Quantization and Huffman Coding." ICLR (2016)
-    * ![network-pruning](./MLSys/network-pruning.png)
-    * ![network-pruning-2](./MLSys/network-pruning-2.png)
-  * Quantization
-    * pruning + quantization 效果最好（相比两者的单独使用以及SVD），大道至简？
-    * XNOR-Net: binary weights/binary input and weights
-    * quantize during training
-  * Smaller model
-    * Knowledge distillation: "Fitnets: Hints for thin deep nets." ICLR (2015)
-  * Others
-    * Specialized hardware for sparse models
-      * Song Han, et al. “EIE: Efficient Inference Engine on Compressed Deep Neural Network.” ISCA 2016
-    * Accuracy and resource trade-off
-      * Han, Seungyeop, et al. "MCDNN: An Approximation-Based Execution Framework for Deep Stream Processing Under Resource Constraints." MobiSys (2016).
+  * 见「稀疏化」
 
 * Serving system
 

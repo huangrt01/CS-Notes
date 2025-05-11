@@ -66,3 +66,15 @@ ret;
 
 // 调试信息
 .debug_abbrev、.debug_info、.debug_pubnames、.debug_pubtypes 和 .debug_loc
+
+
+
+
+
+### 寄存器信息
+
+- 通用目的寄存器 (32-bit) : 通常以 %r 开头 (例如 %r1 , %r101 )。
+- 浮点寄存器 (32-bit) : 通常以 %f 开头 (例如 %f1 , %f227 )。
+- 谓词寄存器 (1-bit) : 通常以 %p 开头 (例如 %p1 , %p34 )。
+- 双精度/长整型寄存器 (64-bit) : 通常以 %rd 开头 (例如 %rd1 , %rd16 )
+

@@ -13,6 +13,9 @@
 - SGLang
   - https://github.com/sgl-project/sglang.git
 
+- Thunder
+  - https://github.com/Lightning-AI/lightning-thunder
+
 
 
 #### Tf 二次开发
@@ -20,8 +23,16 @@
 - HugeCTR
 
 
+#### Data Pipeline
+
+- ConcurrentDataLoader
+  - https://github.com/iarai/concurrent-dataloader/tree/master
+
 
 #### 通信库
+
+- RingAttention
+  - https://github.com/gpu-mode/ring-attention
 
 - AllReduce
   - https://github.com/baidu-research/baidu-allreduce
@@ -100,17 +111,20 @@
  - https://github.com/facebookresearch/segment-anything/blob/main/segment_anything/modeling/image_encoder.py#L358
  - https://github.com/pytorch-labs/segment-anything-fast/blob/main/segment_anything_fast/flash_4.py#L13
 
+
+#### kernel fusion
+
+- cv fusion
+  - https://github.com/morousg/cvGPUSpeedup
+  - https://github.com/morousg/FusedKernelLibrary
+
+
 #### Assembler
 
 - Assembler for NVIDIA Maxwell architecture
   - https://github.com/NervanaSystems/maxas.git
   - SGEMM Impl
 
-
-### Data Pipeline
-
-- ConcurrentDataLoader
-  - https://github.com/iarai/concurrent-dataloader/tree/master
 
 ### C++
 

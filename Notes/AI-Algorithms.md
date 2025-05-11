@@ -170,15 +170,14 @@
   * connect the encoder and decoder through an attention mechanism. 
   * Encoder: 映射到另一个语义空间
   * Self-attention, sometimes called intra-attention is an attention mechanism relating different positions of a single sequence in order to compute a representation of the sequence.
-  
 * 公式
   * multi-head self-attention (MSA) + multi-layer perceptron (MLP) blocks
   * ![image-20241213200148729](./AI-Algorithms/image-20241213200148729.png)
-  
 * 模型结构是什么？
   * 过N个注意力层，再过一个full connection
   * $$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$
     * normalization：$$d_k$$是head dim（最后一维）
+      * 确保注意力机制在不同维度 dk 下都能稳定有效地训练
   * 残差网络
 * 模型参数是什么？
   * 词嵌入向量
@@ -271,6 +270,10 @@
 
 ### Encoder
 
+#### 从 classification 的角度理解 Attention
+
+![image-20250511160613431](./AI-Algorithms/image-20250511160613431.png)
+
 #### 多头自注意力
 
 > * 从模型复杂度的角度：假设超参对效果贡献相同，优先让模型更复杂，利于Scalable，更晚遇到天花板
@@ -315,6 +318,14 @@
   * GPT-3: 96层
   * GPT-4、llama3：120层
   * Q、K、V不同的理解：Q、K、V通过不同的线性变换从同一输入序列中生成，各自承担着不同的作用，共同实现了模型对序列中不同位置之间关系的捕捉。
+
+##### 为什么 multi-head
+
+* 《ttn is all you need》
+  "Multi - head attention allows the model to jointly attend to information from different representation subspaces at different positions. With a single attention head, averaging inhibits this."
+
+- But it also is a formidable computational simplifications: The heads operate fully independently, so computing them is (like batch) “embarrassingly parallel”
+  - head dim是性能的一个限制因素
 
 #### MLP
 
@@ -2120,9 +2131,21 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 
 ## Long-Context 长上下文
 
-* 早期GPT的上下文只有4K
-* 超大的上下文窗口=超长的短期记忆
-* 128K Token = 124K Input Token + 4096 Output Token
+### Intro
+
+* 发展：
+  * 早期GPT的上下文只有4K
+
+* Intro
+  * 超大的上下文窗口=超长的短期记忆
+  * 128K Token = 124K Input Token + 4096 Output Token
+
+![image-20250512021136013](./AI-Algorithms/image-20250512021136013.png)
+
+* 技术路线：
+  * Approximation (e.g. Sparse, LoRA)
+  * RAG / Vector-DBs (ANN search, LSH)
+  * **Brute-force compute** (tiling, blockwise)
 
 ### “Train Short, Test Long”, Positional Embedding
 
@@ -2157,7 +2180,15 @@ https://arxiv.org/abs/2104.09864
 
 [LongRoPE](https://arxiv.org/abs/2402.13753), [NTK-RoPE](https://www.reddit.com/r/LocalLLaMA/comments/14lz7j5/ntkaware_scaled_rope_allows_llama_models_to_have/), [ReRoPE](https://github.com/bojone/rerope?tab=readme-ov-file),
 
+### [LWM —— Large World Model with Blockwise Ring-Attn](https://arxiv.org/pdf/2402.08268)
 
+> WORLD MODEL ON MILLION-LENGTH VIDEO AND LANGUAGE WITH BLOCKWISE RINGATTENTION
+
+![image-20250512022523757](./AI-Algorithms/image-20250512022523757.png)
+
+### 工程
+
+参考 LLM-MLSys.md
 
 ## Interpretability
 
