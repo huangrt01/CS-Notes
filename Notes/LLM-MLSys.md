@@ -756,11 +756,21 @@ for t_tile:
 
 #### Speculative Decoding
 
+> Draft model、large model
+
 《Speculative Decoding: Exploiting Speculative Execution for Accelerating Seq2seq Generation》
 
 《Fast Inference from Transformers via Speculative Decoding》
 
+#### Flash-Decoding
 
+> 思路：parallelize KV计算，用满GPU
+
+* 解决的问题：
+  * **FlashAttention is Sub-optimal for Long-Context Inference**
+    * parallelizes across blocks of queries and batch size only, and does not manage to occupy the entire GPU during token-by-token decoding.
+
+* https://crfm.stanford.edu/2023/10/12/flashdecoding.html 有动画
 
 ### MoE 推理 —— Expert Parallelism
 
@@ -776,10 +786,30 @@ for t_tile:
   * flash-attn将显存从O(s^2)降到了O(s)
   * ![image-20250512023151453](./LLM-MLSys/image-20250512023151453.png)
 
-* FLOPS
+* 长上下文FLOPS
   * ![image-20250512024143990](./LLM-MLSys/image-20250512024143990.png)
 
+* blockwise attn
+  * 动画：https://www.youtube.com/watch?v=JhR_xo9S0_E
+  * ![image-20250513215122201](./LLM-MLSys/image-20250513215122201.png)
 
+* SP
+  * 参考「MLSys.md ——并行训练 —— SP」
+
+* ring-attn
+
+  * ![image-20250513225747367](./LLM-MLSys/image-20250513225747367.png)
+  * ![image-20250514001654067](./LLM-MLSys/image-20250514001654067.png)
+
+  * ring attention的问题：idle worker
+    * ![image-20250514002313692](./LLM-MLSys/image-20250514002313692.png)
+    * ![image-20250514002501925](./LLM-MLSys/image-20250514002501925.png)
+
+#### Striped Attention (Reorder QKV)
+
+![image-20250514003125607](./LLM-MLSys/image-20250514003125607.png)
+
+![image-20250514003221884](./LLM-MLSys/image-20250514003221884.png)
 
 ## 推理框架
 

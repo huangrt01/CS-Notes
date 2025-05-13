@@ -29,13 +29,14 @@
   - https://github.com/iarai/concurrent-dataloader/tree/master
 
 
-#### 通信库
-
-- RingAttention
-  - https://github.com/gpu-mode/ring-attention
+#### 通信、序列并行
 
 - AllReduce
   - https://github.com/baidu-research/baidu-allreduce
+- RingFlashAttention
+  - https://github.com/zhuzilin/ring-flash-attention
+- RingAttention
+  - https://github.com/gpu-mode/ring-attention
 
 
 

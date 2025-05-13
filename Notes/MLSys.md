@@ -2066,6 +2066,8 @@ for i in range(num_layers):
 
 #### SP (sequence parallelism)
 
+> 也参考 LLM-MLSys —— Long Context优化
+
 [2021] Colossal AI 提出了Sequence Parallelsim，论文 https://arxiv.org/pdf/2105.13120
 
 [2022] Megatron-LM 在序列维度拆分 Dropout 和 LayerNorm，论文 https://arxiv.org/abs/2205.05198
@@ -2078,7 +2080,9 @@ for i in range(num_layers):
 
 1/3/4/5是从输入层开始在拆分序列，2 则是在中间层
 
+![image-20250513224936341](./MLSys/image-20250513224936341.png)
 
+![image-20250513225320471](./MLSys/image-20250513225320471.png)
 
 #### TP
 
