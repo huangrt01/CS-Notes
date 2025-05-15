@@ -11,6 +11,17 @@ num_workers、prefetch_factor
 
 减少不必要的CPU线程：numpy偷偷创建cpu核数的线程
 
+### cuda
+
+https://docs.pytorch.org/docs/stable/notes/cuda.html#tensorfloat-32-tf32-on-ampere-and-later-devices
+https://github.com/Lightning-AI/pytorch-lightning/issues/18665
+
+# The flag below controls whether to allow TF32 on matmul. This flag defaults to False
+# in PyTorch 1.12 and later.
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True # The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
+
+
 ### nvfuser
 
 https://pytorch.org/blog/introducing-nvfuser-a-deep-learning-compiler-for-pytorch/
@@ -278,6 +289,9 @@ train_1(model, optimizer, trainloader, num_iters=60) # non_blocking: 9.32s, pin_
 print(time.perf_counter() - start)
 
 
+### backward异步
+
+https://docs.pytorch.org/docs/stable/notes/cuda.html#stream-semantics-of-backward-passes
 
 
 ### distributed ckpt

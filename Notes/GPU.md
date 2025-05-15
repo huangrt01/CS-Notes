@@ -129,44 +129,6 @@ https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 
 ![0f4c3f5e-1d1c-4556-8c7e-2725cc82d2df_971x593](./GPU/0f4c3f5e-1d1c-4556-8c7e-2725cc82d2df_971x593.webp)
 
-###### TensorCore
-
-* Intro
-  * Volta, Turing, Ampere 开始的GPU架构
-  * **Nvidia Tensor cores are dedicated to performing general matrix multiplication (GEMM) and half-precision matrix multiplication and accumulation (HMMA) operations.** In short, GEMM performs matrix operations in the format of A*B + C, and HMMA converts the operation into the half-precision format.
-  * https://resources.nvidia.com/en-us-tensor-core
-  * 相比CUDA core，实现了MMA operations，支持2:4 sparsity，支持in8和int4，更高效
-    * https://www.wevolver.com/article/tensor-cores-vs-cuda-cores
-
-* paper
-
-  * [NVIDIA Tensor Core Programmability, Performance & Precision](https://arxiv.org/pdf/1803.04014)
-
-  * [Analyzing GPU Tensor Core Potential for Fast Reductions](https://arxiv.org/pdf/1903.03640)
-
-  * Demystifying Tensor Cores to Optimize Half-Precision Matrix Multiply
-
-* Guide:
-
-  * GTC 教程：https://developer.nvidia.com/gtc/2020/video/s21745-vid
-
-  * https://leimao.github.io/blog/NVIDIA-Tensor-Core-Programming/
-
-  * Q: Does Matmul involve reduction sum? Why can it be done in FP16?
-  
-    * A: In tensor core FP16 MAC (Multiply-Accumulate) unit, the accumulation is always done in full precision, which avoids the problem of arithmetic underflow.
-    * Reference: https://devblogs.nvidia.com/programming-tensor-cores-cuda-9/
-
-  * To employ Tensor Cores in [cuBLAS](https://docs.nvidia.com/cuda/cublas/index.html), the dimensions of a GEMM ([M, K] x [K, N] -> [M, N]) must be multiples of 8.
-  
-    * convolution没有限制
-    * https://github.com/NVIDIA/apex/issues/221#issuecomment-478084841
-  
-  
-  ![image-20250502214129368](./GPU/image-20250502214129368.png)
-
-
-
 ##### GPU Memory Architecture
 
 ![image-20250226190716305](./GPU/image-20250226190716305.png)
@@ -326,6 +288,11 @@ cudaMemcpyHostToDevice
 
 * ![image-20250404022209555](./GPU/image-20250404022209555.png)
 
+###### Pipeline
+
+* ASYNC in SMEM and ILP in RMEM
+  * ![image-20250515020212872](./GPU/image-20250515020212872.png)
+
 ##### GPU Network
 
 > 基于 [ICI(tpu)](https://cloud.google.com/tpu/docs/system-architecture-tpu-vm)/[RoCE](https://en.wikipedia.org/wiki/InfiniBand)/IB 实现高速网络互联
@@ -367,9 +334,75 @@ cudaMemcpyHostToDevice
     * --> 通过大量warp来hide memory latency
 * Copying of Result Data From Device to Host Memory
 
-#### 显卡驱动
+#### 计算：TensorCore
 
-* 英伟达的显卡驱动程序通常会随CUDA Toolkit一起安装。但是，这个驱动程序是为了开发目的而安装的。这意味着它主要用于开发和调试CUDA应用程序，以帮助开发人员在其工作站上进行开发和测试。这个驱动程序不建议在生产环境中与英伟达的GPU一起使用。在生产环境中，通常需要专门的、经过验证的驱动程序以确保系统的稳定性和性能。
+* Intro
+
+  * Volta, Turing, Ampere 开始的GPU架构
+  * **Nvidia Tensor cores are dedicated to performing general matrix multiplication (GEMM) and half-precision matrix multiplication and accumulation (HMMA) operations.** In short, GEMM performs matrix operations in the format of A*B + C, and HMMA converts the operation into the half-precision format.
+  * https://resources.nvidia.com/en-us-tensor-core
+  * 相比CUDA core，实现了MMA operations，支持2:4 sparsity，支持in8和int4，更高效
+    * https://www.wevolver.com/article/tensor-cores-vs-cuda-cores
+
+* paper
+
+  * [NVIDIA Tensor Core Programmability, Performance & Precision](https://arxiv.org/pdf/1803.04014)
+
+  * [Analyzing GPU Tensor Core Potential for Fast Reductions](https://arxiv.org/pdf/1903.03640)
+
+  * Demystifying Tensor Cores to Optimize Half-Precision Matrix Multiply
+
+* Guide:
+
+  * GTC 教程：https://developer.nvidia.com/gtc/2020/video/s21745-vid
+
+  * https://leimao.github.io/blog/NVIDIA-Tensor-Core-Programming/
+
+  * Q: Does Matmul involve reduction sum? Why can it be done in FP16?
+
+    * A: In tensor core FP16 MAC (Multiply-Accumulate) unit, the accumulation is always done in full precision, which avoids the problem of arithmetic underflow.
+    * Reference: https://devblogs.nvidia.com/programming-tensor-cores-cuda-9/
+
+  * To employ Tensor Cores in [cuBLAS](https://docs.nvidia.com/cuda/cublas/index.html), the dimensions of a GEMM ([M, K] x [K, N] -> [M, N]) must be multiples of 8.
+
+    * convolution没有限制
+    * https://github.com/NVIDIA/apex/issues/221#issuecomment-478084841
+
+
+  ![image-20250502214129368](./GPU/image-20250502214129368.png)
+
+##### [Speaking Tensor Cores —— GPU Mode Lecture 23](https://www.youtube.com/watch?v=hQ9GPnV0-50)
+
+> Vijay Thakkar & Pradeep Ramani (Representing the CUTLASS Team @NVIDIA)
+
+* Intro
+  * Hardware block that accelerates MatMul
+  * FMAs accelerate vector dot products - O(N) operations
+  * Tensor cores accelerate matrix multiplies - O(N3) operations
+  * Increases flop / byte ratio – more temporal and spatial reuse
+
+![image-20250515013418204](./GPU/image-20250515013418204.png)
+
+![image-20250515013430058](./GPU/image-20250515013430058.png)
+
+![image-20250515014503276](./GPU/image-20250515014503276.png)
+
+* 时空重用
+
+![image-20250515014922279](./GPU/image-20250515014922279.png)
+
+* 问题：Ad-hoc partitioning doesn’t scale
+  * Problem 1: Complicated Partitioning Patterns
+    * Prevent us from writing canonical loops for all MMAs
+  * Problem 2: Programmer Managed Asynchrony
+    * GPUs require deeply async, managed, producer/consumer software pipelines
+    * Feeding the tensor cores constantly is hard – requires managing asynchrony and deep software pipelines
+    * With newer architectures like Hopper, even the MMA instruction is asynchronous
+    * Concurrency programming - Writing kernels isn’t just about getting the layouts right anymore
+
+![image-20250515015509463](./GPU/image-20250515015509463.png)
+
+
 
 #### 通信：NVLink等
 
@@ -384,7 +417,7 @@ cudaMemcpyHostToDevice
   * OmniPath
   * RoCE（RDMA over Converged Ethernet）
 
-#### cuDNN
+#### 计算：cuDNN
 
 * Intro
 
@@ -398,7 +431,9 @@ cudaMemcpyHostToDevice
 
   * CUDA Toolkit不包含cuDNN。CUDA Toolkit是一个更底层的工具包，其中的库是针对的是更基础的操作，比如线性代数中各种矩阵和向量的运算，还有用于文件I/O，支持在GPU上进行高性能文件操作等。而cuDNN是专门为深度学习的各种运算所设计的库，它需要使用CUDA Toolkit中的一些库。
 
+#### 显卡驱动
 
+* 英伟达的显卡驱动程序通常会随CUDA Toolkit一起安装。但是，这个驱动程序是为了开发目的而安装的。这意味着它主要用于开发和调试CUDA应用程序，以帮助开发人员在其工作站上进行开发和测试。这个驱动程序不建议在生产环境中与英伟达的GPU一起使用。在生产环境中，通常需要专门的、经过验证的驱动程序以确保系统的稳定性和性能。
 
 #### 共享卡 —— 如何实现算力和显存隔离
 
@@ -621,15 +656,23 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 ### CUDA
 
+> Nvidia Lecture 1: Accelerating Applications with CUDA C/C++
+>
+> [课程网页](https://courses.nvidia.com/courses/course-v1:DLI+C-AC-01+V1/courseware/85f2a3ac16a0476685257996b84001ad/9ef2f68fb10d40c5b54b783392938d04/?activate_block_id=block-v1%3ADLI%2BC-AC-01%2BV1%2Btype%40sequential%2Bblock%409ef2f68fb10d40c5b54b783392938d04)
+
 #### Intro
 
 * CUDA：Compute Unified Device Architect
-* CUDA C: extends ANSI C with minimal new  syntax
+  * CUDA C: extends ANSI C with minimal new  syntax
+
+* CUDA accelerates applications drastically with little effort, has an ecosystem of highly optimized libraries for [DNN](https://developer.nvidia.com/cudnn), [BLAS](https://developer.nvidia.com/cublas), [graph analytics](https://developer.nvidia.com/nvgraph), [FFT](https://developer.nvidia.com/cufft), and more, and also ships with powerful [command line](http://docs.nvidia.com/cuda/profiler-users-guide/index.html#nvprof-overview) and [visual profilers](http://docs.nvidia.com/cuda/profiler-users-guide/index.html#visual).
+* CUDA supports many, if not most, of the [world's most performant applications](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=58,59,60,293,98,172,223,227,228,265,487,488,114,389,220,258,461&search=) in, [Computational Fluid Dynamics](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=10,12,16,17,19,51,53,71,87,121,124,156,157,195,202,203,204,312,339,340,395,407,448,485,517,528,529,541,245,216,104,462,513,250,492,420,429,490,10,12,16,17,19,51,53,71,87,121,124,156,157,195,202,203,204,312,339,340,395,407,448,485,517,528,529,541,245,216,104,462,513,250,492,420,429,490,10,12,16,17,19,51,53,71,87,121,124,156,157,195,202,203,204,312,339,340,395,407,448,485,517,528,529,541,245,216,104,462,513,250,492,420,429,490&search=), [Molecular Dynamics](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519&search=), [Quantum Chemistry](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519&search=), [Physics](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281&search=) and HPC.
 
 #### Programming Model
 
 * thread：uniquely identified by threadIdx和blockIdx
   * Idea: map threads to multi-dimensional data
+  * At a high level, execution configuration allows programmers to specify the **thread hierarchy** for a kernel launch, which defines the number of thread groupings (called **blocks**), as well as how many **threads** to execute in each block.
 
 ![image-20250224190231769](./GPU/image-20250224190231769.png)
 
@@ -641,6 +684,7 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 * 细节：
   * CUDA Kernel argument space has a max limit of 4KB
+  * [cudaDeviceSynchronize只需要在使用cudaStream时使用](https://stackoverflow.com/questions/11888772/when-to-call-cudadevicesynchronize)，平时“Although CUDA kernel launches are asynchronous, all GPU-related tasks placed in one stream (which is the default behavior) are executed sequentially.”
 
 ![image-20250226193631721](./GPU/image-20250226193631721.png)
 
@@ -654,13 +698,28 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 #### CUDA Compiler
 
+[**NVIDIA CUDA Compiler**](http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html), [documentation](http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html)
+
 * nvcc (NVIDIA C compiler) is used to compile kernels into PTX
+  * [`arch` flag](http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#options-for-steering-gpu-code-generation)
+    * 使用 `-gencode arch=compute_XX,code=sm_YY` 这样的语法，你可以让 nvcc 生成针对虚拟架构 compute_XX 的 PTX 代码，并且同时为真实架构 sm_YY 生成 SASS。
+    * PTX用于前向兼容性，SASS用于最佳性能
+
+  * [virtual architecture features](http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#gpu-feature-list) 
+
 * Parallel Thread Execution (PTX) is a low-level VM & instruction set
 * graphics driver translates PTX into executable binary code (SASS)
 
 #### Stream
 
 https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar.pdf
+
+#### Case Study: Matmul
+
+> Snippets/gpu-ops/triton-matmul.py
+
+* Cutlass implementation of matrix multiplication on A100
+  * https://developer.download.nvidia.com/video/gputechconf/gtc/2020/presentations/s21745-developing-cuda-kernels-to-push-tensor-cores-to-the-absolute-limit-on-nvidia-a100.pdf
 
 #### Case Study: Reduce Kernel
 
@@ -688,6 +747,50 @@ https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar
 
 * parallel reduction tree
   * inactive warps
+
+### CUTLASS
+
+> Open source: https://github.com/NVIDIA/cutlass
+>
+> • Documentation: https://github.com/NVIDIA/cutlass#documentation
+>
+> • Presented: [GTC’18](https://on-demand.gputechconf.com/gtc/2018/presentation/s8854-cutlass-software-primitives-for-dense-linear-algebra-at-all-levels-and-scales-within-cuda.pdf), [GTC’19](https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9593-cutensor-high-performance-tensor-operations-in-cuda-v2.pdf), [GTC’20](https://developer.download.nvidia.com/video/gputechconf/gtc/2020/presentations/s21745-developing-cuda-kernels-to-push-tensor-cores-to-the-absolute-limit-on-nvidia-a100.pdf), [GTC’21](https://www.nvidia.com/en-us/on-demand/session/gtcspring21-s31883/), [GTC'22](https://www.nvidia.com/en-us/on-demand/session/gtcspring22-s41996/) , [GTC’22](https://www.nvidia.com/en-us/on-demand/session/gtcfall22-a41131/), [GTC’23](https://www.nvidia.com/en-us/on-demand/session/gtcspring23-s51413/), [GTC’24](https://www.nvidia.com/en-us/on-demand/session/gtc24-s61198/)
+>
+> • Come join the CUTLASS channel in our discord: https://discord.gg/CVEJqWtU
+
+#### [Speaking Tensor Cores —— GPU Mode Lecture 23](https://www.youtube.com/watch?v=hQ9GPnV0-50)
+
+> **看到 14:20**
+
+* Intro
+  * CUDA C++ Template Library for High Performance Linear Algebra
+  * Tensor core computations at all scopes and scales, **decomposed into their “moving parts”**
+  * **Provides a native tile-based programming model for GPU kernels**
+  * ![image-20250515020823498](./GPU/image-20250515020823498.png)
+
+* 特点：
+
+  * Public Tensor Core programming model for NVIDIA GPUs
+    * Serve as a production grade example for the world
+  * Extreme focus on developer productivity for custom kernels
+    * Allow customizing any layer in the hierarchy while preserving composability with other layers
+  * If it compiles, it will be correct – actionable static assert messages otherwise
+    * Static asserts at every layer to ensure layout and dispatch compatibilities
+  * Single, clear points of customization and dispatch to flatten the learning curve
+    * Reduce API surface area with fewer named types
+  * ![image-20250515021614827](./GPU/image-20250515021614827.png)
+
+  * ![image-20250515021650578](./GPU/image-20250515021650578.png)
+
+### CuTe
+
+> CuTe包含于CUTLASS 3
+>
+> https://github.com/NVIDIA/cutlass/tree/main/include/cute
+
+![image-20250515021815814](./GPU/image-20250515021815814.png)
+
+
 
 ### Triton
 
@@ -781,6 +884,21 @@ https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar
 #### 经验和细节
 
 * triton autotune目前对dynamic shape的支持不好，性能较差，原因是autotune会对每个新shape重新tune
+
+### NCCL
+
+> GPU Mode Lecture 17 NCCL: https://www.youtube.com/watch?v=T22e3fgit-A
+
+### Intro
+
+> https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html
+
+![image-20250515030141689](./GPU/image-20250515030141689.png)
+
+* 应用于DDP
+  * AllReduce gradients
+
+
 
 ### GPU优化
 
@@ -1153,57 +1271,6 @@ ptrToConsume = manager.manage(ptrToProduce); // Usage
   - Q：triton能否自动优化这个？
 
 ### Nvidia Lectures
-
-#### Nvidia Lecture 1: Accelerating Applications with CUDA C/C++
-
-[课程网页](https://courses.nvidia.com/courses/course-v1:DLI+C-AC-01+V1/courseware/85f2a3ac16a0476685257996b84001ad/9ef2f68fb10d40c5b54b783392938d04/?activate_block_id=block-v1%3ADLI%2BC-AC-01%2BV1%2Btype%40sequential%2Bblock%409ef2f68fb10d40c5b54b783392938d04)
-
-##### Writing Application Code for the GPU
-
-* CUDA accelerates applications drastically with little effort, has an ecosystem of highly optimized libraries for [DNN](https://developer.nvidia.com/cudnn), [BLAS](https://developer.nvidia.com/cublas), [graph analytics](https://developer.nvidia.com/nvgraph), [FFT](https://developer.nvidia.com/cufft), and more, and also ships with powerful [command line](http://docs.nvidia.com/cuda/profiler-users-guide/index.html#nvprof-overview) and [visual profilers](http://docs.nvidia.com/cuda/profiler-users-guide/index.html#visual).
-
-* CUDA supports many, if not most, of the [world's most performant applications](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=58,59,60,293,98,172,223,227,228,265,487,488,114,389,220,258,461&search=) in, [Computational Fluid Dynamics](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=10,12,16,17,19,51,53,71,87,121,124,156,157,195,202,203,204,312,339,340,395,407,448,485,517,528,529,541,245,216,104,462,513,250,492,420,429,490,10,12,16,17,19,51,53,71,87,121,124,156,157,195,202,203,204,312,339,340,395,407,448,485,517,528,529,541,245,216,104,462,513,250,492,420,429,490,10,12,16,17,19,51,53,71,87,121,124,156,157,195,202,203,204,312,339,340,395,407,448,485,517,528,529,541,245,216,104,462,513,250,492,420,429,490&search=), [Molecular Dynamics](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519&search=), [Quantum Chemistry](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519,8,57,92,123,211,213,237,272,274,282,283,307,325,337,344,345,351,362,365,380,396,398,400,435,507,508,519&search=), [Physics](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/catalog/?product_category_id=6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281,6,24,116,118,119,135,229,231,372,373,392,393,489,493,494,495,496,497,498,67,170,216,281&search=) and HPC.
-
-```c++
-nvidia-smi
-cudaMallocManaged()
-cudaDeviceSynchronize()
-  
-nvcc -arch=sm_70 -o hello-gpu 01-hello/01-hello-gpu.cu -run
-```
-
-* code executed on the CPU is referred to as **host** code, and code running on the GPU is referred to as **device** code
-  * [cudaDeviceSynchronize只需要在使用cudaStream时使用](https://stackoverflow.com/questions/11888772/when-to-call-cudadevicesynchronize)，平时“Although CUDA kernel launches are asynchronous, all GPU-related tasks placed in one stream (which is the default behavior) are executed sequentially.”
-
-```c++
-void CPUFunction()
-{
-  printf("This function is defined to run on the CPU.\n");
-}
-
-__global__ void GPUFunction()
-{
-  printf("This function is defined to run on the GPU.\n");
-}
-// __global__表示CPU/GPU均可执行，必须返回void
-
-int main()
-{
-  CPUFunction();
-	// launch a kernel, provide an execution configuration
-  GPUFunction<<<1, 1>>>();
-  cudaDeviceSynchronize();
-  // CPU等待GPU
-}
-```
-
-At a high level, execution configuration allows programmers to specify the **thread hierarchy** for a kernel launch, which defines the number of thread groupings (called **blocks**), as well as how many **threads** to execute in each block.
-
-[**NVIDIA CUDA Compiler**](http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html), [documentation](http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html)
-
-[`arch` flag](http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#options-for-steering-gpu-code-generation), [virtual architecture features](http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#gpu-feature-list) 
-
-
 
 ##### CUDA Thread Hierarchy
 
@@ -1996,11 +2063,6 @@ Spark 0.2的亮点
   ![INT8](./GPU/INT8-optimization.png)
 
 ### 应用
-
-#### 矩阵乘法
-
-* Cutlass implementation of matrix multiplication on A100
-  * https://developer.download.nvidia.com/video/gputechconf/gtc/2020/presentations/s21745-developing-cuda-kernels-to-push-tensor-cores-to-the-absolute-limit-on-nvidia-a100.pdf
 
 #### 图像处理
 
