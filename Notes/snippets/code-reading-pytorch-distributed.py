@@ -7,8 +7,6 @@ _fire_reducer_autograd_hook
 DP&DDP源码解析 https://zhuanlan.zhihu.com/p/343951042
 
 
-
-
 原理也参考「MLSys.md - 并行训练」
 
 
@@ -489,6 +487,7 @@ find_unused_parameters: to toggle whether DDP should detect unused parameters by
 
 gradient_as_bucket_view: 优化显存
 delay_all_reduce_named_params
+mixed_precision: 似乎是被autocast替代的
 
 2.Model Device Aﬃnity
 treats the multi-device model as one entirety
@@ -829,6 +828,16 @@ class DistributedDataParallel(Module):
         the inter-process parameter synchronization happens in Reducer.cpp.
 
 
+# mixed_precision
+
+https://github.com/pytorch/pytorch/pull/92882
+
+forward_pre_hook: hook1 fwd之前cast to low, hook2 等待copy
+
+
+
+
+
 
 ### reducer.h, comm.h
 
@@ -1115,6 +1124,56 @@ all_reduce_bucket() {
 
 
 
+*** 深入分析DDP和autocast的交互
+
+- DDP：注册hooks
+    - 支持注册python hook
+    - 支持注册C++ hook
+        - 仅支持 ddp._register_builtin_comm_hook(dist.BuiltinCommHookType.FP16_COMPRESS)
+        - AllReduceCommHook、FP16CompressCommHook、_AllReduceBySumCommHook
+- DDP：reduce的dtype取决于bucket的dtype
+    - torch/csrc/distributed/c10d/default_comm_hooks.hpp
+
+c10::intrusive_ptr<c10::ivalue::Future> FP16CompressCommHook::runHook(
+    GradBucket& bucket) {
+  auto compressed_tensor = bucket.getBufferRef().to(torch::kFloat16);
+  // Apply the division first to avoid overflow.
+  compressed_tensor /= state_->getSize();
+  std::vector<at::Tensor> tensors = {compressed_tensor};
+
+  auto allreduce_fut = state_->allreduce(tensors)->getFuture();
+  auto decompressed_tensor = bucket.getBufferRef();
+  auto decompress = [decompressed_tensor](c10::ivalue::Future& allreduce_fut) {
+    auto result = allreduce_fut.value();
+    TORCH_INTERNAL_ASSERT(
+        result.isTensorList(),
+        "ProcessGroup::allreduce should return TensorList");
+
+    auto reduce_tensor = result.toTensorVector()[0];
+    TORCH_INTERNAL_ASSERT_DEBUG_ONLY(
+        reduce_tensor.scalar_type() == at::ScalarType::Half,
+        "Expected reduced tensor to be fp16 in FP16CompressHook, but got type ",
+        reduce_tensor.scalar_type());
+    decompressed_tensor.copy_(reduce_tensor);
+    return c10::IValue(decompressed_tensor);
+  };
+
+  return allreduce_fut->then(decompress, allreduce_fut->elementType());
+}
+
+- bucket dtype
+    - Reducer的初始化
+    - self.reducer = ...
+
+- Reducer.cpp
+void Reducer::set_mixed_precision_param_dtype(c10::ScalarType dtype) {
+  mixed_precision_param_dtype_ = dtype;
+  for (auto& bucket : buckets_) {
+    bucket.gradients = bucket.gradients.to(dtype);
+  }
+}
+
+
 
 ### ProcessGroup.hpp (NCCL, GLOO, MPI, RR)
 
@@ -1122,13 +1181,15 @@ All ProcessGroup instances construct at the same time by
 using a rendezvous service, where the ﬁrst arrival will block
 waiting until the last instance joins
 
-For NCCL backend, the
-ProcessGroup maintains a dedicated set of CUDA streams
-for communication, so that communications will not block
-the computation in the default stream
+For NCCL backend, the ProcessGroup maintains a dedicated set of CUDA streams
+for communication, so that communications will not block the computation in the default stream
 
 DistributedDataParallel uses ProcessGroup::broadcast()
 to send model states from the process with rank 0 to others during initialization and ProcessGroup::allreduce() to sum gradients.
+
+### torch/csrc/distributed/c10d/ProcessGroupNCCL.cpp
+
+用heartbeat的方式做容错和优雅退出
 
 # round-robin ProcessGroups
 
@@ -1161,4 +1222,4 @@ entry_points = {
 
 ### multiprocessing
 
-pytorch 在 multiprocessing 又加了一个 wraper 以实现shared memory
+pytorch 在 multiprocessing 又加了一个 wrapper 以实现shared memory

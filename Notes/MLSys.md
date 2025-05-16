@@ -476,8 +476,9 @@ https://docs.nvidia.com/deeplearning/performance/index.html
     * **指数固定为 - 126**（规格化数的指数通过 `exponent - 127` 计算）。
     * **尾数无隐含的 1**（直接使用尾数位的二进制小数部分）
     * FP32 can represent precision up to 2^(-23)*2^(-126)=2^(-149)
-    * FP16 can represent precision up to 2^(10)*2^(-14)=2^(-24)
-
+    * FP16 can represent precision up to 2^(-10)*2^(-14)=2^(-24)
+    * BF16: 2^(-7) * 2^(-126) = 2^(-133)
+    
   * FP64: 8个字节, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
 
   * FP32: 4个字节, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
@@ -1768,7 +1769,7 @@ void gemmPacked(
     * e.g. DDP
 * 互相转换：
   * All reduce = reduce + broadcast
-  * All gather = scatter + gather
+  * All gather = gather + broadcast
 
 
 
@@ -1799,21 +1800,30 @@ for epoch, data in enumerate(dataset):
 
 ![network-topology](./MLSys/network-topology.png)
 
-* How to implement AllReduce
-  * Tree-Shape
-    * Logically form a reduction tree between nodes
-    * Aggregate to root then broadcast
-    * https://developer.nvidia.com/blog/massively-scale-deep-learning-training-nccl-2-4/
-  * Ring
-    * Form a logical ring between nodes
-    * Streaming aggregation
-    * 分为两个步骤：Scatter Reduce和All Gather
-      * Scatter Reduce
-        * Each node have correctly reduced result of one segment!
-      * All Reduce的通信成本为：$$T=2(N-1)\frac{K}{N}$$
-      * https://andrew.gibiansky.com/blog/machine-learning/baidu-allreduce/
-      * https://zhuanlan.zhihu.com/p/72939003
-    * ![image-20250309030219921](./MLSys/image-20250309030219921.png)
+
+
+![image-20250516144117565](./MLSys/image-20250516144117565.png)
+
+##### Tree AllReduce (Reduce + Broadcast)
+
+* Logically form a reduction tree between nodes
+* Aggregate to root then broadcast
+* https://developer.nvidia.com/blog/massively-scale-deep-learning-training-nccl-2-4/
+
+
+
+##### Ring AllReduce (Scatter Reduce + All Gather)
+
+* Form a logical ring between nodes
+* Streaming aggregation
+* Scatter Reduce
+  * Each node have correctly reduced result of one segment!
+* **All Reduce的通信成本为**：$$T=2(N-1)\frac{K}{N}$$
+* https://andrew.gibiansky.com/blog/machine-learning/baidu-allreduce/
+* https://zhuanlan.zhihu.com/p/72939003
+* ![image-20250309030219921](./MLSys/image-20250309030219921.png)
+
+##### 其它
 
 * AllReduce Libraries
   * MPI offers efficient CPU allreduce
@@ -2408,9 +2418,17 @@ https://www.nvidia.com/en-us/on-demand/session/gtc24-s62544/
 
 https://lightning.ai/docs/thunder/latest/
 
+#### Torch.compile
 
+##### Intro
 
-
+* `torch.compile` makes your model faster by trying to **use existing kernels more effectively and creating simple new kernels.** 
+* 什么情况下torch.compile性能差
+  * 不能编译成一个cuda graph，有graph breaks
+* 能力：
+  * 支持dynamic shape
+  * 支持optimizer的vertical fusion
+    * 编译，没有optimizer IR，编译20s for 几千参数 AdamW
 
 ### MLOps
 

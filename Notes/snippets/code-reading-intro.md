@@ -31,6 +31,9 @@
 
 #### 通信、序列并行
 
+- nccl
+  - https://github.com/NVIDIA/nccl
+  - nccl-test https://github.com/NVIDIA/nccl-tests
 - AllReduce
   - https://github.com/baidu-research/baidu-allreduce
 - RingFlashAttention
@@ -80,6 +83,14 @@
 * Qwen Agent
   * https://github.com/QwenLM/Qwen-Agent
 
+
+### GPU
+
+#### environment
+
+- nvidia-container-toolkit
+  - https://github.com/NVIDIA/nvidia-container-toolkit
+
 ### GPU Op
 
 #### Intro
@@ -128,6 +139,11 @@
 
 
 ### C++
+
+#### basic
+
+- Mandelbrot Set
+  - https://github.com/sol-prog/Mandelbrot_Set
 
 #### 通信相关
 

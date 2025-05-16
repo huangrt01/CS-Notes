@@ -176,6 +176,36 @@ tensor.cpu()、numpy()
 print(tensor)
 torch.num_nonzero()
 
+### gradient compress reduction
+- https://main-horse.github.io/posts/reduction-precision/
+
+m.register_comm_hook(dist.group.WORLD, bf16_compress_hook)
+with torch.autocast("cuda", bfloat16):
+  m(x).backward() # <-- will sync grads via bf16
+
+
+# 分析
+
+import torch
+
+def pow2range(start, stop, base=1.0):
+    return [base * (2 ** i) for i in range(start, stop + 1)]
+
+BS = 4096
+grad_stds = pow2range(-8, -4)  # approx 0.004 ~ 0.0625
+world_sizes = [int(R) for R in pow2range(1, 10)]  # 2..=1024
+
+# Simulate reductions
+std_of_diff = {std: [] for std in grad_stds}
+with torch.device('cuda'):
+    for std in grad_stds:
+        for R in world_sizes:
+            w = torch.normal(0.0, std, (R, BS), dtype=torch.bfloat16)
+            o_bf16 = sum(v for v in w/R)
+            o_fp32 = (w/R).sum(dim=0)  # equivalent to float().sum().bfloat16()
+            diff_std = (o_bf16 - o_fp32).std().item()
+            std_of_diff[std].append(diff_std)
+
 
 ### 异步优化
 

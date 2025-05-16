@@ -12,12 +12,11 @@ import triton.language as tl
 
 tl_print = print if os.environ.get("TRITON_INTERPRET", 0) else tl.device_print
 
-def custom_repr(self):
-  return f'{{Tensor{tuple(self.shape)}: {original_repr(self)}}}'
-
-original_repr = torch.Tensor.__repr__
-torch.Tensor.__repr__ = custom_repr
-
+def set_pretty_tensor_print():
+  def custom_repr(self):
+    return f'{{Tensor{tuple(self.shape)}(dtype={self.dtype}): {original_repr(self)}}}'
+  original_repr = torch.Tensor.__repr__
+  torch.Tensor.__repr__ = custom_repr
 
 def is_cuda():
   return triton.runtime.driver.active.get_current_target().backend == "cuda"
@@ -50,6 +49,8 @@ cuda_begin = r'''
 #include <stdio.h>
 #include <c10/cuda/CUDAException.h>
 
+// #include "nccl.h"
+
 #define CHECK_CUDA(x) TORCH_CHECK(x.device().is_cuda(), #x " must be a CUDA tensor")
 #define CHECK_CONTIGUOUS(x) TORCH_CHECK(x.is_contiguous(), #x " must be contiguous")
 #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
@@ -62,6 +63,15 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
       if (abort) exit(code);
    }
 }
+
+#define NCCLCHECK(cmd) do {                         \
+  ncclResult_t res = cmd;                           \
+  if (res != ncclSuccess) {                         \
+    printf("Failed, NCCL error %s:%d '%s'\n",       \
+        __FILE__,__LINE__,ncclGetErrorString(res)); \
+    exit(EXIT_FAILURE);                             \
+  }                                                 \
+} while(0)
 
 __host__ __device__ inline unsigned int cdiv(unsigned int a, unsigned int b) { return (a + b - 1) / b;}
 '''

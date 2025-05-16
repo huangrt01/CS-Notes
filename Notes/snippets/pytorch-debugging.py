@@ -26,11 +26,11 @@ def set_seed(seed: int = 37) -> None:
 
 ### tensor
 
-def custom_repr(self):
-  return f'{{Tensor{tuple(self.shape)}: {original_repr(self)}}}'
-
-original_repr = torch.Tensor.__repr__
-torch.Tensor.__repr__ = custom_repr
+def set_pretty_tensor_print():
+  def custom_repr(self):
+    return f'{{Tensor{tuple(self.shape)}(dtype={self.dtype}): {original_repr(self)}}}'
+  original_repr = torch.Tensor.__repr__
+  torch.Tensor.__repr__ = custom_repr
 
 
 import numpy as np

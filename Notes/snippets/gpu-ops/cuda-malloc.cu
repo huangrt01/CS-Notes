@@ -1,3 +1,5 @@
+*** stream
+
 #include <stdio.h>
 
 __global__
@@ -115,4 +117,21 @@ int main()
   cudaFree(b);
   cudaFree(c);
   cudaFreeHost(h_c);
+}
+
+
+*** cudaMemAdvise
+有效地指导数据在不同处理器之间的迁移，从而最小化因数据不在本地而导致的缺页中断，提升应用程序性能。
+
+#define GPU_DEVICE 0
+{
+  char * array = nullptr;       
+  cudaMallocManaged(&array, N)  //分配内存
+  fill_data(array);
+  cudaMemAdvise(array, N, cudaMemAdviseSetReadMostly, GPU_DEVICE); //提示GPU端几乎仅用于读取这片数据
+  cudaMemPrefetchAsync(array, N, GPU_DEVICE, NULL); // GPU prefetch
+  qsort<<<...>>>(array);        //GPU 无缺页中断，产生read-only副本
+  //cudaDeviceSynchronize();  
+  use_data(array);              //CPU process 没有page-fault.
+  cudaFree(array);
 }

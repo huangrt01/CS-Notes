@@ -198,11 +198,21 @@ cudaMemcpyHostToDevice
 
 * 两种实现：
   * 基于page fault
+    * 这个地址在统一的内存空间里，GPU和CPU都可以使用，但物理上数据可以不在它被访问的设备里，这时会产生page fault（缺页错误），对这个错误的处理就是把数据拷贝到需要访问它的设备或主机内存里，这个操作是透明的（自动执行）。
+    * https://on-demand.gputechconf.com/gtc/2018/presentation/s8430-everything-you-need-to-know-about-unified-memory.pdf
+    * https://developer.nvidia.com/blog/unified-memory-cuda-beginners/
   * 用load/store，UVA（Unified Virtual Addressing）或者zero copy access
 * e.g. bitsandbytes paged optimizer
   * https://github.com/bitsandbytes-foundation/bitsandbytes/blob/main/docs/source/explanations/optimizers.mdx
   * https://github.com/bitsandbytes-foundation/bitsandbytes/issues/962
   * Compared to CPU offloading, a paged optimizer has zero overhead if all the memory fits onto the device and only some overhead if some of memory needs to be evicted. For offloading, you usually offload fixed parts of the model and need to off and onload all this memory with each iteration through the model (sometimes twice for both forward and backward pass).
+
+* 精讲UnifiedMemory的博客 https://blog.csdn.net/weixin_41172895/article/details/115403922
+  * 使用了虚拟内存(cudaMallocManaged)，降低代码复杂度，系统会将大于gpu内存的空间自动放到cpu上，内存申请**cudaMemPrefetchAsync**
+  * **cudaMemAdvise**
+    * cudaMemAdviseSetReadMostly 及 cudaMemAdviseUnSetReadMostly
+      这两个是cudaMemAdvise的Flag，用来为某个device设定/解除内存空间ReadMostly的特性，device所指的设备可以有一个只读副本而不发生数据迁移，当两端没有写入时，两个副本的数据是一致的。
+    * cudaMemAdvise(cudaMemAdviseSetAccessedBy), gpu上有的直接使用，cpu上就直接pci访问，什么时候搬运到gpu可以自行指定
 
 
 
@@ -261,6 +271,7 @@ cudaMemcpyHostToDevice
   * 一个threading block的thread数量通常是32的倍数（对应N个warp）
   * thread block从x维开始按顺序分配给多个warp
     * ![image-20250404020117023](./GPU/image-20250404020117023.png)
+  
 * 限制：
   * **Nvidia H100**:
     * each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
@@ -274,6 +285,7 @@ cudaMemcpyHostToDevice
     * if there are resource limits (e.g. registers per thread usage, or shared memory usage) which prevent 2 threadblocks (in this example of 1024 threads per block) from being resident on a SM
     * **不能整除1536**
   * 推荐值：one thread block, **128~512 threads**
+  
 * 一些单元：
   * SFU: special function unit
   * Load/Store memory
@@ -298,6 +310,8 @@ cudaMemcpyHostToDevice
 > 基于 [ICI(tpu)](https://cloud.google.com/tpu/docs/system-architecture-tpu-vm)/[RoCE](https://en.wikipedia.org/wiki/InfiniBand)/IB 实现高速网络互联
 >
 > nvlink 2025现状介绍 https://zhuanlan.zhihu.com/p/28229263860
+>
+> IB介绍：https://network.nvidia.com/pdf/whitepapers/Intro_to_IB_for_End_Users.pdf
 
 * NVLink offers a bandwidth of 160 GB/s, roughly 3.2 times that of IB
   (50 GB/s).
@@ -670,11 +684,54 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 #### Programming Model
 
-* thread：uniquely identified by threadIdx和blockIdx
-  * Idea: map threads to multi-dimensional data
-  * At a high level, execution configuration allows programmers to specify the **thread hierarchy** for a kernel launch, which defines the number of thread groupings (called **blocks**), as well as how many **threads** to execute in each block.
+##### CUDA Thread Hierarchy
+
+* Programming model: SIMT
+  * 三层抽象：grid, block, thread
+
+* Kernel Execution
+
+  * configuration ~ grid
+  * block: Each block is executed by one SM and does not migrate.
+    * Several concurrent blocks can reside on one SM depending on block’s memory requirement and the SM’s memory resources.
+
+  * thread：uniquely identified by threadIdx和blockIdx
+    * Idea: map threads to multi-dimensional data
+    * At a high level, execution configuration allows programmers to specify the **thread hierarchy** for a kernel launch, which defines the number of thread groupings (called **blocks**), as well as how many **threads** to execute in each block.
+
+
+![SIMT](./GPU/SIMT.png)
 
 ![image-20250224190231769](./GPU/image-20250224190231769.png)
+
+```
+gridDim.x: num of blocks
+blockDim.x: num of threads in a block
+blockIdx.x: block index
+threadIdx.x: thread index
+```
+
+* [Grid-Stride Loops](https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-stride-loops/)
+  * By using a loop with stride equal to the grid size, we ensure that all addressing within warps is unit-stride, so we get [maximum memory coalescing](https://developer.nvidia.com/blog/parallelforall/how-access-global-memory-efficiently-cuda-c-kernels/), just as in the monolithic version.
+  * 所有warp同步寻址都是在一个grid里，这是最大显存聚合
+
+
+```cpp
+__global__ void kernel(int *a, int N)
+{
+  int indexWithinTheGrid = threadIdx.x + blockIdx.x * blockDim.x;
+  int gridStride = gridDim.x * blockDim.x;
+
+  for (int i = indexWithinTheGrid; i < N; i += gridStride)
+  {
+    // do work on a[i];
+  }
+}
+```
+
+##### 
+
+
 
 ##### Warp Specialization
 
@@ -712,7 +769,9 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 #### Stream
 
-https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar.pdf
+> https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar.pdf
+
+* 核心是一个GPU stream上执行的kernel，必定**按issue提交的顺序执行**
 
 #### Case Study: Matmul
 
@@ -889,7 +948,7 @@ https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar
 
 > GPU Mode Lecture 17 NCCL: https://www.youtube.com/watch?v=T22e3fgit-A
 
-### Intro
+#### Intro
 
 > https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html
 
@@ -899,6 +958,15 @@ https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar
   * AllReduce gradients
 
 
+
+#### 通信库
+
+* allreduce && reducescatter ops are not actually implemented via ring reductions in NCCL in 2024. 
+  * [double binary trees](https://developer.nvidia.com/blog/massively-scale-deep-learning-training-nccl-2-4/) are used for sufficiently large allreduce ops
+  * more recently a variant of Bruck’s algorithm is used for reduce-scatter calls in the [most recent release of NCCL](https://docs.nvidia.com/deeplearning/nccl/release-notes/rel_2-23-4.html#rel_2-23-4).
+  * the use of [SHArP](https://network.nvidia.com/pdf/solutions/hpc/paperieee_copyright.pdf) in infiniband switches produces [indeterministic garbage](https://github.com/NVIDIA/nccl/issues/1497) under a scope I am ill-equipped to elaborate on.
+
+* Also, none of this paragraph applies for any serious frontier lab, because all of them use more efficient collective communications libraries, e.g. [HFReduce](https://arxiv.org/pdf/2408.14158#page=6), [MSCCL++](https://github.com/microsoft/mscclpp), [NCCLX](https://www.reddit.com/r/MachineLearning/comments/1eb4xn4/p_ncclx_mentioned_in_llama3_paper/), etc. So, you know, I am just making unprincipled simplifications here, don’t read too hard into the assumptions or you’ll crack them like eggshells.
 
 ### GPU优化
 
@@ -1238,239 +1306,7 @@ ptrToConsume = manager.manage(ptrToProduce); // Usage
 * Overcoming **Bit-Unpacking Bottlenecks**
   * To mitigate these, various bit-packing configurations were explored, including **packing along columns** versus rows and experimenting with different bit-packing widths (e.g., 8-bit vs. 32-bit). Notably, **transitioning from 32-bit to 8-bit packing** delivered performance improvements of up to 18% on the A100 and 6% on the H100
 
-### Torch.compile
-
-#### Intro
-
-* `torch.compile` makes your model faster by trying to **use existing kernels more effectively and creating simple new kernels.** 
-* 什么情况下torch.compile性能差
-  * 不能编译成一个cuda graph，有graph breaks
-* 能力：
-  * 支持dynamic shape
-  * 支持optimizer的vertical fusion
-    * 编译，没有optimizer IR，编译20s for 几千参数 AdamW
-
-#### 为什么 Square 算子性能差
-
-> snippets/gpu-triton.py
-
-* Triton（Autotune）和 Triton（No Autotune Large Block Size）性能差不多，且最好
-  - Triton（No Autotune Large Block Size）: `BLOCK_SIZE = triton.next_power_of_2(n_cols)`
-  - --> H20机器，大Block Size效果好？
-* torch原生实现 和 Triton（No Autotune Fixed Block Size）性能相当
-  - Triton（No Autotune Fixed Block Size）：固定Block Size为1024
-* Torch(compiled) 性能最差
-  * torch.compile的实现用一个kernel处理整个矩阵数据
-  * 主要差异是，手写代码按行生成多个kernel实例，每个实例并行处理一行数据
-
-![image-20250225191017217](./GPU/image-20250225191017217.png)
-
-- 考虑到矩阵内存连续，对于element-wise任务，可以将2d-matrix视为1d-tensor，因此torch.compile将这一任务抽象成1d并行任务是合理的
-  - 为什么性能有损呢，本质是生成的kernel实例数量影响了性能（这个例子中，每行一个kernel实例，性能有优化）
-  - Q：kernel实例数量影响性能，原理是什么？ 取舍是什么？kernel launch代价？
-  - Q：triton能否自动优化这个？
-
 ### Nvidia Lectures
-
-##### CUDA Thread Hierarchy
-
-* Programming model: SIMT
-  * 三层抽象：grid, block, thread
-
-* Kernel Execution
-
-  * configuration ~ grid
-  * Each block is executed by one SM and does not migrate.
-
-  * Several concurrent blocks can reside on one SM depending on block’s memory requirement and the SM’s memory resources.
-
-![SIMT](./GPU/SIMT.png)
-
-* CUDA-Provided Thread Hierarchy Variables，可以在`__global__`函数里直接用，作为标识来实现并行
-
-* 并行是无序的
-* `threadIdx.x + blockIdx.x * blockDim.x`
-
-```c++
-gridDim.x: num of blocks
-blockDim.x: num of threads in a block
-blockIdx.x: block index
-threadIdx.x: thread index
-```
-
-```c++
-// e.g.
-__global__ void vecAddKernel(const float* A, const float* B, float* C, int n) {
- int i = blockDim.x * blockIdx.x + threadIdx.x;
- if (i < n) {
- 	C[i] = A[i] + B[i];
- }
-}
-
-#define THREADS_PER_BLOCK 512
-void vecAdd(const float* A, const float* B, float* C, int n) {
- float *d_A, *d_B, *d_C;
- int size = n * sizeof(float);
- cudaMalloc((void **) &d_A, size);
- cudaMemcpy(d_A, A, size, cudaMemcpyHostToDevice);
- cudaMalloc((void **) &d_B, size);
- cudaMemcpy(d_B, B, size, cudaMemcpyHostToDevice);
- cudaMalloc((void **) &d_C, size);
- int nblocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
- vecAddKernel<<<nblocks, THREADS_PER_BLOCK>>>(d_A, d_B, d_C, n);
- cudaMemcpy(C, d_C, size, cudaMemcpyDeviceToHost);
- cudaFree(d_A); cudaFree(d_B); cudaFree(d_C);
-}
-```
-
-* 如果不同的线程在不同的Warp里，他们的执行顺序会有所不同（但如果执行的操作非常简单，那么它们执行的先后时间也相差非常小），因为硬件（SM）是以Warp为单位调度线程运行的，每个Warp有32个线程
-
-##### Allocating Memory to be accessed on the GPU and the CPU
-```c++
-// CPU-only
-
-int N = 2<<20;
-size_t size = N * sizeof(int);
-
-int *a;
-a = (int *)malloc(size);
-
-// Use `a` in CPU-only program.
-
-free(a);
-// Accelerated
-
-int N = 2<<20;
-size_t size = N * sizeof(int);
-
-int *a;
-// Note the address of `a` is passed as first argument.
-cudaMallocManaged(&a, size);
-
-// Use `a` on the CPU and/or on any GPU in the accelerated system.
-
-cudaFree(a);
-```
-
-* 这个地址在统一的内存空间里，GPU和CPU都可以使用，但物理上数据可以不在它被访问的设备里，这时会产生page fault（缺页错误），对这个错误的处理就是把数据拷贝到需要访问它的设备或主机内存里，这个操作是透明的（自动执行）。
-
-https://on-demand.gputechconf.com/gtc/2018/presentation/s8430-everything-you-need-to-know-about-unified-memory.pdf
-https://developer.nvidia.com/blog/unified-memory-cuda-beginners/
-
-* 精讲UnifiedMemory的博客 https://blog.csdn.net/weixin_41172895/article/details/115403922
-  * 使用了虚拟内存(cudaMallocManaged)，降低代码复杂度，系统会将大于gpu内存的空间自动放到cpu上，内存申请cudaMemPrefetchAsync
-  * cudaMemAdvise
-  	* cudaMemAdviseSetReadMostly 及 cudaMemAdviseUnSetReadMostly
-  	  这两个是cudaMemAdvise的Flag，用来为某个device设定/解除内存空间ReadMostly的特性，device所指的设备可以有一个只读副本而不发生数据迁移，当两端没有写入时，两个副本的数据是一致的。
-  	* cudaMemAdvise(cudaMemAdviseSetAccessedBy), gpu上有的直接使用，cpu上就直接pci访问，什么时候搬运到gpu可以自行指定
-
-```c++
-#define GPU_DEVICE 0
-{
-	char * array = nullptr;       
-	cudaMallocManaged(&array, N)  //分配内存
-	fill_data(array);
-	cudaMemAdvise(array, N, cudaMemAdviseSetReadMostly, GPU_DEVICE); //提示GPU端几乎仅用于读取这片数据
-	cudaMemPrefetchAsync(array, N, GPU_DEVICE, NULL); // GPU prefetch
-	qsort<<<...>>>(array);        //GPU 无缺页中断，产生read-only副本
-	//cudaDeviceSynchronize();  
-	use_data(array);              //CPU process 没有page-fault.
-	cudaFree(array);
-}
-```
-
-
-##### Grid Size Work 
-
-* Amount Mismatch
-
-  * `size_t number_of_blocks = (N + threads_per_block - 1) / threads_per_block;`
-
-  * threads_per_block最大为1024
-
-
-* [Grid-Stride Loops](https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-stride-loops/)
-
-  * By using a loop with stride equal to the grid size, we ensure that all addressing within warps is unit-stride, so we get [maximum memory coalescing](https://developer.nvidia.com/blog/parallelforall/how-access-global-memory-efficiently-cuda-c-kernels/), just as in the monolithic version.
-  * 所有warp同步寻址都是在一个grid里，这是最大显存聚合
-
-
-```cpp
-__global__ void kernel(int *a, int N)
-{
-  int indexWithinTheGrid = threadIdx.x + blockIdx.x * blockDim.x;
-  int gridStride = gridDim.x * blockDim.x;
-
-  for (int i = indexWithinTheGrid; i < N; i += gridStride)
-  {
-    // do work on a[i];
-  }
-}
-```
-
-##### Error Handling
-
-```c++
-cudaError_t err;
-err = cudaMallocManaged(&a, N)                    // Assume the existence of `a` and `N`.
-
-if (err != cudaSuccess)                           // `cudaSuccess` is provided by CUDA.
-{
-  printf("Error: %s\n", cudaGetErrorString(err)); // `cudaGetErrorString` is provided by CUDA.
-}
-
-someKernel<<<1, -1>>>();  // -1 is not a valid number of threads.
-
-cudaError_t err;
-err = cudaGetLastError(); // `cudaGetLastError` will return the error from above.
-if (err != cudaSuccess)
-{
-  printf("Error: %s\n", cudaGetErrorString(err));
-}
-```
-
-```c++
-#include <stdio.h>
-#include <assert.h>
-
-inline cudaError_t checkCuda(cudaError_t result)
-{
-  if (result != cudaSuccess) {
-    fprintf(stderr, "CUDA Runtime Error: %s\n", cudaGetErrorString(result));
-    assert(result == cudaSuccess);
-  }
-  return result;
-}
-
-int main()
-{
-
-/*
- * The macro can be wrapped around any function returning
- * a value of type `cudaError_t`.
- */
-
-  checkCuda(cudaDeviceSynchronize())
-}
-```
-
-
-
-利用dim3完成2d、3d任务
-
-```c++
-dim3 threads_per_block(16, 16, 1);
-dim3 number_of_blocks(16, 16, 1);
-someKernel<<<number_of_blocks, threads_per_block>>>()
-```
-
-##### Environments and Projects
-
-https://github.com/NVIDIA/nvidia-docker
-
-GPU加速[Mandelbrot Set Simulator](https://github.com/sol-prog/Mandelbrot_set)
-
-Peruse [*GPU-Accelerated Libraries for Computing*](https://developer.nvidia.com/gpu-accelerated-libraries) to learn where you can use highly optimized CUDA libraries for tasks like [basic linear algebra solvers](https://developer.nvidia.com/cublas) (BLAS), [graph analytics](https://developer.nvidia.com/nvgraph), [fast fourier transforms](https://developer.nvidia.com/cufft) (FFT), [random number generation](https://developer.nvidia.com/curand) (RNG), and [image and signal processing](https://developer.nvidia.com/npp), to name a few.
 
 #### 2.Course: Managing Accelerated Application Memory with CUDA Unified Memory and nsys
 
@@ -2064,7 +1900,17 @@ Spark 0.2的亮点
 
 ### 应用
 
+#### Intro
+
+* use [*GPU-Accelerated Libraries for Computing*](https://developer.nvidia.com/gpu-accelerated-libraries) to learn where you can use highly optimized CUDA libraries for tasks like:
+  *  [basic linear algebra solvers](https://developer.nvidia.com/cublas) (BLAS)
+  * [graph analytics](https://developer.nvidia.com/nvgraph)
+  * [fast fourier transforms](https://developer.nvidia.com/cufft) (FFT)
+  * [random number generation](https://developer.nvidia.com/curand) (RNG)
+
 #### 图像处理
+
+* [image and signal processing](https://developer.nvidia.com/npp)
 
 * GPU做图像处理pipeline自动优化
   * Halide: a language and compiler for optimizing parallelism, locality, and recomputation in
