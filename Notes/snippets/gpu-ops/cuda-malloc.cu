@@ -119,6 +119,8 @@ int main()
   cudaFreeHost(h_c);
 }
 
+*** cudaHostAlloc
+pinned memory
 
 *** cudaMemAdvise
 有效地指导数据在不同处理器之间的迁移，从而最小化因数据不在本地而导致的缺页中断，提升应用程序性能。

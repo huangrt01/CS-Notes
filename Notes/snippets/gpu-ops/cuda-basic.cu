@@ -85,4 +85,10 @@ for (int i = 0; i < 32; i++) {
 
 __sync_warp
 
+*** 限制寄存器
 
+__global__ void
+__launch_bounds__(maxThreadsPerBlock, minBlocksPerMultiprocessor)
+MyKernel(...){
+  ...
+}

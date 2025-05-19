@@ -38,6 +38,10 @@
 
 > CME323 https://stanford.edu/~rezab/dao/notes/lecture01/cme323_lec1.pdf
 
+* 分析方法：
+
+  * Assess, Parallelize, Optimize, Deploy(APOD) design cycle
+
 * 并行算法的“成本”（Cost）通常被认为是 **处理器数量 × 时间复杂度** 。
   在GPU编程中，我们通常分配线程（threads）而不是直接控制物理处理器（processors）。
 

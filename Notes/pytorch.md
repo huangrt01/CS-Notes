@@ -10,7 +10,67 @@
 * PyTorch Internals
   * https://blog.ezyang.com/2019/05/pytorch-internals/
 
+## PyTorch: An Imperative Style, High-Performance Deep Learning Library
 
+* PyTorch builds on these trends by providing an **array-based programming model accelerated by GPUs**
+  **and differentiable via automatic differentiation integrated in the Python ecosystem.**
+* PyTorch foregoes the potential beneﬁts of a graph-metaprogramming based approach to preserve the imperative programming model of Python
+
+```Python
+class LinearLayer(Module):
+  def __init__(self, in_sz, out_sz):
+    super().__init__()
+    t1 = torch.randn(in_sz, out_sz)
+    self.w = nn.Parameter(t1)
+    t2 = torch.randn(out_sz)
+    self.b = nn.Parameter(t2)
+  def forward(self, activations):
+    t = torch.mm(activations, self.w)
+    return t + self.b
+  
+class FullBasicModel(nn.Module):
+  def __init__(self):
+    super().__init__()
+    self.conv = nn.Conv2d(1, 128, 3)
+    self.fc = LinearLayer(128, 10)
+  def forward(self, x):
+    t1 = self.conv(x)
+    t2 = nn.functional.relu(t1)
+    t3 = self.fc(t1)
+    return nn.functional.softmax(t3)
+```
+
+* autograd
+  * PyTorch uses the operator overloading approach, which builds up a representation of the computed function every
+    time it is executed.
+  * In its current implementation [30], PyTorch performs **reverse-mode automatic differentiation**, which computes the gradient of a scalar output with respect to a multivariate input.
+    Differentiating functions with more outputs than inputs is more efﬁciently executed using forward-mode automatic differentiation, but this use case is less common for machine learning applications.
+    PyTorch can be easily extended to perform forward-mode differentiation using array-level dual
+    numbers [31, 32].
+
+* 性能优化：
+
+  * An efﬁcient C++ core
+    * Python bindings are generated using YAML meta-data ﬁles.
+    * 比如可以用torchscript单独跑 https://pytorch.org/docs/stable/jit.html
+  * Separate control and data ﬂow
+    * PyTorch is designed to execute operators asynchronously on GPU by leveraging the CUDA stream mechanism [38] to queue CUDA kernel invocations to the GPUs hardware FIFO
+  * Custom caching tensor allocator
+    * cache cuda memory
+      * rounds up allocations to multiples of 512 bytes to avoid fragmentation issues.
+    * One-pool-per-stream Design：
+      * Moreover, it maintains a distinct pool of memory for every CUDA stream (work queue).
+      * 只要新的内存分配操作与之前释放的内存区域使用在同一个流中，内存分配器就可以立即重新分配这块已经在 CPU 端释放的内存
+        * 利用CPU释放更快的特点、流的序列化执行特性
+      * limit：the allocations end up fragmented per stream
+        * 很少用多流，Data loading and distributed computing utilities are exceptions，精心实现
+  * multiprocessing：
+    * PyTorch extends the Python multiprocessing module into torch.multiprocessing, which is a drop-in replacement for the built in package and automatically moves the data of tensors sent to other processes to shared memory instead of sending it over the communication channel.
+    * Another unique feature of this system is that it transparently handles sharing of CUDA tensors, making it easy to implement techniques like Hogwild [42].
+
+  * ref count
+    * PyTorch tracks both references internal to the libtorch library and external references made by
+      users in their Python code by integrating with Python’s own reference counting mechanism
 
 ## API
 

@@ -133,14 +133,61 @@ Tensor cached_cast(at::ScalarType to_type, const Tensor& arg, DeviceType device_
   }
 }
 
-- tip: 推理时没有cache，考虑预转换
+- cached_cast -> WrapFunction_ -> WrapFunction -> #define KERNEL
+
+template <
+    c10::DeviceType device_type,
+    class Redispatch,
+    Redispatch* F,
+    class Ret,
+    class... Args>
+struct WrapFunction_<
+    CastPolicy::promote,
+    device_type,
+    Redispatch,
+    F,
+    Ret,
+    guts::typelist::typelist<Args...>> {
+  static Ret call(Args... args) {
+    c10::impl::ExcludeDispatchKeyGuard no_autocast(
+        get_autocast_dispatch_key_from_device_type(device_type));
+    auto to_type = promote_type(
+        get_lower_precision_fp_from_device_type(device_type),
+        device_type,
+        args...);
+    return (*F)(cached_cast(to_type, args, device_type)...);
+  }
+};
+
+
+#define KERNEL1(DISPATCHKEY, OP, POLICY)      \
+  m.impl(                                     \
+      TORCH_SELECTIVE_NAME("aten::" #OP),     \
+      &::at::autocast::WrapFunction<          \
+          ::at::autocast::CastPolicy::POLICY, \
+          DISPATCHKEY,                        \
+          decltype(ATEN_FN(OP)),              \
+          decltype(ATEN_FN(OP)),              \
+          &ATEN_FN(OP)>::type::call);
+
+* tip: 推理时没有cache，考虑预转换
 
 model = model.half()
 input = input.half()
 with torch.no_grad(), torch.cuda.amp.autocast():
     output = model(input)
 
-* grad_scaler.py
+
+*** 究竟哪里做的cast
+
+fwd: aten::Linear -> aten::to
+- 利用dispatch内部做的cast
+
+
+the gradient remains fp32, means that it propagated via ToCopyBackward0
+- https://github.com/pytorch/pytorch/issues/105348
+
+*** grad_scaler.py
 
 torch.cuda.amp.GradScaler(init_scale=65536.0, growth_factor=2.0, backoff_factor=0.5, growth_interval=2000, enabled=True)
 
@@ -200,4 +247,6 @@ update方法在每个 iteration 结束前都需要调用，
 或者到了该增长的 iteration，就给 scale factor 乘growth_factor。
 也可以用new_scale直接更新 scale factor。
 
+*** amp + FSDP
 
+https://github.com/pytorch/pytorch/issues/105348

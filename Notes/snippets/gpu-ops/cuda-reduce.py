@@ -1,6 +1,8 @@
 # TODO:
 # 1.COARSE_FACTOR templated
 # 2.torch.compile的性能和第一次的shape强相关，有坑
+# 3.另一种思路，两层kernel，先局部归约，再全局归约
+# 4.Kernel Decomposition: Recursive kernel invocation
 
 # reduce-performance(gbps): compile dynamic=None
 #         size   torch.sum  torch.compile(sum)  ReduceSum0  ReduceSum1  ReduceSum2  ReduceSum3  ReduceSum4  ReduceSum5  ReduceSum6(BLOCK_SIZE=128,COARSE_FACTOR=8)

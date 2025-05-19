@@ -274,7 +274,7 @@
 
 ![image-20250511160613431](./AI-Algorithms/image-20250511160613431.png)
 
-#### 多头自注意力
+#### 多头自注意力 MSA
 
 > * 从模型复杂度的角度：假设超参对效果贡献相同，优先让模型更复杂，利于Scalable，更晚遇到天花板
 >
@@ -326,6 +326,10 @@
 
 - But it also is a formidable computational simplifications: The heads operate fully independently, so computing them is (like batch) “embarrassingly parallel”
   - head dim是性能的一个限制因素
+
+##### Massive Values in MSA
+
+> Massive Values in Self-Attention Modules are the Key to Contextual Knowledge Understanding
 
 #### MLP
 

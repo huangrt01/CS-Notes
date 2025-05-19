@@ -1,6 +1,3 @@
-dim3 grid(32, 1, 1);
-dim3 block(128, 1, 1);
-kernelFunction<<<grid, block>>>(..);
 // Number of threads: 128 * 32=4096
 
 

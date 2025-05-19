@@ -9,6 +9,8 @@ plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, 
 
 ### Intro
 
+#### Intro
+
 * 100TB model = 50万亿参数
   * 1万亿=1000B=1T，参数存储用 fp16
 * MLSys历史
@@ -17,35 +19,68 @@ plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, 
     * Activation Checkpoint (2014) -> PyTorch (2019) 
     * Automatic Mixed Precision (2017) -> PyTorch (2019) 
     * Int8 Quant (2015) -> TensorRT (2018)
-  
+
   * 大模型时代：
     * Memory Efficient Attention with Online Softmax (2021) -> FlashAttention in Megatron-LM (2022) 
     * Continuous Batching (2022), Paged Attention (2023) -> vLLM, TensorRT-LLM (2023) 
     * Speculative Sampling (2023) -> Everywhere in LLM Serving (2023)
     * Sequence Parallel (2023) ->  Megatron-LLM (2023) 
-  
+
+#### MLSys 要点
+
 * MLSys走向何方
   * 无论是NV内部NVLink党和Mellanox党的争论,还是其他很多企业都面临相同的问题, 计算/网络/存储/服务器/芯片等多个团队如何紧耦合, 更进一步的扩展到上层的算子/并行策略/算法等多个团队的协同. —— zartbot
   * 现在这些模型的Tensor传输量来看, 尽量的做好Overlap和提升带宽就够了. 是否还要Load/Store. 如果稀疏模型是一条路,那么就一定要. 
     * 例如一个集群通过一些网络拓扑把Allreduce的问题解决干净了, MoE等其它结构一来,AlltoAll又不行了.
 
   * 这一次人工智能革命的数学基础是：范畴论/代数拓扑/代数几何这些二十世纪的数学第一次登上商用计算的舞台。
-
-* Parameter Server
-
-  * Spark MLlib: 同步阻断式
-
-  * Parameter Server: 异步非阻断式
-  * 两者区别在于模型参数的分发是否同步
+* 超前建设
+  * Large Scaling，以 *1000 的能力解决 *100 和 *10的问题
+  * 与业务需求形成流水线的节奏
 
 
 * RecSys中工程与理论之间的均衡
   * end2end：强调模型一致性的收益
   * two stages：强调模型实时性的收益
 
-#### 成本和性能评估
+#### [The Bitter Lesson](http://www.incompleteideas.net/IncIdeas/BitterLesson.html)
 
-参考 「LLM-MLSys」
+> Rich Sutton, March 13, 2019
+
+* human-knowledge approach 和 leveraging of computation，一定程度是互相counter的，体现在资源、人力投入等方面，e.g.:
+
+  * chess, 1997
+    * Search
+  * Go
+    * Search
+    * self play to learn a value function 
+
+   * speech recognition
+     * special methods that took advantage of human knowledge---knowledge of words, of phonemes, of the human vocal tract
+     * <->
+     * the statistical methods---hidden Markov models (HMMs)
+   * CV
+     * searching for edges, or generalized cylinders, or in terms of SIFT features
+     * <->
+     * CNN
+
+* The bitter lesson is based on the historical observations that:
+
+  * AI researchers have often tried to build knowledge into their agents,
+  * this always helps in the short term, and is personally satisfying to the researcher, but
+  * in the long run it plateaus and even inhibits further progress
+  * breakthrough progress eventually arrives by an opposing **approach based on scaling computation by search and learning.**
+
+* The second general point to be learned from the bitter lesson is that:
+
+  * the actual contents of minds are tremendously, irredeemably complex; **we should stop trying to find simple ways to think about the contents of minds, such as simple ways to think about space, objects, multiple agents, or symmetries.** 
+  * All these are part of the arbitrary, intrinsically-complex, outside world. They are not what should be built in, as their complexity is endless; instead **we should build in only the meta-methods that can find and capture this arbitrary complexity**. Essential to these methods is that they can find good approximations, but the search for them should be by our methods, not by us. We want AI agents that can discover like we can, not which contain what we have discovered. Building in our discoveries only makes it harder to see how the discovering process can be done.
+
+
+
+#### 成本和性能评估：参考 「LLM-MLSys」
+
+
 
 
 #### [Google Research: Themes from 2021 and Beyond](https://ai.googleblog.com/2022/01/google-research-themes-from-2021-and.html)
@@ -64,7 +99,7 @@ plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, 
       * https://mangpo.net/papers/xla-autotuning-pact2021.pdf
       * GSPMD: https://ai.googleblog.com/2021/12/general-and-scalable-parallelization.html
     * Human-Creativity–Driven Discovery of More Efficient Model Architectures
-      * Transformet、ViT
+      * Transformer、ViT
     * Machine-Driven Discovery of More Efficient Model Architectures
       * NAS -> Primer、EfficientNetV2
       * RL: https://ai.googleblog.com/2020/07/automl-zero-evolving-code-that-learns.html
@@ -149,14 +184,107 @@ plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, 
   * 硬件算力利用率是指 考虑重计算后，模型一次前反向计算消耗的矩阵算力 与机器算力的比值
   * llm的flops：https://xffxff.github.io/posts/flops
 
+### 训练框架
+
+#### Intro
+
+![pipeline](./MLSys/pipeline.png)
+
+* 流程：
+  * 数据加载
+    * prefetch
+  * 数据预处理
+    * 离线
+  * forward
+  * backward
+  * （节点通信）
+  * optimize
+
+* spark MLlib
+  * 参考「深度学习推荐系统」6.2.1
+  * 分布式 + DAG
+  * 内部并行、边界消耗资源shuffle/reduce
+  * 缺点：
+    * 参数全局广播
+    * 同步阻断式的梯度下降
+    * 不支持复杂DL网络
+
+* tf
+* pytorch
+
+#### PyTorch: An Imperative Style, High-Performance Deep Learning Library
+
+> 参考「pytorch.md」、「snippets」
+
+#### Go+Torch
+
+https://github.com/wangkuiyi/gotorch
+
+* Q: TensorFlow为什么需要引入图这个概念？
+
+  * A1: backward自动求导，需要定义前向的数据结构
+  * A2: python执行速度慢，决定执行效率的是图的解释器。图是python代码的另一种表示形式，开始包括前向计算过程，通过调用TensorFlow API，加入其它op包括反向计算过程和模型更新过程。构造图本质上是在编译。
+
+  * [TFRT](https://github.com/tensorflow/runtime)
+
+
+* 调用libtorch内部的native function类比tf的op，但native function是函数，而不是一个class，每一个function可以用HLO（一种古老的适用于数值计算的语言）写一遍。gotorch调libtorch调pytorch XLA里的HLO程序，翻译成特定设备优化的代码
+
+  * native function有YAML描述，可自动生成Go Wrapper
+
+  * torchscripts：用到的python语法的子集 => python高层api可翻译成torchscripts再翻译
+
+
+* 如果 Go+Torch 在未来一年里孕育成熟，有望优化以下核心应用场景:
+  * 统一训练和预测系统(目前训练用 Python 写，预测用 C++)
+  * 统一云和端系统(目前云上用 TensorFlow，端上比如 xNN 调用 TensorFlow Lite)
+  * 统一训练和预测时的数据处理流程(目前需要用 Python和C++分别做两套，开销大，而且容易出错)
+  * 统一搜索、推荐、广告、金融核心、移动智能和端智能、无人驾驶等多个领域的基础架构
+  * 能支持新的机器学习模式——online learning、GAN、reinforcement learning、imitation learning等。
+
+#### OneFlow: 大规模分布式深度学习框架
+
+数据并行：allreduce + PS
+
+模型并行：参数如何划分？复杂的通信模式
+
+![platforms](./MLSys/platforms.jpg)
+
+横向拓展：片间高速互联，e.g. TPU
+
+纵向拓展：单个芯片从通用到专用
+
+
+
+静态调度与流式执行系统![layers](./MLSys/layers.jpg)
+
+
+
+OneFlow架构
+
+* actor及流水线
+  * 内存槽，用类似rust的ownership解决内存冲突问题，ownership随状态转移
+
+![memory-pipeline](./MLSys/memory-pipeline.jpg)
+
+* node placement: consistent view
+  * SBP, 在op层面实现数据和模型并行 
+    ![SBP](./MLSys/SBP.jpg)
+
+#### HugeCTR
+
+* Embedding Table入显存：unified memory management，节点间交换不再layer by layer，可以一次交换所有PS
+  * 高效的GPU HashTable实现，解决冲突
+* Multi-nodes Model Parallel
+
+* Model Subscription: per req load PS to Embedding Cache in GPU
+
 ### 算法工程协同
 
 * embedding和特征带来的在线内存成本：
   * ftrl -> 稀疏性、全0 Embedding
   * lasso
   * sparseNAS
-
-
 
 ### 分布式调度框架
 
@@ -310,7 +438,8 @@ val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
 
 ### 特征工程
 
-* 参考【tensorflow笔记】的python/data部分
+> 参考【tensorflow笔记】的python/data部分
+
 * 特征转换
   * 无转换，适用于**int、float**或者对应类型的**定长列表**的特征，可以直接输入神经网络。为了保持统一，我们将这一类命名为PretrainEmbedding。
   * 转换为ont-hot或者multi-hot类型，适用于**int、string**，或对应定类型的**定长、变长列表**的特征。这种转换方式适合处理小规模类别型特征，其特征转换后的可理解性，以及不同特征值之间的差异都是可衡量的，在训练数据不够大时，是可以优先考虑的类型。这种转换方式，我们命名为Encoding。
@@ -319,6 +448,60 @@ val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
 * 多次哈希：不论是Encoding还是Embedding，都可能需要对特征值进行哈希，而这就面临哈希冲突的问题，常见有两种处理手段
   * 增加哈希空间大小。哈希空间大小的配置首先必然受特征值空间的影响，如果哈希空间小于特征值空间，则哈希冲突概率很大；如果远远大于特征值空间，则会产生内存浪费。因此，在合理范围内，通过增加哈希空间来减少哈希冲突概率是非常直觉的做法。
   * 多次哈希。即一个特征值由多个不同哈希种子的结果来表达，这样只需要任意一种哈希的结果不冲突，则最终哈希结果不会冲突。但是多次哈希会显著提升计算量，因此也也需要在合理范围内选择哈希次数。
+
+#### [NVTabular](https://github.com/NVIDIA/NVTabular)
+
+* 基于RAPIDS的Recommendation ETL，底层是RAPIDS
+
+![pipeline](./MLSys/pipeline-nvtabular.png)
+
+![nvtabular](./MLSys/nvtabular.png)
+
+#### RAPIDS: 基于GPU的Spark大数据处理和机器学习加速
+
+> 基于Apache Spark的RAPIDS加速器
+
+* Spark 0.2的亮点
+
+  * 支持原生Spark、Databricks 7.0ML、Dataproc 2.0
+
+  * 读取大量小的Parquet文件的优化：并行化处理文件Buffer，CPU与GPU无缝衔接
+
+  * 初步支持SCALA UDF
+
+  * 加速PANDAS UDFs
+    * 实现对Python进程的GPU资源管理，使JVM进程与Python进程共享一个GPU，以安全地在Pandas UDF里使用GPU
+      * 优化JVM与Python之间的数据交换，避免不必要的行列转换
+
+* Apache Spark不适合GPU大数据处理的场景
+
+  * 数据规模小：仅百兆
+
+  * 高缓存一致性的操作
+
+  * 数据移动：缓慢I/O，与CPU的不断交互(UDFs)，Shuffle
+
+  * 有限的GPU内存
+
+* SQL plugin擅长于
+  * 高散列度数据的joins、aggregates、sort
+  * Window operations、复杂计算、数据编码（创建Parquet和ORC文件，读取CSV）
+
+![RAPIDS accelerator for Apache Spark](./MLSys/RAPIDS.png)
+
+![dataframe](./MLSys/dataframe.png)
+
+
+
+* Spark Shuffle: 前后stages间的数据交换
+
+  * CPU-Centric Data Movement: GPU0->CPU->GPU1；PCIe总线(GPU and CPU)、Network(远端CPU)，CPU参与调度
+
+  * GPU-Centric Data Movement: NVLink(同节点GPU), RDMA(远端GPU), GPU Direct Storage(落盘)
+
+  * Shuffling Spilled Data: 溢出到cpu的host memory；如果无法满足，host memory内数据落盘或者通过RDMA传输到远端
+
+  * UCX Library: https://www.openucx.org/
 
 ### 召回
 
@@ -451,7 +634,7 @@ https://huggingface.co/docs/transformers/v4.15.0/performance
 
 https://docs.nvidia.com/deeplearning/performance/index.html
 
-### 量化、混合精度训练推理
+### 混合精度训练、量化推理
 
 #### Intro - 量化目标、精度介绍
 
@@ -660,6 +843,8 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 #### Bf16-Mixed-Precision-Training
 
 https://arxiv.org/pdf/1905.12322
+
+![image-20250519223426286](./MLSys/image-20250519223426286.png)
 
 #### Fp8-Mixed-Precision-Training
 
@@ -1100,7 +1285,35 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
   * https://github.com/pytorch/ao/pull/930
   * ![image-20250331153107702](./MLSys/image-20250331153107702.png)
 
-##### W4A8 + QAT
+#### QAT
+
+##### Intro
+
+> 《Quantization and Training of Neural Networks for Efﬁcient
+> Integer-Arithmetic-Only Inference》
+
+* Intro:
+
+  * achieved by simulating quantization numerics during training while keeping the weights and/or activations in the original data type, typically float, effectively “fake quantizing” the values instead of actually casting them to lower bit-widths
+
+  * ![image-20250328190021045](./MLSys/image-20250328190021045.png)
+
+  * ```Python
+    # PTQ: x_q is quantized and cast to int8
+    # scale and zero point (zp) refer to parameters used to quantize x_float
+    # qmin and qmax refer to the range of quantized values
+    x_q = (x_float / scale + zp).round().clamp(qmin, qmax).cast(int8)
+    
+    # QAT: x_fq is still in float
+    # Fake quantize simulates the numerics of quantize + dequantize
+    x_fq = (x_float / scale + zp).round().clamp(qmin, qmax)
+    x_fq = (x_fq - zp) * scale
+    ```
+
+* 细节techniques：
+  * **without quantizing residuals**： F(x) + x，仅对F(x)量化
+
+##### W4A8 + QAT 工程实践
 
 >  [Quantization-Aware Training for Large Language Models with PyTorch](https://pytorch.org/blog/quantization-aware-training/)
 
@@ -1133,6 +1346,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
   - embeddings are additionally quantized to int4 using a group size of 32
 
 * QAT overhead
+
   * ~34% slower
   * 显存增长，开activation checkpointing缓解
 
@@ -1248,29 +1462,6 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
     * “混合”精度训练：
       * 在 CIFAR10 数据集训练时，低精度定点运算（如 16 位定点数）结合随机舍入，前期训练能保持一定稳定性，但随着精度降低（如 12 位），收敛速度会变慢，学习效果变差。此时切换到更高精度（如 20 位），网络性能可快速提升。这是因为前期低精度训练能利用其计算优势，后期高精度训练可弥补低精度带来的梯度信息损失，提高最终性能。
   * 用于梯度更新
-
-##### QAT
-
-> 《Quantization and Training of Neural Networks for Efﬁcient
-> Integer-Arithmetic-Only Inference》
-
-* Intro:
-
-  * achieved by simulating quantization numerics during training while keeping the weights and/or activations in the original data type, typically float, effectively “fake quantizing” the values instead of actually casting them to lower bit-widths
-
-  * ![image-20250328190021045](./MLSys/image-20250328190021045.png)
-
-  * ```Python
-    # PTQ: x_q is quantized and cast to int8
-    # scale and zero point (zp) refer to parameters used to quantize x_float
-    # qmin and qmax refer to the range of quantized values
-    x_q = (x_float / scale + zp).round().clamp(qmin, qmax).cast(int8)
-    
-    # QAT: x_fq is still in float
-    # Fake quantize simulates the numerics of quantize + dequantize
-    x_fq = (x_float / scale + zp).round().clamp(qmin, qmax)
-    x_fq = (x_fq - zp) * scale
-    ```
 
 ##### Scaling Laws for Precision [ICLR 2025 Oral]
 
@@ -2239,155 +2430,9 @@ PS架构的优势主要还是高可用(system efficiency)
 
 
 
-### 训练框架 Intro
-
-* 流程：
-  * 数据加载
-    * prefetch
-  * 数据预处理
-    * 离线
-  * forward
-  * backward
-  * （节点通信）
-  * optimize
-
-* spark MLlib
-  * 参考「深度学习推荐系统」6.2.1
-  * 分布式 + DAG
-  * 内部并行、边界消耗资源shuffle/reduce
-  * 缺点：
-    * 参数全局广播
-    * 同步阻断式的梯度下降
-    * 不支持复杂DL网络
-
-* tf
-* pytorch
 
 
-
-### PyTorch: An Imperative Style, High-Performance Deep Learning Library
-
-> 参考「pytorch.md」、「snippets」
-
-* PyTorch builds on these trends by providing an **array-based programming model accelerated by GPUs**
-  **and differentiable via automatic differentiation integrated in the Python ecosystem.**
-* PyTorch foregoes the potential beneﬁts of a graph-metaprogramming based approach to preserve the imperative programming model of Python
-
-```Python
-class LinearLayer(Module):
-  def __init__(self, in_sz, out_sz):
-    super().__init__()
-    t1 = torch.randn(in_sz, out_sz)
-    self.w = nn.Parameter(t1)
-    t2 = torch.randn(out_sz)
-    self.b = nn.Parameter(t2)
-  def forward(self, activations):
-    t = torch.mm(activations, self.w)
-    return t + self.b
-  
-class FullBasicModel(nn.Module):
-  def __init__(self):
-    super().__init__()
-    self.conv = nn.Conv2d(1, 128, 3)
-    self.fc = LinearLayer(128, 10)
-  def forward(self, x):
-    t1 = self.conv(x)
-    t2 = nn.functional.relu(t1)
-    t3 = self.fc(t1)
-    return nn.functional.softmax(t3)
-```
-
-* autograd
-  * PyTorch uses the operator overloading approach, which builds up a representation of the computed function every
-    time it is executed.
-  * In its current implementation [30], PyTorch performs **reverse-mode automatic differentiation**, which computes the gradient of a scalar output with respect to a multivariate input.
-    Differentiating functions with more outputs than inputs is more efﬁciently executed using forward-mode automatic differentiation, but this use case is less common for machine learning applications.
-    PyTorch can be easily extended to perform forward-mode differentiation using array-level dual
-    numbers [31, 32].
-
-* 性能优化：
-
-  * An efﬁcient C++ core
-    * Python bindings are generated using YAML meta-data ﬁles.
-    * 比如可以用torchscript单独跑 https://pytorch.org/docs/stable/jit.html
-  * Separate control and data ﬂow
-    * PyTorch is designed to execute operators asynchronously on GPU by leveraging the CUDA stream mechanism [38] to queue CUDA kernel invocations to the GPUs hardware FIFO
-  * Custom caching tensor allocator
-    * cache cuda memory
-      * rounds up allocations to multiples of 512 bytes to avoid fragmentation issues.
-    * One-pool-per-stream Design：
-      * Moreover, it maintains a distinct pool of memory for every CUDA stream (work queue).
-      * 只要新的内存分配操作与之前释放的内存区域使用在同一个流中，内存分配器就可以立即重新分配这块已经在 CPU 端释放的内存
-        * 利用CPU释放更快的特点、流的序列化执行特性
-      * limit：the allocations end up fragmented per stream
-        * 很少用多流，Data loading and distributed computing utilities are exceptions，精心实现
-  * multiprocessing：
-    * PyTorch extends the Python multiprocessing module into torch.multiprocessing, which is a drop-in replacement for the built in package and automatically moves the data of tensors sent to other processes to shared memory instead of sending it over the communication channel.
-    * Another unique feature of this system is that it transparently handles sharing of CUDA tensors, making it easy to implement techniques like Hogwild [42].
-    
-  * ref count
-    * PyTorch tracks both references internal to the libtorch library and external references made by
-    users in their Python code by integrating with Python’s own reference counting mechanism
-
-### Go+Torch
-
-https://github.com/wangkuiyi/gotorch
-
-* Q: TensorFlow为什么需要引入图这个概念？
-
-  * A1: backward自动求导，需要定义前向的数据结构
-  * A2: python执行速度慢，决定执行效率的是图的解释器。图是python代码的另一种表示形式，开始包括前向计算过程，通过调用TensorFlow API，加入其它op包括反向计算过程和模型更新过程。构造图本质上是在编译。
-
-  * [TFRT](https://github.com/tensorflow/runtime)
-
-
-* 调用libtorch内部的native function类比tf的op，但native function是函数，而不是一个class，每一个function可以用HLO（一种古老的适用于数值计算的语言）写一遍。gotorch调libtorch调pytorch XLA里的HLO程序，翻译成特定设备优化的代码
-
-  * native function有YAML描述，可自动生成Go Wrapper
-
-  * torchscripts：用到的python语法的子集 => python高层api可翻译成torchscripts再翻译
-
-
-* 如果 Go+Torch 在未来一年里孕育成熟，有望优化以下核心应用场景:
-  * 统一训练和预测系统(目前训练用 Python 写，预测用 C++)
-  * 统一云和端系统(目前云上用 TensorFlow，端上比如 xNN 调用 TensorFlow Lite)
-  * 统一训练和预测时的数据处理流程(目前需要用 Python和C++分别做两套，开销大，而且容易出错)
-  * 统一搜索、推荐、广告、金融核心、移动智能和端智能、无人驾驶等多个领域的基础架构
-  * 能支持新的机器学习模式——online learning、GAN、reinforcement learning、imitation learning等。
-
-### OneFlow: 大规模分布式深度学习框架
-
-数据并行：allreduce + PS
-
-模型并行：参数如何划分？复杂的通信模式
-
-![platforms](./MLSys/platforms.jpg)
-
-横向拓展：片间高速互联，e.g. TPU
-
-纵向拓展：单个芯片从通用到专用
-
-
-
-静态调度与流式执行系统![layers](./MLSys/layers.jpg)
-
-
-
-OneFlow架构
-
-* actor及流水线
-  * 内存槽，用类似rust的ownership解决内存冲突问题，ownership随状态转移
-
-![memory-pipeline](./MLSys/memory-pipeline.jpg)
-
-* node placement: consistent view
-  * SBP, 在op层面实现数据和模型并行 
-  ![SBP](./MLSys/SBP.jpg)
-
-### 模型推理
-
-* 范式：
-  * 预训练Embedding+轻量化线上模型
+### 模型推理 -> LLM-MLSys.md
 
 ### 图优化
 
@@ -3611,8 +3656,7 @@ https://www2.eecs.berkeley.edu/Pubs/TechRpts/2009/EECS-2009-28.pdf
   * [BytePlus](https://www.byteplus.com/en/product/recommend)，参考【非技术知识笔记】
 * Intro
   * 推荐场景特点
-    * The features are mostly sparse, categorical and dynamically
-      changing;
+    * The features are mostly sparse, categorical and dynamically changing;
     * The underlying distribution of training data is non-stationary, a.k.a. Concept Drift [8].
   * Sparsity and Dynamism
     * embedding多且持续增长

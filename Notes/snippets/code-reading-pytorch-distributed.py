@@ -1126,6 +1126,8 @@ all_reduce_bucket() {
 
 *** 深入分析DDP和autocast的交互
 
+https://discuss.pytorch.org/t/does-nccl-allreduce-use-fp16/141461/6
+
 - DDP：注册hooks
     - 支持注册python hook
     - 支持注册C++ hook
@@ -1165,7 +1167,12 @@ c10::intrusive_ptr<c10::ivalue::Future> FP16CompressCommHook::runHook(
     - Reducer的初始化
     - self.reducer = ...
 
-- Reducer.cpp
+- bucket gradient dtype
+    - Reducer.cpp
+
+initialize_buckets:
+bucket.variable.mutable_grad()
+
 void Reducer::set_mixed_precision_param_dtype(c10::ScalarType dtype) {
   mixed_precision_param_dtype_ = dtype;
   for (auto& bucket : buckets_) {

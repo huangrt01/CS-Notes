@@ -413,6 +413,14 @@ https://en.wikipedia.org/wiki/Cholesky_decomposition
 
       2、Word2Vec最后接的是softmax来预测概率，也就是说实现了一个非线性变换，而自编码器或者SVD并没有。
 
+## 最优化
+
+### 算法
+
+* hill climbing https://en.wikipedia.org/wiki/Hill_climbing
+  * 多元函数，每次只改变一个输入
+  * 容易陷入local maxima
+
 ## 数学分析
 
 ### 一些定义

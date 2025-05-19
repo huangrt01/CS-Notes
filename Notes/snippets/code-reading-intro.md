@@ -41,7 +41,12 @@
 - RingAttention
   - https://github.com/gpu-mode/ring-attention
 
+#### 推理
 
+- TensorRT
+  - https://github.com/NVIDIA/TensorRT
+- TensorRT-LLM
+  - https://github.com/NVIDIA/TensorRT-LLM
 
 #### 量化
 
@@ -123,6 +128,11 @@
  - https://github.com/facebookresearch/segment-anything/blob/main/segment_anything/modeling/image_encoder.py#L358
  - https://github.com/pytorch-labs/segment-anything-fast/blob/main/segment_anything_fast/flash_4.py#L13
 
+
+#### CUTLASS
+
+- CUTLASS
+  - https://github.com/NVIDIA/cutlass
 
 #### kernel fusion
 

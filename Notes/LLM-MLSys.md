@@ -813,10 +813,85 @@ for t_tile:
 
 ## 推理框架
 
+> 范式：预训练Embedding+轻量化线上模型
+
+### Intro
+
 * MLLM推理
   * SGLang
   * LMDeploy
   * vLLM
+* ![utilize-gpu](./LLM-MLSys/utilize-gpu.png)
+* 模型加速：TensorRT、DL complier
+  * Layer & Tensor Fusion: 横向/纵向的融合，减少copy显存; layer merge
+  * Weights & Activation Precision Calibration
+    * Symmetric quantization: 超参threshold，超过会截断，提高转换精度
+    * 用KL-divergence来衡量threshold
+
+  * Kernel Auto-Tuning: 找当前硬件下最优的卷积算法、kernels、tensor layouts
+  * Dynamic Tensor Memory: 给层加引用计数 
+
+### Triton Inference Server
+
+* Client/server在本地：
+  * Reduces HTTP/gRPC overhead: Inputs/outputs needed to be passed to/from Triton are stored in system/CUDA shared memory. 
+
+
+```
+dynamic_batching {
+	preferred_batch_size:[4,8],
+	max_queue_delay_microseconds: 100,
+}
+```
+
+### TensorRT backend
+
+* Model Parser 解析TensorFlow/Caffe模型
+  * [ONNX Parser](https://github.com/onnx)
+* TensorRT Network Definition API
+  * 自定义算子需要自己写
+* TF-TRT (TensorFlow integration with TensorRT) parses the frozen TF graph or saved model, and **converts each supported subgraph to a TRT optimized node** (TRTEngineOp), allowing TF to execute the remaining graph.
+
+### Faster Transformer
+
+![faster transformer](./LLM-MLSys/faster-transformer.png)
+
+* 设计思路
+
+  * decoder和decoding两层抽象，适用于不同灵活性的场景
+
+* 模型结构
+
+  * GPT-2 model
+    * Only one attention block
+    * No beam search
+    * Support sequence length <= 4096
+  * Faster Transformer的实现：
+    * encoder参考BERT
+    * decoder和decoding参考OpenNMT-tf (Attention is all you need)、GPT-2
+
+* encoder和decoder的讨论
+
+  * encoder一次输入的词多、运行次数少、对GPU更友好
+  * decoder和上述相反，但依据Amdahl's Law，在encoder和decoder共用的场景，decoder是瓶颈
+
+* 优化的讨论
+
+  * encoder：瓶颈是kernel launch bound，kernels are too small
+    * Fused Encoder: Fuse the kernels except GEMMs (General Matrix Multiplication)  as much as possible，GEMM用tensorcore优化。更进一步可以利用cutlass工具fuse multi-head attention
+  * decoder：更多small kernels
+    * **Fuse multi-head attention：原因是decoder的batch size是1，不必要对GEMM优化**
+  * decoding : 
+    * fuse the softmax and top k operations by [online-softmax](https://github.com/NVIDIA/online-softmax)
+    * use [CUB](https://nvidia.github.io/cccl/cub/) to accelerate the reduce operations
+    * [beam search](https://towardsdatascience.com/an-intuitive-explanation-of-beam-search-9b1d744e7a0f) 之前要 FP16 转 FP32
+      * Beam width
+    * [effective_transformer by ByteDance](https://github.com/bytedance/effective_transformer): 记录每个sentence的padding前缀和，矩阵计算前移除无用的padding，做attention时再映射回来，本质上是追求tensor的紧致组织。
+  * INT8 optimization：QAT + **without quantizing residuals** => 精度损失少
+
+  ![INT8](./LLM-MLSys/INT8-optimization.png)
+
+
 
 ### SGLang
 
@@ -828,6 +903,88 @@ for t_tile:
 * 更适合本地实验
 * [ollama deepseek-r1](https://ollama.com/library/deepseek-r1:8b)
 * open-webui 版本：dyrnq/open-webui:latest
+
+### NVIDIA ASR & TTS SOLUTIONS
+
+#### ASR WFST decoding
+
+* ASR Pipeline
+
+  * 多级的转换：speech -> phoneme -> character -> word -> sentence
+    * 即使是深度学习兴起，工业界少有用e2e
+    * 多级带来海量choices，需要构建一个decoder解决识别任务(a search problem)
+
+  * ASR system overview
+
+![ASR-system](./LLM-MLSys/ASR-system.png)
+
+> *Q: How do we combine HMM, Lexicon & LM together?*
+>
+> *A: WFST (Weighted Finite State Transducer)*
+
+* WFST是一种图的表示方式，能通用地表示上述三种模型，然后这三张图可以合并。
+
+  * 模型级联 :
+
+    - HMM (声学模型) 的输出是音素phoneme。
+    - 词典将音素序列映射到词语。
+    - 语言模型评估词语序列的合理性。在 WFST 框架下，这些模型的输出和输入可以自然地连接起来。
+
+  * WFST Decoding: 
+    * 图的最短路径问题 : 在组合后的 HCLG 图中，从起点到终点的路径代表了一个可能的识别结果，路径上的权重累积代表了这个结果的可能性。解码的目标就是在这个图中找到权重最小（或概率最大）的路径。
+    * 令牌传递 (Token Passing) : 这是一种动态规划算法，用于在 WFST 图中进行搜索。解码器逐帧处理音频，将“令牌 (token)” 在图中的状态间传递和扩展，每个令牌记录了到达当前状态的路径和累积得分。
+
+#### Kaldi CUDA decoding pipeline
+
+> - Blogs: https://developer.nvidia.com/blog/gpu-accelerated-speech-to-text-with-kaldi-a-tutorial-on-getting-started/
+> - Kaldi integration with Triton: https://github.com/NVIDIA/DeepLearningExamples/tree/master/Kaldi/SpeechRecognition
+> - Kaldi GPU decoder
+>   - NGC: nvcr.io/nvidia/kaldi:20.08-py3
+>   - Kaldi github: github.com/kaldi-asr/src/cudadecoder
+
+* WFST Decoding逻辑判断和对象copy较多，之前很长时间CPU实现
+* GPU DECODE CHALLENGES
+  * Dynamic workload
+    * Amount of parallelism varies greatly throughout decode process
+    * Can have few or many candidates moving from frame to frame
+  * Limited parallelism
+    * Even with many candidates, the amount of parallelism is still far smaller to saturate a GPU
+  * Complex data structure
+    * Need a GPU-friendly data layout to obtain high performance on GPU
+* CUDA DECODER
+  * Operate FST on GPU
+    * CudaFst takes ~1/3 of its original size
+  * Accelerate decoding by parallelization
+    * Batch processing: batch不同语句的chunks，支持context switch
+    * Token Passing in parallel
+  * Process in streaming manner
+* ASR GPU PIPELINE: e2e acceleration, feature extraction + Acoustic Model + Language Model
+  * 结合Triton Inference Server
+
+
+![asr-pipeline](./LLM-MLSys/asr-pipeline.png)
+
+#### Text To Speech(TTS) Synthesis
+
+* Modern TTS Solution
+
+  * Synthesizer: TACOTRON 2模型，合成发音特征
+
+  * Vocoder：声码器 WAVENET、WAVEGLOW
+    * 思路：利用可逆网络生成声音, affine coupling layer很关键
+
+![waveglow](./LLM-MLSys/waveglow.png)
+
+
+
+* BERT
+  * 挑战 (在 TTS 或相关声学/韵律建模中) :
+    - 多音字消歧 (Polyphone disambiguation) : 确定多音字在特定上下文中的正确发音。
+    - 韵律结构预测 (Prosodic structure prediction) : 预测语音的停顿、重音、语调等韵律特征，使合成语音更自然。
+
+* BERT Optimization: 
+  * 对self-attention layer做kernel fusion
+  * Amp
 
 ## 模型训练
 

@@ -48,6 +48,7 @@ nvcc -o output xx.cu
 
 常见flags:
 -O3 -Xptxas -O3 -Xcompiler -O3 -Xptxas -v --ptxas-options=-v
+-out
 
 
 ### utils
