@@ -6,6 +6,12 @@ API: https://docs.pytorch.org/docs/stable/generated/torch.compile.html#torch.com
 https://zhuanlan.zhihu.com/p/730714110
 
 
+### 性能调优
+
+dynamic=False
+config.coordinate_descent_tuning = True
+
+
 ### torch.compile generate Triton Kernel
 
 # compile_square.py

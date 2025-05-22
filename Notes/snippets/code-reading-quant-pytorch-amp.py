@@ -1,6 +1,6 @@
 https://zhuanlan.zhihu.com/p/348554267
 
-* scaler策略：
+*** scaler策略：
 
 因为 loss 和梯度的数值在变，scale factor 需要跟随 loss 动态变化。
 健康的 loss 是振荡中下降，因此GradScaler设计的 scale factor 每隔N个 iteration 乘一个大于 1 的系数，再 scale loss；
@@ -28,7 +28,7 @@ https://zhuanlan.zhihu.com/p/348554267
   "_growth_tracker": 2
 } 
 
-* torch/amp/autocast_mode.py
+*** torch/amp/autocast_mode.py
 
 def autocast_decorator(autocast_instance, func):
     @functools.wraps(func)
@@ -63,6 +63,16 @@ class autocast:
 
 其中torch.*autocast*函数是在 pytorch/aten/src/ATen/autocast_mode.cpp 里实现。
 autocast_mode.cpp 实现策略是 cache fp16 casts of fp32 model weights
+
+- 从图结构的角度
+  - Fwd：对每个参数新增 .to(f16) 节点
+  - Bwd：自动构建Bwd图
+    - the gradient remains fp32, means that it propagated via ToCopyBackward0
+      - https://github.com/pytorch/pytorch/issues/105348
+  - 这解释了为什么到处有cast: 即使输入是BF16，图内仍然有.to节点
+    - torch的to实现：
+      - python op会判断是否dtype一致，决定是否插入图节点
+      - C++ op似乎是直接插入图节点
 
 * aten/src/ATen/autocast_mode.h
 - 关于支持的op
@@ -133,7 +143,7 @@ Tensor cached_cast(at::ScalarType to_type, const Tensor& arg, DeviceType device_
   }
 }
 
-- cached_cast -> WrapFunction_ -> WrapFunction -> #define KERNEL
+- cached_cast <- WrapFunction_ <- WrapFunction <- #define KERNEL <- TORCH_LIBRARY_IMPL(aten, Autocast, m)
 
 template <
     c10::DeviceType device_type,
@@ -170,6 +180,49 @@ struct WrapFunction_<
           decltype(ATEN_FN(OP)),              \
           &ATEN_FN(OP)>::type::call);
 
+
+op注册
+
+TORCH_LIBRARY_IMPL(aten, Autocast, m) {
+  // lower_precision_fp
+#define _KERNEL_CUDA_LOW_PRECISION_FP(...) \
+  KERNEL_CUDA(__VA_ARGS__, lower_precision_fp)
+
+  AT_FORALL_LOWER_PRECISION_FP(_KERNEL_CUDA_LOW_PRECISION_FP)
+  KERNEL_CUDA(cudnn_convolution, lower_precision_fp)
+  KERNEL_CUDA(cudnn_convolution_transpose, lower_precision_fp)
+
+  // fp32
+#define _KERNEL_CUDA_FP32(...) KERNEL_CUDA(__VA_ARGS__, fp32)
+
+  AT_FORALL_FP32(_KERNEL_CUDA_FP32)
+
+  // fp32_set_opt_dtype
+#define _KERNEL_CUDA_FP32_SET_OPT_DTYPE(...) \
+  KERNEL_CUDA(__VA_ARGS__, fp32_set_opt_dtype)
+
+  AT_FORALL_FP32_SET_OPT_DTYPE(_KERNEL_CUDA_FP32_SET_OPT_DTYPE)
+  // commenting these out because they accept an explicit (not-optional) dtype, and we shouldn't try to flip that even
+  // when autocasting.
+  // KERNEL_CUDA(norm, ScalarOpt_dtype, fp32_set_opt_dtype)
+  // KERNEL_CUDA(norm, ScalarOpt_dim_dtype, fp32_set_opt_dtype)
+  // KERNEL_CUDA(norm, names_ScalarOpt_dim_dtype, fp32_set_opt_dtype)
+
+  // fp32_append_dtype
+  // The fp32_append_dtype wrapper overrides implicit promotion behavior.
+  // norm does not implicitly promote, but be aware when adding new ops to this policy.
+  AT_FORALL_DIFFERENT_REDISPATCH_SIGNATURE(
+      KERNEL_DIFFERENT_REDISPATCH_SIGNATURE_CUDA)
+
+  // promote
+#define _KERNEL_CUDA_PROMOTE(...) KERNEL_CUDA(__VA_ARGS__, promote)
+
+  AT_FORALL_PROMOTE(_KERNEL_CUDA_PROMOTE)
+
+  m.impl(TORCH_SELECTIVE_NAME("aten::binary_cross_entropy"),
+         TORCH_FN((&at::autocast::binary_cross_entropy_banned)));
+}
+
 * tip: 推理时没有cache，考虑预转换
 
 model = model.half()
@@ -181,11 +234,12 @@ with torch.no_grad(), torch.cuda.amp.autocast():
 *** 究竟哪里做的cast
 
 fwd: aten::Linear -> aten::to
-- 利用dispatch内部做的cast
-
+- cached_cast
 
 the gradient remains fp32, means that it propagated via ToCopyBackward0
 - https://github.com/pytorch/pytorch/issues/105348
+
+
 
 *** grad_scaler.py
 

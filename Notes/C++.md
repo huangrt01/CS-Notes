@@ -1,6 +1,11 @@
 [toc]
 
 
+
+### Intro
+
+* Standard C++     =      C++ Language + Standard Library
+
 ### 《Effective Modern C++》, Scott Meyers 
 
 **Intro**

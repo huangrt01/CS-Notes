@@ -604,11 +604,24 @@ https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
 | Tesla architecture (特斯拉)                                  | 1    | ~        |                                                              |                                                              |                              |                   |
 
 * H20
-  * 132 SMs
-  * 96GB
+  * ```
+    * SM Version: 900 (PTX Version: 900)
+    * Number of SMs: 78
+    * SM Default Clock Rate: 1980 MHz
+    * Global Memory: 97149 MiB Free / 97508 MiB Total
+    * Global Memory Bus Peak: 4022 GB/sec (6144-bit DDR @2619MHz)
+    * Max Shared Memory: 228 KiB/SM, 48 KiB/Block
+    * L2 Cache Size: 61440 KiB
+    * Maximum Active Blocks: 32/SM
+    * Maximum Active Threads: 2048/SM, 1024/Block
+    * Available Registers: 65536/SM, 65536/Block
+    * ECC Enabled: Yes
+    ```
+  
 * H100 GPU
   * 132 SMs with 64 cores per SM, totalling a whopping 8448 cores.
   * each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
+  
 * A100
   * GPU
     * GPU Memory：80 GB
@@ -626,10 +639,13 @@ https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
 
   * 《Dissecting the Ampere GPU architecture via microbenchmarking》
   * 《Nvidia A100 tensor core GPU architecture》
+  
 * V100
   * https://datacrunch.io/blog/nvidia-v100-gpu-specs
   * roofline: 125/0.9 =139FLOPS/Byte
+  
 * GA10x：RTX 3090, has 82 SMs.
+
 * Each SM in GA10x GPUs contain 128 CUDA Cores, 4 third-generation Tensor Cores, 2 FP64 Cores
   * a 256 KB Register File, and 128 KB of L1/Shared Memory
   * 4*32 FP32 units (one per thread), half  of which know INT32
@@ -950,7 +966,7 @@ public:
 
 ![image-20250518043150350](./GPU/image-20250518043150350.png)
 
-##### Tile
+##### Tile: Data and Computing Resource
 
 ![image-20250519021000133](./GPU/image-20250519021000133.png)
 
@@ -999,6 +1015,22 @@ https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
 > https://github.com/NVIDIA/cutlass/tree/main/include/cute
 
 ![image-20250515021815814](./GPU/image-20250515021815814.png)
+
+
+
+### CCCL
+
+![image-20250522014652212](./GPU/image-20250522014652212.png)
+
+![image-20250522015038459](./GPU/image-20250522015038459.png)
+
+![image-20250522020816335](./GPU/image-20250522020816335.png)
+
+
+
+#### 应用：[llm.cccl —— GPU Mode Bonus Lecture](https://www.youtube.com/watch?v=WiB_3Csfj_Q)
+
+> 是对 llm.c 的重构，性能打平，无优化
 
 
 

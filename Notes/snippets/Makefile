@@ -1,4 +1,14 @@
-# PyTorch
+*** llm.cccl
+
+train_gpt2cu: train_gpt2.cu
+	nvcc -O3 --use_fast_math $< -lcublas -lcublasLt -o $@
+
+如果 train_gpt2cu 这个目标文件不存在，或者其依赖文件 train_gpt2.cu 比它更新，那么就执行以下命令： nvcc -O3 --use_fast_math train_gpt2.cu -lcublas -lcublasLt -o train_gpt2cu
+$< : 这是一个 Makefile 中的自动变量，它代表规则中的 第一个依赖项 。在这个例子中，它会被替换为 train_gpt2.cu
+$@: 是 Makefile 中的另一个自动变量，它代表规则的 目标名称 。在这个例子中，它会被替换为 train_gpt2cu
+
+
+*** PyTorch
 
 # This makefile does nothing but delegating the actual building to cmake.
 PYTHON = python3

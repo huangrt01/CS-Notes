@@ -22,6 +22,11 @@
 
 - HugeCTR
 
+#### LLM训练框架
+
+- llm.cccl
+  - https://github.com/gevtushenko/llm.c
+
 
 #### Data Pipeline
 

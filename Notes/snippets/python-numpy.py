@@ -22,3 +22,5 @@ x = np.zeros((1024, 1024))
 ### 存储
 
 npy格式存tensor
+
+简单方式也可 file.write(tensor.detach().numpy().astype("float32").tobytes())

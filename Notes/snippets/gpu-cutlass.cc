@@ -1,3 +1,12 @@
+cutlass = cutlass + cute
+
+nvcc -std=c++17 examples/cute/tutorial/tiled_copy.cu -o examples/cute/tutorial/tiled_copy_app -I include -I tools/util/include
+
+*** setup cutlass gemm
+
+https://github.com/pytorch-labs/applied-ai/blob/main/kernels/cuda/cutlass_gemm/setup.py
+https://research.colfax-intl.com/tutorial-python-binding-for-cuda-libraries-in-pytorch/
+
 *** 编程模型
 
 - underscores: some_tensor(2, _, _)
@@ -83,3 +92,11 @@ layout/shape -> layout
 ** non contiguous
 
 3:2    ->    i=0,1,2, offset=2*i
+
+
+
+*** cute/tutorials
+
+* tiled_copy.cu
+
+nvcc -std=c++17 examples/cute/tutorial/tiled_copy.cu -o examples/cute/tutorial/tiled_copy_app -I include -I tools/util/include

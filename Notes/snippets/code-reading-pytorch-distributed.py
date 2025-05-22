@@ -1133,8 +1133,6 @@ https://discuss.pytorch.org/t/does-nccl-allreduce-use-fp16/141461/6
     - 支持注册C++ hook
         - 仅支持 ddp._register_builtin_comm_hook(dist.BuiltinCommHookType.FP16_COMPRESS)
         - AllReduceCommHook、FP16CompressCommHook、_AllReduceBySumCommHook
-- DDP：reduce的dtype取决于bucket的dtype
-    - torch/csrc/distributed/c10d/default_comm_hooks.hpp
 
 c10::intrusive_ptr<c10::ivalue::Future> FP16CompressCommHook::runHook(
     GradBucket& bucket) {
@@ -1163,15 +1161,46 @@ c10::intrusive_ptr<c10::ivalue::Future> FP16CompressCommHook::runHook(
   return allreduce_fut->then(decompress, allreduce_fut->elementType());
 }
 
-- bucket dtype
+- DDP：reduce的dtype取决于bucket.gradients的dtype
+    - torch/csrc/distributed/c10d/default_comm_hooks.hpp
+    - all_reduce_bucket
+
+- bucket.gradients的dtype取决于bucket的dtype
+
+void Reducer::initialize_buckets(
+    std::vector<std::vector<size_t>> bucket_indices) {
+    ...
+    for (const auto variable_index : bucket_indices[bucket_index]) {
+        options = options.dtype(variable.dtype());
+        ...
+        bucket.gradients = backend->allocateTensor(bucketSize, options);
+    }
+    ...
+}
+
+- bucket的dtype取决于params的dtype
     - Reducer的初始化
     - self.reducer = ...
 
-- bucket gradient dtype
-    - Reducer.cpp
+- backward过程中，从params.grad到bucket.gradients的复制
+    - mark_variable_ready_dense -> runGradCallbackForVariable
 
-initialize_buckets:
-bucket.variable.mutable_grad()
+void Reducer::runGradCallbackForVariable(
+    at::Tensor& variable,
+    const GradCallback& cb) {
+  auto context_ptr = rpc_context_.context_ptr.load();
+  if (context_ptr == nullptr) {
+    cb(variable.mutable_grad());
+  } else {
+    // Under distributed autograd
+    context_ptr->runGradCallbackForVariable(variable, cb);
+  }
+}
+
+
+
+** 其它
+
 
 void Reducer::set_mixed_precision_param_dtype(c10::ScalarType dtype) {
   mixed_precision_param_dtype_ = dtype;
@@ -1179,6 +1208,7 @@ void Reducer::set_mixed_precision_param_dtype(c10::ScalarType dtype) {
     bucket.gradients = bucket.gradients.to(dtype);
   }
 }
+
 
 
 

@@ -6,39 +6,66 @@
 
 ##### 基础架构与人 —— Haiping Zhao
 
-基础架构
+* 基础架构
 
-* 底层软硬件
-* 不含业务逻辑：抽象化；云化
-* 四大资源：
-  * CPU：计算
-  * 内存
-  * 网络
-  * 磁盘：存储
+  * 底层软硬件
 
-* 人也是基础架构的一部分
-
-不同的协同方式，不同的工程文化
-
-* 开源社区（Facebook），责 < 权 = 利
-* 中台（Alibaba），责 > 权 = 利
-* 纵横交织（ByteDance），责 = 权 = 利
-  * 需要控制合作的cost
-
-人和机器的矛盾
-
-* 编译器
-* 代码共享
-* 微服务
-* 工具和流程
+  * 不含业务逻辑：抽象化；云化
+    * 四大资源：
+      * CPU：计算
+      * 内存
+      * 网络
+      * 磁盘：存储
 
 
+  * 人也是基础架构的一部分
 
-**[l01-Introduction and MapReduce](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Distributed-Systems/l01-Introduction%20and%20MapReduce)**
+
+* 不同的协同方式，不同的工程文化
+
+  * 开源社区（Facebook），责 < 权 = 利
+
+  * 中台（Alibaba），责 > 权 = 利
+
+  * 纵横交织（ByteDance），责 = 权 = 利
+    * 需要控制合作的cost
+
+
+* 人和机器的矛盾
+
+  * 编译器
+
+  * 代码共享
+
+  * 微服务
+
+  * 工具和流程
+
+
+#### AI + 分布式系统
+
+* [大模型时代的计算机系统革新：更大规模、更分布式、更智能化 -- MicroSoft](https://mp.weixin.qq.com/s/7nK3fERGj7a6pcwNMKFdSQ)
+  * **创新超大规模计算机系统以支持未来人工智能的发展**
+    * 推出了能够跨多个加速器执行集体通信算法的微软集体通信库 MSCCL
+    * 以及有助于开发大规模深度神经网络模型的高性能 MoE（Mixture of Experts，混合专家）库 Tutel
+    * [推出了 Welder、Grinder 等编译器](http://mp.weixin.qq.com/s?__biz=MzAwMTA3MzM4Nw==&mid=2649494837&idx=1&sn=0fa87e74e292b7281f40fc64e2328bd3&chksm=82c7fcb1b5b075a7b6917970bce6efc9ef901fb8d9401cbe52385390fe491089738529a46f36&scene=21#wechat_redirect)[3]
+  * **重构云计算这一重要的 IT 基础平台**
+    * 传统云计算领域的研究方向，如虚拟机（VM）、微服务（Micro-services）、计算存储分离、弹性计算等，在人工智能时代下需要被重新定义和发展。虚拟化技术需要在分离式架构的背景下进行重新设计；微服务及其相关云计算模块需要为 AI Agent 和大语言模型构建高效且可靠的服务平台；数据隐私和安全需要成为云计算系统创新的核心要素。所有这些变革创新都要服务于云计算系统的智能化（Cloud + AI）。
+    * 以搜索系统为例，我们基于异构计算系统和深度学习方法对搜索系统进行了创新，从 Web Scale 的矢量搜索系统 SPANN[4] 到最新的 Neural index 索引系统 MEVI[5] 的设计，这些创新不仅极大提升了搜索和广告系统的性能，也为未来信息检索系统提供了新的范式
+  * **设计前沿的分布式系统，以适应更广泛的分布式智能需求。**
+    * “人类的智能不单存在于人类的头脑中，还广泛分布在整个物理世界、社会活动和符号体系中——这就是‘分布式智能’。”美国认知科学家 Roy Pea 在 1993 年发表的一篇论文《Distributed Cognition: Toward a New Foundation for the Study of Learning》中提出了分布式智能（distributed cognition）的概念，为我们提供了一种新的视角来理解人工智能系统与社会以及环境之间的相互作用。
+    * 移动端优化
+      * [PIT](http://mp.weixin.qq.com/s?__biz=MzAwMTA3MzM4Nw==&mid=2649496775&idx=1&sn=f3775b49e27541b985dd4b65564e3d3b&chksm=82c7f543b5b07c55e821401490fba94588e2aec276eab5b7142567fbd4ac1bd2aff317d04ded&scene=21#wechat_redirect)[6]、MoFQ[7]等多种移动端模型量化、稀疏化以及运行时优化的技术
+      * 利用基于查找表（Lookup Table）等全新的计算范式来提升端侧推理效率，包括 LUT-NN[8] 等技术
+    * 使学习算法可以更好地从任意信号（Signals）中捕捉智能
+
+
 
 
 
 #### 分布式基础
+
+##### Intro
 
 * 最终一致性：系统中的所有分散在不同节点的数据，经过一定时间后，最终能够达到符合业务定义的一致的状态
 
@@ -58,6 +85,10 @@
   * partition tolerance: The system continues to operate despite an arbitrary number of messages being dropped (or delayed) by the network between nodes.
 
 * [PACELC theorem](https://en.wikipedia.org/wiki/PACELC_theorem)
+
+##### MapReduce
+
+**[l01-Introduction and MapReduce](https://github.com/huangrt01/CS-Notes/blob/master/Notes/Distributed-Systems/l01-Introduction%20and%20MapReduce)**
 
 ##### 最终一致性解决方案
 

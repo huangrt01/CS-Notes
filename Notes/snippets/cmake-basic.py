@@ -1,3 +1,16 @@
+Same code gen
+Cross-platform (works on Windows)
+Reduced compiler dependencies
+Less error-prone (warns about missing CUDA arch)
+Setup-free dependency management
+
+### usage
+
+mkdir build && cd build
+cmake ..
+make -j
+cd ..
+
 ### basic
 
 cmake_minimum_required(VERSION 3.16)
@@ -43,7 +56,12 @@ add_executable(welcome main.cpp
         Navigation.cpp
 )
 
-###
+### CPM
+拉最新的branch
+> llm.cccl
+include(cmake/CPM.cmake)
+CPMAddPackage("gh:NVIDIA/cccl#main")
+CPMAddPackage("gh:NVIDIA/nvbench#main")
 
 
 ### PyTorch

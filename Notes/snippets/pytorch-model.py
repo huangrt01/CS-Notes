@@ -46,7 +46,7 @@ https://github.com/allegro/allRank/tree/master
 
 torch.nn.Linear(in_features, out_features, bias=True)
 
-# y = Ax + b, A的形状是 (out_features, in_features)
+# y = xA^T + b, A的形状是 (out_features, in_features)
 
 # LazyLinear
 torch.nn.LazyLinear(out_features, bias=True, device=None, dtype=None)
