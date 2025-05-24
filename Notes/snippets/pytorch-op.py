@@ -128,6 +128,11 @@ sort_indices = torch.argsort(shard_ids, stable=True)
 ### concat split
 split的输出是tuple，经常需要转为list
 
+### unique
+
+unique op一定会d2h，原因是shape需要在cpu host上获取
+- https://github.com/pytorch/pytorch/issues/107132
+
 
 ### jagged/padding
 

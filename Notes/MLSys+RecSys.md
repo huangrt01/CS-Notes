@@ -147,7 +147,7 @@ plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, 
     * [Deep Bootstrap framework](https://ai.googleblog.com/2021/03/a-new-lens-on-understanding.html)
   * [data cascades in ML](https://ai.googleblog.com/2021/06/data-cascades-in-machine-learning.html)
 	  * [PAIR Guidebook](https://pair.withgoogle.com/guidebook/)
-		* ![img](./MLSys/data-cascades.png)
+		* ![img](./MLSys+RecSys/data-cascades.png)
 	* [Know Your Data](https://knowyourdata.withgoogle.com/)
 	  *  [finding and investigating anomalous data](https://ai.googleblog.com/2021/09/discovering-anomalous-data-with-self.html)
 	  * [methods to better understand the influence that particular training examples](https://ai.googleblog.com/2021/02/tracin-simple-method-to-estimate.html) can have on an ML model
@@ -188,7 +188,7 @@ plethora of ML frameworks：NCCL, Horovod, BytePS, Mesh-TensorFlow, Gpipe, Ray, 
 
 #### Intro
 
-![pipeline](./MLSys/pipeline.png)
+![pipeline](./MLSys+RecSys/pipeline.png)
 
 * 流程：
   * 数据加载
@@ -248,7 +248,7 @@ https://github.com/wangkuiyi/gotorch
 
 模型并行：参数如何划分？复杂的通信模式
 
-![platforms](./MLSys/platforms.jpg)
+![platforms](./MLSys+RecSys/platforms.jpg)
 
 横向拓展：片间高速互联，e.g. TPU
 
@@ -256,7 +256,7 @@ https://github.com/wangkuiyi/gotorch
 
 
 
-静态调度与流式执行系统![layers](./MLSys/layers.jpg)
+静态调度与流式执行系统![layers](./MLSys+RecSys/layers.jpg)
 
 
 
@@ -265,11 +265,11 @@ OneFlow架构
 * actor及流水线
   * 内存槽，用类似rust的ownership解决内存冲突问题，ownership随状态转移
 
-![memory-pipeline](./MLSys/memory-pipeline.jpg)
+![memory-pipeline](./MLSys+RecSys/memory-pipeline.jpg)
 
 * node placement: consistent view
   * SBP, 在op层面实现数据和模型并行 
-    ![SBP](./MLSys/SBP.jpg)
+    ![SBP](./MLSys+RecSys/SBP.jpg)
 
 #### HugeCTR
 
@@ -317,7 +317,7 @@ OneFlow架构
 	  * [可重复使用的component](https://www.kubeflow.org/docs/components/pipelines/v1/sdk/component-development/)
 	  * Google Cloud TFX......
 	
-	![Google Cloud 上基于 TFX 的机器学习系统的步骤](./MLSys/architecture-for-mlops-using-tfx-kubeflow-pipelines-and-cloud-build-3-tfx-google-cloud.svg)
+	![Google Cloud 上基于 TFX 的机器学习系统的步骤](./MLSys+RecSys/architecture-for-mlops-using-tfx-kubeflow-pipelines-and-cloud-build-3-tfx-google-cloud.svg)
 	
 	
 	* [TFX.periodic_training](https://github.com/tensorflow/community/blob/master/rfcs/20210115-tfx-periodic-training.md)
@@ -381,6 +381,14 @@ pipeline.fit(trainingData)
 val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
 ```
 
+### Dataset
+
+* Criteo Dataset
+  * Training dataset with 24 days of ad display and click data (positive: clicked and negatives: non-clicked)
+  * 13 features taking integer values (mostly count features)
+  * 26 anonymized categorical features
+  * Corresponding Kaggle competition: https://www.kaggle.com/c/criteo-display-ad-challenge
+
 ### 数据流、数据存储
 
 > 可利用大模型
@@ -400,7 +408,7 @@ val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
 
 #### 数据格式
 
-![20250416-011642](./MLSys/20250416-011642.jpeg)
+![20250416-011642](./MLSys+RecSys/20250416-011642.jpeg)
 
 #### 数据流
 
@@ -430,7 +438,7 @@ val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
     * Everything is streaming
     * 思路：数据存储+数据重播
     * 缺点：回放效率，批处理和流处理操作不一定能完全共享
-    * ![image-20250106004639825](./MLSys/image-20250106004639825.png)
+    * ![image-20250106004639825](./MLSys+RecSys/image-20250106004639825.png)
 
 
 * 推荐系统的数据流
@@ -453,9 +461,9 @@ val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
 
 * 基于RAPIDS的Recommendation ETL，底层是RAPIDS
 
-![pipeline](./MLSys/pipeline-nvtabular.png)
+![pipeline](./MLSys+RecSys/pipeline-nvtabular.png)
 
-![nvtabular](./MLSys/nvtabular.png)
+![nvtabular](./MLSys+RecSys/nvtabular.png)
 
 #### RAPIDS: 基于GPU的Spark大数据处理和机器学习加速
 
@@ -487,9 +495,9 @@ val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
   * 高散列度数据的joins、aggregates、sort
   * Window operations、复杂计算、数据编码（创建Parquet和ORC文件，读取CSV）
 
-![RAPIDS accelerator for Apache Spark](./MLSys/RAPIDS.png)
+![RAPIDS accelerator for Apache Spark](./MLSys+RecSys/RAPIDS.png)
 
-![dataframe](./MLSys/dataframe.png)
+![dataframe](./MLSys+RecSys/dataframe.png)
 
 
 
@@ -653,7 +661,7 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 * 量化精度
 
-* ![image-20250404210744334](./MLSys/image-20250404210744334.png)
+* ![image-20250404210744334](./MLSys+RecSys/image-20250404210744334.png)
 
   * [denormalized numbers](https://cs.stackexchange.com/questions/101632/understanding-denormalized-numbers-in-floating-point-representation)
     * **指数固定为 - 126**（规格化数的指数通过 `exponent - 127` 计算）。
@@ -676,7 +684,7 @@ https://docs.nvidia.com/deeplearning/performance/index.html
     * the value range for FP16 is approximately [-2¹⁵, 2¹⁵]=[-32768, 32768]
 
 * 精度范围：
-  * ![image-20250331122231657](./MLSys/image-20250331122231657.png)
+  * ![image-20250331122231657](./MLSys+RecSys/image-20250331122231657.png)
 
 * fp4
 
@@ -809,7 +817,7 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 * Baseline (FP32) : Single-precision storage is used for activations, weights and gradients. All arithmetic is also in FP32. 
 * Mixed Precision (MP): 
-  * ![image-20250301234600987](./MLSys/image-20250301234600987.png)
+  * ![image-20250301234600987](./MLSys+RecSys/image-20250301234600987.png)
   * bf16训练时，一般需要保留一份fp32的W，用来做累加
 * Loss Scaling
 
@@ -844,11 +852,11 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 https://arxiv.org/pdf/1905.12322
 
-![image-20250519223426286](./MLSys/image-20250519223426286.png)
+![image-20250519223426286](./MLSys+RecSys/image-20250519223426286.png)
 
 #### Fp8-Mixed-Precision-Training
 
-![image-20250331122321267](./MLSys/image-20250331122321267.png)
+![image-20250331122321267](./MLSys+RecSys/image-20250331122321267.png)
 
 ##### Literature Review
 
@@ -876,15 +884,15 @@ https://arxiv.org/pdf/1905.12322
       of FP8 data formats through the dynamic adjustment of tensor scaling factors, thereby alleviating underflow and overflow occurrences during all-reduce communication.
     * pre-scaling and post-scaling
       * pre-scaling underflow，post-scaling overflow
-      * <img src="./MLSys/image-20250507132354443.png" alt="image-20250507132354443" style="zoom:50%;" />
+      * <img src="./MLSys+RecSys/image-20250507132354443.png" alt="image-20250507132354443" style="zoom:50%;" />
     * auto-scaling
       * 这个简化有点离谱，直接取global scaling最小值，可能造成精度损失
-      * ![image-20250507133406617](./MLSys/image-20250507133406617.png)
+      * ![image-20250507133406617](./MLSys+RecSys/image-20250507133406617.png)
 * fp8 optimizer
   * the gradient statistics can use lower precision, while the master weights necessitate high precision
     * 仅限first order，因为second-order代表方向更敏感
     * 存fp32 master weights等价为存fp16+scaling
-    * ![image-20250507192731407](./MLSys/image-20250507192731407.png)
+    * ![image-20250507192731407](./MLSys+RecSys/image-20250507192731407.png)
 * 结论：
   * 显存：29% reduction for GPT-7B while 39% for GPT-175B
   * weight-related communication: -63%~65%
@@ -906,7 +914,7 @@ https://arxiv.org/pdf/1905.12322
 
 * Moreover, to further reduce memory and communication overhead in MoE training, we **cache and dispatch activations in FP8, while storing low-precision optimizer states in BF16**
 
-![image-20250501183219211](./MLSys/image-20250501183219211.png)
+![image-20250501183219211](./MLSys+RecSys/image-20250501183219211.png)
 
 * 收益：
   * compute
@@ -914,7 +922,7 @@ https://arxiv.org/pdf/1905.12322
 * 稳定性：
   * we maintain the original precision (e.g., BF16 or FP32) for the following components:
     * the embedding module, the output head, MoE gating modules, normalization operators, and attention operators
-* ![image-20250501185219385](./MLSys/image-20250501185219385.png)
+* ![image-20250501185219385](./MLSys+RecSys/image-20250501185219385.png)
 * 量化方式：
   * (1) for activations, we group and scale elements on a 1x128 tile basis (i.e., **per token per 128 channels**); 
     * the introduction of **per-group scaling factors along the inner dimension of GEMM operations**
@@ -965,7 +973,7 @@ https://arxiv.org/pdf/1905.12322
 >
 > GPU Mode Lecture 7
 
-![image-20250409025047175](./MLSys/image-20250409025047175.png)
+![image-20250409025047175](./MLSys+RecSys/image-20250409025047175.png)
 
 - 迭代路线：
 
@@ -987,10 +995,10 @@ https://arxiv.org/pdf/1905.12322
   - weight only: 针对memory h2d bound、显存瓶颈的场景，去除了对activation做quantize的系列操作，适合llama等
   - --> dynamic quantize在llama成为瓶颈，内存操作多
 
-![image-20250302195633990](./MLSys/image-20250302195633990.png)
+![image-20250302195633990](./MLSys+RecSys/image-20250302195633990.png)
 
 * Dynamic Quantization Flow
-  * ![image-20250303021206950](./MLSys/image-20250303021206950.png)
+  * ![image-20250303021206950](./MLSys+RecSys/image-20250303021206950.png)
   * 问题1：显存增长，原因是int8乘法的accumulation矩阵需要是int32
     * 解法：fusion，直接用bf16作为accumulate矩阵
     * 代码：config.force_fuse_int_mm_with_mul
@@ -998,31 +1006,31 @@ https://arxiv.org/pdf/1905.12322
     * 解法：per-token、per-channel
 * INT8 Weight Only Quantization
   * 矩阵计算，fp32和bf16皆可，fp16容易overflow; accumulation也可考虑bf16
-  * ![image-20250306022930749](./MLSys/image-20250306022930749.png)
+  * ![image-20250306022930749](./MLSys+RecSys/image-20250306022930749.png)
   * 问题：一开始比cublas慢一半
     * 分析1: 额外做了cast、rescale
     * 分析2: The Blocksize is limited to be >= 16, meaning The grid for this launch is configured to execute only 64 blocks, which is less than the GPU's 108 multiprocessors. This can underutilize some multiprocessors. If you do not intend to execute this kernel
       * 解法：config.coordinate_descent_tuning优化
-      * ![image-20250306031254122](./MLSys/image-20250306031254122.png)
-    * ![image-20250306031735121](./MLSys/image-20250306031735121.png)
+      * ![image-20250306031254122](./MLSys+RecSys/image-20250306031254122.png)
+    * ![image-20250306031735121](./MLSys+RecSys/image-20250306031735121.png)
   * Side Note:
     * Weight Only Quantization中，Dequantize是可选的，可以int4直接和float的fractional part相乘
 
 * **Int4 Weight Only Quantization**
 
-  * ![image-20250306215423050](./MLSys/image-20250306215423050.png)
+  * ![image-20250306215423050](./MLSys+RecSys/image-20250306215423050.png)
   * 问题：no torch dtype
     * 解法：用uint8=int4*2存两个int4
   * 问题：如何unpack/pack
     * 解法：右下角的排布，unpack一列只需要load一列
-    * ![image-20250306215741041](./MLSys/image-20250306215741041.png)
+    * ![image-20250306215741041](./MLSys+RecSys/image-20250306215741041.png)
 
   * 问题：性能差
     * 解法：int4 groupwise quant
-    * ![image-20250307025857799](./MLSys/image-20250307025857799.png)
+    * ![image-20250307025857799](./MLSys+RecSys/image-20250307025857799.png)
 
 * GPT-Q
-  * ![image-20250307033049737](./MLSys/image-20250307033049737.png)
+  * ![image-20250307033049737](./MLSys+RecSys/image-20250307033049737.png)
 
 * Triton Limitations
   * It runs into trouble when trying to work with complicated operations and nonstandard dtypes
@@ -1043,9 +1051,9 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
 
 保持数学等价性：$$Y = \hat{X} \cdot \hat{W}$$
 
-![image-20250416153941610](./MLSys/image-20250416153941610.png)
+![image-20250416153941610](./MLSys+RecSys/image-20250416153941610.png)
 
-![image-20250416155502889](./MLSys/image-20250416155502889.png)
+![image-20250416155502889](./MLSys+RecSys/image-20250416155502889.png)
 
 * Intro
   * SmoothQuant smooths the activation outliers by offline migrating the quantization difficulty from activations to weights with a mathematically equivalent transformation.
@@ -1056,8 +1064,8 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
   * Outliers persist in fixed channels
 * 结论
   * 在175B模型，精度优于zeroquant （section5.2）
-  * ![image-20250430154044610](./MLSys/image-20250430154044610.png)
-  * ![image-20250430154148177](./MLSys/image-20250430154148177.png)
+  * ![image-20250430154044610](./MLSys+RecSys/image-20250430154044610.png)
+  * ![image-20250430154148177](./MLSys+RecSys/image-20250430154148177.png)
   
 * 关于per channel activation quantization的分析
 
@@ -1074,7 +1082,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
 
 * 方案：
 
-  * ![image-20250430153746632](./MLSys/image-20250430153746632.png)
+  * ![image-20250430153746632](./MLSys+RecSys/image-20250430153746632.png)
     * activation outliers are more significant的场景，调大alpha
 
 
@@ -1094,7 +1102,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
   * a highly-optimized quantization system backend support to remove the quantization/dequantization overhead
 * 结论：
   * 直接PTQ + GPT-3/Bert：W8A16效果无损，接下来有损 （table1）
-    * ![image-20250329011956361](./MLSys/image-20250329011956361.png)
+    * ![image-20250329011956361](./MLSys+RecSys/image-20250329011956361.png)
     * 每一层内，不同token的range分布差距大 --> token-wise
     * output attn matrix，不同行的分布差异大
   * generation task比eval task更敏感
@@ -1110,7 +1118,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
     * 借鉴Q-Bert
   * Token-wise Quantization for Activations
 * 工程优化（4.3 Quantization-Optimized Transformer Kernels）
-  * ![image-20250330153101483](./MLSys/image-20250330153101483.png)
+  * ![image-20250330153101483](./MLSys+RecSys/image-20250330153101483.png)
   * quant：kernel fusion technique to fuse quantization operator with its previous operator, like layer normalization, to alleviate the data movement cost from token-wise quantization
     * 每个SM可以quantize one row/token
   * dequant：the dequantization cost of the different GeMMs’ output is alleviated by scaling the INT32 accumulation using both the weight and activation quantization scales, before writing the final FP16 result back to the main memory for the next FP16 operator (like GeLU)
@@ -1120,13 +1128,13 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
     * use the CUTLASS profiler tool that explores the tiling dimensions on the thread-blocks, WARPs, and WMMA (Tensor cores), as the three compute hierarchies available within the Ampere GPU architecture
   * 开启cuda graph，优化小模型性能
 * LKD
-  * ![image-20250330153038937](./MLSys/image-20250330153038937.png)
+  * ![image-20250330153038937](./MLSys+RecSys/image-20250330153038937.png)
 
 
 
 ##### PTQ基础
 
-![image-20250329010304813](./MLSys/image-20250329010304813.png)
+![image-20250329010304813](./MLSys+RecSys/image-20250329010304813.png)
 
 * S的选取
   * weight matrix：max(abs(X))
@@ -1134,7 +1142,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
     * dynamic
     * static：calibrated using training data (e.g., momentum based
       averaging) and ﬁxed during inference [23]
-      * ![image-20250329010432713](./MLSys/image-20250329010432713.png)
+      * ![image-20250329010432713](./MLSys+RecSys/image-20250329010432713.png)
 
 #### W4A16 - Weight Only
 
@@ -1150,9 +1158,9 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
   * **保留 1% 显著权重提升量化性能**：发现 LLMs 中部分（0.1%-1%）显著权重对模型性能影响大，跳过这些权重的量化可减少量化损失。**基于激活幅度而非权重幅度选择显著权重**，能显著提升量化模型性能，但混合精度数据类型会增加系统实现难度。
   * **激活感知缩放保护显著权重**：提出按通道缩放方法降低显著权重的量化误差。通过分析量化误差，得出**缩放显著通道**可减小相对误差的结论。为平衡显著和非显著权重，自动搜索最优缩放因子，采用简单搜索空间和快速网格搜索确定最佳超参数 α，并应用权重裁剪最小化量化均方误差。该方法不依赖回归或反向传播，对校准集依赖小，泛化性强
     * 根据activation决策显著 -> scaling up显著的weight -> 相关input变小 -> 量化误差变小
-    * ![image-20250410131426026](./MLSys/image-20250410131426026.png)
+    * ![image-20250410131426026](./MLSys+RecSys/image-20250410131426026.png)
     * 基于一个假设：放大显著的channel后，量化scale变化不大
-    * ![image-20250410130650937](./MLSys/image-20250410130650937.png)
+    * ![image-20250410130650937](./MLSys+RecSys/image-20250410130650937.png)
 * 相比GPTQ：
   * 对校准集不敏感
   * 效果好
@@ -1179,7 +1187,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
   * **本质上是LLM参数量非常大，存在参数冗余**
   * Practical Speedups. Finally, we study practical applications. As an interesting use-case, we focus on the OPT-175B model: **quantized to 3 bits, this model takes approximately 63GB of memory**, including the embeddings and the output layer, which are kept in full FP16 precision. Additionally, storing the **complete history of keys and values for all layers,** a common optimization for generation tasks, **consumes another ≈ 9GB for the maximum of 2048 tokens**. Hence, we can actually fit the entire quantized model into a single 80GB A100 GPU, which can be executed by dynamically dequantizing layers as they are required during inference (the model would not fully fit using 4 bits). For reference, standard FP16 execution requires 5x80GB GPUs, and the state-of-the-art 8bit LLM.int8() quantizer (Dettmers et al., 2022) requires 3 such GPUs
 * 方法：layer-wise
-  * ![image-20250325020148022](./MLSys/image-20250325020148022.png)
+  * ![image-20250325020148022](./MLSys+RecSys/image-20250325020148022.png)
   * 假设：the quantization grid for W is ﬁxed before the process
 * Optimal Brain Quantization
   * 问题分解：将训练后量化的目标转化为最小化损失误差，通过泰勒级数近似，将损失误差表示为与海森矩阵相关的形式，并将其分解为逐层独立的凸问题，进一步按行分解为独立问题。
@@ -1188,10 +1196,10 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
   * 矩阵更新：更新剩余权重的逆海森矩阵，通过移除已量化权重对应的行和列来实现。 
   * 重复迭代：继续上述迭代过程，直到所有权重都被量化。 
 * 在实际应用中，为了提高计算效率和防止数值不准确性累积，GPTQ算法对OBQ进行了改进，如采用**固定的非贪心顺序对所有行进行量化**(减少计算量)、**一次保持权重更新在列的块内**(一次128个column，batch操作)、**对海森矩阵的对角项应用轻微阻尼**(增加数值稳定性)以及**利用逆海森矩阵的Cholesky分解**(逆海森矩阵容易inf)等。
-  * ![image-20250325141614872](./MLSys/image-20250325141614872.png)
+  * ![image-20250325141614872](./MLSys+RecSys/image-20250325141614872.png)
 
 * 算法
-  * ![image-20250325143626232](./MLSys/image-20250325143626232.png)
+  * ![image-20250325143626232](./MLSys+RecSys/image-20250325143626232.png)
 
 
 
@@ -1216,7 +1224,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
     * activation ckpt
   * distributed通信，也占用显存
 
-![image-20250315203511421](./MLSys/image-20250315203511421.png)
+![image-20250315203511421](./MLSys+RecSys/image-20250315203511421.png)
 
 ##### Low-bit optimizer
 
@@ -1224,8 +1232,8 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
 * 《Memory Efficient Optimizers with 4-bit States》
 * 《8-bit Optimizers via Block-wise Quantization》
   * 8bit: bitandbytes
-  * ![image-20250315205836858](./MLSys/image-20250315205836858.png)
-* ![image-20250315210506126](./MLSys/image-20250315210506126.png)
+  * ![image-20250315205836858](./MLSys+RecSys/image-20250315205836858.png)
+* ![image-20250315210506126](./MLSys+RecSys/image-20250315210506126.png)
   * 思路：fuse kernel，不将中间状态存入gpu的global memory
     * **block-wise**而不是tensor-wise，才能**确保计算scale时在shared memory进行**
     * 可能考虑 TMA （tensor memory accelerator）？
@@ -1238,7 +1246,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
   * 1B以上的LLM模型，相比bf16训练的loss差距小
   * finetune某个模型，Lr 1e-5时，bf16训练精度低于int8 SR
     * https://github.com/pytorch/ao/pull/644
-    * ![image-20250331011617617](./MLSys/image-20250331011617617.png)
+    * ![image-20250331011617617](./MLSys+RecSys/image-20250331011617617.png)
 
 * Bf16 w/ SR
 
@@ -1257,7 +1265,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
     * 左乘matrix用row-wise、右乘matrix用column-wise
   * 工程实现：triton kernel
     * torch compile的问题：1）无法fuse两个scaling；2）auto config不好
-  * ![image-20250331123031392](./MLSys/image-20250331123031392.png)
+  * ![image-20250331123031392](./MLSys+RecSys/image-20250331123031392.png)
 
 * 结论：
   * int8矩阵计算加速比，a100在2左右
@@ -1283,7 +1291,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
   * Originally trained with Quantization-Aware Training (QAT)
   * We can use INT8 Tensor Cores! (and 2-bit all-gather for FSDP)
   * https://github.com/pytorch/ao/pull/930
-  * ![image-20250331153107702](./MLSys/image-20250331153107702.png)
+  * ![image-20250331153107702](./MLSys+RecSys/image-20250331153107702.png)
 
 #### QAT
 
@@ -1296,7 +1304,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
 
   * achieved by simulating quantization numerics during training while keeping the weights and/or activations in the original data type, typically float, effectively “fake quantizing” the values instead of actually casting them to lower bit-widths
 
-  * ![image-20250328190021045](./MLSys/image-20250328190021045.png)
+  * ![image-20250328190021045](./MLSys+RecSys/image-20250328190021045.png)
 
   * ```Python
     # PTQ: x_q is quantized and cast to int8
@@ -1317,7 +1325,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
 
 >  [Quantization-Aware Training for Large Language Models with PyTorch](https://pytorch.org/blog/quantization-aware-training/)
 
-* ![image-20250328174952301](./MLSys/image-20250328174952301.png)
+* ![image-20250328174952301](./MLSys+RecSys/image-20250328174952301.png)
 
   * **W4A8: int8 per token dynamic activations + int4 grouped per channel weights**
 
@@ -1474,32 +1482,32 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
   * noise with variance O(2^{-P})
 
 * 要点:
-  * ![image-20250411001753645](./MLSys/image-20250411001753645.png)
+  * ![image-20250411001753645](./MLSys+RecSys/image-20250411001753645.png)
   * lower precision reduces the model’s effective parameter count
   * **training larger models in lower precision may be compute optimal**
   * overtrained models，受量化影响更大（参数少、数据多）
     * overtrain的定义：参考chinchilla paper，tokens seen
     * 和QLoRa的观察相符，这也是QLoRa为什么提出NF4
 * 理论分析：
-  * ![image-20250411001515823](./MLSys/image-20250411001515823.png)
+  * ![image-20250411001515823](./MLSys+RecSys/image-20250411001515823.png)
   * $$\delta_{\mathrm{PTQ}}(N, D, P_{\mathrm{post}}) = C_T \left( \frac{D^{\gamma_D}}{N^{\gamma_N}} \right) e^{-P_{\mathrm{post}} / \gamma_{\mathrm{post}}}$$
     * 由于指数超参近似，类似于 D/N 的 power law
   * Quantized training: $$L(N, D) = A[N(1 - e^{-P_{\mathrm{w}} / \gamma_{\mathrm{w}}})]^{-\alpha} + B D^{-\beta} + E$$
-  * ![image-20250411115840121](./MLSys/image-20250411115840121.png)
+  * ![image-20250411115840121](./MLSys+RecSys/image-20250411115840121.png)
 
 * SCALING LAWS FOR PTQ
-  * ![image-20250411013134252](./MLSys/image-20250411013134252.png)
+  * ![image-20250411013134252](./MLSys+RecSys/image-20250411013134252.png)
   * 一种解释：D越大，N会学到越多信息，因此量化的损失增加
   * 对GPTQ、AWQ、普通量化，均有效
 
 * Scaling law for quantized training
-  * ![image-20250411023740824](./MLSys/image-20250411023740824.png)
+  * ![image-20250411023740824](./MLSys+RecSys/image-20250411023740824.png)
   * 模型越大，量化可以越激进
-  * ![image-20250411025219080](./MLSys/image-20250411025219080.png)
+  * ![image-20250411025219080](./MLSys+RecSys/image-20250411025219080.png)
     * 敏感程度：a > w > kv cache
 * Guidance
   * 4.3.1 IF YOU MUST TRAIN IN LOW PRECISION, INCREASE PARAMETERS BEFORE DATA
-    * ![image-20250411114729068](./MLSys/image-20250411114729068.png)
+    * ![image-20250411114729068](./MLSys+RecSys/image-20250411114729068.png)
   * 4.3.2 COMPUTE-OPTIMAL PRETRAINING PRECISION IS IN GENERAL INDEPENDENT OF
     COMPUTE
   * 4.3.3 BUT COMPUTE-OPTIMAL PRETRAINING PRECISION CAN INCREASE IN COMPUTE IF
@@ -1544,7 +1552,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
     - BERT 各层 Hessian 特征值分布差异显著（图 2），中间层（4-8 层）均值和方差最大，末层最稳定。
     - SQuAD 任务的 Hessian 存在负特征值（图 3），表明模型未收敛至局部极小点。
 
-![image-20250328155538247](./MLSys/image-20250328155538247.png)
+![image-20250328155538247](./MLSys+RecSys/image-20250328155538247.png)
 
 * 混合精度量化策略
 
@@ -1567,7 +1575,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
     - **动态范围调整**：每组独立计算量化范围，减少跨组数据分布差异的影响（图 4）。
     - group-wise量化在 4-bit 下比layer-wise量化在 SST-2 任务中提升 7% 准确率（表 2）。
 
-  - ![image-20250328152923360](./MLSys/image-20250328152923360.png)
+  - ![image-20250328152923360](./MLSys+RecSys/image-20250328152923360.png)
 
     - d/Nh是每个头的输出维度
 
@@ -1676,17 +1684,17 @@ void gemmPacked(
 
 > FP8-LM paper
 
-![image-20250507193147805](./MLSys/image-20250507193147805.png)
+![image-20250507193147805](./MLSys+RecSys/image-20250507193147805.png)
 
 * ZeRO，改变了distribution方式
 
-![image-20250507193223244](./MLSys/image-20250507193223244.png)
+![image-20250507193223244](./MLSys+RecSys/image-20250507193223244.png)
 
 
 
 #### Q-Lora
 
-![image-20250330233937812](./MLSys/image-20250330233937812.png)
+![image-20250330233937812](./MLSys+RecSys/image-20250330233937812.png)
 
 #### 4bit以下
 
@@ -1698,7 +1706,7 @@ void gemmPacked(
   * 1.58-bit weights and INT8 activations.
   * activation采用对称量化
 
-![image-20250331150031977](./MLSys/image-20250331150031977.png)
+![image-20250331150031977](./MLSys+RecSys/image-20250331150031977.png)
 
 ### Sparsity —— 模型压缩、稀疏化、剪枝
 
@@ -1721,7 +1729,7 @@ void gemmPacked(
 * 精度：
   * 应用于LLM训练，无法使用retrain的方法，serving的精度下降可能无法接受？
 
-![image-20250510042754377](./MLSys/image-20250510042754377.png)
+![image-20250510042754377](./MLSys+RecSys/image-20250510042754377.png)
 
 ##### Unstructured Sparsity
 
@@ -1746,15 +1754,15 @@ void gemmPacked(
   * K大、N小时，性能好
     * N大时，load bit indices的相对开销增加
 
-![image-20250511024840934](./MLSys/image-20250511024840934.png)
+![image-20250511024840934](./MLSys+RecSys/image-20250511024840934.png)
 
-![image-20250511025913275](./MLSys/image-20250511025913275.png)
+![image-20250511025913275](./MLSys+RecSys/image-20250511025913275.png)
 
 
 
 * 结果：精度还是有问题，这里是直接prune没有经过retrain的
 
-![image-20250511030244529](./MLSys/image-20250511030244529.png)
+![image-20250511030244529](./MLSys+RecSys/image-20250511030244529.png)
 
 
 
@@ -1768,13 +1776,13 @@ void gemmPacked(
   * Sparsify + sparse_mm < dense_mm
   * Need both W and W_t for forward / backward pass
 
-![image-20250511035325506](./MLSys/image-20250511035325506.png)
+![image-20250511035325506](./MLSys+RecSys/image-20250511035325506.png)
 
-![image-20250511034832998](./MLSys/image-20250511034832998.png)
+![image-20250511034832998](./MLSys+RecSys/image-20250511034832998.png)
 
 * 对比training & serving
   * 显存上涨，原因是要存dense copy
-  * ![image-20250511034855017](./MLSys/image-20250511034855017.png)
+  * ![image-20250511034855017](./MLSys+RecSys/image-20250511034855017.png)
 * xFormers ran experiments with DINO show 10-20% e2e speedup with 0.5% acc gap (81.6 -> 80.5) on ImageNet-1k
   * **Applying 2:4 sparsity to activations**
 
@@ -1786,7 +1794,7 @@ void gemmPacked(
   * Use [Superblock](https://github.com/pytorch-labs/superblock) to recover accuracy
 
 * 结论：
-  * ![image-20250511031308392](./MLSys/image-20250511031308392.png)
+  * ![image-20250511031308392](./MLSys+RecSys/image-20250511031308392.png)
 
 
 
@@ -1795,19 +1803,19 @@ void gemmPacked(
 * [Performance](https://docs.google.com/document/d/12Qos8RlVuuqs9m8i_dA7r7JkMyVx_HXi2TPj86Hrkd8/edit)
   * 视频 33分钟左右，讲解性能挑战在于operator fusion
     * 问题：缺少 fused dequant + cusparse + bf16
-  * ![image-20250511033037908](./MLSys/image-20250511033037908.png)
+  * ![image-20250511033037908](./MLSys+RecSys/image-20250511033037908.png)
 * [Accuracy](https://docs.google.com/presentation/d/1cWstH6lk3zVntNZ1YCkmtKYkwBIJ8AdM3uVAN9Ir9LY/edit)
-  * ![image-20250511033745707](./MLSys/image-20250511033745707.png)
+  * ![image-20250511033745707](./MLSys+RecSys/image-20250511033745707.png)
 
 ##### Future Work
 
-![image-20250511040932650](./MLSys/image-20250511040932650.png)
+![image-20250511040932650](./MLSys+RecSys/image-20250511040932650.png)
 
 * 和shuffle结合，很有意思
 
-![image-20250511040653106](./MLSys/image-20250511040653106.png)
+![image-20250511040653106](./MLSys+RecSys/image-20250511040653106.png)
 
-* ![image-20250511040709582](./MLSys/image-20250511040709582.png)
+* ![image-20250511040709582](./MLSys+RecSys/image-20250511040709582.png)
 
 #### [SparseGPT](https://arxiv.org/abs/2301.00774)
 
@@ -1824,8 +1832,8 @@ void gemmPacked(
 
 * Many types of pruning techniques are known, for example, structured versus unstructured pruning, randomly removing weights versus removing by size or rank, and iterative pruning versus one-shot pruning (Blalock et al., 2018). In case of CNNs, iterative filter pruning is known to achieve state of the art results
 * "Deep Compression: Compressing Deep Neural Networks with Pruning, Trained Quantization and Huffman Coding." ICLR (2016)
-* ![network-pruning](./MLSys/network-pruning.png)
-* ![network-pruning-2](./MLSys/network-pruning-2.png)
+* ![network-pruning](./MLSys+RecSys/network-pruning.png)
+* ![network-pruning-2](./MLSys+RecSys/network-pruning-2.png)
 
 * Pruning + Quantization
   * pruning + quantization 效果最好（相比两者的单独使用以及SVD），大道至简？
@@ -1934,7 +1942,7 @@ void gemmPacked(
 >
 > https://zhuanlan.zhihu.com/p/343951042
 
-![image-20250308203837702](./MLSys/image-20250308203837702.png)
+![image-20250308203837702](./MLSys+RecSys/image-20250308203837702.png)
 
 - 原理：
   - 和PS非常接近
@@ -1943,9 +1951,9 @@ void gemmPacked(
   - 过程二（图中蓝色部分）：所有梯度整合到 device[0]
   - 过程三（图中绿色部分）：device[0] 进行参数更新，其他卡拉取 device[0] 的参数进行更新
 
-![image-20250308204304450](./MLSys/image-20250308204304450.png)
+![image-20250308204304450](./MLSys+RecSys/image-20250308204304450.png)
 
-![image-20250309012139694](./MLSys/image-20250309012139694.png)
+![image-20250309012139694](./MLSys+RecSys/image-20250309012139694.png)
 
 #### Distributed Training and Communication Protocols 通信原语
 
@@ -1964,11 +1972,11 @@ void gemmPacked(
 
 
 
-![image-20250312023205177](./MLSys/image-20250312023205177.png)
+![image-20250312023205177](./MLSys+RecSys/image-20250312023205177.png)
 
-![image-20250312023215715](./MLSys/image-20250312023215715.png)
+![image-20250312023215715](./MLSys+RecSys/image-20250312023215715.png)
 
-![image-20250312025718940](./MLSys/image-20250312025718940.png)
+![image-20250312025718940](./MLSys+RecSys/image-20250312025718940.png)
 
 ##### AllReduce
 
@@ -1979,7 +1987,7 @@ void gemmPacked(
   * AllReduce = AllGather + LocalReduce
   * with TF: TFOptimizer 的 ApplyGradient 方法更新梯度，易于直接使用TF原生与layerwise的Optimizer
 
-![all-reduce](./MLSys/all-reduce.png)
+![all-reduce](./MLSys+RecSys/all-reduce.png)
 
 ```python
 grad = gradient(net, w)
@@ -1989,11 +1997,11 @@ for epoch, data in enumerate(dataset):
   w -= lr * gsum / num_workers 
 ```
 
-![network-topology](./MLSys/network-topology.png)
+![network-topology](./MLSys+RecSys/network-topology.png)
 
 
 
-![image-20250516144117565](./MLSys/image-20250516144117565.png)
+![image-20250516144117565](./MLSys+RecSys/image-20250516144117565.png)
 
 ##### Tree AllReduce (Reduce + Broadcast)
 
@@ -2012,7 +2020,7 @@ for epoch, data in enumerate(dataset):
 * **All Reduce的通信成本为**：$$T=2(N-1)\frac{K}{N}$$
 * https://andrew.gibiansky.com/blog/machine-learning/baidu-allreduce/
 * https://zhuanlan.zhihu.com/p/72939003
-* ![image-20250309030219921](./MLSys/image-20250309030219921.png)
+* ![image-20250309030219921](./MLSys+RecSys/image-20250309030219921.png)
 
 ##### 其它
 
@@ -2069,18 +2077,18 @@ for i in range(num_layers):
   * orchestrates computation (i.e., backward pass) and communication (i.e.,
     computing average) into **non-overlapping phases**,
 
-* ![image-20250310160918593](./MLSys/image-20250310160918593.png)
+* ![image-20250310160918593](./MLSys+RecSys/image-20250310160918593.png)
 
 * **bucketing gradients**
 
   * motivated by the observation that collective communications are more efficient on large tensors
-  * ![image-20250310155726634](./MLSys/image-20250310155726634.png)
+  * ![image-20250310155726634](./MLSys+RecSys/image-20250310155726634.png)
   * 实验insight：bucket num比较大的时候，从16 gpu scaling到32gpu，通信速度衰减少
 
 * **overlapping computation with communication**
 
   * DDP registers one autograd hook for each gradient accumulator. The hook fires after its corresponding accumulator updating the gradients, and will inspect the bucket it pertains. If hooks of all gradients in the same buckets have fired, the last hook will trigger an asynchronous AllReduce on that bucket
-  * ![image-20250310160223744](./MLSys/image-20250310160223744.png)
+  * ![image-20250310160223744](./MLSys+RecSys/image-20250310160223744.png)
   * using the reverse order of model.parameters() as the bucketing order
   * 解决执行subgraph部分梯度不存在的问题：
     * DDP traverses the autograd graph from the output
@@ -2102,14 +2110,14 @@ for i in range(num_layers):
   * communication is the dominant
     training latency contributor, and its impact increases with
     model sizes; 
-    * ![image-20250310220751232](./MLSys/image-20250310220751232.png)
+    * ![image-20250310220751232](./MLSys+RecSys/image-20250310220751232.png)
   * bucket sizes considerably aﬀect communica-
     tion eﬃciency, which could lead to more than 2X speedup if
     conﬁgured properly; 
   * skipping synchronizations appropri-
     ately would signiﬁcantly reduce amortized communication
     overhead without noticeably degrading convergence speed.
-  *  round robin process groups，卡多+模型复杂，3-5 groups比较好![image-20250311015454643](./MLSys/image-20250311015454643.png)
+  *  round robin process groups，卡多+模型复杂，3-5 groups比较好![image-20250311015454643](./MLSys+RecSys/image-20250311015454643.png)
 
 * 讨论：
   * keep the DDP group within the same machine，单机N卡，效率最高
@@ -2158,7 +2166,7 @@ for i in range(num_layers):
   *  [LAMB](https://arxiv.org/abs/1904.00962): 分层自适应学习率，以 Adam 作为基础优化器，在BERT等语言模型上比LARC更成功
   *  [NovoGrad](https://arxiv.org/abs/1905.11286): 按层计算的移动平均值，在几个不同的领域也有不错的表现
 
-![training_result](./MLSys/training_result.png)
+![training_result](./MLSys+RecSys/training_result.png)
 
 #### ZeRO-DP、ZeRO-R
 
@@ -2184,7 +2192,7 @@ for i in range(num_layers):
     - **数据并行（DP）**：内存冗余，无法扩展。
     - **模型并行（MP）**：通信开销大，跨节点效率低（如 40B 模型跨节点效率仅 5% 硬件峰值）。
 
-* ![image-20250328142209236](./MLSys/image-20250328142209236.png)
+* ![image-20250328142209236](./MLSys+RecSys/image-20250328142209236.png)
   * K=12，原因是mixed precision training要保留fp32 copy
 
 * Zero-DP
@@ -2251,7 +2259,7 @@ for i in range(num_layers):
   * 思路：每个节点交替进行forward、backward，尽早启动backward的流水线
   * keeps multiple copies of stale parameters to hide the pipeline bubble without increasing the batch size significantly, making it less memory efficient. 
   * the implementation is not equivalent to the standard DL training and has implications on training convergence.
-  * ![image-20250415030814219](./MLSys/image-20250415030814219.png)
+  * ![image-20250415030814219](./MLSys+RecSys/image-20250415030814219.png)
 
 * DualPipe
   * compared with ZB1P (Qi et al., 2023b) and 1F1B (Harlap et al., 2018), DualPipe significantly reduces the pipeline bubbles
@@ -2262,8 +2270,8 @@ for i in range(num_layers):
     Hoefler, 2021), DualPipe only requires that the pipeline stages and micro-batches be divisible by
     2, without requiring micro-batches to be divisible by pipeline stages. In addition, for DualPipe,
     neither the bubbles nor activation memory will increase as the number of micro-batches grows.
-  * ![image-20250501025515656](./MLSys/image-20250501025515656.png)
-  * ![image-20250501025502918](./MLSys/image-20250501025502918.png)
+  * ![image-20250501025515656](./MLSys+RecSys/image-20250501025515656.png)
+  * ![image-20250501025502918](./MLSys+RecSys/image-20250501025502918.png)
 
 #### SP (sequence parallelism)
 
@@ -2281,9 +2289,9 @@ for i in range(num_layers):
 
 1/3/4/5是从输入层开始在拆分序列，2 则是在中间层
 
-![image-20250513224936341](./MLSys/image-20250513224936341.png)
+![image-20250513224936341](./MLSys+RecSys/image-20250513224936341.png)
 
-![image-20250513225320471](./MLSys/image-20250513225320471.png)
+![image-20250513225320471](./MLSys+RecSys/image-20250513225320471.png)
 
 #### TP
 
@@ -2296,7 +2304,7 @@ for i in range(num_layers):
     * 最后all reduce
 * 局限性：传输大量数据，通常只在单机多卡内的nvlink使用
 
-![20250427-033638](./MLSys/20250427-033638.jpeg)
+![20250427-033638](./MLSys+RecSys/20250427-033638.jpeg)
 
 
 
@@ -2590,7 +2598,7 @@ for prediction, label, img in zip(p,l,i):
   * activation functions: sigmoid's vanishing gradients, dead ReLU
   * poor initialization: 随机 weights 是保证 independently learn
 
-![debug-rule](./MLSys/debug-rule.png)
+![debug-rule](./MLSys+RecSys/debug-rule.png)
 
 * Deployment Results and Insights
   * latent space + [t-SNE]()
@@ -2605,7 +2613,7 @@ for prediction, label, img in zip(p,l,i):
 
 > 电商搜索全链路（PART I）Overviewhttps://mp.weixin.qq.com/s/8-JtKugK-zf9In2ZdI3lrg
 
-![图片](./MLSys/640)
+![图片](./MLSys+RecSys/640)
 
 * 电商搜索和网页搜索的区别
   * 亿级 vs 万亿级
@@ -2613,7 +2621,7 @@ for prediction, label, img in zip(p,l,i):
   * 相关性时效性+CTR/GMV
 * 阿里KDD'21的论文：《Embedding-based Product Retrieval in Taobao Search》，经典架构
 
-![图片](./MLSys/640-20241010191312101)
+![图片](./MLSys+RecSys/640-20241010191312101)
 
 
 
@@ -2641,7 +2649,7 @@ for prediction, label, img in zip(p,l,i):
   * 中小商家多，内容质量不高
   * LBS属性，供给不充分，对召回率要求更高
 
-![image-20241004205944993](./MLSys/meituan0.png)
+![image-20241004205944993](./MLSys+RecSys/meituan0.png)
 
 ![img](https://p1.meituan.net/travelcube/d1e0aed8bb38220792a3337d9ac211e8728900.png)
 
@@ -2734,7 +2742,7 @@ for prediction, label, img in zip(p,l,i):
   * 搜索，是电商 app 非常重要的一个流量入口，可能很多电商 app 来自搜索的流量都会占过半以上。
   * 搜索行为背后是巨大的UV价值
 
-![img](./MLSys/5cb85359f486ff64c45d24790572daef.png)
+![img](./MLSys+RecSys/5cb85359f486ff64c45d24790572daef.png)
 
 #### 个性化
 
@@ -2745,7 +2753,11 @@ for prediction, label, img in zip(p,l,i):
 
 * * 
 
-### Other MLSys
+### RecSys
+
+#### Intro
+
+![image-20250524032844483](./MLSys+RecSys/image-20250524032844483.png)
 
 * [介绍 Facebook 推荐系统的文章](https://engineering.fb.com/2021/01/26/ml-applications/news-feed-ranking/)
   * 多目标 MMoE、分数融合
@@ -3007,7 +3019,7 @@ http://dlsys.cs.washington.edu/schedule
 
 #### Lecture 3: Overview of Deep Learning System
 
-![dlsys-stack](./MLSys/dlsys-stack.png)
+![dlsys-stack](./MLSys+RecSys/dlsys-stack.png)
 
 * softmax in numpy
   * softmax内蕴了logistic regression
@@ -3018,7 +3030,7 @@ http://dlsys.cs.washington.edu/schedule
   * Nodes represents the computation (operation)
   * Edge represents the data dependency between operations
 
-![computational-graph](./MLSys/computational-graph.png)
+![computational-graph](./MLSys+RecSys/computational-graph.png)
 
 * Computation Graph Optimization
   * Deadcode elimination
@@ -3057,7 +3069,7 @@ http://dlsys.cs.washington.edu/schedule
   * Better for system optimization
   * 具体算法见【code-reading笔记】-- Tinyflow -- autodiff
 
-![autodiff](./MLSys/autodiff.png)
+![autodiff](./MLSys+RecSys/autodiff.png)
 
 ##### Paper: 《Automatic differentiation in PyTorch》
 
@@ -3218,7 +3230,7 @@ https://github.com/apache/tvm
     * relu+bias+conv --> CBR
     * Simple Graph-based Element-wise Kernel Generator: Fusion Pass + CodeGen Pass
 
-![xla](./MLSys/xla.png)
+![xla](./MLSys+RecSys/xla.png)
 
 * The Remaining Gap of "Computational Graph as IR"
   * need to build and optimize operators for each hardware, variant of layout, precision, threading pattern …
@@ -3321,7 +3333,7 @@ output = tvm.nd.empty(out_shape, ctx=tvm.gpu(0))
 module.get_output(0, output)
 ```
 
-![tvm-remote](./MLSys/tvm-remote.png)
+![tvm-remote](./MLSys+RecSys/tvm-remote.png)
 
 ##### Paper: 《TVM: An Automated End-to-End Optimizing Compiler for Deep Learning》
 
@@ -3336,7 +3348,7 @@ module.get_output(0, output)
       * autotune与手工优化，后者解决通用问题，前者解决长尾问题并优化后者参数
     * graph rewriter
 
-![tvm-1](./MLSys/tvm-1.png)
+![tvm-1](./MLSys+RecSys/tvm-1.png)
 
 * Optimizing Computational Graphs
   * 和IR的区别：the intermediate data items are large, multi-dimensional tensors.
@@ -3356,7 +3368,7 @@ module.get_output(0, output)
     * We make tensorization extensible by separating the target hardware intrinsic from the schedule with a mechanism for tensor-intrinsic declaration.
   * Explicit Memory Latency Hiding
 
-![tvm-primitives](./MLSys/tvm-primitives.png)
+![tvm-primitives](./MLSys+RecSys/tvm-primitives.png)
 
 * Automating Optimization
   * Schedule Space Specification
@@ -3377,7 +3389,7 @@ module.get_output(0, output)
 * Hardware Specialization
   * • Idea: tailor your chip architecture to the characteristics of a **stable** workload
 
-![evolution](./MLSys/evolution.png)
+![evolution](./MLSys+RecSys/evolution.png)
 
 * Specialization Challenge
   * Tape-out costs for ASICs is exorbitant
@@ -3400,12 +3412,12 @@ module.get_output(0, output)
     * 1350 Operations per byte of weight memory fetched
     * TPU的内存带宽太小了，34GB/s
 
-![tpu](./MLSys/tpu-block-diagram.png)
+![tpu](./MLSys+RecSys/tpu-block-diagram.png)
 
 * HW/SW Co-Design - #1 Tensorization
 * HW/SW Co-Design - #2 Memory Architecting
 
-![memory-architecting](./MLSys/memory-architecting.png)
+![memory-architecting](./MLSys+RecSys/memory-architecting.png)
 
 * HW/SW Co-Design - #3 Data Type
 
@@ -3425,7 +3437,7 @@ module.get_output(0, output)
   * AND we want to enforce write-after-read (WAR) dependences
   * Takeaway: work partitioning and explicit dependence graph execution (EDGE) unlocks pipeline parallelism to hide the latency of memory accesses
 
-![vta-design](./MLSys/vta-design.png)
+![vta-design](./MLSys+RecSys/vta-design.png)
 
 
 
@@ -3438,7 +3450,7 @@ module.get_output(0, output)
   * Memories that connect pipeline stages follow a strict single producer, single consumer rule (fan-in=1, fan-out=1). This enables data flow execution, and makes this design modular
 * TVM DSL allows for separation of schedule and algorithm
 
-![vta-primitives](./MLSys/vta-primitives.png)
+![vta-primitives](./MLSys+RecSys/vta-primitives.png)
 
 * Virtual Threading
   * How do we take advantage of pipeline parallelism with virtual threading?
@@ -3447,7 +3459,7 @@ module.get_output(0, output)
   * Final step: virtual thread lowering into a single instruction stream
     * Push and pop commands dictate how to interact with the hardware dependence queues
 
-![virtual-threading](./MLSys/virtual-threading.png)
+![virtual-threading](./MLSys+RecSys/virtual-threading.png)
 
 * Programming for VTA in TVM
 
@@ -3500,7 +3512,7 @@ module.get_output(0, output)
       * Enable mutation in the scheduler, no extra job needed
         * Both operation “mutate” the same memory, supported in MXNet
 
-![mlp-memory-opt](./MLSys/mlp-memory-opt.png)
+![mlp-memory-opt](./MLSys+RecSys/mlp-memory-opt.png)
 
 * We are still Starved
   * For training, cost is still linear to the number of layers
@@ -3512,7 +3524,7 @@ module.get_output(0, output)
   * **Sublinear Memory Complexity**
     * O(K) + O(N/K) ---> sqrt(N) memory cost plan
 
-![memory-opt-recursion](./MLSys/memory-opt-recursion.png)
+![memory-opt-recursion](./MLSys+RecSys/memory-opt-recursion.png)
 
 #### Lecture 10: Parallel Scheduling
 
@@ -3609,7 +3621,7 @@ module.get_output(0, output)
       * If saturate GPU in temporal domain due to low latency: allocate dedicated GPU(s)
       * If not: can use multi-batching to share GPU cycles with other models
 
-    * ![split-batching](./MLSys/split-batching.png)
+    * ![split-batching](./MLSys+RecSys/split-batching.png)
 
     * Prefix batching for model specialization：类似于sparse/dense op分离的思路
 
@@ -3706,7 +3718,7 @@ https://www2.eecs.berkeley.edu/Pubs/TechRpts/2009/EECS-2009-28.pdf
   * 100trillion ~ 100万亿参数，fp16下就是200TB
   * 能在google cloud platform运行：https://github.com/PersiaML/tutorials/blob/main/src/kubernetes-integration/index.md
 
-![persia-overall](./MLSys/persia-overall.png)
+![persia-overall](./MLSys+RecSys/persia-overall.png)
 
 * Preliminaries
   * dense同步 sparse异步
@@ -3722,7 +3734,7 @@ https://www2.eecs.berkeley.edu/Pubs/TechRpts/2009/EECS-2009-28.pdf
       * input: buffered embeddings from W_emb
       * output: activations' gradients
 
-![persia-hybrid](./MLSys/persia-hybrid.png)
+![persia-hybrid](./MLSys+RecSys/persia-hybrid.png)
 
 * System Design and Implementation
   * 架构
@@ -3749,9 +3761,9 @@ https://www2.eecs.berkeley.edu/Pubs/TechRpts/2009/EECS-2009-28.pdf
       * insight：ps能丢梯度，重视实时响应；dense不能丢梯度
       * ps存shared-memory方便拉起process
 
-![image-20221121215329176](./MLSys/persia-system.png)
+![image-20221121215329176](./MLSys+RecSys/persia-system.png)
 
-![image-20221121224430506](./MLSys/persia-PS.png)
+![image-20221121224430506](./MLSys+RecSys/persia-PS.png)
 
 * Theory Analysis
   * Assumptions
@@ -3760,7 +3772,7 @@ https://www2.eecs.berkeley.edu/Pubs/TechRpts/2009/EECS-2009-28.pdf
     * Bounded staleness: 经验值为5
   * THEOREM 1: id类特征的低频特性 --> 收敛接近同步训练
 
-![image-20221121234602852](./MLSys/persia-theory.png)
+![image-20221121234602852](./MLSys+RecSys/persia-theory.png)
 
 * Evaluation
   * 内部cluster set-up：100 * V100 + 100 * 50 CPU cores
@@ -3984,7 +3996,7 @@ In order to facilitate deployment on various computing platforms, XDL can be sch
   * Hierarchical sample compression: prefix tree
     * 用户在同一屏的多条曝光记录，item不同，但是user特征是相同的。基于这个特点，XDL采用多级前缀树来构造训练样本，压缩样本中user特征、ad特征的量（ad特征的压缩是否有必要？）
 
-![prefix-tree](./MLSys/prefix-tree.png)
+![prefix-tree](./MLSys+RecSys/prefix-tree.png)
 
 * Workflow pipeline
 

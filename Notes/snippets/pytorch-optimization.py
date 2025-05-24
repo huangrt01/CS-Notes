@@ -88,11 +88,14 @@ torch.cuda.empty_cache()
 
 export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128 # 128-500
 
+** 细节
 - 原位操作，但多次使用原位操作可能导致backward错误，比如连续两次sigmoid_
+- del logits再loss.backward()
 
 
 # grad acc
 牺牲训练速度，保batch size+显存
+- 显存方面，激活值降低，梯度增加，复杂模型可能会降低
 
 is_sync_step = (step + 1) % int(args.grad_accum_step) == 0 if int(args.grad_accum_step) > 0 else True
 sync_context = contextlib.nullcontext() if is_sync_step else model.no_sync()

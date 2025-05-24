@@ -1,3 +1,9 @@
+### Refcount
+
+sys.getrefcount(object)
+
+inspect.stack()[-1].globals
+
 ### GIL
 
 https://wiki.python.org/moin/GlobalInterpreterLock

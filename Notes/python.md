@@ -93,7 +93,15 @@ https://wiki.python.org/moin/GlobalInterpreterLock
 * 循环依赖：即使del也无法触发gc
   * Python-gc.py
 
+##### 变量作用域：LEGB
 
+Python 使用 词法作用域 （lexical scoping），也称为静态作用域。这意味着变量的作用域是在代码编写时由其在代码中的位置决定的，而不是在运行时。Python 的作用域规则通常被称为 LEGB 规则 ：
+
+- L (Local) ：局部作用域。这是函数内部定义的变量。当函数被调用时，会创建一个新的局部作用域。函数执行完毕后，这个作用域通常会被销毁，其中的变量也就不再存在（除非有闭包等情况）。
+- E (Enclosing function locals) ：嵌套函数（闭包）的父函数的作用域。如果一个函数嵌套在另一个函数内部，内部函数可以访问外部（但非全局）函数的变量。
+- G (Global) ：全局作用域。在模块级别定义的变量。在一个模块的任何地方都可以访问全局变量。
+- B (Built-in) ：内置作用域。Python 预定义的名称，如 len() , print() , str 等。
+当 Python 查找一个变量时，它会按照 L -> E -> G -> B 的顺序搜索。
 
 #### 基础数据
 

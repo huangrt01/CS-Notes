@@ -780,7 +780,11 @@ __global__ void kernel(int *a, int N)
 
 ##### Warp Specialization
 
-《Singe: Leveraging Warp Specialization for High Performance on GPUs》
+* 《Singe: Leveraging Warp Specialization for High Performance on GPUs》
+* DeepSeek-V3用上了
+* pytorch的使用：https://pytorch.org/blog/warp-specialization/
+
+
 
 #### Host and Device Code
 
@@ -1472,11 +1476,6 @@ microbenchmark using ptx
 #### Nvidia Lecture 5: Introduction to Nsight Profiling Tools
 
 ![nsight-product](./GPU/nsight-product.png)
-
-
-```shell
-nsys profile -t cuda,osrt,nvtx -o baseline -w true python main.py
-```
 
 Support:
 

@@ -73,25 +73,31 @@
 
 #### LLM
 
-* nanoGPT
-  * https://github.com/karpathy/nanoGPT
+- nanoGPT
+  - https://github.com/karpathy/nanoGPT
 
-* DeepSeek-V3
-  * https://github.com/deepseek-ai/DeepSeek-V3
+- DeepSeek-V3
+  - https://github.com/deepseek-ai/DeepSeek-V3
 
 #### LM
 
-* the Annotated Transformer
-  * https://github.com/harvardnlp/annotated-transformer
-* OpenNMT
-  * https://github.com/OpenNMT/OpenNMT-py.git
+- the Annotated Transformer
+  - https://github.com/harvardnlp/annotated-transformer
+- OpenNMT
+  - https://github.com/OpenNMT/OpenNMT-py.git
+
+#### DLRM
+
+- facebook-DLRM
+  - https://github.com/facebookresearch/dlrm
+
 
 ### Applied Algo
 
 #### Agent
 
-* Qwen Agent
-  * https://github.com/QwenLM/Qwen-Agent
+- Qwen Agent
+  - https://github.com/QwenLM/Qwen-Agent
 
 
 ### GPU

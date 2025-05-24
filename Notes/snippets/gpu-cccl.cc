@@ -1,3 +1,7 @@
+https://nvidia.github.io/cccl/cpp.html
+
+https://discord.com/invite/nvidiadeveloper
+#cuda
 
 *** thrust
 
