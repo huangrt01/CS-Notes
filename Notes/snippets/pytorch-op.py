@@ -28,6 +28,23 @@ print(my_module.hello_world())
 
 # Define the CUDA kernel and C++ wrapper
 
+* 读文件
+
+cuda_code_file = "./kernels/src/pointwise_add_relu_fused.cu"
+header_code_file = "./kernels/src/pointwise_add_relu_fused.cuh"
+
+with open(cuda_code_file) as f:
+    cuda_code = "".join([f for f in f.readlines() if not f.startswith("#include")])
+    print(cuda_code)
+
+print("----")
+
+with open(header_code_file) as f:
+    header_code = "".join([f for f in f.readlines() if not f.startswith("#include")])
+    print(header_code)
+
+
+
 cuda_begin = r'''
 #include <torch/extension.h>
 #include <stdio.h>

@@ -1,3 +1,5 @@
+*** intro
+
 import torch
 from torchvision import transforms
 from torch.utils.data import Dataset
@@ -44,7 +46,27 @@ Y = torch.randn(100, 1)
 dataset = TensorDataset(X, Y)
 
 
-### 内存问题 -- 读多个文件的实现
+*** parquet dataset
+
+class CriteoParquetDataset(Dataset):
+    def __init__(self, file_name: str):
+        df = pd.read_parquet(file_name)
+        self.total_rows = len(df)
+        self.label_tensor = torch.from_numpy(df["labels"].values).to(torch.float32)
+        dense_columns = [f for f in df.columns if f.startswith("DENSE")]
+        sparse_columns = [f for f in df.columns if f.startswith("SPARSE")]
+        self.dense_tensor = torch.from_numpy(df[dense_columns].values)
+        self.sparse_tensor = torch.from_numpy(df[sparse_columns].values)
+
+    def __len__(self):
+        return self.total_rows
+
+    def __getitem__(self, idx):
+        return self.label_tensor[idx], self.dense_tensor[idx], \
+        self.sparse_tensor[idx]
+
+
+*** 内存问题 -- 读多个文件的实现
 
 * 读数据
   * https://zhuanlan.zhihu.com/p/376974245

@@ -289,6 +289,14 @@ public int partition(String topic, Object key, byte[] keyBytes, Object value, by
 ChildrenWatch
 ```
 
+#### Spark
+
+##### 1 Billion Row Challenge
+
+![image-20250525021552954](./Distributed-Systems/image-20250525021552954.png)
+
+
+
 #### Flink 
 
 * streaming依赖kafka的exactly once 保障。用的是water mark机制来确定消费进度

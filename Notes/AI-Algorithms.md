@@ -1321,6 +1321,10 @@ https://ai.stanford.edu/blog/understanding-incontext/
 
 https://github.com/huggingface/peft
 
+* LoRA implementation 
+  * https://lightning.ai/lightning-ai/studios/code-lora-from-scratch?view=public&section=featured
+  * 效果比只训练最后两层好
+
 
 
 ### Instruction tuning

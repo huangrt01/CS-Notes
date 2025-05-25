@@ -1,3 +1,9 @@
+*** from loguru import logger
+
+logger.info(model)
+
+*** logging
+
 import logging
 
 def init_logging(log_file):

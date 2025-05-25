@@ -88,6 +88,9 @@
 
 #### DLRM
 
+- simple-DLRM
+  - gpu-mode:lectures/lecture_018 https://github.com/gpu-mode/lectures.git
+
 - facebook-DLRM
   - https://github.com/facebookresearch/dlrm
 

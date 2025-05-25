@@ -892,6 +892,21 @@ public:
 
 
 
+#### 关于 Mega Kernel
+
+* 收益：
+  * L2 cache传输数据而不是HBM传输
+  * 
+* 难点：
+  * SM occupancy
+    * register spillover
+  * code composability
+  * 需要精心编排：cache访问、warp任务
+  * 多stage时，单stage的同步：
+    * GPU限制，无法一次同步mega kernel的全部threads，只能同步block内的threads
+    * --> 需要event-driven的design，比如用一个变量表示stage，会有开销
+* nvidia：Persistent Kernel
+
 #### Case Study: Matmul
 
 > Snippets/gpu-ops/triton-matmul.py
@@ -1624,5 +1639,35 @@ ptrToConsume = manager.manage(ptrToProduce); // Usage
   * Halide: a language and compiler for optimizing parallelism, locality, and recomputation in
     image processing pipelines.
 
+#### [Data Analytics and Processing —— GPU Mode Lecture 19](https://www.youtube.com/watch?v=FUBrIgdIuh0)
+
+> by Devavret Makkar
+>
+> Voltron Data
+
+* cuDF and Theseus
+  * dataframe存在GPU HBM中，如果要修改，需要内存能放下两份dataframe
+
+![image-20250525015851957](./GPU/image-20250525015851957.png)
+
+* Spark性能受限于CPU性能
+  * TPC-H 10TB Benchmark
+
+![image-20250525020712940](./GPU/image-20250525020712940.png)
 
 
+
+![image-20250525021039208](./GPU/image-20250525021039208.png)
+
+* 1 Billion Row Challenge 以及 solution
+
+![image-20250525022533001](./GPU/image-20250525022533001.png)
+
+##### cuDF
+
+* General Solution
+  * ![image-20250525022730141](./GPU/image-20250525022730141.png)
+  * cuDF实现，参考snippets
+
+* table view and table
+  * ![image-20250525023305797](./GPU/image-20250525023305797.png)
