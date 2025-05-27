@@ -20,12 +20,6 @@ https://godbolt.org
 * AOT (Ahead-Of-Time Compilation)
 * JIT
 
-#### GPU 相关 IR
-
-* The `@triton.jit` decorator works by walking the Abstract Syntax Tree (AST) of the provided Python function so as to generate Triton-IR on-the-fly using a common SSA construction algorithm.
-  * [Simple and efficient construction of static single assignment form](https://link.springer.com/chapter/10.1007/978-3-642-37051-9_6)
-* The resulting IR code is then simplified, optimized and automatically parallelized by our compiler backend, before being converted into high-quality LLVM-IR—and eventually PTX—for execution on recent NVIDIA GPUs.
-
 #### Linking
 
 linking with libraries: -lXXX
@@ -129,7 +123,17 @@ kernel2<<<1,1>>>(); // host code launches kernel2
 
 #### PGO (Profile Guided Optimization)
 
-* 
+
+
+### GPU
+
+* **[实现Baby Triton](https://zhuanlan.zhihu.com/p/709844371?share_code=1zPzTKwsDAJN&utm_psn=1910488935282479202)**
+
+* The `@triton.jit` decorator works by walking the Abstract Syntax Tree (AST) of the provided Python function so as to generate Triton-IR on-the-fly using a common SSA construction algorithm.
+  * [Simple and efficient construction of static single assignment form](https://link.springer.com/chapter/10.1007/978-3-642-37051-9_6)
+* The resulting IR code is then simplified, optimized and automatically parallelized by our compiler backend, before being converted into high-quality LLVM-IR—and eventually PTX—for execution on recent NVIDIA GPUs.
+
+
 
 ### C++
 

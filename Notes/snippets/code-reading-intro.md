@@ -110,6 +110,16 @@
 - nvidia-container-toolkit
   - https://github.com/NVIDIA/nvidia-container-toolkit
 
+#### 基础库
+
+- cccl
+  - https://github.com/NVIDIA/cccl
+- cuCollections
+  - 比如各类set、map等
+  - https://github.com/NVIDIA/cuCollections
+
+
+
 ### GPU Op
 
 #### Intro

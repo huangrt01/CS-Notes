@@ -8,6 +8,12 @@
 有torchrec实现
 
 
+***** torchrec
+
+merged_ids, inverse_idx = torch.unique(ids_tensor, return_inverse=True, return_counts=False)
+num_row = merged_ids.size(0)
+merged_embedding = torch.ops.segment_ops.collect_sum(emb_tensor, inverse_idx, num_row)
+
 ***** simple-DLRM
 - gpu-mode:lectures/lecture_018 https://github.com/gpu-mode/lectures.git
 

@@ -53,6 +53,11 @@
 
   - 结论 ：这个成本高于顺序算法的成本 O(N)，因此被认为是“非成本高效的”（not cost efficient）。这意味着并行化并没有带来理论上最佳的加速比。
 
+* Work efficiency的概念
+
+  * A parallel algorithm is work-efficient if it performs the same amount of work as the corresponding sequential algorithm
+  * 用于分析scan优化
+
 * Brent's theorem
 
   * ![image-20250509140316594](./Computer-Architecture/image-20250509140316594.png)

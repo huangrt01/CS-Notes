@@ -206,6 +206,12 @@ ALTER TABLE test TABLE (c1 char(1),c2 char(1));
   - zadd：sorted set (element with score)
   - hset：https://redis.io/commands/hset/
 
+### 数据库优化
+
+#### Dictionary Encoding
+
+
+
 ### 图数据库
 
 #### Gremlin

@@ -1,9 +1,4 @@
-### 细节的优化算子
-
-torch._foreach_zero_
-
-
-### 写kernel
+*** 写kernel
 
 Tensor my_op_out_cpu(Tensor& result, const Tensor& self, const Tensor& other) {
     // 错误检查
@@ -55,7 +50,7 @@ Tensor& abs_(Tensor& self) {
     return abs_out(self, self);
 }
 
-### dispatch
+*** dispatch
  - 并非涵盖实际所有类型
 
 AT_DISPATCH_ALL_TYPES(

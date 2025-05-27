@@ -953,6 +953,65 @@ public:
   
 * use [CUB](https://nvidia.github.io/cccl/cub/) to accelerate the reduce operations
 
+#### Case Study: Scan
+
+##### Intro
+
+* 定义
+  * ![image-20250527005439630](./GPU/image-20250527005439630.png)
+
+* 应用：
+  * exclusive scan的应用：partition split
+  * min/max的应用：heap结构
+
+##### Segmented Scan
+
+![image-20250527005554368](./GPU/image-20250527005554368.png)
+
+##### Kogge-Stone Parallel Scan
+
+* 多次执行reduction tree
+
+![image-20250527005621923](./GPU/image-20250527005621923.png)
+
+![image-20250527011031040](./GPU/image-20250527011031040.png)
+
+![image-20250527011118815](./GPU/image-20250527011118815.png)
+
+
+
+* Kogge-Stone Parallel Scan
+  * 细节：避免同步读写，需要先读再sync再写再sync
+  * 优化：True and False Dependencies
+    * true：先写后读
+    * false：先读后写
+      * 优化：double buffering
+
+![image-20250527014530585](./GPU/image-20250527014530585.png)
+
+* work efficiency分析
+
+![image-20250527020051572](./GPU/image-20250527020051572.png)
+
+##### Brent-Kung Parallel Scan
+
+* 也很朴素
+
+![image-20250527020413284](./GPU/image-20250527020413284.png)
+
+![image-20250527020653029](./GPU/image-20250527020653029.png)
+
+#### Case Study: Unique
+
+* 在A800 GPU上，对10亿个int32类型的随机整数进行`torch.unique(return_inverse=True)`操作需要320ms的时间
+
+* [torch.unique在GPU上的性能优化](https://zhuanlan.zhihu.com/p/3921184972)
+  * Radix Sort: 下标数组采用int32来降低访存开销，这个可以将排序的时间从130ms优化到80ms左右。
+  * Scatter：通过Radix Sort来替换掉scatter计算，提升访存友好性，这个可以将inverse indices的计算从160ms优化到80ms左右。
+    * 本质上应该是radix sort的随机写入的访存，比scatter更友好
+
+![image-20250527200239012](./GPU/image-20250527200239012.png)
+
 ### CUTLASS
 
 > Open source: https://github.com/NVIDIA/cutlass
@@ -1081,31 +1140,13 @@ https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
   * During the compilation, the Triton compiler tries to use clever tricks to **rearrange the parts of your program**
   * 利用ptx汇编可以将triton降级为ptx代码，在cuda上直接运行以达到极致计算性能的优化，Triton提供了块指针非常便捷的实现FA，对GPU IO感知类的实现进行了充分的支持。
 
-#### 和 numba 对比
+##### 和 numba 对比
 
 * numba：
   * python
   * 可以传入矩阵shape
   * debug
   * NUMBA_ENABLE_CUDASIM=1
-
-#### Op优化情况
-
->  snippets/gpu-triton.py
-
-* Square
-
-> Snippets/gpu-triton-ops.py
-
-* Matmul
-
-![image-20250302192301222](./GPU/image-20250302192301222.png)
-
-* Index select backward
-  * ![image-20250423115630485](./GPU/image-20250423115630485.png)
-  * 
-
-
 
 #### Programming Model
 
@@ -1133,6 +1174,10 @@ https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
 
 
 
+#### 结合 Compiling 理解
+
+* [实现Baby Triton](https://zhuanlan.zhihu.com/p/709844371?share_code=1zPzTKwsDAJN&utm_psn=1910488935282479202)
+
 #### Debugging
 
 > snippets/gpu-triton-debugging.py
@@ -1145,6 +1190,8 @@ https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
 #### 经验和细节
 
 * triton autotune目前对dynamic shape的支持不好，性能较差，原因是autotune会对每个新shape重新tune
+  * GemLite
+
 
 ### NCCL
 
@@ -1267,6 +1314,7 @@ https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
   * memory bound每个thread做更多事情
 
 * Bank conflicts
+  * 新一代GPU影响变小
   
 * Latency hiding
 * *Rewrite your algorithm using better math*
@@ -1671,3 +1719,33 @@ ptrToConsume = manager.manage(ptrToProduce); // Usage
 
 * table view and table
   * ![image-20250525023305797](./GPU/image-20250525023305797.png)
+
+##### hashmap实现GroupBy
+
+* 思路：
+  * 实现一个row comparator
+  * 「gpu-cudf.py」
+
+![image-20250526003222556](./GPU/image-20250526003222556.png)
+
+![image-20250526003251348](./GPU/image-20250526003251348.png)
+
+![image-20250526004431661](./GPU/image-20250526004431661.png)
+
+![image-20250526004731745](./GPU/image-20250526004731745.png)
+
+##### cuDF Other uses
+
+![image-20250526005204789](./GPU/image-20250526005204789.png)
+
+##### Thesus —— Scaling the cuDF solution
+
+![image-20250526010812744](./GPU/image-20250526010812744.png)
+
+![image-20250526011638154](./GPU/image-20250526011638154.png)
+
+![image-20250526013153114](./GPU/image-20250526013153114.png)
+
+### AMD GPU
+
+[为什么除了CSP，几乎没人用AMD的GPU？--SemiAnalysis](https://mp.weixin.qq.com/s/y-fCljKIuWZou_2OYYUDGQ)

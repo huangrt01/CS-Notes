@@ -17,6 +17,11 @@
 # 14   67108864.0  3606.969284  2279.203436     3072.750022      2297.409519
 # 15  134217728.0  3670.092554  2292.595792     3104.400700      2306.939119
 
+# TODO:
+# if provider == 'torch':
+    # ms, min_ms, max_ms = triton.testing.do_bench(lambda: x + y,
+    #                                              quantiles=quantiles)
+
 
 import torch
 import triton
@@ -46,6 +51,9 @@ def triton_add(x: torch.Tensor, y: torch.Tensor):
     output = torch.empty_like(x)
     assert x.is_cuda and y.is_cuda and output.is_cuda
     n_elements = output.numel()
+    # The SPMD launch grid denotes the number of kernel instances that run in parallel.
+    # It is analogous to CUDA launch grids. It can be either Tuple[int], or Callable(metaparameters) -> Tuple[int].
+    # In this case, we use a 1D grid where the size is the number of blocks:
     grid = lambda meta: (triton.cdiv(n_elements, meta['BLOCK_SIZE']),)
     add_kernel[grid](x, y, output, n_elements, BLOCK_SIZE=1024)
     return output
