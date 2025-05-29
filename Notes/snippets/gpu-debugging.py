@@ -2,6 +2,12 @@
 
 compute sanitizer: https://docs.nvidia.com/cuda/compute-sanitizer/index.html
 
+memcheck: https://docs.nvidia.com/cuda/archive/9.1/cuda-memcheck/index.html
+  Memcheck - The memory access error and leak detection tool.
+  Racecheck - The shared memory data access hazard detection tool.
+  Initcheck - The unitialized device global memory access detection tool.
+  Synccheck - The thread synchronization hazard detection tool.
+
 ### cuda debug
 
 CUDA_LAUNCH_BLOCKING=1

@@ -3506,24 +3506,32 @@ void finish_task() {
   * `SharedStore<ObjectPool>` 常见用法
 * Thread Local
   * [C++11 thread_local用法](https://zhuanlan.zhihu.com/p/340201634) : `thread_local` 作为类成员变量时必须是 `static` 的
-* Memory Coherence and Memory Consistency
-  * [如何理解 C++11 的六种 memory order？ - Furion W的回答 - 知乎](https://www.zhihu.com/question/24301047/answer/83422523)
-  * Memory Consistency Model
-    * Sequential consistency model
-    * 在无缓存的体系结构下实现SC
-      * Write buffers with read bypassing
-      * Overlapping writes
-      * Nonblocking reads
-    * 在有缓存的体系结构下实现SC
-      * Cache coherence protocols
-      * Detecting write completion
-      * Maintaining write atomicity
-  * C++11 memory order
-    * Synchronized-with 与 happens-before 关系
-    * 顺序一致次序 sequential consistent(memory_order_seq_cst)
-    * 松弛次序 relaxed(memory_order_relaxed)
-      * 在 relaxed ordering 中唯一的要求是在同一线程中，对同一原子变量的访问不可以被重排
-    * 获取-释放次序 acquire release(memory_order_consume, memory_order_acquire, memory_order_release, memory_order_acq_rel)
+
+#### Memory Coherence and Memory Consistency
+
+> [如何理解 C++11 的六种 memory order？ - Furion W的回答 - 知乎](https://www.zhihu.com/question/24301047/answer/83422523)
+
+* Memory Consistency Model
+  * Sequential consistency model
+  * 在无缓存的体系结构下实现SC
+    * Write buffers with read bypassing
+    * Overlapping writes
+    * Nonblocking reads
+  * 在有缓存的体系结构下实现SC
+    * Cache coherence protocols
+    * Detecting write completion
+    * Maintaining write atomicity
+* Synchronized-with 与 happens-before 关系
+* 顺序一致次序 sequential consistent(memory_order_seq_cst)
+* 松弛次序 relaxed(memory_order_relaxed)
+  * **在 relaxed ordering 中唯一的要求是在同一线程中，对同一原子变量的访问不可以被重排**
+* 获取-释放次序 acquire release
+  * 对应memory_order_release, memory_order_acquire, memory_order_acq_rel.
+  * Acquire-release 中没有全序关系,但它提供了一些同步方法。在这种序列模 型下,原子 load 操作是 acquire 操作(memory_order_acquire), 原子 store 操作是 release操作(memory_order_release), 原子read_modify_write操作(如fetch_add(), exchange())可以是 acquire, release 或两者皆是(memory_order_acq_rel). 同步是 成对出现的,它出现在一个进行 release 操作和一个进行 acquire 操作的线程间。 一个 release 操作 syncrhonized-with 一个想要读取刚才被写的值的 acquire 操作。
+    * **Acquire (获取) : 确保在当前线程中，此原子操作之前的所有内存操作（读或写）的结果，对于其他线程来说，在该原子操作执行之前或执行时可见。**
+    * **Release (释放) : 确保当前线程中的原子操作本身，对于其他线程来说，在该线程后续的任何内存操作变得可见之前可见。**
+  * 这意味着不同线程仍然看到了不一样的次序,但这次序是被限制过了的。当我们在此再引入 happens-before 关系时，就可以实现更大规模的顺序关系。（[3] Listing 5.8, 5.9）
+* acquire-release间的数据依赖与memory_order_consume
 
 #### DOD
 

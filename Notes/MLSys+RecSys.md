@@ -2444,16 +2444,6 @@ PS架构的优势主要还是高可用(system efficiency)
 
 ### 图优化
 
-* 静态图的优势：
-  * 移除无用op、跨op优化、op fusion
-
-#### XLA
-
-* 常量折叠、公共表达式消除、死代码消除等经典编译优化
-* XLA 还支持Kernel Fusion，减少 Kernel Launch 成本和显存 IO 开销
-
-#### PyTorch 图优化
-
 * PyTorch JIT – fusing pointwise operations into one kernel has been key
   * e.g. to get LSTMs close to CuDNN perf.
 * 2nd gen PyTorch JIT fusers added contractions etc. 
@@ -2461,11 +2451,24 @@ PS架构的优势主要还是高可用(system efficiency)
   * NVFuser https://pytorch.org/blog/introducing-nvfuser-a-deep-learning-compiler-for-pytorch/
 * Today’s inductor / Triton based optimizations are also partly with that, but supports more complex ops
 
+#### 优化技术
+
+* 静态图：
+  * 优势：移除无用op、跨op优化、op fusion
+
+* multi stream
+  * torch.compile没做图内算子拆stream
+
+#### XLA
+
+* 常量折叠、公共表达式消除、死代码消除等经典编译优化
+* XLA 还支持Kernel Fusion，减少 Kernel Launch 成本和显存 IO 开销
+
 ##### Inductor
 
 https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747
 
-##### Lightning Thunder
+#### Lightning Thunder
 
 https://www.nvidia.com/en-us/on-demand/session/gtc24-s62544/
 

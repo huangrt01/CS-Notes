@@ -15,6 +15,17 @@ class MyModule(Module):
         s += 'bias=False)'
         return s
 
+* hack to方法：
+
+ def _apply(self, fn):
+    device = get_var_from_closure(fn, 'device')
+    if device is not None:
+      self.device = device
+    self.mapper._apply(fn)
+    for i in range(len(self._blocks)):
+      self._blocks[i] = fn(self._blocks[i])
+    return super()._apply(fn)
+
 
 # STE
 

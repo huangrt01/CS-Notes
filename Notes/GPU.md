@@ -214,6 +214,14 @@ cudaMemcpyHostToDevice
       这两个是cudaMemAdvise的Flag，用来为某个device设定/解除内存空间ReadMostly的特性，device所指的设备可以有一个只读副本而不发生数据迁移，当两端没有写入时，两个副本的数据是一致的。
     * cudaMemAdvise(cudaMemAdviseSetAccessedBy), gpu上有的直接使用，cpu上就直接pci访问，什么时候搬运到gpu可以自行指定
 
+###### Memory Order
+
+* bug代码
+  * CUDA programming guide says that *atomicAdd has relaxed memory semantics*.
+  * ![image-20250529210343079](./GPU/image-20250529210343079.png)
+
+* ![image-20250529210902176](./GPU/image-20250529210902176.png)
+
 
 
 ##### GPU Execution Model
@@ -310,6 +318,10 @@ cudaMemcpyHostToDevice
 * ![image-20250404022026152](./GPU/image-20250404022026152.png)
 
 * ![image-20250404022209555](./GPU/image-20250404022209555.png)
+
+* 相关优化kernel例子：
+  * scan
+  * reduce
 
 ###### Pipeline
 
@@ -834,6 +846,9 @@ __global__ void kernel(int *a, int N)
 
 * e.g.
   * nbody-raw.cu -> nbody-optimized.cu
+* 相关design：
+  * one stream one memory pool的设计
+    * 内存的“逻辑释放”（返回给分配器池）可以早于其“物理空闲”（GPU上使用它的最后一个操作执行完毕），减小内存碎片
 
 #### CUDA cooperative group 协作线程组
 
@@ -955,11 +970,15 @@ public:
 
 #### Case Study: Scan
 
+> GPU Mode Lecture 20、21、24
+
 ##### Intro
 
 * 定义
   * ![image-20250527005439630](./GPU/image-20250527005439630.png)
 
+* 意义：
+  * ![image-20250529174045796](./GPU/image-20250529174045796.png)
 * 应用：
   * exclusive scan的应用：partition split
   * min/max的应用：heap结构
@@ -995,11 +1014,60 @@ public:
 
 ##### Brent-Kung Parallel Scan
 
-* 也很朴素
+* 分析：
+  * 也很朴素
+  * control divergence更严重
+    * --> 重新排布thread，避免warp divergence
+  * While the Brent - Kung algorithm has a higher theoretical work-efficiency than the Kogge - Stone algorithm, in practice, **due to the computation being latency-bound, the reduced workload is replaced by idle pipeline cycles.**
+    * The performance of the Brent - Kung algorithm on GPUs is comparable to or may even be worse than that of the Kogge - Stone algorithm. 
 
 ![image-20250527020413284](./GPU/image-20250527020413284.png)
 
 ![image-20250527020653029](./GPU/image-20250527020653029.png)
+
+![image-20250528001759951](./GPU/image-20250528001759951.png)
+
+![image-20250528002553091](./GPU/image-20250528002553091.png)
+
+##### Thread Coarsening
+
+![image-20250529033632676](./GPU/image-20250529033632676.png)
+
+![image-20250529035506342](./GPU/image-20250529035506342.png)
+
+##### 优化 Multiple Kernel Calls
+
+![image-20250529160104332](./GPU/image-20250529160104332.png)
+
+![image-20250529162856203](./GPU/image-20250529162856203.png)
+
+##### Scan at the Speed of Light
+
+![image-20250529172450689](./GPU/image-20250529172450689.png)
+
+![image-20250529181914418](./GPU/image-20250529181914418.png)
+
+##### Reduce-Then-Scan
+
+* 相比上面的segmented方法，少一次全局内存读取
+  * 第一次主要数据移动 (约 n)：读取原始输入数据进行规约 (Reduction)
+    * (中间步骤：扫描块总和 - 数据移动可忽略)
+  * 第二次主要数据移动 (约 n)：再次读取原始输入数据以进行最终计算
+  * 第三次主要数据移动 (约 n)：写入最终的前缀和结果
+
+![image-20250529185632950](./GPU/image-20250529185632950.png)
+
+##### Stream Scan (Chained-Scan)
+
+![image-20250529185921863](./GPU/image-20250529185921863.png)
+
+* Message Passing Latency
+
+![image-20250529190927108](./GPU/image-20250529190927108.png)
+
+
+
+
 
 #### Case Study: Unique
 
@@ -1297,25 +1365,22 @@ https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
 > https://docs.google.com/presentation/d/1cvVpf3ChFFiY4Kf25S4e4sPY6Y5uRUO-X-A4nJ7IhFE/edit?slide=id.p#slide=id.p
 
 * Coalesced Global Memory Access
-
 * Maximize occupancy
-
 * *Understand if memory or compute bound*
-
 * Minimize control divergence
-
 * Tiling of reused data
-
 * Privatization
   * local copy, avoid hitting global memory
-
 * Thread Coarsening
-  * compute bound通常每个thread做尽可能少的事情
-  * memory bound每个thread做更多事情
-
+  * 适用于：work balance的场景 + memory bound的场景 + per thread register不bound的场景
+    * compute bound通常每个thread做尽可能少的事情
+    * memory bound每个thread做更多事情
+  
+  * coarsening factor的选择原则：减少thread block数量后，仍在GPU的SM数量附近
+  
 * Bank conflicts
   * 新一代GPU影响变小
-  
+
 * Latency hiding
 * *Rewrite your algorithm using better math*
   * Use high level language to write GPU kernels.
@@ -1478,6 +1543,10 @@ https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9
 
 ![control-flow](./GPU/control-flow.png)
 
+#### Register Spilling
+
+
+
 ### PMPP: Programming Massively Parallel Processors
 
 > * 书：Programming Massively Parallel Processors (PMPP) 3rd edition
@@ -1528,6 +1597,14 @@ https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9
 * Intro
   * cuda是async，因此用python的time模块，测的包含kernel launch时间，不包含execute时间
 
+#### SOL (Speed of Light)
+
+![image-20250529183215524](./GPU/image-20250529183215524.png)
+
+![image-20250529182615484](./GPU/image-20250529182615484.png)
+
+
+
 #### Dissecting the NVIDIA Volta GPU Architecture via Microbenchmarking
 
 https://arxiv.org/pdf/1804.06826
@@ -1535,6 +1612,14 @@ https://arxiv.org/pdf/1804.06826
 #### Demystifying the Nvidia Ampere Architecture through Microbenchmarking and Instruction-level Analysis
 
 microbenchmark using ptx
+
+#### Nvidia HPC Benchmarks
+
+https://catalog.ngc.nvidia.com/orgs/nvidia/containers/hpc-benchmarks
+
+https://docs.nvidia.com/nvidia-hpc-benchmarks/overview.html
+
+
 
 #### Nvidia Lecture 5: Introduction to Nsight Profiling Tools
 

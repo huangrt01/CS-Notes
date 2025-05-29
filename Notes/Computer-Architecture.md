@@ -16,7 +16,7 @@
 #### Roofline Model
 
 * Rooﬂine: an insightful visual performance model for multicore architectures.
-  * **横轴：arithmetic intensity**: which is the number of arithmetic operations per byte of memory access.
+  * **横轴：arithmetic intensity**: which is the number of arithmetic operations per byte of memory access. (FLOPS/BYTE)
     * Compute-bound: the time taken by the operation is determined by how many arithmetic operations there are, while time accessing HBM is much smaller. Typical examples are matrix multiply with large inner dimension, and convolution with large number of channels.
     * Memory-bound: the time taken by the operation is determined by the number of memory accesses, while time spent in computation is much smaller. Examples include most other operations: elementwise (e.g., activation, dropout), and reduction (e.g., sum, softmax, batch norm, layer norm).
     
@@ -53,12 +53,16 @@
 
   - 结论 ：这个成本高于顺序算法的成本 O(N)，因此被认为是“非成本高效的”（not cost efficient）。这意味着并行化并没有带来理论上最佳的加速比。
 
-* Work efficiency的概念
+* **Work efficiency**的概念
 
   * A parallel algorithm is work-efficient if it performs the same amount of work as the corresponding sequential algorithm
   * 用于分析scan优化
+  * **If resources are limited, parallel algorithm will be slow because of low work efficiency.**
+  * thread coarsening是均衡work efficiency和parallelism的一种方法
+    * insight：如果parallelism带来了计算serialization的代价，与其硬件支付，不如自己支付serialization
+    * 适用于：work balance的场景 + memory bound的场景
 
-* Brent's theorem
+* **Brent's theorem**
 
   * ![image-20250509140316594](./Computer-Architecture/image-20250509140316594.png)
   * 用于分析reduce sum的优化
