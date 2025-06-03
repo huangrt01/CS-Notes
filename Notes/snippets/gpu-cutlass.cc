@@ -94,9 +94,172 @@ layout/shape -> layout
 3:2    ->    i=0,1,2, offset=2*i
 
 
+*** cute API
+
+Spatial microkernels: cute::Tiled{Mma|Copy}<>
+- Robust representation power across a wide range GPU architectures
+
+Temporal Microkernels: collective::Collective{Mma|Conv|Epilogue|Transform}<>
+- Dispatched against by policies that also define the set of kernel schedules they can be composed with
+
+Kernel layer: kernel::{Gemm|Conv}Universal<>
+- Treats GEMM as a composition of a collective mainloop and a collective epilogue
+- Tile Schedulers are a first class at this level – decide which tile coords map to which program ID
+
+Device layer: device::{Gemm|Conv}UniversalAdapter<>
+- Just a handle object to the kernel
+- cutlass::Pipeline: used for abstracting synchronization across or within the layers
+
+Static asserts everywhere to guard against invalid compositions or incorrect layouts
+
+
+** collective API
+
+// Dispatch policy examples
+// 2 stage pipeline through 1 stage in smem, 1 in rmem, with predicated gmem loads
+struct MainloopSm70TwoStage;
+
+// n-buffer in smem (cp.async), pipelined with registers, WITHOUT predicated gmem loads
+struct MainloopSm80CpAsyncUnpredicated;
+
+// n-buffer in smem (TMA), pipelined with Hopper GMMA and TMA, Warp specialized dynamic schedule
+struct MainloopSm90TmaGmmaWarpSpecialized;
+
+template <
+    class DispatchPolicy,
+    class TileShape,
+    class ElementA,
+    class SmemLayoutA,
+    class ElementB,
+    class SmemLayoutB,
+    class ElementC,
+    class ArchTag,
+    class TiledMma,
+    class GmemCopyAtomA,
+    class SmemCopyAtomA,
+    class GmemCopyAtomB,
+    class SmemCopyAtomB
+>
+struct CollectiveMma;
+
+
+* 49_hopper_gemm_schedules_with_collective_builder
+
+- “I want a Hopper collective but composed with persistent kernel and 5 stages”
+
+using CollectiveOp = typename collective::CollectiveBuilder<
+	arch::Sm90, arch::OpClassTensorOp,
+	half_t, LayoutA, 8,
+	half_t, LayoutB, 8,
+	float,
+	Shape<_128,_128,_64>, Shape<_1,_2,_1>,
+	gemm::collective::StageCount<5>,
+	gemm::KernelTmaWarpSpecializedPersistent
+	>::CollectiveOp;
+
+
+
+*** profiler
+
+https://docs.nvidia.com/cutlass/media/docs/cpp/profiler.html
+
+* CUTLASS has a python based kernel emitter and a manifest to hold a bunch of kernels
+* Autotuning strategy is to stamp out a set of candidates kernels and then …
+* Use the CUTLASS profiler to pick the best kernel for your problems of interest
+* It is also possible to dump ptx of the best performing kernel with `cuobjdump` or –DCUTLASS_NVCC_KEEP
+
+*** write custom kernels
+
+template<
+    int Stages_,
+    class ClusterShape_ = Shape<-1,-1,-1>,
+    class KernelSchedule = KernelTmaWarpSpecialized // or KernelTmaWarpSpecializedPersistent
+>
+struct MyCustomHopperMainloopWoot {
+    constexpr static int Stages = Stages_;
+    using ClusterShape = ClusterShape_;
+    using ArchTag = arch::Sm90;
+    using Schedule = KernelSchedule;
+};
+
+** epilogue fusion
+
+有python interface，参考gpu-cutlass.py
+
+using EVTOutput = Sm90LinCombPerRowBiasEltAct<
+TileShape, ReLu, ElementOutput, ElementCompute>;
+
+<->
+
+using Alpha = Sm90ScalarBroadcast<ElementScalar>;
+using Accum = Sm90AccFetch;
+using Bias = Sm90ColBroadcast<
+    0, TileShape, ElementBias, Stride<-1,0,int>, AlignmentBias>;
+using MultiplyAdd = Sm90Compute<
+    multiply_add, ElementCompute, ElementCompute, RoundStyle>;
+using EVTCompute0 = Sm90EVT<MultiplyAdd, Alpha, Accum, Bias>;
+
+using Beta = Sm90ScalarBroadcast<ElementScalar>;
+using C = Sm90SrcFetch<ElementSource>;
+using EVTCompute1 = Sm90EVT<MultiplyAdd, Beta, C, EVTCompute0>;
+
+using ReLUAct = Sm90Compute<
+    ReLu, ElementOutput, ElementCompute, RoundStyle>;
+using EVTOutput = Sm90EVT<ReLUAct, EVTCompute1>;
+
+using CollectiveEpilogue = typename
+cutlass::epilogue::collective::CollectiveBuilder<
+    cutlass::arch::Sm90, cutlass::arch::OpClassTensorOp,
+    TileShape, ClusterShape,
+    cutlass::epilogue::collective::EpilogueTileAuto,
+    ElementAccumulator, ElementCompute,
+    ElementC, LayoutC, AlignmentC,
+    ElementD, LayoutD, AlignmentD,
+    EpilogueScheduleType,
+    EVTOutput
+>::CollectiveOp;
+
+
+*** examples
+
+** GETT
+
+examples/51_hopper_gett/gett_kernel.cuh
+
+// Build the mainloop type
+using CollectiveMainloop = typename cutlass::gemm::collective::CollectiveBuilder<
+    arch::Sm90, arch::OpClassTensorOp,
+    ElementA, StrideA, AlignmentA,
+    ElementB, StrideB, AlignmentB,
+    ElementAccumulator,
+    TilesShape, ClusterShape,
+    cutlass::gemm::collective::StageCountAuto,
+    cutlass::gemm::collective::KernelScheduleAuto
+>::CollectiveOp;
+
+// Build the epilogue type
+using CollectiveEpilogue = typename cutlass::epilogue::collective::CollectiveBuilder<
+    arch::Sm90, arch::OpClassTensorOp,
+    TileShape, ClusterShape,
+    cutlass::epilogue::collective::EpilogueTileAuto,
+    ElementAccumulator, ElementCompute,
+    ElementC, StrideC, AlignmentC,
+    ElementD, StrideD, AlignmentD,
+    cutlass::epilogue::collective::EpilogueScheduleAuto
+>::CollectiveOp;
+
+// Compose both at the kernel layer, and define the type of our problem shape tuple
+using GettKernel = cutlass::gemm::kernel::GemmUniversal<
+    ProblemShape_MNKL, // still a rank-4 tuple, but now is hierarchical
+    CollectiveMainloop,
+    CollectiveEpilogue>;
+
+// Device layer handle to the kernel
+using Gett = cutlass::gemm::device::GemmUniversalAdapter<GettKernel>;
+
 
 *** cute/tutorials
 
-* tiled_copy.cu
+** tiled_copy.cu
 
 nvcc -std=c++17 examples/cute/tutorial/tiled_copy.cu -o examples/cute/tutorial/tiled_copy_app -I include -I tools/util/include

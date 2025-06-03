@@ -145,7 +145,7 @@ y = x.numpy()
 
 ### tensor operation
 
-# 原地更新: 破坏梯度传播、不分配内存
+# inplace原地更新: 破坏梯度传播、不分配内存
 buf.mul_(momentum).add_(grad, alpha=1 - dampening)
 param = param.add_(grad, alpha=-lr)
 
@@ -162,6 +162,8 @@ local_used_map_dev_.copy_(local_used_map_tmp, true);
 在旧版本的 PyTorch 中，使用 .data 属性来获取张量中的数据，现在更推荐使用 .item() 方法。
 
 sigmoid_()
+
+exponential_() 生成指数分布随机数
 
 
 # 视图操作

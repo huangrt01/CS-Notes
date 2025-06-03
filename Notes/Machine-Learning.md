@@ -303,13 +303,20 @@ Materials
 
 
 
-### 训练技巧
+### 反向传播技巧
 
 #### (STE) Straight-Through Estimators
 
 > [《Estimating or Propagating Gradients Through Stochastic Neurons for Conditional Computation》](https://arxiv.org/pdf/1308.3432)
 
 https://hassanaskary.medium.com/intuitive-explanation-of-straight-through-estimators-with-pytorch-implementation-71d99d25d9d0
+
+#### Gumbel-Max trick
+
+> 如何理解Gumbel-Max trick？ - SleepyBag的回答 - 知乎
+> https://www.zhihu.com/question/62631725/answer/507940806
+
+* 一种从离散分布取样的方法，它的形式可以允许我们定义一种可微分的，离散分布的近似取样，这种取样方式不像「干脆以各类概率值的概率向量替代取样」这么粗糙，也不像直接取样一样不可导（因此没办法应对可能的 bp ）
 
 
 

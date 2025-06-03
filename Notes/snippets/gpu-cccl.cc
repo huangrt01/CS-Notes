@@ -55,6 +55,8 @@ using pinned_vector = thrust::host_vector<
 传入 thrust::cuda::par_nosync、thrust::cuda::device、thrust::cuda::par.on(stream)
 
 * atomic
+增加thread_scope的参数
+- https://nvidia.github.io/cccl/libcudacxx/extended_api/synchronization_primitives/atomic_ref.html
 
 cuda::atomic_ref<float, cuda::thread_scope_device> dwte_ix_ref(*dwte_ix);
 cuda::atomic_ref<float, cuda::thread_scope_device> dwte_tc_ref(*dwpe_tc);
@@ -153,6 +155,8 @@ auto [b, n, nh_, d_] = i2n(idx, NH, T, HS);
 
 *** cub
 
+* scope
+
 Scope is a set of threads that may interact directly with given operation and establish relations described in the memory consistency model
 cuda::thread_scope_block is a set of threads of a given thread block
 cuda::thread_scope_device is a set of threads of a given device
@@ -178,6 +182,26 @@ void residual_forward_alternative(float* out, const float* inp1, const float* in
     thrust::transform(thrust::device,
                       inp1cs, inp1cs + N, inp2cs, out, thrust::plus<float>());
 }
+
+* Block load/scan
+
+constexpr int threads = 512;
+constexpr int items = 1;
+constexpr int tile_size = threads * items;
+
+using load_t = cub::BlockLoad<std::uint32_t, threads, items>;
+using store_t = cub::BlockStore<std::uint32_t, threads, items>;
+using scan_t = cub::BlockScan<std::uint32_t, threads>;
+
+std::uint32_t thread_data[items];
+load_t{storage_load}.Load(X + bid * tile_size, thread_data);
+scan_t{storage_scan}.InclusiveSum(thread_data, thread_data);
+
+SingleWordStream(previous_sum, thread_data);
+for (int i = 0; i < items; i++) {
+    thread_data[i] += previous_sum;
+}
+store_t{storage_store}.Store(Y + bid * tile_size, thread_data);
 
 
 *** nvbench

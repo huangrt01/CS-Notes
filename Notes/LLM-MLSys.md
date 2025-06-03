@@ -165,7 +165,7 @@ print(f"Prompt的token数量为: {token_count}")
 ### 性能、延时
 
 * TTFT：time to first token，和input token长度相关
-* TPOT
+* TPOT / ITL
 
 
 ### 训练成本
@@ -756,11 +756,176 @@ for t_tile:
 
 #### Speculative Decoding
 
-> Draft model、large model
+> * [GPU Mode Lecture 22: Hacker's Guide to Speculative Decoding in VLLM](https://www.youtube.com/watch?v=9wNAgpX6z_4)【1】
+>   * Cade Daniel
+>   * Working on LLM inference in vLLM
+>   * Software Engineer at [Anyscale](https://www.anyscale.com/)
+>   * Previously, model parallelism systems at AWS 
+>     - https://arxiv.org/abs/2111.05972 
+>   * https://x.com/cdnamz 
+> * Recommended reading: Andrej Karpathy’s tweet on speculative decoding 【2】
+>   - https://x.com/karpathy/status/1697318534555336961 
+> * 《Accelerating LLM Inference with Staged Speculative Decoding》【3】
+> * 《Speculative Decoding: Exploiting Speculative Execution for Accelerating Seq2seq Generation》【4】
+>
+> * 《Fast Inference from Transformers via Speculative Decoding》【5】
 
-《Speculative Decoding: Exploiting Speculative Execution for Accelerating Seq2seq Generation》
+##### Intro
 
-《Fast Inference from Transformers via Speculative Decoding》
+- Memory-boundedness
+  - In memory-bound LLM inference, the full GPU compute capacity is underutilized
+  - The unused compute can be used, if we can find a way to use it
+- Not all parameters required for every token
+  - Do we really need 70B parameters to answer “What is the capital of California”? Probably not…
+- Idea:
+  - Try to predict what large model will say
+  - Get probabilities of predictions
+  - Use heuristic to accept or rejection the predictions based on probabilities
+
+* Draft model
+  * use a small and cheap draft model to first generate a candidate sequence of K tokens - a "draft". 
+* large model
+  * Then we feed all of these together through the big model in a batch. 
+  * This is almost as fast as feeding in just one token, per the above. Then we go from left to right over the logits predicted by the model and sample tokens. Any sample that agrees with the draft allows us to immediately skip forward to the next token. 
+  * If there is a disagreement then we throw the draft away and eat the cost of doing some throwaway work (sampling the draft and the forward passing for all the later tokens).
+
+![image-20250531020213917](./LLM-MLSys/image-20250531020213917.png)【3】
+
+![image-20250531015417368](./LLM-MLSys/image-20250531015417368.png)【3】
+
+##### 结论
+
+![image-20250531021603085](./LLM-MLSys/image-20250531021603085.png)
+
+![image-20250531021629279](./LLM-MLSys/image-20250531021629279.png)
+
+- γ (gamma) : 推测步数或候选Token数量 。它很可能表示小型的“草稿模型”（draft model）一次提议的候选Token的数量。
+  - 更大的 γ 意味着草稿模型一次会生成更多的候选Token，供大型的“目标模型”（target model）并行验证。
+- α (alpha) : 推测解码的效率或接受率相关的指标 。它可能与草稿模型提议的Token被目标模型接受的平均比例或质量有关。
+  - 更高的 α 通常意味着草稿模型的提议更准确，或者推测过程更有效，导致更多的候选Token被接受。
+- 推测解码的潜力 : 当 α 较高时（例如 α > 0.8），即使 γ 较大（如 γ=10），运算量的增加也相对可控（例如小于2倍），同时能获得显著的加速效果（例如5-7倍）。
+
+![image-20250531033629475](./LLM-MLSys/image-20250531033629475.png)
+
+
+
+##### Losslessness --> rejection sampling
+
+> (proof of losslessness): [Accelerating Large Language Model Decoding with Speculative Sampling](https://arxiv.org/pdf/2302.01318) 
+
+- Is the output of speculative decoding different than the target model?
+
+  - TL;DR No if using rejection sampling, subject to hardware numerics
+  - Diagram https://github.com/vllm-project/vllm/pull/2336 
+  - Yes if using lossly sampling technique, e.g. Medusa’s typical acceptance (but higher acceptance rate!)
+
+- 拒绝采样的标准方法规定：
+
+  - 对于草稿模型提出的词元 d ，我们以概率 min(1, P_target(d) / P_draft(d)) 接受它。其中 P_target(d) 是目标模型认为词元 d 的概率， P_draft(d) 是草稿模型认为词元 d 的概率。
+
+    - 情况一： P_target(d) <= P_draft(d)
+
+      - 接受概率 alpha = min(1, P_target(d) / P_draft(d)) = P_target(d) / P_draft(d) 。
+        - 这意味着草稿模型对于词元 d 的预测要么是“过于自信”（即 P_draft(d) 远大于 P_target(d) ），要么是恰好符合或略微高估了目标模型的概率。
+      - 当草稿模型提出词元 d 时（以概率 P_draft(d) 发生），我们以 alpha 的概率接受它。
+      - 通过这条路径（草稿提议 d 并被接受）,确保了词元 d 的输出概率恰好等于目标模型希望的概率是 P_draft(d) * alpha = P_draft(d) * (P_target(d) / P_draft(d)) = P_target(d) 。
+
+  - 如果词元 d 被拒绝（即上述接受条件未满足），为了仍然从目标分布 P_target 中采样，我们需要从一个调整后的“剩余”概率分布中采样。这个分布正比于 max(0, P_target(x) - P_draft(x)) ，其中 x 是词汇表中的任意词元。
+
+  - **Recovered token:** If all tokens are rejected, we can use math trick to sample a correct token from the target model distribution
+
+    - → We always get >=1 token
+
+    - **恢复词元**就是从这个调整后的“剩余”概率分布中采样得到的词元 。
+
+  - 通过这种方式（接受草稿词元，或在拒绝时使用恢复词元），算法确保了在每个解码步骤中选出的词元都严格遵循目标模型 P_target 的概率分布。这是恢复词元最根本的意义。
+
+- **Bonus token:** All speculative tokens may be accepted. We can sample from target model distribution normally in this case
+
+  - → we get an additional token in the happy-path!
+  - ![image-20250601011458695](./LLM-MLSys/image-20250601011458695.png)
+
+##### top1 vs top-k “tree attention”
+
+> - https://sites.google.com/view/medusa-llm 
+> - https://arxiv.org/pdf/2305.09781 
+> - https://www.together.ai/blog/sequoia 
+
+- Top-1: proposal method suggests 1 token per sequence per slot
+- Top-k: proposal method suggests k tokens per sequence per slot
+- Currently only top-1 proposal and scoring is supported
+  - Top-k is a future work
+  - Most aggressive speedups require top-k attention masking
+  - FlashInfer going to support masking
+  - https://github.com/vllm-project/vllm/issues/3960 
+
+##### 工程实现
+
+![image-20250531034753144](./LLM-MLSys/image-20250531034753144.png)
+
+* How to evaluate speedup?
+
+  - Simplified version:
+
+    - Inter-token latency = step time / number of tokens per step in expectation
+    - Example without speculative decoding: 30ms / 1 → 1 token per 30ms
+    - Example with speculative decoding: 40ms / 2.5 → 1 token per 16ms
+
+    - Key factors
+      - How long does it take to propose?
+      - How accurate are the proposals?
+      - How long does it take to verify / other spec framework overheads?
+
+  - In practice:
+    - https://github.com/vllm-project/vllm/blob/main/vllm/v1/spec_decode/metrics.py
+      - Acceptance rate – “How aligned is the proposal method with the target model?”
+      - System efficiency – “How efficient is the deployment compared to 100% acceptance rate?”
+
+##### Lookahead scheduling
+
+- Problem: Scoring speculative tokens generates KV. How can we save accepted KV to skip regeneration and reduce FLOPs requirements?
+- Recommended reading: [What is lookahead scheduling in vLLM?](https://docs.google.com/document/d/1Z9TvqzzBPnh5WHcRwjvK2UEeFeq5zMZb5mFE8jR0HCs/edit#heading=h.1fjfb0donq5a)
+- TL;DR:
+  - vLLM’s scheduler allocates additional space for KV
+  - The SpecDecodeWorker uses the space to store KV of speculative tokens
+  - Accepted token KV is stored correctly
+
+##### Dynamic speculative decoding
+
+- Problem: As batch size increases, spare FLOPs is reduced. How can we ensure spec decode performs no worse than no spec decode?
+- Recommended reading: https://github.com/vllm-project/vllm/issues/4565 
+  - Work by Lily Liu and Cody Yu
+- TL;DR
+  - Based on the batch size, adjust which sequences have speculations (or disable spec dec altogether)
+  - Future work: per-sequence speculation length
+
+![image-20250601012653322](./LLM-MLSys/image-20250601012653322.png)
+
+##### Batch expansion
+
+- Problem: How to support scoring when **PagedAttention only supports 1 query token per sequence**?
+- Recommended reading: [Optimizing attention for spec decode can reduce latency / increase throughput](https://docs.google.com/document/d/1T-JaS2T1NRfdP51qzqpyakoCXxSXTtORppiwaj5asxA/edit#heading=h.kk7dq05lc6q8)
+- TL;DR
+  - We create “virtual sequences” in SpecDecodeWorker each with 1 query token
+  - This expands the batch (and duplicates KV loads in the attention layers)
+  - We can remove this with an attention kernel which supports PagedAttention + multiple query tokens per sequence
+  - Contact https://github.com/LiuXiaoxuanPKU for more information
+
+##### Future Contribution Ideas
+
+- More engineering
+  - Retrieval-acceleration https://arxiv.org/html/2401.14021v1 
+  - Chunked prefill + spec decode
+  - Prefix caching + spec decode
+  - Guided decoding + spec decode
+  - Inferentia / TPU / CPU support
+- More modeling
+  - Meta-model for speculation length
+  - Meta-model for speculation type
+- Large / mixed engineering+modeling
+  - Multi-LoRA draft model (specialize to domains)
+  - Online learning draft model https://arxiv.org/abs/2310.07177 
+  - Batched parallel decoding https://github.com/vllm-project/vllm/issues/4303 
 
 #### Flash-Decoding
 
@@ -897,6 +1062,33 @@ dynamic_batching {
 
 * Intro
   * known for its almost [zero-overhead batch scheduler](https://lmsys.org/blog/2024-12-04-sglang-v0-4/) and fast [constrained decoding](https://lmsys.org/blog/2024-02-05-compressed-fsm/)
+
+### vLLM
+
+#### Intro
+
+* core principles
+  * Ease-of-use
+  * Great performance
+    * 演进路线是优先优化throughput，后优化latency
+  * Hardware agnosticity
+
+* 优化特性
+  * PagedAttention/tensor parallelism
+  * Optimized multi-LoRA
+  * Chunked prefill
+  * Automatic prefix caching
+    * block level实现
+  * Guided decoding
+    * 限制token类型，比如json语法
+  * Quantization (fp8 WIP, and others)
+  * Pipeline-parallelism (WIP)
+  * Prefill disaggregation (WIP)
+
+* Hardware agnosticity
+  * NVIDIA, AMD, Inferentia, TPU (WIP), CPU 
+
+
 
 ### ollama
 

@@ -2730,7 +2730,7 @@ int foo(const std::vector<int>& m) {
 }
 ```
 
-### C++ Potpourri
+### Potpourri
 
 #### 编码规范
 
@@ -2758,6 +2758,7 @@ int foo(const std::vector<int>& m) {
 #### 编译相关
 
 * 参考我的 [Compiler笔记]()
+
 
 
 #### C
@@ -3507,31 +3508,71 @@ void finish_task() {
 * Thread Local
   * [C++11 thread_local用法](https://zhuanlan.zhihu.com/p/340201634) : `thread_local` 作为类成员变量时必须是 `static` 的
 
-#### Memory Coherence and Memory Consistency
+#### Memory Coherence / Memory Consistency / Memory Order
 
 > [如何理解 C++11 的六种 memory order？ - Furion W的回答 - 知乎](https://www.zhihu.com/question/24301047/answer/83422523)
+>
+> https://spcl.inf.ethz.ch/Teaching/2019-dphpc/lectures/lecture4-memory-models.pdf
+>
+> https://www.cs.cmu.edu/afs/cs/academic/class/15740-f18/www/papers/ieeemicro96-adve-consistency.pdf
 
-* Memory Consistency Model
+* 为什么会出现coherence问题？
+
+  - 硬件维度：
+    - ![image-20250603185505412](./C++/image-20250603185505412.png)
+    - e.g. P1执行 Y=10，这个写操作可能被P1放入其写缓冲器（WB），或者写入其L1缓存，但此时可能还没有传播到共享的L2缓存，或者P2还没有观察到这个更新。
+  - 编译器维度：在线程指令的局部视角下进行编译优化
+    - ![image-20250603233931443](./C++/image-20250603233931443.png)
+  - 详细参考 https://spcl.inf.ethz.ch/Teaching/2019-dphpc/lectures/lecture4-memory-models.pdf
+
+  * P1执行 Y=10 ：这个写操作可能被P1放入其写缓冲器（WB），或者写入其L1缓存，但此时可能还没有传播到共享的L2缓存，或者P2还没有观察到这个更新。
+
+* Memory Coherence —— Coherence定义了一个读操作能获得什么样的值
+  * 通俗地说，我们可以说一个内存系统是为Coherent, 如果任何一个对数据的读操作总是返回其最近被改写的值。这个模糊且过分简单的定义主要包含了内存系统两方面的行为表现：
+* Memory Consistency Model —— Consitency定义了何时一个写操作的值会被读操作获得
   * Sequential consistency model
-  * 在无缓存的体系结构下实现SC
+    * **SC有两点要求**：
+      1. 在每个处理器内，维护每个处理器的程序次序；
+      2. 在所有处理器间，维护单一的表征所有操作的次序。对于写操作W1, W2, 不能出现从处理器 P1 看来，执行次序为 W1->W2; 从处理器 P2 看来，执行次序却为 W2->W1 这种情况。
+  * 在无缓存的体系结构下实现SC，若干难点：
     * Write buffers with read bypassing
     * Overlapping writes
     * Nonblocking reads
-  * 在有缓存的体系结构下实现SC
+  * 在有缓存的体系结构下实现SC，若干难点：
     * Cache coherence protocols
     * Detecting write completion
     * Maintaining write atomicity
+* Memory Consistency的代价
+  - [体系结构书Chapter 5.6](https://acs.pub.ro/~cpop/SMPA/Computer Architecture A Quantitative Approach (5th edition).pdf) 给出了为保证SC，一个写操作的耗时从 50 cycles 变为 170 cycles 的例子
+  - --> 因此引入多种Memory Order，细化场景，尽可能降低这一代价
+  - 允许专家通过采用更合理的内存序获得更大的性能提升；同时允许在对性能要求不是那么严格的程序中采用默认的内存序,使得程序更容易理解
 * Synchronized-with 与 happens-before 关系
-* 顺序一致次序 sequential consistent(memory_order_seq_cst)
-* 松弛次序 relaxed(memory_order_relaxed)
+  * 【变量视角】如果线程 A 写了变量 x, 线程 B 读了变量 x, 那么我们就说线程 A, B 间存在 synchronized-with 关系。
+  * 【指令视角】对于多线程而言,如果一个线程中的操作 A inter-thread happens-before 另一个线程中的操作 B, 那么 A happens-before B.
+  * 【从变量到指令】如果一个线程中的操作 A synchronized-with 另一个线程中的操作 B, 那么 A inter-thread happens-before B
+* C++11中的六种memory order
+  * sequential consistent(memory_order_seq_cst),
+  * relaxed(memory_order_seq_cst)
+  * acquire release(memory_order_consume, memory_order_acquire, memory_order_release, memory_order_acq_rel)
+* 顺序一致次序 sequential consistent
+  * 对应memory_order_seq_cst
+  * 保证了：
+    * 从同步的角度来看，一个顺序一致的 store 操作 synchroniezd-with 一个顺序一致的需要读取相同的变量的 load 操作
+    * 在 load 之后执行的顺序一致原子操作都表现得像在 store 之后完成
+* 松弛次序 relaxed
+  * 对应memory_order_relaxed
   * **在 relaxed ordering 中唯一的要求是在同一线程中，对同一原子变量的访问不可以被重排**
 * 获取-释放次序 acquire release
   * 对应memory_order_release, memory_order_acquire, memory_order_acq_rel.
-  * Acquire-release 中没有全序关系,但它提供了一些同步方法。在这种序列模 型下,原子 load 操作是 acquire 操作(memory_order_acquire), 原子 store 操作是 release操作(memory_order_release), 原子read_modify_write操作(如fetch_add(), exchange())可以是 acquire, release 或两者皆是(memory_order_acq_rel). 同步是 成对出现的,它出现在一个进行 release 操作和一个进行 acquire 操作的线程间。 一个 release 操作 syncrhonized-with 一个想要读取刚才被写的值的 acquire 操作。
+  * Acquire-release 中没有全序关系,但它提供了一些同步方法
+    * 原子 load 操作是 acquire 操作(memory_order_acquire)
+    * 原子 store 操作是 release操作(memory_order_release)
+    * 原子read_modify_write操作(如fetch_add(), exchange())可以是 acquire, release 或两者皆是(memory_order_acq_rel).
+  *  **同步是成对出现的,它出现在一个进行 release 操作和一个进行 acquire 操作的线程间。 一个 release 操作 syncrhonized-with 一个想要读取刚才被写的值的 acquire 操作。**
     * **Acquire (获取) : 确保在当前线程中，此原子操作之前的所有内存操作（读或写）的结果，对于其他线程来说，在该原子操作执行之前或执行时可见。**
     * **Release (释放) : 确保当前线程中的原子操作本身，对于其他线程来说，在该线程后续的任何内存操作变得可见之前可见。**
   * 这意味着不同线程仍然看到了不一样的次序,但这次序是被限制过了的。当我们在此再引入 happens-before 关系时，就可以实现更大规模的顺序关系。（[3] Listing 5.8, 5.9）
-* acquire-release间的数据依赖与memory_order_consume
+* 进阶内容：acquire-release间的数据依赖与memory_order_consume
 
 #### DOD
 
@@ -4240,6 +4281,12 @@ def AdvanceToMatchingTime(row_iter1, row_iter2, row_iter3):
 #### PART IV Selected Topics
 
 #### chpt 14 Testing and Readability
+
+* testing中的一些概念：
+  * 单测：单元性和隔离性
+  * property-based testing属于单测
+
+
 
 * Make Tests Easy to Read and Maintain
 * What’s Wrong with This Test?

@@ -486,6 +486,9 @@ https://github.com/OpenNMT/OpenNMT-py/
 
 #### MQA
 
+* MQA
+  * ![image-20250601014800391](./AI-Algorithms/image-20250601014800391.png)
+
 * 从MHA到MQA的up-training方法【GQA paper】
 
 ![image-20250502141431027](./AI-Algorithms/image-20250502141431027.png)

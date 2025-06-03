@@ -1,4 +1,4 @@
-### Overview
+*** Overview
 
 1.pytorch Profiler
 
@@ -9,8 +9,10 @@
 3. Nsight Compute
 - 优化GPU算子
 
+自顶向下的分析（不同数值影响profile结果）：https://www.thonking.ai/p/strangely-matrix-multiplications
 
-### GPU Monitoring
+
+*** GPU Monitoring
 
 # nvitop
 
@@ -39,7 +41,7 @@ sudo nvidia-smi -pm 1
 nvidia-smi -ac 9751,1530 # <memory, graphics>
 
 
-### time - 1
+*** time - 1
 class TimePytorchFunction:
 
   def __init__(self, func, *args):
@@ -70,7 +72,7 @@ b = torch.randn(10000, 10000).cuda()
 with TimePytorchFunction(torch.square, b) as timer:
     result = timer.run()
 
-### time - 2
+*** time - 2
 
 # Timing utilities
 import gc, time
@@ -94,7 +96,7 @@ def end_timer_and_print(local_msg):
   print("Max memory used by tensors = {} MB, reserved = {} MB".format(
       torch.cuda.max_memory_allocated() // 1e6, torch.cuda.max_memory_reserved() // 1e6))
 
-### set seed
+*** set seed
 
 def set_seed(seed: int = 37) -> None:
     np.random.seed(seed)
@@ -108,7 +110,7 @@ def set_seed(seed: int = 37) -> None:
 
 
 
-### ncu profiler
+*** ncu profiler
 
 # install
 https://www.bilibili.com/opus/898996578463776788

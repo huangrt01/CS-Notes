@@ -26,9 +26,16 @@
 
 ![image-20250404195013648](./Computer-Architecture/image-20250404195013648.png)
 
+* 多种 workload
+  * compute bound
+  
+  * memory bound
+  
+  * latency bound
+  
 * 硬件例子：
   * V100: 125/0.9 =139FLOPS/Byte
-  
+
 * Memory optimization和runtime optimization
   * 往往是互相制约的
 * IO-Aware Runtime Optimization 【flash-attention】

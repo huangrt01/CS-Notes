@@ -172,3 +172,64 @@ __global__ void add_kernel(float* output, float* partialSums, unsigned int N) {
         }
     }
 }
+
+
+// cub stream block load/scan
+// 扩大items到23
+
+constexpr int threads = 512;
+constexpr int items = 23;   
+constexpr int tile_size = threads * items;
+
+using load_t = cub::BlockLoad<std::uint32_t, threads, items>;
+using store_t = cub::BlockStore<std::uint32_t, threads, items>;
+using scan_t = cub::BlockScan<std::uint32_t, threads>;
+
+std::uint32_t thread_data[items];
+load_t{storage_load}.Load(X + bid * tile_size, thread_data);
+scan_t{storage_scan}.InclusiveSum(thread_data, thread_data);
+
+SingleWordStream(previous_sum, thread_data);
+for (int i = 0; i < items; i++) {
+    thread_data[i] += previous_sum;
+}
+store_t{storage_store}.Store(Y + bid * tile_size, thread_data);
+
+// 优化warp-coalesced memory access
+
+using load_t = cub::BlockLoad<std::uint32_t, threads, items, cub::BLOCK_LOAD_WARP_TRANSPOSE>;
+using store_t = cub::BlockStore<std::uint32_t, threads, items, cub::BLOCK_LOAD_WARP_TRANSPOSE>;
+
+
+// look back
+
+using scan_tile_state_t = cub::ScanTileState<std::uint32_t>;
+using tile_prefix_op = cub::TilePrefixCallbackOp<std::uint32_t, cub::Sum, scan_tile_state_t>;
+
+tile_prefix_op prefix(tile_states, storage.look_back, cub::Sum{});
+const unsigned int bid = prefix.GetTileId();
+
+std::uint32_t block_aggregate;
+std::uint32_t thread_data[items_per_thread];
+load_t{storage_load}.Load(X + bid * tile_size, thread_data);
+scan_t{storage_scan}.InclusiveSum(thread_data, thread_data, block_aggregate);
+
+if (bid == 0) {
+    if (threadIdx.x == 0) {
+        tile_states.SetInclusive(bid, block_aggregate);
+    }
+} else {
+    const unsigned int warp_id = threadIdx.x / 32;
+    if (warp_id == 0) {
+        std::uint32_t exclusive_prefix = prefix(block_aggregate);
+        if (threadIdx.x == 0) {
+            previous_sum = exclusive_prefix;
+        }
+    }
+}
+__syncthreads();
+
+for (int i = 0; i < items_per_thread; i++) {
+    thread_data[i] += previous_sum;
+}
+

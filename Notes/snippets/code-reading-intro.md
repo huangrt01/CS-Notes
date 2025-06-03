@@ -10,6 +10,9 @@
 - TorchRec
   - https://pytorch.org/torchrec/overview.html
 
+- vLLM
+  - https://github.com/vllm-project/vllm.git
+
 - SGLang
   - https://github.com/sgl-project/sglang.git
 
@@ -183,3 +186,13 @@
 
 - Protobuf
   - https://github.com/protocolbuffers/protobuf
+
+#### 并行编程
+
+- DPDK QSBR Cuckoo Hash Table
+  - https://github.com/DPDK/dpdk/blob/main/lib/hash/rte_cuckoo_hash.c
+  - 基于 RCU 的布谷鸟哈希表，代码结构清晰易懂，非常适合并发编程进阶
+
+- Maple Tree
+  - https://github.com/torvalds/linux/blob/master/lib/maple_tree.c
+  - Linux Kernel MM 新秀，接过了 rbtree 的接力棒，tree node 更加地 cache efficient，采用 RCU 保证 reader lockless，writer lock 是 tree level coarse-grained 而不是 node level fine-grained。与普通 BTree 不同的是支持非重叠区间的增删改查（non-overlapping interval index），最神秘的地方是区间的覆盖写（overwrite multiple entries），此过程中删除多个 leaf nodes 和 internal nodes 同时维持 Btree invariant，核心函数是 mas_spanning_rebalance。阅读过程中可以结合 mailing list。

@@ -1,4 +1,4 @@
-### Intro
+*** Intro
 
 * PyTorch uses the operator overloading approach, which builds up a representation of the computed function every
   time it is executed.
@@ -15,11 +15,12 @@
 -- Note [Inference tensor cannot be saved for backward]
 
 
-### Autograd Engine
+*** Autograd Engine
+
+csrc/autograd/python_engine.cpp
+-> no python GIL
 
 csrc/autograd/engine.*
-
-
 提前scan graph决定每个task的依赖
 
 

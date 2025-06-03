@@ -156,7 +156,9 @@ branch的成本极低，instantaneous
   - `git checkout --` 切换到上一个分支
   - checkout需要所有changes已经commit，或者参考[Stashing and Cleaning](https://git-scm.com/book/en/v2/ch00/_git_stashing)
   - `git checkout <tag>`会进入detached HEAD状态，做的commit只属于这一个commit
-  
+- `git checkout large-mr-branch -- path/to/your/file.ext`
+  - 拆MR
+
 - `git checkout --track origin/serverfix`: 创建本地分支并track远程分支 
 - `git merge <revision>`: merges into current branch, merge的不同策略如下：
   * Fast-forward，直接在当前commit上遍历即可

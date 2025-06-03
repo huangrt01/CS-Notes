@@ -1,4 +1,3 @@
-from unittest import makeSuite
 import torch
 import triton
 import triton.language as tl
@@ -83,7 +82,8 @@ def _index_select_forward_common(unique_values: torch.Tensor,
 def index_select_bwd_atomic_add(grad_outputs, indices, grad_unique_values,
                                 num_rows: int, num_cols: int, num_indices: int,
                                 BLOCK_M_SIZE: tl.constexpr,
-                                BLOCK_N_SIZE: tl.constexpr):
+                                BLOCK_N_SIZE: tl.constexpr,
+                                sem: tl.constexpr = None):
   # grad_unique_values: shape (num_rows, num_cols)
   # grad_outputs: shape (num_indices, num_cols)
   pid_m = tl.program_id(axis=0)
@@ -105,7 +105,7 @@ def index_select_bwd_atomic_add(grad_outputs, indices, grad_unique_values,
                       other=0.0)
       tl.atomic_add(grad_unique_values + unique_row_id * num_cols + off_cols,
                     grads.to(grad_unique_values.dtype.element_ty),
-                    mask=mask)
+                    mask=mask, sem=sem)
 
 
 class IndexSelect_TritonAtomicAdd(torch.autograd.Function):
@@ -158,6 +158,57 @@ class IndexSelect_TritonAtomicAdd(torch.autograd.Function):
                                         BLOCK_N_SIZE=BLOCK_N_SIZE)
     return grad_unique_values, None
 
+
+class IndexSelect_TritonAtomicAddRelaxed(torch.autograd.Function):
+
+  @staticmethod
+  @custom_fwd(device_type="cuda", cast_inputs=torch.float32)
+  def forward(ctx, unique_values: torch.Tensor, indices: torch.Tensor):
+    output, num_rows, num_cols, num_indices = _index_select_forward_common(
+        unique_values, indices)
+    ctx.save_for_backward(indices)
+    ctx.input_shape = unique_values.shape
+    ctx.input_dtype = unique_values.dtype
+    ctx.input_device = unique_values.device
+    ctx.num_rows = num_rows
+    ctx.num_cols = num_cols
+    ctx.num_indices = num_indices
+    return output
+
+  @staticmethod
+  @custom_bwd(device_type="cuda")
+  def backward(ctx, *grad_outputs: list[torch.Tensor]):
+    (indices,) = ctx.saved_tensors
+    input_shape = ctx.input_shape
+    input_dtype = ctx.input_dtype
+    input_device = ctx.input_device
+    num_rows = ctx.num_rows
+    num_cols = ctx.num_cols
+    num_indices = ctx.num_indices
+
+    grad_output = grad_outputs[0].contiguous()
+    grad_unique_values = torch.zeros(input_shape,
+                                     dtype=input_dtype,
+                                     device=input_device)
+
+    if num_indices > 0 and num_rows > 0 and num_cols > 0:
+      # BLOCK_M_SIZE, BLOCK_N_SIZE = 8, 128
+      # grid = ((indices.numel() + BLOCK_M_SIZE - 1) // BLOCK_M_SIZE,
+      #         (num_cols + BLOCK_N_SIZE - 1) // BLOCK_N_SIZE)
+
+      BLOCK_M_SIZE, BLOCK_N_SIZE = 8, triton.next_power_of_2(num_cols)
+      grid = ((indices.numel() + BLOCK_M_SIZE - 1) // BLOCK_M_SIZE, 1)
+
+      index_select_bwd_atomic_add[grid](grad_output,
+                                        indices,
+                                        grad_unique_values,
+                                        num_rows,
+                                        num_cols,
+                                        num_indices,
+                                        BLOCK_M_SIZE=BLOCK_M_SIZE,
+                                        BLOCK_N_SIZE=BLOCK_N_SIZE,
+                                        sem='relaxed')
+    return grad_unique_values, None
 
 @triton.jit
 def index_select_bwd_reorder(
@@ -820,6 +871,7 @@ index_select_torch_native_scatter_add = IndexSelect_NativeScatterAdd.apply
 index_select_torch_compiled = torch.compile(
     index_select_torch_native_scatter_add)
 index_select_triton_atomic_add = IndexSelect_TritonAtomicAdd.apply
+index_select_triton_atomic_add_relaxed = IndexSelect_TritonAtomicAddRelaxed.apply
 index_select_triton_reorder = IndexSelect_TritonReorder.apply
 index_select_triton_reorder_2d = IndexSelect_TritonReorder2D.apply
 index_select_triton_row_lock = IndexSelect_TritonRowLock.apply

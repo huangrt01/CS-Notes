@@ -190,7 +190,18 @@ cudaMemcpyHostToDevice
 
 ![image-20250404200229175](./GPU/image-20250404200229175.png)
 
-###### Unified Memory
+###### Unified/Pinned Memory
+
+- GPU Memory 基础
+  - 原始：cudaMalloc + cudaMalloc + cudaMemcpyAsync
+  - 常见：cudaMallocManaged + cudaMemPrefetchAsync(A, size, **gpuId**, s);
+  - 进阶：cudaMemAdvise (**cudaMemAdviseSetReadMostly** 及 cudaMemAdviseUnSetReadMostly)
+
+![image-20250603181456674](./GPU/image-20250603181456674.png)
+
+--->
+
+![image-20250603190410296](./GPU/image-20250603190410296.png)
 
 * Pascal之后有硬件支持
 * 解决cpu&gpu空间均需访问某一tensor的问题
@@ -201,6 +212,7 @@ cudaMemcpyHostToDevice
     * 这个地址在统一的内存空间里，GPU和CPU都可以使用，但物理上数据可以不在它被访问的设备里，这时会产生page fault（缺页错误），对这个错误的处理就是把数据拷贝到需要访问它的设备或主机内存里，这个操作是透明的（自动执行）。
     * https://on-demand.gputechconf.com/gtc/2018/presentation/s8430-everything-you-need-to-know-about-unified-memory.pdf
     * https://developer.nvidia.com/blog/unified-memory-cuda-beginners/
+    * ![image-20250603191027306](./GPU/image-20250603191027306.png)
   * 用load/store，UVA（Unified Virtual Addressing）或者zero copy access
 * e.g. bitsandbytes paged optimizer
   * https://github.com/bitsandbytes-foundation/bitsandbytes/blob/main/docs/source/explanations/optimizers.mdx
@@ -213,14 +225,6 @@ cudaMemcpyHostToDevice
     * cudaMemAdviseSetReadMostly 及 cudaMemAdviseUnSetReadMostly
       这两个是cudaMemAdvise的Flag，用来为某个device设定/解除内存空间ReadMostly的特性，device所指的设备可以有一个只读副本而不发生数据迁移，当两端没有写入时，两个副本的数据是一致的。
     * cudaMemAdvise(cudaMemAdviseSetAccessedBy), gpu上有的直接使用，cpu上就直接pci访问，什么时候搬运到gpu可以自行指定
-
-###### Memory Order
-
-* bug代码
-  * CUDA programming guide says that *atomicAdd has relaxed memory semantics*.
-  * ![image-20250529210343079](./GPU/image-20250529210343079.png)
-
-* ![image-20250529210902176](./GPU/image-20250529210902176.png)
 
 
 
@@ -428,10 +432,10 @@ cudaMemcpyHostToDevice
 
 ![image-20250515014922279](./GPU/image-20250515014922279.png)
 
-* 问题：Ad-hoc partitioning doesn’t scale
-  * Problem 1: Complicated Partitioning Patterns
+* **问题：Ad-hoc partitioning doesn’t scale**
+  * **Problem 1: Complicated Partitioning Patterns**
     * Prevent us from writing canonical loops for all MMAs
-  * Problem 2: Programmer Managed Asynchrony
+  * **Problem 2: Programmer Managed Asynchrony**
     * GPUs require deeply async, managed, producer/consumer software pipelines
     * Feeding the tensor cores constantly is hard – requires managing asynchrony and deep software pipelines
     * With newer architectures like Hopper, even the MMA instruction is asynchronous
@@ -467,6 +471,14 @@ cudaMemcpyHostToDevice
 * cuDNN和CUDA Toolkit的关系
 
   * CUDA Toolkit不包含cuDNN。CUDA Toolkit是一个更底层的工具包，其中的库是针对的是更基础的操作，比如线性代数中各种矩阵和向量的运算，还有用于文件I/O，支持在GPU上进行高性能文件操作等。而cuDNN是专门为深度学习的各种运算所设计的库，它需要使用CUDA Toolkit中的一些库。
+
+#### 存储：GDS GPUDirect Storage
+
+https://docs.nvidia.com/gpudirect-storage/index.html
+
+https://docs.pytorch.org/tutorials/prototype/gpu_direct_storage.html
+
+https://discuss.pytorch.org/t/feature-request-nvidia-gds-support-for-pytorch-iterabledataset-checkpointing/211945
 
 #### 显卡驱动
 
@@ -834,7 +846,22 @@ __global__ void kernel(int *a, int N)
 
 * CUTLASS、Thrust、CUB
 
-#### CUDA Streams
+
+
+#### async execution, memory models, unified memory
+
+> https://www.irisa.fr/alf/downloads/collange/cours/hpca2020_gpu_2.pdf
+
+##### async execution
+
+* Direct Memory Access (DMA) copy engine runs CPU-GPU memory transfers in background
+  * Requires page-locked memory
+    * cudaMallocHost
+    * Fixed virtual→physical mapping
+
+![image-20250603174537178](./GPU/image-20250603174537178.png)
+
+##### Streams
 
 > https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar.pdf
 
@@ -849,6 +876,73 @@ __global__ void kernel(int *a, int N)
 * 相关design：
   * one stream one memory pool的设计
     * 内存的“逻辑释放”（返回给分配器池）可以早于其“物理空闲”（GPU上使用它的最后一个操作执行完毕），减小内存碎片
+
+![image-20250603174713490](./GPU/image-20250603174713490.png)
+
+##### Memory Order
+
+> - 官方Doc：https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#memory-consistency-model
+> - 从实现角度的详细讲解可参考：
+>   - The One-Decade Task: Putting std::atomic in CUDA. - Olivier Giroux - CppCon 2019 https://www.youtube.com/watch?v=VogqOscJYvk
+
+* GPU中的Inter-thread/inter-warp communication
+  * ![image-20250603182612200](./GPU/image-20250603182612200.png)
+
+* atomics
+  * ![image-20250603183009273](./GPU/image-20250603183009273.png)
+
+* **Nvidia GPU默认是relaxed consistency model**
+  * ![image-20250603183729801](./GPU/image-20250603183729801.png)
+
+* thread fence
+  * ![image-20250603184442154](./GPU/image-20250603184442154.png)
+
+* fp下，atomic会导致同一机器+runtime params时的精度差异
+  * ![image-20250603185127387](./GPU/image-20250603185127387.png)
+
+* **Triton Atomic Memory Order 默认是 acquire-release**
+  - https://triton-lang.org/main/python-api/generated/triton.language.atomic_add.html
+* CCCL
+  * The class template `cuda::atomic_ref` is an extended form of [cuda::std::atomic_ref](https://en.cppreference.com/w/cpp/atomic/atomic_ref) that takes an **additional** **[cuda::thread_scope](https://nvidia.github.io/cccl/libcudacxx/extended_api/memory_model.html#libcudacxx-extended-api-memory-model-thread-scopes)** **argument**, defaulted to `cuda::std::thread_scope_system`.
+    - https://nvidia.github.io/cccl/libcudacxx/extended_api/synchronization_primitives/atomic_ref.html
+* 应用
+  * CUDA programming guide says that *atomicAdd has relaxed memory semantics*.
+  * ![image-20250529210343079](./GPU/image-20250529210343079.png)
+* ![image-20250529210902176](./GPU/image-20250529210902176.png)
+
+
+
+#### CUDA Graph
+
+* 从events到graph
+
+![image-20250603175817686](./GPU/image-20250603175817686.png)
+
+* **Limitations of scheduling task graphs with streams**
+  * **Sub-optimal scheduling : GPU runtime has no vision of tasks ahead**
+  * **Must pay various initialization overheads when launching each task**
+* New alternative since CUDA 10.0: cudaGraph API
+  * **Build an in-memory representation of the dependency graph offline**
+  * **Let the CUDA runtime optimize and schedule the task graph**
+  * **Launch the optimized graph as needed**
+* Two ways we can build the dependency graph
+  * Record a sequence of asynchronous CUDA calls Describe the graph explicitly
+  * Describe the graph explicitly
+
+##### Record sequence
+
+* Supports any number of streams (except default stream 0) 
+  * Follows dependencies to other streams through events
+  * Capture all streams that have dependency with first captured stream
+* Need all recorded calls to be asynchronous and bound to a stream
+  * CPU code needs to be asynchronous to be recorded too!
+  * `cudaLaunchHostFunc`
+
+##### Describing the graph explicitly
+
+
+
+
 
 #### CUDA cooperative group 协作线程组
 
@@ -982,6 +1076,9 @@ public:
 * 应用：
   * exclusive scan的应用：partition split
   * min/max的应用：heap结构
+* 结论：
+  * ![image-20250530025208117](./GPU/image-20250530025208117.png)
+  
 
 ##### Segmented Scan
 
@@ -1061,11 +1158,66 @@ public:
 
 ![image-20250529185921863](./GPU/image-20250529185921863.png)
 
-* Message Passing Latency
+###### **Message Passing Latency**
+
+* tile bytes = 512 threads * 4B
 
 ![image-20250529190927108](./GPU/image-20250529190927108.png)
 
+* ![image-20250530004924150](./GPU/image-20250530004924150.png)
 
+* 优化到不需要memory ordering
+
+![image-20250530005844631](./GPU/image-20250530005844631.png)
+
+![image-20250530010008876](./GPU/image-20250530010008876.png)
+
+* 增大tile bytes
+
+![image-20250530015646080](./GPU/image-20250530015646080.png)
+
+
+
+##### CUB BlockScan实现
+
+![image-20250530011004227](./GPU/image-20250530011004227.png)
+
+![image-20250530011109457](./GPU/image-20250530011109457.png)
+
+![image-20250530015826615](./GPU/image-20250530015826615.png)
+
+![image-20250530021638792](./GPU/image-20250530021638792.png)
+
+![image-20250530021654371](./GPU/image-20250530021654371.png)
+
+![image-20250530021858322](./GPU/image-20250530021858322.png)
+
+* 受限于block shared memory
+  * L20 Max Shared Memory: 228 KiB/SM, **48 KiB/Block**
+
+![image-20250530022022807](./GPU/image-20250530022022807.png)
+
+##### Decoupled Look Back
+
+![image-20250530022621920](./GPU/image-20250530022621920.png)
+
+* CTA以polling的方式look back
+
+  * CTA 代表 Cooperative Thread Array，即 CUDA 中的线程块（thread block）。
+
+  * ![image-20250530022837433](./GPU/image-20250530022837433.png)
+
+  * 问题：轮训的contention过大
+  * 解法：delay
+    * 比如最近的架构，L2 latency增加，backoff策略的重要性增加
+  * ![image-20250530023403117](./GPU/image-20250530023403117.png)
+  * ![image-20250530023602245](./GPU/image-20250530023602245.png)
+
+* ![image-20250530024004967](./GPU/image-20250530024004967.png)
+
+##### Autotune
+
+![image-20250530024158600](./GPU/image-20250530024158600.png)
 
 
 
@@ -1098,6 +1250,58 @@ public:
 
 ![image-20250518041015826](./GPU/image-20250518041015826.png)
 
+##### [Speaking Tensor Cores —— GPU Mode Lecture 23](https://www.youtube.com/watch?v=hQ9GPnV0-50)
+
+* Intro
+  * CUDA C++ Template Library for High Performance Linear Algebra
+  * Tensor core computations at all scopes and scales, **decomposed into their “moving parts”**
+  * **Provides a native tile-based programming model for GPU kernels**
+  * ![image-20250515020823498](./GPU/image-20250515020823498.png)
+
+* 特点：
+
+  * Public Tensor Core programming model for NVIDIA GPUs
+    * Serve as a production grade example for the world
+  * Extreme focus on developer productivity for custom kernels
+    * Allow customizing any layer in the hierarchy while preserving composability with other layers
+  * If it compiles, it will be correct – actionable static assert messages otherwise
+    * **Static asserts** at every layer to ensure layout and dispatch compatibilities
+  * Single, clear points of customization and dispatch to flatten the learning curve
+    * Reduce API surface area with fewer named types
+  * ![image-20250515021614827](./GPU/image-20250515021614827.png)
+
+  * ![image-20250515021650578](./GPU/image-20250515021650578.png)
+
+
+
+#### 概念、结构、API
+
+![image-20250602003811225](./GPU/image-20250602003811225.png)
+
+![image-20250602004228998](./GPU/image-20250602004228998.png)
+
+##### Collective API
+
+![image-20250603021616958](./GPU/image-20250603021616958.png)
+
+ ###### Collective Builder
+
+![image-20250603022518063](./GPU/image-20250603022518063.png)
+
+![image-20250603022527792](./GPU/image-20250603022527792.png)
+
+![image-20250603022800068](./GPU/image-20250603022800068.png)
+
+##### Kernel API
+
+* Kernel layer
+
+  * collective mainloop: MMA
+
+  * collective epilogue: post-processing (GEMM的general的体现，alpha*AB + c)
+
+![image-20250603021942599](./GPU/image-20250603021942599.png)
+
 #### 编程模型
 
 ##### Layout
@@ -1105,6 +1309,8 @@ public:
 * layout
   * shape
   * Stride
+  * 支持multi-modal: 比如 (4, (2,2)):(2, (1,8))，嵌套，是multi-modal
+* ![image-20250602002442488](./GPU/image-20250602002442488.png)
 
 ![image-20250518041548300](./GPU/image-20250518041548300.png)
 
@@ -1122,39 +1328,7 @@ public:
 
 ![image-20250520020742235](./GPU/image-20250520020742235.png)
 
-#### WGMMA
-
-https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
-
-#### [Speaking Tensor Cores —— GPU Mode Lecture 23](https://www.youtube.com/watch?v=hQ9GPnV0-50)
-
-> **看到 14:20**
-
-* Intro
-  * CUDA C++ Template Library for High Performance Linear Algebra
-  * Tensor core computations at all scopes and scales, **decomposed into their “moving parts”**
-  * **Provides a native tile-based programming model for GPU kernels**
-  * ![image-20250515020823498](./GPU/image-20250515020823498.png)
-
-* 特点：
-
-  * Public Tensor Core programming model for NVIDIA GPUs
-    * Serve as a production grade example for the world
-  * Extreme focus on developer productivity for custom kernels
-    * Allow customizing any layer in the hierarchy while preserving composability with other layers
-  * If it compiles, it will be correct – actionable static assert messages otherwise
-    * Static asserts at every layer to ensure layout and dispatch compatibilities
-  * Single, clear points of customization and dispatch to flatten the learning curve
-    * Reduce API surface area with fewer named types
-  * ![image-20250515021614827](./GPU/image-20250515021614827.png)
-
-  * ![image-20250515021650578](./GPU/image-20250515021650578.png)
-
-
-
-
-
-### CuTe
+##### CuTe
 
 > CuTe包含于CUTLASS 3
 >
@@ -1164,7 +1338,76 @@ https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
 
 
 
+
+
+#### Writing Custom Kernels
+
+* Write custom mainloops (micro-kernels), compose with existing schedule (outer loops) via dispatch policies
+* Write custom schedules (outer loops), compose with existing mainloops (micro-kernels) via dispatch policies
+* Kernel layer totally agnostic of # of in/out tensors and the semantics of the computation itself
+* Kernel is a composition of a mainloop, epilogue, and tile scheduler: compose them freely
+
+![image-20250603023325396](./GPU/image-20250603023325396.png)
+
+##### fusion
+
+![image-20250603024424604](./GPU/image-20250603024424604.png)
+
+##### mixed input
+
+* Mixed input: fused dequant
+  * 新增一个collective做upcast即可
+
+![image-20250603025500228](./GPU/image-20250603025500228.png)
+
+##### pipeline
+
+![image-20250603023512480](./GPU/image-20250603023512480.png)
+
+##### epilogue fusion
+
+> Gpu-cutlass.cc
+
+![image-20250603025632871](./GPU/image-20250603025632871.png)
+
+<img src="./GPU/image-20250603025804753.png" alt="image-20250603025804753" style="zoom:30%;" />
+
+
+
+* python interface
+
+![image-20250603031033752](./GPU/image-20250603031033752.png)
+
+* optimized loop
+
+![image-20250603031007227](./GPU/image-20250603031007227.png)
+
+##### Profiler
+
+* CUTLASS has a python based kernel emitter and a manifest to hold a bunch of kernels
+* Autotuning strategy is to stamp out a set of candidates kernels and then …
+* Use the CUTLASS profiler to pick the best kernel for your problems of interest
+* It is also possible to dump ptx of the best performing kernel with `cuobjdump` or –DCUTLASS_NVCC_KEEP
+
+
+
+#### Case Study: GEMM、GETT
+
+> GETT paper https://arxiv.org/abs/1607.00145
+
+https://docs.nvidia.com/cutlass/media/docs/cpp/cute/0x_gemm_tutorial.html
+
+#### Case Study: WGMMA
+
+https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
+
+
+
+
+
 ### CCCL
+
+#### Intro
 
 ![image-20250522014652212](./GPU/image-20250522014652212.png)
 
@@ -1172,7 +1415,18 @@ https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
 
 ![image-20250522020816335](./GPU/image-20250522020816335.png)
 
+* Note：
+  * 各种GPU上的性能都比较好
 
+
+
+#### CUB
+
+* Block load/Scan
+
+![image-20250530010705118](./GPU/image-20250530010705118.png)
+
+![image-20250530010946272](./GPU/image-20250530010946272.png)
 
 #### 应用：[llm.cccl —— GPU Mode Bonus Lecture](https://www.youtube.com/watch?v=WiB_3Csfj_Q)
 

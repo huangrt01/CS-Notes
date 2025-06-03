@@ -1,9 +1,9 @@
-### Intro
+*** Intro
 
 Pytorch的框架开销：As long as you have Tensors with a few 100s of elements, “Python is slow” and data administrative
 overhead (allocate tensor structure) is single digit percentages
 
-### dataset
+*** dataset
 
 num_workers、prefetch_factor
 
@@ -11,7 +11,7 @@ num_workers、prefetch_factor
 
 减少不必要的CPU线程：numpy偷偷创建cpu核数的线程
 
-### cuda
+*** cuda
 
 https://docs.pytorch.org/docs/stable/notes/cuda.html#tensorfloat-32-tf32-on-ampere-and-later-devices
 https://github.com/Lightning-AI/pytorch-lightning/issues/18665
@@ -22,18 +22,23 @@ torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True # The flag below controls whether to allow TF32 on cuDNN. This flag defaults to True.
 
 
-### nvfuser
+*** nvfuser
 
 https://pytorch.org/blog/introducing-nvfuser-a-deep-learning-compiler-for-pytorch/
 
-### Thunder
+*** Thunder
 
 https://lightning.ai/docs/thunder/latest/
 https://github.com/Lightning-AI/lightning-thunder
 https://www.nvidia.com/en-us/on-demand/session/gtc24-s62544/
 
 
-### activation ckpt
+*** tunable op
+
+https://docs.pytorch.org/docs/stable/cuda.tunable.html
+
+
+*** activation ckpt
 
 import torch
 import torch.nn as nn
@@ -53,7 +58,7 @@ output = checkpoint_sequential(model, segments=2, input=x)
 print("Output shape:", output.shape)
 
 
-### ZERO
+*** ZERO
 
 https://pytorch.org/tutorials/recipes/zero_redundancy_optimizer.html
 
@@ -78,11 +83,11 @@ def example(rank, world_size, use_zero):
     print(f"params sum is: {sum(model.parameters()).sum()}")
 
 
-### 坑
+*** 坑
 * 尽量减少张量搬运
 * 使用inplace操作
 
-### 显存memory优化
+*** 显存memory优化
 
 torch.cuda.empty_cache()
 
@@ -172,14 +177,14 @@ foreach=False
 
 
 
-### 小心同步
+*** 小心同步
 
 tensor.item()、tensor[0]
 tensor.cpu()、numpy()
 print(tensor)
 torch.num_nonzero()
 
-### gradient compress reduction
+*** gradient compress reduction
 - https://main-horse.github.io/posts/reduction-precision/
 
 m.register_comm_hook(dist.group.WORLD, bf16_compress_hook)
@@ -210,7 +215,7 @@ with torch.device('cuda'):
             std_of_diff[std].append(diff_std)
 
 
-### 异步优化
+*** 异步优化
 
 https://zhuanlan.zhihu.com/p/9616453650
 
@@ -322,16 +327,16 @@ train_1(model, optimizer, trainloader, num_iters=60) # non_blocking: 9.32s, pin_
 print(time.perf_counter() - start)
 
 
-### backward异步
+*** backward异步
 
 https://docs.pytorch.org/docs/stable/notes/cuda.html#stream-semantics-of-backward-passes
 
 
-### distributed ckpt
+*** distributed ckpt
 
 https://github.com/pytorch/tutorials/blob/main/recipes_source/distributed_checkpoint_recipe.rst
 
-### async distributed ckpt
+*** async distributed ckpt
 
 https://pytorch.org/tutorials/recipes/distributed_async_checkpoint_recipe.html
 

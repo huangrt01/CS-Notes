@@ -27,11 +27,14 @@ class Test(unittest.TestCase):
             new_ckpt_dir = f'{self.temp_dir}/new_saved'
             ...
 
-### pytest
+*** pytest
 
 - @pytest.mark.benchmark
 
 pytest.main(["-x", __file__])
+
+
+@create_new_process_for_each_test()     —— vllm
 
 
 ### Decorator

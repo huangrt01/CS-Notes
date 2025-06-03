@@ -15,10 +15,7 @@ https://godbolt.org
   
 * 编译器有能力让不同 target 的 cpp 文件的不同编译选项，有区分地生效。但无法控制其它cpp文件对头文件的使用，因此头文件为主体的开源项目，经常不得不很小心地去处理各种使用情况。
 
-#### Compiling
 
-* AOT (Ahead-Of-Time Compilation)
-* JIT
 
 #### Linking
 
@@ -122,6 +119,18 @@ kernel2<<<1,1>>>(); // host code launches kernel2
   * [Application paper](https://www.osti.gov/biblio/1798430-enhancements-supporting-ic-usage-pem-libraries-next-gen-platforms)
 
 #### PGO (Profile Guided Optimization)
+
+
+
+### Compiling 优化
+
+> * AOT (Ahead-Of-Time Compilation)
+> * JIT
+
+![image-20250603233349414](./Compiling/image-20250603233349414.png)
+
+* Operation Reordering
+  * ![image-20250603233420166](./Compiling/image-20250603233420166.png)
 
 
 

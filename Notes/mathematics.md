@@ -299,6 +299,10 @@ https://web.eecs.umich.edu/~justincj/teaching/eecs442/notes/linear-backprop.html
 
 ![image-20250331145615951](./mathematics/image-20250331145615951.png)
 
+
+
+
+
 ## 线性代数
 
 *  $$E_{S}=E_CE_U$$    -> $$e_s^x={E_U}^Te_c^x$$
