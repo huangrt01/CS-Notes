@@ -65,6 +65,11 @@
 ![Compute required for training LLMs](./AI-Algorithms/Compute-for-Training-LLMs-GPT3-paper-672x385.jpg)
 
 * 量化scaling law，参考Scaling Laws for Precision
+* 参数量 or FLOPS，以MOE为例研究 https://arxiv.org/pdf/2501.12370
+  * 核心结论
+    - 预训练中优先增加参数而非 FLOPs，最优稀疏度随模型增大趋近 1。
+    - 推理时 FLOPs 影响更大，稀疏模型在推理任务需动态增加计算（如思维链提示）。
+  * 语言理解类任务依赖参数存储的知识，稀疏模型参数更多优势显著；而推理类任务（如 SQuAD）需要实时计算处理输入，稀疏模型 FLOPs per example 更低，导致推理深度不足，误差比密集模型高 5-10%。
 
 
 
@@ -327,9 +332,41 @@
 - But it also is a formidable computational simplifications: The heads operate fully independently, so computing them is (like batch) “embarrassingly parallel”
   - head dim是性能的一个限制因素
 
+##### Self-Attn 是低通滤波器
+
+> ANTI-OVERSMOOTHING IN DEEP VISION TRANSFORMERS VIA THE FOURIER DOMAIN ANALYSIS: FROM THEORY TO PRACTICEhttps://arxiv.org/pdf/2203.05962
+
+* 视觉 Transformer（ViT）在深度增加时因注意力坍塌和补丁均匀性导致性能饱和，本文通过傅里叶分析建立理论框架，证明**自注意力机制本质上是低通滤波器，深度增加会使特征图仅保留直流（DC）分量**。为此提出 AttnScale 和 FeatScale 两种技术：前者将自注意力块分解为低通和高通分量并重新缩放组合为全通滤波器，后者对不同频带特征图重新加权以增强高频信号。两者均无超参数且高效，插入多种 ViT 变体后，使 DeiT、CaiT 和 Swin-Transformer 性能分别提升最高 1.1%、0.6% 和 0.5%，参数开销极小。
+
+* self-attn是低通滤波器
+  * 定理与推论
+    - **定理 1**：自注意力矩阵是低通滤波器，随层数增加高频分量消失。
+    - **推论 2**：不同层自注意力矩阵的组合仍为低通滤波器。
+    - **定理 3**：给出自注意力对高频分量的抑制速率上界。
+  * 现有机制的作用
+    - 多头注意力、残差连接和前馈网络（FFN）可缓解但无法根除低通问题。
+    - 残差连接能防止高频分量衰减至零，但无法单独提升高频信息。
+  * ![image-20250605194854393](./AI-Algorithms/image-20250605194854393.png)
+  * 本质上是softmax是低通滤波器
+  * ![image-20250605200742218](./AI-Algorithms/image-20250605200742218.png)
+
+
+
+
+
 ##### Massive Values in MSA
 
 > Massive Values in Self-Attention Modules are the Key to Contextual Knowledge Understanding
+
+##### Quiet Attention
+
+>  https://www.evanmiller.org/attention-is-off-by-one.html
+>
+> https://github.com/kyegomez/AttentionIsOFFByOne
+
+![image-20250606172056691](./AI-Algorithms/image-20250606172056691.png)
+
+
 
 #### MLP
 
@@ -519,6 +556,12 @@ https://github.com/OpenNMT/OpenNMT-py/
 #### MLA
 
 见 DeepSeek-V3 章节
+
+#### Trans in trans
+
+https://arxiv.org/pdf/2103.00112
+
+![image-20250606173644337](./AI-Algorithms/image-20250606173644337.png)
 
 ### transformer外的相关模型结构
 
@@ -2190,6 +2233,33 @@ https://arxiv.org/abs/2104.09864
 #### 其它
 
 [LongRoPE](https://arxiv.org/abs/2402.13753), [NTK-RoPE](https://www.reddit.com/r/LocalLLaMA/comments/14lz7j5/ntkaware_scaled_rope_allows_llama_models_to_have/), [ReRoPE](https://github.com/bojone/rerope?tab=readme-ov-file),
+
+### Attention Sink (Global Token)
+
+> EFFICIENT STREAMING LANGUAGE MODELS WITH ATTENTION SINKS (streaming-LLM)
+>
+> 节点间信息传播的中心
+
+![image-20250606171300149](./AI-Algorithms/image-20250606171300149.png)
+
+1. 注意力汇聚点（Attention Sink）
+   - 发现模型对初始 tokens 分配大量注意力，即使其语义无关（如 Llama-2-7B 深层头部对初始 token 注意力占比超 50%）
+   - **原因：Softmax 要求注意力分数和为 1，初始 tokens 因自回归特性被所有后续 tokens 可见，易被训练为汇聚点**
+2. StreamingLLM 框架
+   - **核心设计**：保留 4 个初始 tokens 的 KV 作为汇聚点，结合滑动窗口 KV 缓存（如 4+1020 配置）
+   - 技术细节
+     - 缓存内重新分配位置编码（如当前缓存 tokens [0,1,2,3,6,7,8] 解码时位置设为 0-7）
+     - 兼容 RoPE（缓存 Keys 后应用旋转变换）和 ALiBi（连续线性偏置）
+   - **预训练优化**：添加 Learnable Sink Token 作为专用汇聚点，160M 参数模型实验显示仅需 1 个该 token 即可稳定性能
+
+四、应用与局限
+
+1. **适用场景**：多轮对话、短文档 QA 等依赖近期上下文的流式任务，已被 NVIDIA TensorRT-LLM 等框架采用
+2. 局限性
+   - 不扩展模型上下文长度，依赖缓存内信息（如 StreamEval 中查询距离超缓存时准确率降为 0）
+   - 长文档 QA 等需长期记忆的任务表现不及截断基线
+
+![image-20250606171351749](./AI-Algorithms/image-20250606171351749.png)
 
 ### [LWM —— Large World Model with Blockwise Ring-Attn](https://arxiv.org/pdf/2402.08268)
 

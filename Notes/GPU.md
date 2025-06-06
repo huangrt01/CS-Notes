@@ -332,6 +332,14 @@ cudaMemcpyHostToDevice
 * ASYNC in SMEM and ILP in RMEM
   * ![image-20250515020212872](./GPU/image-20250515020212872.png)
 
+* Hopper
+  * ![image-20250604163312653](./GPU/image-20250604163312653.png)
+  * ![image-20250604205142105](./GPU/image-20250604205142105.png)
+
+
+
+
+
 ##### GPU Network
 
 > 基于 [ICI(tpu)](https://cloud.google.com/tpu/docs/system-architecture-tpu-vm)/[RoCE](https://en.wikipedia.org/wiki/InfiniBand)/IB 实现高速网络互联
@@ -412,6 +420,8 @@ cudaMemcpyHostToDevice
 
   ![image-20250502214129368](./GPU/image-20250502214129368.png)
 
+
+
 ##### [Speaking Tensor Cores —— GPU Mode Lecture 23](https://www.youtube.com/watch?v=hQ9GPnV0-50)
 
 > Vijay Thakkar & Pradeep Ramani (Representing the CUTLASS Team @NVIDIA)
@@ -442,6 +452,28 @@ cudaMemcpyHostToDevice
     * Concurrency programming - Writing kernels isn’t just about getting the layouts right anymore
 
 ![image-20250515015509463](./GPU/image-20250515015509463.png)
+
+##### 从 Ampere 到 Hopper
+
+* WGMMA
+
+  > https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
+  >
+  > https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#asynchronous-warpgroup-level-matrix-instructions
+
+  * ![image-20250604011322741](./GPU/image-20250604011322741.png)
+
+  * https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#asynchronous-warpgroup-level-matrix-instructions
+    * ![image-20250604011633358](./GPU/image-20250604011633358.png)
+
+* cute实现
+
+  * ![image-20250604012854461](./GPU/image-20250604012854461.png)
+  * ![image-20250604012906376](./GPU/image-20250604012906376.png)
+
+* PTX
+  * ![image-20250604012549285](./GPU/image-20250604012549285.png)
+  * ![image-20250604014553481](./GPU/image-20250604014553481.png)
 
 
 
@@ -583,21 +615,6 @@ nvidia-smi --query-gpu=name --format=csv,noheader
   * a100加速比2，
   * ![image-20250331133109379](./GPU/image-20250331133109379.png)
 
-#### 新硬件架构
-
-##### Hopper
-
-* Thread Block Group的概念
-* WGMMA 的异步能力 https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
-
-
-
-##### Blackwell
-
-https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
-
-
-
 #### Engegy Model
 
 ![image-20250331151735124](./GPU/image-20250331151735124.png)
@@ -609,7 +626,7 @@ https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
 
 
 
-#### **机型基础
+#### 机型基础
 
 * Nvidia GPU的算力([Compute Capability](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#compute-capability)), 只是一个版本号, 用来表示核心架构. 一般用`X.X`的方式表示, 第一位是主版本号, 第二位是次版本号, 如下:
 
@@ -627,7 +644,16 @@ https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
 | Fermi architecture (费米)                                    | 2    | 2010     |                                                              |                                                              |                              |                   |
 | Tesla architecture (特斯拉)                                  | 1    | ~        |                                                              |                                                              |                              |                   |
 
+* 大卡和小卡
+  
+  * 主要差异是显存带宽、互联带宽，因此大卡用于训练，小卡训练+推理
+  
+  * 大卡：H20/H100/H800/H200/A100/A800
+  
+  * 小卡：L20/L40S/L40/A30/A10/T4/V100
+  
 * H20
+
   * ```
     * SM Version: 900 (PTX Version: 900)
     * Number of SMs: 78
@@ -641,11 +667,11 @@ https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
     * Available Registers: 65536/SM, 65536/Block
     * ECC Enabled: Yes
     ```
-  
+
 * H100 GPU
   * 132 SMs with 64 cores per SM, totalling a whopping 8448 cores.
   * each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
-  
+
 * A100
   * GPU
     * GPU Memory：80 GB
@@ -663,11 +689,11 @@ https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
 
   * 《Dissecting the Ampere GPU architecture via microbenchmarking》
   * 《Nvidia A100 tensor core GPU architecture》
-  
+
 * V100
   * https://datacrunch.io/blog/nvidia-v100-gpu-specs
   * roofline: 125/0.9 =139FLOPS/Byte
-  
+
 * GA10x：RTX 3090, has 82 SMs.
 
 * Each SM in GA10x GPUs contain 128 CUDA Cores, 4 third-generation Tensor Cores, 2 FP64 Cores
@@ -675,7 +701,7 @@ https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
   * 4*32 FP32 units (one per thread), half  of which know INT32
   * L1 cache and shared memory share hardware (128KB) directly on the SM shmem can be 0/8/16/32/64/100KB
     * L1 Cache the remainder (>=28KB)
-  
+
 * ![image-20250404011658421](./GPU/image-20250404011658421.png)
 
 
@@ -737,6 +763,128 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 
 * https://www.pugetsystems.com/labs/articles/puget-systems-most-reliable-hardware-of-2024
 
+### 新硬件架构
+
+#### Ampere
+
+* Ampere GPU 新增了 *LDGSTS* 指令，数据块从Global Memory 到Shared Memory 的过程不需要经过中间寄存器，可以进一步的优化SGEMM 的性能
+
+#### Hopper
+
+> [GPU Mode Lecture 23](https://www.youtube.com/watch?v=hQ9GPnV0-50) 的第二部分
+
+##### Thread Block Group
+
+* Intro
+  * ![image-20250604004403044](./GPU/image-20250604004403044.png)
+
+* 硬件视角：Hopper中，每个GPC大概相当于一张Kepler架构的显卡
+  * ![image-20250604004514480](./GPU/image-20250604004514480.png)
+
+* DSHEM
+  * ![image-20250604004631680](./GPU/image-20250604004631680.png)
+
+##### Async Barriers
+
+* 核心是理解"Independent Work" ：
+  * 它 不依赖 于其他线程是否完成了它们的 "Produce Data" 阶段
+  * 而 "Consume Data" 阶段通常 依赖 于所有线程都完成了 "Produce Data"。
+* cuda::barrier
+* 硬件支持
+  * ampere: spin wait
+  * hopper：fast sync
+
+![image-20250604005508134](./GPU/image-20250604005508134.png)
+
+##### Async Transaction Barriers
+
+![image-20250604010051437](./GPU/image-20250604010051437.png)
+
+##### TMA
+
+> TENSOR MEMORY ACCELERATOR UNIT (TMA) FOR ASYNC DATA MOVEMENT
+
+* 历史
+  * ampere之前，从global memory到shared memory，需要经过registers
+  * Ampere GPU 新增了 *LDGSTS* 指令，数据块从Global Memory 到Shared Memory 的过程不需要经过中间寄存器，可以进一步的优化SGEMM 的性能
+* 特点：
+  * bi-directional
+  * DSMEM相关
+  * aware of tensor (strides...)
+  * async transaction barrier
+
+![image-20250604010317897](./GPU/image-20250604010317897.png)
+
+##### TensorCore
+
+参考「计算：tensorcore」
+
+##### Case Study: Hopper GEMM
+
+> Reading material :
+>
+> • https://github.com/NVIDIA/cutlass/blob/main/media/docs/cute/
+>
+> • https://www.nvidia.com/en-us/on-demand/session/gtcspring23-s51413/
+>
+> • https://www.nvidia.com/en-us/on-demand/session/gtc24-s61198/
+>
+> • https://github.com/NVIDIA/cutlass/pull/1578
+
+* 概念
+  * 多播 (Multicast) ：多播是一种通信模式，其中数据从单一源发送到一组特定的目标接收者。在GPU上下文中，这意味着从全局内存加载的数据块可以被多个计算单元（如线程块）共享，而不是每个单元都独立去全局内存读取相同的数据。
+
+![image-20250604015516169](./GPU/image-20250604015516169.png)
+
+* deep software pipelining of loads via shared memory
+  * 能work的必要因素：1.MMA运算飞快，因此需要加速load data；2.cache足够大
+  * 什么是deep or short pipelining？
+    * deep ～ 数据多 ～ L2 cache
+    * short ～ 数据少 ～ shared memory
+
+![image-20250604163241698](./GPU/image-20250604163241698.png)
+
+* 进阶优化
+  * ![image-20250605015652871](./GPU/image-20250605015652871.png)
+
+* 高阶优化
+  * Optimal ThreadBlock rasterization & swizzling
+    * Encourages exploitation of locality
+    * https://github.com/NVIDIA/cutlass/blob/main/media/docs/efficient_gemm.md#threadblock-rasterization
+  * Stream-K scheduling
+    * Finding the optimal Trade-off between occupancy and efficiency
+    * https://arxiv.org/abs/2301.03598
+  * Efficient Input transformations prior to MMA
+    * Optimizing for register usage
+    * Pipelined RS kernels
+    * https://github.com/NVIDIA/cutlass/blob/main/include/cutlass/gemm/collective/sm90_mma_tma_gmma_rs_warpspecialized.hp
+  * Optimal instruction sequence generation
+    * Prefetching, Cache management
+
+* ![image-20250605020334527](./GPU/image-20250605020334527.png)
+
+* ![image-20250605021056758](./GPU/image-20250605021056758.png)
+
+
+
+##### Case Study: Persistent Ping-Pong GEMM
+
+![image-20250605015850900](./GPU/image-20250605015850900.png)
+
+![image-20250605015918459](./GPU/image-20250605015918459.png)
+
+![image-20250605020018668](./GPU/image-20250605020018668.png)
+
+
+
+#### Blackwell
+
+https://www.nvidia.com/en-us/data-center/technologies/blackwell-architecture/
+
+
+
+
+
 ### CUDA
 
 > Nvidia Lecture 1: Accelerating Applications with CUDA C/C++
@@ -754,6 +902,8 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
 #### Programming Model
 
 ##### CUDA Thread Hierarchy
+
+![image-20250604004317561](./GPU/image-20250604004317561.png)
 
 * Programming model: SIMT
   * 三层抽象：grid, block, thread
@@ -1023,6 +1173,23 @@ public:
 * Cutlass implementation of matrix multiplication on A100
   * https://developer.download.nvidia.com/video/gputechconf/gtc/2020/presentations/s21745-developing-cuda-kernels-to-push-tensor-cores-to-the-absolute-limit-on-nvidia-a100.pdf
 
+#### Case Study: Fp8 GEMM
+
+* For fp8 training, follow the CUTLASS FP8 recipe that does higher precision accumulation
+* For fp8 quant/dequant, see CUTLASS epilogues fusing amax and aux tensors
+
+- amax :
+- amax 是 "absolute maximum" 的缩写，即 绝对最大值 。
+- aux tensors (auxiliary tensors) : 在 fp8 量化/反量化以及 CUTLASS epilogue（尾声）的上下文中，这些辅助张量可能包含多种数据，用于支持量化过程或与 GEMM 结果相关的其他融合操作。例如：
+  - 缩放因子 (Scale factors) : 可能直接存储预计算的或根据 amax 动态计算出的缩放因子。这些缩放因子可能是逐张量、逐通道或更细粒度的。
+  - 零点 (Zero-points) : 某些量化方案除了缩放因子外，还会使用零点偏移。这些零点值可以存储在辅助张量中。
+  - 偏置张量 (Bias tensors) : 如果偏置加法操作被融合到 epilogue 中，偏置项会存储在这里。
+  - 其他元数据或中间结果 : 对于更复杂的 epilogue 操作（例如，反量化后立即进行激活函数计算，然后再量化），可能需要辅助张量来存储中间计算结果或下一阶段操作所需的参数。
+
+
+
+
+
 #### Case Study: Reduce
 
 > GPU Mode Lecture 9: Reductions https://www.youtube.com/watch?v=09wntC6BT5o
@@ -1245,6 +1412,14 @@ public:
 > [GPU Mode Lecture 15](https://www.youtube.com/watch?v=G6q719ck7ww&t=4s) by Eric Auld
 
 #### Intro
+
+* cutlass v.s. triton
+  * jit编译慢，某些场景serving难
+  * 易用性差一些
+  * 性能上限高一点
+  * 先triton再cutlass是趋势
+
+![image-20250605021201168](./GPU/image-20250605021201168.png)
 
 ![image-20250518040354290](./GPU/image-20250518040354290.png)
 
@@ -1547,6 +1722,8 @@ https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
 >
 > Getting good occupancy – balance resources
 
+![image-20250604015349787](./GPU/image-20250604015349787.png)
+
 ##### Roofline Model
 
 * H20: 
@@ -1801,6 +1978,12 @@ https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9
 
 
 
+#### 新硬件比如 Hopper 特性
+
+参考「Hopper」
+
+
+
 ### PMPP: Programming Massively Parallel Processors
 
 > * 书：Programming Massively Parallel Processors (PMPP) 3rd edition
@@ -2011,6 +2194,8 @@ ptrToConsume = manager.manage(ptrToProduce); // Usage
 ### 应用
 
 #### Intro
+
+![image-20250605021257360](./GPU/image-20250605021257360.png)
 
 * use [*GPU-Accelerated Libraries for Computing*](https://developer.nvidia.com/gpu-accelerated-libraries) to learn where you can use highly optimized CUDA libraries for tasks like:
   *  [basic linear algebra solvers](https://developer.nvidia.com/cublas) (BLAS)

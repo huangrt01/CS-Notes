@@ -483,6 +483,18 @@ https://en.wikipedia.org/wiki/Cholesky_decomposition
 
 ![image-20250405000910294](./mathematics/image-20250405000910294.png)
 
+## 数字信号处理
+
+### DFT
+
+![image-20250605195600286](./mathematics/image-20250605195600286.png)
+
+
+
+
+
+
+
 ## 数学在工科的应用
 
 * [为什么这么多年直到马斯克出来才想到做可复用火箭？](https://www.zhihu.com/question/597238433/answer/3080541702)

@@ -56,7 +56,8 @@
     * Params：`12C^2+13C`
   
   * attn的计算占比是$$\frac{4BCT^2}{24BTC^2+4BCT^2} = \frac{T}{6C+T}$$
-  * GPT3-175B C = 12288, T = 8192
+    * 在$$T < 6 \times C$$时，整体计算压力在 FFN+QKVO Proj 部分；在 $$T > 6 \times C$$时，整体计算压力在Attention 部分。
+    * GPT3-175B C = 12288, T = 8192
   
 
 ```Python
@@ -135,9 +136,7 @@ y = fc2(y)
     * fp16参数、fp32参数copy、fp16梯度、fp32梯度、fp32历史梯度滑动平均、fp32历史梯度平方和滑动平均
     * `(1+2+1+2+2+2)*2*175=3,500 GB`
 
-* the 1.5B parameter GPT-2 model trained with sequence length of 1K and batch size of
-  
-  32 requires about 60 GB of memory. 
+* the 1.5B parameter GPT-2 model trained with sequence length of 1K and batch size of 32 requires about 60 GB of memory. 
   
   * Activation checkpointing reduce the activation memory by approximately the square root of the total activations. -> 8GB
   

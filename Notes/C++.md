@@ -3556,7 +3556,7 @@ void finish_task() {
   * acquire release(memory_order_consume, memory_order_acquire, memory_order_release, memory_order_acq_rel)
 * 顺序一致次序 sequential consistent
   * 对应memory_order_seq_cst
-  * 保证了：
+  * 保证了 —— 全局总序
     * 从同步的角度来看，一个顺序一致的 store 操作 synchroniezd-with 一个顺序一致的需要读取相同的变量的 load 操作
     * 在 load 之后执行的顺序一致原子操作都表现得像在 store 之后完成
 * 松弛次序 relaxed

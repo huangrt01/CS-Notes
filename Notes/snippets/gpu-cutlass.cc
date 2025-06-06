@@ -2,6 +2,10 @@ cutlass = cutlass + cute
 
 nvcc -std=c++17 examples/cute/tutorial/tiled_copy.cu -o examples/cute/tutorial/tiled_copy_app -I include -I tools/util/include
 
+*** tutorials
+
+https://docs.nvidia.com/cutlass/media/docs/cpp/cute/00_quickstart.html
+
 *** setup cutlass gemm
 
 https://github.com/pytorch-labs/applied-ai/blob/main/kernels/cuda/cutlass_gemm/setup.py
