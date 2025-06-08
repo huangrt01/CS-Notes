@@ -163,11 +163,14 @@
 * N-gram word2vec模型泛化性差
   * -> 大力出奇迹，对全局做attention
 
-
-
 * seq2seq模型的早期探索
   * https://arxiv.org/abs/1609.08144
   * additive attn: https://arxiv.org/abs/1703.03906
+
+#### 从 Machine Translation 的角度理解 Transformer
+
+* encoder是存储英语原文信息KV
+* decoder逐个生成中文，生成过程中需要以生成的中文为Query，对Encoder高度压缩了的英文KV信息，做cross attn，蒸馏信息并预测生成新query
 
 ### Intro
 
@@ -240,7 +243,7 @@
   * Byte-level BPE
   * GPT-2 has a vocabulary size of 50,257, which corresponds to the 256 bytes base tokens, a special end-of-text token and the symbols learned with 50,000 merges.
 
-### Encoder & Decoder
+### Encoder Decoder v.s. Decoder Only
 
 > 一些思考：
 >
@@ -249,15 +252,21 @@
 
 * encoder用于分析，decoder用于生成
   * Decoder 只关注 Encoder 的 最终输出层
-  * **非标准实现**的transformer
+  * 下面是一种**非标准实现**的transformer
+    * 标准transformer，几个decoder的输入均为Encoder N的输出
     * ![image-20250203160834537](./AI-Algorithms/image-20250203160834537.png)
-
 * Encoder Only & Decoder Only & encoder-decoder
   * Decoder Only：将输入拼起来，作为prompt
     * 相比原始transformer，去除了：encoder、decoder中和encoder相连的MSA
     * 转换成了「续写任务」，大部分LLM使用这种架构
     * *Decoder*-*Only*模型在参数效率上通常优于*Encoder*-*Decoder*模型，因为它不需要同时训练两个模块
+  * Encoder Decoder
+* flops对比：
+  * N^2 + M^2 + M*N (Encoder-Decoder)
+  * *(N+M)^2 = N^2 + 2*M*N + M^2 (Decoder-Only)
+    * **cross attention由于其不对称性，在flops上更有优势**
 
+  * 并且Encoder-Decoder架构，可以减小Encoder的层数
 
 
 >  [2025了，如何回答“为什么现在的大模型都是decoder-only的架构？”](https://mp.weixin.qq.com/s/sFgtCmRdOpxQZy7zqey-fw)
@@ -519,7 +528,9 @@ https://github.com/OpenNMT/OpenNMT-py/
 
 ![image-20250205164614941](./AI-Algorithms/image-20250205164614941.png)
 
-### transformer的改进
+## Transformer的改进
+
+### KV压缩
 
 #### MQA
 
@@ -552,10 +563,58 @@ https://github.com/OpenNMT/OpenNMT-py/
   - 减少 KV Cache 不仅节省显存，更重要的是 减少了内存带宽的压力 。在推理时，从显存加载巨大的 KV Cache 是一个主要的速度瓶颈。GQA 通过减小 KV Cache 大小，显著加快了这部分数据的读取速度。
   - 计算量的减少也对推理速度有一定贡献。
 
-
 #### MLA
 
 见 DeepSeek-V3 章节
+
+### Q压缩
+
+#### Perceiver
+
+> Yannic Kilcher 论文精读：https://www.youtube.com/watch?v=P_xeshTnPZg&t=4s
+>
+> 结合代码分析：https://zhuanlan.zhihu.com/p/360773327
+
+##### 动机
+
+* 同时处理多模态是趋势：Biological systems perceive the world by simultaneously processing high-dimensional inputs from modalities as diverse as vision, audition, touch, proprioception, etc.
+* 过往CV和语音模型设计，局限于单模态的处理：The perception models used in deep learning on the other hand are designed for individual modalities, often relying on **domain-speciﬁc assumptions such as the local grid structures** exploited by virtually all existing vision models. These priors introduce helpful inductive biases, but also lock models to individual modalities.
+* Perceiver – a model that builds upon Transformers and hence makes few architectural assumptions about the relationship between its inputs, but that also scales to hundreds of thousands of inputs, like ConvNets.
+  * 算法考虑：同时处理多模态
+  * 工程考虑：
+    * NLP：几千token； CV：50k~224^2 token
+    * 聚类压缩Query
+
+##### Model 设计
+
+* encoder-decoder --> Perceiver <-- Decoder-only
+  * encoder-decoder --> Perceiver：去除对原始序列的encoder，减少Flops
+  * Perceiver <-- Decoder-only：压缩query，利用cross-attn，减少Flops
+
+1. **核心机制**
+   - **非对称交叉注意力**：查询（Q）来自可学习的低维潜在单元（N=512），键（K）和值（V）来自输入数据（M≥50,000），将复杂度降至 O (MN)。
+     - 初始化 $$K$$ 个**可学习**的 Variables 作为聚类中心（$$K << L$$）
+       - 类似Q-Former
+       - hard方式初始化
+     - 利用 cross attention 将序列信息蒸馏到可学习的 Variables 中，实现自适应聚类
+     - 利用 self attention 捕捉聚类中心之间的高阶交互关系
+     - 交错进行 2、3 两个步骤将模型堆叠至多层
+   - **迭代蒸馏**：交替使用交叉注意力（提取输入特征）和潜在 Transformer 自注意力（处理低维表示），如图 1 所示，通过 8 次迭代逐步聚焦关键信息。
+     - ![image-20250607013213140](./AI-Algorithms/image-20250607013213140.png)
+   - **权重共享**：后续交叉注意力模块共享参数，减少过拟合，参数数量减少约 10 倍（如 ImageNet 模型从 326.2M 降至 44.9M）。
+2. **位置编码**
+   - **傅里叶特征**：使用高频正弦余弦编码空间坐标（如 2D 图像的 (x,y)），支持高分辨率表示（如 224×224 图像用 64 频带）。
+   - **模态标识**：为多模态输入添加模态特定编码（如视频 + 音频时用 4 维嵌入区分）。
+3. 进一步改造
+   * 压缩到极致即为 attention sink 作为输入 ，做单步解码
+
+### Q+KV压缩
+
+#### Token Merge
+
+> LONGER: Scaling Up Long Sequence Modeling in Industrial Recommenders
+
+* concat
 
 #### Trans in trans
 
@@ -563,7 +622,7 @@ https://arxiv.org/pdf/2103.00112
 
 ![image-20250606173644337](./AI-Algorithms/image-20250606173644337.png)
 
-### transformer外的相关模型结构
+### RWKV、Mamba等
 
 | 架构        | 设计者                                               | 特点                                     | 链接                                                         |
 | ----------- | ---------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------ |
@@ -585,6 +644,113 @@ https://arxiv.org/pdf/2103.00112
     * 运行时只跑2个专家网络
     * 相比GPT-3.5更像人脑
 * Additive Attention https://arxiv.org/abs/1409.0473
+
+## Long-Context 长上下文
+
+### Intro
+
+* 发展：
+  * 早期GPT的上下文只有4K
+
+* Intro
+  * 超大的上下文窗口=超长的短期记忆
+  * 128K Token = 124K Input Token + 4096 Output Token
+
+![image-20250512021136013](./AI-Algorithms/image-20250512021136013.png)
+
+* 技术路线：
+  * Approximation (e.g. Sparse, LoRA)
+  * RAG / Vector-DBs (ANN search, LSH)
+  * **Brute-force compute** (tiling, blockwise)
+
+### “Train Short, Test Long”, Positional Embedding
+
+* TSTL指的是一种训练和评估大型语言模型（LLM）或其他序列处理模型的方法和期望能力。具体含义如下：
+
+  * Train Short (短序列训练) ：在模型训练阶段，主要使用相对较短的文本序列（例如，上下文长度为 512 或 1024 个 token）进行训练。这样做可以：
+
+    - 节省计算资源 ：处理短序列需要更少的内存和计算时间，训练速度更快。
+
+    - 利用现有数据 ：很多现有的训练数据集可能包含大量中短长度的文本。
+
+  * Test Long (长序列测试/推理) ：在模型训练完成后，期望它能够在处理比训练时所见过的序列 更长 的文本时，依然保持良好的性能和稳定性。例如，一个在 1024 token 长度上训练的模型，希望它在处理 2048、4096 甚至更长 token 的输入时，也能理解上下文、生成连贯的文本，并且不会出现性能急剧下降或崩溃的情况。
+  * 传统的绝对位置编码（如 Transformer 原始论文中的正弦/余弦编码或学习的绝对位置嵌入）在 TSTL 方面表现不佳。因为它们要么为每个绝对位置学习一个特定的嵌入向量，要么其编码方式在超过训练长度后无法自然外推。当遇到比训练时更长的序列时，模型没有见过这些新位置的编码，导致性能下降。
+
+#### Alibi
+
+https://arxiv.org/abs/2108.12409
+
+- 它不直接向词嵌入添加位置信息，而是在计算注意力分数时，给每个 query-key 对添加一个 与它们之间距离成正比的惩罚项（bias） 。
+- 这个惩罚是 相对的 、 局部的 ，并且是 非学习 的（或者说，其斜率是固定的，按注意力头分配）。
+- 因为惩罚只依赖于相对距离，而不是绝对位置编号，所以当序列变长时，这种相对距离的惩罚机制仍然有效。模型自然地倾向于关注更近的 token，这种倾向性不依赖于序列的总长度。因此，Alibi 表现出很好的长度外推能力。
+
+#### RoPE
+
+https://arxiv.org/abs/2104.09864
+
+- Intro
+  - 它通过将位置信息编码为 旋转矩阵 ，并应用于 query 和 key 向量。
+  - 两个 token 之间的注意力分数依赖于它们向量的点积，而 RoPE 的设计使得这个点积主要取决于它们的 相对位置 （通过旋转角度的差值体现）。
+  - 虽然 RoPE 编码的是绝对位置（通过旋转角度），但其核心机制使得相对位置信息得以保留和利用。这种基于旋转的相对位置编码方式，相比于学习绝对位置嵌入，具有更好的外推性，因为它不依赖于为训练长度内的每个绝对位置分配特定编码。
+
+- 推导
+  - $$\hat q = f(q, m), \hat k = f(k, n)$$
+  - 进一步通过 attention 内积机制实现：
+    - $$\langle f(q, m), f(k, n) \rangle = g(q, k, m - n)$$
+
+  - 借助复数域，我们可以将二维下的内积做恒等映射，在复数中， $$\langle q, k \rangle = Re[qk^*]$$，所以有映射
+    - $$Re[f(q,m)f^*(k, n)] = g(q, k, m-n)$$
+
+  - 通过对该映射的求解，我们可以得到其复数编码形式与矩阵编码形式，
+    - $$f(q,m) = R_f(q,m)e^{i\Theta_f(q,m)} = ||q||e^{i(\Theta(q)+m\theta)} = qe^{im\theta}$$
+    - $$f(q, m) = \left(\begin{array}{cc} cos m\theta & -sinm\theta \\ sinm\theta & cosm\theta \end{array} \right) \left( \begin{array}{c} q_0 \\ q_1 \end{array}\right)$$
+
+  - 考虑编码矩阵在多维情况下的稀疏性，所以采用乘法实现，即
+    * $$\left( \begin{array}{c}q_0 \\ q_1 \\ q_2 \\ q_3 \\ ... \\ q_{d-2} \\ q_{d-1} \end{array} \right) * \left( \begin{array}{c} cosm\theta_0 \\ cosm\theta_0 \\ cosm\theta_1 \\ cosm\theta_1 \\ ... \\ cosm\theta_{d/2-1} \\ cosm\theta_{d/2-1} \end{array} \right) + \left( \begin{array}{c}-q_1 \\ q_0 \\ -q_3 \\ q_2 \\ ... \\ -q_{d-1} \\ q_{d-2} \end{array} \right) * \left( \begin{array}{c} sinm\theta_0 \\ sinm\theta_0 \\ sinm\theta_1 \\ sinm\theta_1 \\ ... \\ sinm\theta_{d/2-1} \\ sinm\theta_{d/2-1} \end{array} \right)$$
+
+
+#### 其它
+
+[LongRoPE](https://arxiv.org/abs/2402.13753), [NTK-RoPE](https://www.reddit.com/r/LocalLLaMA/comments/14lz7j5/ntkaware_scaled_rope_allows_llama_models_to_have/), [ReRoPE](https://github.com/bojone/rerope?tab=readme-ov-file),
+
+### Attention Sink (Global Token)
+
+> EFFICIENT STREAMING LANGUAGE MODELS WITH ATTENTION SINKS (streaming-LLM)
+>
+> 节点间信息传播的中心
+
+![image-20250606171300149](./AI-Algorithms/image-20250606171300149.png)
+
+1. 注意力汇聚点（Attention Sink）
+   - 发现模型对初始 tokens 分配大量注意力，即使其语义无关（如 Llama-2-7B 深层头部对初始 token 注意力占比超 50%）
+   - **原因：Softmax 要求注意力分数和为 1，初始 tokens 因自回归特性被所有后续 tokens 可见，易被训练为汇聚点**
+2. StreamingLLM 框架
+   - **核心设计**：保留 4 个初始 tokens 的 KV 作为汇聚点，结合滑动窗口 KV 缓存（如 4+1020 配置）
+   - 技术细节
+     - 缓存内重新分配位置编码（如当前缓存 tokens [0,1,2,3,6,7,8] 解码时位置设为 0-7）
+     - 兼容 RoPE（缓存 Keys 后应用旋转变换）和 ALiBi（连续线性偏置）
+   - **预训练优化**：添加 Learnable Sink Token 作为专用汇聚点，160M 参数模型实验显示仅需 1 个该 token 即可稳定性能
+
+四、应用与局限
+
+1. **适用场景**：多轮对话、短文档 QA 等依赖近期上下文的流式任务，已被 NVIDIA TensorRT-LLM 等框架采用
+2. 局限性
+   - 不扩展模型上下文长度，依赖缓存内信息（如 StreamEval 中查询距离超缓存时准确率降为 0）
+   - 长文档 QA 等需长期记忆的任务表现不及截断基线
+
+![image-20250606171351749](./AI-Algorithms/image-20250606171351749.png)
+
+### [LWM —— Large World Model with Blockwise Ring-Attn](https://arxiv.org/pdf/2402.08268)
+
+> WORLD MODEL ON MILLION-LENGTH VIDEO AND LANGUAGE WITH BLOCKWISE RINGATTENTION
+
+![image-20250512022523757](./AI-Algorithms/image-20250512022523757.png)
+
+### 工程
+
+参考 LLM-MLSys.md
+
+
 
 ## Bert
 
@@ -2182,94 +2348,6 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
     - 时间组合（不同的时间点多个物体的不同状态）
 
   * 视频生成的Scaling Law**应当侧重于增加组合多样性，而不仅仅是扩大数据量**。
-
-## Long-Context 长上下文
-
-### Intro
-
-* 发展：
-  * 早期GPT的上下文只有4K
-
-* Intro
-  * 超大的上下文窗口=超长的短期记忆
-  * 128K Token = 124K Input Token + 4096 Output Token
-
-![image-20250512021136013](./AI-Algorithms/image-20250512021136013.png)
-
-* 技术路线：
-  * Approximation (e.g. Sparse, LoRA)
-  * RAG / Vector-DBs (ANN search, LSH)
-  * **Brute-force compute** (tiling, blockwise)
-
-### “Train Short, Test Long”, Positional Embedding
-
-* TSTL指的是一种训练和评估大型语言模型（LLM）或其他序列处理模型的方法和期望能力。具体含义如下：
-
-  * Train Short (短序列训练) ：在模型训练阶段，主要使用相对较短的文本序列（例如，上下文长度为 512 或 1024 个 token）进行训练。这样做可以：
-
-    - 节省计算资源 ：处理短序列需要更少的内存和计算时间，训练速度更快。
-
-    - 利用现有数据 ：很多现有的训练数据集可能包含大量中短长度的文本。
-
-  * Test Long (长序列测试/推理) ：在模型训练完成后，期望它能够在处理比训练时所见过的序列 更长 的文本时，依然保持良好的性能和稳定性。例如，一个在 1024 token 长度上训练的模型，希望它在处理 2048、4096 甚至更长 token 的输入时，也能理解上下文、生成连贯的文本，并且不会出现性能急剧下降或崩溃的情况。
-  * 传统的绝对位置编码（如 Transformer 原始论文中的正弦/余弦编码或学习的绝对位置嵌入）在 TSTL 方面表现不佳。因为它们要么为每个绝对位置学习一个特定的嵌入向量，要么其编码方式在超过训练长度后无法自然外推。当遇到比训练时更长的序列时，模型没有见过这些新位置的编码，导致性能下降。
-
-#### Alibi
-
-https://arxiv.org/abs/2108.12409
-
-- 它不直接向词嵌入添加位置信息，而是在计算注意力分数时，给每个 query-key 对添加一个 与它们之间距离成正比的惩罚项（bias） 。
-- 这个惩罚是 相对的 、 局部的 ，并且是 非学习 的（或者说，其斜率是固定的，按注意力头分配）。
-- 因为惩罚只依赖于相对距离，而不是绝对位置编号，所以当序列变长时，这种相对距离的惩罚机制仍然有效。模型自然地倾向于关注更近的 token，这种倾向性不依赖于序列的总长度。因此，Alibi 表现出很好的长度外推能力。
-
-#### RoPE
-
-https://arxiv.org/abs/2104.09864
-
-- 它通过将位置信息编码为 旋转矩阵 ，并应用于 query 和 key 向量。
-- 两个 token 之间的注意力分数依赖于它们向量的点积，而 RoPE 的设计使得这个点积主要取决于它们的 相对位置 （通过旋转角度的差值体现）。
-- 虽然 RoPE 编码的是绝对位置（通过旋转角度），但其核心机制使得相对位置信息得以保留和利用。这种基于旋转的相对位置编码方式，相比于学习绝对位置嵌入，具有更好的外推性，因为它不依赖于为训练长度内的每个绝对位置分配特定编码。
-
-#### 其它
-
-[LongRoPE](https://arxiv.org/abs/2402.13753), [NTK-RoPE](https://www.reddit.com/r/LocalLLaMA/comments/14lz7j5/ntkaware_scaled_rope_allows_llama_models_to_have/), [ReRoPE](https://github.com/bojone/rerope?tab=readme-ov-file),
-
-### Attention Sink (Global Token)
-
-> EFFICIENT STREAMING LANGUAGE MODELS WITH ATTENTION SINKS (streaming-LLM)
->
-> 节点间信息传播的中心
-
-![image-20250606171300149](./AI-Algorithms/image-20250606171300149.png)
-
-1. 注意力汇聚点（Attention Sink）
-   - 发现模型对初始 tokens 分配大量注意力，即使其语义无关（如 Llama-2-7B 深层头部对初始 token 注意力占比超 50%）
-   - **原因：Softmax 要求注意力分数和为 1，初始 tokens 因自回归特性被所有后续 tokens 可见，易被训练为汇聚点**
-2. StreamingLLM 框架
-   - **核心设计**：保留 4 个初始 tokens 的 KV 作为汇聚点，结合滑动窗口 KV 缓存（如 4+1020 配置）
-   - 技术细节
-     - 缓存内重新分配位置编码（如当前缓存 tokens [0,1,2,3,6,7,8] 解码时位置设为 0-7）
-     - 兼容 RoPE（缓存 Keys 后应用旋转变换）和 ALiBi（连续线性偏置）
-   - **预训练优化**：添加 Learnable Sink Token 作为专用汇聚点，160M 参数模型实验显示仅需 1 个该 token 即可稳定性能
-
-四、应用与局限
-
-1. **适用场景**：多轮对话、短文档 QA 等依赖近期上下文的流式任务，已被 NVIDIA TensorRT-LLM 等框架采用
-2. 局限性
-   - 不扩展模型上下文长度，依赖缓存内信息（如 StreamEval 中查询距离超缓存时准确率降为 0）
-   - 长文档 QA 等需长期记忆的任务表现不及截断基线
-
-![image-20250606171351749](./AI-Algorithms/image-20250606171351749.png)
-
-### [LWM —— Large World Model with Blockwise Ring-Attn](https://arxiv.org/pdf/2402.08268)
-
-> WORLD MODEL ON MILLION-LENGTH VIDEO AND LANGUAGE WITH BLOCKWISE RINGATTENTION
-
-![image-20250512022523757](./AI-Algorithms/image-20250512022523757.png)
-
-### 工程
-
-参考 LLM-MLSys.md
 
 ## Interpretability
 

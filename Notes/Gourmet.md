@@ -25,16 +25,21 @@
 ## Intro
 
 * 八大菜系：鲁菜、川菜、苏菜、粤菜、浙菜、闽菜、湘菜和徽菜
+* 米其林：https://guide.michelin.com/hk/zh_HK
 
 ## 鲁菜
 
+## 川菜
 
+## 苏菜
 
 
 
 ## 粤菜
 
 ### [米3] 潮上潮(正大店)
+
+> 北京
 
 * 小吃
   * 黄皮豉绿豆糕、三种水果（莲雾蜜瓜等）
@@ -69,7 +74,47 @@
   * 文森拉图 百变女王（葡萄品种）
   * 中华小芒森
 
+### [黑1] [融合鄂菜] [丹青宴(武汉天地店)](http://www.dianping.com/shop/H3RK48ynrNYG2zWn)
+
+* 粤菜和湖北融合，四人套餐的几个菜比较有湖北菜的风味
+* 黄贡椒低温笋壳鱼
+* 大管鱿鱼
+* 麻城带皮羊排
+* 家烧九孔野藕很好吃
+
+### [黑1] [富临饭店](http://www.dianping.com/shop/Ha59fknixkpAMDOX)
+
+> 北京
+>
+> 粵菜人物系列：楊貫一 https://guide.michelin.com/hk/zh_HK/article/people/Cantonese-cuisine-figures-Ah-Yat-Abalone
+>
+> https://guide.michelin.com/mo/zh_HK/article/dining-out/what-order-forum-other-than-abalone
+
+* 波龙两吃
+
+* 燕窝鱼翅
+* 蒜蓉虾钳
+* 鸡蛋清鱼子酱蒸虾肉；沙葛做泡菜
+* 葱烧辽参
+
+* TODO：下次吃富临鲍鱼。 
+
+
+
+### [黑1] [利苑酒家(华熙国际店)](http://www.dianping.com/shop/EoVWA6uQ5um0NIaz)
+
+> 北京
+
+* 冰烧三层肉
+* 鲍汁凤爪
+* 老火靓汤
+* 炸蟹
+
+
+
 ### [万丽轩·粤菜(王府井金茂万丽酒店)](http://www.dianping.com/shop/irdxPTojjSGgpzZe)
+
+> 北京
 
 * 和室友吃双人自助，性价比还行
 
@@ -79,7 +124,207 @@
 
 ### [杭宴1999·钱塘鱼鲜(未来科技城店)](http://www.dianping.com/shop/iuMwTEG1AFGYAzPO)
 
+> 杭州
+
 * 团建10人餐，素菜好吃，有些创意菜，性价比高
+
+### [康乐渔港·传统台州味道(未来科技城店)](http://www.dianping.com/shop/l1gkiRLklNO77xAz)
+
+> 杭州
+
+* 沙蒜豆面、雪花牛肉粒
+
+## 闽菜
+
+## 湘菜
+
+## 徽菜
+
+
+
+## 沪菜
+
+### [米2黑1] [屋里厢上海菜馆](http://www.dianping.com/shop/k1SFangFje74jJcT)
+
+* 味道正宗，量大管饱。 红烧肉和熏鱼是典型的上海特色，元宵节吃了汤圆
+
+
+
+
+
+## 鄂菜
+
+### [黑1] 粗茶淡饭 · 壹号餐房
+
+> 武汉
+
+* 前菜：
+  * 鸭舌、猪蹄
+* 主菜
+  * 椒香翘壳王：活鱼+青椒，一起蒸，极香
+  * 黄贡椒蒸波龙
+  * 青柠脆皮牛肉
+  * 三丝鱼翅盅
+  * 清炒藕带
+  * 甲鱼裙边泡饭
+
+## 中餐创意菜
+
+### [黑1] [宴锦堂(隆福寺店)](http://www.dianping.com/shop/jpzTTmzT4Ksm0W8x)
+
+> 北京
+>
+> https://www.thetigerhood.com/yan-jin-tang/
+>
+> TODO：豪华双人餐可吃
+
+* 脆葱慢煮鲍鱼
+* 独头蒜烧江鳗
+* 伊豆辣椒黑蒜松板肉
+* 酸萝卜海蜇皮
+* 小黄鱼面
+* 炝拌丝瓜苗
+
+
+
+## 中西创意菜
+
+### [黑1] 青岚
+
+> 杭州
+
+* 前菜
+  * 蔬菜：花菜+蔬菜汤+孔泰芝士
+  * 脆：竹笙+菌菇+棕榈芯
+  * 亚洲：牛蛙+墨鱼+亚洲酱汁
+  * 章鱼：章鱼+土豆+京葱
+* 主菜：
+  * 甘鲷鱼鳞烧（油淋+炭烤）+桃子+乳清芝士
+  * 5日熟成绍兴麻鸭+莲藕+藤椒
+* 饭
+  * 腌笃鲜饭
+
+
+
+## 西餐
+
+### [黑1] [Ambre Ciel 珀餐厅](https://www.dianping.com/review/2598000304)
+
+> 杭州
+
+Spanish Bluefin Tuna
+Bluefin Tuna Tartare, 10Yrs Caviar, Dashi Gelee
+西班牙金枪鱼塔塔，10 年鱼子酱，鲣鱼清汤啫喱
+
+------
+
+Mozambique Langoustine
+Char-grilled, Iberico Ham Crumbles, White Peach Sabayon
+炭烤莫桑比克鳌虾，伊比利亚火腿末，白水蜜桃香槟沙巴雍
+
+------
+
+Pan Seared Sea Bream
+Olive Oil Confit Baby Calamari, Bonito Yuzu Jus
+香煎东海真鲷鱼，油封小鱿鱼，柚子胡椒汁
+
+------
+
+Paccheri Pasta
+Beef Bolognese Stuffed, Pesto Sauce, Aged Parmesan Cheese
+意大利管面，茄牛肉酱，罗勒酱，陈年帕玛森芝士
+
+------
+
+Iberico Pork Secreto
+Roasted Foie Gras, House-made Sausages, White Port Raisin Sauce
+伊比利亚猪排，煎鸭肝，自制香肠，白波特提子汁
+
+### [黑1] [The Georg(东华门店)](http://www.dianping.com/shop/H1VxDTW6es76OBCP)
+
+> 北京，性价比一般
+
+* 坚果乳+刁草油+金枪鱼+白萝卜+昆布
+* 鱼子酱+根芹+洋葱牛肉汁+芝士泡沫
+  * 根芹地中海特有，口感绵密
+* 扇贝+白味增+蟹子异香汁
+* 海螯虾+辣白菜+舞茸菌
+  * 舞茸菌蘸酱味道有点重
+* 羊肩
+* 鸭肉
+* 和牛
+* 面包味道不错
+
+
+
+## 法餐
+
+### [黑1] [LES MORILLES樂·墨瑞](http://www.dianping.com/shop/k3fFH2HheBakU1uq)
+
+> 北京
+
+* 第一次
+  * 香煎鸭胸肉
+  * 海胆鱼子酱慕斯
+* 第二次
+  * 帝王蟹三吃：
+    * 海胆奶冻+蔬菜；
+    * 墨鱼汁粉+沙拉+鱼子酱+香菜；
+    * 炭烤+贵州木姜子油
+  * 卤水鹅肝+糖渍金桔胡萝卜
+  * 炭烤芦笋+沙拉+柚子汁+藕片+芝麻菜+冰叶
+  * 炭烤大连鲍鱼 黑松露鲍鱼肝酱
+  * 炭烤东星斑 青黄节瓜 马赛鱼汤
+  * 鸽子 柑橘汁 玉兰菜 黑莓 紫薯慕斯
+  * 百合奶冻
+
+## 意餐
+
+### [黑1] [北京四季酒店·MIO](http://www.dianping.com/shop/H5CfTveZDODlyj5m)
+
+> 北京
+
+* 黄鳍吞拿鱼：水瓜柳 凤尾鱼酱汁 肉质相比金枪鱼鲜甜
+  * **水瓜柳**：源自地中海的酸渍小黄瓜，味道酸、咸且带草本清香，能**解腻提鲜**，中和黄鳍吞拿鱼的油脂感（若轻煎 / 炙烤），增添清爽层次，也赋予 “异域风味标签” 。
+  * **凤尾鱼酱汁**：凤尾鱼（银鱼柳）经熬煮、打碎制成酱汁，自带浓郁咸鲜、海洋发酵风味，可**强化整体鲜味浓度**，让黄鳍吞拿鱼的本味更突出，同时衔接水瓜柳的酸香，形成 “酸 - 鲜 - 咸” 的味觉递进 。
+* 千层茄子 罗勒叶和番茄 最后清蒸一下
+* 柠檬芝士烩饭，黑蒜酱 罗勒油 薏米
+* 海虹（青口贝）鹰嘴豆
+* 意式小牛肉 低温慢煮牛里脊
+* 意大利饺子：mortadella火腿 猪牛里脊
+
+
+
+## 日料
+
+### [黑1] [鮨藤本 Sushi Fujimoto(北京店)](http://www.dianping.com/shop/l8SlZi09HViAhZ6T)
+
+> 北京
+
+* 胡麻豆腐松叶蟹、苹果酱小白菜章鱼、牡丹虾绍兴酒鱼子酱、鳗鱼小黄瓜、喉黑鱼九条葱、太刀鱼蚕豆天妇罗配紫苏
+* 寿司：
+  * 金目鲷
+  * 金枪鱼中腹
+  * 大腹
+  * 蛇腹
+  * 北极贝
+  * 小竹筴鱼
+  * 车虾
+  * 海胆
+* 卤豆皮包星鳗
+
+
+
+### 龙之介 鮨・割烹 (美爵店)
+
+> 杭州
+
+* 金枪鱼大腹
+* 赤贝牡丹虾
+* 金吉鱼、红姜芽
+* 天妇罗
+* 松叶蟹 蟹拐（钳子肉条？）
+* 枪鱿鱼
 
 
 
@@ -87,7 +332,7 @@
 
 ### [黑1] [朴竺·植物料理](http://www.dianping.com/shop/G3Mtz61eCAQlonh9)
 
-> 茶、菜、景 
+> 杭州，茶、菜、景 
 
 * 小吃：
   * 蘑菇脆片（腌制、蘑菇酱）

@@ -86,6 +86,8 @@
 
 - the Annotated Transformer
   - https://github.com/harvardnlp/annotated-transformer
+- Perceiver
+  - https://github.com/lucidrains/perceiver-pytorch
 - OpenNMT
   - https://github.com/OpenNMT/OpenNMT-py.git
 
