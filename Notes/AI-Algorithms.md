@@ -587,15 +587,20 @@ https://github.com/OpenNMT/OpenNMT-py/
 
 ##### Model 设计
 
-* encoder-decoder --> Perceiver <-- Decoder-only
+* 角度一：encoder-decoder --> Perceiver <-- Decoder-only
   * encoder-decoder --> Perceiver：去除对原始序列的encoder，减少Flops
   * Perceiver <-- Decoder-only：压缩query，利用cross-attn，减少Flops
+* 角度二：RNN的角度理解
+  * K、V是序列输入
+  * Q是latent state
+  * K、V是输入，将信息重复蒸馏进Q中
 
 1. **核心机制**
    - **非对称交叉注意力**：查询（Q）来自可学习的低维潜在单元（N=512），键（K）和值（V）来自输入数据（M≥50,000），将复杂度降至 O (MN)。
-     - 初始化 $$K$$ 个**可学习**的 Variables 作为聚类中心（$$K << L$$）
-       - 类似Q-Former
-       - hard方式初始化
+     - 初始Q的选取：
+       - **可学习**初始化： $$K$$ 个的 Variables 作为聚类中心（$$K << L$$）
+         - 类似Q-Former
+       - **hard方式初始化**： 取Seq的前K个token，包括：1）k1个global token；2）序列中前K-k1个token
      - 利用 cross attention 将序列信息蒸馏到可学习的 Variables 中，实现自适应聚类
      - 利用 self attention 捕捉聚类中心之间的高阶交互关系
      - 交错进行 2、3 两个步骤将模型堆叠至多层

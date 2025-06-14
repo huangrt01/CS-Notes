@@ -1,15 +1,44 @@
-### Refcount
+*** match case
+
+from dataclasses import dataclass
+
+@dataclass
+class Point:
+    x: int
+    y: int
+
+@dataclass
+class Circle:
+    center: Point
+    radius: float
+
+shape = Circle(Point(10, 20), 5.0)
+
+match shape:
+    case Point(x=px, y=py):
+        print(f"It's a Point at ({px}, {py})")
+    case Circle(center=Point(x=cx, y=cy), radius=r): # 嵌套解构
+        print(f"It's a Circle with center ({cx}, {cy}) and radius {r}")
+    case _:
+        print("Unknown shape")
+# 输出: It's a Circle with center (10, 20) and radius 5.0
+
+
+
+*** Refcount
 
 sys.getrefcount(object)
 
 inspect.stack()[-1].globals
 
-### GIL
+
+*** GIL
 
 https://wiki.python.org/moin/GlobalInterpreterLock
 
 
-### Decorator
+
+*** Decorator
 
 def test_task_decorator(*args, task_filter: Union[str, List[str]] = None, **kwargs):
   def decorator(func: Callable):

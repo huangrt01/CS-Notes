@@ -465,7 +465,7 @@ https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html
 * Intro
   * GRU解决了RNN的梯度消失问题，参数量比LSTM小
 
-
+![image-20250610024850494](./Machine-Learning/image-20250610024850494.png)
 
 ### Contrastive Learning
 

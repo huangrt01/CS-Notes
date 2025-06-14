@@ -10,7 +10,7 @@
 
 * option + S: 语音输入
 * option + space: 唤起豆包
-* ctrl + option + A: 截图
+* shift + option + A: 截图
 
 ### Trae
 
