@@ -19,8 +19,8 @@ def index_select_fwd(unique_values, indices, output, num_rows: int,
                      num_cols: int, num_indices: int,
                      BLOCK_M_SIZE: tl.constexpr, BLOCK_N_SIZE: tl.constexpr):
   # unique_values: shape (num_rows, num_cols)
-  pid_m = tl.program_id(axis=0)
-  pid_n = tl.program_id(axis=1)
+  pid_m = tl.program_id(axis=0).to(tl.int64)
+  pid_n = tl.program_id(axis=1).to(tl.int64)
   off_m = pid_m * BLOCK_M_SIZE + tl.arange(0, BLOCK_M_SIZE)
   off_n = pid_n * BLOCK_N_SIZE + tl.arange(0, BLOCK_N_SIZE)
   index_data = tl.load(indices + off_m, mask=off_m < num_indices, other=-1)
@@ -55,10 +55,9 @@ def _index_select_forward_common(unique_values: torch.Tensor,
                        dtype=unique_values.dtype,
                        device=unique_values.device)
   num_indices = indices.numel()
-
   if num_indices > 0 and num_rows > 0 and num_cols > 0:
     BLOCK_M_SIZE, BLOCK_N_SIZE = 128, min(128,
-                                          triton.next_power_of_2(num_indices))
+                                          triton.next_power_of_2(num_cols))
     grid = ((num_indices + BLOCK_M_SIZE - 1) // BLOCK_M_SIZE,
             (num_cols + BLOCK_N_SIZE - 1) // BLOCK_N_SIZE)
     index_select_fwd[grid](unique_values,
@@ -86,8 +85,8 @@ def index_select_bwd_atomic_add(grad_outputs, indices, grad_unique_values,
                                 sem: tl.constexpr = None):
   # grad_unique_values: shape (num_rows, num_cols)
   # grad_outputs: shape (num_indices, num_cols)
-  pid_m = tl.program_id(axis=0)
-  pid_n = tl.program_id(axis=1)
+  pid_m = tl.program_id(axis=0).to(tl.int64)
+  pid_n = tl.program_id(axis=1).to(tl.int64)
   off_cols = pid_n * BLOCK_N_SIZE + tl.arange(0, BLOCK_N_SIZE)
   mask = off_cols < num_cols
 
@@ -96,7 +95,7 @@ def index_select_bwd_atomic_add(grad_outputs, indices, grad_unique_values,
   if start >= num_indices:
     return
   if end > num_indices:
-    end = num_indices
+    end = num_indices.to(tl.int64)
   for index_row_id in range(start, end):
     unique_row_id = tl.load(indices + index_row_id)
     if unique_row_id >= 0 and unique_row_id < num_rows:
@@ -210,6 +209,93 @@ class IndexSelect_TritonAtomicAddRelaxed(torch.autograd.Function):
                                         sem='relaxed')
     return grad_unique_values, None
 
+
+class IndexSelect(torch.autograd.Function):
+
+  @staticmethod
+  @custom_fwd(device_type="cuda", cast_inputs=torch.float32)
+  def forward(ctx, unique_values: torch.Tensor, indices: torch.Tensor):
+    output, num_rows, num_cols, num_indices = _index_select_forward_common(
+        unique_values, indices)
+    ctx.save_for_backward(indices)
+    ctx.input_shape = unique_values.shape
+    ctx.input_dtype = unique_values.dtype
+    ctx.input_device = unique_values.device
+    ctx.num_rows = num_rows
+    ctx.num_cols = num_cols
+    ctx.num_indices = num_indices
+    return output
+
+  @staticmethod
+  @custom_bwd(device_type="cuda")
+  def backward(ctx, *grad_outputs: list[torch.Tensor]):
+    (indices,) = ctx.saved_tensors
+    input_shape = ctx.input_shape
+    input_dtype = ctx.input_dtype
+    input_device = ctx.input_device
+    num_rows = ctx.num_rows
+    num_cols = ctx.num_cols
+    num_indices = ctx.num_indices
+
+    grad_output = grad_outputs[0].contiguous()
+    grad_unique_values = torch.zeros(input_shape,
+                                     dtype=input_dtype,
+                                     device=input_device)
+    if num_indices <= 0 or num_rows <= 0 or num_cols <= 0:
+      return grad_unique_values, None
+    unique_ratio = num_indices / num_rows
+    # heuristic for choosing the backward implementation
+    # Ref: https://bytedance.larkoffice.com/docx/FhAddVRQRofQCoxBZrIcoWxIn5c
+    threshold = None
+    if unique_ratio <= 0.02:
+      threshold = 400000
+    elif unique_ratio <= 0.03:
+      threshold = 350000
+    elif unique_ratio <= 0.05:
+      threshold = 300000
+    elif unique_ratio <= 0.2:
+      threshold = 200000
+    elif unique_ratio <= 0.5:
+      threshold = 300000
+    else:
+      threshold = 400000q
+    if num_indices <= threshold:
+      # BLOCK_M_SIZE, BLOCK_N_SIZE = 8, 128
+      # grid = ((indices.numel() + BLOCK_M_SIZE - 1) // BLOCK_M_SIZE,
+      #         (num_cols + BLOCK_N_SIZE - 1) // BLOCK_N_SIZE)
+
+      BLOCK_M_SIZE, BLOCK_N_SIZE = 8, triton.next_power_of_2(num_cols)
+      grid = ((indices.numel() + BLOCK_M_SIZE - 1) // BLOCK_M_SIZE, 1)
+
+      index_select_bwd_atomic_add[grid](grad_output,
+                                        indices,
+                                        grad_unique_values,
+                                        num_rows,
+                                        num_cols,
+                                        num_indices,
+                                        BLOCK_M_SIZE=BLOCK_M_SIZE,
+                                        BLOCK_N_SIZE=BLOCK_N_SIZE)
+    else:
+      unique_indices, inverse_indices, counts = torch.unique(
+          indices, sorted=True, return_inverse=True, return_counts=True)
+      offsets = torch.zeros(counts.size(0) + 1,
+                            dtype=counts.dtype,
+                            device=counts.device)
+      offsets[1:] = torch.cumsum(counts, dim=0)
+      BLOCK_SIZE = 1024
+      grid = (counts.size(0), (num_cols + BLOCK_SIZE - 1) // BLOCK_SIZE)
+      index_select_bwd_reorder[grid](
+          grad_output,
+          grad_unique_values,
+          unique_indices,
+          inverse_indices,
+          offsets,
+          num_rows=num_rows,
+          num_cols=num_cols,
+          BLOCK_SIZE=BLOCK_SIZE,
+      )
+    return grad_unique_values, None
+
 @triton.jit
 def index_select_bwd_reorder(
     grad_outputs,
@@ -223,8 +309,9 @@ def index_select_bwd_reorder(
 ):
   # grad_unique_values: shape (num_rows, num_cols)
   # grad_outputs: shape (num_indices, num_cols)
-  pid = tl.program_id(axis=0)
-  off_cols = tl.arange(0, BLOCK_SIZE)
+  pid = tl.program_id(axis=0).to(tl.int64)
+  pid_col = tl.program_id(axis=1).to(tl.int64)
+  off_cols = pid_col * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
   mask = off_cols < num_cols
   acc = tl.zeros((BLOCK_SIZE,), dtype=tl.float32)
 
@@ -307,8 +394,8 @@ def index_select_bwd_reorder_2d(grad_outputs, grad_unique_values,
                                 BLOCK_N_SIZE: tl.constexpr):
   # grad_unique_values: shape (num_rows, num_cols)
   # grad_outputs: shape (num_indices, num_cols)
-  pid = tl.program_id(axis=0)
-  pid_n = tl.program_id(axis=1)
+  pid = tl.program_id(axis=0).to(tl.int64)
+  pid_n = tl.program_id(axis=1).to(tl.int64)
   off_cols = pid_n * BLOCK_N_SIZE + tl.arange(0, BLOCK_N_SIZE)
   mask = off_cols < num_cols
 
@@ -393,8 +480,8 @@ def index_select_bwd_row_lock(grad_outputs, grad_unique_values, locks, indices,
                               BLOCK_N_SIZE: tl.constexpr):
   # grad_unique_values: shape (num_rows, num_cols)
   # grad_outputs: shape (num_indices, num_cols)
-  pid_m = tl.program_id(axis=0)
-  pid_n = tl.program_id(axis=1)
+  pid_m = tl.program_id(axis=0).to(tl.int64)
+  pid_n = tl.program_id(axis=1).to(tl.int64)
   off_cols = pid_n * BLOCK_N_SIZE + tl.arange(0, BLOCK_N_SIZE)
   mask = off_cols < num_cols
 
@@ -480,7 +567,7 @@ def index_select_bwd_batch_lock(
     BLOCK_SIZE: tl.constexpr,
     BLOCK_SIZE_COLS: tl.constexpr,
 ):
-  pid = tl.program_id(axis=0)
+  pid = tl.program_id(axis=0).to(tl.int64)
   off_m = pid * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
   source_mask = off_m < num_indices
   indices = tl.load(indices + off_m, mask=source_mask, other=-1)
@@ -730,7 +817,7 @@ def index_select_bwd_segmented(
     BLOCK_SIZE_COLS: tl.constexpr,
     BLOCK_SIZE_SEGMENT: tl.constexpr,
 ):
-  pid_unique = tl.program_id(axis=0)
+  pid_unique = tl.program_id(axis=0).to(tl.int64)
   off_unique_idx = pid_unique * BLOCK_SIZE_UNIQUE + tl.arange(
       0, BLOCK_SIZE_UNIQUE)
   unique_mask = off_unique_idx < num_unique_indices
@@ -878,5 +965,4 @@ index_select_triton_row_lock = IndexSelect_TritonRowLock.apply
 index_select_triton_batch_lock = IndexSelect_TritonBatchLock.apply
 index_select_triton_sorted = IndexSelect_TritonSorted.apply
 index_select_triton_sorted_compiled = torch.compile(index_select_triton_sorted)
-
-index_select = index_select_triton_reorder
+index_select = IndexSelect.apply

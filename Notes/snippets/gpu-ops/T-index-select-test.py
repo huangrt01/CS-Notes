@@ -176,63 +176,8 @@ class TestIndexSelect(unittest.TestCase):
 
   def test_batch_index_select_grad(self):
     device = torch.device("cuda:0")
-    B, N, D, num_indices = 1025, 96, 129, 2058
+    B, N, D, num_indices = 1025, 96, 1290, 2058
     # B, N, D, num_indices = 4, 55, 68, 4096
-
-    torch.manual_seed(42)
-    torch.cuda.manual_seed(42)
-    unique_values_ref = torch.randn(N,
-                                    D,
-                                    dtype=torch.float32,
-                                    device=device,
-                                    requires_grad=True)
-    indices_ref = torch.randint(low=0,
-                                high=N,
-                                size=(B, num_indices),
-                                device=device)
-
-    expanded_values = unique_values_ref.unsqueeze(0).expand(B, -1, -1)
-    expanded_indices = indices_ref.unsqueeze(-1).expand(-1, -1, D)
-    torch_out_ref = torch.gather(expanded_values, 1, expanded_indices)
-    torch_out_ref.sum().backward()
-    torch_grad_ref = unique_values_ref.grad.clone()
-    unique_values_ref.grad.zero_()  # Zero grad for the reference tensor
-
-    self._run_and_check_grad(index_select_triton_atomic_add, unique_values_ref,
-                             indices_ref, torch_out_ref, torch_grad_ref, device,
-                             N, D, num_indices, "Triton Atomic Add")
-    self._run_and_check_grad(index_select_triton_atomic_add_relaxed,
-                             unique_values_ref, indices_ref, torch_out_ref,
-                             torch_grad_ref, device, N, D, num_indices,
-                             "Triton Atomic Add Relaxed")
-    self._run_and_check_grad(index_select_triton_reorder, unique_values_ref,
-                             indices_ref, torch_out_ref, torch_grad_ref, device,
-                             N, D, num_indices, "Triton Reorder")
-    self._run_and_check_grad(index_select_triton_reorder_2d, unique_values_ref,
-                             indices_ref, torch_out_ref, torch_grad_ref, device,
-                             N, D, num_indices, "Triton Reorder 2D")
-    self._run_and_check_grad(index_select_triton_row_lock, unique_values_ref,
-                             indices_ref, torch_out_ref, torch_grad_ref, device,
-                             N, D, num_indices, "Triton Row Lock")
-    self._run_and_check_grad(index_select_torch, unique_values_ref, indices_ref,
-                             torch_out_ref, torch_grad_ref, device, N, D,
-                             num_indices, "Torch")
-    self._run_and_check_grad(index_select_torch_native_scatter_add,
-                             unique_values_ref, indices_ref, torch_out_ref,
-                             torch_grad_ref, device, N, D, num_indices,
-                             "Torch Scatter Add")
-    self._run_and_check_grad(index_select_torch_compiled, unique_values_ref,
-                             indices_ref, torch_out_ref, torch_grad_ref, device,
-                             N, D, num_indices, "Torch Compiled Scatter Add")
-    self._run_and_check_grad(index_select_triton_sorted, unique_values_ref,
-                             indices_ref, torch_out_ref, torch_grad_ref, device,
-                             N, D, num_indices, "Triton Sorted")
-    # self._run_and_check_grad(index_select_triton_batch_lock, unique_values_ref, indices_ref, torch_out_ref, torch_grad_ref, device, N, D, num_indices, "Triton Batch Lock")
-
-
-  def test_batch_index_select_grad_large(self):
-    device = torch.device("cuda:0")
-    B, N, D, num_indices = 125, 200, 129, 12*8192
 
     torch.manual_seed(42)
     torch.cuda.manual_seed(42)

@@ -1407,6 +1407,8 @@ utilize MTP to improve training.
 * lm-arena：https://lmarena.ai/?leaderboard
 * webdev-arena：https://web.lmarena.ai/leaderboard
 
+![image-20250616165815319](./AI-Algorithms/image-20250616165815319.png)
+
 #### BPB
 
 * BPB (Bits Per Byte) 与模型的交叉熵损失（Cross-Entropy Loss）直接相关，这源于它们在信息论和模型评估中的基本含义。以下是详细解释：

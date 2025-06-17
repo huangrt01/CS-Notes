@@ -1,6 +1,8 @@
 ### tools
 
-compute sanitizer: https://docs.nvidia.com/cuda/compute-sanitizer/index.html
+compute-sanitizer ./app
+
+https://docs.nvidia.com/cuda/compute-sanitizer/index.html
 
 memcheck: https://docs.nvidia.com/cuda/archive/9.1/cuda-memcheck/index.html
   Memcheck - The memory access error and leak detection tool.

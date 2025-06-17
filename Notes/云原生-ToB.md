@@ -511,6 +511,22 @@ https://aws.amazon.com/cn/ec2/instance-types/
 
 
 
+### AI-ToB
+
+#### Intro
+
+![image-20250616165500735](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20250616165500735.png)
+
+#### 火山AI Force大会
+
+* https://www.volcengine.com/event/force-2506
+  * 刊例价 70元/1000万 token
+  * 16.4万亿 token 等于 1.15亿元
+
+![image-20250616164911048](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20250616164911048.png)
+
+![image-20250616165347724](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20250616165347724.png)
+
 ### ToB
 
 #### Intro

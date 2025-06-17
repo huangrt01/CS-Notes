@@ -25,6 +25,14 @@ pid_m = pid // grid_n
 pid_n = pid % grid_n
 
 
+pid_m = tl.program_id(axis=0).to(tl.int64)
+- int32的范围是 -2,147,483,648 到 +2,147,483,647
+- 当元素数量较多，可能达到 20亿以上 float 时，pid_m = tl.program_id(axis=0).to(tl.int64) 是 Triton Kernel 的最佳实践
+  - 20亿 float，当 emb_dim =4096、batch size = 1024时，每个 instance 有 5000 个 emb，在现实场景中可能达到
+  - https://github.com/triton-lang/triton/issues/1058
+
+
+
 ### swizzle
 
 - 手工

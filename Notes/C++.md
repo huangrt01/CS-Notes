@@ -1,10 +1,12 @@
 [toc]
 
-
+> https://m.youtube.com/watch?v=ZAji7PkXaKY
+>
+> back to basics系列
 
 ### Intro
 
-* Standard C++     =      C++ Language + Standard Library
+* Standard C++   =  C++ Language + Standard Library
 
 ### 《Effective Modern C++》, Scott Meyers 
 
