@@ -194,8 +194,11 @@ class IndexSelect_TritonAtomicAddRelaxed(torch.autograd.Function):
       # BLOCK_M_SIZE, BLOCK_N_SIZE = 8, 128
       # grid = ((indices.numel() + BLOCK_M_SIZE - 1) // BLOCK_M_SIZE,
       #         (num_cols + BLOCK_N_SIZE - 1) // BLOCK_N_SIZE)
-
-      BLOCK_M_SIZE, BLOCK_N_SIZE = 8, triton.next_power_of_2(num_cols)
+      if num_indices * num_cols > 3000000 * 64:
+        BLOCK_M_SIZE = 32
+      else:
+        BLOCK_M_SIZE = 8
+      BLOCK_N_SIZE = triton.next_power_of_2(num_cols)
       grid = ((indices.numel() + BLOCK_M_SIZE - 1) // BLOCK_M_SIZE, 1)
 
       index_select_bwd_atomic_add[grid](grad_output,
@@ -258,7 +261,7 @@ class IndexSelect(torch.autograd.Function):
     elif unique_ratio <= 0.5:
       threshold = 300000
     else:
-      threshold = 400000q
+      threshold = 400000
     if num_indices <= threshold:
       # BLOCK_M_SIZE, BLOCK_N_SIZE = 8, 128
       # grid = ((indices.numel() + BLOCK_M_SIZE - 1) // BLOCK_M_SIZE,
@@ -276,13 +279,20 @@ class IndexSelect(torch.autograd.Function):
                                         BLOCK_M_SIZE=BLOCK_M_SIZE,
                                         BLOCK_N_SIZE=BLOCK_N_SIZE)
     else:
-      unique_indices, inverse_indices, counts = torch.unique(
-          indices, sorted=True, return_inverse=True, return_counts=True)
+      indices = indices.flatten()
+      # unique_indices, counts = torch.unique(
+      #     indices, sorted=True, return_inverse=False, return_counts=True)
+      # inverse_indices = torch.argsort(indices)
+      sorted_values, inverse_indices = torch.sort(indices)
+      unique_indices, counts = torch.unique_consecutive(sorted_values, return_counts=True)
       offsets = torch.zeros(counts.size(0) + 1,
                             dtype=counts.dtype,
                             device=counts.device)
       offsets[1:] = torch.cumsum(counts, dim=0)
-      BLOCK_SIZE = 1024
+      if num_indices < 250000:
+        BLOCK_SIZE = 128
+      else:
+        BLOCK_SIZE = 1024
       grid = (counts.size(0), (num_cols + BLOCK_SIZE - 1) // BLOCK_SIZE)
       index_select_bwd_reorder[grid](
           grad_output,
@@ -345,6 +355,7 @@ class IndexSelect_TritonReorder(torch.autograd.Function):
     ctx.input_device = unique_values.device
     ctx.num_rows = num_rows
     ctx.num_cols = num_cols
+    ctx.num_indices = num_indices
     return output
 
   @staticmethod
@@ -355,24 +366,28 @@ class IndexSelect_TritonReorder(torch.autograd.Function):
     input_device = ctx.input_device
     num_rows = ctx.num_rows
     num_cols = ctx.num_cols
+    num_indices = ctx.num_indices
 
     grad_output = grad_outputs[0].contiguous()
     grad_unique_values = torch.zeros(input_shape,
                                      dtype=input_dtype,
                                      device=input_device)
-    unique_indices, inverse_indices, counts = torch.unique(indices,
-                                                           sorted=True,
-                                                           return_inverse=True,
-                                                           return_counts=True)
+
+    indices = indices.flatten()
+    # unique_indices, counts = torch.unique(
+    #     indices, sorted=True, return_inverse=False, return_counts=True)
+    # inverse_indices = torch.argsort(indices)
+    sorted_values, inverse_indices = torch.sort(indices)
+    unique_indices, counts = torch.unique_consecutive(sorted_values, return_counts=True)
     offsets = torch.zeros(counts.size(0) + 1,
                           dtype=counts.dtype,
                           device=counts.device)
     offsets[1:] = torch.cumsum(counts, dim=0)
-    BLOCK_SIZE = triton.next_power_of_2(num_cols)
-    grid = (counts.size(0),)
-
-    # BLOCK_SIZE = 128
-    # grid = (counts.size(0), (num_cols + BLOCK_SIZE - 1) // BLOCK_SIZE)
+    if num_indices < 250000:
+      BLOCK_SIZE = 128
+    else:
+      BLOCK_SIZE = 1024
+    grid = (counts.size(0), (num_cols + BLOCK_SIZE - 1) // BLOCK_SIZE)
     index_select_bwd_reorder[grid](
         grad_output,
         grad_unique_values,
@@ -384,6 +399,7 @@ class IndexSelect_TritonReorder(torch.autograd.Function):
         BLOCK_SIZE=BLOCK_SIZE,
     )
     return grad_unique_values, None
+    
 
 
 @triton.jit
@@ -404,7 +420,7 @@ def index_select_bwd_reorder_2d(grad_outputs, grad_unique_values,
   if start >= num_rows:
     return
   if end > num_rows:
-    end = num_rows
+    end = num_rows.to(tl.int64)
   for unique_row_id in range(start, end):
     unique_start = tl.load(offsets + unique_row_id)
     unique_end = tl.load(offsets + unique_row_id + 1)
@@ -490,7 +506,7 @@ def index_select_bwd_row_lock(grad_outputs, grad_unique_values, locks, indices,
   if start >= num_indices:
     return
   if end > num_indices:
-    end = num_indices
+    end = num_indices.to(tl.int64)
   for index_row_id in range(start, end):
     unique_row_id = tl.load(indices + index_row_id)
     if unique_row_id >= 0 and unique_row_id < num_rows:

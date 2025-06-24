@@ -51,11 +51,13 @@ def trace_handler(prof):
 
 *** 显存profile
 
-TODO:
+https://docs.pytorch.org/memory_viz
+
 https://pytorch.org/blog/understanding-gpu-memory-1/
 https://pytorch.org/blog/understanding-gpu-memory-2/
 
 memory snapshot可以日常开启
+pytorch memory profiler: 只能跟踪categorized memory曲线
 
 import torch
 
@@ -75,6 +77,11 @@ print("Max memory used by tensors = {} MB, reserved = {} MB".format(
       torch.cuda.max_memory_allocated() // 1e6, torch.cuda.max_memory_reserved() // 1e6))
 
 - 无法profile第三方库比如nccl的显存占用
+
+- 检测tensor cycles
+
+from torch.utils.viz._cycles import warn_tensor_cycles
+warn_tensor_cycles()
 
 
 *** tensorboard展示

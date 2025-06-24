@@ -3250,6 +3250,14 @@ Thought:{agent_scratchpad}
 
 ![image-20250616205439328](./AI-Agent/image-20250616205439328.png)
 
+### AI知识管理
+
+![image-20250617213353090](./AI-Agent/image-20250617213353090.png)
+
+![image-20250617213524820](./AI-Agent/image-20250617213524820.png)
+
+
+
 
 
 ## 端侧LLM

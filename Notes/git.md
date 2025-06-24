@@ -96,7 +96,7 @@ def load_reference(name_or_id):
 - `git commit`: creates a new commit
   - Write [good commit messages](https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html) and Even more reasons to write [good commit messages](https://chris.beams.io/posts/git-commit/): 大写开头，祈使句，简短
   - saves the snapshot to the project history and completes the  change-tracking process. In short, a commit functions like taking a photo. Anything that’s been staged with `git add` will become a part of the snapshot with `git commit`.
-  - `git commit -am "m"`可以先add再commit，但前提是commit的文件都是tracked状态
+  - `git commit -am "m"`可以先add再commit，**commit的文件都是tracked状态**
   - `-v`显示diff信息
 - `git log`: shows a flattened log of history
   - `git log --pretty=format:"%h %s" --all --graph --decorate --no-merges`: visualizes history as a DAG

@@ -151,6 +151,10 @@
 
 ### 向量库和向量检索
 
+![image-20250617211754493](./AI-Applied-Algorithms/image-20250617211754493.png)
+
+![image-20250617211804708](./AI-Applied-Algorithms/image-20250617211804708.png)
+
 * Text Embeddings
 
   * **语义相似度**：向量之间距离
@@ -446,6 +450,10 @@
   * Prompts for Keyword Extraction：7.3.3
   * Prompts for RAG Evaluation
 
+### Agentic RAG
+
+![image-20250617211907221](./AI-Applied-Algorithms/image-20250617211907221.png)
+
 
 
 ### LLM4KGQA
@@ -650,6 +658,12 @@ response_of_comparation = response.choices[0].message.content return response_of
 ### 竞品
 
 ![image-20241007224527684](./AI-Applied-Algorithms/pai-rag.png)
+
+## 记忆与个性化
+
+![image-20250617211948454](./AI-Applied-Algorithms/image-20250617211948454.png)
+
+
 
 ## 推理 Agent
 

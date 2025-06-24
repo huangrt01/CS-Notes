@@ -93,6 +93,10 @@ torch.cuda.empty_cache()
 
 export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128 # 128-500
 
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True 
+适用于动态shape场景
+https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf
+
 ** 细节
 - 原位操作，但多次使用原位操作可能导致backward错误，比如连续两次sigmoid_
 - del logits再loss.backward()

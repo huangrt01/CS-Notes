@@ -89,9 +89,10 @@ https://wiki.python.org/moin/GlobalInterpreterLock
   * 触发不定期
   * 依赖上次gc以来新分配的变量数量
   * 变量年龄组、阈值设置
-
+    * There are **3 generations of thresholds** to help amortize the expensive costs of running garbage collection on every object. The later generations are less frequently run.
 * 循环依赖：即使del也无法触发gc
   * Python-gc.py
+  * gc.collect()
 
 ##### 变量作用域：LEGB
 

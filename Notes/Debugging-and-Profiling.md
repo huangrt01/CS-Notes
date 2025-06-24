@@ -599,6 +599,18 @@ std::pair<size_t, size_t> MemoryUsage() {
 
 
 
+### ML Profiling
+
+![image-20250617210508106](./Debugging-and-Profiling/image-20250617210508106.png)
+
+![image-20250617210421615](./Debugging-and-Profiling/image-20250617210421615.png)
+
+### GPU Profiling
+
+> 参考gpu-profiling-*.py
+
+
+
 
 ### Exercises
 

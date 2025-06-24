@@ -1011,7 +1011,7 @@ __global__ void kernel(int *a, int N)
 
 ![image-20250603174537178](./GPU/image-20250603174537178.png)
 
-##### Streams
+##### CUDA Streams
 
 > https://developer.download.nvidia.com/CUDA/training/StreamsAndConcurrencyWebinar.pdf
 
@@ -1021,6 +1021,10 @@ __global__ void kernel(int *a, int N)
   * The default stream is special: it blocks all kernels in all other streams 
     * 这一规则有副作用，因此推荐用non-default streams
 
+* 缺点：
+  * SM的碎片问题
+    * ![20250624-191131](./GPU/20250624-191131.jpeg)
+  
 * e.g.
   * nbody-raw.cu -> nbody-optimized.cu
 * 相关design：
