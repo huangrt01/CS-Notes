@@ -210,6 +210,13 @@ ALTER TABLE test TABLE (c1 char(1),c2 char(1));
 
 #### Dictionary Encoding
 
+#### 同时支持 Query 和 Span
+
+* scan：底层存储连续
+* query：设计计算缓存层
+
+
+
 
 
 ### 图数据库
@@ -315,6 +322,13 @@ g.V().has("id", C.id).has("type", C.type)
 ```
 
 
+
+
+
+### 数据一致性
+
+* 多版本并发控制(Multiversion concurrency control, MCC 或 **MVCC**)
+  * 是数据库管理系统常用的一种并发控制，也用于程序设计语言实现事务内存。MVCC意图解决读写锁造成的多个、长时间的读操作饿死写操作问题。每个事务读到的数据项都是一个历史快照（snapshot)并依赖于实现的隔离级别。写操作不覆盖已有数据项，而是创建一个新的版本，直至所在操作提交时才变为可见。快照隔离使得事物看到它启动时的数据状态
 
 
 

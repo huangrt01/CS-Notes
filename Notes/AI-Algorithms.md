@@ -434,7 +434,7 @@
 https://arxiv.org/pdf/1705.03122
 
 * 为什么引入？
-  * MSA的计算，改变Q和K的词元位置，计算结果不变
+  * MSA的计算，改变Q和K的词元位置，计算结果不变，**“invariant to position”**
 
 * 绝对位置编码：
   * Convolutional Sequence to Sequence Learning
@@ -583,7 +583,7 @@ https://github.com/OpenNMT/OpenNMT-py/
   * 算法考虑：同时处理多模态
   * 工程考虑：
     * NLP：几千token； CV：50k~224^2 token
-    * 聚类压缩Query
+    * 聚类压缩Query：the model leverages an **asymmetric attention mechanism** to iteratively **distill inputs** into a **tight latent bottleneck**, allowing it to scale to handle **very large inputs**.
 
 ##### Model 设计
 
@@ -594,6 +594,14 @@ https://github.com/OpenNMT/OpenNMT-py/
   * K、V是序列输入
   * Q是latent state
   * K、V是输入，将信息重复蒸馏进Q中
+* 角度三：将Transformer放平
+  * 相同点：大的byte array通过cross attn蒸馏小的latent array
+  * 不同点：
+    * latent array（output sequence)是随机初始化的，大小可以随便控制；而原来的面向seq-to-seq学习的transformer中的output sequence是来自目标语言的表示层；
+    * transformer中对output sequence是先self-attention，然后cross-attention；而perceiver中则相反，是先cross-attention，然后再进行若干次self-attention。
+  
+  * <img src="./AI-Algorithms/image-20250627151342683.png" alt="image-20250627151342683" style="zoom:50%;" />
+  
 
 1. **核心机制**
    - **非对称交叉注意力**：查询（Q）来自可学习的低维潜在单元（N=512），键（K）和值（V）来自输入数据（M≥50,000），将复杂度降至 O (MN)。
@@ -613,19 +621,50 @@ https://github.com/OpenNMT/OpenNMT-py/
 3. 进一步改造
    * 压缩到极致即为 attention sink 作为输入 ，做单步解码
 
-### Q+KV压缩
+##### 结论
+
+* Scaling law
+  * ![image-20250626171040462](./AI-Algorithms/image-20250626171040462.png)
+
+* weight sharing减少参数量，缓解过拟合
+  * <img src="./AI-Algorithms/image-20250626165611055.png" alt="image-20250626165611055" style="zoom:50%;" />
+
+* cross-attn和self-attn interleaved效果好
+  * <img src="./AI-Algorithms/image-20250626165801217.png" alt="image-20250626165801217" style="zoom:50%;" />
+
+
+
+### QKV压缩
 
 #### Token Merge
 
 > LONGER: Scaling Up Long Sequence Modeling in Industrial Recommenders
 
-* concat
+* 对block内做concat
 
 #### Trans in trans
 
 https://arxiv.org/pdf/2103.00112
 
 ![image-20250606173644337](./AI-Algorithms/image-20250606173644337.png)
+
+### KV压缩
+
+#### Sliding Window Attn —— Mistral-7B
+
+* GQA + Sliding Window Attn + Rolling Buffer Cache
+  * 减少计算和KV存储
+
+
+![image-20250503011135579](./AI-Algorithms/image-20250503011135579.png)
+
+#### MoBA Attn (Moonshot AI)
+
+> https://arxiv.org/pdf/2502.13189
+>
+> MOBA: MIXTURE OF BLOCK ATTENTION FOR LONG-CONTEXT LLMS
+
+* 对block内做mean pooling
 
 ### RWKV、Mamba等
 
@@ -1374,12 +1413,6 @@ utilize MTP to improve training.
 
 * Distillation from DeepSeek-R1
 * Self-Rewarding
-
-## Mistral-7B
-
-* GQA + Sliding Window Attn + Rolling Buffer Cache
-
-![image-20250503011135579](./AI-Algorithms/image-20250503011135579.png)
 
 ## Datasets and Evaluation
 
@@ -2243,20 +2276,16 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
 
     * LLM的逻辑推理能力越强，则能解锁更多复杂应用，大模型应用的天花板就越高
     * o1模型能力越强，则可以反哺基座模型
-
   * o1的做法本质上是CoT的自动化or内化。
-
+  
     * rl搜索COT的决策空间
     * 问题越复杂，隐藏的COT token消耗越大
-
+  
     * 大部分逻辑推理数据的形式是<问题，正确答案>，缺了中间的详细推理步骤，而o1本质上是让大模型学会自动寻找从问题到正确答案的中间步骤，以此来增强复杂问题的解决能力。
-
   * RL的scaling law本质上是COT决策树搜索的scaling law
-
   * Agent无法实用化的主要原因就在于基座模型的复杂推理能力不够强。
-
+  
     * 通过基座模型Plan把一个复杂任务分解为10个步骤，哪怕单个步骤的正确率高达95%，要想最后把任务做对，10个环节的准确率连乘下来，最终的正确率只有59%
-
   * OpenAI想做的方向太多，资源分散导致分到具体一个方向的资源不够用，所以越往后发展“期货状态”的方向越多，也让人觉得尽显疲态。
 
 ### CoT

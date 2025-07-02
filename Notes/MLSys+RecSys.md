@@ -644,9 +644,9 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 ### 混合精度训练、量化推理
 
-#### Intro - 量化目标、精度介绍
+#### 低精度的目标
 
-* 量化的目标是什么？ —— 多目标优化
+* 低精度的目标是什么？ —— 多目标优化
 
   - 优化计算
     - tensorcore，Int8/fp8/fp16/bf16 matmul
@@ -659,32 +659,35 @@ https://docs.nvidia.com/deeplearning/performance/index.html
       - e.g. Increasing the speed at which **the user receives generated results** is challenging, as compute is **dominated by matrix-vector products**. Unlike matrix-matrix products, these are primarily limited by memory bandwidth.
   - 减少精度损失：先决条件
 
-* 量化精度
+#### 浮点数精度介绍
 
-* ![image-20250404210744334](./MLSys+RecSys/image-20250404210744334.png)
-
-  * [denormalized numbers](https://cs.stackexchange.com/questions/101632/understanding-denormalized-numbers-in-floating-point-representation)
+* 浮点数
+  * $$number = (-1)^{sign\ bit}*(1.mantissa)*2^{(exponent-bias)}$$
+  * 概念 [denormalized numbers](https://cs.stackexchange.com/questions/101632/understanding-denormalized-numbers-in-floating-point-representation)
     * **指数固定为 - 126**（规格化数的指数通过 `exponent - 127` 计算）。
     * **尾数无隐含的 1**（直接使用尾数位的二进制小数部分）
     * FP32 can represent precision up to 2^(-23)*2^(-126)=2^(-149)
     * FP16 can represent precision up to 2^(-10)*2^(-14)=2^(-24)
     * BF16: 2^(-7) * 2^(-126) = 2^(-133)
-    
+
+* ![image-20250404210744334](./MLSys+RecSys/image-20250404210744334.png)
+
   * FP64: 8个字节, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
 
   * FP32: 4个字节, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
-    * FP32 = (-1)^(sign) × 2^(decimal exponent -127 ) × (implicit leading 1 + decimal mantissa), [where](https://en.wikipedia.org/wiki/Exponent_bias) 127 is the biased exponent value.
+    * FP32 = (-1)^(sign) × 2^(decimal exponent **-127** ) × (implicit leading 1 + decimal mantissa), [where](https://en.wikipedia.org/wiki/Exponent_bias) 127 is the biased exponent value.
 
     * the value range for FP32 is approximately [-2¹²⁷, 2¹²⁷] ~[-1.7*1e38, 1.7*1e38]
 
     * excluding the largest value 0xFF as it represents NAN
 
   * FP16: 2个字节 1位符号, 5位指数, 10位小数，**有效位数为3位**. 常用于精度更低的机器学习等
-    *  For FP16, the formula becomes (-1)^(sign) × 2^(decimal exponent – 15) × (implicit leading 1 + decimal mantissa), where 15 is the corresponding biased exponent value
+    *  For FP16, the formula becomes (-1)^(sign) × 2^(decimal exponent **– 15**) × (implicit leading 1 + decimal mantissa), where 15 is the corresponding biased exponent value
     * the value range for FP16 is approximately [-2¹⁵, 2¹⁵]=[-32768, 32768]
+    * ![image-20250627185839062](./MLSys+RecSys/image-20250627185839062.png)
 
 * 精度范围：
-  * ![image-20250331122231657](./MLSys+RecSys/image-20250331122231657.png)
+  * <img src="./MLSys+RecSys/image-20250331122231657.png" alt="image-20250331122231657" style="zoom:50%;" />
 
 * fp4
 

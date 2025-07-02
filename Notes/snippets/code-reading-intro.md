@@ -76,6 +76,9 @@
 
 #### LLM
 
+- llama3
+  - https://github.com/meta-llama/llama3
+
 - nanoGPT
   - https://github.com/karpathy/nanoGPT
 

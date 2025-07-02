@@ -562,7 +562,9 @@ print(f"Prompt的token数量为: {token_count}")
     to help lengthen the context (e.g., Transformer-XL [14] and Compressive Transformer [69]). We recommend the survey [81] for more details.
     There are several lines of work on developing other modules instead of attention to model longer context. HiPPO [35] and its extensions, most notably S4 [31, 36, 37] projects the history on a polynomial basis, allowing accurate reconstruction of the history through state-space models. They combine the strengths of CNNs (eﬃcient training), RNNs (eﬃcient inference), and continuous models (robust to change in sampling rates). LambdaNetworks [2], AFT [93] and FLASH [42] are other attempts at replacing attention in the context of image classiﬁcation and language modeling.
 
-### Best Practices：使用 GemLite、TorchAO 和 SGLang 加速 LLM 推理
+### Best Practices
+
+#### 使用 GemLite、TorchAO 和 SGLang 加速 LLM 推理
 
 > https://pytorch.org/blog/accelerating-llm-inference/
 >
@@ -594,6 +596,24 @@ print(f"Prompt的token数量为: {token_count}")
 
 
 
+
+### KV Cache
+
+> 大模型推理性能优化之KV Cache解读 https://zhuanlan.zhihu.com/p/630832593
+>
+> llama3源码
+
+* Intro
+  * 缓存当前轮可重复利用的计算结果，下一轮计算时直接读取缓存结果
+  * 每轮推理对应的 cache 数据量为 2∗b∗s∗h∗n_layers ，这里 s 值等于当前轮次值。以GPT3-175B为例，假设以 float16 来保存 KV cache，senquence长度为100，batchsize=1，则 KV cache占用显存为 2×100×12288×96×2 Byte= 472MB。
+
+* prefill和decode
+  * prefill：发生在计算第一个输出token过程中，这时Cache是空的，FLOPs同KV Cache关闭一致，存在大量gemm操作，推理速度慢。
+  * Decode：
+    * 发生在计算第二个输出token至最后一个token过程中，这时Cache是有值的，每轮推理只需读取Cache，同时将当前轮计算出的新的Key、Value追加写入至Cache；
+    * FLOPs降低，gemm变为gemv操作，推理速度相对第一阶段变快，这时属于Memory-bound类型计算。
+
+![image-20250630201017484](./LLM-MLSys/image-20250630201017484.png)
 
 ### 访存优化
 
