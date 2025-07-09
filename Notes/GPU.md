@@ -1159,7 +1159,6 @@ public:
 
 * 收益：
   * L2 cache传输数据而不是HBM传输
-  * 
 * 难点：
   * SM occupancy
     * register spillover

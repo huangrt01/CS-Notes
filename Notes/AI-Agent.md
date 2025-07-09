@@ -228,49 +228,74 @@ TODO
 
 ### App
 
+#### 榜单
+
+* 2025/06 AI产品周榜 https://mp.weixin.qq.com/s/QYy1aEkUOkpD8FMeuvC2hQ
+  * 
+
 * 展望Killer App
   * AI暂时只是对旧场景的增强
-* 新产品类型
-  * 助手类：打不过Siri们
-  * 搜索类
-    * [Perplexity](https://perplexity.ai)
-    * [秘塔 AI](https://metaso.cn/)
-    * [Devv](https://devv.ai/)
-  * 情感陪伴类
-    * [Character.AI](https://character.ai)（已被 Google 收购）
-    * [星野](https://www.xingyeai.com/)
-    * [Replika](https://replika.ai)
-  * 定制Agent
-    * GPTs
-    * 扣子
-    * dify
-  * AI编程 ，目前最成功的AI应用
-    - [Cursor](https://www.cursor.com/)
-    - [Windsurf](https://codeium.com/windsurf)
-    - [InsCode](https://inscode.csdn.net/)
-    - [marscode](https://www.marscode.cn/)
-* 手握场景的
-  * 拍照答题
-    * Gauth
-    * Question AI
-  * 英语学习
-    * [多邻国](https://www.duolingo.cn/)
-    * 有道 Hi Echo
-  * 图像处理
-    * 美图秀秀
-    * [Adobe Firefly](https://www.adobe.com/products/firefly.html)
-  * 办公
-    - [WPS AI](https://ai.wps.cn/)
-    - [Copilot for Microsoft 365](https://adoption.microsoft.com/en-us/copilot/)
-    - [钉钉魔法棒](https://alidocs.dingtalk.com/i/p/Pl2AmoVbakq8Xdb9BpLmk7jYdkVEvm2g)
-    - [飞书智能伙伴](https://www.feishu.cn/product/ai_companion)
-    - [腾讯会议智能助手](https://meeting.tencent.com/ai/)
-  * 编程
-    * Copilot
-  * 全家桶
-    * Google
-    * Microsoft
-    * ByteDance
+
+#### 助手类
+
+* 豆包
+
+#### 搜索类
+
+* [Perplexity](https://perplexity.ai)
+* [秘塔 AI](https://metaso.cn/)
+* [Devv](https://devv.ai/)
+
+#### 情感陪伴类
+
+* [Character.AI](https://character.ai)（已被 Google 收购）
+* [星野](https://www.xingyeai.com/)
+* [Replika](https://replika.ai)
+
+#### 定制Agent
+
+* GPTs
+* 扣子
+* dify
+
+#### AI编程
+
+- [Cursor](https://www.cursor.com/)
+- [Windsurf](https://codeium.com/windsurf)
+- [InsCode](https://inscode.csdn.net/)
+- [marscode](https://www.marscode.cn/)
+- Copilot
+
+#### 拍照答题
+
+* Gauth
+* Question AI
+
+#### 英语学习
+
+* [多邻国](https://www.duolingo.cn/)
+* 有道 Hi Echo
+
+#### 图像处理
+
+* 美图秀秀
+* [Adobe Firefly](https://www.adobe.com/products/firefly.html)
+
+#### 办公
+
+* Notion AI https://www.notion.com/help/guides/category/ai
+
+- [WPS AI](https://ai.wps.cn/)
+- [Copilot for Microsoft 365](https://adoption.microsoft.com/en-us/copilot/)
+- [钉钉魔法棒](https://alidocs.dingtalk.com/i/p/Pl2AmoVbakq8Xdb9BpLmk7jYdkVEvm2g)
+- [飞书智能伙伴](https://www.feishu.cn/product/ai_companion)
+- [腾讯会议智能助手](https://meeting.tencent.com/ai/)
+
+#### 全家桶
+
+* Google
+* Microsoft
+* ByteDance
 
 ### 公司内部提效
 

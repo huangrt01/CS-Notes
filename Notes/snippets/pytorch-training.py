@@ -147,6 +147,13 @@ LambdaLR
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
+*** 数据不均问题 —— Generic Join Context Manager
+
+https://docs.pytorch.org/tutorials/advanced/generic_join.html
+
+https://docs.pytorch.org/docs/stable/distributed.algorithms.join.html
+
+
 ### Example
 
 import torch
