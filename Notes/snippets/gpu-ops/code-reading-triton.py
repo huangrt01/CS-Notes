@@ -32,3 +32,15 @@ struct ReduceOpConversion
     accumulatePartialReductions(helper, smemBases, rewriter);
 
     loadReductionAndPackResult(helper, smemShape, smemBases, rewriter);
+
+
+
+
+*** AOT compile and link
+
+compiler = os.path.join(triton.tools.__path__[0], "compile.py")
+
+
+python/triton/tools/link.py
+
+linker = os.path.join(triton.tools.__path__[0], "link.py")

@@ -768,7 +768,7 @@ single-container patterns for container management, single-node patterns of clos
 - 超参调优库(Tune):  支持任意ML框架：PyTorch，XGBoost， MXNet， Keras，集成了很多优化器的库和算法， 通过TensorBoard做显示，可以和Ray Serve无缝结合
 - Training with RaySGD: 优势在于能和其它Ray lib无缝结合，并且实现了分布式的dataset
 
-（2）Ray的底层能力：大厂结合Ray自研框架的lecture在这里：[蚂蚁金服Ray Forward推广](https://tech.antfin.com/community/activities/698/review)
+（2）Ray的底层能力：大厂结合Ray自研框架的lecture：[蚂蚁金服Ray Forward推广](https://tech.antfin.com/community/activities/698/review)
 
 3.Ray对应于我们系统中的多个层次，它的底层能力对应于资源管理层REAM (包括Flink, Yarn等)，上游生态对应于我们的LagrangeX
 
