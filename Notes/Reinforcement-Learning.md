@@ -11,6 +11,13 @@
 
 [深度强化学习系列（二）强化学习基础 - iker peng的文章 - 知乎](https://zhuanlan.zhihu.com/p/23436744)
 
+### RL理论
+
+* RL 有个众所周知的问题：当 action space 变得极大、历史信息过长，且问题本身趋于复杂时，它就解决不了。比如，如果 LLM 完全跳过 Pre-training 阶段，只靠一个 Reward function 从零开始训练模型，即使函数设计得再好，模型也几乎不可能达到当前 LLM 的能力水平。原因在于探索空间过大，模型在找到有效策略前就可能迷失或崩溃。这是现在有 Pre-training 到 Post-training 到 Reinforcement fine tuning 多步训练的核心原因。通过巨长无比的 Pre-training 去预热策略模型，在一定程度上解决 exploration 问题，再用 RL 进行优化是有效的。
+  * 但这套体系也存在核心问题：模型的 plasticity（可塑性）有限。训练时间一旦过长、模型结构达到饱和，就会出现 catastrophic forgetting（灾难性遗忘），也就是模型无法再学习新知识，甚至丢失旧知识。这就像一块海绵吸满了水，再强行注水只会把原来的水挤出去。这也意味着，模型的训练能力不可能无限提升。如果数据集持续增长，Pre-training 阶段纳入无限量的原始数据，模型规模也得不断扩大才能适配，以记住任何事情。但人类知识的增长是指数级的，GPU 支撑能力的算力和模型扩展能力却是线性的。最终，这种线性与指数之间的不匹配会形成无法逾越的瓶颈。
+
+
+
 ## veRL
 
 > https://arxiv.org/abs/2409.19256
@@ -151,5 +158,7 @@
     process (Lightman et al., 2023; Wang et al., 2023b).
     * 基于规则的泛化性，比基于模型的更强
 
+## RLHF
 
-
+* Intro
+  * RLHF 其实从某种意义上想像成一个 Offline RL 步骤，因为 reward model 的能力限制了 RL 算法完全 off-policy 的能力。当然，它所带来的 reasoning 能力已经是超过了超越传统监督学习的 Pre-training，但提升幅度仍然非常有限。所以 experience /exploration 的 online 运行是无法避开的重要步骤。

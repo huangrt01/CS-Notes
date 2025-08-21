@@ -1,4 +1,4 @@
-### tools
+*** tools
 
 compute-sanitizer ./app
 
@@ -10,12 +10,16 @@ memcheck: https://docs.nvidia.com/cuda/archive/9.1/cuda-memcheck/index.html
   Initcheck - The unitialized device global memory access detection tool.
   Synccheck - The thread synchronization hazard detection tool.
 
-### cuda debug
+*** cuda coredump
+
+https://blog.vllm.ai/2025/08/11/cuda-debugging.html
+
+*** cuda debug
 
 CUDA_LAUNCH_BLOCKING=1
 
 
-# check error instantly
+* check error instantly
 
 load_keys_kernel<<<grid, BLOCK_SIZE>>>(gpu_keys_ptr, keys_, values_, num_keys,
                                          conflict_zone_size_, capacity_);
@@ -32,7 +36,7 @@ and report the error message, so I think you are right that neither clone()
 nor inverse are the root cause of the issue but are just reporting “an error” as the CUDA context is corrupt.
 
 
-# jupyter notebook
+* jupyter notebook
 
 pip3 install wurlitzer
 %load_ext wurlitzer

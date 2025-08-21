@@ -667,6 +667,20 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 ## 推理 Agent
 
+### 算法理论
+
+* [专访Pokee CEO朱哲清](https://www.xiaohongshu.com/explore/688cba190000000023038da5?app_platform=ios&app_version=8.86&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBmLxP7tTpVSUcvw4pq6ugGZ5IA8aKu780DUkpud8d5ck=&author_share=1&xhsshare=CopyLink&shareRedId=N0lEN0Y6Rk82NzUyOTgwNjc5OTg2NUpP&apptime=1755577736&share_id=ed67514d0f084d5e93e2177cce5b2489&exSource=)，谈agentic experience
+  * multi-step reasoning和multi-step execution的重要性
+    * creative&design类agent的一个瓶颈是，一步做完，用户没法改了，比如无法导入AE并保留图层，或者导入Figma
+  * RL的重要性
+    * agent中，pretraining的主要意义是理解
+    * 从人类工作流中提取pretraining数据集的效率低
+    * 复杂系统中，多轮迭代产生的数据，价值高，不能完全依赖offline RL
+  * agent如何超越function calling
+    * 目标导向的规划很重要
+    * 解决evalutaion的瓶颈
+    * 个性化memory理解
+
 ### 业务场景
 
 * 基座推理模型的训练数据场景
@@ -759,7 +773,7 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 
 
-## Multi-modal Search
+## Multi-modal Search/Agent
 
 ### Intro
 
@@ -1032,6 +1046,16 @@ response_of_comparation = response.choices[0].message.content return response_of
   * a person trying to open the doors,
   * water is flooding in the factory
   * the machines are on fire.
+
+### [Seed] M3-Agent
+
+> https://github.com/ByteDance-Seed/m3-agent
+>
+> https://www.arxiv.org/abs/2508.09736
+
+
+
+
 
 ## AI Search
 

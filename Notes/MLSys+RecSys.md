@@ -2467,9 +2467,19 @@ PS架构的优势主要还是高可用(system efficiency)
 * 常量折叠、公共表达式消除、死代码消除等经典编译优化
 * XLA 还支持Kernel Fusion，减少 Kernel Launch 成本和显存 IO 开销
 
-##### Inductor
 
-https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747
+
+#### Export
+
+> https://forums.developer.nvidia.com/t/best-way-to-convert-pytorch-to-tensorrt-model/291622/7
+>
+> https://discuss.pytorch.org/t/questions-about-compiling-and-exporting-a-model-to-tensorrt/201885/2
+>
+> https://zhuanlan.zhihu.com/p/674704795
+>
+> https://dev-discuss.pytorch.org/t/pytorch-2-x-inference-recommendations/2506
+
+
 
 #### Lightning Thunder
 
@@ -2478,6 +2488,22 @@ https://www.nvidia.com/en-us/on-demand/session/gtc24-s62544/
 https://lightning.ai/docs/thunder/latest/
 
 #### Torch.compile
+
+> https://dev-discuss.pytorch.org/t/the-future-of-c-model-deployment/1282/6
+>
+> https://docs.pytorch.org/docs/2.8/torch.compiler_aot_inductor.html
+>
+> https://hud.pytorch.org/benchmark/compilers
+>
+> https://docs.pytorch.org/docs/main/torch.compiler_performance_dashboard.html
+>
+> 关于aot_inductor中交叉编译相关的功能：
+>
+> https://github.com/pytorch/pytorch/issues/115965
+>
+> 关于如何拓展cpp\cuda实现在pytorch中
+>
+> https://github.com/pytorch/pytorch/issues/152032 
 
 ##### Intro
 
@@ -2488,6 +2514,10 @@ https://lightning.ai/docs/thunder/latest/
   * 支持dynamic shape
   * 支持optimizer的vertical fusion
     * 编译，没有optimizer IR，编译20s for 几千参数 AdamW
+
+##### Inductor
+
+https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747
 
 ### MLOps
 

@@ -1030,11 +1030,39 @@ dynamic_batching {
 
 ### TensorRT backend
 
+#### Intro
+
 * Model Parser 解析TensorFlow/Caffe模型
   * [ONNX Parser](https://github.com/onnx)
 * TensorRT Network Definition API
   * 自定义算子需要自己写
 * TF-TRT (TensorFlow integration with TensorRT) parses the frozen TF graph or saved model, and **converts each supported subgraph to a TRT optimized node** (TRTEngineOp), allowing TF to execute the remaining graph.
+
+#### 优化原理
+
+> https://zhuanlan.zhihu.com/p/667727749
+
+* Hardware Aware Optimazation
+  * 不同硬件，模拟kernel最优解`trtexec --timingCacheFile=`
+  * Type of hardware（DLA/Hardware capability...）
+  * Memory footprint（Share, Cache, Global...）
+  * Input and output shape
+  * Weight shapes
+  * Weight sparsity
+  * Level of quantization （so, reconsider memory)
+* 强制选择kernel：`AlgorithmSelector`
+
+#### Torch-TensorRT
+
+https://github.com/pytorch/TensorRT/releases/tag/v2.8.0
+
+> https://docs.pytorch.org/TensorRT/
+>
+> https://docs.pytorch.org/TensorRT/dynamo/dynamo_export.html
+>
+> https://docs.pytorch.org/TensorRT/fx/getting_started_with_fx_path.html
+
+
 
 ### Faster Transformer
 
@@ -1207,6 +1235,23 @@ dynamic_batching {
 - [Google Gemini 1.5](https://storage.googleapis.com/deepmind-media/gemini/gemini_v1_5_report.pdf)，基于数十个 4k TPUv4 Pod 并行训练，Pod 内部 3D-Torus ICI 互联，单链路带宽 800Gbps。
   - TPU有SuperPod大规模ICI的优势
 - [字节 MegaScale](https://arxiv.org/abs/2402.15627)，12k GPU 并行训练。
+
+### 多模态训练
+
+#### VeOmni
+
+> https://mp.weixin.qq.com/s/A1CdiEiSaGrh_aH_ggBINg
+>
+> **arXiv：**https://arxiv.org/pdf/2508.02317
+>
+> **GitHub：**https://github.com/ByteDance-Seed/VeOmni
+
+* 以模型为中心的分布式训练
+  * VeOmni 将模型定义与底层分布式训练代码解耦，使 FSDP、SP、EP 等分布式策略，可灵活组合应用于不同的模型组件（如编码器、MoE 层），无需修改模型代码。
+  * 同时，VeOmni 提供轻量接口，支持新模态无缝集成，解决了现有框架因模型与并行逻辑耦合而导致的扩展性差、工程成本高等问题。
+  * ![image-20250820184311361](./LLM-MLSys/image-20250820184311361.png)
+
+
 
 ### Ckpt
 
