@@ -31,6 +31,27 @@
   5. 用最终获得的 Prompt 调用 LLM
   6. 由 LLM 生成回复
 
+#### Context Engineering的概念
+
+> Chroma访谈 「RAG真是一个糟糕的概念」 https://mp.weixin.qq.com/s/D5MXQKMffdGS_gTMHE4LIQ
+
+* Context Engineering 这个概念，算是 AI 工程学的一部分。Context Engineering 的任务，就是在每一步生成时，决定上下文窗口里应该放什么。
+  * 一个是内循环，决定这一次上下文里该放哪些内容；
+  * 另一个是外循环，随着时间积累，逐渐学会如何越来越好地选择信息，只放最相关的。
+  * 背后的观察是，context越长，LLM的能力下降
+* **索引的目标就是用写入时的性能去换查询时的性能**
+* Rerank
+  * 专门的 re-rank 模型未来会慢慢边缘化。它们不会消失，但只会在极端规模、极端成本场景下才需要。就像硬件一样，大部分时候 CPU 或 GPU 就够了，只有极少数情况才会考虑 ASIC 或 FPGA。
+* 代码检索的场景
+  * **Claude Code  的同学提到过，他们不会对代码库做 Embedding 或索引，而是直接提供工具，用工具来做代码搜索**
+
+#### RAG的未来
+
+* 未来的检索系统可能会有几个特点：
+  * 第一，它们会一直停留在潜在空间里，而不是再回到自然语言。
+  * 第二，边生成边检索
+    * RAGAR
+
 ### 业务场景
 
 * 场景一：合作伙伴评估
@@ -151,6 +172,8 @@
 
 ### 向量库和向量检索
 
+#### 产品 Intro
+
 ![image-20250617211754493](./AI-Applied-Algorithms/image-20250617211754493.png)
 
 ![image-20250617211804708](./AI-Applied-Algorithms/image-20250617211804708.png)
@@ -192,9 +215,12 @@
   * 复杂场景：关系型数据库中的表与表之间的复杂查询操作。
     * 例如，支付宝的业务可能涉及几十张表，需要很多join和where语句来实现。这种复杂的关系型数据库查询需求是独立的vector DB无法满足的，因为它们通常只做向量搜索，没有大量的表与表之间的操作。
   * 对于那些专注向量搜索的应用，独立的vector DB确实可能是更好的选择。它们有更好的扩展能力，能更好地满足这类需求。因此，这两种场景并不冲突，具体选择取决于业务需求。如果业务需要处理复杂的关系型数据库查询，我们的pgvecto.rs会更适合，而如果业务重心在向量搜索，独立的vector DB可能更有优势。
-
 * turbopuffer
   * 专门做多租户场景，这一单点差异化让它的商业化进程非常顺利。它针对有多租户需求的客户（比如Notion这样的应用）提供数据库服务。
+* chroma https://mp.weixin.qq.com/s/D5MXQKMffdGS_gTMHE4LIQ
+  * 原生支持正则搜索，因为它对代码搜索特别好用。我们还专门做了索引优化，让正则搜索在大数据量下也能跑得很快。
+  * “forking”功能，可以在一百毫秒内复制一个已有索引
+  
 
 ### Embedding模型
 
@@ -1095,7 +1121,29 @@ response_of_comparation = response.choices[0].message.content return response_of
   * https://docs.vantagediscovery.com/docs/search-more-like-these-tm#example-soft-chair--item-27--two-pinterest-images
     * ![more-like-these-overview](./AI-Applied-Algorithms/more-like-these-overview.webp)
 
+#### 多目标 LLM Ranking、插件系统
 
+##### [腾讯元宝搜索实践：大模型时代，AI 如何让搜索焕发新生](https://mp.weixin.qq.com/s/A7PhY4b6rV3DF7ygiqzO9w)
+
+![image-20250822163623802](./AI-Applied-Algorithms/image-20250822163623802.png)
+
+* 插件系统
+  * 插件召排，基于用户输入改写后的 query，以向量方式召回 k 个插件，再基于 rank 模型简化召回插件列表，输出 top n，保证召回率 100%；
+  * 外部知识引入，为 Function Calling 模型提供节假日等外部知识，提升槽位抽取精度，降低模型幻觉；
+  * Function Calling，基于输入候选插件及外部知识，对用户改写 query 抽取出需要调用的 API 及槽位；
+  * API 调用，将插件结果按照规则映射到 API 请求，获取 api 结果；
+  * 质量控制，部分插件偏向于检索，增加相关度过滤提升精度。
+* LLM Ranking
+  * Continued Pre-training（搜索持续预训练）：采用多种任务形式的搜索语料持续训练，优化大模型的领域适配效果；
+  * 大规模监督生成式学习：采用纯生成式方案进行大规模下游任务训练，并采用细粒度的打分 GenFR 对生成式模型进行约束；
+  * 生成式模型蒸馏：对生成式 teacher ( 13B/30B/70B) 进行蒸馏，将能力迁移到尺寸相对较小的 LLM student (0.5B) 上以满足推理性能；
+  * 多目标能力拟合：多目标排序时采用 4 个目标连续生成的方案，先后生成相关性、权威性、时效性、需求满足，最后多个目标加权得到最终得分。
+  * 这些环节对应了 AI 搜索从基础能力建设到线上落地的全流程。
+
+![image-20250822163632961](./AI-Applied-Algorithms/image-20250822163632961.png)
+
+* RL
+  * ![image-20250822163935761](./AI-Applied-Algorithms/image-20250822163935761.png)
 
 
 

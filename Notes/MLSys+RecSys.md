@@ -1122,7 +1122,7 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
   * Token-wise Quantization for Activations
 * 工程优化（4.3 Quantization-Optimized Transformer Kernels）
   * ![image-20250330153101483](./MLSys+RecSys/image-20250330153101483.png)
-  * quant：kernel fusion technique to fuse quantization operator with its previous operator, like layer normalization, to alleviate the data movement cost from token-wise quantization
+  * quant：kernel fusion technique to fuse quantization operator with its previous operator, like layer normalization/GeMM, to alleviate the data movement cost from token-wise quantization
     * 每个SM可以quantize one row/token
   * dequant：the dequantization cost of the different GeMMs’ output is alleviated by scaling the INT32 accumulation using both the weight and activation quantization scales, before writing the final FP16 result back to the main memory for the next FP16 operator (like GeLU)
     * 异步读取量化scale
@@ -2155,7 +2155,8 @@ for i in range(num_layers):
     * 为了保持模型的表达能力，引入可学习的参数，缩放因子和平移因子
 * Ghost BN
   * 计算更小批量的统计数据（“ghost 批量”）
-    * 引入其他噪声
+    * 噪声大于 SyncBN；速度快于 SyncBN
+    * 本质上是提供了调优BN的batch size的能力
   * 按 GPU 逐个单独执行批量归一化，解决同步 BN 通信开销问题
 * 将噪声添加至梯度
   * 确保权重更新的协方差随着批量大小的变动保持不变 
@@ -2514,6 +2515,9 @@ https://lightning.ai/docs/thunder/latest/
   * 支持dynamic shape
   * 支持optimizer的vertical fusion
     * 编译，没有optimizer IR，编译20s for 几千参数 AdamW
+* [以 DiT 模型为例对比 torch.compile 和 TensorRT](https://www.zhihu.com/question/1918670222509994354/answer/1945426163502646299)
+  * 动态shape、多样化的module
+  
 
 ##### Inductor
 
@@ -3873,27 +3877,32 @@ https://instagram-engineering.com/core-modeling-at-instagram-a51e0158aa48
 
 #### Clipper: A Low-Latency Online Prediction Serving System, NSDI 17
 
-low latencies, high throughputs, and improved accuracy
+* low latencies, high throughputs, and improved accuracy
 
-prediction cache, batching queue
+* prediction cache, batching queue
 
 ##### Model abstraction layer
 
-用object store存模型，减少初始化开销
+* 用object store存模型，减少初始化开销
 
-prediction cache：本质上类似SHARED属性（同一batch内的某一特征用相同的预估结果）。两者的区别在于，前者的输入更简单，以模型和req id为标识，易于做cache操作；后者是feature层面，更精细。推荐系统入图的特征输入很难做到完全一致，因此做prediction cache操作难度较大。
+* prediction cache：本质上类似SHARED属性（同一batch内的某一特征用相同的预估结果）。两者的区别在于，前者的输入更简单，以模型和req id为标识，易于做cache操作；后者是feature层面，更精细。推荐系统入图的特征输入很难做到完全一致，因此做prediction cache操作难度较大。
 
-batching：动态选batch size的方式
-* additive-increase-multiplicative-decrease (AIMD) scheme 
-* quantile regression
-* delayed batching：按攒batch的timeout来delay，适合并行优化明显的模型
+* batching：动态选batch size的方式
 
-model container: 无状态服务
-* Clipper performs adaptive batching independently for each replica
+  * additive-increase-multiplicative-decrease (AIMD) scheme 
+
+  * quantile regression
+
+  * delayed batching：按攒batch的timeout来delay，适合并行优化明显的模型
+
+
+* model container: 无状态服务
+  * Clipper performs adaptive batching independently for each replica
+
 
 ##### Model selection layer
 
-动态调整选用模型的策略，推荐系统采用这类技术比CV/NLP难度更大
+* 动态调整选用模型的策略，推荐系统采用这类技术比CV/NLP难度更大
 
 * Single Model Selection Policy
   * address the trade-off between exploring possible actions and exploiting the estimated best action. 

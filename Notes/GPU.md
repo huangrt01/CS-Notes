@@ -976,7 +976,16 @@ __global__ void kernel(int *a, int N)
 
 ![image-20250404200327944](./GPU/image-20250404200327944.png)
 
+#### CUDA Driver & Runtime
 
+* cuda driver API
+  * `libcuda.so`（随驱动安装）
+  * driver API更繁琐，但是更加底层
+  * OpenAI Triton 直接通过`libcuda.so`调用驱动，直接把Python代码翻译成驱动可执行的cubin程序
+    * https://github.com/triton-lang/triton/blob/main/third_party/nvidia/backend/driver.py
+* cuda runtime API
+  * `libcudart.so`（随cudatoolkit安装）
+  * runtime API使用更方便，但是无法控制一些底层细节
 
 #### CUDA Compiler
 
@@ -996,7 +1005,22 @@ __global__ void kernel(int *a, int N)
 
 * CUTLASS、Thrust、CUB
 
+#### CUDA Context
 
+> https://zhuanlan.zhihu.com/p/694214348
+
+* 当一个进程在CPU上运行时，操作系统会维护这个进程的状态，包括已经分配的内存及其地址、打开的文件、使用的硬件等资源。相对应的，当一个进程要使用GPU时，GPU也必须为该进程维护这些状态。这就是cuda context。
+  * ![image-20250912185208030](./GPU/image-20250912185208030.png)
+* 不同之处在于：
+  * 一个进程在操作系统里的状态只有一份（保存在内存中），而一个进程在多个GPU里都可能有一些状态。
+  * 更确切地说：**每一个进程在每一个GPU上都可以有多个cuda context，但最多只能有一个current context**。
+* cuda API的参数并不包括cuda context，而是依赖于**current context**的概念，所有的cuda API调用，都是针对current context而言的。
+  * 在cuda driver API中，我们可以通过`cuCtxCreate/cuCtxDestroy`函数来创建、销毁cuda context，`cuCtxPushCurrent/cuCtxPopCurrent`来操作cuda context stack，`cuCtxSetCurrent`则是直接把栈顶的cuda context进行替换，`cuCtxGetCurrent`是获取栈顶的cuda context。一些小细节：`cuCtxCreate`不仅会创建cuda context，而且会`cuCtxPushCurrent`，也即创建并置于栈顶；同样的，`cuCtxDestroy`不仅会销毁，也会将cuda context从栈中弹出。
+  * 为了节省显存，一般来说大家都不会在每个线程创建cuda context，**也不会在一个设备上创建多个cuda context**。于是cuda新增了primary context的概念，**每个进程在每个GPU上最多有一个primary context**。相应的API是`cuDevicePrimaryCtxRetain/cuDevicePrimaryCtxRelease`
+    * 实际上一个设备可以多个cuda context
+    * runtime API收回了cuda context管理的权限，整个进程在一个设备上最多只有一个primary cuda context。只要没有人调用`cudaDeviceReset`，就不会出现问题。
+* cuda context对代码设计细节的影响
+  * 由于一个cuda context就要300MB+显存，因此我们需要尽可能减少cuda context。由此带来的重要的设计细节就是：**尽量不要让多个进程操作同一个GPU**。否则会带来频繁的cuda context切换
 
 #### async execution, memory models, unified memory
 

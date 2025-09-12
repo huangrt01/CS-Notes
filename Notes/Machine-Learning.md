@@ -87,6 +87,8 @@ Materials
 
 ### Optimizer
 
+> https://speech.ee.ntu.edu.tw/~tlkagk/courses/ML2020/Optimization.pdf
+
 #### Optimization Problem
 
 * Total Error = Optimization Error + Representation Error
@@ -215,13 +217,24 @@ Materials
     - Also see SAG: https://arxiv.org/pdf/1309.2388v2.pdf
   - 2nd momentum
     - 用外积矩阵近似 Hessian 矩阵
+  - 后期$$\hat{m}_t$$近似为梯度，此时等效学习率为 $$\frac{\eta }{\sqrt{\hat{v}_t} + \epsilon}$$
+    - 如果二阶矩小，需要配合learning rate decay
 - 不保证理论收敛
   - 2 ways to fix:
     - Use $$\max\{\hat{v}_t, \hat{v}_{t-1}, \ldots \hat{v}_1\}$$instead of $$\hat{v}_t$$to guarantee decreasing $$\frac{\eta_t}{\sqrt{\hat{v}_t} + \epsilon}$$: AMSGrad
     - Take $$\beta_2 \propto 1-\frac{1}{t}$$, approaches 1 when $$t$$ approaches infinity,  $$v_t$$barely changes at the end
 - Note：
-  - sparse 部分不适用 Adam：滑动平均用到了历史信息
+  - sparse 部分不适用 Adam：滑动平均用到了历史信息，可能导致很旧的信息引入
   - 配合 slow start 技术，前期并发数缓慢增大
+
+##### SparseAdam
+
+> https://docs.pytorch.org/docs/stable/generated/torch.optim.SparseAdam.html
+
+* optimizer仅对非0的embedding更新动量
+* 倾向于仅对二阶动量而非一阶动量生效
+  * 一阶动量 m_t 的目的 ：找到梯度的 平均方向 。方向是有时效性的，混合不同时间点的方向是危险的。
+  * 二阶动量 v_t 的目的 ：统计参数被更新的 总频率/总强度 。这是一个累加计数器，它的值代表“这个参数总共被更新了多少次”。
 
 #### RMSProp
 
@@ -299,7 +312,35 @@ Materials
 * 应用：
   * 优化 sparse feature embedding layer (fid -> embedding vector layer) 的 model sparsity，将每个特征的 vector 当作一个 group
 
+#### [Google] AdaGrad Clippy
 
+> https://zhuanlan.zhihu.com/p/661609678 石塔西
+
+* 问题：“**损失函数曲面陡峭的地方，步长太大了**”
+  * CV模型很多时候是针对一个静态的样本集反复训练，训练数据分布保持不变，而推荐模型必须针对源源而来的样本流在线学习，样本的分布迁移是家常便钣。面对时刻变化着的数据分布，优化算法沿着之前的方向迈过了头，也不足为奇了。
+  * 现在大厂的排序模型几乎都是多目标的。多个目标之间可能“翘翘板”，相同的步长，对于一个任务可能收敛过慢，对另一个任务却可能导致不收敛。
+* ![image-20250910164703351](./Machine-Learning/image-20250910164703351.png)
+
+### 学习率 Learning Rate 相关
+
+#### Examples
+
+* Transformer
+  * Optimizer：AdamW
+  * 第一阶段是warmup阶段，第二阶段则是逆平方根衰减阶段，通过减低学习率防止模型在最优解附近震荡。
+
+![img_v3_02q0_a182662e-98ba-4a76-abe0-2380d382f2bg](./Machine-Learning/img_v3_02q0_a182662e-98ba-4a76-abe0-2380d382f2bg.png)
+
+* LLaMA 2:
+  * 前2000步warmup至峰值学习率，然后采用余弦退火衰减至峰值学习率的10%
+
+#### LARS – 按层自适应学习率调整
+
+*  [LARS论文](https://arxiv.org/abs/1904.00962): 
+   *  大LR -> LR warm-up -> LARS，只是能保证大batch训练能训，关于效果问题，作者认为“increasing the batch does not give much additional gradient information comparing to smaller batches.”
+*  [LARC](https://github.com/NVIDIA/apex/blob/master/apex/parallel/LARC.py): 带梯度裁剪的分层自适应学习率，以具有动力的SGD作为基础优化器
+*  [LAMB](https://arxiv.org/abs/1904.00962): 分层自适应学习率，以 Adam 作为基础优化器，在BERT等语言模型上比LARC更成功
+*  [NovoGrad](https://arxiv.org/abs/1905.11286): 按层计算的移动平均值，在几个不同的领域也有不错的表现
 
 
 
@@ -469,9 +510,24 @@ https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html
 
 ### Contrastive Learning
 
+> https://lilianweng.github.io/posts/2021-05-31-contrastive/#infonce
+
 #### Intro
 
-[Constrastive Learning: MoCo and SimCLR](https://mp.weixin.qq.com/s/v5p9QA3vDl-WTF3-7shp4g)
+* [Constrastive Learning: MoCo and SimCLR](https://mp.weixin.qq.com/s/v5p9QA3vDl-WTF3-7shp4g)
+* batch size比较重要，增加batch size可以增加正负样本对的数量
+
+#### InfoNCE
+
+* The **InfoNCE loss** in CPC ([Contrastive Predictive Coding](https://lilianweng.github.io/posts/2019-11-10-self-supervised/#contrastive-predictive-coding); [van den Oord, et al. 2018](https://arxiv.org/abs/1807.03748)), inspired by [NCE](https://lilianweng.github.io/posts/2021-05-31-contrastive/#NCE), uses categorical cross-entropy loss to identify the positive sample amongst a set of unrelated noise samples.
+
+* **The probability of we detecting the positive sample correctly is:** $$ p(C = \text{pos}|\mathcal{X}, \boldsymbol{c}) = \frac{p(\boldsymbol{x}_{\text{pos}}|\boldsymbol{c}) \prod_{\substack{i=1, \dots, N; i \neq \text{pos}}} p(\boldsymbol{x}_i)}{\sum_{j=1}^N \left[ p(\boldsymbol{x}_j|\boldsymbol{c}) \prod_{\substack{i=1, \dots, N; i \neq j}} p(\boldsymbol{x}_i) \right]} = \frac{\frac{p(\boldsymbol{x}_{\text{pos}}|\boldsymbol{c})}{p(\boldsymbol{x}_{\text{pos}})}}{\sum_{j=1}^N \frac{p(\boldsymbol{x}_j|\boldsymbol{c})}{p(\boldsymbol{x}_j)}} = \frac{f(\boldsymbol{x}_{\text{pos}}, \boldsymbol{c})}{\sum_{j=1}^N f(\boldsymbol{x}_j, \boldsymbol{c})} $$ where the scoring function is $$ f(\boldsymbol{x}, \boldsymbol{c}) \propto \frac{p(\boldsymbol{x}|\boldsymbol{c})}{p(\boldsymbol{x})} $$.
+  * Given a context vector $$ \boldsymbol{c} $$, the positive sample should be drawn from the conditional distribution $$ p(\boldsymbol{x}|\boldsymbol{c}) $$, while $$ N - 1 $$ negative samples are drawn from the proposal distribution $$ p(\boldsymbol{x}) $$, independent from the context $$ \boldsymbol{c} $$. For brevity, let us label all the samples as $$ \mathcal{X} = \{\boldsymbol{x}_i\}_{i=1}^N $$, among which only one of them $$ \boldsymbol{x}_{\text{pos}} $$ is a positive sample. 
+* The InfoNCE loss optimizes the negative log probability of classifying the positive sample correctly: $$ \mathcal{L}_{\text{InfoNCE}} = -\mathbb{E} \left[ \log \frac{f(\boldsymbol{x}, \boldsymbol{c})}{\sum_{\boldsymbol{x}' \in \mathcal{X}} f(\boldsymbol{x}', \boldsymbol{c})} \right] $$ 
+* The fact that $$ f(\boldsymbol{x}, \boldsymbol{c}) $$ estimates the density ratio $$ \frac{p(\boldsymbol{x}|\boldsymbol{c})}{p(\boldsymbol{x})} $$ has a connection with mutual information optimization. To maximize the mutual information between input $$ \boldsymbol{x} $$ and context vector $$ \boldsymbol{c} $$, we have: $$ I(\boldsymbol{x}; \boldsymbol{c}) = \sum_{\boldsymbol{x}, \boldsymbol{c}} p(\boldsymbol{x}, \boldsymbol{c}) \log \frac{p(\boldsymbol{x}, \boldsymbol{c})}{p(\boldsymbol{x})p(\boldsymbol{c})} = \sum_{\boldsymbol{x}, \boldsymbol{c}} p(\boldsymbol{x}, \boldsymbol{c}) \log \frac{p(\boldsymbol{x}|\boldsymbol{c})}{p(\boldsymbol{x})} $$ where the logarithmic term in blue is estimated by $$ f $$. For sequence prediction tasks, rather than modeling the future observations $$ p_k(\boldsymbol{x}_{t + k}|\boldsymbol{c}_t) $$ directly (which could be fairly expensive), CPC models a density function to preserve the mutual information between $$ \boldsymbol{x}_{t + k} $$ and $$ \boldsymbol{c}_t $$: $$ f_k(\boldsymbol{x}_{t + k}, \boldsymbol{c}_t) = \exp\left( \boldsymbol{z}_{t + k}^\top \mathbf{W}_k \boldsymbol{c}_t \right) \propto \frac{p(\boldsymbol{x}_{t + k}|\boldsymbol{c}_t)}{p(\boldsymbol{x}_{t + k})} $$ where $$ \boldsymbol{z}_{t + k} $$ is the encoded input and $$ \mathbf{W}_k $$ is a trainable weight matrix. 
+  * 最小化 InfoNCE Loss，实际上是在 最大化锚点 c 和正样本 x_i 之间互信息 (Mutual Information) 的一个下界
+
+
 
 #### 训练 Dense Retriever
 

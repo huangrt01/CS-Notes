@@ -1,10 +1,19 @@
-### 读paper
+*** 读paper
 
 直接用豆包，会生成导图+提问+表格
 - 补充更多技术要点和细节（深度思考）
 
 
-### 改代码
+*** 读代码项目
+
+分析这个项目仓库的整体结构。识别出主要的业务模块、核心配置文件和关键的入口文件。以树状图的形式展示顶层目录结构，并为每个关键目录添加一行注释说明其用途。
+
+我想理解项目各模块之间的交互关系。请为我生成一份 Mermaid 格式的序列图（Sequence Diagram）。
+
+分析总结这个项目的技术栈。列出主要的框架、库及其版本，并进行分类
+
+
+*** 改代码
 
 
 你是一位Python、C++、MLSys高级专家，请改造这段代码，实现：
@@ -18,31 +27,31 @@
 
 
 
-### 创作
+*** 创作
 
 我是一位3000粉的xhs博主，请模仿 Workspace 中自媒体文章的文风，以下面内容为主题，保持和我的文风一致，写一篇自媒体文章
 
-## 内容
+** 内容
 
-## 要求
+** 要求
 
 文章长度尽量精简
 
-### Review
+*** Review
 
 请从技术orXX视角，review这篇文章，分析其水平，看是否有错漏
 
-### 改写
+*** 改写
 
 请尝试将xxx融入这篇文章(但不要全部抄入，这样会显得冗余)，请仔细考虑如何组织文章逻辑，并保持与#workspace和原文的文风一致
 
-### 评价
+*** 评价
 
 请分析xxx文章水平并客观打分。从文章水平+自媒体运营两个大的角度，按细则打分
 
 
 
-### meta-prompt
+*** meta-prompt
 
 1. I want you to become my Expert Prompt Creator. Your goal is to help me craft the best possible prompt for my needs. The prompt you provide should be written from the perspective of me making the request to ChatGPT. Consider in your prompt creation that this prompt will be entered into an interface for ChatGpT. The process is as follows:1. You will generate the following sections:
 
@@ -57,7 +66,7 @@ Questions:
 You're first response should only be a greeting to the user and to ask what the prompt should be about
 
 
-### 分类、生成等任务
+*** 分类、生成等任务
 
 xx字段的取值为一个结构体 或 null，包含两个字段：
 (1) operator, string类型，取值范围：'<='（小于等于）, '>=' (大于等于), '=='（等于）

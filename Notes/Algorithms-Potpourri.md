@@ -67,6 +67,8 @@ unsigned u64ToAsciiTable(uint64_t value, char* dst) {
 - FP32: 用4个字节来表达一个数字, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
 - FP16: 用2个字节来表达一个数字, 1位符号, 5位指数, 10位小数，**有效位数为3位**. 常用于精度更低的机器学习等
 
+
+
 ### 数据结构
 
 #### Hash Table
@@ -178,6 +180,36 @@ https://en.wikipedia.org/wiki/Bloom_filter
 
 
 
+### 数据处理
+
+#### TopK
+
+* std是对topK的近似
+
+```python
+ def get_topk_amax(tensor, percentile):
+      tensor = tf.abs(tensor)
+      tensor = tf.reshape(tensor, [-1])
+      tensor_size = tf.cast(tf.size(tensor), tf.float32)
+      k = tf.math.maximum(1, tf.cast(tf.math.ceil(tensor_size * (1-percentile)), tf.int32))
+      topk, _ = tf.math.top_k(tensor, k=k)
+      target_amax = topk[-1]
+      return target_amax
+
+  def get_std_amax(tensor, std_scale):
+      return tf.abs(tf.reduce_mean(tensor)) + std_scale * tf.math.reduce_std(tensor)      
+
+  def get_max_amax(tensor):
+      return tf.reduce_max(tf.abs(tensor))
+```
+
+
+
+
+
 ### 图算法
+
+* Dijkstras's 算法：图的最短路径
+  * 分层cluster的思想，超越dijkstras https://www.quantamagazine.org/new-method-is-the-fastest-way-to-find-the-best-routes-20250806/
 
 * 社区发现 Louvain算法 https://zhuanlan.zhihu.com/p/558706129

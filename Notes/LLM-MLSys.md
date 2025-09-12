@@ -599,6 +599,8 @@ print(f"Prompt的token数量为: {token_count}")
 
 ### KV Cache
 
+> 本质和 casual mask 有密切关系，full mask下无法使用 KV cache
+>
 > 大模型推理性能优化之KV Cache解读 https://zhuanlan.zhihu.com/p/630832593
 >
 > llama3源码

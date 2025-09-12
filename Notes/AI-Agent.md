@@ -369,7 +369,7 @@ TODO
   * 懂AI：AI的能力边界
   * 懂编程
 
-### 应用技术架构
+### Agent 应用技术架构、系统设计
 
 * 纯prompt
 * prompt + function calling
@@ -394,6 +394,14 @@ TODO
 
 * Notes
   * “准备测试数据“容易被忽略
+
+#### [一口气学会如何思考AI Agent系统设计](https://www.bilibili.com/video/BV1WoeozgEyn/)
+
+![image-20250905205432873](./AI-Agent/image-20250905205432873.png)
+
+![image-20250909162445811](./AI-Agent/image-20250909162445811.png)
+
+
 
 ### 大模型技术选型
 
@@ -457,6 +465,186 @@ TODO
 * 游戏 AI Npc
   * https://foresightnews.pro/article/detail/30224
   
+
+## Agent
+
+### Intro
+
+* 和Workflow的对比，见workflow章节中的甲骨文文章
+* Intro
+  * understanding complex inputs, engaging in reasoning and planning, using tools reliably, and recovering from errors.
+  * it's crucial for the agents to gain “ground truth” from the environment at each step (such as tool call results or code execution) to assess its progress
+  * **When to use agents:** Agents can be used for open-ended problems where it’s difficult or impossible to predict the required number of steps, and where you can’t hardcode a fixed path. The LLM will potentially operate for many turns, and you must have some level of trust in its decision-making. Agents' autonomy makes them ideal for scaling tasks in trusted environments.
+
+![image-20250226015431648](./AI-Agent/image-20250226015431648.png)
+
+* [Google 白皮书分析](https://ppc.land/ai-agents-google-unveils-framework-for-next-gen-systems/)
+  * 白皮书：https://ppc.land/content/files/2025/01/Newwhitepaper_Agents2.pdf
+  * ![image-20250227192024868](./AI-Agent/image-20250227192024868.png)
+  * model layer
+  * orchestration layer
+    * ReAct, Chain-of-Thought, and Tree-of-Thoughts
+    * "agent chaining"
+
+  * Tools layer
+    * Extensions
+      * provide standardized API interactions
+
+    * Functions
+      * enable client-side execution control
+
+    * Data Stores
+      * facilitate access to various types of information
+
+  * ![image-20250227191217604](./AI-Agent/image-20250227191217604.png)
+
+* 吴恩达：系统可以具有不同程度的Agentic特性
+  * **Reflection（反思）**：类似于AI的自我纠错和迭代。例如，AI系统会检查自己编写的代码，并提出修改建议。
+  * **Tool Use（工具使用）**：大语言模型调用插件，扩展了其能力。例如，使用Copilot进行联网搜索或调用代码插件解决数理逻辑问题。
+  * **Planning（规划）**：AI根据用户输入的任务，拆解流程、选择工具、调用、执行并输出结果。例如，根据一张图片中的姿态生成一张新图片，并进行描述。
+  * **Multi-agent（多智能体协作）**：多个Agent协作完成任务，每个Agent可能扮演不同的角色，如CEO、产品经理或程序员。这种模式模拟了现实生活中的工作场景，能够处理复杂系统处理复杂系统
+* OpenAI开源多智能体agent框架swarm https://mp.weixin.qq.com/s/ysUzxUYV-lsQ6aiYPU0KdA
+  * https://github.com/openai/swarm
+  * 自动将函数转成适配格式的json描述
+  * 上下文的管理有多种模式可以轻松传递
+  * 10行代码构建出多智能体系统
+
+![agent-overview](./AI-Agent/agent-overview.png)
+
+- [LangGraph](https://langchain-ai.github.io/langgraph/) from LangChain;
+- Amazon Bedrock's [AI Agent framework](https://aws.amazon.com/bedrock/agents/);
+- [Rivet](https://rivet.ironcladapp.com/), a drag and drop GUI LLM workflow builder; and
+- [Vellum](https://www.vellum.ai/), another GUI tool for building and testing complex workflows.
+
+### Function Calling
+
+https://www.anthropic.com/news/tool-use-ga
+
+*  Anthropic's suggestions for deciding on tool formats are the following:
+
+   - Give the model enough tokens to "think" before it writes itself into a corner.
+
+   - Keep the format close to what the model has seen naturally occurring in text on the internet.
+
+   - Make sure there's no formatting "overhead" such as having to keep an accurate count of thousands of lines of code, or string-escaping any code it writes.
+
+*  *agent*-computer interfaces (ACI)
+
+   * Put yourself in the model's shoes
+   * writing a great docstring for a junior developer on your team
+   * https://console.anthropic.com/workbench
+   * [Poka-yoke](https://en.wikipedia.org/wiki/Poka-yoke) your tools
+   * e.g. SWE Bench，文件tool仅输入绝对路径
+
+### ReAct
+
+```
+Answer the following questions as best you can. You have access to the following tools:
+
+{tools}
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+Begin!
+
+Question: {input}
+Thought:{agent_scratchpad}
+```
+
+### **SelfAskWithSearch**
+
+* 适合知识图谱这样的层层推理场景
+
+
+
+### Plan-And-Execute
+
+> https://blog.langchain.dev/planning-agents/
+
+* 好处
+  * Generating the full reasoning steps is a tried-and-true prompting technique to improve outcomes.
+  * 性能、成本
+* Naive版本
+  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb
+
+![img](./AI-Agent/plan-and-execute-0915298.png)
+
+* ReWOO：Reasoning WithOut Observations
+  * the planner can reference previous outputs using syntax like `#E2` 
+  * more effective than a naive plan-and-execute agent since each task can have only the required context (its input and variable values).
+
+* LLMCompiler
+  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/llm-compiler/LLMCompiler.ipynb
+  * **Planner**: streams a DAG of tasks. Each task contains a tool, arguments, and list of dependencies.
+  * **Task Fetching Unit** schedules and executes the tasks. This accepts a stream of tasks. This unit schedules tasks once their dependencies are met. Since many tools involve other calls to search engines or LLMs, the extra parallelism can grant a significant speed boost (the paper claims 3.6x).
+  * **Joiner**: dynamically replan or finish based on the entire graph history (including task execution results) is an LLM step that decides whether to respond with the final answer or whether to pass the progress back to the (re-)planning agent to continue work.
+  * 好处：
+    * **Planner** outputs are ***streamed;\*** the output parser eagerly yields task parameters and their dependencies.
+    * The **task fetching unit** receives the parsed task stream and schedules tasks once all their dependencies are satisfied.
+    * Task arguments can be *variables,* which are the outputs of previous tasks in the DAG. For instance, the model can call `search("${1}")` to search for queries generated by the output of task 1. This lets the agent work even faster than the "embarrassingly parallel" tool calling in OpenAI.
+
+### Agent Examples
+
+#### Intro
+
+* 模版
+
+![agent-flowchart](./AI-Agent/agent-flowchart.png)
+
+#### Agentic RAG
+
+* ![image-20250227201733347](./AI-Agent/image-20250227201733347.png)
+
+#### Coding Agent
+
+- A coding Agent to resolve [SWE-bench tasks](https://www.anthropic.com/research/swe-bench-sonnet), which involve edits to many files based on a task description;
+  - ![image-20250226015736553](./AI-Agent/image-20250226015736553.png)
+- Our [“computer use” reference implementation](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo), where Claude uses a computer to accomplish tasks.
+
+#### Customer support
+
+- 特点
+  - Support interactions naturally follow a conversation flow while requiring access to external information and actions;
+  - Tools can be integrated to pull customer data, order history, and knowledge base articles;
+  - Actions such as issuing refunds or updating tickets can be handled programmatically; and
+  - Success can be clearly measured through user-defined resolutions.
+- 一口气学会如何思考AI Agent系统设计 https://www.bilibili.com/video/BV1WoeozgEyn/
+  - 参考「Agent应用技术架构」
+
+![image-20250905205445608](./AI-Agent/image-20250905205445608.png)
+
+![image-20250909162528023](./AI-Agent/image-20250909162528023.png)
+
+
+
+## Agent 产品
+
+### HiAgent
+
+![image-20250616205439328](./AI-Agent/image-20250616205439328.png)
+
+### AI知识管理
+
+![image-20250617213353090](./AI-Agent/image-20250617213353090.png)
+
+![image-20250617213524820](./AI-Agent/image-20250617213524820.png)
+
+### 语鲸
+
+https://lingowhale.com/topics
+
+
+
+
 
 ## 本地开发
 
@@ -1078,7 +1266,13 @@ Assistant：
     - Most viewed
     - Recently viewed
 
-### 竞品
+### Agentic Search
+
+#### Hornet
+
+https://hornet.dev/
+
+### 产品
 
 * [深度｜AI+电商搜索大盘点，又一个资本集中下注的细分赛道](https://mp.weixin.qq.com/s/zaczcDifgT-9Gt5q-R7azQ)
   * VantageDiscovery
@@ -1955,6 +2149,8 @@ for hat in queue:
 
 ## AI编程
 
+### Intro
+
 * 「编程」是**目前大模型能力最强的垂直领域**，甚至超越了对「自然语言」本身的处理能力。因为：
 
   - 训练数据质量高
@@ -1965,6 +2161,11 @@ for hat in queue:
 * 知道怎么用好 AI 编程，了解它的能力边界、使用场景，就能类比出在其他领域 AI 怎么落地，能力上限在哪
 * 趋势：
   * [Atom Capital: 1000x 的超级码农——AI 编程的机会和未来](https://mp.weixin.qq.com/s/IE1P-USAJDlbPcssJltNnw)
+
+### 检索的实现
+
+* Claude Code  的同学提到过，他们不会对代码库做 Embedding 或索引，而是直接提供工具，用工具来做代码搜索
+* **代码 Embedding 被低估**
 
 ### 理论
 
@@ -3119,170 +3320,6 @@ https://agently.cn/guides/workflow/index.html
 
 
 
-## Agent
-
-### Intro
-
-* 和Workflow的对比，见workflow章节中的甲骨文文章
-* Intro
-  * understanding complex inputs, engaging in reasoning and planning, using tools reliably, and recovering from errors.
-  * it's crucial for the agents to gain “ground truth” from the environment at each step (such as tool call results or code execution) to assess its progress
-  * **When to use agents:** Agents can be used for open-ended problems where it’s difficult or impossible to predict the required number of steps, and where you can’t hardcode a fixed path. The LLM will potentially operate for many turns, and you must have some level of trust in its decision-making. Agents' autonomy makes them ideal for scaling tasks in trusted environments.
-
-![image-20250226015431648](./AI-Agent/image-20250226015431648.png)
-
-* [Google 白皮书分析](https://ppc.land/ai-agents-google-unveils-framework-for-next-gen-systems/)
-  * 白皮书：https://ppc.land/content/files/2025/01/Newwhitepaper_Agents2.pdf
-  * ![image-20250227192024868](./AI-Agent/image-20250227192024868.png)
-  * model layer
-  * orchestration layer
-    * ReAct, Chain-of-Thought, and Tree-of-Thoughts
-    * "agent chaining"
-
-  * Tools layer
-    * Extensions
-      * provide standardized API interactions
-
-    * Functions
-      * enable client-side execution control
-
-    * Data Stores
-      * facilitate access to various types of information
-
-  * ![image-20250227191217604](./AI-Agent/image-20250227191217604.png)
-
-* 吴恩达：系统可以具有不同程度的Agentic特性
-  * **Reflection（反思）**：类似于AI的自我纠错和迭代。例如，AI系统会检查自己编写的代码，并提出修改建议。
-  * **Tool Use（工具使用）**：大语言模型调用插件，扩展了其能力。例如，使用Copilot进行联网搜索或调用代码插件解决数理逻辑问题。
-  * **Planning（规划）**：AI根据用户输入的任务，拆解流程、选择工具、调用、执行并输出结果。例如，根据一张图片中的姿态生成一张新图片，并进行描述。
-  * **Multi-agent（多智能体协作）**：多个Agent协作完成任务，每个Agent可能扮演不同的角色，如CEO、产品经理或程序员。这种模式模拟了现实生活中的工作场景，能够处理复杂系统处理复杂系统
-* OpenAI开源多智能体agent框架swarm https://mp.weixin.qq.com/s/ysUzxUYV-lsQ6aiYPU0KdA
-  * https://github.com/openai/swarm
-  * 自动将函数转成适配格式的json描述
-  * 上下文的管理有多种模式可以轻松传递
-  * 10行代码构建出多智能体系统
-
-![agent-overview](./AI-Agent/agent-overview.png)
-
-- [LangGraph](https://langchain-ai.github.io/langgraph/) from LangChain;
-- Amazon Bedrock's [AI Agent framework](https://aws.amazon.com/bedrock/agents/);
-- [Rivet](https://rivet.ironcladapp.com/), a drag and drop GUI LLM workflow builder; and
-- [Vellum](https://www.vellum.ai/), another GUI tool for building and testing complex workflows.
-
-### Function Calling
-
-https://www.anthropic.com/news/tool-use-ga
-
-*  Anthropic's suggestions for deciding on tool formats are the following:
-
-   - Give the model enough tokens to "think" before it writes itself into a corner.
-
-   - Keep the format close to what the model has seen naturally occurring in text on the internet.
-
-   - Make sure there's no formatting "overhead" such as having to keep an accurate count of thousands of lines of code, or string-escaping any code it writes.
-
-*  *agent*-computer interfaces (ACI)
-
-   * Put yourself in the model's shoes
-   * writing a great docstring for a junior developer on your team
-   * https://console.anthropic.com/workbench
-   * [Poka-yoke](https://en.wikipedia.org/wiki/Poka-yoke) your tools
-   * e.g. SWE Bench，文件tool仅输入绝对路径
-
-### ReAct
-
-```
-Answer the following questions as best you can. You have access to the following tools:
-
-{tools}
-
-Use the following format:
-
-Question: the input question you must answer
-Thought: you should always think about what to do
-Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action
-Observation: the result of the action
-... (this Thought/Action/Action Input/Observation can repeat N times)
-Thought: I now know the final answer
-Final Answer: the final answer to the original input question
-
-Begin!
-
-Question: {input}
-Thought:{agent_scratchpad}
-```
-
-### **SelfAskWithSearch**
-
-* 适合知识图谱这样的层层推理场景
-
-
-
-### Plan-And-Execute
-
-> https://blog.langchain.dev/planning-agents/
-
-* 好处
-  * Generating the full reasoning steps is a tried-and-true prompting technique to improve outcomes.
-  * 性能、成本
-* Naive版本
-  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb
-
-![img](./AI-Agent/plan-and-execute-0915298.png)
-
-* ReWOO：Reasoning WithOut Observations
-  * the planner can reference previous outputs using syntax like `#E2` 
-  * more effective than a naive plan-and-execute agent since each task can have only the required context (its input and variable values).
-
-* LLMCompiler
-  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/llm-compiler/LLMCompiler.ipynb
-  * **Planner**: streams a DAG of tasks. Each task contains a tool, arguments, and list of dependencies.
-  * **Task Fetching Unit** schedules and executes the tasks. This accepts a stream of tasks. This unit schedules tasks once their dependencies are met. Since many tools involve other calls to search engines or LLMs, the extra parallelism can grant a significant speed boost (the paper claims 3.6x).
-  * **Joiner**: dynamically replan or finish based on the entire graph history (including task execution results) is an LLM step that decides whether to respond with the final answer or whether to pass the progress back to the (re-)planning agent to continue work.
-  * 好处：
-    * **Planner** outputs are ***streamed;\*** the output parser eagerly yields task parameters and their dependencies.
-    * The **task fetching unit** receives the parsed task stream and schedules tasks once all their dependencies are satisfied.
-    * Task arguments can be *variables,* which are the outputs of previous tasks in the DAG. For instance, the model can call `search("${1}")` to search for queries generated by the output of task 1. This lets the agent work even faster than the "embarrassingly parallel" tool calling in OpenAI.
-
-### Agent Examples
-
-* Agentic RAG
-  * ![image-20250227201733347](./AI-Agent/image-20250227201733347.png)
-
-- A coding Agent to resolve [SWE-bench tasks](https://www.anthropic.com/research/swe-bench-sonnet), which involve edits to many files based on a task description;
-  - ![image-20250226015736553](./AI-Agent/image-20250226015736553.png)
-- Our [“computer use” reference implementation](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo), where Claude uses a computer to accomplish tasks.
-- Customer support
-  - Support interactions naturally follow a conversation flow while requiring access to external information and actions;
-  - Tools can be integrated to pull customer data, order history, and knowledge base articles;
-  - Actions such as issuing refunds or updating tickets can be handled programmatically; and
-  - Success can be clearly measured through user-defined resolutions.
-
-* 模版
-
-![agent-flowchart](./AI-Agent/agent-flowchart.png)
-
-
-
-
-
-
-
-## Agent 产品
-
-### HiAgent
-
-![image-20250616205439328](./AI-Agent/image-20250616205439328.png)
-
-### AI知识管理
-
-![image-20250617213353090](./AI-Agent/image-20250617213353090.png)
-
-![image-20250617213524820](./AI-Agent/image-20250617213524820.png)
-
-
-
 
 
 ## 端侧LLM
@@ -3373,8 +3410,8 @@ Thought:{agent_scratchpad}
 ### 发明创造
 
 * 使用镜子和放大镜制造焦点火
+  * 在中世纪，使用镜子和放大镜集中阳光点火，可以被视为一种神奇的表演。这种方法的原理基于光的折射和焦点原理，即凸透镜（如放大镜）可以将太阳光聚焦到一点，从而产生足够的热量点燃易燃物质。
 
-在中世纪，使用镜子和放大镜集中阳光点火，可以被视为一种神奇的表演。这种方法的原理基于光的折射和焦点原理，即凸透镜（如放大镜）可以将太阳光聚焦到一点，从而产生足够的热量点燃易燃物质。
 
 实施步骤：
 
@@ -3386,10 +3423,11 @@ Thought:{agent_scratchpad}
 
 
 * 利用化学反应制造彩色烟雾
+  * 彩色烟雾的制作可以通过燃烧含有不同金属盐的化学混合物来实现，这些金属盐在燃烧时会产生不同颜色的火焰和烟雾。
 
-彩色烟雾的制作可以通过燃烧含有不同金属盐的化学混合物来实现，这些金属盐在燃烧时会产生不同颜色的火焰和烟雾。
 
-#### 实施步骤：
+实施步骤：
+
 1. **准备化学材料**：常用的材料包括硝酸钾（促进燃烧），以及铜粉（绿色）、锶盐（红色）、钡盐（绿色）等。
 2. **制作烟雾弹**：将小量金属盐与硝酸钾混合，包裹在易燃纸张中。
 3. **点燃烟雾弹**：在安全的环境下点燃包裹好的化学混合物，观察彩色的烟雾效果。
@@ -3400,10 +3438,11 @@ Thought:{agent_scratchpad}
 
 
 * 制造简易电池
+  * 利用中世纪已有的材料如铜和锌板，可以制造出一个简易的伏打电池，展示电的生成。
 
-利用中世纪已有的材料如铜和锌板，可以制造出一个简易的伏打电池，展示电的生成。
 
-#### 实施步骤：
+实施步骤：
+
 1. **材料准备**：准备铜板和锌板，以及盐水或柠檬汁作为电解质。
 2. **组装电池**：将铜板和锌板插入电解质中，它们之间不应接触。
 3. **连接导线**：使用导线连接铜板和锌板，并将导线的另一端连接到一个小型电灯泡或电铃。
@@ -3412,10 +3451,11 @@ Thought:{agent_scratchpad}
 
 
 * 制造机械自动装置
+  * 使用简单的齿轮和杠杆系统，制造一个小型的自动机械装置，如自动敲钟的装置。
 
-使用简单的齿轮和杠杆系统，制造一个小型的自动机械装置，如自动敲钟的装置。
 
-#### 实施步骤：
+实施步骤：
+
 1. **设计装置**：设计一个简单的齿轮系统，使用手摇或水力来驱动。
 2. **制作齿轮和杠杆**：使用木材或金属制作齿轮和杠杆，确保它们能够顺畅转动。
 3. **组装**：将齿轮和杠杆组装成一个连续运动的机械系统。

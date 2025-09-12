@@ -777,7 +777,12 @@ for key in def_keys:
 --filterflags="-lssl -lcrypto -lcrypt -levent -lz -lbz2 -lmsgpack"
 ```
 
+#### vcpkg
 
+* 管理C++项目的第三方 依赖库
+  * get started: https://learn.microsoft.com/en-us/vcpkg/get_started/get-started?pivots=shell-bash
+  * with vscode: https://learn.microsoft.com/en-us/vcpkg/get_started/get-started-vscode?pivots=shell-bash
+  * with clion: https://www.jetbrains.com/help/clion/package-management.html
 
 
 
