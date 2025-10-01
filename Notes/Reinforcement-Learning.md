@@ -13,32 +13,25 @@
 
 ### RL理论
 
+* 长期以来，出于工程和算法原因，人们认为用强化学习训练 LM 是不可能的。而目前多个组织找到的可行方案是：
+  * 使用策略梯度强化学习 (Policy Gradient RL) 算法
+  * 近端策略优化 (Proximal Policy Optimization，PPO) 微调
+  * 微调 LM 的部分参数
+    * 因为微调整个 10B～100B+ 参数的成本过高 (相关工作参考低秩适应 LoRA 和 DeepMind 的 Sparrow LM)
+
 * RL 有个众所周知的问题：当 action space 变得极大、历史信息过长，且问题本身趋于复杂时，它就解决不了。比如，如果 LLM 完全跳过 Pre-training 阶段，只靠一个 Reward function 从零开始训练模型，即使函数设计得再好，模型也几乎不可能达到当前 LLM 的能力水平。原因在于探索空间过大，模型在找到有效策略前就可能迷失或崩溃。这是现在有 Pre-training 到 Post-training 到 Reinforcement fine tuning 多步训练的核心原因。通过巨长无比的 Pre-training 去预热策略模型，在一定程度上解决 exploration 问题，再用 RL 进行优化是有效的。
   * 但这套体系也存在核心问题：模型的 plasticity（可塑性）有限。训练时间一旦过长、模型结构达到饱和，就会出现 catastrophic forgetting（灾难性遗忘），也就是模型无法再学习新知识，甚至丢失旧知识。这就像一块海绵吸满了水，再强行注水只会把原来的水挤出去。这也意味着，模型的训练能力不可能无限提升。如果数据集持续增长，Pre-training 阶段纳入无限量的原始数据，模型规模也得不断扩大才能适配，以记住任何事情。但人类知识的增长是指数级的，GPU 支撑能力的算力和模型扩展能力却是线性的。最终，这种线性与指数之间的不匹配会形成无法逾越的瓶颈。
 
 
-
-## veRL
-
-> https://arxiv.org/abs/2409.19256
-
-### Intro
-
-* veRL(HybridFlow)是一个灵活、高效、工业级的RL(HF)训练
-  框架,专为大型语言模型(LLM)而设计。veRL应用hybrid-
-  controller编程模型,兼具single-controller的编程灵活性与
-  multi-controller的计算高效性。
-* 在提供灵活性的同时,veRL利用3D-HybridEngine能力,减少训
-  练和生成阶段之间转换期间的通信开销,提供极致吞吐性能。
-* 支持Auto - Mapping算法来搜索每个node最佳Parallelism和
-  Placement方式。将模型放置到不同的GPU组上,以实现高效的
-  资源利用和跨不同集群规模的可扩展性。
 
 
 
 ## Algorithm
 
 ### PPO
+
+* 核心思路是clipping
+  * 限制了每次参数更新的幅度，确保新的策略（更新后的模型）与旧的策略（更新前的模型）不会相差太远
 
 ![image-20250504001256092](./Reinforcement-Learning/image-20250504001256092.png)
 
@@ -158,7 +151,69 @@
     process (Lightman et al., 2023; Wang et al., 2023b).
     * 基于规则的泛化性，比基于模型的更强
 
-## RLHF
+## RLHF —— 基于人类反馈的强化学习
 
-* Intro
+### Intro
+
+* 核心贡献：解决了“奖励信号模糊”的难题
+
   * RLHF 其实从某种意义上想像成一个 Offline RL 步骤，因为 reward model 的能力限制了 RL 算法完全 off-policy 的能力。当然，它所带来的 reasoning 能力已经是超过了超越传统监督学习的 Pre-training，但提升幅度仍然非常有限。所以 experience /exploration 的 online 运行是无法避开的重要步骤。
+  * ![image-20251002031823547](./Reinforcement-Learning/image-20251002031823547.png)
+
+  * ![image-20251002031905100](./Reinforcement-Learning/image-20251002031905100.png)
+
+
+### 历史发展
+
+* ![image-20251002032014395](./Reinforcement-Learning/image-20251002032014395.png)
+
+![image-20251002032114981](./Reinforcement-Learning/image-20251002032114981.png)
+
+![image-20251002032323673](./Reinforcement-Learning/image-20251002032323673.png)
+
+![image-20251002032405417](./Reinforcement-Learning/image-20251002032405417.png)
+
+### RLHF 步骤
+
+* Reinforcement Learning from Human Feedback (RLHF), using the same methods as [InstructGPT](https://openai.com/blog/instruction-following/), but with slight differences in the data collection setup
+  * RLHF的blog介绍：https://huggingface.co/blog/rlhf
+    * supervised fine-tuning: human AI trainers provided conversations in which they played both sides—the user and an AI assistant
+  * 步骤：
+    * 预训练一个语言模型 (LM) ；
+    * 聚合问答数据并训练一个奖励模型 (Reward Model，RM) ；
+    * 用强化学习 (RL) 方式微调语言模型（LM）。
+  * reward model: 人工打分
+    * 人工写答案 -> 人工选答案 -> 机器选答案
+    * prompt dataset
+    * fine-tune the model using [Proximal Policy Optimization](https://openai.com/blog/openai-baselines-ppo/)
+    * 一些巧妙的打分方式：
+      * 客服点按钮，选取ai答案，也是finetune过程
+      * reddit帖子中的最高分
+
+![img](./Reinforcement-Learning/ChatGPT_Diagram.svg)
+
+### InstructGPT —— 介绍RLHF的数据工程
+
+* RLHF的数据量要求大于SFT
+
+![image-20251002032216911](./Reinforcement-Learning/image-20251002032216911.png)
+
+#### UltraFeedback
+
+* --> UltraRM+
+
+![image-20251002032525480](./Reinforcement-Learning/image-20251002032525480.png)
+
+## RL工程 —— veRL
+
+> https://arxiv.org/abs/2409.19256
+
+* RL的训练的workload包含既包含LLM训练的workload（计算bound），也包含推理的workload（访存bound），这导致RL训练的效率较低，依赖训推一体的高效训练
+
+### Intro
+
+* veRL(HybridFlow)是一个灵活、高效、工业级的RL(HF)训练框架,专为大型语言模型(LLM)而设计。veRL应用hybrid-
+  controller编程模型,兼具single-controller的编程灵活性与multi-controller的计算高效性。
+* 在提供灵活性的同时,veRL利用3D-HybridEngine能力,减少训练和生成阶段之间转换期间的通信开销,提供极致吞吐性能。
+* 支持Auto - Mapping算法来搜索每个node最佳Parallelism和Placement方式。将模型放置到不同的GPU组上,以实现高效的
+  资源利用和跨不同集群规模的可扩展性。

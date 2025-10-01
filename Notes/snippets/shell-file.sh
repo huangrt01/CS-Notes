@@ -1,9 +1,16 @@
-### 查找大文件
+*** 查找大文件
 
-sudo find / \( -path /root/newrec -prune \) -o \( -type f -size +100M -exec ls -lh {} \; \) | awk '{ print $9 ": " $5 }'
+sudo find / \( -path /root/rec -prune \) -o \( -type f -size +100M -exec ls -lh {} \; \) | awk '{ print $9 ": " $5 }'
 
 
-### 文件传输
+*** 查找并remove文件
+
+find /root/rec -mindepth 1 -type d -mmin +120 -exec rm -rf {} +
+
+# 注意加号，是为了一次rm命令rm多个文件，而不是循环
+
+
+*** 文件传输
 
 xxd -p myfile > tmp
 xxd -r -p tmp > myfile

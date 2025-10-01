@@ -55,6 +55,12 @@
   - https://github.com/NVIDIA/TensorRT
 - TensorRT-LLM
   - https://github.com/NVIDIA/TensorRT-LLM
+- Nvidia Triton Inference
+  - https://github.com/triton-inference-server/server
+  - .../core
+  - .../backend
+  - .../python_backend
+  - .../pytorch_backend     for LibTorch
 
 #### 量化
 

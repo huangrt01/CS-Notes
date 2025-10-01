@@ -10,6 +10,7 @@
 
 * Intro
   * 未来硬件，内存互连很关键
+    * LLM推理到底需要什么样的芯片？ https://wallstreetcn.com/articles/3709523
 * 技术发展
   * Memory Efficient Attention with Online Softmax (2021) -> FlashAttention in Megatron-LM (2022) 
   * Continuous Batching (2022), Paged Attention (2023) -> vLLM, TensorRT-LLM (2023) 
@@ -201,7 +202,7 @@ print(f"Prompt的token数量为: {token_count}")
 
 ## 推理&训练部署
 
-### Intro —— 模型&资源决策
+### Intro —— LLM模型&资源决策
 
 > * 微调的显存消耗小
 > * 对于许多不需要 H 系列所有高级功能（如最高带宽的 NVLink、全面的 ECC 内存、特定的虚拟化支持或单卡最大显存）的场景，4090 是一个更经济的选择
@@ -496,7 +497,6 @@ print(f"Prompt的token数量为: {token_count}")
 
 
 
-
 ### DeepSeek-V3 (MoE)
 
 * prefill
@@ -593,7 +593,9 @@ print(f"Prompt的token数量为: {token_count}")
 
 > 更详细的实验结论：https://developers.redhat.com/articles/2024/10/17/we-ran-over-half-million-evaluations-quantized-llms#real_world_benchmark_performance
 
+### Continuous Batching
 
+> Orca: A distributed serving system for transformer-based generative model
 
 
 
@@ -958,6 +960,52 @@ for t_tile:
 
 * https://crfm.stanford.edu/2023/10/12/flashdecoding.html 有动画
 
+#### Prefill-Decode Disaggregating (PD分离)
+
+> DistServe、Splitwise、TetriInfer
+
+##### Intro
+
+* ![image-20250912201454071](./LLM-MLSys/image-20250912201454071.png)(semi-PD)
+  * 小计算量的decode，占满GPU资源，导致大计算量的prefill进行wait
+
+##### semi-PD: TOWARDS EFFICIENT LLM SERVING VIA PHASE-WISE DISAGGREGATED COMPUTATION AND UNIFIED STORAGE
+
+> https://github.com/infinigence/Semi-PD
+
+* Intro
+  * 现有 LLM 服务系统分为**统一系统**（prefill 与 decode 阶段同 GPU，存在延迟干扰）和**解耦系统**（两阶段分属不同 GPU，存在存储失衡、KV 缓存传输开销、资源调整成本高、权重冗余四大问题）
+  * 为此提出**semi-PD**系统，通过**分阶段解耦计算**（基于 MPS 实现 SM 级资源分配，消除两阶段延迟干扰）与**统一存储**（用统一内存管理器协调权重与 KV 缓存访问，解决存储痛点），搭配**低开销资源切换机制**和**SLO-aware 动态分区算法**，最终在 DeepSeek 系列模型上降低单请求平均端到端延迟**1.27-2.58×**，在 Llama 系列模型上满足 SLO 约束的请求量提升**1.55-1.72×**。
+  * <img src="./LLM-MLSys/image-20250912202038298.png" alt="image-20250912202038298" style="zoom:50%;" />
+
+![image-20250912201840304](./LLM-MLSys/image-20250912201840304.png)
+
+* | 系统类型 | 代表方案                         | 核心特点                           | 关键问题                                                     |
+  | -------- | -------------------------------- | ---------------------------------- | ------------------------------------------------------------ |
+  | 统一系统 | vLLM、SGLang、FasterTransformer  | prefill 与 decode 同 GPU，共享资源 | 1. **延迟干扰**：优先 prefill 会恶化 TPOT，优先 decode 会恶化 TTFT； 2. 无法同时满足 TTFT 与 TPOT 的 SLO |
+  | 解耦系统 | DistServe、Splitwise、TetriInfer | prefill 与 decode 分属不同 GPU     | 1. **存储失衡**：decode 需存完整 KV 缓存，prefill 仅存部分，最高浪费 89.33% GPU 内存； 2. **KV 缓存传输开销**：跨 GPU 传输耗时，低端 GPU 无 NVLink 时开销显著； 3. **资源调整成本高**：GPU 级粗粒度调整，DistServe 重载权重需分钟级； 4. **权重冗余**：两阶段各存完整权重，Llama3.1-405B 需额外翻倍 GPU |
+
+* **计算资源控制器**：
+
+  - 解耦计算实现：基于**NVIDIA MPS**（多进程服务），支持 SM 级资源分配，通过 (x,y) 配置 prefill/decode 的 SM 占比（如 x=60、y=40 表示 prefill 用 60% SM）；
+  - 低开销资源切换：保证当配比变化时，服务不抖动
+    1. **常驻进程**：持有关键weight与 KV 缓存，通过 IPC 共享内存指针，避免进程重启时的权重重载与 KV 复制；
+    2. **延迟切换**：新 (x,y) 配置准备完成后再生效，隐藏 IPC 与初始化延迟；
+    3. **异步切换**：仅终止完成当前迭代的 worker，确保系统始终有 worker 运行，避免空闲。
+  - ![image-20250912202246690](./LLM-MLSys/image-20250912202246690.png)
+
+* **统一内存管理器**：
+
+  - 权重管理：利用权重 “只读” 特性，支持 prefill/decode worker 共享访问，消除权重冗余；
+  - KV 缓存管理：
+    1. 基于 vLLM 的**分页存储**，通过块表索引访问 KV 缓存；
+    2. 用**原子操作**（包裹 query-get-update 三步）解决 prefill/decode 异步分配导致的 WAR（写后读）冲突，确保内存利用率准确。
+
+* SLO-aware 动态调整方法
+  * TTFT：结合 M/M/1 排队模型，考虑等待延迟 + 处理延迟
+
+
+
 ### MoE 推理 —— Expert Parallelism
 
 * Seed：https://arxiv.org/abs/2504.02263
@@ -1019,8 +1067,15 @@ for t_tile:
 
 ### Triton Inference Server
 
+#### Intro
+
+![image-20250917200548693](./LLM-MLSys/image-20250917200548693.png)
+
+#### 优化
+
 * Client/server在本地：
   * Reduces HTTP/gRPC overhead: Inputs/outputs needed to be passed to/from Triton are stored in system/CUDA shared memory. 
+* batching
 
 
 ```
@@ -1029,6 +1084,20 @@ dynamic_batching {
 	max_queue_delay_microseconds: 100,
 }
 ```
+
+#### multi model serving
+
+* [instance-group](https://docs.nvidia.com/deeplearning/triton-inference-server/archives/triton_inference_server_1140/user-guide/docs/model_configuration.html#section-instance-groups)
+  * ![image-20250917200712691](./LLM-MLSys/image-20250917200712691.png)
+
+* 使用 multi streams 实现
+  * ![image-20250917201955610](./LLM-MLSys/image-20250917201955610.png)
+
+#### Ensemble model
+
+https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/ensemble_models.html
+
+
 
 ### TensorRT backend
 

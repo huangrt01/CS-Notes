@@ -966,6 +966,10 @@ TODO 胡贤彬的blog https://www.jianshu.com/u/350f609099e2
 
 * [C3.ai](https://c3.ai/#null)
 
+
+
+
+
 ### ML ToB
 
 >  [Z Potentials｜高策，27岁离开腾讯字节创业，如何5个月获300万下载和品类第一的弯道超车？](https://mp.weixin.qq.com/s/S9wnlCt89cSn_7N4QCPOeQ)
@@ -984,10 +988,25 @@ TODO 胡贤彬的blog https://www.jianshu.com/u/350f609099e2
   * 现在使用推理的受众，和以前有很大不同，更广泛
     * 他们不再需要传统意义上的高易用性工具，而是需要一些新的工具，比如AI Gateway，它强调的是上线后和开发运维（DevOps）环节的应用，而不是开发过程中的效率提升。
 
-#### 火山引擎
+#### GPU、火山引擎
 
 * [火山引擎 ML 平台 PR 文章](https://hub.baai.ac.cn/view/19131)
   * 性能优化、资源调度、开发机、硬件矩阵等优势
+
+##### Intro
+
+* spot instances + gpu fractionalization技术是组合拳
+  * ![image-20250915181313568](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20250915181313568.png)
+
+##### Spot Instance
+
+> https://www.youtube.com/watch?v=4tHr75KKIeU
+
+![image-20250915180613681](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20250915180613681.png)
+
+![image-20250915181050757](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20250915181050757.png)
+
+![image-20250915181105619](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20250915181105619.png)
 
 #### 推荐系统
 

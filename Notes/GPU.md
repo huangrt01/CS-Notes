@@ -479,16 +479,7 @@ cudaMemcpyHostToDevice
 
 #### 通信：NVLink等
 
-* NVLink
-  * 高速、低延迟的通用串行总线接口技术，GPU卡间通信，带宽很高
-  * H100:
-    * 50GB/link
-    * 18links
-* 多机
-  * Ethernet
-  * InfiniBand
-  * OmniPath
-  * RoCE（RDMA over Converged Ethernet）
+* 见「NCCL」
 
 #### 计算：cuDNN
 
@@ -516,24 +507,173 @@ https://discuss.pytorch.org/t/feature-request-nvidia-gds-support-for-pytorch-ite
 
 * 英伟达的显卡驱动程序通常会随CUDA Toolkit一起安装。但是，这个驱动程序是为了开发目的而安装的。这意味着它主要用于开发和调试CUDA应用程序，以帮助开发人员在其工作站上进行开发和测试。这个驱动程序不建议在生产环境中与英伟达的GPU一起使用。在生产环境中，通常需要专门的、经过验证的驱动程序以确保系统的稳定性和性能。
 
-#### 共享卡 —— 如何实现算力和显存隔离
+#### 共享卡 GPU Fractionalization and Virtualization —— 如何实现算力和显存隔离
+
+##### Intro
+
+> GPU虚拟化 Intro https://blog.csdn.net/taxiidriver/article/details/144118627
+>
+> Running Multiple Models on the Same GPU, on Spot Instances https://www.youtube.com/watch?v=4tHr75KKIeU
 
 * 隔离方式：时间片 vs 空间
+
+  * timeslice sharing的问题在于：一张卡同一时间只能有一个cuda ctx，无法做到空分复用
+
 * 隔离级别：不隔离 vs 强隔离 vs 弹性
+
 * 几种隔离技术对比：
-  * vGPU(Grid)(Nvidia)：虚拟化；容器化支持不好，license
+  * vGPU(Grid)(Nvidia)：虚拟化；容器化支持不好，licensing cost
   * vCuda(腾讯)：cuda hook；性能损耗严重
   * cGPU(Alibaba)：ioctl；损耗小，硬隔离，侵入内核（机器容易坏）
-  * MPS(Nvidia)：thread；显存隔离，故障隔离不好
+  * MPS(Nvidia)：thread；显存隔离、故障隔离不好
     * 进程级别，进程数量会受限于显存
   * MIG(~A100)：sm/global memory；硬件层面隔离
 
+* GPU容器虚拟化技术
 
+  * 阿里云 GPU Share：仅共享，无隔离
+  * 火山引擎 mGPU：内核驱动层实现的 GPU 容器虚拟化技术
+  * 腾讯云 qGPU
+
+* 一些基础的观察：
+
+  - 推理速度并不和计算资源大小成正比
+    - 受限于 服务的并发能力、业务进程对GPU资源的利用能力（比如是否访存瓶颈）
+
+  - GPU利用充分时，显存制约并发能力
+
+    - 显存限制MPS进程数量
+
+    - 模型量化能缓解显存瓶颈，放入更多模型，间接提升并发能力
+
+  - 资源调度制约并发能力
+    - e.g. MIG的资源粒度，最多7份
 
 * 3 ways to accelerate applications:
   * Libraries    
   * OpenACC (add directive, for applications like HPC)
   * Programming Languages
+
+##### Timeslicing
+
+> p99延迟高
+
+![image-20250915172318238](./GPU/image-20250915172318238.png)
+
+![image-20250915191113874](./GPU/image-20250915191113874.png)
+
+##### MIG
+
+> - 算力隔离，不受相互干扰，相比虚拟化的方案，延迟更低
+> - 兼容性
+>   - 仅限于Ampere以后的旗舰系列（H100/H20/A100/A800/A30）
+>   - 支持VM，容器
+>   - 开启后不支持NVlink
+
+![image-20250915172453987](./GPU/image-20250915172453987.png)
+
+* 新的多实例GPU（MIG）功能允许GPU（从NVIDIA Ampere架构开始）安全地划分为**最多七个单独的GPU实例**，用于CUDA应用程序，为多个用户提供单独的GPU资源，以实现最佳的GPU利用率。
+  * 此功能对于没有完全饱和GPU计算能力的工作负载特别有益，因此用户可能希望并行运行不同的工作负载以最大限度地提高利用率。
+* 对于具有多租户用例的云服务提供商（CSP），MIG除了为客户提供增强的隔离外，还确保一个客户端不会影响其他客户端的工作或调度。
+  * 使用MIG，每个实例的处理器在整个内存系统中都有单独和隔离的路径——片上交叉端口、L2缓存库、内存控制器和DRAM地址总线都被唯一地分配给单个实例。这确保了单个用户的工作负载可以以可预测的吞吐量和延迟运行，具有相同的L2缓存分配和DRAM带宽，即使其他任务正在处理自己的缓存或使DRAM接口饱和。MIG可以对可用的GPU计算资源（包括流式多处理器或SM，以及复制引擎或解码器等GPU引擎）进行分区，为VM、容器或进程等不同客户端提供具有故障隔离的定义服务质量（QoS）。MIG使多个GPU实例能够在单个物理NVIDIA Ampere架构GPU上并行运行。
+* 使用MIG，用户将能够在新的虚拟GPU实例上查看和安排作业，就像它们是物理GPU一样。MIG适用于Linux操作系统，支持使用Docker引擎的容器，支持使用红帽虚拟化和VMware vSphere等管理程序的Kubernetes和虚拟机。MIG支持以下部署配置：
+  * 裸金属，包括容器
+  * GPU在受支持的管理程序之上通过虚拟化传递给Linux客户机
+  * vGPU位于受支持的管理程序之上
+
+* MIG允许多个vGPU（以及虚拟机）在单个GPU上并行运行，同时保留vGPU提供的隔离保证。
+* 收益：
+  * ![下载](./GPU/%E4%B8%8B%E8%BD%BD.png)
+  * ![image-20250915180445893](./GPU/image-20250915180445893.png)
+
+##### 阿里云 GPU Share
+
+> [GPU Share](https://github.com/AliyunContainerService/gpushare-scheduler-extender) 
+>
+> 仅共享无隔离
+
+
+
+##### 火山引擎 mGPU
+
+> https://www.volcengine.com/docs/6460/132501
+>
+> 内核驱动层实现的 GPU 容器虚拟化技术
+
+* Intro
+
+  * 严格隔离：支持显存和算力的严格隔离，细粒度配置算力大小和算力占比，实现 GPU 资源利用率的最大化。
+
+  - 兼容开放：支持 Volta、Turing、Ampere 等主流架构，适配标准开源的 Kubernetes。
+
+  - 多维监控
+
+  - 更优性能：支持动态调整时间片（timeslice），提高业务进程的吞吐量，进而获取更高的业务性能收益。
+
+![image-20250915192404934](./GPU/image-20250915192404934.png)
+
+- 算力分配
+
+  - 分配限制：0.01 GPU
+    - ![image-20250915192940042](./GPU/image-20250915192940042.png)
+
+  * 分配策略
+    * ![image-20250915192954567](./GPU/image-20250915192954567.png)
+
+- 在离线混布 https://www.volcengine.com/docs/6460/1450262
+  - mGPU 在离线混部功能支持将在线任务和离线任务混合部署在同一张 GPU 卡上，在内核与驱动层面，实现离线任务 100% 利用闲置算力、在线任务 100% 抢占离线任务，从而进一步压榨 GPU 资源，把 GPU 使用成本降到最低。
+
+##### 腾讯云 qGPU
+
+> [Elastic GPU](https://github.com/elastic-ai) 项目，包含下列三个组件：
+
+- [Elastic GPU Scheduler](https://github.com/elastic-ai/elastic-gpu-scheduler): GPU 共享调度 Scheduler Extender
+- [Elastic GPU Agent](https://github.com/elastic-ai/elastic-gpu-agent): GPU 共享 Device Plugin
+- [Elastic GPU Exporter](https://github.com/elastic-ai/elastic-gpu-exporter): 单机上的 GPU 监控采集组件
+- [Elastic GPU](https://github.com/elastic-ai/elastic-gpu): 通过 CRD 管理 GPU 资源
+
+##### 华为云 CCE
+
+- [GPU虚拟化概述_云容器引擎 CCE_用户指南_Standard和Turbo集群用户指南_调度_GPU调度_GPU虚拟化](https://support.huaweicloud.com/usermanual-cce/cce_10_0644.html)
+  - 单个GPU卡最多虚拟化成20个GPU虚拟设备。
+
+##### MPS
+
+> https://man.archlinux.org/man/extra/nvidia-utils/nvidia-cuda-mps-control.1.en
+>
+> - MPS的优势：
+>   - 空分复用 替代 timeslice sharing
+>   - 共享全局 cuda ctx，消除cuda ctx的切换开销、多个cuda ctx的存储开销
+> - MPS的劣势：
+>   - 显存隔离不好 --> 可通过流量侧限流控制
+>   - 故障隔离不好 --> 需要业务侧建设完备的运维机制
+
+<img src="./GPU/image-20250915185610610.png" alt="image-20250915185610610" style="zoom:50%;" />
+
+<img src="./GPU/image-20250915191133620.png" alt="image-20250915191133620" style="zoom:67%;" />
+
+* MPS is a binary-compatible client-server runtime implementation of the CUDA API which consists of several components:
+  - **Control Daemon Process** – The control daemon is responsible for starting and stopping the server, as well as coordinating connections between clients and servers.
+  - **Client Runtime** – The MPS client runtime is **built into the CUDA Driver library** and may be used transparently by any CUDA application.
+  - **Server Process** – The server is the clients’ shared connection to the GPU and provides concurrency between clients.
+* MPS Server  —— nvidia-cuda-mps-server
+  * The MPS server creates the shared GPU context, and manages its clients.
+  * An MPS server can support a finite amount of CUDA contexts determined by the hardware architecture it is running on.
+* MPS Control —— nvidia-cuda-mps-control
+  * When CUDA is first initialized in a program, the CUDA driver attempts to connect to the MPS control daemon. If the connection attempt fails, the program continues to run as it normally would without MPS. If however, the connection attempt to the control daemon succeeds, the CUDA driver then requests the daemon to start an MPS server on its behalf.
+  * If there's an MPS server already running, and the user id of that server process matches that of the requesting client process, the control daemon simply notifies the client process of it, which then proceeds to connect to the server.
+* 环境变量：
+  * CUDA_MPS_PIPE_DIRECTORY
+  * CUDA_MPS_ACTIVE_THREAD_PERCENTAGE：**控制sm的比例**
+    * A more optimal strategy is to uniformly partition the portion by half of the number of expected clients (i.e., set active thread percentage to **100% / 0.5n**) to give the load balancer more freedom to overlap execution between clients when there are idle resources.
+  * [CUDA_MPS_ENABLE_PER_CTX_DEVICE_MULTIPROCESSOR_PARTITIONING](https://docs.nvidia.com/deploy/mps/index.html#cuda-mps-enable-per-ctx-device-multiprocessor-partitioning)
+* 运维细节：
+  * 监控的时候需要同时监控nvidia-cuda-mps-control和对应的nvidia-cuda-mps-server. 原因如下:
+    * Nvidia-cuda-mps-control 挂掉之后, 对应的 nvidia-cuda-mps-server会随着一起结束.
+    * Nvidia-cuda-mps-server 出问题的时候, 并不影响nvidia-cuda-mps-control, 这个时候服务是处于不可控状态. 服务是异常的.
+
+* DL Serving框架对MPS的支持
+  * 见「snippets/gpu-mps.sh」
 
 
 
@@ -652,49 +792,83 @@ nvidia-smi --query-gpu=name --format=csv,noheader
   
   * 小卡：L20/L40S/L40/A30/A10/T4/V100
   
-* H20
+* Nvidia GPU 产品根据使用场景不同分为不同的序列:
+  
+  - GeForce: 用于家庭和个人电脑，包括游戏和娱乐等;
+    - **前缀**: 显卡档次与代号. GT: 频率提升版本; GS: GT的缩减版，级别在GT之后; GTX: 一般可以理解为GT eXtreme，代表了极端、极致的意思; GTS: GTX的缩减版，级别在GTX之后. RTX-> GTX > GTS > GT > GS
+    - **数字**: 例如1060, 10代表的是第几代, 6代表显卡性能档次的定位
+    - **后缀**: SE的意思是阉割版, TI表示增强版, M表示移动端, LE表示
+  - Quadro: 用于工业渲染、艺术设计，工作站等场合
+  - Tesla: 用于科学计算，深度学习加速等场景, 对于15年以后的产品, 一般或以省去Tesla, 或用NVIDIA代替, 如P100, T4, V100, A100等.
+  
+  GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件的版本. 
+  
+  ![h100](./GPU/h100.png)
+  
+  
+  
 
-  * ```
-    * SM Version: 900 (PTX Version: 900)
-    * Number of SMs: 78
-    * SM Default Clock Rate: 1980 MHz
-    * Global Memory: 97149 MiB Free / 97508 MiB Total
-    * Global Memory Bus Peak: 4022 GB/sec (6144-bit DDR @2619MHz)
-    * Max Shared Memory: 228 KiB/SM, 48 KiB/Block
-    * L2 Cache Size: 61440 KiB
-    * Maximum Active Blocks: 32/SM
-    * Maximum Active Threads: 2048/SM, 1024/Block
-    * Available Registers: 65536/SM, 65536/Block
-    * ECC Enabled: Yes
-    ```
+##### H20
 
-* H100 GPU
-  * 132 SMs with 64 cores per SM, totalling a whopping 8448 cores.
-  * each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
+* ```
+  * SM Version: 900 (PTX Version: 900)
+  * Number of SMs: 78
+  * SM Default Clock Rate: 1980 MHz
+  * Global Memory: 97149 MiB Free / 97508 MiB Total
+  * Global Memory Bus Peak: 4022 GB/sec (6144-bit DDR @2619MHz)
+  * Max Shared Memory: 228 KiB/SM, 48 KiB/Block
+  * L2 Cache Size: 61440 KiB
+  * Maximum Active Blocks: 32/SM
+  * Maximum Active Threads: 2048/SM, 1024/Block
+  * Available Registers: 65536/SM, 65536/Block
+  * ECC Enabled: Yes
+  ```
 
-* A100
-  * GPU
-    * GPU Memory：80 GB
-    * GPU Memory Bandwidth：2039 GB/s
-    * https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/
-    * 192KB of on-chip SRAM per each of 108 SMs
-    * Float32 Tensor Core：156 TFlops
-    * Float16 Tensor Core：314 TFlops
-    * Float32 CUDA Core：19.5 TFlops
-  * CPU：2 socket
-    * 内存TB级别
-  * Interconnect：
-    * NVLink：600GB/s （50GB/s，12 links）
-    * PCIe Gen4: 64GB/s
+##### H100
 
-  * 《Dissecting the Ampere GPU architecture via microbenchmarking》
-  * 《Nvidia A100 tensor core GPU architecture》
+* 132 SMs with 64 cores per SM, totalling a whopping 8448 cores.
+* each SM can handle 32 blocks, 64 warps (i.e., 2048 threads), and 1024 threads per block.
 
-* V100
-  * https://datacrunch.io/blog/nvidia-v100-gpu-specs
-  * roofline: 125/0.9 =139FLOPS/Byte
+##### [A10 v.s. A10G](https://www.baseten.co/blog/nvidia-a10-vs-a10g-for-ml-model-inference/)
 
-* GA10x：RTX 3090, has 82 SMs.
+* The A10 is an Ampere-series datacenter GPU well-suited to many model inference tasks, such as running seven billion parameter LLMs. However, AWS users run those same workloads on the A10G, a variant of the graphics card created specifically for AWS. The A10 and A10G have somewhat different specs — most notably around tensor compute — but are interchangeable for most model inference tasks because they share the same GPU memory and bandwidth, and most model inference is memory bound.
+* the A10 prioritizes tensor compute, while the A10G has a higher CUDA core performance
+* 根据ops_to_byte分析是compute bound还是memory bound
+  * arithmetic_intensity (Llama 2 7B, Single-Headed Attention Operation)
+        ~= total compute / total memory movement
+        = 4d(N^2) + 3N^2 ops / 8N^2 + 8Nd bytes
+        = 62 ops/byte
+* [A guide to LLM inference and performance](https://www.baseten.co/blog/llm-transformer-inference-guide/) TODO
+
+
+
+##### A100
+
+* GPU
+  * GPU Memory：80 GB
+  * GPU Memory Bandwidth：2039 GB/s
+  * https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/
+  * 192KB of on-chip SRAM per each of 108 SMs
+  * Float32 Tensor Core：156 TFlops
+  * Float16 Tensor Core：314 TFlops
+  * Float32 CUDA Core：19.5 TFlops
+* CPU：2 socket
+  * 内存TB级别
+* Interconnect：
+  * NVLink：600GB/s （50GB/s，12 links）
+  * PCIe Gen4: 64GB/s
+
+* 《Dissecting the Ampere GPU architecture via microbenchmarking》
+* 《Nvidia A100 tensor core GPU architecture》
+
+##### V100
+
+* https://datacrunch.io/blog/nvidia-v100-gpu-specs
+* roofline: 125/0.9 =139FLOPS/Byte
+
+##### GA10x
+
+RTX 3090, has 82 SMs.
 
 * Each SM in GA10x GPUs contain 128 CUDA Cores, 4 third-generation Tensor Cores, 2 FP64 Cores
   * a 256 KB Register File, and 128 KB of L1/Shared Memory
@@ -704,32 +878,15 @@ nvidia-smi --query-gpu=name --format=csv,noheader
 
 * ![image-20250404011658421](./GPU/image-20250404011658421.png)
 
+##### 晟腾 950
+
+* https://www.toutiao.com/article/7551253505684554278/
+  * 950PR 提升推理 Prefill 性能，提升推荐业务性能，搭载自研 HBM——HiBL 1.0
+  * 950DT 提升推理 Decode 性能，提升训练性能，提升内存容量和带宽。
+  * ![image-20250923162239297](./GPU/image-20250923162239297.png)
+  * ![image-20250923162228313](./GPU/image-20250923162228313.png)
 
 
-Nvidia GPU 产品根据使用场景不同分为不同的序列:
-
-- GeForce: 用于家庭和个人电脑，包括游戏和娱乐等;
-  - **前缀**: 显卡档次与代号. GT: 频率提升版本; GS: GT的缩减版，级别在GT之后; GTX: 一般可以理解为GT eXtreme，代表了极端、极致的意思; GTS: GTX的缩减版，级别在GTX之后. RTX-> GTX > GTS > GT > GS
-  - **数字**: 例如1060, 10代表的是第几代, 6代表显卡性能档次的定位
-  - **后缀**: SE的意思是阉割版, TI表示增强版, M表示移动端, LE表示
-- Quadro: 用于工业渲染、艺术设计，工作站等场合
-- Tesla: 用于科学计算，深度学习加速等场景, 对于15年以后的产品, 一般或以省去Tesla, 或用NVIDIA代替, 如P100, T4, V100, A100等.
-
-GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件的版本. 
-
-![h100](./GPU/h100.png)
-
-
-
-* [A10 v.s. A10G](https://www.baseten.co/blog/nvidia-a10-vs-a10g-for-ml-model-inference/)
-  * The A10 is an Ampere-series datacenter GPU well-suited to many model inference tasks, such as running seven billion parameter LLMs. However, AWS users run those same workloads on the A10G, a variant of the graphics card created specifically for AWS. The A10 and A10G have somewhat different specs — most notably around tensor compute — but are interchangeable for most model inference tasks because they share the same GPU memory and bandwidth, and most model inference is memory bound.
-  * the A10 prioritizes tensor compute, while the A10G has a higher CUDA core performance
-  * 根据ops_to_byte分析是compute bound还是memory bound
-    * arithmetic_intensity (Llama 2 7B, Single-Headed Attention Operation)
-          ~= total compute / total memory movement
-          = 4d(N^2) + 3N^2 ops / 8N^2 + 8Nd bytes
-          = 62 ops/byte
-  * [A guide to LLM inference and performance](https://www.baseten.co/blog/llm-transformer-inference-guide/) TODO
 
 ##### 显存一览
 
@@ -754,6 +911,13 @@ GPU的Compute Capability与CUDA版本不是同一回事, 后者是开发套件�
   * 384-bit memory interface（数据总线位数）, 900 MHz DDR
   * 384 * 1800 / 8 = 86.4 GB/s
     * 由于DDR的时钟脉冲上升沿和下降沿都传输数据，因此倍增系数为2
+
+##### 内存带宽
+
+* A30: 400GB/s / 4卡 = 100GB/s
+* Ascend 910B：550GB/s / 16卡 = 34GB/s
+
+
 
 #### 硬件降频
 
@@ -976,6 +1140,14 @@ __global__ void kernel(int *a, int N)
 
 ![image-20250404200327944](./GPU/image-20250404200327944.png)
 
+##### synchronize的情形
+
+* ![image-20250922191115556](./GPU/image-20250922191115556.png)
+
+* ![image-20250922191127137](./GPU/image-20250922191127137.png)
+
+
+
 #### CUDA Driver & Runtime
 
 * cuda driver API
@@ -1045,10 +1217,44 @@ __global__ void kernel(int *a, int N)
   * The default stream is special: it blocks all kernels in all other streams 
     * 这一规则有副作用，因此推荐用non-default streams
 
+* concurrency的要求
+  * CUDA operations must be in different, **non-0**, streams
+  
+  * cudaMemcpyAsync with host from 'pinned' memory
+    * Page-locked memory
+  
+    * Allocated using cudaMallocHost() or cudaHostAlloc()
+  
+  * Sufficient resources must be available
+    * cudaMemcpyAsyncs in different directions
+    * Device resources (SMEM, registers, blocks, etc.)
+  
+* Note:
+  * Concurrency can be disabled with environment variable CUDA_LAUNCH_BLOCKING
+
+  * It is difficult to get more than 4 kernels to run concurrently
+
+  * `cudaStreamQuery` can be used to separate sequential kernels and prevent delaying signals
+
+  * Kernels using more than 8 textures cannot run concurrently
+
+  * Switching L1/Shared configuration will break concurrency
+
+  * To run concurrently, CUDA operations must have no more than 62 intervening CUDA operations
+    * That is, in 'issue order' they must not be separated by more than 62 other issues
+
+    * Further operations are serialized
+
+  * `cudaEvent_t` is useful for timing, but for performance use `cudaEventCreateWithFlags ( &event, cudaEventDisableTiming )`
+
 * 缺点：
   * SM的碎片问题
     * ![20250624-191131](./GPU/20250624-191131.jpeg)
-  
+  * CPU端编程的issue order会影响并行效果
+    * ![image-20250922192716599](./GPU/image-20250922192716599.png)
+  * delaying signal的现象
+    * ![image-20250922205637894](./GPU/image-20250922205637894.png)
+
 * e.g.
   * nbody-raw.cu -> nbody-optimized.cu
 * 相关design：
@@ -1724,6 +1930,17 @@ https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
 #### Intro
 
 > https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html
+
+* 单机：NVLink
+  * 高速、低延迟的通用串行总线接口技术，GPU卡间通信，带宽很高
+  * H100:
+    * 50GB/link
+    * 18links
+* 多机
+  * Ethernet
+  * InfiniBand
+  * OmniPath
+  * RoCE（RDMA over Converged Ethernet）
 
 ![image-20250515030141689](./GPU/image-20250515030141689.png)
 

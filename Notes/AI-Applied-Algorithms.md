@@ -685,16 +685,14 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 ![image-20241007224527684](./AI-Applied-Algorithms/pai-rag.png)
 
-## 记忆与个性化
-
-![image-20250617211948454](./AI-Applied-Algorithms/image-20250617211948454.png)
-
-
-
 ## 推理 Agent
 
 ### 算法理论
 
+* Agent难点
+  * 基座模型的复杂推理能力不够强
+
+    * 通过基座模型Plan把一个复杂任务分解为10个步骤，哪怕单个步骤的正确率高达95%，要想最后把任务做对，10个环节的准确率连乘下来，最终的正确率只有59%
 * [专访Pokee CEO朱哲清](https://www.xiaohongshu.com/explore/688cba190000000023038da5?app_platform=ios&app_version=8.86&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBmLxP7tTpVSUcvw4pq6ugGZ5IA8aKu780DUkpud8d5ck=&author_share=1&xhsshare=CopyLink&shareRedId=N0lEN0Y6Rk82NzUyOTgwNjc5OTg2NUpP&apptime=1755577736&share_id=ed67514d0f084d5e93e2177cce5b2489&exSource=)，谈agentic experience
   * multi-step reasoning和multi-step execution的重要性
     * creative&design类agent的一个瓶颈是，一步做完，用户没法改了，比如无法导入AE并保留图层，或者导入Figma
@@ -798,6 +796,12 @@ response_of_comparation = response.choices[0].message.content return response_of
 * **大多数情况是因为它错误地解读了某个信息来源。**这也是我们为什么坚持要**加上引用**的原因之一——**让用户能方便地核对信息来源**
 
 
+
+
+
+## 记忆与个性化
+
+![image-20250617211948454](./AI-Applied-Algorithms/image-20250617211948454.png)
 
 ## Multi-modal Search/Agent
 

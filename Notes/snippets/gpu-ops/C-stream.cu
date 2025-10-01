@@ -1,3 +1,17 @@
+*** stream priority
+
+https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__STREAM.html#group__CUDART__STREAM_1ge2be9e9858849bf62ba4a8b66d1c3540
+
+cudaStreamCreateWithPriority
+cudaDeviceGetStreamPriorityRange
+
+
+*** cudaStreamQuery
+
+cudaStreamQuery 是 CUDA Runtime API 中的一个重要函数，它的核心功能是 以非阻塞的方式查询一个 CUDA 流（Stream）的状态 。
+
+*** example
+
 #include <stdio.h>
 
 __global__

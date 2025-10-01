@@ -291,6 +291,15 @@ ChildrenWatch
 
 #### Spark
 
+##### Shuffle策略
+
+- Shuffle Hash Join (洗牌哈希连接)
+  - 核心思想 ：把两张大表按 key 切割，然后把相同 key 的数据块发送到同一个节点上进行连接。。
+- Broadcast Hash Join (广播哈希连接)
+  - 核心思想 ：把小表完整地复制分发给所有计算节点，让它和分布在各个节点上的大表数据进行本地连接。
+- Shuffle Sort Merge Join (洗牌排序合并连接)
+  - 核心思想 ：先把两张表按 key “洗牌”并 排序 ，然后在每个节点上像拉拉链一样，将两条有序的数据流合并起来完成连接。
+
 ##### 1 Billion Row Challenge
 
 ![image-20250525021552954](./Distributed-Systems/image-20250525021552954.png)
