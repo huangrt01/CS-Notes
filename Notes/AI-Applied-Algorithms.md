@@ -8,6 +8,56 @@
 
 ### Intro
 
+#### 为什么需要
+
+![image-20251003023430624](./AI-Applied-Algorithms/image-20251003023430624.png)
+
+#### Context Engineering的概念
+
+> Chroma访谈 「RAG真是一个糟糕的概念」 https://mp.weixin.qq.com/s/D5MXQKMffdGS_gTMHE4LIQ
+
+* Context Engineering 这个概念，算是 AI 工程学的一部分。Context Engineering 的任务，就是在每一步生成时，决定上下文窗口里应该放什么。
+  * 一个是内循环，决定这一次上下文里该放哪些内容；
+  * 另一个是外循环，随着时间积累，逐渐学会如何越来越好地选择信息，只放最相关的。
+  * 背后的观察是，context越长，LLM的能力下降
+* **索引的目标就是用写入时的性能去换查询时的性能**
+* Rerank
+  * 专门的 re-rank 模型未来会慢慢边缘化。它们不会消失，但只会在极端规模、极端成本场景下才需要。就像硬件一样，大部分时候 CPU 或 GPU 就够了，只有极少数情况才会考虑 ASIC 或 FPGA。
+* 代码检索的场景
+  * **Claude Code  的同学提到过，他们不会对代码库做 Embedding 或索引，而是直接提供工具，用工具来做代码搜索**
+
+#### RAG的未来
+
+* 未来的检索系统可能会有几个特点：
+  * 第一，它们会一直停留在潜在空间里，而不是再回到自然语言。
+  * 第二，边生成边检索
+    * RAGAR
+* Cartridge，soft-prompt外挂kv-cachehttps://hazyresearch.stanford.edu/blog/2025-06-08-cartridges
+
+### 业务场景
+
+* 场景一：合作伙伴评估
+  - “哪些企业最适合成为我们的战略合作伙伴？”
+  - 对话式搜推 --> 追问用户企业
+  - 知识图谱 --> 业务领域、技术优势、市场定位、信用评级、知识产权情况、诉讼记录
+  - 寻求业务、技术能力的互补性 (工程施工 + 设计规划)
+* 场景二：市场趋势洞察
+  - “未来哪些行业领域可能出现爆发式增长，我们企业该如何提前布局？”
+  - 对话式搜推 --> 追问用户行业
+  - 知识图谱 --> 注册数量、资本投入、新增专利数量
+  - 寻找不同行业之间的关联节点
+* 场景三：潜在项目预测
+  - “未来哪些项目最有可能适合我们企业参与投标？”
+  - 对话式搜推 --> 追问用户技术优势
+  - 知识图谱 --> 领域招投标项目数量增长趋势、政策法规、行业动态
+  - 为用户提供潜在项目清单
+
+### 检索
+
+![image-20251003024127433](./AI-Applied-Algorithms/image-20251003024127433.png)
+
+#### 基础流程
+
 * RAG（Retrieval Augmented Generation）顾名思义，通过***\*检索\****的方法来增强***\*生成模型\****的能力。
 
 ![image-20240923003438170](./AI-Applied-Algorithms/rag.png)
@@ -31,46 +81,93 @@
   5. 用最终获得的 Prompt 调用 LLM
   6. 由 LLM 生成回复
 
-#### Context Engineering的概念
+##### Retrieval-in-context LM: 验证了相比LLM内在知识有正向价值
 
-> Chroma访谈 「RAG真是一个糟糕的概念」 https://mp.weixin.qq.com/s/D5MXQKMffdGS_gTMHE4LIQ
+* Paper
+  * In-context RAG
+  * REPLUG
 
-* Context Engineering 这个概念，算是 AI 工程学的一部分。Context Engineering 的任务，就是在每一步生成时，决定上下文窗口里应该放什么。
-  * 一个是内循环，决定这一次上下文里该放哪些内容；
-  * 另一个是外循环，随着时间积累，逐渐学会如何越来越好地选择信息，只放最相关的。
-  * 背后的观察是，context越长，LLM的能力下降
-* **索引的目标就是用写入时的性能去换查询时的性能**
-* Rerank
-  * 专门的 re-rank 模型未来会慢慢边缘化。它们不会消失，但只会在极端规模、极端成本场景下才需要。就像硬件一样，大部分时候 CPU 或 GPU 就够了，只有极少数情况才会考虑 ASIC 或 FPGA。
-* 代码检索的场景
-  * **Claude Code  的同学提到过，他们不会对代码库做 Embedding 或索引，而是直接提供工具，用工具来做代码搜索**
+![image-20251003030511914](./AI-Applied-Algorithms/image-20251003030511914.png)
 
-#### RAG的未来
+![image-20251003030554219](./AI-Applied-Algorithms/image-20251003030554219.png)
 
-* 未来的检索系统可能会有几个特点：
-  * 第一，它们会一直停留在潜在空间里，而不是再回到自然语言。
-  * 第二，边生成边检索
-    * RAGAR
+![image-20251003031257325](./AI-Applied-Algorithms/image-20251003031257325.png)
 
-### 业务场景
+#### 关键字检索
 
-* 场景一：合作伙伴评估
-  - “哪些企业最适合成为我们的战略合作伙伴？”
-  - 对话式搜推 --> 追问用户企业
-  - 知识图谱 --> 业务领域、技术优势、市场定位、信用评级、知识产权情况、诉讼记录
-  - 寻求业务、技术能力的互补性 (工程施工 + 设计规划)
-* 场景二：市场趋势洞察
-  - “未来哪些行业领域可能出现爆发式增长，我们企业该如何提前布局？”
-  - 对话式搜推 --> 追问用户行业
-  - 知识图谱 --> 注册数量、资本投入、新增专利数量
-  - 寻找不同行业之间的关联节点
-* 场景三：潜在项目预测
-  - “未来哪些项目最有可能适合我们企业参与投标？”
-  - 对话式搜推 --> 追问用户技术优势
-  - 知识图谱 --> 领域招投标项目数量增长趋势、政策法规、行业动态
-  - 为用户提供潜在项目清单
+* Elastic Search
+  * Elasticsearch（简称ES）是一个广泛应用的开源搜索引擎: https://www.elastic.co/
+  * 关于ES的安装、部署等知识，网上可以找到大量资料，例如: https://juejin.cn/post/7104875268166123528
+  * 关于经典信息检索技术的更多细节，可以参考: https://nlp.stanford.edu/IR-book/information-retrieval-book.html
+* **关键字检索的局限性**
+  * 同一个语义，用词不同，可能导致检索不到有效的结果
+
+#### 向量库和向量检索
+
+* Text Embeddings
+
+  * **语义相似度**：向量之间距离
+    * 欧氏距离
+    * 余弦距离
+
+* 向量数据库
+
+  * 与传统的关系型数据库是互补的
+
+* 主流向量数据库性能对比：
+
+  * FAISS: Meta 开源的向量检索引擎 https://github.com/facebookresearch/faiss
+
+  - Pinecone: 商用向量数据库，只有云服务 https://www.pinecone.io/
+
+  * **Milvus**: 开源向量数据库，同时有云服务 https://milvus.io/
+    * 性能优化较多
+  * Weaviate: 开源向量数据库，同时有云服务 https://weaviate.io/
+  * Qdrant: 开源向量数据库，同时有云服务 https://qdrant.tech/
+  * PGVector: Postgres 的开源向量检索引擎 https://github.com/pgvector/pgvector
+  * RediSearch: Redis 的开源向量检索引擎 https://github.com/RediSearch/RediSearch
+  * ElasticSearch 也支持向量检索 https://www.elastic.co/enterprise-search/vector-search
+
+![vectordb](./AI-Applied-Algorithms/vectordb.png)
+
+##### 产品 Intro
+
+![image-20250617211754493](./AI-Applied-Algorithms/image-20250617211754493.png)
+
+![image-20250617211804708](./AI-Applied-Algorithms/image-20250617211804708.png)
+
+* pgvector
+  * PostgreSQL里面的一个vector search的插件
+  * 缺点：
+    * 向量维度最大只支持2000维，而现在很多新的模型生成的向量远远超过2000维，可能达到4096维以上（和采用了PostgreSQL底层存储有关）
+    * 处理复杂应用场景时能力非常弱。这里的复杂场景指的是传统的关系型数据库中的操作，如filter、join和where等。例如，如果需要将两张表进行join然后再进行向量搜索，pgvector处理这种关系型操作的能力很差。
+* PGVector.rs
+  * 主要论点：vector是一种新的data type，而不是新的indexing构建方式
+  * 基于关系型数据库来支持向量搜索，而不是开发一个新的specialized vector DB
+  * 复杂场景：关系型数据库中的表与表之间的复杂查询操作。
+    * 例如，支付宝的业务可能涉及几十张表，需要很多join和where语句来实现。这种复杂的关系型数据库查询需求是独立的vector DB无法满足的，因为它们通常只做向量搜索，没有大量的表与表之间的操作。
+  * 对于那些专注向量搜索的应用，独立的vector DB确实可能是更好的选择。它们有更好的扩展能力，能更好地满足这类需求。因此，这两种场景并不冲突，具体选择取决于业务需求。如果业务需要处理复杂的关系型数据库查询，我们的pgvecto.rs会更适合，而如果业务重心在向量搜索，独立的vector DB可能更有优势。
+* turbopuffer
+  * 专门做多租户场景，这一单点差异化让它的商业化进程非常顺利。它针对有多租户需求的客户（比如Notion这样的应用）提供数据库服务。
+* chroma https://mp.weixin.qq.com/s/D5MXQKMffdGS_gTMHE4LIQ
+  * 原生支持正则搜索，因为它对代码搜索特别好用。我们还专门做了索引优化，让正则搜索在大数据量下也能跑得很快。
+  * “forking”功能，可以在一百毫秒内复制一个已有索引
+
+### 难点
+
+#### 企业内部数据混乱
+
+* 过去两年，我们有很多To B智能体项目的实践经验，比如用RAG模式搭建客服系统，过程中往往发现很多企业内部数据混乱，需要企业先投入做数据治理。在企业场景下，数据治理是比较耗时的工作。 （腾讯CSIG经验）
+  * 如果内部文档有矛盾，就必须梳理清楚，定义好不同信息来源的权威性；
+  * 如果文档有新、老版本，召回逻辑必须考虑时效性
 
 ### Literature Review
+
+#### RAG的几个关键问题
+
+![image-20251003222558778](./AI-Applied-Algorithms/image-20251003222558778.png)
+
+
 
 > LightRAG 5.2
 
@@ -159,69 +256,6 @@
     * complex reasoning across multiple evidence graphs grounded on KGs
       * MindMap
 
-
-
-### 关键字检索
-
-* Elastic Search
-  * Elasticsearch（简称ES）是一个广泛应用的开源搜索引擎: https://www.elastic.co/
-  * 关于ES的安装、部署等知识，网上可以找到大量资料，例如: https://juejin.cn/post/7104875268166123528
-  * 关于经典信息检索技术的更多细节，可以参考: https://nlp.stanford.edu/IR-book/information-retrieval-book.html
-* **关键字检索的局限性**
-  * 同一个语义，用词不同，可能导致检索不到有效的结果
-
-### 向量库和向量检索
-
-#### 产品 Intro
-
-![image-20250617211754493](./AI-Applied-Algorithms/image-20250617211754493.png)
-
-![image-20250617211804708](./AI-Applied-Algorithms/image-20250617211804708.png)
-
-* Text Embeddings
-
-  * **语义相似度**：向量之间距离
-    * 欧氏距离
-    * 余弦距离
-
-* 向量数据库
-
-  * 与传统的关系型数据库是互补的
-
-* 主流向量数据库性能对比：
-
-  * FAISS: Meta 开源的向量检索引擎 https://github.com/facebookresearch/faiss
-
-  - Pinecone: 商用向量数据库，只有云服务 https://www.pinecone.io/
-
-  * **Milvus**: 开源向量数据库，同时有云服务 https://milvus.io/
-    * 性能优化较多
-  * Weaviate: 开源向量数据库，同时有云服务 https://weaviate.io/
-  * Qdrant: 开源向量数据库，同时有云服务 https://qdrant.tech/
-  * PGVector: Postgres 的开源向量检索引擎 https://github.com/pgvector/pgvector
-  * RediSearch: Redis 的开源向量检索引擎 https://github.com/RediSearch/RediSearch
-  * ElasticSearch 也支持向量检索 https://www.elastic.co/enterprise-search/vector-search
-
-![vectordb](./AI-Applied-Algorithms/vectordb.png)
-
-* pgvector
-  * PostgreSQL里面的一个vector search的插件
-  * 缺点：
-    * 向量维度最大只支持2000维，而现在很多新的模型生成的向量远远超过2000维，可能达到4096维以上（和采用了PostgreSQL底层存储有关）
-    * 处理复杂应用场景时能力非常弱。这里的复杂场景指的是传统的关系型数据库中的操作，如filter、join和where等。例如，如果需要将两张表进行join然后再进行向量搜索，pgvector处理这种关系型操作的能力很差。
-* PGVector.rs
-  * 主要论点：vector是一种新的data type，而不是新的indexing构建方式
-  * 基于关系型数据库来支持向量搜索，而不是开发一个新的specialized vector DB
-  * 复杂场景：关系型数据库中的表与表之间的复杂查询操作。
-    * 例如，支付宝的业务可能涉及几十张表，需要很多join和where语句来实现。这种复杂的关系型数据库查询需求是独立的vector DB无法满足的，因为它们通常只做向量搜索，没有大量的表与表之间的操作。
-  * 对于那些专注向量搜索的应用，独立的vector DB确实可能是更好的选择。它们有更好的扩展能力，能更好地满足这类需求。因此，这两种场景并不冲突，具体选择取决于业务需求。如果业务需要处理复杂的关系型数据库查询，我们的pgvecto.rs会更适合，而如果业务重心在向量搜索，独立的vector DB可能更有优势。
-* turbopuffer
-  * 专门做多租户场景，这一单点差异化让它的商业化进程非常顺利。它针对有多租户需求的客户（比如Notion这样的应用）提供数据库服务。
-* chroma https://mp.weixin.qq.com/s/D5MXQKMffdGS_gTMHE4LIQ
-  * 原生支持正则搜索，因为它对代码搜索特别好用。我们还专门做了索引优化，让正则搜索在大数据量下也能跑得很快。
-  * “forking”功能，可以在一百毫秒内复制一个已有索引
-  
-
 ### Embedding模型
 
 * 向量模型怎么训练：
@@ -247,7 +281,9 @@
 * Note：
   * 可能支持跨语言
 
-### 算法进阶
+### 算法细节
+
+#### document分割
 
 *  文本分割的粒度
    * 缺陷
@@ -255,6 +291,8 @@
        * 比如切分自然段，粒度太大
      * 问题的答案可能跨越两个片段
    * 改进: 按一定粒度，部分重叠式的切割文本，使上下文更完整
+
+#### Rerank
 
 *  检索后排序
    * 问题: 有时，最合适的答案不一定排在检索的最前面
@@ -267,26 +305,28 @@
 
 ![sbert-rerank](./AI-Applied-Algorithms/sbert-rerank.png)
 
-* **混合检索（Hybrid Search）**
-  * 参考 「LLM + Search」
-  * 很多向量数据库都支持混合检索，比如 [Weaviate](https://weaviate.io/blog/hybrid-search-explained)、[Pinecone](https://www.pinecone.io/learn/hybrid-search-intro/) 等。也可以根据上述原理自己实现。
-
-* RAG Fusion
+#### RAG Fusion
 
 ![rag-fusion](./AI-Applied-Algorithms/rag-fusion.jpeg)
 
-*  [query rewriting and query expansion](https://www.google.com/search/howsearchworks/how-search-works/ranking-results/#meaning)
-*  PDF中的表格如何处理
-   * TableTransformer模型 + GPT-4V
-     * TableTransformer找到表格
-     * 用 GPT-4 Vision 生成表格（图像）描述，并向量化用于检索
-   * 一些面向 RAG 的文档解析辅助工具
+#### query相关：长度等
 
-     - [PyMuPDF](https://pymupdf.readthedocs.io/en/latest/): PDF 文件处理基础库，带有基于规则的表格与图像抽取（不准）
-     - [RAGFlow](https://github.com/infiniflow/ragflow): 一款基于深度文档理解构建的开源 RAG 引擎，支持多种文档格式
-     - [Unstructured.io](https://unstructured.io/): 一个开源+SaaS形式的文档解析库，支持多种文档格式
-     - [LlamaParse](https://docs.llamaindex.ai/en/stable/llama_cloud/llama_parse/)：付费 API 服务，由 LlamaIndex 官方提供，解析不保证100%准确，实测偶有文字丢失或错位发生
-     - [Mathpix](https://mathpix.com/)：付费 API 服务，效果较好，可解析段落结构、表格、公式等，贵！
+*  [query rewriting and query expansion](https://www.google.com/search/howsearchworks/how-search-works/ranking-results/#meaning)
+*  query长度
+   *  ![image-20251003030946197](./AI-Applied-Algorithms/image-20251003030946197.png)
+
+#### PDF中的表格如何处理
+
+* TableTransformer模型 + GPT-4V
+  * TableTransformer找到表格
+  * 用 GPT-4 Vision 生成表格（图像）描述，并向量化用于检索
+* 一些面向 RAG 的文档解析辅助工具
+
+  - [PyMuPDF](https://pymupdf.readthedocs.io/en/latest/): PDF 文件处理基础库，带有基于规则的表格与图像抽取（不准）
+  - [RAGFlow](https://github.com/infiniflow/ragflow): 一款基于深度文档理解构建的开源 RAG 引擎，支持多种文档格式
+  - [Unstructured.io](https://unstructured.io/): 一个开源+SaaS形式的文档解析库，支持多种文档格式
+  - [LlamaParse](https://docs.llamaindex.ai/en/stable/llama_cloud/llama_parse/)：付费 API 服务，由 LlamaIndex 官方提供，解析不保证100%准确，实测偶有文字丢失或错位发生
+  - [Mathpix](https://mathpix.com/)：付费 API 服务，效果较好，可解析段落结构、表格、公式等，贵！
 
 
 ![table_rag](./AI-Applied-Algorithms/table_rag.png)
@@ -677,15 +717,265 @@ response = openai.ChatCompletion.create( messages=[ model="gpt-4", {"role": "use
 response_of_comparation = response.choices[0].message.content return response_of_comparation
 ```
 
+### REALM: 检索增强的新预训练方法
+
+![image-20251003025641241](./AI-Applied-Algorithms/image-20251003025641241.png)
+
+![image-20251003030210411](./AI-Applied-Algorithms/image-20251003030210411.png)
+
+### RETRO：检索信息注入LLM中间层
+
+![image-20251003221612123](./AI-Applied-Algorithms/image-20251003221612123.png)
+
+* 关键设计：CCA
+
+![image-20251003221653922](./AI-Applied-Algorithms/image-20251003221653922.png)
 
 
 
+* CCA的实现：
+  * 错位，目的是保留最后一个token，保证最后一个token能整合信息
+  * ![image-20251003221756943](./AI-Applied-Algorithms/image-20251003221756943.png)
+
+
+
+### KNN-LM: 从LLM生成机制入手，加权两个概率分布
+
+* 相比普通LLM，会考虑外部信息中的全部tokens
+
+![image-20251003222007503](./AI-Applied-Algorithms/image-20251003222007503.png)
+
+
+
+![image-20251003222151358](./AI-Applied-Algorithms/image-20251003222151358.png)
+
+* 加权两个概率分布
+  * ![image-20251003222248075](./AI-Applied-Algorithms/image-20251003222248075.png)
+
+* 结论：
+  * ![image-20251003222409984](./AI-Applied-Algorithms/image-20251003222409984.png)
+
+
+
+### Soft Prompt
+
+#### Cartridge: soft-prompt外挂kv-cache
+
+[LLM无限上下文了，RAG（Retrieval Augmented Generation）还有意义吗？ - Crim的回答 - 知乎](https://www.zhihu.com/question/653424464/answer/1925241113582768305)
+
+https://hazyresearch.stanford.edu/blog/2025-06-08-cartridges
+
+#### [Meta] REFRAG: Rethinking RAG based Decoding
+
+> 本质上是对RAG做性能优化
+>
+> insight是利用块间注意力小的特点，分块做encoder处理，损失小
+
+* Intro
+  * 大型语言模型（LLMs）在检索增强生成（RAG）等长上下文任务中面临**高延迟**（尤其是首 token 生成时间 TTFT 呈二次增长）和**内存消耗大**（KV 缓存随上下文长度线性增加）的问题，而 RAG 上下文因检索段落语义相似度低，存在块对角注意力结构，导致大量计算冗余。为此，研究提出**REFRAG**（RAG 专用高效解码框架），通过 “压缩 - 感知 - 扩展” 机制：利用轻量编码器（如 RoBERTa）预计算检索段落的**块嵌入**、通过投影层匹配解码器（如 LLaMA）嵌入空间，并结合**强化学习（RL）选择性扩展关键块**，实现任意位置压缩且保持自回归性。
+  * 实验表明，REFRAG 在不修改 LLM 架构、无困惑度损失的前提下，实现**30.85× TTFT 加速**（较此前 SOTA 模型 CEPE 提升 3.75×），并将 LLM 上下文长度扩展**16×**，在 RAG（强 / 弱检索器场景均优）、多轮对话、长文档摘要等任务中，均优于 LLaMA、REPLUG 等基线模型，甚至在弱检索器场景提升精度 1.93%。
+* 流程
+  * ![image-20251005002345893](./AI-Applied-Algorithms/image-20251005002345893.png)
+  * **上下文分块**：将 RAG 中的`s`个上下文 token 划分为`L = s/k`个`k`长度块（如`k=16`，`s=2048`则`L=128`）；
+  * **块嵌入预计算**：轻量编码器（如 RoBERTa-Large）处理每个块`C_i`，生成块嵌入`c_i = M_enc(C_i)`，并通过投影层`ϕ`映射为与解码器 token 嵌入维度一致的`e_i^cnk`；
+  * **解码器输入构造**：将 “问题 token 嵌入（`e_1~e_q`）+ 块嵌入（`e_1^cnk~e_L^cnk`）” 输入解码器（如 LLaMA-2-7B），生成答案；
+  * **RL 选择性扩展**：轻量 RL 策略以 “next-paragraph 预测困惑度” 为负奖励，选择关键块（如高相关性段落）扩展为原 token，非关键块保留压缩嵌入，实现 “精度 - 效率” 平衡。
+
+* 痛点：现有长上下文优化方法（如 CEPE、StreamingLLM）针对通用 LLM 任务，未考虑 RAG 特性：
+
+  - **信息稀疏**：RAG 上下文由多段检索文本组成，仅少数段落与查询直接相关，全 token 计算存在大量冗余；
+  - **预编码信息浪费**：检索阶段已通过向量编码、重排序获得段落与查询的相关性信息，解码时被完全丢弃；
+  - **块对角注意力**：检索段落因多样性 / 去重，语义相似度低，形成 “块内高注意力、块间低注意力” 的块对角结构，跨块计算无效。
+
+* REFRAG 的训练分为 “持续预训练（CPT）” 与 “下游微调” 两阶段，核心策略为**重构任务**与**课程学习**。
+
+  * ##### 3.1 持续预训练（CPT）
+
+    1. **重构任务**
+       - 目标：**对齐编码器与解码器嵌入空间**，减少压缩信息损失；
+       - 操作：冻结解码器，仅训练编码器 + 投影层，让解码器从块嵌入中恢复原`k`个 token；
+       - 作用：强制模型依赖上下文记忆（块嵌入）而非参数记忆，为后续长上下文处理奠定基础。
+    2. **课程学习**
+       - 问题：`k`增大时，token 组合数呈`V^k`增长（`V`为词汇量），直接多块重构难度极高；
+       - 方案：从 “单块重构（易）” 逐步过渡到 “多块重构（难）”，数据混合从 “易任务主导” 逐步转向 “难任务主导”（表 8）；
+       - 效果：避免训练崩溃，使模型逐步掌握 “压缩 - 恢复” 能力（表 11 显示，无课程学习时 REFRAG 重构`2048`token 的困惑度为 1.599，有课程学习时仅 0.135）。
+
+  * 3.2 下游微调
+
+    - **监督微调（SFT）**：使用 RAG（110 万数据点，含 OpenAssistant、SQuADv2 等）、多轮对话（TopiOCQA 等）数据集，微调模型适配下游任务；
+    - **RL 策略微调**：优化块扩展选择，进一步提升 “压缩效率” 与 “答案精度” 的平衡。
 
 ### 竞品
 
 ![image-20241007224527684](./AI-Applied-Algorithms/pai-rag.png)
 
-## 推理 Agent
+## Agent Overview
+
+> 【InfiniTensor】清华大学系列训练营-大模型与人工智能系统训练营 大模型前沿技术（五）自主智能体 https://www.bilibili.com/video/BV14sPkehEGg
+
+### Intro
+
+* 和Workflow的对比，见workflow章节中的甲骨文文章
+* Intro
+  * understanding complex inputs, engaging in reasoning and planning, using tools reliably, and recovering from errors.
+  * it's crucial for the agents to gain “ground truth” from the environment at each step (such as tool call results or code execution) to assess its progress
+  * **When to use agents:** Agents can be used for open-ended problems where it’s difficult or impossible to predict the required number of steps, and where you can’t hardcode a fixed path. The LLM will potentially operate for many turns, and you must have some level of trust in its decision-making. Agents' autonomy makes them ideal for scaling tasks in trusted environments.
+
+![image-20250226015431648](./AI-Applied-Algorithms/image-20250226015431648.png)
+
+* [Google 白皮书分析](https://ppc.land/ai-agents-google-unveils-framework-for-next-gen-systems/)
+  * 白皮书：https://ppc.land/content/files/2025/01/Newwhitepaper_Agents2.pdf
+  * ![image-20250227192024868](./AI-Applied-Algorithms/image-20250227192024868.png)
+  * model layer
+  * orchestration layer
+    * ReAct, Chain-of-Thought, and Tree-of-Thoughts
+    * "agent chaining"
+
+  * Tools layer
+    * Extensions
+      * provide standardized API interactions
+
+    * Functions
+      * enable client-side execution control
+
+    * Data Stores
+      * facilitate access to various types of information
+
+  * ![image-20250227191217604](./AI-Applied-Algorithms/image-20250227191217604.png)
+
+* 吴恩达：系统可以具有不同程度的Agentic特性
+  * **Reflection（反思）**：类似于AI的自我纠错和迭代。例如，AI系统会检查自己编写的代码，并提出修改建议。
+  * **Tool Use（工具使用）**：大语言模型调用插件，扩展了其能力。例如，使用Copilot进行联网搜索或调用代码插件解决数理逻辑问题。
+  * **Planning（规划）**：AI根据用户输入的任务，拆解流程、选择工具、调用、执行并输出结果。例如，根据一张图片中的姿态生成一张新图片，并进行描述。
+  * **Multi-agent（多智能体协作）**：多个Agent协作完成任务，每个Agent可能扮演不同的角色，如CEO、产品经理或程序员。这种模式模拟了现实生活中的工作场景，能够处理复杂系统处理复杂系统
+* OpenAI开源多智能体agent框架swarm https://mp.weixin.qq.com/s/ysUzxUYV-lsQ6aiYPU0KdA
+  * https://github.com/openai/swarm
+  * 自动将函数转成适配格式的json描述
+  * 上下文的管理有多种模式可以轻松传递
+  * 10行代码构建出多智能体系统
+
+![agent-overview](./AI-Applied-Algorithms/agent-overview.png)
+
+- [LangGraph](https://langchain-ai.github.io/langgraph/) from LangChain;
+- Amazon Bedrock's [AI Agent framework](https://aws.amazon.com/bedrock/agents/);
+- [Rivet](https://rivet.ironcladapp.com/), a drag and drop GUI LLM workflow builder; and
+- [Vellum](https://www.vellum.ai/), another GUI tool for building and testing complex workflows.
+
+#### 未来展望
+
+![image-20251003230508861](./AI-Applied-Algorithms/image-20251003230508861.png)
+
+### Function Calling
+
+https://www.anthropic.com/news/tool-use-ga
+
+*  Anthropic's suggestions for deciding on tool formats are the following:
+
+   - Give the model enough tokens to "think" before it writes itself into a corner.
+
+   - Keep the format close to what the model has seen naturally occurring in text on the internet.
+
+   - Make sure there's no formatting "overhead" such as having to keep an accurate count of thousands of lines of code, or string-escaping any code it writes.
+
+*  *agent*-computer interfaces (ACI)
+
+   * Put yourself in the model's shoes
+   * writing a great docstring for a junior developer on your team
+   * https://console.anthropic.com/workbench
+   * [Poka-yoke](https://en.wikipedia.org/wiki/Poka-yoke) your tools
+   * e.g. SWE Bench，文件tool仅输入绝对路径
+
+### ReAct
+
+```
+Answer the following questions as best you can. You have access to the following tools:
+
+{tools}
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+Begin!
+
+Question: {input}
+Thought:{agent_scratchpad}
+```
+
+### **SelfAskWithSearch**
+
+* 适合知识图谱这样的层层推理场景
+
+
+
+### Plan-And-Execute
+
+> https://blog.langchain.dev/planning-agents/
+
+* 好处
+  * Generating the full reasoning steps is a tried-and-true prompting technique to improve outcomes.
+  * 性能、成本
+* Naive版本
+  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb
+
+![img](./AI-Applied-Algorithms/plan-and-execute-0915298.png)
+
+* ReWOO：Reasoning WithOut Observations
+  * the planner can reference previous outputs using syntax like `#E2` 
+  * more effective than a naive plan-and-execute agent since each task can have only the required context (its input and variable values).
+
+* LLMCompiler
+  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/llm-compiler/LLMCompiler.ipynb
+  * **Planner**: streams a DAG of tasks. Each task contains a tool, arguments, and list of dependencies.
+  * **Task Fetching Unit** schedules and executes the tasks. This accepts a stream of tasks. This unit schedules tasks once their dependencies are met. Since many tools involve other calls to search engines or LLMs, the extra parallelism can grant a significant speed boost (the paper claims 3.6x).
+  * **Joiner**: dynamically replan or finish based on the entire graph history (including task execution results) is an LLM step that decides whether to respond with the final answer or whether to pass the progress back to the (re-)planning agent to continue work.
+  * 好处：
+    * **Planner** outputs are ***streamed;\*** the output parser eagerly yields task parameters and their dependencies.
+    * The **task fetching unit** receives the parsed task stream and schedules tasks once all their dependencies are satisfied.
+    * Task arguments can be *variables,* which are the outputs of previous tasks in the DAG. For instance, the model can call `search("${1}")` to search for queries generated by the output of task 1. This lets the agent work even faster than the "embarrassingly parallel" tool calling in OpenAI.
+
+### Agent Examples
+
+#### Intro
+
+* 模版
+
+![agent-flowchart](./AI-Applied-Algorithms/agent-flowchart.png)
+
+#### Agentic RAG
+
+* ![image-20250227201733347](./AI-Applied-Algorithms/image-20250227201733347.png)
+
+#### Coding Agent
+
+- A coding Agent to resolve [SWE-bench tasks](https://www.anthropic.com/research/swe-bench-sonnet), which involve edits to many files based on a task description;
+  - ![image-20250226015736553](./AI-Applied-Algorithms/image-20250226015736553.png)
+- Our [“computer use” reference implementation](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo), where Claude uses a computer to accomplish tasks.
+
+#### Customer support
+
+- 特点
+  - Support interactions naturally follow a conversation flow while requiring access to external information and actions;
+  - Tools can be integrated to pull customer data, order history, and knowledge base articles;
+  - Actions such as issuing refunds or updating tickets can be handled programmatically; and
+  - Success can be clearly measured through user-defined resolutions.
+- 一口气学会如何思考AI Agent系统设计 https://www.bilibili.com/video/BV1WoeozgEyn/
+  - 参考「Agent应用技术架构」
+
+![image-20250905205445608](./AI-Applied-Algorithms/image-20250905205445608.png)
+
+![image-20250909162528023](./AI-Applied-Algorithms/image-20250909162528023.png)
+
+
+
+## Agent 推理框架
 
 ### 算法理论
 
@@ -795,13 +1085,81 @@ response_of_comparation = response.choices[0].message.content return response_of
 
 * **大多数情况是因为它错误地解读了某个信息来源。**这也是我们为什么坚持要**加上引用**的原因之一——**让用户能方便地核对信息来源**
 
+### 通用Agent框架
+
+#### OpenAI AutoGPT
+
+#### XAgent：大模型驱动的自主智能体框架
+
+* 效果大于AutoGPT
+  * ![image-20251003225501225](./AI-Applied-Algorithms/image-20251003225501225.png)
 
 
 
+https://github.com/OpenBMB/XAgent
 
-## 记忆与个性化
+![image-20251003224631051](./AI-Applied-Algorithms/image-20251003224631051.png)
+
+* 双循环机制
+  * planning agent
+    * 每次执行完子任务，反思planning
+
+![image-20251003224843298](./AI-Applied-Algorithms/image-20251003224843298.png)
+
+![image-20251003224933636](./AI-Applied-Algorithms/image-20251003224933636.png)
+
+* ToolServer
+
+![image-20251003225150323](./AI-Applied-Algorithms/image-20251003225150323.png)
+
+* 请求用户干预，寻求实时反馈
+  * ![image-20251003225342911](./AI-Applied-Algorithms/image-20251003225342911.png)
+
+#### UltraRAG
+
+![image-20251003223605348](./AI-Applied-Algorithms/image-20251003223605348.png)
+
+### Agent + Workflow
+
+#### ICE：智能体赋能工作流优化
+
+![image-20251003224343872](./AI-Applied-Algorithms/image-20251003224343872.png)
+
+![image-20251003224435434](./AI-Applied-Algorithms/image-20251003224435434.png)
+
+### 
+
+
+
+### 子领域的Agent框架应用
+
+#### Gemini 2.5 Pro Capable of Winning Gold at IMO 2025
+
+
+
+#### RepoAgent：大模型驱动的项目级代码文档生成框架
+
+![image-20251003225921341](./AI-Applied-Algorithms/image-20251003225921341.png)
+
+
+
+#### MatPlotAgent：数据可视化智能体
+
+![image-20251003230227036](./AI-Applied-Algorithms/image-20251003230227036.png)
+
+![image-20251003230328481](./AI-Applied-Algorithms/image-20251003230328481.png)
+
+
+
+## 记忆与个性化、Context-Engineering
 
 ![image-20250617211948454](./AI-Applied-Algorithms/image-20250617211948454.png)
+
+### 火山引擎 MineContext
+
+
+
+
 
 ## Multi-modal Search/Agent
 
@@ -1101,7 +1459,8 @@ response_of_comparation = response.choices[0].message.content return response_of
   * 实际生产中，传统的关键字检索（稀疏表示）与向量检索（稠密表示）各有优劣。
     * 举个具体例子，比如文档中包含很长的专有名词，关键字检索往往更精准而向量检索容易引入概念混淆。
     * e.g. 在医学中“小细胞肺癌”和“非小细胞肺癌”是两种不同的癌症
-
+  * 很多向量数据库都支持混合检索，比如 [Weaviate](https://weaviate.io/blog/hybrid-search-explained)、[Pinecone](https://www.pinecone.io/learn/hybrid-search-intro/) 等
+  
 * [Relevance scoring in hybrid search using Reciprocal Rank Fusion (RRF)](https://learn.microsoft.com/en-us/azure/search/hybrid-search-ranking)
   * Kv search (BM25)
   * Vector search (HNSW)
@@ -1429,6 +1788,8 @@ values = [token.word for token in jieba.posseg.cut(query)
 #### [CBR-ApSQL] Prompting GPT-3.5 for Text-to-SQL with De-semanticization and Skeleton Retrieval
 
 * Masked Question Similarity Selection (MQS)
+
+
 
 
 

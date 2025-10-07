@@ -23,7 +23,9 @@
 
 
 
-## 历史发展
+## 算法 Overview
+
+> [InfiniTensor 大模型概述](https://www.bilibili.com/video/BV1zxrUYyEg2)
 
 * 计算智能 -> 感知智能 -> 通用智能
 * AGI
@@ -31,7 +33,43 @@
 * Note
   * GPT-3.5相比于GPT-3，参数量变化不大，效果差距很大，这是由于微调技术
 
-## Scaling Law
+### 人工智能发展史
+
+![image-20251001190648165](./AI-Algorithms/image-20251001190648165.png)
+
+#### 符号智能
+
+![image-20251001190833892](./AI-Algorithms/image-20251001190833892.png)
+
+#### 专用智能
+
+![image-20251001191016712](./AI-Algorithms/image-20251001191016712.png)
+
+#### 通用智能
+
+* 无标注数据+自监督预训练+大模型参数
+
+* 生成式模型：
+
+  * 判别式，即根据用户和物品的特征预测用户与物品交互的**条件**概率；而生成式模型预测的是**联合概率**：
+  * 判别式关注预测给定条件下的结果，生成式理解所有变量如何共同出现
+  * 文本生成：ChatGPT，Gemini
+
+  - 图片生成：Stable Diffusion，DALL-E
+
+  - 视频生成：Sora，Kling
+
+### Scaling Law
+
+#### Scaling Law的前提：统一序列化建模、无监督预训练
+
+![image-20251001191246393](./AI-Algorithms/image-20251001191246393.png)
+
+![image-20251002034314205](./AI-Algorithms/image-20251002034314205.png)
+
+#### Scaling Law
+
+> Scaling Law: https://arxiv.org/abs/2001.08361
 
 |            | 1代  | 2代  | 3代  | 4代                                                          |
 | :--------- | :--- | :--- | :--- | :----------------------------------------------------------- |
@@ -42,19 +80,9 @@
 | :--- | :----- | :---- | :--------- | :--- |
 | 参数 | 280B   | 127B  | 79B        | 540B |
 
-* Scaling Law: https://arxiv.org/abs/2001.08361
-* emergent ability
-  * [How much bigger can/should LLMs become?](https://cmte.ieee.org/futuredirections/2023/04/24/how-much-bigger-can-should-llms-become/)
-  * https://arxiv.org/abs/2206.07682
-  * 100TB=50000Billion
-* [Training Compute-Optimal Large Language Models](https://arxiv.org/abs/2203.15556)
-  * Google - Chinchilla
-  * 核心思路：
-    * $$L(N,D)=AN^{-\alpha}+BD^{\beta}+E$$
-      * Chinchilla-optimal
-      * $$D/N \approx 20$$
-    * 模型undertrained，n和d需要一起增长
-  * function form很重要
+* function form很重要
+* scaling prediction：GPT-4作为了印证
+  * ![image-20251001200843681](./AI-Algorithms/image-20251001200843681.png)
 
 ![截屏2023-11-19 05.00.35](./AI-Algorithms/emergent-1.png)
 
@@ -64,14 +92,100 @@
 
 ![Compute required for training LLMs](./AI-Algorithms/Compute-for-Training-LLMs-GPT3-paper-672x385.jpg)
 
+#### Chinchilla: [Training Compute-Optimal Large Language Models](https://arxiv.org/abs/2203.15556)
+
+* Google - Chinchilla
+  * ![image-20251001201117306](./AI-Algorithms/image-20251001201117306.png)
+* 核心思路：
+  * $$L(N,D)=AN^{-\alpha}+BD^{\beta}+E$$
+    * Chinchilla-optimal
+    * loss和参数量呈现对数线性下降
+    * $$D/N \approx 20$$
+  * 模型undertrained，n和d需要一起增长
+
+#### emergent ability
+
+* Intro
+  * [How much bigger can/should LLMs become?](https://cmte.ieee.org/futuredirections/2023/04/24/how-much-bigger-can-should-llms-become/)
+  * https://arxiv.org/abs/2206.07682
+
+* 理解涌现：采样通过率的scalable能力，仍是规律性的
+  * ![image-20251002022908751](./AI-Algorithms/image-20251002022908751.png)
+
+
+
+#### 利用Scaling Law做科研，小模型的配置推广到大模型
+
+![image-20251002023119283](./AI-Algorithms/image-20251002023119283.png)
+
+#### Data Scaling
+
+> 也参考 「SFT — 指令微调」，有一些手段
+
+##### 高质量数据的价值
+
+![image-20251002023555458](./AI-Algorithms/image-20251002023555458.png)
+
+##### 缓解数据衰竭 —— ”左脚踩右脚“
+
+* 当前普遍的做法
+* 并不单纯是“左脚踩右脚”，过程中，引入了人工校准
+
+##### 缓解数据衰竭 —— Multi-Epoch
+
+* 数据规模有限时，重复四遍以内基本不影响Scaling Law
+
+![image-20251002023412628](./AI-Algorithms/image-20251002023412628.png)
+
+
+
+#### 其它
+
 * 量化scaling law，参考Scaling Laws for Precision
+
 * 参数量 or FLOPS，以MOE为例研究 https://arxiv.org/pdf/2501.12370
   * 核心结论
     - 预训练中优先增加参数而非 FLOPs，最优稀疏度随模型增大趋近 1。
     - 推理时 FLOPs 影响更大，稀疏模型在推理任务需动态增加计算（如思维链提示）。
-  * 语言理解类任务依赖参数存储的知识，稀疏模型参数更多优势显著；而推理类任务（如 SQuAD）需要实时计算处理输入，稀疏模型 FLOPs per example 更低，导致推理深度不足，误差比密集模型高 5-10%。
+  * 语言理解类任务依赖参数存储的知识，稀疏模型参数更多优势显著
+  * 而推理类任务（如 SQuAD）需要实时计算处理输入，稀疏模型 FLOPs per example 更低，导致推理深度不足，误差比密集模型高 5-10%。
+
+### 算法创新的方向
+
+* 现状LLM领域：
+  * 提升模型能力：做数据
+  * 提升模型效率：做结构
+
+#### OpenAI 观点：提升数据效率
+
+> OpenAI: https://mp.weixin.qq.com/s/M51zPbbNThc8r1WSo7xLoQ
+
+* 上面的方法只通过线性的增加数据量，就可以有效的提升智能，那我们能不能用这种方法无限的拓展 AI 的智能呢，而无需幂律增加的数据？ 不行！因为高级智能模式有这些特点：
+
+  - 种类多
+
+  - 组合多
+
+  - 隐藏的深
+
+  - 发现困难
+
+  - 合成困难
 
 
+* 存在巨量的很难发现的，没有被充分表述的，很难合成的智能模式。
+  * 如果要 cover 所有的智能模式，需要的数据量还是幂律增长的， scaling-law 依然有效， 数据枯竭的问题还在。
+  * Sam 问在没有算法创新的情况下， 这条路线还能走多远？ 负责预训练的工程师 Alex Paino 说最多到 GPT 5.5 （数据在 GPT 4.5 的基础上还能再 x10) 。 Alex 及 Selsam都说如果要继续往前走，就需要算法创新，需要追求**数据效率**，用尽可能少的数量学习到尽可能多的智能模式。 Selsam 说在数据效率上，AI 比人类还差数千倍甚至更多。
+
+#### 密度定律：模型能力密度随时间呈指数级增强
+
+![image-20251007010010511](./AI-Algorithms/image-20251007010010511.png)
+
+![image-20251007010244438](./AI-Algorithms/image-20251007010244438.png)
+
+#### Inference Time Scaling
+
+![image-20251007010448786](./AI-Algorithms/image-20251007010448786.png)
 
 ## Literature Review
 
@@ -129,24 +243,22 @@
   * 挖掘LLM的implicit知识
   * 相应地，MindMap同时挖掘explicit and implicit知识
 
-### 生成式模型
-
-* 判别式，即根据用户和物品的特征预测用户与物品交互的**条件**概率；而生成式模型预测的是**联合概率**：
-
-  * 判别式关注预测给定条件下的结果，生成式理解所有变量如何共同出现
-  * 文本生成：ChatGPT，Gemini
-
-  - 图片生成：Stable Diffusion，DALL-E
-
-  - 视频生成：Sora，Kling
-
 ## Attention Is All You Need
 
-> Paper
+> * Paper 《Attention Is All You Need》
 >
-> 硬核课堂：ChatGPT的设计和实现 https://hardcore-tech.feishu.cn/wiki/DtO3wHVzEiOUdNk0r3cc8BY8nef
+> * 硬核课堂：ChatGPT的设计和实现 https://hardcore-tech.feishu.cn/wiki/DtO3wHVzEiOUdNk0r3cc8BY8nef
+>
+> * The Annotated Transformer https://nlp.seas.harvard.edu/annotated-transformer
+>   * https://github.com/harvardnlp/annotated-transformer/
 
-### 从过去的NLP技术到 Transformer
+### Seq2seq
+
+#### 为什么需要seq2seq建模
+
+![image-20251004025701238](./AI-Algorithms/image-20251004025701238.png)
+
+#### 从RNN到 Transformer
 
 * 以RNN为核心的Encoder Decoder有以下几个重要的问题
   * 信息丢失：每次传递乘了系数，丢失前面的信息
@@ -154,7 +266,9 @@
     * the number of operations required to relate signals from two arbitrary input or output positions grows in the distance between positions, linearly for ConvS2S and logarithmically for ByteNet.
     * RNN是sequence-aligned实现
   * 不能并行计算，对GPU不友好
-* 以上问题，对**从序列到序列的模型**很重要
+* 以上问题，对**从序列到序列(seq2seq)的模型**很重要
+
+![image-20251005165225825](./AI-Algorithms/image-20251005165225825.png)
 
 > Transformer 的目标是 **设计全新的、并行的、长期依赖稳定且能捕获全局上下文信息、处理可变长度序列的神经网络架构**。
 
@@ -200,6 +314,8 @@
 
 ### Tokenization 词元化
 
+#### Intro
+
 * token是LLM训练推理的最小单元，由tokenizer模型将文本切成token
   * 可能是 1/3 个汉字（因为汉字的UTF-8编码是三个字节，取一个字节）、一个汉字、半个单词等
   * 和模型设计有关：
@@ -239,9 +355,18 @@
   b'\x9c'<br/><br/>
 ```
 
-* https://huggingface.co/docs/transformers/en/tokenizer_summary
+* GPT-2如何做
+  * https://huggingface.co/docs/transformers/en/tokenizer_summary
   * Byte-level BPE
   * GPT-2 has a vocabulary size of 50,257, which corresponds to the 256 bytes base tokens, a special end-of-text token and the symbols learned with 50,000 merges.
+  
+
+#### BPE (Byte Pair Encoding): 常用于文本处理的分词算法
+
+![image-20251004030028127](./AI-Algorithms/image-20251004030028127.png)
+
+* 减少未登录词（OOV）的问题 https://github.com/rsennrich/subword-nmt
+  
 
 ### Encoder Decoder v.s. Decoder Only
 
@@ -282,7 +407,7 @@
 
 
 
-### Encoder
+### Encoder / Decoder
 
 #### 从 classification 的角度理解 Attention
 
@@ -335,11 +460,25 @@
 
 ##### 为什么 multi-head
 
-* 《ttn is all you need》
-  "Multi - head attention allows the model to jointly attend to information from different representation subspaces at different positions. With a single attention head, averaging inhibits this."
+* 《Attn is all you need》
+  "Multi-head attention allows the model to **jointly attend to information from different representation subspaces at different positions**. With a single attention head, averaging inhibits this."
 
 - But it also is a formidable computational simplifications: The heads operate fully independently, so computing them is (like batch) “embarrassingly parallel”
-  - head dim是性能的一个限制因素
+  - **head dim是性能的一个限制因素** --> GPU Kernel，SM并行计算
+
+##### Q和KV的head num可为倍数关系（GQA）
+
+![image-20251004230520582](./AI-Algorithms/image-20251004230520582.png)
+
+##### Self-Attn 的数学特点
+
+* QA和KA为每行相等的常量时，有以下两个特性：
+  * VB主体：self-attn值不受影响
+  * VA常量：由于softmax具有归一化的特点，这里具有不变性
+
+* $$\begin{array}{rcl} O &=& softmax(\frac{QK^T}{\tau} + mask)V \\\\ &=& softmax({\frac{[{Q_A}, Q_B] [{K_A}, K_B]^T}{\tau}}+ mask)[{V_A}, V_B] \\\\ &=& softmax({\frac{{Q_A K_A^T} + Q_B K_B^T}{\tau}}+ mask)[{V_A}, V_B] \\\\ &=& softmax(\frac{Q_B K_B^T}{\tau}+ mask)[{V_A}, V_B] \\\\ &=& [{V_A}, softmax(\frac{Q_B K_B^T}{\tau}+ mask)V_B] \end{array}$$
+
+
 
 ##### Self-Attn 是低通滤波器
 
@@ -375,31 +514,19 @@
 
 ![image-20250606172056691](./AI-Algorithms/image-20250606172056691.png)
 
+##### softcapping
+
+softcapping
+
+* ![image-20250924141137584](./AI-Algorithms/image-20250924141137584.png)
 
 
-#### MLP
-
-* 提升网络表达力
-* 非线性
-* 融合多头特征
-
-#### Layer Normalization
-
-对seq_len维度上的每一个embedding（768维）做LN
-
-##### Pre-LN
-
-* 将归一化层放在子层（Attention 或 FFN） 之前 的结构被称为 Pre-LN (Pre-Layer Normalization) 。
-
-  主要原因和优点如下：
-
-  1. 训练稳定性 ：这是采用 Pre-LN 最主要的原因。在原始的 Post-LN 结构 (Input -> Sublayer -> Add -> LayerNorm) 中，随着网络层数加深，每一层的输出在累加（Add 操作）后才进行归一化，可能导致梯度在反向传播时出现剧烈变化（梯度消失或爆炸），使得训练过程不稳定，尤其是在模型很深的时候。Pre-LN 结构 (Input -> LayerNorm -> Sublayer -> Add) 通过在每个子层的输入处进行归一化，稳定了传递给子层的激活值范围，从而也稳定了反向传播时的梯度流。这使得训练过程更加平滑，不易发散。
-  2. 减少对学习率 Warmup 的依赖
-  3. 更快的收敛（有时）
 
 ### Decoder
 
-#### 因果掩码机制
+![image-20251004224418837](./AI-Algorithms/image-20251004224418837.png)
+
+#### Masked Softmax 因果掩码机制
 
 * masked multi-head attention
 
@@ -427,7 +554,101 @@
 
 
 
+### FFN
 
+#### MLP
+
+* 提升网络表达力
+* 非线性
+* 融合多头特征
+
+#### Native FFN (PositionWiseFeedForward)
+
+> GLU Variants Improve Transformer https://arxiv.org/pdf/2002.05202
+
+![image-20250703152649327](./AI-Algorithms/image-20250703152649327.png)
+
+#### SwiGLU
+
+* FFN_SwiGLU(x) = (Swish(xW₁) ⊙ xW₃)W₂
+  * `F.silu(self.w1(x)) * self.w3(x)`
+  * [llama2实现](https://github.com/meta-llama/llama/blob/689c7f261b9c5514636ecc3c5fefefcbb3e6eed7/llama/model.py#L307)
+
+* 一种 动态的、依赖于输入内容的特征选择机制
+
+![image-20251002161617087](./AI-Algorithms/image-20251002161617087.png)
+
+##### 激活函数的稀疏化探索 —— ReLUfication、ProSparse、ReLU^2
+
+* 图中s1:Swish替换为ReLU
+* 图中s2: 也在layernorm后插入额外的relu层
+
+![image-20251003003146309](./AI-Algorithms/image-20251003003146309.png)
+
+* ProSparse
+  * MiniCPM-S
+
+![image-20251003003248893](./AI-Algorithms/image-20251003003248893.png)
+
+* ReLU^2
+  * ![image-20251003003357703](./AI-Algorithms/image-20251003003357703.png)
+  * token维度，相邻token复用神经元；流量维度，神经元的共现情况
+    * ![image-20251003003547686](./AI-Algorithms/image-20251003003547686.png)
+
+
+
+#### Layer Normalization
+
+* The LayerNorm operator is a way to **improve the performance of sequential models (e.g., Transformers) or neural networks with small batch size**
+  * 对seq_len维度上的每一个embedding（768维）做LN
+* 对比layernorm和BN
+  * LayerNorm 在特征维度上对单个样本进行归一化，不依赖 batch size，训练和推理行为一致，常用于 RNN、Transformer 等序列模型。
+  * BatchNorm 在 batch 维度上对channel进行归一化，对 batch size 敏感，训练和推理行为不同，常用于 CNN。
+
+##### Pre-LN
+
+* 将归一化层放在子层（Attention 或 FFN） 之前 的结构被称为 Pre-LN (Pre-Layer Normalization) 。
+* 主要原因和优点如下：
+  1. 训练稳定性 ：这是采用 Pre-LN 最主要的原因。在原始的 Post-LN 结构 (Input -> Sublayer -> Add -> LayerNorm) 中，随着网络层数加深，每一层的输出在累加（Add 操作）后才进行归一化，可能导致梯度在反向传播时出现剧烈变化（梯度消失或爆炸），使得训练过程不稳定，尤其是在模型很深的时候。Pre-LN 结构 (Input -> LayerNorm -> Sublayer -> Add) 通过在每个子层的输入处进行归一化，稳定了传递给子层的激活值范围，从而也稳定了反向传播时的梯度流。这使得训练过程更加平滑，不易发散。
+     * 反向传播路径 : d(Output) -> d(Add) -> [d(Sublayer) -> d(LayerNorm)] AND [d(Input)]
+     * 在 Add 节点，梯度“兵分两路”：
+       - 路径一（主干道/残差连接） : 梯度 直接、原封不动地 流向 Input 。这是一个恒等映射（Identity Path），梯度值乘以1。这是最关键的一点，它为梯度提供了一条 畅通无阻、无任何缩放 的“高速公路”，可以直接回传到网络的更深层。
+       - 路径二（分支） : 另一份梯度流向 Sublayer ，然后穿过 Sublayer 的反向传播，再穿过 LayerNorm 的反向传播，最后这个经过计算和缩放的梯度也作用于 Input 。
+     * 结论（Pre-LN） :Pre-LN 之所以稳定，是因为 主干道是“干净”的 。无论分支（路径二）上的 Sublayer 和 LayerNorm 产生了多大的梯度，它们只是作为一部分“增量”被 加到 主干道的梯度上，而不会改变主干道梯度本身的直接传导。
+  2. 减少对学习率 Warmup 的依赖
+  3. 更快的收敛（有时）
+
+##### Post-LN 的问题
+
+`Input -> Sublayer -> Add -> LayerNorm`
+
+* 反向阶段，LayerNorm的梯度较大，再基于残差层传入Sublayer，梯度大小不可控
+
+##### 最后一层加 LN
+
+* an additional layer normalization was added after the final selfattention block 【GPT-2】
+
+##### RMS Norm
+
+![image-20251004224626759](./AI-Algorithms/image-20251004224626759.png)
+
+##### Google 去除 LN 的尝试
+
+* [通过梯度近似寻找LayerNorm的替代品](https://spaces.ac.cn/archives/10831/comment-page-1?replyTo=27379)
+  * RMSNorm的梯度
+    * ![image-20250924112123450](./AI-Algorithms/image-20250924112123450.png)
+  * elementwise的对角线近似
+    * ![image-20250924140158319](./AI-Algorithms/image-20250924140158319.png)
+  * ![image-20250924140904836](./AI-Algorithms/image-20250924140904836.png)
+
+
+
+#### 参数初始化策略
+
+* scaled_init_method_normal
+  * https://github.com/NVIDIA/Megatron-LM/blob/main/megatron/core/utils.py#L641
+  * GPT-2 paper 「2.3」
+    * https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf
 
 ### Position Encoding
 
@@ -473,36 +694,35 @@ $$PE_{(pos, 2i + 1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)$$
 - **固定模式**
 - **缺乏语义信息**：只提供了位置信息，不包含元素的语义信息，对于一些需要结合位置和语义信息的任务，可能需要与其他编码方式结合使用。
 
-### 映射到预测空间
+#### RoPE等参考「Long Context」
+
+
+
+### Output Embedding 映射到预测空间
 
 * 线性层、词表数量
   * **隐藏层的映射目的**：神经网络中所有隐藏层的映射，本质是不断在多个超空间中对特征进行相互映射。
   * **表示学习假设**：表示学习假定存在一个超空间，在这个超空间里能够找到一个超平面，将空间中的目标向量区分开来。
-* share the same weight matrix between the two embedding layers and the pre-softmax linear transformation
+* Tie/shared word embedding: share the same weight matrix between the two embedding layers and the pre-softmax linear transformation
   * https://arxiv.org/abs/1608.05859
+  * 并不常用
+  * ![image-20251004231115873](./AI-Algorithms/image-20251004231115873.png)
+* 可以只对需要输出的logits进行这步计算
 
-### 算法技巧
+### 训练策略
 
-* Label Smoothing
-  * During training, we employed label smoothing of value ϵls=0.1*ϵ**l**s*=0.1 [(cite)](https://arxiv.org/abs/1512.00567). This hurts perplexity, as the model learns to be more unsure, but improves accuracy and BLEU score.
-  * label [2,1,0,3,3]
-    * ![image-20250207130816676](./AI-Algorithms/image-20250207130816676.png)
+#### Label Smoothing
 
-1.BPE/ Word-piece
-https://github.com/rsennrich/subword-nmt
-减少未登录词（OOV）的问题
-
-2.Shared Embeddings
-https://arxiv.org/abs/1608.05859
-
-3.Beam Search
-https://github.com/OpenNMT/OpenNMT-py/
-
-4.Model Averaging
+* During training, we employed label smoothing of value ϵls=0.1*ϵ**l**s*=0.1 [(cite)](https://arxiv.org/abs/1512.00567). This hurts perplexity, as the model learns to be more unsure, but improves accuracy and BLEU score.
+* label [2,1,0,3,3]
+  * ![image-20250207130816676](./AI-Algorithms/image-20250207130816676.png)
+* 实现参考「code-reading-the-annotated-transformer」
 
 
 
-### 推理
+### 推理采样
+
+#### Intro
 
 * 推理：
   * `<sos>`（start of sentence）
@@ -512,16 +732,27 @@ https://github.com/OpenNMT/OpenNMT-py/
   * 推理阶段的操作和训练阶段的解码器操作类似，但是训练阶段有目标序列的真实值作为输入来计算损失并进行反向传播训练，而推理阶段是根据之前生成的单词不断生成新的单词。
   * 在训练时，解码器的输入是已知的目标序列，在推理时，解码器的输入是逐步生成的单词序列。
 
+#### Argmax和随机采样
+
+![image-20251005010204784](./AI-Algorithms/image-20251005010204784.png)
+
+##### temperature、top-k、top-p
+
+* top-p采样：也称为nucleus sampling
+
+![image-20251005011425211](./AI-Algorithms/image-20251005011425211.png)
+
+#### Beam Search
+
+![image-20251005011715687](./AI-Algorithms/image-20251005011715687.png)
+
+
+
 ### 局限性
 
 * over-smoothing https://arxiv.org/abs/2202.08625
   * 深层token间相似度增加
   * 自回归+casual mask的非对称可以缓解
-
-### Implementation
-
-* The Annotated Transformer https://nlp.seas.harvard.edu/annotated-transformer
-  * https://github.com/harvardnlp/annotated-transformer/
 
 
 ### 实验
@@ -530,7 +761,17 @@ https://github.com/OpenNMT/OpenNMT-py/
 
 ## Transformer的改进
 
+> [【InfiniTensor】大咖课-韩旭-知识密度牵引下的大模型高效计算](https://www.bilibili.com/video/BV1oSYfzfEXQ)
+
 ### KV压缩
+
+#### Intro
+
+* KV cache大小
+  * ![image-20251005025202463](./AI-Algorithms/image-20251005025202463.png)
+
+* 优化n_head
+  * MQA、GQA
 
 #### MQA
 
@@ -566,6 +807,8 @@ https://github.com/OpenNMT/OpenNMT-py/
 #### MLA
 
 见 DeepSeek-V3 章节
+
+#### 「稀疏注意力」章节
 
 ### Q压缩
 
@@ -646,11 +889,22 @@ https://github.com/OpenNMT/OpenNMT-py/
 
 https://arxiv.org/pdf/2103.00112
 
+* 在CV中应用，主要解决image token化时， patch过大(16X16)内部信息没有得到较好提取的问题。解决方法是在16X16的patch分解出4X4的patch, 先做一次transformer, 再在外层用16X16的token做trans. 
+
 ![image-20250606173644337](./AI-Algorithms/image-20250606173644337.png)
 
-### KV压缩
+### 稀疏注意力
+
+#### Intro: Sparse Transformer 和 Longformer
+
+* Sparse Transformer:通过滑动窗口、周期性稀疏注意力进行加速。
+* Longformer:通过跳跃滑动窗口、周期性稀疏注意力、局部全局注意力进行加速。
+
+![image-20251007014852428](./AI-Algorithms/image-20251007014852428.png)
 
 #### Sliding Window Attn —— Mistral-7B
+
+> 本质上是为 Transformer 模型注入 **“局部性优先” 归纳偏置 (Inductive Bias)**
 
 * GQA + Sliding Window Attn + Rolling Buffer Cache
   * 减少计算和KV存储
@@ -658,15 +912,106 @@ https://arxiv.org/pdf/2103.00112
 
 ![image-20250503011135579](./AI-Algorithms/image-20250503011135579.png)
 
-#### MoBA Attn (Moonshot AI)
+#### Streaming LLM: Attention Sink (Global Token)
+
+> EFFICIENT STREAMING LANGUAGE MODELS WITH ATTENTION SINKS (streaming-LLM)
+>
+> 节点间信息传播的中心，前几个token起到锚点的作用
+>
+> global token可缓解稀疏注意力中对长距离依赖性建模能力的退化 [paper1](https://openreview.net/pdf?id=6XwCseSnww)、[paper2](https://arxiv.org/pdf/2112.07916)、[paper3](https://arxiv.org/abs/2004.08483)
+
+![image-20250606171300149](./AI-Algorithms/image-20250606171300149.png)
+
+1. 注意力汇聚点（Attention Sink）
+   - 发现模型对初始 tokens 分配大量注意力，即使其语义无关（如 Llama-2-7B 深层头部对初始 token 注意力占比超 50%）
+   - **原因：Softmax 要求注意力分数和为 1，初始 tokens 因自回归特性被所有后续 tokens 可见，易被训练为汇聚点**
+2. StreamingLLM 框架
+   - **核心设计**：保留 4 个初始 tokens 的 KV 作为汇聚点，结合滑动窗口 KV 缓存（如 4+1020 配置）
+   - 技术细节
+     - 缓存内重新分配位置编码（如当前缓存 tokens [0,1,2,3,6,7,8] 解码时位置设为 0-7）
+     - 兼容 RoPE（缓存 Keys 后应用旋转变换）和 ALiBi（连续线性偏置）
+   - **预训练优化**：添加 Learnable Sink Token 作为专用汇聚点，160M 参数模型实验显示仅需 1 个该 token 即可稳定性能
+
+四、应用与局限
+
+1. **适用场景**：多轮对话、短文档 QA 等依赖近期上下文的流式任务，已被 NVIDIA TensorRT-LLM 等框架采用
+2. 局限性
+   - 不扩展模型上下文长度，依赖缓存内信息（如 StreamEval 中查询距离超缓存时准确率降为 0）
+   - 长文档 QA 等需长期记忆的任务表现不及截断基线
+
+![image-20250606171351749](./AI-Algorithms/image-20250606171351749.png)
+
+##### MInference: StreamingLLM + InfLLM + vertical-slash
+
+* vertical slash：
+  * 归纳偏置：在一个局部的Query块内，认为所有Query向量的注意力分布是相似的，因此用这个块里最后一个Query的注意力分布来代表整个块的注意力分布。
+
+![image-20251007134921672](./AI-Algorithms/image-20251007134921672.png)
+
+#### MoBA Attn (Moonshot AI): 压缩 — hard选择
 
 > https://arxiv.org/pdf/2502.13189
 >
 > MOBA: MIXTURE OF BLOCK ATTENTION FOR LONG-CONTEXT LLMS
 
-* 对block内做mean pooling
+* selection
+  * 对block内做mean pooling
 
-### RWKV、Mamba等
+![image-20251005232237411](./AI-Algorithms/image-20251005232237411.png)
+
+![image-20251005232321586](./AI-Algorithms/image-20251005232321586.png)
+
+#### 类似工作：InfLLM v2 / MiniCPM4
+
+![image-20251007140013419](./AI-Algorithms/image-20251007140013419.png)
+
+![image-20251007140911453](./AI-Algorithms/image-20251007140911453.png)
+
+#### [DeepSeek] NSA (native sparse attn) 压缩 — soft选择 — 滑窗
+
+> DeepSeek的优势在于基本是最早用NSA方案**做了pre-train**，预训练做稀疏训练
+>
+> 面向 Inference Time Scaling
+
+* 架构概览
+  * 压缩 —— 选择 —— 滑窗
+  * ![image-20251005145437139](./AI-Algorithms/image-20251005145437139.png)
+  * 压缩：8倍，比较激进
+  * 选择：
+    * 图右上角的mask比较有意思，对于尾部token的处理
+    * **Gated Output** 
+
+* kernel design
+  * <img src="./AI-Algorithms/image-20251005150446270.png" alt="image-20251005150446270" style="zoom:50%;" />
+  * 挑战是KV稀疏，SRAM放什么数据需要设计
+  * 解决方案：用FA-2的思路，Query放在SRAM
+    * 前提：使用了GQA
+
+* 效果：
+  * ![image-20251005150728341](./AI-Algorithms/image-20251005150728341.png)
+  * ![image-20251005145214936](./AI-Algorithms/image-20251005145214936.png)
+
+##### 分块压缩：InfLLM
+
+![image-20251007134505990](./AI-Algorithms/image-20251007134505990.png)
+
+
+
+#### 模型化：选取代表元
+
+> Explicit Sparse Transformer
+
+![image-20251007015647275](./AI-Algorithms/image-20251007015647275.png)
+
+### 非Transformer架构研究
+
+#### Intro
+
+> RNN 长上下文记忆能力弱 --> Transformer架构
+>
+> Transformer长上下文性能差 --> 新一代RNN架构
+
+![image-20251007141002959](./AI-Algorithms/image-20251007141002959.png)
 
 | 架构        | 设计者                                               | 特点                                     | 链接                                                         |
 | ----------- | ---------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------ |
@@ -680,14 +1025,206 @@ https://arxiv.org/pdf/2103.00112
   * 大公司追求效果极致的好
 * RWKV、Mamba：线性transformer
   * mamba：选择性SSM架构
-* MoE混合专家模型：
-  * 门控网络+专家网络
-  * GPT-3 1750亿参数
-  * GPT-4 1.8万亿参数
-    * 16个专家网络
-    * 运行时只跑2个专家网络
-    * 相比GPT-3.5更像人脑
 * Additive Attention https://arxiv.org/abs/1409.0473
+
+#### Linear Attn 基础 — Transformer without softmax == RNN
+
+* $$V' = (φ(Q)φ(K)^T)V$$
+  * 复杂度从序列长度N的平方，降到了线性
+  * 可以把 (φ(K)^T * V) 看作一个 全局的“状态”或“记忆” 。它把所有 Key 和 Value 的信息压缩成了一个小矩阵。
+  - 在自回归生成（一个一个token地生成）的场景下，这个“状态”可以迭代更新
+
+![image-20251007015959086](./AI-Algorithms/image-20251007015959086.png)
+
+##### 评价Linear Attn：联想记忆和状态追踪能力
+
+![image-20251005170207628](./AI-Algorithms/image-20251005170207628.png)
+
+（RWKV7）
+
+
+
+#### 第二代RNN：提升训练质量和效率
+
+##### 记忆压缩
+
+![image-20251007141822655](./AI-Algorithms/image-20251007141822655.png)
+
+#### 第三代RNN：提升模型记忆能力
+
+##### 快慢记忆融合机制
+
+
+
+#### RWKV
+
+> 读法：raku
+
+![image-20251005165507125](./AI-Algorithms/image-20251005165507125.png)
+
+* 核心差异：Time Mixing
+  * R：使用多少信息量
+  * W：信息量的重要性
+
+![image-20251005170437615](./AI-Algorithms/image-20251005170437615.png)
+
+##### Time Mixing
+
+![image-20251005165713281](./AI-Algorithms/image-20251005165713281.png)
+
+##### RWKV-7
+
+![image-20251005165755159](./AI-Algorithms/image-20251005165755159.png)
+
+![image-20251005170039565](./AI-Algorithms/image-20251005170039565.png)
+
+![image-20251005170356714](./AI-Algorithms/image-20251005170356714.png)
+
+
+
+## MoE 混合专家模型
+
+> https://huggingface.co/blog/moe
+>
+> 思路：扩参数量，保Flops不变
+
+### Intro
+
+#### MoE介绍
+
+* 门控网络+专家网络
+* GPT-3 1750亿参数
+* GPT-4 1.8万亿参数
+  * 16个专家网络
+  * 运行时只跑2个专家网络
+  * 相比GPT-3.5更像人脑
+
+![image-20251003005026169](./AI-Algorithms/image-20251003005026169.png)
+
+![image-20251003005055185](./AI-Algorithms/image-20251003005055185.png)
+
+* 发展趋势
+  * ![image-20251003010400486](./AI-Algorithms/image-20251003010400486.png)
+
+#### MoE和人脑的类比
+
+![image-20251007012257695](./AI-Algorithms/image-20251007012257695.png)
+
+* 高效性：MoE的本质特点
+* 可复用性：**模块化复用与组合**正是MoE模型能够掌握和处理海量、多样化知识与任务的理论基础
+  * 人脑：模块复用和组合
+  * MoE：不同层的gating不一样，相当于不同层激活的专家可能对于不同任务有复杂的组合。
+* 可解释性
+  * 人脑 ：神经科学家通过**功能性磁共振成像（fMRI）**等技术，观察人类在执行特定任务时大脑的哪些区域（模块）被激活，从而推断这些区域的功能。例如，当一个人说话时，如果**布罗卡区（Broca's area）**被点亮，我们就能理解它在语言生成中的关键作用。
+  * MoE：虽然模型的完全可解释性仍是一个前沿课题，但相比于密集的“黑箱”模型，MoE在可解释性上提供了重要的突破口。
+    * 通过分析和追踪哪些类型的输入token总是被路由到某一个特定的专家，研究人员可以推断出这个专家的“专长”。例如，已经有研究发现，在多语言模型中，存在专门处理特定语种（如德语、日语）的专家，也存在专门处理代码、JSON格式或科学文献的专家。
+
+#### LLM神经元的稀疏激活特性
+
+##### FFN
+
+* 核心：激活函数输出的激活值，具备稀疏性
+
+![image-20251007013022728](./AI-Algorithms/image-20251007013022728.png)
+
+##### Attn也具备
+
+![image-20251002163423266](./AI-Algorithms/image-20251002163423266.png)
+
+
+
+### 从FFN到MoE：FFN模块化
+
+#### 模块化
+
+![image-20251002162330247](./AI-Algorithms/image-20251002162330247.png)
+
+* 模块化性质的早期涌现，先构建模块化，再构建神经元功能
+
+![image-20251002163239043](./AI-Algorithms/image-20251002163239043.png)
+
+​	![image-20251007013206293](./AI-Algorithms/image-20251007013206293.png)
+
+#### 神经元特异化：能力&语言&情感神经元
+
+* ![image-20251003002100921](./AI-Algorithms/image-20251003002100921.png)
+
+* ![image-20251003002248264](./AI-Algorithms/image-20251003002248264.png)
+
+* 情感神经元
+  * 情感神经元在所有层 --> 需要微调来实现角色扮演的大模型
+  * ![image-20251003002341416](./AI-Algorithms/image-20251003002341416.png)
+
+#### 神经元激活的稀疏性 —— MoeFication
+
+> Question: paper如何去判断神经元功能分布相似的，需要批量输入+统计？
+
+![image-20251002162209654](./AI-Algorithms/image-20251002162209654.png)
+
+![image-20251007013515941](./AI-Algorithms/image-20251007013515941.png)
+
+#### 稀疏稠密协同训练
+
+> 可能被淘汰了，现在LLM一开始就是稀疏结构
+
+![image-20251003003642702](./AI-Algorithms/image-20251003003642702.png)
+
+### SparseMoE
+
+* 每个token分配到Gate分数最高的k个Experts上进行计算
+* 问题：
+  * load balance
+  * 访存bound：Expert parallelism
+
+#### Load Balance
+
+##### auxiliary loss —— DeepSeek-V2
+
+![image-20251003010847599](./AI-Algorithms/image-20251003010847599.png)
+
+##### 随机路由
+
+![image-20251003005507992](./AI-Algorithms/image-20251003005507992.png)
+
+##### auxiliary-loss-free —— DeepSeek-V3
+
+* For MoE models, an unbalanced expert load will lead to routing collapse (Shazeer et al., 2017) and diminish computational efficiency in scenarios with expert parallelism. Conventional solutions usually rely on the auxiliary loss (Fedus et al., 2021; Lepikhin et al., 2021) to avoid unbalanced load. However, too large an auxiliary loss will impair the model performance (Wang et al., 2024a). To achieve a better trade-off between load balance and model performance, we pioneer an auxiliary-loss-free load balancing strategy (Wang et al., 2024a) to ensure load balance.【deepseek-v3】
+  * Auxiliary-Loss-Free Load Balancing.
+    * 每个step进行策略调节
+    * ![image-20250501014407504](./AI-Algorithms/image-20250501014407504.png)
+
+![image-20251003010955657](./AI-Algorithms/image-20251003010955657.png)
+
+#### 共享专家和垂类专家
+
+![image-20251003010658296](./AI-Algorithms/image-20251003010658296.png)
+
+
+
+#### 专家容量
+
+![image-20251003005711499](./AI-Algorithms/image-20251003005711499.png)
+
+### SoftMoE
+
+> google paper
+
+![image-20250703153601233](./AI-Algorithms/image-20250703153601233.png)
+
+* 对于输入的$$N$$个 tokens 通过线性组合（Dispatch）得到$$S$$个 slot，由$$E$$个 Expert 均匀处理$$S$$个 slot 后再映射回（Combine）$$N$$个 tokens，该方案可以看作是某种Merge Tokens的思想。当$$S<N$$可显著减少 FLOPS，同时可以通过 Expert 的数目来控制参数量。
+  * S == E 时，理解为 Merge Tokens
+
+### HardMoE —— PertokensFFN
+
+* N == S，不再对输入tokens进行dispatch，PertokensFFN
+  * 根据语义信息分配token
+  * 能保留token间的异构性特点 —— 适用token异构的场景
+
+### MoE + Sparsity
+
+参考「MLSys+RecSys」笔记
+
+
 
 ## Long-Context 长上下文
 
@@ -730,12 +1267,16 @@ https://arxiv.org/abs/2108.12409
 
 #### RoPE
 
+> [苏剑林：Transformer升级之路：2、博采众长的旋转式位置编码](https://spaces.ac.cn/archives/8265)
+
 https://arxiv.org/abs/2104.09864
 
 - Intro
   - 它通过将位置信息编码为 旋转矩阵 ，并应用于 query 和 key 向量。
   - 两个 token 之间的注意力分数依赖于它们向量的点积，而 RoPE 的设计使得这个点积主要取决于它们的 相对位置 （通过旋转角度的差值体现）。
   - 虽然 RoPE 编码的是绝对位置（通过旋转角度），但其核心机制使得相对位置信息得以保留和利用。这种基于旋转的相对位置编码方式，相比于学习绝对位置嵌入，具有更好的外推性，因为它不依赖于为训练长度内的每个绝对位置分配特定编码。
+
+![image-20251004225613944](./AI-Algorithms/image-20251004225613944.png)
 
 - 推导
   - $$\hat q = f(q, m), \hat k = f(k, n)$$
@@ -752,37 +1293,17 @@ https://arxiv.org/abs/2104.09864
   - 考虑编码矩阵在多维情况下的稀疏性，所以采用乘法实现，即
     * $$\left( \begin{array}{c}q_0 \\ q_1 \\ q_2 \\ q_3 \\ ... \\ q_{d-2} \\ q_{d-1} \end{array} \right) * \left( \begin{array}{c} cosm\theta_0 \\ cosm\theta_0 \\ cosm\theta_1 \\ cosm\theta_1 \\ ... \\ cosm\theta_{d/2-1} \\ cosm\theta_{d/2-1} \end{array} \right) + \left( \begin{array}{c}-q_1 \\ q_0 \\ -q_3 \\ q_2 \\ ... \\ -q_{d-1} \\ q_{d-2} \end{array} \right) * \left( \begin{array}{c} sinm\theta_0 \\ sinm\theta_0 \\ sinm\theta_1 \\ sinm\theta_1 \\ ... \\ sinm\theta_{d/2-1} \\ sinm\theta_{d/2-1} \end{array} \right)$$
 
+##### RoPE的两种实现：GPT-J style 和 GPT-NeoX style
+
+https://zhuanlan.zhihu.com/p/631363482
+
+
 
 #### 其它
 
 [LongRoPE](https://arxiv.org/abs/2402.13753), [NTK-RoPE](https://www.reddit.com/r/LocalLLaMA/comments/14lz7j5/ntkaware_scaled_rope_allows_llama_models_to_have/), [ReRoPE](https://github.com/bojone/rerope?tab=readme-ov-file),
 
-### Attention Sink (Global Token)
-
-> EFFICIENT STREAMING LANGUAGE MODELS WITH ATTENTION SINKS (streaming-LLM)
->
-> 节点间信息传播的中心
-
-![image-20250606171300149](./AI-Algorithms/image-20250606171300149.png)
-
-1. 注意力汇聚点（Attention Sink）
-   - 发现模型对初始 tokens 分配大量注意力，即使其语义无关（如 Llama-2-7B 深层头部对初始 token 注意力占比超 50%）
-   - **原因：Softmax 要求注意力分数和为 1，初始 tokens 因自回归特性被所有后续 tokens 可见，易被训练为汇聚点**
-2. StreamingLLM 框架
-   - **核心设计**：保留 4 个初始 tokens 的 KV 作为汇聚点，结合滑动窗口 KV 缓存（如 4+1020 配置）
-   - 技术细节
-     - 缓存内重新分配位置编码（如当前缓存 tokens [0,1,2,3,6,7,8] 解码时位置设为 0-7）
-     - 兼容 RoPE（缓存 Keys 后应用旋转变换）和 ALiBi（连续线性偏置）
-   - **预训练优化**：添加 Learnable Sink Token 作为专用汇聚点，160M 参数模型实验显示仅需 1 个该 token 即可稳定性能
-
-四、应用与局限
-
-1. **适用场景**：多轮对话、短文档 QA 等依赖近期上下文的流式任务，已被 NVIDIA TensorRT-LLM 等框架采用
-2. 局限性
-   - 不扩展模型上下文长度，依赖缓存内信息（如 StreamEval 中查询距离超缓存时准确率降为 0）
-   - 长文档 QA 等需长期记忆的任务表现不及截断基线
-
-![image-20250606171351749](./AI-Algorithms/image-20250606171351749.png)
+### 也参考 「稀疏注意力」
 
 ### [LWM —— Large World Model with Blockwise Ring-Attn](https://arxiv.org/pdf/2402.08268)
 
@@ -790,24 +1311,38 @@ https://arxiv.org/abs/2104.09864
 
 ![image-20250512022523757](./AI-Algorithms/image-20250512022523757.png)
 
-### 工程
-
-参考 LLM-MLSys.md
+### 工程 -> 「LLM-MLSys.md」
 
 
 
-## Bert
+## 半自回归模型
+
+### Intro: GPT-4o / Diffusion / MTP
+
+![image-20251007010817845](./AI-Algorithms/image-20251007010817845.png)
+
+* MTP、speculative decoding，均属于半自回归的范畴
+
+### 和 Diffusion 结合
+
+#### Google 工作
+
+#### BlockDiffusion：全局自回归 + 局部非自回归
+
+![image-20251007143025845](./AI-Algorithms/image-20251007143025845.png)
+
+
+
+## Bert —— 掩码语言模型
 
 > 完形填空的训练难度比NTP小
 
-* Transformer 具有 field reduce 能力，将 N 个 token reduce 成 M 个 token
+### Intro
+
+![image-20251003023223287](./AI-Algorithms/image-20251003023223287.png)
+
 * [GELU](https://paperswithcode.com/method/gelu)
   * GELUs are used in [GPT-3](https://paperswithcode.com/method/gpt-3), [BERT](https://paperswithcode.com/method/bert), and most other Transformers.
-* Layer Normalization
-  * The LayerNorm operator was first introduced in [BA2016]() as a way to **improve the performance of sequential models (e.g., Transformers) or neural networks with small batch size**
-  * 对比layernorm和BN
-    * LayerNorm 在特征维度上对单个样本进行归一化，不依赖 batch size，训练和推理行为一致，常用于 RNN、Transformer 等序列模型。
-    * BatchNorm 在 batch 维度上对channel进行归一化，对 batch size 敏感，训练和推理行为不同，常用于 CNN。
 
 ![image-20241019021744575](./AI-Algorithms/bert-5434356.png)
 
@@ -861,6 +1396,10 @@ https://arxiv.org/abs/2104.09864
      troduced at fine-tuning time; BERT learns
      [SEP], [CLS] and sentence A/B embeddings during pre-training
   *  bert训练语料多、batch size大
+
+#### CLS Token的本质
+
+* Transformer 具有 field reduce 能力，将 N 个 token reduce 成 M 个 token
 
 ### model finetune
 
@@ -936,6 +1475,8 @@ https://arxiv.org/abs/2104.09864
 
 ## GPT-2
 
+> https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf
+
 * 目标：如果不微调了，能不能有更好的效果？
   * 稀疏自注意力机制
   * 增加batch size到百万，减少通信量
@@ -948,6 +1489,7 @@ https://arxiv.org/abs/2104.09864
 * 自回归架构
   * 局限性：只接受离散样本
   * 一个一个字输出
+* 训练稳定性：Pre-Norm + 参数初始化策略
 
 
 
@@ -974,6 +1516,8 @@ https://arxiv.org/abs/2104.09864
 
 ## GPT-3.5 (ChatGPT)
 
+### Intro
+
 * 目标：与人类的指令对齐
   * 无法对齐/不安全
 
@@ -988,22 +1532,25 @@ https://arxiv.org/abs/2104.09864
 
   * 未来：AGI(Artificial General Intelligence)；教会它使用工具
 
-* 三个关键技术：
-  * In-Context Learning 情景学习
-    * 在前向中学习
-    * 涌现能力：百亿参数规模之后，能力突然提升，改变传统学习范式
-    * 大幅降低下游任务开发成本
-    * 《Rethinking the Role of Demonstrations: What Makes In-Context Learning Work?》 --> 随机label仍可能提升效果
-  * Chain-of-Thought, CoT 思维链
-    * 《PAL: Program-aided Language Models》，让语言模型生成能由计算模型执行的描述代码
-    * 在大模型中打破scaling law
-  * Learning from Natural Instructions 自然指令学习
-    * 很像情景学习，样本逐渐简化（负例不需要suggestion；不需要负例）
-    * https://instructions.apps.allenai.org/
-    * OpenAI: 通过人类反馈对齐人类指令
-* **大模型具备了对知识的跨语言能力**
+### 三个关键技术
+
+* In-Context Learning 情景学习
+  * 在前向中学习
+  * 涌现能力：百亿参数规模之后，能力突然提升，改变传统学习范式
+  * 大幅降低下游任务开发成本
+  * 《Rethinking the Role of Demonstrations: What Makes In-Context Learning Work?》 --> 随机label仍可能提升效果
+* Chain-of-Thought, CoT 思维链
+  * 《PAL: Program-aided Language Models》，让语言模型生成能由计算模型执行的描述代码
+  * 在大模型中打破scaling law
+* Learning from Natural Instructions 自然指令学习
+  * 很像情景学习，样本逐渐简化（负例不需要suggestion；不需要负例）
+  * https://instructions.apps.allenai.org/
+  * OpenAI: 通过人类反馈对齐人类指令
+
+### 其它
+
 * RLHF
-  * 见【本文档-finetuning-RLHF】部分
+  * 见【RLHF】部分
   * 惩罚1：过大的梯度/概率值
   * 惩罚2：灾难性遗忘
 * limitations
@@ -1019,8 +1566,11 @@ https://arxiv.org/abs/2104.09864
 
 
 * Note
+  
+  * **大模型具备了对知识的跨语言能力**
   * 科技部部长王志刚表示，ChatGPT有很好的计算方法，同样一种原理，在于做得好不好；就像踢足球，都是盘带、射门，但是要做到像梅西那么好也不容易。
   * 客观题高考515分水平
+  
 * [专访Altman](https://www.pingwest.com/a/285835)
 
   * **感想**：有几个点值得关注：ai自运行的能力、ai隐藏意图的能力、ai与真实物质世界接口的能力、ai认识到自己的现实处境并差异化处理的能力
@@ -1046,28 +1596,72 @@ https://arxiv.org/abs/2104.09864
 * GPT-4幕后的研发团队大致可分为七个部分：预训练（Pretraining）、长上下文（Long context）、视觉（Vision）、强化学习和对齐（RL & alignment）、评估和分析（Evaluation & analysis）、部署（Deployment）以及其他贡献者（Additional contributions）
 * [GPT-4技术报告](https://mp.weixin.qq.com/s?__biz=Mzk0NzQzOTczOA==&mid=2247484155&idx=1&sn=5ef0fcf20d4b87366269d3c0cf4312c0&scene=21#wechat_redirect)
   * 32k对应50页的context
-* [Language models can explain neurons in language models](https://openai.com/research/language-models-can-explain-neurons-in-language-models)
-  * 步骤：
-    * GPT-4解释某个GPT-2神经元的行为
-    * 用GPT-4模拟这一行为
-    * 比较并打分
+* Scaling Prediction：GPT-4印证了Scaling Law
+  * ![image-20251001200931740](./AI-Algorithms/image-20251001200931740.png)
 
-  * OpenAI 共让 GPT-4 解释了 GPT-2 中的 307200 个神经元，其中大多数解释的得分很低，只有超过 1000 个神经元的解释得分高于 0.8。
-  * 三种提高解释得分的方法：
-    - 对解释进行迭代，通过让 GPT-4 想出可能的反例，根据其激活情况修改解释来提高分数。
-    - 使用更大的模型来进行解释，平均得分也会上升。
-    - 调整被解释模型的结构，用不同的激活函数训练模型。
-  * https://github.com/openai/automated-interpretability
-  * 传统的视觉解释方法不能scale well
-    * https://openai.com/research/microscope
-    * https://distill.pub/2020/circuits/curve-detectors/
+## LLAMA 2
+
+```
+{
+  "_name_or_path": "meta-llama/Llama-2-7b-hf",
+  "architectures": [
+    "LlamaForCausalLM"
+  ],
+  "bos_token_id": 1,
+  "eos_token_id": 2,
+  "hidden_act": "silu",
+  "hidden_size": 4096,
+  "initializer_range": 0.02,
+  "intermediate_size": 11008,
+  "max_position_embeddings": 4096,
+  "model_type": "llama",
+  "num_attention_heads": 32,
+  "num_hidden_layers": 32,
+  "num_key_value_heads": 32,
+  "pretraining_tp": 1,
+  "rms_norm_eps": 1e-05,
+  "rope_scaling": null,
+  "tie_word_embeddings": false,
+  "torch_dtype": "float16",
+  "transformers_version": "4.31.0.dev0",
+  "use_cache": true,
+  "vocab_size": 32000
+}
+```
+
+
 
 ## LLAMA 3
+
+> https://ai.meta.com/blog/meta-llama-3/
+>
+> 官方代码：https://github.com/meta-llama/llama3
+>
+> Transformers 库：https://github.com/huggingface/transformers/tree/main/src/transformers/models/llama
+>
+> 官方模型下载（需要申请）：https://huggingface.co/meta-llama
+>
+> TinyLlama：https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v0.4
 
 * Intro
   * uses RMSNorm [ZS19], SwiGLU [Sha20], rotary embedding [SAL+24], and removes all biases
 * https://hasgeek.com/simrathanspal/the-llama3-guide/sub
-* https://ai.meta.com/blog/meta-llama-3/
+* ![image-20251004224418837](./AI-Algorithms/image-20251004224418837.png)
+
+* FFN
+  * hidden_size 4096
+  * intermediate_size 11008
+  * hidden_act: SiLU
+
+* Masked MSA
+  * hidden_size 4096
+  * num_attention_heads 32
+  * num key/value heads 32
+
+* Decoder
+  * LLAMA 7B：num_hidden_layers = 32
+
+
 
 ## DeepSeek
 
@@ -1240,8 +1834,12 @@ but can achieve stronger performance than MHA
 >
 > [腾讯解读](https://mp.weixin.qq.com/s/_1Zbfi2evLE7-Dn4NLVHOw)，较形象
 
-* DeepSeek-V3, a strong Mixture-of-Experts (MoE) language model with **671B** total
-  parameters with **37B activated** for each token
+### Intro
+
+![image-20251007010333327](./AI-Algorithms/image-20251007010333327.png)
+
+* DeepSeek-V3, a strong Mixture-of-Experts (MoE) language model with **671B** total parameters with **37B activated** for each token
+
   * 关键技术
     * Multi-head Latent Attention (MLA)
     * DeepSeekMoE architectures
@@ -1256,9 +1854,14 @@ but can achieve stronger performance than MHA
   * **训练成本：**
     * **2048张H800，2.788M H800 GPU hours for its full training**
     * **558万刀**
+
+  ![image-20251007010203261](./AI-Algorithms/image-20251007010203261.png)
+
 * 训练框架：
+
   * On the whole, DeepSeek-V3 applies **16-way Pipeline Parallelism (PP)** (Qi et al., 2023a), **64-way Expert Parallelism (EP)** (Lepikhin et al., 2021) spanning 8 nodes, and **ZeRO-1 Data Parallelism (DP)** (Rajbhandari et al., 2020).
     * 没有使用代价很大的TP并行, 这是针对H800被砍了NVLINK带宽的优化
+
 * 训练流程：
   * pretrain 14T tokens
   * a two-stage context length extension for DeepSeek-V3. In the first stage, the maximum context length is extended to 32K, and in the second stage, it is further extended to 128K.
@@ -1414,6 +2017,116 @@ utilize MTP to improve training.
 * Distillation from DeepSeek-R1
 * Self-Rewarding
 
+## Embedding Model
+
+https://ezml.io/blog/beyond-clip-the-future-of-multimodal-retrieval-with-visualized-bge-vista-and-magiclens
+
+### CLIP
+
+**What is CLIP?**
+
+CLIP, developed by OpenAI, is a model designed to understand and relate images and text through contrastive learning. It learns to match images with their corresponding text descriptions and to differentiate these pairs from mismatches, enabling it to perform various tasks, from image classification to zero-shot learning.
+
+**How Does CLIP Work?**
+
+- **Contrastive Learning:** CLIP is trained on a vast dataset of image-text pairs, learning to create a shared embedding space where both images and texts are represented as vectors. The model maximizes the similarity of correct image-text pairs and minimizes it for incorrect pairs.
+- **Joint Embedding Space:** CLIP’s ability to create a joint embedding space for images and text allows it to generalize across different tasks and domains.
+
+**Limitations of CLIP**
+
+- **Fine-Grained Visual Understanding:** CLIP struggles with fine-grained visual details due to its broad learning approach. It can miss subtle distinctions within images that are critical for certain tasks.
+- **Imprecise Multimodal Alignment:** The alignment between text and images can be imprecise, especially when dealing with complex or nuanced relationships.
+- **Retrieval Performance Variability:** CLIP's performance can vary depending on the specificity of the query and the image, sometimes leading to suboptimal results.
+
+### CoCa
+
+https://research.google/blog/image-text-pre-training-with-contrastive-captioners/
+
+### Visualized BGE (Bootstrapped Grid Embedding)
+
+**How Does Visualized BGE Work?**
+
+- **Grid-Based Embeddings:** Unlike CLIP, which processes entire images, Visualized BGE (specifically the BGE-Visualized-M3 variant) breaks down images into grids and embeds each segment separately. This grid-based approach allows the model to capture more localized and detailed visual information.
+- **Bootstrapping:** Visualized BGE uses a bootstrapping process where the model iteratively refines its understanding of the image’s content. This iterative training enhances the model's ability to differentiate between subtle visual details.
+- **Leveraging Stable Diffusion:** The training process of Visualized BGE, especially in its M3 variant, incorporates techniques similar to stable diffusion to generate edited images. These variations expose the model to a diverse set of images, thereby improving its ability to recognize and embed fine-grained details across various scenarios.
+
+**Prominent Example - BGE-Visualized-M3**
+
+The **BGE-Visualized-M3** model is a prominent example of the Visualized BGE architecture. It supports multiple retrieval functionalities such as:
+
+- **Dense Retrieval:** Standard dense retrieval, commonly seen in text embeddings.
+- **Multi-Vector Retrieval:** Fine-grained interactions between multiple vectors.
+- **Sparse Retrieval:** Term-based retrieval with enhanced importance assigned to certain terms.
+
+**Advantages of Visualized BGE**
+
+- **Fine-Grained Detail Recognition:** The grid-based embedding method enhances the model’s ability to recognize and differentiate fine details within images.
+- **Improved Retrieval Accuracy:** The detailed focus leads to more accurate retrieval results, particularly in scenarios where specific visual features are critical.
+- **Complex Image Handling:** Visualized BGE, especially in its BGE-Visualized-M3 variant, excels in understanding complex images with multiple elements, where generalist models like CLIP might struggle.
+
+### VISTA
+
+> Visualized Text Embedding for Universal Multimodal Retrieval
+
+![img](./AI-Algorithms/rygUM4x9yYMvOzaCGkxrVuR0.png)
+
+**What is VISTA?**
+
+VISTA (Visualized Text Embedding for Universal Multimodal Retrieval) takes the advancements of Visualized BGE even further by enhancing the integration of text and image data. VISTA introduces a sophisticated method of embedding text in a way that is deeply integrated with visual data, making it a versatile model for a broad range of multimodal tasks.
+
+**How Does VISTA Work?**
+
+- **ViT and Text Tokenization:** VISTA uses a Vision Transformer (ViT) as an image tokenizer, feeding the visual tokens into a pre-trained text encoder. This allows the model to handle images, text, and multimodal data seamlessly.
+- **In-Depth Fusion:** VISTA creates a deeply fused multimodal representation by concatenating the visual tokens from the ViT encoder with the text tokens and processing this interleaved sequence through a frozen text encoder. This ensures that the text embedding capabilities are preserved while enhancing image-text alignment.
+- **Two-Stage Training Process:** VISTA employs a two-stage training process. In the first stage, it performs cross-modal training using massive weakly labeled data, aligning visual tokens with the text encoder. In the second stage, VISTA fine-tunes this alignment with high-quality composed image-text datasets, significantly improving the model's ability to handle complex multimodal tasks.
+
+**Improvements Over CLIP**
+
+- **Unified Embedding Space:** Unlike CLIP, which handles text and image embeddings separately, VISTA creates a unified embedding space that ensures better integration and alignment of text and image data.
+- **Versatility:** VISTA’s architecture allows it to excel across a broader range of multimodal retrieval tasks, from simple image-text matching to complex multimodal document retrieval.
+- **Enhanced Detail and Context Understanding:** By deeply integrating visual and textual data, VISTA can better understand and retrieve information based on nuanced and detailed queries.
+
+### MagicLens by Google 
+
+![img](./AI-Algorithms/ZlUMrMOnFObZ7sRbqFe7d8QYZcI.png)
+
+**What is MagicLens?**
+
+MagicLens is a cutting-edge, self-supervised image retrieval model designed to handle **open-ended instructions** for image search. Unlike traditional models that focus on visual similarities, MagicLens allows users to express complex search intents through natural language, retrieving images based on diverse semantic relations beyond mere visual features.
+
+**How Does MagicLens Work?**
+
+- **Training on Web Data:** MagicLens is trained on **36.7 million image triplets** (query image, instruction, target image) mined from naturally occurring web image pairs. These pairs contain implicit relations (e.g., “inside view of,” “different angle”), which are made explicit using large multimodal models (LMMs) and large language models (LLMs).
+
+- **Self-Supervised Learning:** The model generates diverse instructions using foundation models (PaLM and PaLI) and learns to align image-text pairs via contrastive learning, allowing it to support open-ended, complex queries.
+- **Dual-Encoder Architecture:** A dual-encoder system processes the query image and integrates the instruction into the target image retrieval, making the system highly efficient for diverse retrieval tasks.
+
+**Key Innovations:**
+
+- **Beyond Visual Similarity:** MagicLens excels at retrieving images based on **non-visual relations**, such as context, object-specific queries, or semantic differences (e.g., “different product angle” or “related landmarks”).
+- **Efficient Model Size:** Despite being **50x smaller** than previous state-of-the-art models, MagicLens achieves superior performance across various image retrieval benchmarks.
+- **Real-Time and Accurate Retrieval:** MagicLens allows for **interactive, real-time search** and refines results based on user feedback, making it adaptable to dynamic retrieval tasks.
+
+**Why It’s an Advancement:**
+
+MagicLens moves beyond the visual similarity limitations of CLIP and Visualized BGE, supporting **open-ended, natural language-driven searches**. It represents a significant leap in the ability to handle complex, contextually rich image queries, making it highly effective and scalable for modern multimodal search applications.
+
+### Qwen-3 Embedding
+
+https://arxiv.org/pdf/2506.05176
+
+* Intro
+  * 基于合成数据的multi-stage训练
+  * 构建高质量合成数据
+  * 引入模型合并（model merging）
+  * 有reranking模型
+* 训练
+  * 在输入序列的末尾添加 [EOS]，使用其最终一层 hidden state 作为 embedding 表示；
+  * **Embedding 模型采用 InfoNCE 对比损失**
+    - InfoNCE loss 的目标是最大化正样本对的相似度，同时最小化负样本对的相似度。
+    - 负样本包括硬负样本、批内负样本等
+    - ![image-20250708163208666](./AI-Algorithms/image-20250708163208666.png)
+
 ## Datasets and Evaluation
 
 ### Intro
@@ -1466,63 +2179,33 @@ utilize MTP to improve training.
 
 * PersonaMem —— 记忆个性化评测
 
-## MoE
-
-> 思路：扩参数量，保Flops不变
-
-* Intro
-  * https://huggingface.co/blog/moe
-
-### SparseMoE
-
-* 每个token分配到Gate分数最高的k个Experts上进行计算
-* 问题：
-  * load balance
-  * 访存bound：Expert parallelism
-
-#### Load Balance
-
-* For MoE models, an unbalanced expert load will lead to routing collapse (Shazeer et al., 2017) and diminish computational efficiency in scenarios with expert parallelism. Conventional solutions usually rely on the auxiliary loss (Fedus et al., 2021; Lepikhin et al., 2021) to avoid unbalanced load. However, too large an auxiliary loss will impair the model performance (Wang et al., 2024a). To achieve a better trade-off between load balance and model performance, we pioneer an auxiliary-loss-free load balancing strategy (Wang et al., 2024a) to ensure load balance.【deepseek-v3】
-  * Auxiliary-Loss-Free Load Balancing.
-    * 每个step进行策略调节
-    * ![image-20250501014407504](./AI-Algorithms/image-20250501014407504.png)
-
-### SoftMoE
-
-> google paper
-
-* 对于输入的$$N$$个 tokens 通过线性组合（Dispatch）得到$$S$$个 slot，由$$E$$个 Expert 均匀处理$$S$$个 slot 后再映射回（Combine）$$N$$个 tokens，该方案可以看作是某种Merge Tokens的思想。当$$S<N$$可显著减少 FLOPS，同时可以通过 Expert 的数目来控制参数量。
-  * S == E 时，理解为 Merge Tokens
-
-### HardMoE
-
-* N == S，不再对输入tokens进行dispatch，PertokensFFN
-  * 根据语义信息分配token
-
 ## In-context Learning
 
 https://ai.stanford.edu/blog/understanding-incontext/
 
-## Finetuning
+## SFT (Supervised Finetuning)、对齐
 
 ### Intro
 
-* finetune v.s. from scratch
-  * finetune的场合：私有部署+开源模型能力不足
-
+* 数据工程是 SFT 的核心
+* 如何提升数据数量和质量是数据工程的核心
+  - 从 0 到 60 分：习得输出的模板，激发预训练中习得的知识
+  - 从 60 到 100 分：提升推理、生成和知识性能力，进一步对齐人类的期望
+* 在未来，如何保证数据的**多样性**和**可扩展性**是 SFT 成功的关键
 * 如何做finetune
+  * 流程和DL的训练差不多
+    * 数据预处理阶段，会加载tokenizer，将文本转token ids
   * 基座模型选型
   * 全参数finetune和小参数量finetune
     * 小参数量finetune
       * Adapters
       * Prompt-tuning v1/v2
       * LoRA
-* finetune需求
-  * OpenAI: 1.3w条SFT prompt
-  * embedding：至少10w条数据，相似性和同义性
-* alpaca
-
-![image-20231025213448602](./AI-Algorithms/alpaca.png)
+* Finetune的需求：
+  * 场合：私有部署+开源模型能力不足
+  * 数据量需求：
+    * OpenAI: 1.3w条SFT prompt
+    * embedding：至少10w条数据，相似性和同义性
 
 ### Literature Review
 
@@ -1537,33 +2220,6 @@ https://ai.stanford.edu/blog/understanding-incontext/
 
 * fine-tuned LLMs fail to learn from examples
   * DAIL-SQL
-
-### SFT
-
-* 流程和DL的训练差不多
-  * 数据预处理阶段，会加载tokenizer，将文本转token ids
-
-### RLHF
-
-* Reinforcement Learning from Human Feedback (RLHF), using the same methods as [InstructGPT](https://openai.com/blog/instruction-following/), but with slight differences in the data collection setup
-  * RLHF的blog介绍：https://huggingface.co/blog/rlhf
-    * supervised fine-tuning: human AI trainers provided conversations in which they played both sides—the user and an AI assistant
-  * 步骤：
-    * 预训练一个语言模型 (LM) ；
-    * 聚合问答数据并训练一个奖励模型 (Reward Model，RM) ；
-    * 用强化学习 (RL) 方式微调语言模型（LM）。
-      * 长期以来，出于工程和算法原因，人们认为用强化学习训练 LM 是不可能的。而目前多个组织找到的可行方案是使用策略梯度强化学习 (Policy Gradient RL) 算法、近端策略优化 (Proximal Policy Optimization，PPO) 微调初始 LM 的部分或全部参数。因为微调整个 10B～100B+ 参数的成本过高 (相关工作参考低秩适应 LoRA 和 DeepMind 的 Sparrow LM)
-  * reward model: 人工打分
-    * 人工写答案 -> 人工选答案 -> 机器选答案
-    * prompt dataset
-    * fine-tune the model using [Proximal Policy Optimization](https://openai.com/blog/openai-baselines-ppo/)
-    * 一些巧妙的打分方式：
-      * 客服点按钮，选取ai答案，也是finetune过程
-      * reddit帖子中的最高分
-
-![img](./AI-Algorithms/ChatGPT_Diagram.svg)
-
-* 
 
 ### LoRA
 
@@ -1581,28 +2237,31 @@ https://github.com/huggingface/peft
 
 ### Instruction tuning
 
+#### Intro
+
+* 典型例子ChatGPT
+
+* 提升模型泛化能力
+
+![image-20251002023902315](./AI-Algorithms/image-20251002023902315.png)
+
 #### Literature Review
 
 * Zero-shot training of retrievers.
   * 克服没见过的任务的query难点
-    * 无监督：leveraging another model to automatically generate
-      training data (Wang et al., 2022a).[TRwI]
-    * 生成label（template-based)：Dai et al. (2022) use task-speciﬁc tem-
-      plates and few-shot samples to automatically gen-
-      erate in-domain training queries given randomly
-      sampled documents from the target corpus using
+    * 无监督：leveraging another model to automatically generate training data (Wang et al., 2022a).[TRwI]
+    * 生成label（template-based)：Dai et al. (2022) use task-speciﬁc templates and few-shot samples to automatically generate in-domain training queries given randomly sampled documents from the target corpus using
       FLAN (Wei et al., 2022a)..[TRwI]
-
+  
 * Instruction Tuning
 
-  * Weiet al., 2022a; Sanh et al., 2022; Ouyang et al., 2022;
-    Min et al., 2022; Wang et al., 2022b; Mishra et al.,
+  * Weiet al., 2022a; Sanh et al., 2022; Ouyang et al., 2022; Min et al., 2022; Wang et al., 2022b; Mishra et al.,
     2022; Chung et al., 2022 .[TRwI]
   * 缺少指令tuning的retrieval[TRwI]
     * 缺少标注数据集
     * llm生成海量emb的成本高 
     * Retrieval with descriptions的路线：效果一般
-
+  
   * dataset scale提升instruction的泛化能力
     * Recent work (Wang et al., 2022b; Chung et al., 2022)
       show that scaling up the number of the training
@@ -1616,7 +2275,39 @@ https://github.com/huggingface/peft
       more than 100 datasets) improves zero-shot and
       cross-task retrieval. [TRwI]
 
-#### Task-aware Retrieval with Instructions
+#### 组合泛化 + 大参数量：1+1>2
+
+![image-20251002024429291](./AI-Algorithms/image-20251002024429291.png)
+
+#### Alpaca & Vicuna: 数量 v.s. 质量
+
+![image-20251002025358987](./AI-Algorithms/image-20251002025358987.png)
+
+![image-20251002025703039](./AI-Algorithms/image-20251002025703039.png)
+
+![image-20231025213448602](./AI-Algorithms/alpaca.png)
+
+##### LIMA: Less Is More For Alignment
+
+![image-20251002030109269](./AI-Algorithms/image-20251002030109269.png)
+
+![image-20251002030131953](./AI-Algorithms/image-20251002030131953.png)
+
+![image-20251002030145476](./AI-Algorithms/image-20251002030145476.png)
+
+##### UltraChat: Scalable Diversity的数据集
+
+![image-20251002030324827](./AI-Algorithms/image-20251002030324827.png)
+
+![image-20251002030504238](./AI-Algorithms/image-20251002030504238.png)
+
+![image-20251002030443463](./AI-Algorithms/image-20251002030443463.png)
+
+##### Orca：从传统NLP任务中挖掘指令数据
+
+![image-20251002030655684](./AI-Algorithms/image-20251002030655684.png)
+
+#### 指令微调+检索 Task-aware Retrieval with Instructions
 
 > https://github.com/facebookresearch/tart
 
@@ -1707,7 +2398,13 @@ https://www.zhihu.com/question/603488576/answer/3178990801
   - 训练过程
     - 用 LoRA 方法对 Chinese - LLaMA2 - 13B 的指令进行微调。
 
+## RLHF —— 基于人类反馈的强化学习
+
+* 参考「Reinforcement-Learning」
+
 ## MLLM(Multimodal LLM)
+
+> TODO InfiniTensor 2024冬 多模态分享: https://www.bilibili.com/video/BV1r3fJYVEre
 
 ### Intro
 
@@ -1846,106 +2543,6 @@ https://www.zhihu.com/question/603488576/answer/3178990801
 
 * GPT-4o
   * GPT 4o本质上是要探索不同模态相互融合的大一统模型应该怎么做的问题，对于提升大模型的智力水平估计帮助不大
-
-
-
-
-
-### Embedding Model
-
-https://ezml.io/blog/beyond-clip-the-future-of-multimodal-retrieval-with-visualized-bge-vista-and-magiclens
-
-#### CLIP
-
-**What is CLIP?**
-
-CLIP, developed by OpenAI, is a model designed to understand and relate images and text through contrastive learning. It learns to match images with their corresponding text descriptions and to differentiate these pairs from mismatches, enabling it to perform various tasks, from image classification to zero-shot learning.
-
-**How Does CLIP Work?**
-
-- **Contrastive Learning:** CLIP is trained on a vast dataset of image-text pairs, learning to create a shared embedding space where both images and texts are represented as vectors. The model maximizes the similarity of correct image-text pairs and minimizes it for incorrect pairs.
-- **Joint Embedding Space:** CLIP’s ability to create a joint embedding space for images and text allows it to generalize across different tasks and domains.
-
-**Limitations of CLIP**
-
-- **Fine-Grained Visual Understanding:** CLIP struggles with fine-grained visual details due to its broad learning approach. It can miss subtle distinctions within images that are critical for certain tasks.
-- **Imprecise Multimodal Alignment:** The alignment between text and images can be imprecise, especially when dealing with complex or nuanced relationships.
-- **Retrieval Performance Variability:** CLIP's performance can vary depending on the specificity of the query and the image, sometimes leading to suboptimal results.
-
-#### CoCa
-
-https://research.google/blog/image-text-pre-training-with-contrastive-captioners/
-
-
-
-#### Visualized BGE (Bootstrapped Grid Embedding)
-
-**How Does Visualized BGE Work?**
-
-- **Grid-Based Embeddings:** Unlike CLIP, which processes entire images, Visualized BGE (specifically the BGE-Visualized-M3 variant) breaks down images into grids and embeds each segment separately. This grid-based approach allows the model to capture more localized and detailed visual information.
-- **Bootstrapping:** Visualized BGE uses a bootstrapping process where the model iteratively refines its understanding of the image’s content. This iterative training enhances the model's ability to differentiate between subtle visual details.
-- **Leveraging Stable Diffusion:** The training process of Visualized BGE, especially in its M3 variant, incorporates techniques similar to stable diffusion to generate edited images. These variations expose the model to a diverse set of images, thereby improving its ability to recognize and embed fine-grained details across various scenarios.
-
-**Prominent Example - BGE-Visualized-M3**
-
-The **BGE-Visualized-M3** model is a prominent example of the Visualized BGE architecture. It supports multiple retrieval functionalities such as:
-
-- **Dense Retrieval:** Standard dense retrieval, commonly seen in text embeddings.
-- **Multi-Vector Retrieval:** Fine-grained interactions between multiple vectors.
-- **Sparse Retrieval:** Term-based retrieval with enhanced importance assigned to certain terms.
-
-**Advantages of Visualized BGE**
-
-- **Fine-Grained Detail Recognition:** The grid-based embedding method enhances the model’s ability to recognize and differentiate fine details within images.
-- **Improved Retrieval Accuracy:** The detailed focus leads to more accurate retrieval results, particularly in scenarios where specific visual features are critical.
-- **Complex Image Handling:** Visualized BGE, especially in its BGE-Visualized-M3 variant, excels in understanding complex images with multiple elements, where generalist models like CLIP might struggle.
-
-#### VISTA (Visualized Text Embedding for Universal Multimodal Retrieval)
-
-![img](./AI-Algorithms/rygUM4x9yYMvOzaCGkxrVuR0.png)
-
-**What is VISTA?**
-
-VISTA (Visualized Text Embedding for Universal Multimodal Retrieval) takes the advancements of Visualized BGE even further by enhancing the integration of text and image data. VISTA introduces a sophisticated method of embedding text in a way that is deeply integrated with visual data, making it a versatile model for a broad range of multimodal tasks.
-
-**How Does VISTA Work?**
-
-- **ViT and Text Tokenization:** VISTA uses a Vision Transformer (ViT) as an image tokenizer, feeding the visual tokens into a pre-trained text encoder. This allows the model to handle images, text, and multimodal data seamlessly.
-- **In-Depth Fusion:** VISTA creates a deeply fused multimodal representation by concatenating the visual tokens from the ViT encoder with the text tokens and processing this interleaved sequence through a frozen text encoder. This ensures that the text embedding capabilities are preserved while enhancing image-text alignment.
-- **Two-Stage Training Process:** VISTA employs a two-stage training process. In the first stage, it performs cross-modal training using massive weakly labeled data, aligning visual tokens with the text encoder. In the second stage, VISTA fine-tunes this alignment with high-quality composed image-text datasets, significantly improving the model's ability to handle complex multimodal tasks.
-
-**Improvements Over CLIP**
-
-- **Unified Embedding Space:** Unlike CLIP, which handles text and image embeddings separately, VISTA creates a unified embedding space that ensures better integration and alignment of text and image data.
-- **Versatility:** VISTA’s architecture allows it to excel across a broader range of multimodal retrieval tasks, from simple image-text matching to complex multimodal document retrieval.
-- **Enhanced Detail and Context Understanding:** By deeply integrating visual and textual data, VISTA can better understand and retrieve information based on nuanced and detailed queries.
-
-#### MagicLens by Google 
-
-![img](./AI-Algorithms/ZlUMrMOnFObZ7sRbqFe7d8QYZcI.png)
-
-**What is MagicLens?**
-
-MagicLens is a cutting-edge, self-supervised image retrieval model designed to handle **open-ended instructions** for image search. Unlike traditional models that focus on visual similarities, MagicLens allows users to express complex search intents through natural language, retrieving images based on diverse semantic relations beyond mere visual features.
-
-**How Does MagicLens Work?**
-
-- **Training on Web Data:** MagicLens is trained on **36.7 million image triplets** (query image, instruction, target image) mined from naturally occurring web image pairs. These pairs contain implicit relations (e.g., “inside view of,” “different angle”), which are made explicit using large multimodal models (LMMs) and large language models (LLMs).
-
-- **Self-Supervised Learning:** The model generates diverse instructions using foundation models (PaLM and PaLI) and learns to align image-text pairs via contrastive learning, allowing it to support open-ended, complex queries.
-- **Dual-Encoder Architecture:** A dual-encoder system processes the query image and integrates the instruction into the target image retrieval, making the system highly efficient for diverse retrieval tasks.
-
-**Key Innovations:**
-
-- **Beyond Visual Similarity:** MagicLens excels at retrieving images based on **non-visual relations**, such as context, object-specific queries, or semantic differences (e.g., “different product angle” or “related landmarks”).
-- **Efficient Model Size:** Despite being **50x smaller** than previous state-of-the-art models, MagicLens achieves superior performance across various image retrieval benchmarks.
-- **Real-Time and Accurate Retrieval:** MagicLens allows for **interactive, real-time search** and refines results based on user feedback, making it adaptable to dynamic retrieval tasks.
-
-**Why It’s an Advancement:**
-
-MagicLens moves beyond the visual similarity limitations of CLIP and Visualized BGE, supporting **open-ended, natural language-driven searches**. It represents a significant leap in the ability to handle complex, contextually rich image queries, making it highly effective and scalable for modern multimodal search applications.
-
-
 
 ### Data Prepare
 
@@ -2250,6 +2847,10 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
   - 聚类算法的改进：Artificial Hummingbird、Fuzzy C-means Clustering
 - 优劣势分析：相比LMSKE，实时性更好、视频图片语义信息的利用更少
 
+### 视频理解
+
+* TS2NET：soft/hard attn，做max pooling进行筛选token
+
 
 
 ## VLA (Vision Language Action) and Robot Foundation Model
@@ -2263,45 +2864,6 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
   * AlphaGo，MCTS是在连续空间内，机器人也在连续空间内决策，启发了机器人
 
 
-
-
-
-## OpenAI o1
-
-> o1本质上是在探索大模型在AGI路上能走多远、天花板在哪里的问题
-
-* [如何理解OpenAI o1](https://mp.weixin.qq.com/s/QdVSq8q7wLWtPakdZdqidA)
-
-  * 提升LLM模型认知能力的核心在于复杂逻辑推理能力。
-
-    * LLM的逻辑推理能力越强，则能解锁更多复杂应用，大模型应用的天花板就越高
-    * o1模型能力越强，则可以反哺基座模型
-  * o1的做法本质上是CoT的自动化or内化。
-  
-    * rl搜索COT的决策空间
-    * 问题越复杂，隐藏的COT token消耗越大
-  
-    * 大部分逻辑推理数据的形式是<问题，正确答案>，缺了中间的详细推理步骤，而o1本质上是让大模型学会自动寻找从问题到正确答案的中间步骤，以此来增强复杂问题的解决能力。
-  * RL的scaling law本质上是COT决策树搜索的scaling law
-  * Agent无法实用化的主要原因就在于基座模型的复杂推理能力不够强。
-  
-    * 通过基座模型Plan把一个复杂任务分解为10个步骤，哪怕单个步骤的正确率高达95%，要想最后把任务做对，10个环节的准确率连乘下来，最终的正确率只有59%
-  * OpenAI想做的方向太多，资源分散导致分到具体一个方向的资源不够用，所以越往后发展“期货状态”的方向越多，也让人觉得尽显疲态。
-
-### CoT
-
-[OpenAI研究员、思维树作者姚顺雨专访：人生是一场无限流游戏丨独家](https://mp.weixin.qq.com/s/MdPI-X1HvRxFuX_Z0Ju_ug)
-
-* 许多计算本质上就是去计算下一个token，next token prediction开始成为一个新的计算。那么针对计算复杂性，传统的语言如何在新框架下适用，还有很多问题需要去解决
-* Open-endedness
-  * 语言游戏之所以和其他游戏区别很大，就是因为语言的开放性，即open-endedness。既然这样，那么它本质上应该有一个generative solution，而不是一个discriminative solution。所以从我第一个工作开始，我就一直在做autoregressive language model (GPT-2)
-  * 从哲学的角度来看，人生就是一个无限流游戏，某种程度上来说，更像一个文字游戏，而不是电子游戏。每天你都有很多选择，从程度上说是非常high level、 open ended的。
-* ReAct
-  * 这篇论文的本质是Agent不仅仅有environment action，也有thinking action。
-  * 主要的思路是，在玩文字游戏的时候，为什么机器很笨，而人很聪明，是因为人类有思考的能力。当时我在做ReAct的时候，最初的想法是，如果我能够让机器模仿人，不仅仅是模仿人的活动，也模仿人怎么思考，是不是就可以泛化得更好。具体比如人看到了一个城堡，人的选择是走向第三个门，如果你只去模仿这样的Mapping，很多时候是很难去泛化的。但是如果能够让它同时去模仿人的思考过程，那可能就是一个非常自然的、可以泛化的一个理由。比如人可能会想，现在周围很黑暗而且有奇怪的叫声，可能有危险需要灯。灯在第一个房间，但是第一个房间的钥匙在第三个房间，所以我得先去第三个房间。
-* CoT的扩展
-  * 从某种程度上来说，ReAct和Tree of Thoughts其实相当于是CoT的两个方向的扩展。一个方向是要和外部世界发生联系，另一个方向是内部的思考，如何从一个线性过程变成一个非线性，也就是更加通往 system 2的一个过程。
-* 身边太多聪明的人，但你发现自己并不比他们差。做研究非常重要的因素就是信心，如果你不相信能做出非常好的研究，那你是不可能做出来好的研究的。
 
 ## AGI
 
@@ -2405,6 +2967,23 @@ MagicLens moves beyond the visual similarity limitations of CLIP and Visualized 
   * **Enhanced Explainable Search**
     * Scenario: A customer searches for "running shoes" but is dissatisfied with the results, feeling they are too generic.
     * Solution: The platform could use SAEs to analyze the search query's representation in the LLM's activation space. By identifying the activated features, they could provide an explanation to the customer, like "We are showing you popular running shoes based on your location and browsing history." Additionally, the platform could offer "steering" options based on other relevant features. For example, they could suggest refining the search by "cushioning," "terrain," or "price range."
+
+### [Language models can explain neurons in language models](https://openai.com/research/language-models-can-explain-neurons-in-language-models)
+
+* 步骤：
+  * GPT-4解释某个GPT-2神经元的行为
+  * 用GPT-4模拟这一行为
+  * 比较并打分
+
+* OpenAI 共让 GPT-4 解释了 GPT-2 中的 307200 个神经元，其中大多数解释的得分很低，只有超过 1000 个神经元的解释得分高于 0.8。
+* 三种提高解释得分的方法：
+  - 对解释进行迭代，通过让 GPT-4 想出可能的反例，根据其激活情况修改解释来提高分数。
+  - 使用更大的模型来进行解释，平均得分也会上升。
+  - 调整被解释模型的结构，用不同的激活函数训练模型。
+* https://github.com/openai/automated-interpretability
+* 传统的视觉解释方法不能scale well
+  * https://openai.com/research/microscope
+  * https://distill.pub/2020/circuits/curve-detectors/
 
 ## 幻觉
 

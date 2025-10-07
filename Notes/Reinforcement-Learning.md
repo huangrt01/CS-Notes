@@ -204,11 +204,61 @@
 
 ![image-20251002032525480](./Reinforcement-Learning/image-20251002032525480.png)
 
-## RL工程 —— veRL
+## OpenAI o1
 
-> https://arxiv.org/abs/2409.19256
+> o1本质上是在探索大模型在AGI路上能走多远、天花板在哪里的问题
+>
+> [如何理解OpenAI o1](https://mp.weixin.qq.com/s/QdVSq8q7wLWtPakdZdqidA)
+
+* 提升LLM模型认知能力的核心在于复杂逻辑推理能力。
+
+  * LLM的逻辑推理能力越强，则能解锁更多复杂应用，大模型应用的天花板就越高
+  * o1模型能力越强，则可以反哺基座模型
+* o1的做法本质上是CoT的自动化or内化。
+  * 具体怎么做：数据标注，对CoT的过程打分
+  * rl搜索COT的决策空间
+  * 问题越复杂，隐藏的COT token消耗越大
+
+  * 大部分逻辑推理数据的形式是<问题，正确答案>，缺了中间的详细推理步骤，而o1本质上是让大模型学会自动寻找从问题到正确答案的中间步骤，以此来增强复杂问题的解决能力。
+* RL的scaling law本质上是COT决策树搜索的scaling law
+* Note
+  * OpenAI想做的方向太多，资源分散导致分到具体一个方向的资源不够用，所以越往后发展“期货状态”的方向越多，也让人觉得尽显疲态。
+
+### CoT
+
+[OpenAI研究员、思维树作者姚顺雨专访：人生是一场无限流游戏丨独家](https://mp.weixin.qq.com/s/MdPI-X1HvRxFuX_Z0Ju_ug)
+
+* 许多计算本质上就是去计算下一个token，next token prediction开始成为一个新的计算。那么针对计算复杂性，传统的语言如何在新框架下适用，还有很多问题需要去解决
+* Open-endedness
+  * 语言游戏之所以和其他游戏区别很大，就是因为语言的开放性，即open-endedness。既然这样，那么它本质上应该有一个generative solution，而不是一个discriminative solution。所以从我第一个工作开始，我就一直在做autoregressive language model (GPT-2)
+  * 从哲学的角度来看，人生就是一个无限流游戏，某种程度上来说，更像一个文字游戏，而不是电子游戏。每天你都有很多选择，从程度上说是非常high level、 open ended的。
+* ReAct
+  * 这篇论文的本质是Agent不仅仅有environment action，也有thinking action。
+  * 主要的思路是，在玩文字游戏的时候，为什么机器很笨，而人很聪明，是因为人类有思考的能力。当时我在做ReAct的时候，最初的想法是，如果我能够让机器模仿人，不仅仅是模仿人的活动，也模仿人怎么思考，是不是就可以泛化得更好。具体比如人看到了一个城堡，人的选择是走向第三个门，如果你只去模仿这样的Mapping，很多时候是很难去泛化的。但是如果能够让它同时去模仿人的思考过程，那可能就是一个非常自然的、可以泛化的一个理由。比如人可能会想，现在周围很黑暗而且有奇怪的叫声，可能有危险需要灯。灯在第一个房间，但是第一个房间的钥匙在第三个房间，所以我得先去第三个房间。
+* CoT的扩展
+  * 从某种程度上来说，ReAct和Tree of Thoughts其实相当于是CoT的两个方向的扩展。一个方向是要和外部世界发生联系，另一个方向是内部的思考，如何从一个线性过程变成一个非线性，也就是更加通往 system 2的一个过程。
+* 身边太多聪明的人，但你发现自己并不比他们差。做研究非常重要的因素就是信心，如果你不相信能做出非常好的研究，那你是不可能做出来好的研究的。
+
+## RL工程 Overview
+
+### 挑战：训推一体
 
 * RL的训练的workload包含既包含LLM训练的workload（计算bound），也包含推理的workload（访存bound），这导致RL训练的效率较低，依赖训推一体的高效训练
+* ![image-20251007143316174](./Reinforcement-Learning/image-20251007143316174.png) 
+
+### Partial Rollout
+
+#### Intro
+
+![image-20251007143441936](./Reinforcement-Learning/image-20251007143441936.png)
+
+#### Mooncake + RL
+
+![image-20251005222409248](./Reinforcement-Learning/image-20251005222409248.png)
+
+##  veRL
+
+> https://arxiv.org/abs/2409.19256
 
 ### Intro
 

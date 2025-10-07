@@ -2,207 +2,43 @@
 
 [toc]
 
-## 资源
+> https://cs.stanford.edu/~chrismre/#papers
 
-* https://cs.stanford.edu/~chrismre/#papers
+## 训推系统
 
-## Intro
+### Intro
 
-* Intro
-  * 未来硬件，内存互连很关键
-    * LLM推理到底需要什么样的芯片？ https://wallstreetcn.com/articles/3709523
-* 技术发展
-  * Memory Efficient Attention with Online Softmax (2021) -> FlashAttention in Megatron-LM (2022) 
-  * Continuous Batching (2022), Paged Attention (2023) -> vLLM, TensorRT-LLM (2023) 
-  * Speculative Sampling (2023) -> Everywhere in LLM Serving (2023)
-  * Sequence Parallel (2023) ->  Megatron-LLM (2023) 
-* 业务目标：https://mp.weixin.qq.com/s/llalxX6miJRxy0-Vk8Ezpg
-  * MFU（Model FLOPs Utilization）
-  * 故障率：在大规模的集群中，推理请求的故障率，因为在一万张卡的集群中，如果每几分钟就有一张卡挂掉，那么这会影响整体效率，或者说看故障时间占在整个有效训练时间的占比，如果说是故障的时间占训练时间比例超过30%，也非常影响效率；
-  
+#### 推理系统 Overview
 
-## 成本和性能评估
+![image-20251004020634191](./LLM-MLSys/image-20251004020634191.png)
 
-* Intro
-  * AIGC是大国的游戏
-    * 欧洲受欧盟法案影响，ai发展没跟上
+![image-20251005030023014](./LLM-MLSys/image-20251005030023014.png)
 
-  * AI系统：记录数据、与人交互、机器学习分析、预测、干预人的决策
+#### 系统、算法、数据的共同演进
 
-### MFU、HFU
+![image-20251005213702242](./LLM-MLSys/image-20251005213702242.png)
 
-* Hardware FLOPS Utilization
+#### 硬件，内存互连、异构协同很关键
 
-  * 考虑了计算换空间
+* LLM推理到底需要什么样的芯片？ https://wallstreetcn.com/articles/3709523
 
-* MFU（Model FLOPs Utilization）：
+![image-20251005214302319](./LLM-MLSys/image-20251005214302319.png)
 
-  * 评估GPU算力的有效利用率
+### 技术发展
 
-* | 模型          | 参数规模 | MFU    | 硬件配置   |
-  | ------------- | -------- | ------ | ---------- |
-  | PaLM          | 540B     | 46.2%  | 6144 TPUv4 |
-  | Megatron-LM   | 530B     | 56.0％ | 3072 A100  |
-  | Mosaic ML     | 70B      | 43.36% | 128 H100   |
-  | 字节MegaScale | 175B     | 55.2%  | 12,288 GPU |
+* Memory Efficient Attention with Online Softmax (2021) -> FlashAttention in Megatron-LM (2022) 
+* Continuous Batching (2022), Paged Attention (2023) -> vLLM, TensorRT-LLM (2023) 
+* Speculative Sampling (2023) -> Everywhere in LLM Serving (2023)
+* Sequence Parallel (2023) ->  Megatron-LLM (2023) 
 
-### FLOPS
+### 业务目标：MFU、故障率等
 
-* Am,k * Bk,n : `2*m*n*k` FLOPS
-  * 乘和加各算一次
-* transformer
-  * 设C为emb size、T为seq len
-  * 一层Transformer
-    * FLOPS： `24BTC^2 + 4BCT^2` 
-    * Params：`12C^2+13C`
-  
-  * attn的计算占比是$$\frac{4BCT^2}{24BTC^2+4BCT^2} = \frac{T}{6C+T}$$
-    * 在$$T < 6 \times C$$时，整体计算压力在 FFN+QKVO Proj 部分；在 $$T > 6 \times C$$时，整体计算压力在Attention 部分。
-    * GPT3-175B C = 12288, T = 8192
-  
+> https://mp.weixin.qq.com/s/llalxX6miJRxy0-Vk8Ezpg
 
-```Python
-# x : [B, T, C]
-# B : batch_size
-# T : seq_len
-# C : dimension
+* MFU（Model FLOPs Utilization）
+* 故障率：在大规模的集群中，推理请求的故障率，因为在一万张卡的集群中，如果每几分钟就有一张卡挂掉，那么这会影响整体效率，或者说看故障时间占在整个有效训练时间的占比，如果说是故障的时间占训练时间比例超过30%，也非常影响效率；
 
-x = layernorm(x)
-q, k, v = qkv_proj(x).split()
-# [B, T, C] x [C, 3C] -> [B, T, 3C]: 6BTC^2 FLOPS
-attn = q @ k.T
-# [B, T, C] x [B, C, T] = [B, T, T] : 2BT^2C FLOPS
-attn = softmax(attn)
-# 3BT^2*n_h, softmax计算量被忽略
-y = attn @ v
-# [B, T, T] x [B, T, C] -> [B,T, C] : 2BT^2C FLOPS
-y = proj(y)
-# [B, T, C] x [C, C] -> [B, T, C] : 2BTC^2
-y = layernorm(y)
-y = fc1(y)
-# [B, T, C] x [C, 4C] -> [B, T, 4C] : 8BTC^2
-y = gelu(y)
-y = fc2(y)
-# [B, T, 4C] x [4C, C] -> [B, T, C] : 8BTC^2
-```
-
-* GPT decoder推理
-  * 结合GPU的FLOPS和DRAM内存带宽，容易计算得到GPT的训练是compute bound，推理是MBW bound
-
-```Python
-# qkv_cache : [B, T-1, 3C]
-# x : [B, 1, C]
-# B : batch_size
-# T : seq_len
-# C : dimension
-
-x = layernorm(x)
-qkv = qkv_proj(x)
-# [B, 1, C] x [C, 3C] -> [B, 1, 3C]: 6BC^2 FLOPS
-qkv = concat(qkv, qkv_cache)
-# [B, 1, 3C], [B, T-1, 3C] -> [B, T, 3C]
-q, k, v = qkv.split()
-attn = q[:, -1, :] @ k.T
-# [B, 1, C] x [B, C, T] = [B, 1, T] : 2BTC FLOPS
-attn = softmax(attn)
-y = attn @ v
-# [B, 1, T] x [B, T, C] -> [B,1, C] : 2BTC FLOPS
-y = proj(y)
-# [B, 1, C] x [C, C] -> [B, 1, C] : 2BC^2
-y = layernorm(y)
-y = fc1(y)
-# [B, 1, C] x [C, 4C] -> [B, 1, 4C] : 8BC^2
-y = gelu(y)
-y = fc2(y)
-# [B, 1, 4C] x [4C, C] -> [B, 1, C] : 8BC^2
-```
-
-
-
-### 显存
-
-#### 训练显存
-
-![image-20250416153914190](./LLM-MLSys/image-20250416153914190.png)
-
-* 7B模型：
-  
-  * float32: 70*10^8 * 4B = 26.7GB
-  * 微调：考虑中间结果，100GB以上
-* gpt-3：
-  * 175B 700GB
-    * Fp16 326GB
-  * 算上adam优化器2100GB
-  * 混合精度训练：
-    * fp16参数、fp32参数copy、fp16梯度、fp32梯度、fp32历史梯度滑动平均、fp32历史梯度平方和滑动平均
-    * `(1+2+1+2+2+2)*2*175=3,500 GB`
-
-* the 1.5B parameter GPT-2 model trained with sequence length of 1K and batch size of 32 requires about 60 GB of memory. 
-  
-  * Activation checkpointing reduce the activation memory by approximately the square root of the total activations. -> 8GB
-  
-  * For a GPT-2 like architecture the total activations is about 12 × hidden dim × batch × seq length × transformer layers.
-
-#### 推理显存
-
-* 8bit量化模型： 参数量1B 占用 1G 显存以上
-
-### Token
-
-```python
-import tiktoken
-
-def count_tokens(prompt):
-    encoding = tiktoken.get_encoding("cl100k_base")
-    num_tokens = len(encoding.encode(prompt))
-    return num_tokens
-
-prompt_text = "这是一个示例prompt"
-token_count = count_tokens(prompt_text)
-print(f"Prompt的token数量为: {token_count}")
-```
-
-### 性能、延时
-
-* TTFT：time to first token，和input token长度相关
-* TPOT / ITL
-
-
-### 训练成本
-
-* O(10k) 规模的 GPU / TPU 集群
-* LLaMA：2048 A100 21d
-  * a100一个月几十刀，训一个几十万
-* 人力成本：训练基础大模型，团队20人
-  * 6个月准备、6个月训练、6个月微调，18个月训模型
-  * 上下文能力提升之后，时效性会显著增强
-
-* Note
-  * 和芯片的对比：This “growth” is strikingly similar to the one involved in chip evolution where as the number of transistors increases (higher density on a chip) the cost for plants manufacturing  those chips skyrocket.  In  the case of chip manufacturing  the economics remained viable because new plants did cost more but they also produced many more chips so that till the middle lf the last decade the cost per chip was actually  decreasing generation over generation (one effect captured in the Moore’s law).
-  * As with chips one may  wonder if there is a limit to the economic affordability (there sure is, it is just difficult  to pinpoint!).
-  * TODO: https://www.wired.com/story/openai-ceo-sam-altman-the-age-of-giant-ai-models-is-already-over/
-
-### GPU
-
-* 存量和增量
-
-![image-20241019195324985](./LLM-MLSys/image-20241019195324985.png)
-
-* 分布：
-
-![image-20241019195345714](./LLM-MLSys/image-20241019195345714.png)
-
-### 售价
-
-* https://tiktoken.aigc2d.com/
-  * 统计token数量
-  * GPT-4o
-    * output：15刀/1M token
-    * input：5刀/1M token
-
-## 推理&训练部署
-
-### Intro —— LLM模型&资源决策
+### LLM模型&资源决策
 
 > * 微调的显存消耗小
 > * 对于许多不需要 H 系列所有高级功能（如最高带宽的 NVLink、全面的 ECC 内存、特定的虚拟化支持或单卡最大显存）的场景，4090 是一个更经济的选择
@@ -285,6 +121,7 @@ print(f"Prompt的token数量为: {token_count}")
 </tr>
 </tbody>
 </table>
+
 
 
 
@@ -416,6 +253,7 @@ print(f"Prompt的token数量为: {token_count}")
 
 
 
+
 * 高配
   * Bf16，32K上下文
 
@@ -497,6 +335,11 @@ print(f"Prompt的token数量为: {token_count}")
 
 
 
+
+
+
+
+
 ### DeepSeek-V3 (MoE)
 
 * prefill
@@ -524,23 +367,503 @@ print(f"Prompt的token数量为: {token_count}")
     * the batch size per expert is relatively small (usually within 256 tokens), and the bottleneck is memory access rather than computation
       * **allocate only a small portion of SMs to dispatch+MoE+combine.**
   * 通信优化
-    * leverage the IBGDA (NVIDIA, 2022) technology to further
-      minimize latency and enhance communication efficiency.
-    * **overlap the attention of one micro-batch with**
-      **the dispatch+MoE+combine of another.**
+    * DeepEp：leverage the IBGDA (NVIDIA, 2022) technology to further minimize latency and enhance communication efficiency.
+    * **overlap the attention of one micro-batch with the dispatch+MoE+combine of another.**
 
-## 推理&训练优化
+## 成本和性能评估
+
+* Intro
+  * AIGC是大国的游戏
+    * 欧洲受欧盟法案影响，ai发展没跟上
+
+  * AI系统：记录数据、与人交互、机器学习分析、预测、干预人的决策
+
+### MFU、HFU
+
+* Hardware FLOPS Utilization
+
+  * 考虑了计算换空间
+
+* MFU（Model FLOPs Utilization）：
+
+  * 评估GPU算力的有效利用率
+
+* | 模型          | 参数规模 | MFU    | 硬件配置   |
+  | ------------- | -------- | ------ | ---------- |
+  | PaLM          | 540B     | 46.2%  | 6144 TPUv4 |
+  | Megatron-LM   | 530B     | 56.0％ | 3072 A100  |
+  | Mosaic ML     | 70B      | 43.36% | 128 H100   |
+  | 字节MegaScale | 175B     | 55.2%  | 12,288 GPU |
+
+### FLOPS
+
+* Am,k * Bk,n : `2*m*n*k` FLOPS
+  * 乘和加各算一次
+* transformer
+  * 设C为emb size、T为seq len
+  * 一层Transformer
+    * FLOPS： `24BTC^2 + 4BCT^2` 
+    * Params：`12C^2+13C`
+  
+  * attn的计算占比是$$\frac{4BCT^2}{24BTC^2+4BCT^2} = \frac{T}{6C+T}$$
+    * 在$$T < 6 \times C$$时，整体计算压力在 FFN+QKVO Proj 部分；在 $$T > 6 \times C$$时，整体计算压力在Attention 部分。
+    * GPT3-175B C = 12288, T = 8192
+  
+
+```Python
+# x : [B, T, C]
+# B : batch_size
+# T : seq_len
+# C : dimension
+
+x = layernorm(x)
+q, k, v = qkv_proj(x).split()
+# [B, T, C] x [C, 3C] -> [B, T, 3C]: 6BTC^2 FLOPS
+attn = q @ k.T
+# [B, T, C] x [B, C, T] = [B, T, T] : 2BT^2C FLOPS
+attn = softmax(attn)
+# 3BT^2*n_h, softmax计算量被忽略
+y = attn @ v
+# [B, T, T] x [B, T, C] -> [B,T, C] : 2BT^2C FLOPS
+y = proj(y)
+# [B, T, C] x [C, C] -> [B, T, C] : 2BTC^2
+y = layernorm(y)
+y = fc1(y)
+# [B, T, C] x [C, 4C] -> [B, T, 4C] : 8BTC^2
+y = gelu(y)
+y = fc2(y)
+# [B, T, 4C] x [4C, C] -> [B, T, C] : 8BTC^2
+```
+
+* GPT decoder推理
+  * 结合GPU的FLOPS和DRAM内存带宽，容易计算得到GPT的训练是compute bound，推理是MBW bound
+
+```Python
+# qkv_cache : [B, T-1, 3C]
+# x : [B, 1, C]
+# B : batch_size
+# T : seq_len
+# C : dimension
+
+x = layernorm(x)
+qkv = qkv_proj(x)
+# [B, 1, C] x [C, 3C] -> [B, 1, 3C]: 6BC^2 FLOPS
+qkv = concat(qkv, qkv_cache)
+# [B, 1, 3C], [B, T-1, 3C] -> [B, T, 3C]
+q, k, v = qkv.split()
+attn = q[:, -1, :] @ k.T
+# [B, 1, C] x [B, C, T] = [B, 1, T] : 2BTC FLOPS
+attn = softmax(attn)
+y = attn @ v
+# [B, 1, T] x [B, T, C] -> [B,1, C] : 2BTC FLOPS
+y = proj(y)
+# [B, 1, C] x [C, C] -> [B, 1, C] : 2BC^2
+y = layernorm(y)
+y = fc1(y)
+# [B, 1, C] x [C, 4C] -> [B, 1, 4C] : 8BC^2
+y = gelu(y)
+y = fc2(y)
+# [B, 1, 4C] x [4C, C] -> [B, 1, C] : 8BC^2
+```
+
+
+
+### 显存
+
+#### 训练显存
+
+![image-20250416153914190](./LLM-MLSys/image-20250416153914190.png)
+
+* 7B模型：
+  
+  * float32: 70*10^8 * 4B = 26.7GB
+  * 微调：考虑中间结果，100GB以上
+* gpt-3：
+  * Fp32参数：175B * 4 = 700GB
+    * Fp16参数：326GB
+  * 算上adam优化器2100GB
+  * 混合精度训练：
+    * fp16参数、fp32参数copy、fp16梯度、fp32梯度、fp32历史梯度滑动平均、fp32历史梯度平方和滑动平均
+      * fp16梯度 在转换为 fp32梯度 后可以被释放
+      * fp16参数 在fwd之后可以释放（事实上PyTorch的amp实现并不会这样）
+    * 保守估计：`(1+2+1+2+2+2)*2*175=20*175=3500 GB`
+    * 激进估计：`(2+2+2+2)*2*175=16*175GB`
+  
+* the 1.5B parameter GPT-2 model trained with sequence length of 1K and batch size of 32 requires about 60 GB of memory. 
+  
+  * Activation checkpointing reduce the activation memory by approximately the square root of the total activations. -> 8GB
+  
+  * For a GPT-2 like architecture the total activations is about 12 × hidden dim × batch × seq length × transformer layers.
+
+#### 推理显存
+
+![image-20251005140306148](./LLM-MLSys/image-20251005140306148.png)
+
+* 8bit量化模型： 参数量1B 占用 1G 显存以上
+
+### Token
+
+```python
+import tiktoken
+
+def count_tokens(prompt):
+    encoding = tiktoken.get_encoding("cl100k_base")
+    num_tokens = len(encoding.encode(prompt))
+    return num_tokens
+
+prompt_text = "这是一个示例prompt"
+token_count = count_tokens(prompt_text)
+print(f"Prompt的token数量为: {token_count}")
+```
+
+### 性能、延时
+
+* TTFT：time to first token，和input token长度相关
+* TPOT / ITL
+* TBT: time between tokens
+
+
+### 训练成本
+
+* O(10k) 规模的 GPU / TPU 集群
+* LLaMA：2048 A100 21d
+  * a100一个月几十刀，训一个几十万
+* 人力成本：训练基础大模型，团队20人
+  * 6个月准备、6个月训练、6个月微调，18个月训模型
+  * 上下文能力提升之后，时效性会显著增强
+
+* Note
+  * 和芯片的对比：This “growth” is strikingly similar to the one involved in chip evolution where as the number of transistors increases (higher density on a chip) the cost for plants manufacturing  those chips skyrocket.  In  the case of chip manufacturing  the economics remained viable because new plants did cost more but they also produced many more chips so that till the middle lf the last decade the cost per chip was actually  decreasing generation over generation (one effect captured in the Moore’s law).
+  * As with chips one may  wonder if there is a limit to the economic affordability (there sure is, it is just difficult  to pinpoint!).
+  * TODO: https://www.wired.com/story/openai-ceo-sam-altman-the-age-of-giant-ai-models-is-already-over/
+
+### 全球GPU供给
+
+* 存量和增量
+
+![image-20241019195324985](./LLM-MLSys/image-20241019195324985.png)
+
+* 分布：
+
+![image-20241019195345714](./LLM-MLSys/image-20241019195345714.png)
+
+### 能源
+
+* 一张H100 = 700W * 61% 年利用率 = 2.51个人的美国家庭
+
+![image-20251007005621688](./LLM-MLSys/image-20251007005621688.png)
+
+### 售价
+
+* https://tiktoken.aigc2d.com/
+  * 统计token数量
+  * GPT-4o
+    * output：15刀/1M token
+    * input：5刀/1M token
+
+## AI对话系统
+
+### Intro
+
+![image-20251005013903889](./LLM-MLSys/image-20251005013903889.png)
+
+### 从故事续写到AI对话
+
+#### Chat Template
+
+![image-20251005012753518](./LLM-MLSys/image-20251005012753518.png)
+
+
+
+#### 会话记忆 = kv cache
+
+* ![image-20251005013326741](./LLM-MLSys/image-20251005013326741.png)
+
+#### 「调度优化」
+
+## Long-Context优化
+
+### Intro
+
+![image-20251005174802221](./LLM-MLSys/image-20251005174802221.png)
+
+### 分布式并行注意力
+
+#### Ring Attention —— Sequence Parallel Attention Across Devices
+
+> GPU Mode Lecture 13 https://www.youtube.com/watch?v=ws7angQYIxI
+
+* 显存：flash-attn的显存随seq-len线性增长
+  * flash-attn将显存从O(s^2)降到了O(s)
+  * ![image-20250512023151453](./LLM-MLSys/image-20250512023151453.png)
+
+* 长上下文FLOPS
+  * ![image-20250512024143990](./LLM-MLSys/image-20250512024143990.png)
+
+* blockwise attn
+  * 动画：https://www.youtube.com/watch?v=JhR_xo9S0_E
+  * ![image-20250513215122201](./LLM-MLSys/image-20250513215122201.png)
+
+* SP
+  * 参考「MLSys.md ——并行训练 —— SP」
+
+* ring-attn
+
+  * ![image-20250513225747367](./LLM-MLSys/image-20250513225747367.png)
+  * ![image-20250514001654067](./LLM-MLSys/image-20250514001654067.png)
+
+  * ring attention的问题：idle worker
+    * ![image-20250514002313692](./LLM-MLSys/image-20250514002313692.png)
+    * ![image-20250514002501925](./LLM-MLSys/image-20250514002501925.png)
+
+#### Striped Attention (Reorder QKV)
+
+![image-20250514003125607](./LLM-MLSys/image-20250514003125607.png)
+
+![image-20250514003221884](./LLM-MLSys/image-20250514003221884.png)
+
+### 算子SM利用率优化
+
+#### Flash-Decoding (For Long-Context)
+
+> 思路：parallelize KV计算，用满GPU
+
+* 解决的问题：
+  * **FlashAttention is Sub-optimal for Long-Context Inference**
+    * parallelizes across blocks of queries and batch size only, and does not manage to occupy the entire GPU during token-by-token decoding.
+
+* https://crfm.stanford.edu/2023/10/12/flashdecoding.html 有动画
+
+#### POD-Attention: Unlocking Full Prefill-Decode Overlap
+
+* Intro
+  * 动机：hybrid batching时，放在一起的prefill attn和decode attn没有任何重用，是跨请求各自独立的，能否有优化空间？
+  * Goal: Overlap compute-heavy prefill with memory-banedwidth-heavy
+    decode to fully utilize GPU resources.
+    * 让prefill kernel和decode kernel共享同一个SM的资源
+
+![image-20251005174305512](./LLM-MLSys/image-20251005174305512.png)
+
+##### 现有kernel fusion技术的局限性
+
+![image-20251005175614866](./LLM-MLSys/image-20251005175614866.png)
+
+* CTA-parallel和kernel-parallel：无法保证同一SM执行
+  * ![image-20251005175900584](./LLM-MLSys/image-20251005175900584.png)
+* warp-parallel：负载不均衡比较严重
+* intra-thread：同步开销大
+
+##### POD-Attention
+
+* POD-Attention: Combines prefills and decodes into a single kernel with guaranteed SM co-location.
+* Key idea: SM-aware CTA scheduling
+  * Guarantees each SM runs prefill and decode CTAs in parallel
+  * Enables the CTA scheduler to overlap the two operations
+  * Utilizes compute and memory bandwidth simultaneously.
+
+![image-20251005180053939](./LLM-MLSys/image-20251005180053939.png)
+
+![image-20251005181013683](./LLM-MLSys/image-20251005181013683.png)
+
+* 结论：
+  * ![image-20251005181218437](./LLM-MLSys/image-20251005181218437.png)
+  * ![image-20251005181252622](./LLM-MLSys/image-20251005181252622.png)
+
+
+
+
+
+## 训练调度
+
+#### 异构GPU集群调度器
+
+##### Metis: Heterogeneous GPUs + DP + TP + PP
+
+> InfiniTensor Paper讲解：https://www.bilibili.com/video/BV1oEZ1Y6EBv
+
+* Today's Practice: Auto-parallelier to find optimal parallelissm plans on homogeneous GPUs (e.g., **Alpa**)
+* ![image-20251005212433711](./LLM-MLSys/image-20251005212433711.png)
+
+* ![image-20251005212728814](./LLM-MLSys/image-20251005212728814.png)
+
+* 异构（A100/V100）需要考虑的事情：
+  * load balancing，比如PP更多layer放到A100上
+  * break 2d-abstraction，比如4 V100 = 2 A100
+* 解法：planner规划器
+  * ![image-20251005213015879](./LLM-MLSys/image-20251005213015879.png)
+  * ![image-20251005213121093](./LLM-MLSys/image-20251005213121093.png)
+
+
+
+## 推理调度
+
+### Continuous Batching: Orca
+
+> Orca: A distributed serving system for transformer-based generative model
+>
+> Continuous Batching解决的是「请求调度问题」，可以和varlen flash attn相结合
+
+* 背景：AI Chatbot中的batching
+  * 计算浪费、延迟、中断
+  * ![image-20251005014058271](./LLM-MLSys/image-20251005014058271.png)
+
+* Orca
+  * ![image-20251005014456699](./LLM-MLSys/image-20251005014456699.png)
+  * 核心思路
+    * 可以进行batching的计算同时进行
+      * qkv linear
+      * out linear
+    * 无法batching的计算分请求进行
+      * attn
+
+### LLM Hybrid Batching
+
+> 用TTFT换TPOT
+
+![image-20251005173748976](./LLM-MLSys/image-20251005173748976.png)
+
+- Prefill and decode inputs of multiple requests are batched as a single input
+- Improves throughput by reducing scheduling latencies.
+
+
+
+
+
+### Prefill-Decode Disaggregating (PD分离)
+
+> DistServe、Splitwise、TetriInfer
+>
+> TODO [zartbot: 再来谈谈大模型的分离式推理架构](https://mp.weixin.qq.com/s/oRQMEsAj3LoD8UbVtST3Lw)
+
+#### Intro
+
+* ![image-20250912201454071](./LLM-MLSys/image-20250912201454071.png)(semi-PD)
+  * 小计算量的decode，占满GPU资源，导致大计算量的prefill进行wait
+
+####  Mooncake: 以KV Cache为中心，PD分离推理架构
+
+> TODO Mooncake：将 P / D 分离进行到底 https://zhuanlan.zhihu.com/p/1711346141
+>
+> TODO https://www.zhihu.com/question/649192998/answer/3546745976
+
+##### Intro: PD分离 + KV Cache Pool
+
+![image-20251005220419286](./LLM-MLSys/image-20251005220419286.png)
+
+![image-20251005215005826](./LLM-MLSys/image-20251005215005826.png)
+
+* 核心思路：
+  * prefill和decode用异构集群
+  * KVCache Pool，集群间构成一个大的KV Cache Pool
+* 挑战：KV Cache占内存大，且需要尽快传输
+  * 于是考虑用廉价CPU DRAM存储
+
+##### KV Cache多级缓存池、Transfer Engine
+
+![image-20251005215358591](./LLM-MLSys/image-20251005215358591.png)
+
+* transfer engine
+  * 核心是RDMA zero copy
+
+![image-20251005220132617](./LLM-MLSys/image-20251005220132617.png)
+
+##### 开源框架融合：vLLM(LMCache)/SGLang(deepseek-v3、NVL72超节点)/Dynamo
+
+> vllm PR #12957
+
+![image-20251005221150234](./LLM-MLSys/image-20251005221150234.png)
+
+* SGLang + Mooncacke: deepseek-v3/r1吞吐5倍提升、超节点NVL72支持
+
+![image-20251005221459614](./LLM-MLSys/image-20251005221459614.png)
+
+![image-20251005221553375](./LLM-MLSys/image-20251005221553375.png)
+
+* Dynamo + Mooncake
+
+![image-20251005221701671](./LLM-MLSys/image-20251005221701671.png)
+
+##### 和强化学习结合
+
+* RL Infra的挑战：
+  * ckpt，快速从训练节点update到推理节点
+  * long cot的RL，prompt长度不均衡，长尾请求
+    * 解决方案：partial rollout，截断特别长的长尾，放进下一轮
+    * 核心要点：暂存kv cache，放到下一轮
+
+![image-20251005221956055](./LLM-MLSys/image-20251005221956055.png)
+
+#### semi-PD: 分阶段解耦计算 + 统一存储
+
+> https://github.com/infinigence/Semi-PD
+
+* Intro
+  * 现有 LLM 服务系统分为**统一系统**（prefill 与 decode 阶段同 GPU，存在延迟干扰）和**解耦系统**（两阶段分属不同 GPU，存在存储失衡、KV 缓存传输开销、资源调整成本高、权重冗余四大问题）
+  * 为此提出**semi-PD**系统，通过**分阶段解耦计算**（基于 MPS 实现 SM 级资源分配，消除两阶段延迟干扰）与**统一存储**（用统一内存管理器协调权重与 KV 缓存访问，解决存储痛点），搭配**低开销资源切换机制**和**SLO-aware 动态分区算法**，最终在 DeepSeek 系列模型上降低单请求平均端到端延迟**1.27-2.58×**，在 Llama 系列模型上满足 SLO 约束的请求量提升**1.55-1.72×**。
+  * <img src="./LLM-MLSys/image-20250912202038298.png" alt="image-20250912202038298" style="zoom:50%;" />
+
+![image-20250912201840304](./LLM-MLSys/image-20250912201840304.png)
+
+* | 系统类型 | 代表方案                         | 核心特点                           | 关键问题                                                     |
+  | -------- | -------------------------------- | ---------------------------------- | ------------------------------------------------------------ |
+  | 统一系统 | vLLM、SGLang、FasterTransformer  | prefill 与 decode 同 GPU，共享资源 | 1. **延迟干扰**：优先 prefill 会恶化 TPOT，优先 decode 会恶化 TTFT； 2. 无法同时满足 TTFT 与 TPOT 的 SLO |
+  | 解耦系统 | DistServe、Splitwise、TetriInfer | prefill 与 decode 分属不同 GPU     | 1. **存储失衡**：decode 需存完整 KV 缓存，prefill 仅存部分，最高浪费 89.33% GPU 内存； 2. **KV 缓存传输开销**：跨 GPU 传输耗时，低端 GPU 无 NVLink 时开销显著； 3. **资源调整成本高**：GPU 级粗粒度调整，DistServe 重载权重需分钟级； 4. **权重冗余**：两阶段各存完整权重，Llama3.1-405B 需额外翻倍 GPU |
+
+* **计算资源控制器**：
+
+  - 解耦计算实现：基于**NVIDIA MPS**（多进程服务），支持 SM 级资源分配，通过 (x,y) 配置 prefill/decode 的 SM 占比（如 x=60、y=40 表示 prefill 用 60% SM）；
+  - 低开销资源切换：保证当配比变化时，服务不抖动
+    1. **常驻进程**：持有关键weight与 KV 缓存，通过 IPC 共享内存指针，避免进程重启时的权重重载与 KV 复制；
+    2. **延迟切换**：新 (x,y) 配置准备完成后再生效，隐藏 IPC 与初始化延迟；
+    3. **异步切换**：仅终止完成当前迭代的 worker，确保系统始终有 worker 运行，避免空闲。
+  - ![image-20250912202246690](./LLM-MLSys/image-20250912202246690.png)
+
+* **统一内存管理器**：
+
+  - 权重管理：利用权重 “只读” 特性，支持 prefill/decode worker 共享访问，消除权重冗余；
+  - KV 缓存管理：
+    1. 基于 vLLM 的**分页存储**，通过块表索引访问 KV 缓存；
+    2. 用**原子操作**（包裹 query-get-update 三步）解决 prefill/decode 异步分配导致的 WAR（写后读）冲突，确保内存利用率准确。
+
+* SLO-aware 动态调整方法
+
+  * TTFT：结合 M/M/1 排队模型，考虑等待延迟 + 处理延迟
+
+
+
+### Attention-FFN Disaggregation (AFD)
+
+> kimi、火山MegaScale-Infer、阶跃，都是类似思路
+
+#### Intro
+
+![image-20251005222618516](./LLM-MLSys/image-20251005222618516.png)
+
+#### 要点是通信优化
+
+![image-20251005230600558](./LLM-MLSys/image-20251005230600558.png)
+
+#### Mooncake
+
+* 和火山引擎有合作
+
+![image-20251005222604681](./LLM-MLSys/image-20251005222604681.png)
+
+![image-20251005230631404](./LLM-MLSys/image-20251005230631404.png)
+
+
+
+
+
+## 推理优化&算子优化
 
 ### Intro
 
 > https://developer.nvidia.com/blog/mastering-llm-techniques-inference-optimization/
-
-* KV cache
-  * LLM模型预测的时候使用的是KV cache的技术，也就是缓存已经推理出的前t-1个token的KV matrix，那么在第t个token开始就无需再计算这部分KV，直接调用缓存的KV就可以。具体而言，整个MHA在casual mask下，可以表示为： $$Logit_{t_h} = \sum_{i \leq t}softmax(\frac{Q_{t_h}K^T_{i_h}}{\sqrt d})V_{i_h}$$,因此预测第t个token的时候，query的multi head（h表示）需要重新计算，以及第t个key和query的multi head（h表示）表示需要重新计算，其余的就可以直接用预测t-1个token缓存的KV进行计算。整体上会大大节省预测时间。附：但是这部分的KV需要占用GPU缓存，而大模型中缓存占用过多，会导致预测的时候Batch size过小，那么整体的预测吞吐率会降低，所以后续很多工作都在对于KV cache做优化。
-* Prefix Cache
-  * https://docs.vllm.ai/en/latest/automatic_prefix_caching/apc.html
-  
-* Mooncake：将 P / D 分离进行到底 https://zhuanlan.zhihu.com/p/1711346141
+>
+> InfiniTensor 入门材料 https://www.bilibili.com/video/BV1zifEYMELb
+>
+> [InfiniTensor 章明星 - 从同构走向分离的大模型推理系统](https://www.bilibili.com/video/BV11aYfz3EPC)
 
 ### Literature Review
 
@@ -561,6 +884,10 @@ print(f"Prompt的token数量为: {token_count}")
     natural language processing [22] and computer vision [24, 91]. However, one of their computational bottlenecks is that their time and memory scales quadratic in the sequence length. There are numerous approaches to overcome this bottleneck, including approximation with hashing (i.e., sparse) such as Reformer [51] and Smyrf [19] and with low-rank approximation such as Performer [12, 54]. One can even combine sparse and low-rank approximation for better accuracy (e.g., Longformer [3], BigBird [92], Scatterbrain [9], Long-short transformer [94], Combiner [73]). Other approaches include compressing along the sequence dimension to attend to multiple tokens at once [52, 57, 79, 89]. One can also attend over the states from previous sequences
     to help lengthen the context (e.g., Transformer-XL [14] and Compressive Transformer [69]). We recommend the survey [81] for more details.
     There are several lines of work on developing other modules instead of attention to model longer context. HiPPO [35] and its extensions, most notably S4 [31, 36, 37] projects the history on a polynomial basis, allowing accurate reconstruction of the history through state-space models. They combine the strengths of CNNs (eﬃcient training), RNNs (eﬃcient inference), and continuous models (robust to change in sampling rates). LambdaNetworks [2], AFT [93] and FLASH [42] are other attempts at replacing attention in the context of image classiﬁcation and language modeling.
+
+### 算法工程co-design
+
+* 参考「AI-Algorithm」：「KV压缩」「Q压缩」等、「MoE」
 
 ### Best Practices
 
@@ -593,12 +920,6 @@ print(f"Prompt的token数量为: {token_count}")
 
 > 更详细的实验结论：https://developers.redhat.com/articles/2024/10/17/we-ran-over-half-million-evaluations-quantized-llms#real_world_benchmark_performance
 
-### Continuous Batching
-
-> Orca: A distributed serving system for transformer-based generative model
-
-
-
 ### KV Cache
 
 > 本质和 casual mask 有密切关系，full mask下无法使用 KV cache
@@ -607,17 +928,39 @@ print(f"Prompt的token数量为: {token_count}")
 >
 > llama3源码
 
+#### Intro
+
 * Intro
   * 缓存当前轮可重复利用的计算结果，下一轮计算时直接读取缓存结果
   * 每轮推理对应的 cache 数据量为 2∗b∗s∗h∗n_layers ，这里 s 值等于当前轮次值。以GPT3-175B为例，假设以 float16 来保存 KV cache，senquence长度为100，batchsize=1，则 KV cache占用显存为 2×100×12288×96×2 Byte= 472MB。
+  * LLM模型预测的时候使用的是KV cache的技术，也就是缓存已经推理出的前t-1个token的KV matrix，那么在第t个token开始就无需再计算这部分KV，直接调用缓存的KV就可以。具体而言，整个MHA在casual mask下，可以表示为： $$Logit_{t_h} = \sum_{i \leq t}softmax(\frac{Q_{t_h}K^T_{i_h}}{\sqrt d})V_{i_h}$$,因此预测第t个token的时候，query的multi head（h表示）需要重新计算，以及第t个key和query的multi head（h表示）表示需要重新计算，其余的就可以直接用预测t-1个token缓存的KV进行计算。整体上会大大节省预测时间。附：但是这部分的KV需要占用GPU缓存，而大模型中缓存占用过多，会导致预测的时候Batch size过小，那么整体的预测吞吐率会降低，所以后续很多工作都在对于KV cache做优化。
+  * ![image-20250630201017484](./LLM-MLSys/image-20250630201017484.png)
+  
 
-* prefill和decode
-  * prefill：发生在计算第一个输出token过程中，这时Cache是空的，FLOPs同KV Cache关闭一致，存在大量gemm操作，推理速度慢。
-  * Decode：
-    * 发生在计算第二个输出token至最后一个token过程中，这时Cache是有值的，每轮推理只需读取Cache，同时将当前轮计算出的新的Key、Value追加写入至Cache；
-    * FLOPs降低，gemm变为gemv操作，推理速度相对第一阶段变快，这时属于Memory-bound类型计算。
+#### prefill和decode
 
-![image-20250630201017484](./LLM-MLSys/image-20250630201017484.png)
+![image-20251005175111505](./LLM-MLSys/image-20251005175111505.png)
+
+* prefill：发生在计算第一个输出token过程中，这时Cache是空的，FLOPs同KV Cache关闭一致，存在大量gemm操作，推理速度慢。
+* Decode：
+  * 发生在计算第二个输出token至最后一个token过程中，这时Cache是有值的，每轮推理只需读取Cache，同时将当前轮计算出的新的Key、Value追加写入至Cache；
+  * FLOPs降低，gemm变为gemv操作，推理速度相对第一阶段变快，这时属于Memory-bound类型计算。
+
+![image-20251005214442152](./LLM-MLSys/image-20251005214442152.png)
+
+![image-20251005012559887](./LLM-MLSys/image-20251005012559887.png)
+
+#### Prefix Caching
+
+> https://docs.vllm.ai/en/latest/automatic_prefix_caching/apc.html
+
+##### Intro
+
+![image-20251005214742619](./LLM-MLSys/image-20251005214742619.png)
+
+![image-20251005214806732](./LLM-MLSys/image-20251005214806732.png)
+
+
 
 ### 访存优化
 
@@ -795,6 +1138,8 @@ for t_tile:
 
 ##### Intro
 
+![image-20251007142108701](./LLM-MLSys/image-20251007142108701.png)
+
 - Memory-boundedness
   - In memory-bound LLM inference, the full GPU compute capacity is underutilized
   - The unused compute can be used, if we can find a way to use it
@@ -806,7 +1151,7 @@ for t_tile:
   - Use heuristic to accept or rejection the predictions based on probabilities
 
 * Draft model
-  * use a small and cheap draft model to first generate a candidate sequence of K tokens - a "draft". 
+  * use a small and cheap draft model to first **generate a candidate sequence of K tokens - a "draft"**. 
 * large model
   * Then we feed all of these together through the big model in a batch. 
   * This is almost as fast as feeding in just one token, per the above. Then we go from left to right over the logits predicted by the model and sample tokens. Any sample that agrees with the draft allows us to immediately skip forward to the next token. 
@@ -950,100 +1295,45 @@ for t_tile:
   - Online learning draft model https://arxiv.org/abs/2310.07177 
   - Batched parallel decoding https://github.com/vllm-project/vllm/issues/4303 
 
-#### Flash-Decoding
+#### 树状投机
 
-> 思路：parallelize KV计算，用满GPU
+##### Sequoia: 基础树状
 
-* 解决的问题：
-  * **FlashAttention is Sub-optimal for Long-Context Inference**
-    * parallelizes across blocks of queries and batch size only, and does not manage to occupy the entire GPU during token-by-token decoding.
+![image-20251007142328516](./LLM-MLSys/image-20251007142328516.png)
 
-* https://crfm.stanford.edu/2023/10/12/flashdecoding.html 有动画
+##### EAGLE: 高速树状投机，用于DeepSeek MTP
 
-#### Prefill-Decode Disaggregating (PD分离)
+![image-20251007142456171](./LLM-MLSys/image-20251007142456171.png)
 
-> DistServe、Splitwise、TetriInfer
+##### FR-Spec: 优化EAGLE的起草模型的词表效率
 
-##### Intro
+![image-20251007142712622](./LLM-MLSys/image-20251007142712622.png)
 
-* ![image-20250912201454071](./LLM-MLSys/image-20250912201454071.png)(semi-PD)
-  * 小计算量的decode，占满GPU资源，导致大计算量的prefill进行wait
+![image-20251007142812542](./LLM-MLSys/image-20251007142812542.png)
 
-##### semi-PD: TOWARDS EFFICIENT LLM SERVING VIA PHASE-WISE DISAGGREGATED COMPUTATION AND UNIFIED STORAGE
-
-> https://github.com/infinigence/Semi-PD
-
-* Intro
-  * 现有 LLM 服务系统分为**统一系统**（prefill 与 decode 阶段同 GPU，存在延迟干扰）和**解耦系统**（两阶段分属不同 GPU，存在存储失衡、KV 缓存传输开销、资源调整成本高、权重冗余四大问题）
-  * 为此提出**semi-PD**系统，通过**分阶段解耦计算**（基于 MPS 实现 SM 级资源分配，消除两阶段延迟干扰）与**统一存储**（用统一内存管理器协调权重与 KV 缓存访问，解决存储痛点），搭配**低开销资源切换机制**和**SLO-aware 动态分区算法**，最终在 DeepSeek 系列模型上降低单请求平均端到端延迟**1.27-2.58×**，在 Llama 系列模型上满足 SLO 约束的请求量提升**1.55-1.72×**。
-  * <img src="./LLM-MLSys/image-20250912202038298.png" alt="image-20250912202038298" style="zoom:50%;" />
-
-![image-20250912201840304](./LLM-MLSys/image-20250912201840304.png)
-
-* | 系统类型 | 代表方案                         | 核心特点                           | 关键问题                                                     |
-  | -------- | -------------------------------- | ---------------------------------- | ------------------------------------------------------------ |
-  | 统一系统 | vLLM、SGLang、FasterTransformer  | prefill 与 decode 同 GPU，共享资源 | 1. **延迟干扰**：优先 prefill 会恶化 TPOT，优先 decode 会恶化 TTFT； 2. 无法同时满足 TTFT 与 TPOT 的 SLO |
-  | 解耦系统 | DistServe、Splitwise、TetriInfer | prefill 与 decode 分属不同 GPU     | 1. **存储失衡**：decode 需存完整 KV 缓存，prefill 仅存部分，最高浪费 89.33% GPU 内存； 2. **KV 缓存传输开销**：跨 GPU 传输耗时，低端 GPU 无 NVLink 时开销显著； 3. **资源调整成本高**：GPU 级粗粒度调整，DistServe 重载权重需分钟级； 4. **权重冗余**：两阶段各存完整权重，Llama3.1-405B 需额外翻倍 GPU |
-
-* **计算资源控制器**：
-
-  - 解耦计算实现：基于**NVIDIA MPS**（多进程服务），支持 SM 级资源分配，通过 (x,y) 配置 prefill/decode 的 SM 占比（如 x=60、y=40 表示 prefill 用 60% SM）；
-  - 低开销资源切换：保证当配比变化时，服务不抖动
-    1. **常驻进程**：持有关键weight与 KV 缓存，通过 IPC 共享内存指针，避免进程重启时的权重重载与 KV 复制；
-    2. **延迟切换**：新 (x,y) 配置准备完成后再生效，隐藏 IPC 与初始化延迟；
-    3. **异步切换**：仅终止完成当前迭代的 worker，确保系统始终有 worker 运行，避免空闲。
-  - ![image-20250912202246690](./LLM-MLSys/image-20250912202246690.png)
-
-* **统一内存管理器**：
-
-  - 权重管理：利用权重 “只读” 特性，支持 prefill/decode worker 共享访问，消除权重冗余；
-  - KV 缓存管理：
-    1. 基于 vLLM 的**分页存储**，通过块表索引访问 KV 缓存；
-    2. 用**原子操作**（包裹 query-get-update 三步）解决 prefill/decode 异步分配导致的 WAR（写后读）冲突，确保内存利用率准确。
-
-* SLO-aware 动态调整方法
-  * TTFT：结合 M/M/1 排队模型，考虑等待延迟 + 处理延迟
-
-
+![image-20251007142837046](./LLM-MLSys/image-20251007142837046.png)
 
 ### MoE 推理 —— Expert Parallelism
 
-* Seed：https://arxiv.org/abs/2504.02263
+#### Intro
 
-### Long-Context优化
+![image-20251003005914473](./LLM-MLSys/image-20251003005914473.png)
 
-#### Ring Attention —— Sequence Parallel Attention Across Devices
+![image-20251003010149803](./LLM-MLSys/image-20251003010149803.png)
 
-> GPU Mode Lecture 13 https://www.youtube.com/watch?v=ws7angQYIxI
+* Arctic、DeepSeek-V3
 
-* 显存：flash-attn的显存随seq-len线性增长
-  * flash-attn将显存从O(s^2)降到了O(s)
-  * ![image-20250512023151453](./LLM-MLSys/image-20250512023151453.png)
+![image-20251003010751098](./LLM-MLSys/image-20251003010751098.png)
 
-* 长上下文FLOPS
-  * ![image-20250512024143990](./LLM-MLSys/image-20250512024143990.png)
 
-* blockwise attn
-  * 动画：https://www.youtube.com/watch?v=JhR_xo9S0_E
-  * ![image-20250513215122201](./LLM-MLSys/image-20250513215122201.png)
 
-* SP
-  * 参考「MLSys.md ——并行训练 —— SP」
+#### Seed Paper
 
-* ring-attn
+https://arxiv.org/abs/2504.02263
 
-  * ![image-20250513225747367](./LLM-MLSys/image-20250513225747367.png)
-  * ![image-20250514001654067](./LLM-MLSys/image-20250514001654067.png)
+#### DeepSeek解法
 
-  * ring attention的问题：idle worker
-    * ![image-20250514002313692](./LLM-MLSys/image-20250514002313692.png)
-    * ![image-20250514002501925](./LLM-MLSys/image-20250514002501925.png)
 
-#### Striped Attention (Reorder QKV)
-
-![image-20250514003125607](./LLM-MLSys/image-20250514003125607.png)
-
-![image-20250514003221884](./LLM-MLSys/image-20250514003221884.png)
 
 ## 推理框架
 
@@ -1064,6 +1354,10 @@ for t_tile:
 
   * Kernel Auto-Tuning: 找当前硬件下最优的卷积算法、kernels、tensor layouts
   * Dynamic Tensor Memory: 给层加引用计数 
+
+#### vLLM v.s. Sarathi v.s. Sarathi + POD
+
+![image-20251005182019260](./LLM-MLSys/image-20251005182019260.png)
 
 ### Triton Inference Server
 
@@ -1132,6 +1426,18 @@ https://github.com/pytorch/TensorRT/releases/tag/v2.8.0
 > https://docs.pytorch.org/TensorRT/dynamo/dynamo_export.html
 >
 > https://docs.pytorch.org/TensorRT/fx/getting_started_with_fx_path.html
+
+### Nvidia Dynamo
+
+> https://github.com/ai-dynamo
+
+* Core Framework
+* **[LLM Optimized Components](https://github.com/ai-dynamo/dynamo/tree/main/lib/llm)**
+  - Disaggregated Serving Engine: Decoupling of prefill and decode to optimize for throughput at latency SLOs
+  - Intelligent Routing System: Prefix-based and load-aware request distribution
+  - KV Cache Management: Distributed KV Cache management
+* NIXL
+  * *NVIDIA Inference Xfer Library* (*NIXL*) is targeted for accelerating point to point communications in AI inference frameworks such as NVIDIA Dynamo.
 
 
 
@@ -1326,8 +1632,34 @@ https://github.com/pytorch/TensorRT/releases/tag/v2.8.0
 
 ### Ckpt
 
+#### Intro
+
+* safetensors
+  * config.json
+  * model.safetensors
+  * tokenizer.model
+
+![image-20251004232301701](./LLM-MLSys/image-20251004232301701.png)
+
+![image-20251004232511080](./LLM-MLSys/image-20251004232511080.png)
+
+* 细节：
+  * 存储时是W，计算时W^T
+
+#### ByteCheckpoint
+
 * 字节Ckpt https://mp.weixin.qq.com/s/4pIAZqH01Ib_OGGGD9OWQg
   * ByteCheckpoint ，一个 PyTorch 原生，兼容多个训练框架，支持 Checkpoint 的高效读写和自动重新切分的大模型 Checkpointing 系统。
+
+#### [阿里大模型创作平台 MuseAI 极速模型切换](https://mp.weixin.qq.com/s?__biz=Mzg4NTczNzg2OA==&mid=2247507136&idx=1&sn=4a3f589481aa8b9808e4e37cd13684d9&scene=21&poc_token=HHa65GijwfEt24fRL4yDooJWlGzE7F3NfBC3qFKb)
+
+* 本文主要分析了平台由于频繁切换 Diffusion Pipeline 引起的用户体验与资源浪费问题，并从网络传输、内存管理、Host-to-Device、模型量化等方面着手优化。
+
+
+
+
+
+## 通信优化 -> MLSys+RecSys.md
 
 ## 软硬协同
 

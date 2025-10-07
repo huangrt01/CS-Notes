@@ -363,11 +363,15 @@ https://hassanaskary.medium.com/intuitive-explanation-of-straight-through-estima
 
 ### 激活函数
 
-* Intro
-  * 选激活函数 https://machinelearningmastery.com/choose-an-activation-function-for-deep-learning/
-    * When using the ReLU function for hidden layers, it is a good practice to use a “*He Normal*” or “*He Uniform*” weight initialization and scale input data to the range 0-1 (normalize) prior to training.
-  * 典型问题：XOR问题
-  * ![image-20241221123336418](./Machine-Learning/image-20241221123336418.png)
+#### Intro
+
+* 各种激活函数
+  * ![image-20251004022659992](./Machine-Learning/image-20251004022659992.png)
+
+* 选激活函数 https://machinelearningmastery.com/choose-an-activation-function-for-deep-learning/
+  * When using the ReLU function for hidden layers, it is a good practice to use a “*He Normal*” or “*He Uniform*” weight initialization and scale input data to the range 0-1 (normalize) prior to training.
+* 典型问题：XOR问题
+* ![image-20241221123336418](./Machine-Learning/image-20241221123336418.png)
 
 
 
@@ -380,6 +384,13 @@ https://hassanaskary.medium.com/intuitive-explanation-of-straight-through-estima
     * 指数计算消耗资源
 * Tanh(x)=2Sigmoid(2x)−1
   * 相比sigmoid，以0为中心
+
+##### LLM中的各种激活函数
+
+https://sathvikjoel.github.io/posts/tech/05032024_activationfunctions/
+
+#### ReLU系列
+
 * ReLU
   * 优点：
     * ReLU解决了梯度消失的问题，当输入值为正时，神经元不会饱和
@@ -388,7 +399,6 @@ https://hassanaskary.medium.com/intuitive-explanation-of-straight-through-estima
   * 缺点：
     * 输出不是以0为中心的
     * Dead ReLU 问题：要设置一个合适的较小的学习率
-
 * Leaky ReLU：解决了ReLU输入值为负时神经元出现的死亡的问题
   * 函数中的α，需要通过先验知识人工赋值（一般设为0.01）
   * 有些近似线性，导致在复杂分类中效果不好。

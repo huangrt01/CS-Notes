@@ -12,6 +12,10 @@ In-place operation will happen if sendbuff == recvbuff.
 
 * 概念：communication objects，指代一组GPU
 
+
+
+** 两种编程模型
+
 ● 1 GPU per CPU process
 ○ Root process generates uniqueId
 ○ Broadcast id to all processes (e.g. use MPI)

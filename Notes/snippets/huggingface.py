@@ -1,4 +1,4 @@
-### Installation
+*** Installation
 https://huggingface.co/docs/transformers/installation
 
 # download file
@@ -11,7 +11,17 @@ for f in ["config.json", "pytorch_model.bin", "preprocessor_config.json"]:
   hf_hub_download(repo_id='facebook/dinov2-base', filename=f, cache_dir="./vit-large-patch16-224-in21k")
 
 
-### load ckpt
+*** tokenizer
+
+tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)
+token_ids = tokenizer.encode("Once upon a time")
+tokens = tokenizer.convert_ids_to_tokens(token_ids)
+
+print(token_ids)
+print(tokens)
+
+
+*** load ckpt
 
 from typing import Optional, Any
 from pydantic import BaseModel

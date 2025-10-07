@@ -2,6 +2,8 @@
 
 [toc]
 
+## Intro
+
 ### Intro
 
 * ToB的挑战
@@ -10,6 +12,8 @@
   * 头部客户的用量实在是太大了，后面的腰部客户加起来还不如一个头部客户的量大。所以对云厂商来说，做一个产品把所有的腰部客户都服务好，也不如把一个头部客户服务好收益更大。
 
 * 十万台是一个企业架设服务器或者使用云服务的一个成本临界点
+  * TODO "十万台的魔咒" [The Cost of Cloud, a Trillion Dollar Paradox](https://a16z.com/2021/05/27/cost-of-cloud-paradox-market-cap-cloud-lifecycle-scale-growth-repatriation-optimization/)
+
 
 
 
@@ -18,6 +22,139 @@
 * 早在1956年，ChristopherStrachey提出了虚拟化的概念，这是云计算一开始的理论基础。
 * 在2006年8月，云计算概念第一次在互联网一个大型会议提出，由此掀开了被称为“互联网的第三次革命”，于是各大科技巨头奋起，想要占领这块具有巨大市场潜力的“新大陆”。
 * 亚马逊公司是现在全世界云服务市场份额最大的公司，亚马逊公司出于其网购占有率全世界第一的情况下，就有类似“黑色星期五”的疯狂购物节，此时平时分散时间购物的人们会集中在极短的时间内在亚马逊购物，由此亚马逊必须有足够的储存空间和运算能力来处理这种“突发情况”，在平时，通过把这些多余的储存空间和算力“出租”出去，就形成了一个云服务商的一个大优势。
+
+### 深入理解云市场
+
+#### SaaS、PaaS、IaaS
+
+> 再就业小酒馆 Blog http://xhslink.com/byZMGl
+
+![image-20221205185439684](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/tob-stack.png)
+
+* toB软件市场的本质和趋势
+  * IaaS (55%)：稳定成熟，多云融合趋势，中国电子云
+  * Paas (30%)
+    * 数据中台：数据的采、存、算、管、用
+      * 反观国内，更多关注是数据应用价值，对应的是数据资产管理类产品或数据应用，实施部署起来更多是项目，核心竞争力是从客户学习到横向经验。
+    * 智能中台：项目居多，业务形式的有AIGC
+    * 连接集成平台：对标国外的MuleSoft，多指数据和应用层面的集成
+      * 新型路径钉钉、飞书，点集成
+    * 低代码开发平台：主要核心是流程引擎和表单引擎，会结合AI，也有人把RPA往这里面放，解决的就是定制化的问题，以及不同角色信息传导的差异问题。
+  * SaaS：渲染、飞书、推荐
+    * role-based
+    * industry-based: 闷声发小财
+* 中美企业软件差异
+  * 行业维度
+    * 美国是消费型社会，中国仍处于生产型社会
+  * 客户维度
+    * 行业整体预算大头来自国企，因多种因素更愿意买硬件
+  * 人才维度
+    * AI、电商、支付领域是领先者
+    * 产品营销类人才较为匮乏
+  * 公司维度
+    * 组织支持：中国更重视销售关系，大包大揽
+  * 国内做sass还是难做，saas分为行业的和通用的，创业公司能起来的以行业为主，通用的基本是大厂在做生态，高频打低频
+  * [中国真的适合sass吗？](https://www.zhihu.com/question/420454515/answer/2825655168)
+    * saas是为了降本增效，估值高的公司真的很多需要saas吗？（医生、律师），受众主要还是中小企业
+    * 中国的中小企业：一是没有，二是代表不了先进生产力的方向，三是降本增效不容易带来优势，四是就算有竞争优势，也不好淘汰老旧企业
+    * 适合国情的SaaS：大型外包，ToG
+* 被宠坏的软件公司要向硬件和服务公司学
+  * 要注重产品PFM（product market fit）
+  * 提升每个项目毛利，保证净利的正值
+  * 经济学指标
+    * 扣非净利润：扣除非经常损益后的净利润
+    * 毛利率=[(销售收入-销售成本)/销售收入]*100%
+    * `净利率=净利润/销售收入*100%=(销售收入-销售成本-各项期间费用-税金)/ 销售收入*100%`
+    * 人效比=营业收入/人员总数
+
+![image-20221205211302189](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/tob-data.png)
+
+#### 全局视角分析：[《为什么云厂商销售只会打折？》](https://mp.weixin.qq.com/s/lfZXEh6zJPzorI3cdcqwyg) —— 中间件、多租户等话题
+
+> 文章写的很好，但其实我猜一开始MuseAI没想上云
+
+* 降价，打折，优惠券
+  * 0.2到0.95不等的折扣数
+  * 阿里云作为唯一公开宣称盈利的厂商，2025财年第一季的 EBITA 利润率约为 8%，还不如做空调的美的利润高
+  * **中国云计算被做成了无差别的大宗商品。**云厂商卖虚拟机和 CDN 的方法，同大宗商品交易所卖小麦的方法，基本差不多：价格取决于并且只取决于规格。巴西的二级小麦和乌克兰的二级小麦没有区别，阿里云的 8C16G 和 火山引擎的 8C16G 也没有区别，都被市场视作同一个SKU。这种产品的同质化使得厂商只在一个维度竞争：价格。
+
+* 云计算缺席了客户开发过程
+  * 案例：[大模型多云部署怎么玩？阿里创作平台 MuseAI 集团内外落地指南 ](https://www.sohu.com/a/848840646_355140)
+  * 爱橙科技为阿里集团开发了一个内部使用的 AIGC 产品 MuseAI，部署于阿里集团的基础设施上，受到欢迎。之后他们拓展集团外用户，对后台和前端代码做了大幅度的修改，前后花了半年时间。这个过程中，云厂商 — 具体地说是阿里云 — 不仅没有帮助，甚至还对他们造成了一些困扰。
+  * 云平台并非客户默认开发平台。客户集团内部有一套完整的内部中间件帮助产品团队开发部署新业务。
+    * 客户的 **DB** 首选不是阿里云的 PolarDB 而是自研的 TDDL.
+    * **配置管理**首选不是阿里云的微服务引擎 MSE 而是自研的 Diamond。
+    * 连最基础的**存储**，客户也不用阿里云的 OSS，而选择了没有外部生态的 Pangu。
+    * 客户的 **CI/CD 流水线**也不支持阿里云。
+    * 我推测原文说的弹内 Schedulerx 也不是阿里云的 **Schedulerx** 服务。
+    * ![image-20251007154127473](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20251007154127473.png)
+
+* 多租户服务缺位
+
+  * MuseAI 最开始作为一个内部项目开发，只需要服务阿里员工，后来需要服务多个集团用户，团队就不得不做实现多租户系统（**Multitenancy**）。原文作者说
+
+    > 无论采用哪种方案，都必然会面对一个问题：部分逻辑在不同环境的实现是有差异的。例如，用户体系的差异，内部通过 BUC 可以获取到用户信息，集团外可能是手机号注册等别的链路；
+
+  * 实际上，[**阿里云的 IDaaS**](*https://cn.aliyun.com/product/idaas?from_alibabacloud=*) 正好是解决这个问题的专业服务。MuseAI 的业务代码可以不用和阿里集团的 BUC 系统直接交互，而是和 IDaaS交互。IDaaS 则把阿里集团的 BUC 视作一个[**身份提供方（IdP）**](*https://help.aliyun.com/zh/idaas/eiam/user-guide/idps/*)接入其用户池。在这个架构下，阿里集团只是 MuseAI 的多个租户之一。这样 MuseAI 不仅可以获取更高质量的用户管理系统，而且可以零开发成本的接入其他集团租户
+
+* API管理服务、可观测性服务、安全服务缺位
+
+
+
+#### 双因素增长模型
+
+> TODO 胡贤彬的blog https://www.jianshu.com/u/350f609099e2
+
+* 案例：阿里云HTTPDNS，0.5人运维，年几千万营收
+  * 解决域名解析跳转的问题
+  * 规模效应：新品收入 * 活跃用户 * 转化率
+* 增长困境
+  * 持续增长，理想化是天级别
+  * [双因素增长模型](https://www.jianshu.com/p/842640e8a05c)：企业规模价值 = 单客价值 * 客户数量 / 营销费用^2
+    * 单客价值：续约、增购
+    * 客户数量：客群规模（留存）、拉新
+  * 挑战1：国内私有云一次性买断的模式，大客户可持续价值低
+    * “维保” 5%~15%
+    * 大客户占 90% 以上营收，中长尾三年消失 90%
+  * 挑战2：碎片化市场，制约“客群快速增长”
+    * 研发定制化（行业/单客）：大厂人力成本高
+  * 理想是标准化，否则重服务，大客户项目制（卖产品+定制化）
+* 对策
+  * 从“卖软件”到“卖服务”
+    * 引导公有云、引导专属云（如金融云）、引导私部订阅、优先泛互行业、非泛互非核心业务上云
+      * [金融云 by aliyun](https://help.aliyun.com/document_detail/29851.html)
+        * 金融云是服务于银行、证券、保险、基金等金融机构的行业云，采用独立的机房集群提供满足一行两会监管要求的云产品，并为金融客户提供更加专业周到的服务。
+        * 案例：众安保险
+      * 泛互行业：媒体、游戏、工具等
+        * 没有等保的准入要求
+        * KA大部分用公有云、SMB几乎全部用公有云
+        * 泛互决策上云的一个原因是上云很快，几天内就能跑起来（上云速度是一个衡量软件敏捷性的重要指标）
+    * 可持续、短期营收规模小
+  * 聚焦优质行业
+    * 蚂蚁移动开发平台 mPaaS，先专注做金融
+  * 行业解决方案“被集成”
+    * 做多行业通用的PaaS
+    * 行业伙伴：完成行业属性的最后一公里
+    * e.g. 微软Azure，70%以上服务由“伙伴”提供
+* 云上解决方案：销售驱动 & 产品驱动
+  * SLG (Sales-Led-Growth)：大客户销售解决方案，做KA大单（公有云KA本质上是SLG）
+    * call high
+    * 技术标：差异化能力
+    * 商务标：控标项是利润
+    * 积累：客户关系（私域客户规模）、增购提高利润
+    * Tips:
+      * 倾斜泛互行业，主要使用公有云
+      * 有合规要求的行业，非核心业务引导上云
+      * 行业云
+    * e.g. 腾讯服务拼多多
+  * PLG (Product-Led-Growth)：SMB
+    * 市场线索、销售线索、产品线索
+    * PLG的思路，教育市场，从toc到tob，从个人到SMB到KA，先聚焦再泛化
+    * e.g. Slack，个人/团队办公提效产品，特点是个人有决策权，形成用户习惯，能口碑传播
+
+
+
+
 
 ### 各种概念
 
@@ -37,6 +174,22 @@
 
 
 
+
+
+## 云厂商调研
+
+### 定价
+
+#### 机器规格定价
+
+* aws
+
+https://aws.amazon.com/cn/ec2/instance-types/
+
+
+
+### 服务能力
+
 #### APM (Application Performance Management)
 
 * [回到网易后开源 APM 技术选型与实战 - 李乐](https://www.infoq.cn/article/apm-pinpoint-practice)
@@ -45,7 +198,9 @@
 * [国内首个开源全链路压测平台 Takin](https://cloud.tencent.com/developer/article/1852614)
 * [Oracle APM](https://www.oracle.com/manageability/application-performance-monitoring/)
 
-##### 《Studying the Effectiveness of Application Performance Management (APM) Tools for Detecting Performance Regressions for Web Applications: An Experience Report》
+##### APM用于探测服务性能退化 (Paper)
+
+> 《Studying the Effectiveness of Application Performance Management (APM) Tools for Detecting Performance Regressions for Web Applications: An Experience Report》
 
 APM tools处理regression test的缺点：1）mining approaches少；2）定位问题慢，需要manual work；3）难拓展
 
@@ -71,36 +226,16 @@ Case Study Setup:
 
 6.2 APM Tools should Provide Better Data Aggregation and Summarization
 
+#### 定制内核功能
+
+* aliyun
+  * https://help.aliyun.com/zh/alinux/product-overview/alibaba-cloud-linux-overview?spm=a2c4g.11186623.0.0.6ada55623xzX9G
 
 
 
+## 云的底层技术&产品
 
-#### "十万台的魔咒"
-
-* [The Cost of Cloud, a Trillion Dollar Paradox](https://a16z.com/2021/05/27/cost-of-cloud-paradox-market-cap-cloud-lifecycle-scale-growth-repatriation-optimization/)
-
-
-
-#### 云的应用
-
-* 云+体验：内容存储分发加工推荐创作
-  * 内容获取
-  * 内容加工
-  * 内容分发
-  * 内容消费
-  * 数据分析
-* 云+数据
-  * 数据驱动业务优化->分析评估->业务过程数字化->数据生产沉淀
-  * 要解决的：高密度计算问题、数仓问题
-  * 底层是湖仓一体
-* 云+智能
-  * “我的长沙”APP：“融媒体+城市服务”融合平台
-
-![image-20211202153930004](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/rec-value.png)
-
-
-
-
+### Intro
 
 #### Borg, Omega, and Kubernetes
 
@@ -456,26 +591,78 @@ cat cpu.stat
 * [如何给 Docker 镜像瘦身？](https://www.infoq.cn/article/tbiwieu87e*wkunvjdwm)
   * 中间层: docker image history my_image:my_tag
 
+### 多租户系统
+
+#### 阿里云 IDaaS
+
+[**阿里云的 IDaaS**](*https://cn.aliyun.com/product/idaas?from_alibabacloud=*) 正好是解决这个问题的专业服务。MuseAI 的业务代码可以不用和阿里集团的 BUC 系统直接交互，而是和 IDaaS交互。IDaaS 则把阿里集团的 BUC 视作一个[**身份提供方（IdP）**](*https://help.aliyun.com/zh/idaas/eiam/user-guide/idps/*)接入其用户池。在这个架构下，阿里集团只是 MuseAI 的多个租户之一。这样 MuseAI 不仅可以获取更高质量的用户管理系统，而且可以零开发成本的接入其他集团租户
+
+### API Gateway
+
+一般来说，云原生团队开发 Web 服务，都先定义 API，然后再去实现。API 是前端和后端以及不同的后端服务之间的合约。没有这个合约的话，团队只能依靠口头约定 URL，HTTP 方法，参数和返回值，沟通成本非常高。
+
+《阿里 API 网关最佳实践》: *https://static-aliyun-doc.oss-cn-hangzhou.aliyuncs.com/download%2Fpdf%2F68134%2F%25E6%259C%2580%25E4%25BD%25B3%25E5%25AE%259E%25E8%25B7%25B5_cn_zh-CN.pdf*
+
+API网关灰度发布最佳实践: *https://static-aliyun-doc.oss-cn-hangzhou.aliyuncs.com/download%2Fpdf%2F68134%2F%25E6%259C%2580%25E4%25BD%25B3%25E5%25AE%259E%25E8%25B7%25B5_cn_zh-CN.pdf*
 
 
 
+### 存储
 
-### 云厂商相关
+#### 对象存储TOS
 
-#### 机器规格定价
+* [使用 Rclone 访问 TOS](https://www.volcengine.com/docs/6349/81434)
+  * [rclone官网](https://rclone.org/docs/)
+    * copy
+      * `--s3-no-head-object`
+      * `rclone copy testdir volces-tos:bucket-demo`  将文件夹内所有文件放到tos
+    * ls, lsd, lsl
+      * `rclone $远程连接:$一级桶`
+    * `rclone sync testdir volces-tos:bucket-demo/testdir`
+    * size
+    * check
+      * `--size-only`：只比较文件大小。
+      * `--download`：下载远程文件并对比。
+  * `~/.config/rclone/rclone.conf`
 
-* aws
+```shell
+curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip
+unzip rclone-current-linux-amd64.zip
+cd rclone-*-linux-amd64
 
-https://aws.amazon.com/cn/ec2/instance-types/
+sudo cp rclone /usr/bin/
+sudo chown root:root /usr/bin/rclone
+sudo chmod 755 /usr/bin/rclone
 
-#### 定制内核功能
+sudo mkdir -p /usr/local/share/man/man1
+sudo cp rclone.1 /usr/local/share/man/man1/
+sudo mandb
 
-* aliyun
-  * https://help.aliyun.com/zh/alinux/product-overview/alibaba-cloud-linux-overview?spm=a2c4g.11186623.0.0.6ada55623xzX9G
+rclone ls remote:path # lists a remote
+rclone copy /local/path remote:path # copies /local/path to the remote
+rclone sync -i /local/path remote:path # syncs /local/path to the remote
+```
+
+```
+[tos]
+type = s3
+provider = Other
+access_key_id = AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+secret_access_key = AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+region = cn-beijing
+endpoint = BBBBBBBBBBBBBBBBBBBB
+force_path_style = false
+disable_http2 = true
+no_check_bucket = true
+
+rclone lsd tos:
+touch README.txt
+rclone copy README.txt tos:ABC --s3-no-head-object
+```
 
 
 
-### k8s 与性能
+### k8s 下的系统性能
 
 #### 主机超售
 
@@ -496,7 +683,15 @@ https://aws.amazon.com/cn/ec2/instance-types/
 
 * 最简单的确认方式：控制有/无其它租户，做控制变量，测量e2e指标和微架构指标
 
-### 运维监控
+### 可观测性服务 —— 运维监控
+
+> 经验中，云原生系统的可观测性开销，往往占到云开销的 15%-25%。
+>
+> 这么高吗？
+
+#### Intro
+
+* 阿里云有非常丰富的可观测性服务，包括日志服务 SLS，云监控 CloudMonitor， 应用实时监控服务 ARMS
 
 #### 网络
 
@@ -509,25 +704,19 @@ https://aws.amazon.com/cn/ec2/instance-types/
   * 也有观点认为，可视化的重要性远大于指标、日志和链路追踪
   * 推动“数据民主化”
 
+### 安全服务
+
+![image-20251007155027318](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20251007155027318.png)
 
 
-### AI-ToB
 
-#### Intro
+## 云产品
 
-![image-20250616165500735](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20250616165500735.png)
 
-#### 火山AI Force大会
 
-* https://www.volcengine.com/event/force-2506
-  * 刊例价 70元/1000万 token
-  * 16.4万亿 token 等于 1.15亿元
 
-![image-20250616164911048](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20250616164911048.png)
 
-![image-20250616165347724](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20250616165347724.png)
-
-### ToB
+### ToB 产品 Overview
 
 #### Intro
 
@@ -576,14 +765,59 @@ https://aws.amazon.com/cn/ec2/instance-types/
 
     
 
-#### 火山引擎业务
+### AI-ToB
+
+#### Intro
+
+![image-20250616165500735](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20250616165500735.png)
+
+##### 火山云的应用：体验、数据、智能
+
+* 云+体验：内容存储分发加工推荐创作
+  * 内容获取
+  * 内容加工
+  * 内容分发
+  * 内容消费
+  * 数据分析
+* 云+数据
+  * 数据驱动业务优化->分析评估->业务过程数字化->数据生产沉淀
+  * 要解决的：高密度计算问题、数仓问题
+  * 底层是湖仓一体
+* 云+智能
+  * “我的长沙”APP：“融媒体+城市服务”融合平台
+
+![image-20211202153930004](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/rec-value.png)
+
+
+
+#### AI-ToB产品
+
+* [Palantir](https://www.palantir.com/)
+
+* [C3.ai](https://c3.ai/#null)
+
+#### 火山AI Force大会
+
+* https://www.volcengine.com/event/force-2506
+  * 刊例价 70元/1000万 token
+  * 16.4万亿 token 等于 1.15亿元
+
+![image-20250616164911048](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20250616164911048.png)
+
+![image-20250616165347724](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20250616165347724.png)
+
+
+
+* * 
+
+#### 火山引擎 [V-moment特别版](https://www.volcengine.com/docs/search?q=%E7%89%B9%E5%88%AB%E7%89%88)
 
 * [一篇从火山引擎出发的ToB市场分析文章](https://zhuanlan.zhihu.com/p/519653936)
   * 在音视频基础编辑、智能编辑、CV、创意商城四个方面都拥有突出优势
   * 巨头选择了不同类型差异化的道路，比如阿里云的大而全；比如腾讯云是以微信小程序搭建作为突破口，形成自己的体系优势；比如说百度智能云的AI能力；比如说华为云的政企服务等等。
   * 火山引擎公布的十三家核心客户中，抖音，头条和西瓜三个是字节自家的应用，其他包括：中信银行，美的，得到，虎扑，悟空租车，彩云科技，故事，不背，网眼，和STARLINK
 
-##### [V-moment特别版](https://www.volcengine.com/docs/search?q=%E7%89%B9%E5%88%AB%E7%89%88)
+##### 
 
 ##### [第一期|云上视界新看法](https://www.volcengine.com/docs/6703/101619) 视频云
 
@@ -807,164 +1041,6 @@ https://aws.amazon.com/cn/ec2/instance-types/
 
 
 
-
-#### 火山引擎技术
-
-* [使用 Rclone 访问 TOS](https://www.volcengine.com/docs/6349/81434)
-  * [rclone官网](https://rclone.org/docs/)
-    * copy
-      * `--s3-no-head-object`
-      * `rclone copy testdir volces-tos:bucket-demo`  将文件夹内所有文件放到tos
-    * ls, lsd, lsl
-      * `rclone $远程连接:$一级桶`
-    * `rclone sync testdir volces-tos:bucket-demo/testdir`
-    * size
-    * check
-      * `--size-only`：只比较文件大小。
-      * `--download`：下载远程文件并对比。
-  * `~/.config/rclone/rclone.conf`
-
-```shell
-curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip
-unzip rclone-current-linux-amd64.zip
-cd rclone-*-linux-amd64
-
-sudo cp rclone /usr/bin/
-sudo chown root:root /usr/bin/rclone
-sudo chmod 755 /usr/bin/rclone
-
-sudo mkdir -p /usr/local/share/man/man1
-sudo cp rclone.1 /usr/local/share/man/man1/
-sudo mandb
-
-rclone ls remote:path # lists a remote
-rclone copy /local/path remote:path # copies /local/path to the remote
-rclone sync -i /local/path remote:path # syncs /local/path to the remote
-```
-
-```
-[tos]
-type = s3
-provider = Other
-access_key_id = AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-secret_access_key = AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-region = cn-beijing
-endpoint = BBBBBBBBBBBBBBBBBBBB
-force_path_style = false
-disable_http2 = true
-no_check_bucket = true
-
-rclone lsd tos:
-touch README.txt
-rclone copy README.txt tos:ABC --s3-no-head-object
-```
-
-
-
-#### 再就业小酒馆 Blog
-
-http://xhslink.com/byZMGl
-
-![image-20221205185439684](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/tob-stack.png)
-
-* toB软件市场的本质和趋势
-  * IaaS (55%)：稳定成熟，多云融合趋势，中国电子云
-  * Paas (30%)
-    * 数据中台：数据的采、存、算、管、用
-      * 反观国内，更多关注是数据应用价值，对应的是数据资产管理类产品或数据应用，实施部署起来更多是项目，核心竞争力是从客户学习到横向经验。
-    * 智能中台：项目居多，业务形式的有AIGC
-    * 连接集成平台：对标国外的MuleSoft，多指数据和应用层面的集成
-      * 新型路径钉钉、飞书，点集成
-    * 低代码开发平台：主要核心是流程引擎和表单引擎，会结合AI，也有人把RPA往这里面放，解决的就是定制化的问题，以及不同角色信息传导的差异问题。
-  * SaaS：渲染、飞书、推荐
-    * role-based
-    * industry-based: 闷声发小财
-* 中美企业软件差异
-  * 行业维度
-    * 美国是消费型社会，中国仍处于生产型社会
-  * 客户维度
-    * 行业整体预算大头来自国企，因多种因素更愿意买硬件
-  * 人才维度
-    * AI、电商、支付领域是领先者
-    * 产品营销类人才较为匮乏
-  * 公司维度
-    * 组织支持：中国更重视销售关系，大包大揽
-  * 国内做sass还是难做，saas分为行业的和通用的，创业公司能起来的以行业为主，通用的基本是大厂在做生态，高频打低频
-  * [中国真的适合sass吗？](https://www.zhihu.com/question/420454515/answer/2825655168)
-    * saas是为了降本增效，估值高的公司真的很多需要saas吗？（医生、律师），受众主要还是中小企业
-    * 中国的中小企业：一是没有，二是代表不了先进生产力的方向，三是降本增效不容易带来优势，四是就算有竞争优势，也不好淘汰老旧企业
-    * 适合国情的SaaS：大型外包，ToG
-* 被宠坏的软件公司要向硬件和服务公司学
-  * 要注重产品PFM（product market fit）
-  * 提升每个项目毛利，保证净利的正值
-  * 经济学指标
-    * 扣非净利润：扣除非经常损益后的净利润
-    * 毛利率=[(销售收入-销售成本)/销售收入]*100%
-    * `净利率=净利润/销售收入*100%=(销售收入-销售成本-各项期间费用-税金)/ 销售收入*100%`
-    * 人效比=营业收入/人员总数
-
-![image-20221205211302189](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/tob-data.png)
-
-
-
-#### 双因素增长模型 ToB
-
-TODO 胡贤彬的blog https://www.jianshu.com/u/350f609099e2
-
-* 案例：阿里云HTTPDNS，0.5人运维，年几千万营收
-  * 解决域名解析跳转的问题
-  * 规模效应：新品收入 * 活跃用户 * 转化率
-* 增长困境
-  * 持续增长，理想化是天级别
-  * [双因素增长模型](https://www.jianshu.com/p/842640e8a05c)：企业规模价值 = 单客价值 * 客户数量 / 营销费用^2
-    * 单客价值：续约、增购
-    * 客户数量：客群规模（留存）、拉新
-  * 挑战1：国内私有云一次性买断的模式，大客户可持续价值低
-    * “维保” 5%~15%
-    * 大客户占 90% 以上营收，中长尾三年消失 90%
-  * 挑战2：碎片化市场，制约“客群快速增长”
-    * 研发定制化（行业/单客）：大厂人力成本高
-  * 理想是标准化，否则重服务，大客户项目制（卖产品+定制化）
-* 对策
-  * 从“卖软件”到“卖服务”
-    * 引导公有云、引导专属云（如金融云）、引导私部订阅、优先泛互行业、非泛互非核心业务上云
-      * [金融云 by aliyun](https://help.aliyun.com/document_detail/29851.html)
-        * 金融云是服务于银行、证券、保险、基金等金融机构的行业云，采用独立的机房集群提供满足一行两会监管要求的云产品，并为金融客户提供更加专业周到的服务。
-        * 案例：众安保险
-      * 泛互行业：媒体、游戏、工具等
-        * 没有等保的准入要求
-        * KA大部分用公有云、SMB几乎全部用公有云
-        * 泛互决策上云的一个原因是上云很快，几天内就能跑起来（上云速度是一个衡量软件敏捷性的重要指标）
-    * 可持续、短期营收规模小
-  * 聚焦优质行业
-    * 蚂蚁移动开发平台 mPaaS，先专注做金融
-  * 行业解决方案“被集成”
-    * 做多行业通用的PaaS
-    * 行业伙伴：完成行业属性的最后一公里
-    * e.g. 微软Azure，70%以上服务由“伙伴”提供
-* 云上解决方案：销售驱动 & 产品驱动
-  * SLG (Sales-Led-Growth)：大客户销售解决方案，做KA大单（公有云KA本质上是SLG）
-    * call high
-    * 技术标：差异化能力
-    * 商务标：控标项是利润
-    * 积累：客户关系（私域客户规模）、增购提高利润
-    * Tips:
-      * 倾斜泛互行业，主要使用公有云
-      * 有合规要求的行业，非核心业务引导上云
-      * 行业云
-    * e.g. 腾讯服务拼多多
-  * PLG (Product-Led-Growth)：SMB
-    * 市场线索、销售线索、产品线索
-    * PLG的思路，教育市场，从toc到tob，从个人到SMB到KA，先聚焦再泛化
-    * e.g. Slack，个人/团队办公提效产品，特点是个人有决策权，形成用户习惯，能口碑传播
-
-
-
-#### 一些产品
-
-* [Palantir](https://www.palantir.com/)
-
-* [C3.ai](https://c3.ai/#null)
 
 
 

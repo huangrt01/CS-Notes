@@ -74,7 +74,7 @@
 
 ![structure](./AI-Agent-Product&PE/structure.png)
 
-## 产品
+## ToC 产品
 
 ### 模型能力
 
@@ -236,9 +236,37 @@ TODO
 * 展望Killer App
   * AI暂时只是对旧场景的增强
 
-#### 助手类
+#### 助手类 Chatbot
 
 * 豆包
+
+##### [对腾讯汤道生时隔一年的独家专访：元宝重兵投入这半年](https://mp.weixin.qq.com/s/jSRLLI3-nsEhYoAwL5agaQ)
+
+* 近半年腾讯元宝的几个关键点：
+  * 组织架构调整：csig（云事业部）做元宝，teg做混元
+  * 元宝接入deepseek
+    * 总结一下，这个决策的关键点来自于Pony发了一条群聊。
+
+* 元宝
+  * 定位：希望元宝将会成为C端搜索信息的新入口。
+* 对AI Search的理解
+  * LLM排序效果不错：今天做搜索和十几年前做搜索完全不一样了，我们会充分利用AI、大模型的能力来帮我们挑选最可能的信息来源、最权威的网站内容，然后再用这些信息加入到排序逻辑里。 现在初步来看，这种AI原生（AI-native）的搜索引擎能力要比传统先爬回数据，基于某些方式粗排再精排的效果更好。
+  * 产品&技术细节：在产品层面，我们一直在**补能力**，比如改善搜索服务的准确性与时效性，支持更多方言的语音识别，支持更精准的图片修改，改善性能加速吐字等。
+* 腾讯的AI Agent产品场景：
+  * **腾讯云的营销自动化产品“企点营销云”**已服务很多零售客户，以前基于通用大数据模式，结合线上线下用户行为，建立用户画像，从新用户到首次购买、复购，再到会员的整个流程优化。我相信随着更多企业用智能体给营销加持，这类营销场景有大的提升空间。 最近我们帮一个连锁零售客户——绝味食品——做了一个营销增收项目。项目中，我们用了多个Agent来提升营销管线的不同环境，最终结果让所有人都很惊讶。对比专家组，效果达到了3倍的提升。
+  * **腾讯云智能体开发平台3.0**，支持超过140个MCP插件服务，大大扩展了智能体能调用的工具能力，并支持多智能体并行协作，让智能体搭建可以更简单、更模块化。
+    * 我们很多业务的MCP服务，比如地图与支付，都是对外开放的，欢迎外部的智能体调用。
+* 对RAG、AI Agent的理解：
+  * 过去两年，我们有很多To B智能体项目的实践经验，比如用RAG模式搭建客服系统，过程中往往发现很多企业内部数据混乱，需要企业先投入做数据治理。在企业场景下，数据治理是比较耗时的工作。
+    * 如果内部文档有矛盾，就必须梳理清楚，定义好不同信息来源的权威性；
+    * 如果文档有新、老版本，召回逻辑必须考虑时效性
+* 腾讯的优势：
+  * 要在某个场景满足用户需求，有很多周边能力需要搭配，包括搜索能力、语音理解与生成、专业数据、服务生态等——腾讯本身在各种内容与服务生态有比较强的积累，对我们是一个有利的地方。
+  * 微信支持元宝的力度是前所未有的大，包括早期的广告位、新闻插件，还有视频号与公众号也可以被@元宝做点评。
+  * 地图&支付等腾讯内部其它业务，开放了MCP服务，可供ToB Agent平台调用 “我们很多业务的MCP服务，比如地图与支付，都是对外开放的，欢迎外部的智能体调用。” 
+    * --> 字节能否用类似打法？
+
+
 
 #### 搜索类
 
@@ -466,179 +494,25 @@ TODO
   * https://foresightnews.pro/article/detail/30224
   
 
-## Agent
-
-### Intro
-
-* 和Workflow的对比，见workflow章节中的甲骨文文章
-* Intro
-  * understanding complex inputs, engaging in reasoning and planning, using tools reliably, and recovering from errors.
-  * it's crucial for the agents to gain “ground truth” from the environment at each step (such as tool call results or code execution) to assess its progress
-  * **When to use agents:** Agents can be used for open-ended problems where it’s difficult or impossible to predict the required number of steps, and where you can’t hardcode a fixed path. The LLM will potentially operate for many turns, and you must have some level of trust in its decision-making. Agents' autonomy makes them ideal for scaling tasks in trusted environments.
-
-![image-20250226015431648](./AI-Agent-Product&PE/image-20250226015431648.png)
-
-* [Google 白皮书分析](https://ppc.land/ai-agents-google-unveils-framework-for-next-gen-systems/)
-  * 白皮书：https://ppc.land/content/files/2025/01/Newwhitepaper_Agents2.pdf
-  * ![image-20250227192024868](./AI-Agent-Product&PE/image-20250227192024868.png)
-  * model layer
-  * orchestration layer
-    * ReAct, Chain-of-Thought, and Tree-of-Thoughts
-    * "agent chaining"
-
-  * Tools layer
-    * Extensions
-      * provide standardized API interactions
-
-    * Functions
-      * enable client-side execution control
-
-    * Data Stores
-      * facilitate access to various types of information
-
-  * ![image-20250227191217604](./AI-Agent-Product&PE/image-20250227191217604.png)
-
-* 吴恩达：系统可以具有不同程度的Agentic特性
-  * **Reflection（反思）**：类似于AI的自我纠错和迭代。例如，AI系统会检查自己编写的代码，并提出修改建议。
-  * **Tool Use（工具使用）**：大语言模型调用插件，扩展了其能力。例如，使用Copilot进行联网搜索或调用代码插件解决数理逻辑问题。
-  * **Planning（规划）**：AI根据用户输入的任务，拆解流程、选择工具、调用、执行并输出结果。例如，根据一张图片中的姿态生成一张新图片，并进行描述。
-  * **Multi-agent（多智能体协作）**：多个Agent协作完成任务，每个Agent可能扮演不同的角色，如CEO、产品经理或程序员。这种模式模拟了现实生活中的工作场景，能够处理复杂系统处理复杂系统
-* OpenAI开源多智能体agent框架swarm https://mp.weixin.qq.com/s/ysUzxUYV-lsQ6aiYPU0KdA
-  * https://github.com/openai/swarm
-  * 自动将函数转成适配格式的json描述
-  * 上下文的管理有多种模式可以轻松传递
-  * 10行代码构建出多智能体系统
-
-![agent-overview](./AI-Agent-Product&PE/agent-overview.png)
-
-- [LangGraph](https://langchain-ai.github.io/langgraph/) from LangChain;
-- Amazon Bedrock's [AI Agent framework](https://aws.amazon.com/bedrock/agents/);
-- [Rivet](https://rivet.ironcladapp.com/), a drag and drop GUI LLM workflow builder; and
-- [Vellum](https://www.vellum.ai/), another GUI tool for building and testing complex workflows.
-
-### Function Calling
-
-https://www.anthropic.com/news/tool-use-ga
-
-*  Anthropic's suggestions for deciding on tool formats are the following:
-
-   - Give the model enough tokens to "think" before it writes itself into a corner.
-
-   - Keep the format close to what the model has seen naturally occurring in text on the internet.
-
-   - Make sure there's no formatting "overhead" such as having to keep an accurate count of thousands of lines of code, or string-escaping any code it writes.
-
-*  *agent*-computer interfaces (ACI)
-
-   * Put yourself in the model's shoes
-   * writing a great docstring for a junior developer on your team
-   * https://console.anthropic.com/workbench
-   * [Poka-yoke](https://en.wikipedia.org/wiki/Poka-yoke) your tools
-   * e.g. SWE Bench，文件tool仅输入绝对路径
-
-### ReAct
-
-```
-Answer the following questions as best you can. You have access to the following tools:
-
-{tools}
-
-Use the following format:
-
-Question: the input question you must answer
-Thought: you should always think about what to do
-Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action
-Observation: the result of the action
-... (this Thought/Action/Action Input/Observation can repeat N times)
-Thought: I now know the final answer
-Final Answer: the final answer to the original input question
-
-Begin!
-
-Question: {input}
-Thought:{agent_scratchpad}
-```
-
-### **SelfAskWithSearch**
-
-* 适合知识图谱这样的层层推理场景
 
 
-
-### Plan-And-Execute
-
-> https://blog.langchain.dev/planning-agents/
-
-* 好处
-  * Generating the full reasoning steps is a tried-and-true prompting technique to improve outcomes.
-  * 性能、成本
-* Naive版本
-  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb
-
-![img](./AI-Agent-Product&PE/plan-and-execute-0915298.png)
-
-* ReWOO：Reasoning WithOut Observations
-  * the planner can reference previous outputs using syntax like `#E2` 
-  * more effective than a naive plan-and-execute agent since each task can have only the required context (its input and variable values).
-
-* LLMCompiler
-  * https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/llm-compiler/LLMCompiler.ipynb
-  * **Planner**: streams a DAG of tasks. Each task contains a tool, arguments, and list of dependencies.
-  * **Task Fetching Unit** schedules and executes the tasks. This accepts a stream of tasks. This unit schedules tasks once their dependencies are met. Since many tools involve other calls to search engines or LLMs, the extra parallelism can grant a significant speed boost (the paper claims 3.6x).
-  * **Joiner**: dynamically replan or finish based on the entire graph history (including task execution results) is an LLM step that decides whether to respond with the final answer or whether to pass the progress back to the (re-)planning agent to continue work.
-  * 好处：
-    * **Planner** outputs are ***streamed;\*** the output parser eagerly yields task parameters and their dependencies.
-    * The **task fetching unit** receives the parsed task stream and schedules tasks once all their dependencies are satisfied.
-    * Task arguments can be *variables,* which are the outputs of previous tasks in the DAG. For instance, the model can call `search("${1}")` to search for queries generated by the output of task 1. This lets the agent work even faster than the "embarrassingly parallel" tool calling in OpenAI.
-
-### Agent Examples
-
-#### Intro
-
-* 模版
-
-![agent-flowchart](./AI-Agent-Product&PE/agent-flowchart.png)
-
-#### Agentic RAG
-
-* ![image-20250227201733347](./AI-Agent-Product&PE/image-20250227201733347.png)
-
-#### Coding Agent
-
-- A coding Agent to resolve [SWE-bench tasks](https://www.anthropic.com/research/swe-bench-sonnet), which involve edits to many files based on a task description;
-  - ![image-20250226015736553](./AI-Agent-Product&PE/image-20250226015736553.png)
-- Our [“computer use” reference implementation](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo), where Claude uses a computer to accomplish tasks.
-
-#### Customer support
-
-- 特点
-  - Support interactions naturally follow a conversation flow while requiring access to external information and actions;
-  - Tools can be integrated to pull customer data, order history, and knowledge base articles;
-  - Actions such as issuing refunds or updating tickets can be handled programmatically; and
-  - Success can be clearly measured through user-defined resolutions.
-- 一口气学会如何思考AI Agent系统设计 https://www.bilibili.com/video/BV1WoeozgEyn/
-  - 参考「Agent应用技术架构」
-
-![image-20250905205445608](./AI-Agent-Product&PE/image-20250905205445608.png)
-
-![image-20250909162528023](./AI-Agent-Product&PE/image-20250909162528023.png)
-
-
-
-
-
-## Agent 产品
+## Agent ToB&ToC 产品
 
 ### HiAgent
 
 ![image-20250616205439328](./AI-Agent-Product&PE/image-20250616205439328.png)
 
-### AI知识管理
+### 火山引擎 AI知识管理
 
 ![image-20250617213353090](./AI-Agent-Product&PE/image-20250617213353090.png)
 
 ![image-20250617213524820](./AI-Agent-Product&PE/image-20250617213524820.png)
+
+### **腾讯云的营销自动化产品“企点营销云”**
+
+* 已服务很多零售客户，以前基于通用大数据模式，结合线上线下用户行为，建立用户画像，从新用户到首次购买、复购，再到会员的整个流程优化。我相信随着更多企业用智能体给营销加持，这类营销场景有大的提升空间。 最近我们帮一个连锁零售客户——绝味食品——做了一个营销增收项目。项目中，我们用了多个Agent来提升营销管线的不同环境，最终结果让所有人都很惊讶。对比专家组，效果达到了3倍的提升。
+
+
 
 ### 语鲸
 

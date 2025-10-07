@@ -1,3 +1,8 @@
+*** FFN实现: SwiGLU
+
+def forward(self, x):
+    return self.w2(F.silu(self.w1(x)) * self.w3(x))
+
 
 *** kv cache实现
 

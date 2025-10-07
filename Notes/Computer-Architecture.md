@@ -342,13 +342,17 @@ https://www.slideshare.net/am_sharifian/intel-hyper-threading-technology/1
   * 点积 + 转换
 * CLZ 等指令：https://en.wikipedia.org/wiki/Find_first_set
 
-### 汇编优化
+#### 汇编优化
 
 * FFmpeg：https://github.com/FFmpeg/asm-lessons
 
 
 
 #### AMX
+
+> 容量成本低，带宽成本高
+
+![image-20251005230828442](./Computer-Architecture/image-20251005230828442.png)
 
 * AMX: [The x86 Advanced Matrix Extension (AMX) Brings Matrix Operations; To Debut with Sapphire Rapids](https://fuse.wikichip.org/news/3600/the-x86-advanced-matrix-extension-amx-brings-matrix-operations-to-debut-with-sapphire-rapids/)
   * AMX introduces a new matrix register file with eight rank-2 tensor (matrix) registers called “tiles”.
@@ -371,6 +375,10 @@ https://www.slideshare.net/am_sharifian/intel-hyper-threading-technology/1
   - Intel IAA(in-memory analytics accelerator): compress/decompress/scan/filter，也是offload cpu cores
     - https://www.intel.com/content/www/us/en/analytics/in-memory-data-and-analytics.html
     - 场景如presto：https://engineering.fb.com/2019/06/10/data-infrastructure/aria-presto/
+
+##### 应用场景：Mooncake KTransformers
+
+![image-20251005231348062](./Computer-Architecture/image-20251005231348062.png)
 
 ### 存储：硬盘、NVMe
 

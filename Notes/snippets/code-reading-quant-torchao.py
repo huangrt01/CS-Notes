@@ -1,4 +1,4 @@
-### torchao
+*** intro
 
 - speed-first
 - 依赖torch.compile做算子优化
@@ -39,11 +39,14 @@ e.g. int4 quantized tensor
 
 
 
-### 支持哪些量化？
+
+*** 支持哪些量化？
 
 - int4_weight_only quantization：it’s a 4 bit groupwise quantization with group size of 64, using tinygemm kernel
 - gemlite_uintx_weight_only：4 means 4 bit, and 64 is also the group size, using GemLite kernel
 - float8_dynamic_activation_float8_weight： quantization in TorchAO, both activation and weights are quantized with per row scales
+
+- fp6 weight only(fp16/bf16 model): Torchao/dtypes/floatx
 
 
 

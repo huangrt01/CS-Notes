@@ -91,6 +91,9 @@
 - DeepSeek-V3
   - https://github.com/deepseek-ai/DeepSeek-V3
 
+- transformers
+  - https://github.com/huggingface/transformers
+
 #### LM
 
 - the Annotated Transformer
@@ -111,10 +114,23 @@
 
 ### Applied Algo
 
-#### Agent
+#### Agent / RAG
 
 - Qwen Agent
   - https://github.com/QwenLM/Qwen-Agent
+
+- UltraRAG
+  - https://github.com/OpenBMB/UltraRAG
+  - DeepResearch、Search-o1的开源实现，yaml形式支持多种agent pipeline
+
+- LightRAG
+
+- XAgent
+  - https://github.com/OpenBMB/XAgent
+  - 自主智能体框架
+  - ToolServer：工具执行环境
+  - Planning、Execution 双循环的设计
+  - 统一基于function calling的实现
 
 
 ### GPU
@@ -171,6 +187,12 @@
 
 - CUTLASS
   - https://github.com/NVIDIA/cutlass
+
+
+#### Attention Kernel
+
+- Pod-Attention
+  - https://github.com/microsoft/vattention/blob/main/pod_attn/tests/fabench.py
 
 #### kernel fusion
 

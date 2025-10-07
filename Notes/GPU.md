@@ -893,6 +893,7 @@ RTX 3090, has 82 SMs.
 <img src="./GPU/image-20250507025921271.png" alt="image-20250507025921271" style="zoom:50%;" />
 
 * H20: 96G
+* L40: 48G
 
 ##### 显存带宽
 
@@ -1311,20 +1312,19 @@ __global__ void kernel(int *a, int N)
   * **Launch the optimized graph as needed**
 * Two ways we can build the dependency graph
   * Record a sequence of asynchronous CUDA calls Describe the graph explicitly
+    * Supports any number of streams (except default stream 0) 
+      * Follows dependencies to other streams through events
+      * Capture all streams that have dependency with first captured stream
+    * Need all recorded calls to be asynchronous and bound to a stream
+      * CPU code needs to be asynchronous to be recorded too!
+      * `cudaLaunchHostFunc`
   * Describe the graph explicitly
 
-##### Record sequence
+#### 应用：VLLM Piecewise CUDA Graph
 
-* Supports any number of streams (except default stream 0) 
-  * Follows dependencies to other streams through events
-  * Capture all streams that have dependency with first captured stream
-* Need all recorded calls to be asynchronous and bound to a stream
-  * CPU code needs to be asynchronous to be recorded too!
-  * `cudaLaunchHostFunc`
+> https://mp.weixin.qq.com/s/JCzBtIAMVOiNtisHxZBTUw
 
-##### Describing the graph explicitly
-
-
+* prefill阶段的attn隔离掉（因为变长），对剩下的其它算子做cuda graph
 
 
 
@@ -2199,6 +2199,17 @@ https://developer.download.nvidia.com/video/gputechconf/gtc/2019/presentation/s9
 * Group transfer
   * One large transfer much better than many small ones
   * Overlap memory transfer with computation
+
+#### kernel fusion
+
+* --> 「LLM-MLSys」-「POD-Attention」-「现有kernel fusion技术的局限性」
+
+##### SM Aware CTA Scheduling
+
+* ![image-20251005180123244](./GPU/image-20251005180123244.png)
+* ![image-20251005180858114](./GPU/image-20251005180858114.png)
+
+
 
 #### Instruction Optimization
 
