@@ -586,6 +586,27 @@ https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html
   * 前者是说，一篇文档的词频（而不是词序）代表了文档的主题；
   * 后者是说，上下文环境相似的两个词有着相近的语义。
 
+##### 高维空间维度灾难（Curse of Dimensionality）和测度集中（Concentration of Measure）
+
+- 问题定义：$$Score = q · S = q · (v_1 + v_2 + ... + v_k + ... + v_N)$$
+  - 点积是Attention和各种模型的核心计算
+  - 问题的关键在于， 随着维度 D 的增加， $$q · v_k$$ 这一项相对于整个总和 $$Σ(q · v_i)$$ 的影响力是如何变化的。
+- 低维空间：
+  - 直观例子 (2维): 假设 $$v_1 = [10, 0]$$ ， $$v_2 = [1, 1]$$ 。它们的和 $$S = [11, 1]$$。向量 S 的方向几乎完全由 $$v_1$$ 决定。如果此时有一个查询向量 $$q = [1, 0]$$ ，那么：
+    - $$q · v_1$$ = 10
+    - $$q · v_2$$ = 1
+    - $$Score = q · S = 1$$
+    - 在这里， $$v_1$$ 的贡献占了总分的 10/11 ≈ 91% 。$$v_2$$ 对结果产生了 主导性影响 。
+  - 在低维空间，单个向量的“个性”或“方向性”容易保留下来并主导求和后的结果。
+- 高维空间的反直觉特性：**向量几乎总是近乎正交的**
+  - 假设向量 $$q$$ 和 $$v$$ 的每个分量 $$q_i, v_i$$ 都是从均值为 $$0$$、方差为 $$1$$ 的分布中独立随机抽取的。
+  - 点积的期望值：$$E[q \cdot v] = E\left[\sum_{i=1}^{D} q_i v_i\right] = \sum_{i=1}^{D} E[q_i v_i] = \sum_{i=1}^{D} E[q_i]E[v_i] = 0$$
+  - 点积的方差： $$Var(q \cdot v) = Var\left(\sum_{i=1}^{D} q_i v_i\right) = \sum_{i=1}^{D} Var(q_i v_i) = \sum_{i=1}^{D} E[q_i^2]E[v_i^2] - (E[q_i]E[v_i])^2 = \sum_{i=1}^{D} (1 \cdot 1 - 0) = D$$
+  - $$\cos(\theta) = \frac{q \cdot v}{||q|| \cdot ||v||}$$，其分子 $$q \cdot $$ 的标准差为 $$\sqrt{D}$$，而分母 $$||q|| \cdot ||v|$$ 的期望值约为 $$\sqrt{D} \cdot \sqrt{D} =D $$。因此，$$\cos(\theta)$$ 的值会随着 $$D$$ 的增大而向 $$0$$ 集中。
+-  $$N$$ 个“随机噪声”加起来：$$Score = q \cdot v_1 + q \cdot v_2 + \dots + q \cdot v_N = \sum_{i=1}^{N} q \cdot v_i$$
+  - 根据中心极限定理，总和会趋向于一个正态分布。
+  - 单项 $$q \cdot v_k$$ 对总和的相对贡献 ≈ `StdDev(q · v_k) / StdDev(Score) = sqrt(D) / sqrt(N * D) = 1 / sqrt(N)`，N越大，相对贡献越小。
+
 #### 利用 Embedding 的 Feature-based 方法
 
 * 历史方法

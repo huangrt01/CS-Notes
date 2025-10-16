@@ -2528,3 +2528,7 @@ ptrToConsume = manager.manage(ptrToProduce); // Usage
 ### AMD GPU
 
 [为什么除了CSP，几乎没人用AMD的GPU？--SemiAnalysis](https://mp.weixin.qq.com/s/y-fCljKIuWZou_2OYYUDGQ)
+
+### 晟腾 NPU
+
+* 知乎相关讨论，活成了华为的测试团队 https://www.zhihu.com/question/1952365913941729630/answer/1954950015760966264

@@ -1005,6 +1005,8 @@ https://arxiv.org/pdf/2103.00112
 
 ### 非Transformer架构研究
 
+> todo: 快速权重 using fast weights to attend to the recent past
+
 #### Intro
 
 > RNN 长上下文记忆能力弱 --> Transformer架构
@@ -1872,6 +1874,8 @@ but can achieve stronger performance than MHA
 ### MLA
 
 > [Zartbot 解读](https://mp.weixin.qq.com/s?__biz=MzUxNzQ5MTExNw==&mid=2247489919&idx=1&sn=e0f253eef5637a364defc1ce2051d713&scene=21#wechat_redirect)
+>
+> todo MLA系列知识点 http://xhslink.com/o/A7ws1PQXhM2
 
 ![image-20250503133239668](./AI-Algorithms/image-20250503133239668.png)
 
@@ -2696,78 +2700,6 @@ https://www.zhihu.com/question/603488576/answer/3178990801
   * 图表问答生成：ChartLlama-code
 
 ![image-20241207213052536](./AI-Algorithms/image-20241207213052536.png)
-
-
-
-
-
-### 多模态
-
-#### [Where to Go Next for Recommender Systems? ID- vs. Modality-based Recommender Models Revisited](https://arxiv.org/pdf/2303.13835)
-
-* Intro：
-  * 结论是：MoRec is already comparable to its IDRec counterpart with an expensive end-to-end training method, **even for warm item recommendation**
-  * https://github.com/westlake-repl/IDvs.MoRec
-  * Q(i): Equipped with strong modality encoders (ME), can
-    MoRec be comparable to or even surpass IDRec in regular, especially in warm-start item recommendation scenario?
-    * two-tower based DSSM [24, 50] and session-based SASRec [25])，公平的实验setting对比
-  * Q(ii): If Q(i) is yes, can the recent technical advances devel-
-    oped in NLP and CV fields translate into accuracy improve- ment in MoRec when using text and visual features? 
-  * Q(iii): Are the representations learned by these founda-
-    tion models as general as claimed? How can we effectively use item modality representations derived from an NLP or CV encoder network?
-
-* 算法：
-  * User表征：User Emb、User BHV、User Profile
-  * Item表征：Item Emb、模态Emb
-  * 基于DSSM和SASREC研究IDRec和MoRec
-    * SASRec is a well-known se- quential recommendation model based on multi-head self-attention (MHSA) [59] which describes a user by her interacted item ID sequence.
-* 结论：
-  * seq2seq训练 + SASREC相比双塔，更能发挥MoRec的能力
-  * E2E训练效果比two stage好很多
-    * “唯一The good thing” is that by proper adaption (i.e., TS-DNN), TS-based MoRec have some potential to compete with E2E MoRec for text recommendation in the future (16.66 vs 18.23).
-    * representation fea- tures are not universal enough, at least for item recommendation.
-
-![image-20241003233046500](./AI-Algorithms/morec.png)
-
-* 关于Training Cost：
-  * the best MoRec (with SASRec as user encoder and Swin-B as ME) takes an astonishing more than 100x compute and training time than IDRec
-  * inference time差不多
-  * 优化思路：
-    * 只finetune top-layer
-* 其它算法相关：
-  * extra pre-training：在e2e morec的基础上，比较难做效果
-  * Combing ID & modality features：效果差
-  * it is sometimes necessary to set different learning rate for item ME and other modules. This may be because item ME has been pre-trained on NLP and CV datasets before, and its learning stride may be different from other modules trained from scratch.
-
-#### Exploring the Upper Limits of Text-Based Collaborative Filtering Using Large Language Models: Discoveries and Insights
-
-* Intro
-  * Text-based collaborative filtering (TCF)
-  * We examine whether these extremely large LMs could enable a universal item representation for the recommendation task.
-
-* 算法：
-  * loss：either be a pairwise BPR [38] loss or a cross-entropy classification loss [54].
-
-* 结论
-  * Q1: How does the recommender system’s performance respond to the continuous increase in the item encoder’s size? Is the performance limits attainable at the scale of hundreds of billions? 
-    * sasrec效果好于DSSM
-    * the TCF model with a 175B parameter LM may not have reached its performance ceiling
-  * Q2: Can super-large LMs, such as GPT-3 with 175-billion parameters, generate universal text representations?
-    * even the item representation learned by an extremely large LM (e.g., GPT-3) may not result in a universal representation, at least not for the text
-    * ![image-20241006172858506](./AI-Algorithms/tcf-result.png)
-    * Finetune LM效果好（top two layers）![image-20241006173055402](./AI-Algorithms/image-20241006173055402.png)
-  * Q3: Can recommender models with a 175-billion parameter LM as the item encoder easily beat the simplest ID embedding based models (IDCF), especially for warm item recommendation?
-    * ![image-20241006173158353](./AI-Algorithms/tcf-result2.png)
-  * Q4: How close is the TCF paradigm to a universal recommender model?
-    * while TCF models with large LMs do exhibit a certain degree of transfer learning capability, they still fall significantly short of being a universal recommender model, as we had initially envisioned
-    * Table 3
-    * For a universal recommender system model, not only should item representations be transferable, **but also the matching relationship between users and items needs to be transferable.** However, the matching relationship is closely related to the exposure strategy of the specific recommender system.
-  * Q5: Will the classic TCF paradigm be replaced by a recent prompt engineering based rec- ommendation method that utilizes ChatGPT (called ChatGPT4Rec)?
-
-![image-20241006171904133](./AI-Algorithms/TCF.png)
-
-* 其它：
-  * appendix有sasrec在不同数据集的训练超参
 
 
 

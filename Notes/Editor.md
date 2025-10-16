@@ -14,6 +14,8 @@
 
 ### Trae
 
+> todo: https://docs.trae.cn/ide/what-is-trae
+
 #### 快捷键
 
 * 报告问题：Command + K Command + R
@@ -25,6 +27,16 @@
     * 打开 Editor 设置，搜索 pyright type checking mode。
     * 将默认的 recommended 模式修改为 basic 模式。
 * ruff
+
+#### MCP
+
+> 官网：https://docs.trae.ai/ide/tutorial-mcp-figma?_lang=zh
+>
+> 公众号
+
+
+
+
 
 ### Vim
 

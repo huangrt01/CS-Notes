@@ -2858,6 +2858,49 @@ for prediction, label, img in zip(p,l,i):
 * 机器学习平台（PyTorch）-- Generic Infra
 * 虚拟现实，加密货币（Oculus，Libra）-- Cutting Edge, Future Product
 
+#### taobao、爱橙: RecIS，基于torch
+
+> https://mp.weixin.qq.com/s/aLZ79XIdEDvJjrWHwig7_A
+>
+> http://arxiv.org/abs/2509.20883
+
+##### IO优化
+
+读样本(IO)阶段，预期是样本能够充分供给GPU训练计算，读样本的延迟能够被训练延迟掩盖。具体而言有多个优化目标：a. 样本存储压缩率高；b. 读样本数据吞吐尽量高；c. 处理样本效率高。这主要包括以下优化：
+
+【存储layout - 列存】
+
+列存样本是按列顺序优先存储，由于训练本身就是各列组装成多个Tensor 进行批量计算的，列存样本节省了组装过程从行中拷贝的工作，而且可以通过存储端"选列"，无代价的满足筛选特征的需求，非常适合作为推荐模型的存储结构。另外按列存储有更好的压缩比，一方面释放了更大的容量空间，一方面也减轻了网络带宽的压力。
+
+**【高并发&异步】**
+
+在训练进程内部，通过多线程高并发读取分片数据，压榨分布式存储性能；相比torch的python多进程dataloader，C++多线程的性能更高，对GPU Lauch的影响也更小；我们通过异步化，使IO和训练同时进行，隐藏读样本的延迟。
+
+**【内存layout - CSR】**
+
+和Tensorflow的SparseTensor(COO)相比，RaggedTensor(CSR)的存储表达更高效，特别是对于超长序列特征。
+
+**【GPU打Batch】**
+
+在一些对IO性能要求极致的场景，我们还提供GPU组装Batch的能力，一方面充分利用GPU访存，一方面可以在多线程中提前进行高效的CPU->GPU拷贝。
+
+##### **访存优化**
+
+推荐模型的稀疏部分通常是典型的访存密集型（Memory-bound）场景，我们必须对关键路径上的访存效率进行深入优化。这主要包含以下几个核心策略：
+
+**【GPU Hashtable】**
+
+* offload策略
+* 将具有相同维度（embedding dimension）的参数合并成一个大的逻辑表（table）
+* 算子优化
+  * 稀疏计算并发优化
+  * 自动对维度相同的 Embedding 进行合并优化
+  *  向量化访存（咋实现的？）
+  * 原子操作优化
+    * 在推荐模型中，多处涉及 Sparse Reduction 操作。例如，在 Embedding 计算中，多值特征对应的 Embedding 向量通常会通过 Sum 或 Mean 等操作进行池化（pooling），形成一个稠密张量以供后续网络计算。
+    * 由于稀疏张量固有的变长特性，这类 Reduction 操作难以进行高效合并。因此，开发者通常会直接采用 atomic_add 等原子操作。然而，这会引发内存碰撞（collision），导致访存效率低下。
+    * 为解决这一问题，我们发现，在 Sparse Reduction 中，相邻的 Embedding 向量更有可能进行 Reduction。基于这一观察，RecIS 采取了新的优化方案：通过Warp 级别合并，结合向量化访存，来减少原子操作的碰撞，从而提升访存效率。
+
 #### 快手
 
 * sim 基于embedding聚类

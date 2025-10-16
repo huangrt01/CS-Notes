@@ -111,8 +111,24 @@
 - facebook-DLRM
   - https://github.com/facebookresearch/dlrm
 
+#### GR、RQ-VAE
+
+- GRID
+  - https://github.com/snap-research/GRID
+
+- rq-vae-quantization
+  - https://github.com/kakaobrain/rq-vae-transformer
+  - quantizations.py
+
+- TIGER (unofficial)
+  - https://github.com/EdoardoBotta/RQ-VAE-Recommender
+
 
 ### Applied Algo
+
+#### Context Engineering
+
+- MineContext
 
 #### Agent / RAG
 

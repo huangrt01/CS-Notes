@@ -156,7 +156,23 @@
 
 
 
-### 各种概念
+#### 定价与成本："下云"运动
+
+* 《[**花钱买罪受的大冤种：逃离云计算妙瓦底**](https://mp.weixin.qq.com/s?__biz=MzU5ODAyNTM5Ng==&mid=2247488951&idx=1&sn=ad3b7b24d99728672728bde480366bd0&scene=21#wechat_redirect)》
+* 下云范例
+  * 《[**DHH：下云超预期，能省一个亿**](https://mp.weixin.qq.com/s?__biz=MzU5ODAyNTM5Ng==&mid=2247488498&idx=1&sn=9950b036d3ed6ed5880592bd2ce6c8f7&scene=21#wechat_redirect)》
+  * 《[**B站HTTPDNS自研降本之道**](https://mp.weixin.qq.com/s?__biz=Mzg3Njc0NTgwMg==&mid=2247492578&idx=1&sn=bb87b1171165720ecdd50f58c6013ba2&scene=21#wechat_redirect)》
+* 《[**云计算泥石流：下云合订本**](https://mp.weixin.qq.com/s?__biz=MzU5ODAyNTM5Ng==&mid=2247488410&idx=1&sn=e44705fce4221458244e7705258ca254&scene=21#wechat_redirect)》
+
+
+
+
+
+### 各种概念和理念
+
+#### IaC (Infrastructure as Code)
+
+https://aws.amazon.com/cn/what-is/iac/
 
 #### CNCF (Cloud Native Computing Foundation) 的定义
 
@@ -233,9 +249,22 @@ Case Study Setup:
 
 
 
-## 云的底层技术&产品
+## 云的基础设施
 
 ### Intro
+
+#### 应用和基础设施的关系
+
+> https://mp.weixin.qq.com/s/lfZXEh6zJPzorI3cdcqwyg
+
+* 阿里云的张瓅玶先生提出：应用和基础设施应全面解藕。
+  * ![image-20251007172921716](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20251007172921716.png)
+  * 阿里巴巴的应用上云前仍然存在应用和基础设施耦合问题，由于采用自建软件基础设施，配置管理、发布升级、监控观测、流量治理等与业务应用耦合在一起，对于运维效率、研发演进效率和稳定性都带来了挑战。我们在上云过程中看到，实现标准的云基础设施和业务应用的全面解耦，将会带来全面的研发运维效率提升。
+* 笔者无法赞同。恰恰相反，**大多数团队开发云原生系统时候, 不再区分基础设施和应用代码**：
+  1. 把基础设施作为代码管理，此即为 Infra as Code。工具有 Terraform，AWS CDK 和 Kubernetes 的 YAML。尽量避免手动在控制台修改配置。
+  2. 利用 CI/CD 把基础设施代码和应用代码的变更用同一个流程管理起来。举例来说， URL **https://magong.se/api/todos** 的域名 magong.se 可能取决于基础设施代码的 DNS 部分，路径 api 取决于基础设施代码的 API Gateway部分，而路径 todos 则取决于应用层代码。对一个良好的 CI/CD 来说， 修改基础设施代码和应用代码，没什么区别，无非就是又一次部署而已。
+  3. 管理应用代码的 Dev 也管理基础设施代码。由于 DevOps 的演进，目前大多数云原生开发团队已经没有专门的运维组了。Infra 也是 Dev 在管理。
+  4. 我和我的朋友们把这种基础设施和应用的耦合更推进一步，SealOS 的方海涛主张[**《**](https://mp.weixin.qq.com/s?__biz=Mzg5ODkwNTc2Ng==&mid=2247488841&idx=1&sn=ab06e5d17b33f7fcdef9de140fdbe99a&scene=21#wechat_redirect)[**云本应该就是操作系统**](https://mp.weixin.qq.com/s?__biz=Mzg5ODkwNTc2Ng==&mid=2247488841&idx=1&sn=ab06e5d17b33f7fcdef9de140fdbe99a&scene=21#wechat_redirect)》， ClapDB 的李令辉主张《[**云是一台新电脑**](https://mp.weixin.qq.com/s?__biz=Mzg2MDYzOTUzMA==&mid=2247483706&idx=1&sn=68768543f49c6f853043ef5c10abb864&scene=21#wechat_redirect)》。在这个范式下，应用调用云 API 和调用 Syscalls 是类似的。没有人会说要解耦应用和操作系统，同理，也不应该提倡解耦应用和基础设施。
 
 #### Borg, Omega, and Kubernetes
 
@@ -683,7 +712,7 @@ rclone copy README.txt tos:ABC --s3-no-head-object
 
 * 最简单的确认方式：控制有/无其它租户，做控制变量，测量e2e指标和微架构指标
 
-### 可观测性服务 —— 运维监控
+### Monitoring 可观测性服务 —— 运维监控
 
 > 经验中，云原生系统的可观测性开销，往往占到云开销的 15%-25%。
 >
@@ -703,6 +732,24 @@ rclone copy README.txt tos:ABC --s3-no-head-object
   * 本质是提升数据可观测性（Data Observability），打破数据边界，提供一个“统一的视窗”，实现对数据的全览和实时监控
   * 也有观点认为，可视化的重要性远大于指标、日志和链路追踪
   * 推动“数据民主化”
+
+### Logging
+
+
+
+### Tracing
+
+### Alert
+
+
+
+### CI/CD平台 DevOps
+
+* 阿里云云效
+  * https://www.aliyun.com/product/yunxiao
+* [vivo自建](https://mp.weixin.qq.com/mp/wappoc_appmsgcaptcha?poc_token=HCbf5Gij-A3fYkuQVymNKQEvJbLry_qZo2HlMLcR&target_url=https%3A%2F%2Fmp.weixin.qq.com%2Fs%3F__biz%3DMzI4NjY4MTU5Nw%3D%3D%26mid%3D2247498843%26idx%3D1%26sn%3D314aff57db845b164d2e70d0d58ad12a%26token%3D789170263%26lang%3Dzh_CN%26scene%3D21#wechat_redirect)
+
+
 
 ### 安全服务
 

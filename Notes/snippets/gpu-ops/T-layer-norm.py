@@ -1,3 +1,5 @@
+# https://triton-lang.org/main/getting-started/tutorials/05-layer-norm.html
+
 # Implementing backward pass in Triton.
 
 # Implementing parallel reduction in Triton.

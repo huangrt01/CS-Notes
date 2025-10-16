@@ -28,6 +28,8 @@
 
 ## Algorithm
 
+> TODO Reinforcement Learning An Overview
+
 ### PPO
 
 * 核心思路是clipping
@@ -267,3 +269,11 @@
 * 在提供灵活性的同时,veRL利用3D-HybridEngine能力,减少训练和生成阶段之间转换期间的通信开销,提供极致吞吐性能。
 * 支持Auto - Mapping算法来搜索每个node最佳Parallelism和Placement方式。将模型放置到不同的GPU组上,以实现高效的
   资源利用和跨不同集群规模的可扩展性。
+
+
+
+## RL应用算法
+
+### Search-r1
+
+> reasoning模型和工具调用结合起来强化学习训练

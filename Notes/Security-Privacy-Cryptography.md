@@ -44,16 +44,13 @@ return sum;
 
 
 
-### MIT 6.NULL 
-[6.NULL Security and Cryptography](https://missing.csail.mit.edu/2020/security/)
+### Security and Cryptography
 
-[6.NULL Security and Privacy](https://missing.csail.mit.edu/2019/security/)
-
-#### Security and Cryptography
+> [6.NULL Security and Cryptography](https://missing.csail.mit.edu/2020/security/)
 
 [Cryptographic Right Answers](https://latacora.micro.blog/2018/04/03/cryptographic-right-answers.html)
 
-一些概念：
+#### Intro
 
 ##### Entropy
 online guessing - 40 bits of entropy
@@ -71,8 +68,7 @@ offline guessing - 80 bits of entropy
 - Producing keys from passphrases for use in other cryptographic algorithms (e.g. symmetric cryptography, see below).
 - Storing login credentials. Storing plaintext passwords is bad; the right approach is to generate and store a random [salt](https://en.wikipedia.org/wiki/Salt_(cryptography)) `salt = random()` for each user, store `KDF(password + salt)`, and verify login attempts by re-computing the KDF given the entered password and the stored salt.
 
-
-##### Symmetric cryptography
+#### Symmetric cryptography
 
 应用：
 
@@ -85,7 +81,7 @@ openssl aes-256-cbc -d -in {input filename} -out {output filename}
 
 
 
-##### Asymmetric cryptography
+#### Asymmetric cryptography
 
 用private key来sign，用public key来encrypt
 
@@ -153,9 +149,11 @@ curl https://github.com/web-flow.gpg | gpg --import
 gpg --sign-key 4AEE18F83AFDEB23
 ```
 
+### Security and Privacy
 
+> [6.NULL Security and Privacy](https://missing.csail.mit.edu/2019/security/)
 
-#### Security and Privacy
+#### Intro
 
 Follow the [right people](https://heimdalsecurity.com/blog/best-twitter-cybersec-accounts/)
 
@@ -169,7 +167,9 @@ Follow the [right people](https://heimdalsecurity.com/blog/best-twitter-cybersec
 
 Tech Solidarity has a pretty great list of [do’s and don’ts for journalists](https://techsolidarity.org/resources/basic_security.htm) that has a lot of sane advice, and is decently up-to-date. @thegrugq also has a good blog post on [travel security advice](https://medium.com/@thegrugq/stop-fabricating-travel-security-advice-35259bf0e869) that’s worth reading. We’ll repeat much of the advice from those sources here, plus some more. Also, get a [USB data blocker](https://amzn.com/B00QRRZ2QM), because [USB is scary](https://www.bleepingcomputer.com/news/security/heres-a-list-of-29-different-types-of-usb-attacks/).
 
-##### Private Communication
+
+
+#### Private Communication
 
 Use [Signal](https://www.signal.org/) ([setup instructions](https://medium.com/@mshelton/signal-for-beginners-c6b44f76a1f0). [Wire](https://wire.com/en/) is [fine too](https://www.securemessagingapps.com/); WhatsApp is okay; [don’t use Telegram](https://twitter.com/bascule/status/897187286554628096) (不错的文章)). Desktop messengers are pretty broken (partially due to usually relying on Electron, which is a huge trust stack).
 
@@ -177,7 +177,7 @@ E-mail is particularly problematic, even if PGP signed. It’s not generally for
 
 
 
-##### File Security
+#### File Security
 
 File security is hard, and operates on many level. What is it you’re trying to secure against?
 
@@ -196,7 +196,9 @@ File security is hard, and operates on many level. What is it you’re trying to
 
   - Think about whether an attacker can delete your backups if they get a hold of your laptop!
 
-##### Internet Security & Privacy
+
+
+#### Internet Security & Privacy
 
 The internet is a *very* scary place. Open WiFi networks [are](https://www.troyhunt.com/the-beginners-guide-to-breaking-website/) [scary](https://www.troyhunt.com/talking-with-scott-hanselman-on/). Make sure you delete them afterwards, otherwise your phone will happily announce and re-connect to something with the same name later!
 
@@ -206,7 +208,7 @@ If you’re particularly privacy-oriented, [privacytools.io](https://privacytool
 
 Some of you may wonder about [Tor](https://www.torproject.org/). Keep in mind that Tor is *not* particularly resistant to powerful global attackers, and is weak against traffic analysis attacks. It may be useful for hiding traffic on a small scale, but won’t really buy you all that much in terms of privacy. You’re better off using more secure services in the first place (Signal, TLS + certificate pinning, etc.).
 
-##### Web Security
+#### Web Security
 
 So, you want to go on the Web too? Jeez, you’re really pushing your luck here.
 
@@ -242,3 +244,4 @@ If you’re using Firefox, enable [Multi-Account Containers](https://support.moz
 * 任意文件读取/下载漏洞
 * SQL注入漏洞
   * 编码不规范引发。攻击者拼接SQL片段，通过返回包内容的大小，逐步获取数据库的内容
+* [炮打Ollama鉴权机制——为什么CS从业者都需要学习网络安全](https://www.bilibili.com/video/BV1eZ421z79W/)
