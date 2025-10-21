@@ -25,10 +25,13 @@
 
 - HugeCTR
 
-#### LLM训练框架
+#### 训练框架、最佳实践
 
 - llm.cccl
   - https://github.com/gevtushenko/llm.c
+
+- nvidia例子库
+  - https://github.com/NVIDIA/DeepLearningExamples/tree/master
 
 
 #### Data Pipeline
@@ -61,6 +64,8 @@
   - .../backend
   - .../python_backend
   - .../pytorch_backend     for LibTorch
+  - PyTriton: https://github.com/triton-inference-server/pytriton
+  - Model Analyzer: https://github.com/triton-inference-server/model_analyzer/tree/main/docs
 
 #### 量化
 

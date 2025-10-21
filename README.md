@@ -1,10 +1,13 @@
 ## CS-Notes
 
-### Intro
+### 2021年版Intro
 
 * 我的自学笔记，在学习MLSys和C++，整理算法、操作系统，后续学习分布式系统，终身更新。
 * 我不是贵系oi出身的大神，目前在以一个初学者的心态补习计算机知识，学习路径和心得可能更值得大家借鉴。
-* 欢迎交流任何问题，[知乎咨询](https://www.zhihu.com/people/huang-rui-teng)满意率100%，私信交流也可，力所能及的都会回复，有代表性的问题会加进本仓库分享。
+
+### 2025年版Intro
+
+* 多了太多内容，无从谈起，建议看目录。
 
 ### 笔记心得
 
@@ -18,4 +21,13 @@
   * remaining bug: 包含`$`的行会视为latex行内公式转化为公式图片，但这样会将shell代码转换，需要判断是否在latex代码域内，予以排除
   * solution: clone仓库，用[Typora](https://typora.io/)阅读Note文件夹里的本体文件
 * 内推字节AML团队，请联系 huangrt01@163.com
+
+### 社交媒体
+
+* [小红书](https://www.xiaohongshu.com/user/profile/5cb7c5bf00000000160120df): 观想人间的一团云，当前3-4k粉丝
+* [知乎咨询](https://www.zhihu.com/people/huang-rui-teng)
+
+### Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=huangrt01/CS-Notes&type=date&legend=top-left)](https://www.star-history.com/#huangrt01/CS-Notes&type=date&legend=top-left)
 

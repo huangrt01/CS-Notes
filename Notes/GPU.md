@@ -1174,6 +1174,13 @@ __global__ void kernel(int *a, int N)
 * Parallel Thread Execution (PTX) is a low-level VM & instruction set
 * graphics driver translates PTX into executable binary code (SASS)
 
+* 编译流程：device & host code separation
+  * ![image-20251020032139241](./GPU/image-20251020032139241.png)
+  * ![image-20251020032252213](./GPU/image-20251020032252213.png)
+  * ![image-20251021010805296](./GPU/image-20251021010805296.png)
+
+
+
 #### CUDA Libraries (called from device)
 
 * CUTLASS、Thrust、CUB
@@ -1908,6 +1915,35 @@ https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
 
 * [实现Baby Triton](https://zhuanlan.zhihu.com/p/709844371?share_code=1zPzTKwsDAJN&utm_psn=1910488935282479202)
 
+##### Triton Internals —— GPU Mode Lecture 29 看到 09:54
+
+> https://www.youtube.com/watch?v=njgow_zaJMw
+>
+> Kapil Sharma @Meta
+>
+> https://www.kapilsharma.dev/posts/deep-dive-into-triton-internals/ 1、2、3系列
+>
+> Cuda Compilation
+> ->Triton Compilation
+> ->Example
+> ->Jit Compilation
+> ->Triton and MLIR
+> ->IR Walkthrough
+> ->Example MLIR Pass
+> ->If Time Permits: Add a new compiler pass
+
+* Intro
+  * cuda compilation -> 「CUDA Compiler」
+  * The `@triton.jit` decorator works by walking the Abstract Syntax Tree (AST) of the provided Python function so as to generate Triton-IR on-the-fly using a common SSA construction algorithm.
+    * [Simple and efficient construction of static single assignment form](https://link.springer.com/chapter/10.1007/978-3-642-37051-9_6)
+  * The resulting IR code is then simplified, optimized and automatically parallelized by our compiler backend, before being converted into high-quality LLVM-IR—and eventually PTX—for execution on recent NVIDIA GPUs.
+  * ![image-20251021011220240](./GPU/image-20251021011220240.png)
+  * ![image-20251021011403520](./GPU/image-20251021011403520.png)
+
+
+
+
+
 #### Debugging
 
 > snippets/gpu-triton-debugging.py
@@ -1920,6 +1956,7 @@ https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper/
 #### 经验和细节
 
 * triton autotune目前对dynamic shape的支持不好，性能较差，原因是autotune会对每个新shape重新tune
+  * 考虑AOT方法
   * GemLite
 
 

@@ -526,6 +526,10 @@ softcapping
 
 ![image-20251004224418837](./AI-Algorithms/image-20251004224418837.png)
 
+#### 广义的decoder
+
+* 也参考「深度学习推荐系统——VQ-VAE」
+
 #### Masked Softmax 因果掩码机制
 
 * masked multi-head attention
@@ -2021,6 +2025,12 @@ utilize MTP to improve training.
 * Distillation from DeepSeek-R1
 * Self-Rewarding
 
+# DeepSeek-OCR todo
+
+> https://github.com/deepseek-ai/DeepSeek-OCR/blob/main/DeepSeek_OCR_paper.pdf
+
+
+
 ## Embedding Model
 
 https://ezml.io/blog/beyond-clip-the-future-of-multimodal-retrieval-with-visualized-bge-vista-and-magiclens
@@ -2782,6 +2792,22 @@ https://www.zhihu.com/question/603488576/answer/3178990801
 ### 视频理解
 
 * TS2NET：soft/hard attn，做max pooling进行筛选token
+
+
+
+### 图像和视频生成
+
+#### rejection sampling
+
+本质是 **“生成一批样本，筛选后保留优质样本” 的后处理方法 **。
+
+论文中用于类条件（ImageNet）和文本条件（CC-3M）图像生成：
+
+- 背景：自回归模型（如 RQ-Transformer）生成样本时，受 “预测误差累积” 影响，部分样本会出现细节模糊、类别偏离（如类条件生成中 “猫” 生成成 “狗”）或文本 - 图像不对齐（如文本 “雪山汉堡” 生成成 “普通汉堡”）的问题；
+- 操作逻辑：先让模型生成远多于目标数量的样本（如需要 50K 最终样本，先生成 200K），再用一个 “质量评判标准” 对这些样本打分，**拒绝低分劣质样本，只保留高分优质样本**，最终得到符合目标数量的高质量样本。
+- 论文中的 “评判标准”：类条件生成用预训练的 ResNet-101 分类器（判断生成样本是否符合目标类别），文本条件生成用 CLIP 模型（判断生成图像与文本的对齐度）。
+
+评估使用 acceptance rate
 
 
 

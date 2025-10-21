@@ -893,6 +893,12 @@ def find_most_similar(input_word):
   * 3、依次计算该框与其他剩余的框的IOU值。然后通过一个IOU阈值将和这个置信度最高的框拥有较大IOU的框（即和这个框相近的框）去除。
   * 4、 继续对剩余的框进行2，3操作，直到遍历完毕
 
+#### 自回归图像生成
+
+##### PixelCNN
+
+
+
 ### RL —— Reinforcement Learning
 
 > 见 RL.md

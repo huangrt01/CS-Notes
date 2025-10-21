@@ -1359,17 +1359,52 @@ https://arxiv.org/abs/2504.02263
 
 ![image-20251005182019260](./LLM-MLSys/image-20251005182019260.png)
 
+#### Triton v.s. In-house inference server
+
+![image-20251021140125431](./LLM-MLSys/image-20251021140125431.png)
+
+
+
 ### Triton Inference Server
+
+> https://developer.nvidia.com/blog/power-your-ai-inference-with-new-nvidia-triton-and-nvidia-tensorrt-features/#multi-gpu_multi-node_inference
+>
+> b站质量比较高的入门教学视频 https://www.bilibili.com/video/BV1KS4y1v7zd
+>
+> https://docs.nvidia.com/deeplearning/triton-inference-server/release-notes/overview.html#overview
 
 #### Intro
 
-![image-20250917200548693](./LLM-MLSys/image-20250917200548693.png)
+* 本图：推理服务的要素齐全
 
-#### 优化
+![image-20251021011746074](./LLM-MLSys/image-20251021011746074.png)
+
+
+
+![image-20251021013003706](./LLM-MLSys/image-20251021013003706.png)
+
+
+
+##### 推理框架的设计
+
+![image-20251021013611335](./LLM-MLSys/image-20251021013611335.png)
+
+* 模型分为三类
+  * 独立的
+  * ensembled with a model pipeline
+  * stateful model，比如LLM
+    * oldest是一种允许打sequence batch的策略，只要保证顺序即可
+  * ![image-20251021014149599](./LLM-MLSys/image-20251021014149599.png)
+
+#### 应用
+
+![image-20251021140306069](./LLM-MLSys/image-20251021140306069.png)
+
+#### 优化：batching、streaming
 
 * Client/server在本地：
   * Reduces HTTP/gRPC overhead: Inputs/outputs needed to be passed to/from Triton are stored in system/CUDA shared memory. 
-* batching
+* dynamic_batching
 
 
 ```
@@ -1378,6 +1413,10 @@ dynamic_batching {
 	max_queue_delay_microseconds: 100,
 }
 ```
+
+* streaming
+
+![image-20251021014859343](./LLM-MLSys/image-20251021014859343.png)
 
 #### multi model serving
 
@@ -1391,9 +1430,69 @@ dynamic_batching {
 
 https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/ensemble_models.html
 
+![image-20251021014957347](./LLM-MLSys/image-20251021014957347.png)
+
+#### Step-by-step
+
+##### Prepare the Model Repository
+
+![image-20251021151841663](./LLM-MLSys/image-20251021151841663.png)
+
+![image-20251021163316269](./LLM-MLSys/image-20251021163316269.png)
+
+##### Configure the Served Model
+
+![image-20251021180832920](./LLM-MLSys/image-20251021180832920.png)
+
+![image-20251021181028150](./LLM-MLSys/image-20251021181028150.png)
+
+* version policy
+
+![image-20251021181939060](./LLM-MLSys/image-20251021181939060.png)
+
+* instance groups
+
+![image-20251021182528915](./LLM-MLSys/image-20251021182528915.png)
 
 
-### TensorRT backend
+
+##### Launch Triton Server
+
+
+
+##### Configure an Ensemble Model
+
+##### Send Requests to Triton Server
+
+
+
+
+
+#### 更多能力
+
+##### Metrics
+
+![image-20251021140234653](./LLM-MLSys/image-20251021140234653.png)
+
+##### Model Analyzer
+
+> https://www.bilibili.com/video/BV1R3411g7VR?spm_id_from=333.788.videopod.sections&vd_source=65f5ae8ea74e17ab3f49a362930881e1
+
+* Performance&memory analysis 
+
+##### PyTriton
+
+https://github.com/triton-inference-server/pytriton
+
+##### Triton Management Service
+
+NVIDIA Triton Management Service provides model orchestration functionality for efficient multimodel inference. This functionality, which runs as a production service, loads models on demand and unloads models when not in use. 
+
+It efficiently allocates GPU resources by placing as many models as possible on a single GPU server and helps to optimally group models from different frameworks for efficient memory use. It now supports autoscaling of NVIDIA Triton instances based on high utilization from inference and encrypted (AES-256) communication with applications. [Apply for early access to NVIDIA Triton Management Service.](https://developer.nvidia.com/tms-early-access)
+
+### TensorRT
+
+> https://developer.nvidia.com/blog/power-your-ai-inference-with-new-nvidia-triton-and-nvidia-tensorrt-features
 
 #### Intro
 
@@ -1426,6 +1525,12 @@ https://github.com/pytorch/TensorRT/releases/tag/v2.8.0
 > https://docs.pytorch.org/TensorRT/dynamo/dynamo_export.html
 >
 > https://docs.pytorch.org/TensorRT/fx/getting_started_with_fx_path.html
+
+#### 更多能力
+
+* Multi-GPU multi-node inference
+
+
 
 ### Nvidia Dynamo
 
@@ -1486,6 +1591,13 @@ https://github.com/pytorch/TensorRT/releases/tag/v2.8.0
 
 * Intro
   * known for its almost [zero-overhead batch scheduler](https://lmsys.org/blog/2024-12-04-sglang-v0-4/) and fast [constrained decoding](https://lmsys.org/blog/2024-02-05-compressed-fsm/)
+
+#### 性能优化
+
+* [SGLang 性能优化知识点2025-9月月报](https://mp.weixin.qq.com/s/6AVsx9FavxCjVmnmzVyoLw)
+  * 许多细节性能优化，适合走读源码
+
+
 
 ### vLLM
 

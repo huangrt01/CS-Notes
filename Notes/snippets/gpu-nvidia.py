@@ -7,14 +7,25 @@ cat /proc/driver/nvidia/version
 
 https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html
 
-# CUDA版本
+* CUDA版本
 
-% nvcc -V 
+% nvcc -V
+
+cat /usr/local/cuda/version.txt
 
 # note
 nvcc是准确的。  nvidia-smi是最大支持版本
 一个CUDA Driver版本可以支持多个CUDA版本
 
+* cuDNN版本
+
+cat /usr/local/cuda/include/cudnn.h | grep CUDNN_MAJOR -A 2
+
+*** 关于容器
+
+https://hub.docker.com/r/nvidia/cuda
+
+training_image="nvcr.nju.edu.cn/nvidia/cuda:12.6.3-cudnn-devel-ubuntu22.04"
 
 
 ### basic

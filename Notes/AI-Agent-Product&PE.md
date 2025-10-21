@@ -986,6 +986,24 @@ Assistant：
 原谅值：20/100
 ```
 
+
+
+## MCP
+
+### Intro
+
+[MCP Protocol](https://www.anthropic.com/news/model-context-protocol)
+
+### 衔接 MCP 和 Workflow 的产品
+
+#### Claude Skills
+
+* [不写代码也能定制 AI 工作流？Claude Skills 让你的 AI 更懂你](https://mp.weixin.qq.com/s/8nk3DaZqAqJxbxW9BJuFlA)
+  * 积累workflow数据
+  * 和MCP的关系，用户定义、定位相似度高
+
+
+
 ## AI Search
 
 ### 产品逻辑
@@ -1157,6 +1175,17 @@ https://hornet.dev/
   * Glaze
     * 在该产品中，每个人都会获得一个初始的虚拟时尚买手 Glaze。用户可添加 Glaze 的联系方式，并成为他的好友。随后在用户浏览 Ins、Pinterest 等时尚内容网站时，可以通过分享按钮将你喜欢的内容分享给这位助手。**Glaze 购物助手会积累这些用户分享数据，学习用户的穿衣风格、产品偏好，并随时为你推荐相关商品**，用户可以直接在 Glaze 推荐的链接中进行购买和转化。
 
+#### Google AI Mode
+
+* AI Overview [2023]：有增量信息价值才显示
+* AI Mode [2025]：点击进入
+  * google搜索和知识图谱
+  * 并行子query
+  * 多模态
+  * 精调gemini
+
+
+
 #### GenSpark 百度系创业
 
 #### BaseModel.ai by Synerise
@@ -1270,6 +1299,9 @@ https://webkul.com/ai-semantic-search-services/
     - Style-specific: Cashmere sweaters, Puffer vests, Statement scarves, Athleisure-inspired winter looks
   * 优势：多样性强
   * 局限性：冷启动The models may not be familiar with newly added product names or trained to memorize millions of product model numbers in its embedding space. 用hybrid search解决
+* 在线链路：
+  * 核心是session id，先得到搜索结果+session id，再通过session id获取生成结果
+  
 * demo
   * stackoverflow的检索：https://ai-demos.dev/demos/matching-engine
     * https://cloud.google.com/blog/products/ai-machine-learning/how-to-use-grounding-for-your-llms-with-text-embeddings?hl=en
@@ -1416,6 +1448,10 @@ https://www.bbc.com/news/articles/c87p2rppx4po
 #### 科学类搜索 SciMaster
 
 https://mp.weixin.qq.com/s/mHz-D6UN3-4MUZSMEGt4ug
+
+#### 医疗AI搜索 OpenEvidence
+
+[一个免费垂直领域AI搜索产品，凭什么8个月估值冲到60亿美金？](https://mp.weixin.qq.com/s/daRpt9ow0jFA-I4vs4gXCw) 
 
 #### 其它
 

@@ -21,7 +21,9 @@
     * Memory-bound: the time taken by the operation is determined by the number of memory accesses, while time spent in computation is much smaller. Examples include most other operations: elementwise (e.g., activation, dropout), and reduction (e.g., sum, softmax, batch norm, layer norm).
     
     * 算术操纵数量/内存访问字节数量
-    * e.g. attention大于0.5接近1
+    * e.g. 
+      * 标准attention：O(d)
+      * Flash-attn：O(N)
   * 纵轴：computational throughput
 
 ![image-20250404195013648](./Computer-Architecture/image-20250404195013648.png)
@@ -73,6 +75,24 @@
 
   * ![image-20250509140316594](./Computer-Architecture/image-20250509140316594.png)
   * 用于分析reduce sum的优化
+
+#### [OSDI 25] 八种系统性能优化方法论
+
+> https://www.usenix.org/system/files/osdi25-park-sujin.pdf
+>
+> 《Principles and Methodologies for Serial Performance Optimization》
+
+![image-20251019030956778](./Computer-Architecture/image-20251019030956778.png)
+
+* 三大优化原则
+
+| 原则标识    | 原则名称   | 核心逻辑                           | 效果                               |
+| ----------- | ---------- | ---------------------------------- | ---------------------------------- |
+| $$P_{rm}$$  | 任务移除   | 从序列$$S_n$$中删除不必要任务      | 优化后序列长度$$m < n$$            |
+| $$P_{rep}$$ | 任务替换   | 用更快任务$$t_j$$替换原任务$$t_i$$ | 序列长度不变，$$F(S_n') < F(S_n)$$ |
+| $$P_{ord}$$ | 任务重排序 | 调整任务执行顺序                   | 利用 locality 等提升效率           |
+
+
 
 #### 为什么优化 Latency 困难
 
@@ -381,6 +401,15 @@ https://www.slideshare.net/am_sharifian/intel-hyper-threading-technology/1
 ![image-20251005231348062](./Computer-Architecture/image-20251005231348062.png)
 
 ### 存储：硬盘、NVMe
+
+* 读写速度
+
+  - **万兆网(10Gb/s)**：理论带宽是1.25GB/s, 实际一般能达到800~1200MB/s
+
+  - **SATA SSD**:读取速度通常在500MB/s 左右
+
+- **NVMe SSD(PCIe 3.0):** 读取速度可以达到3500MB/s 甚至更高
+- **NVMe SSD(PCIe 4.0):** 读取速度可以达到7000MB/s 或更高
 
 * 硬盘：分为HDD和SSD
   * 读写模式

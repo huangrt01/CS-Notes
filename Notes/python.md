@@ -359,6 +359,10 @@ x - y =  -1
    * 控制 from xxx import 的行为，定义公共接口
    * 为 lint 等代码检查工具提供辅助
 
+##### Hydra: 基于yaml管理复杂项目
+
+https://hydra.cc/docs/intro/
+
 #### 关键词
 
 ##### for else
