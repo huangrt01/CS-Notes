@@ -644,7 +644,7 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 ### 混合精度训练、量化推理
 
-#### 低精度的目标
+#### Intro: 低精度的目标
 
 * 低精度的目标是什么？ —— 多目标优化
 
@@ -659,7 +659,7 @@ https://docs.nvidia.com/deeplearning/performance/index.html
       - e.g. Increasing the speed at which **the user receives generated results** is challenging, as compute is **dominated by matrix-vector products**. Unlike matrix-matrix products, these are primarily limited by memory bandwidth.
   - 减少精度损失：先决条件
 
-#### 浮点数精度介绍
+#### Intro: 浮点数精度
 
 * 浮点数
   * $$number = (-1)^{sign\ bit}*(1.mantissa)*2^{(exponent-bias)}$$
@@ -672,22 +672,29 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 * ![image-20250404210744334](./MLSys+RecSys/image-20250404210744334.png)
 
-  * FP64: 8个字节, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
+* FP64: 8个字节, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
 
-  * FP32: 4个字节, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
-    * FP32 = (-1)^(sign) × 2^(decimal exponent **-127** ) × (implicit leading 1 + decimal mantissa), [where](https://en.wikipedia.org/wiki/Exponent_bias) 127 is the biased exponent value.
+* FP32: 4个字节, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
+  * FP32 = (-1)^(sign) × 2^(decimal exponent **-127** ) × (implicit leading 1 + decimal mantissa), [where](https://en.wikipedia.org/wiki/Exponent_bias) 127 is the biased exponent value.
 
-    * the value range for FP32 is approximately [-2¹²⁷, 2¹²⁷] ~[-1.7*1e38, 1.7*1e38]
+  * the value range for FP32 is approximately [-2¹²⁷, 2¹²⁷] ~[-1.7*1e38, 1.7*1e38]
 
-    * excluding the largest value 0xFF as it represents NAN
+  * excluding the largest value 0xFF as it represents NAN
 
-  * FP16: 2个字节 1位符号, 5位指数, 10位小数，**有效位数为3位**. 常用于精度更低的机器学习等
-    *  For FP16, the formula becomes (-1)^(sign) × 2^(decimal exponent **– 15**) × (implicit leading 1 + decimal mantissa), where 15 is the corresponding biased exponent value
-    * the value range for FP16 is approximately [-2¹⁵, 2¹⁵]=[-32768, 32768]
-    * ![image-20250627185839062](./MLSys+RecSys/image-20250627185839062.png)
+  * 精度：1e-23，对应6.9位，所以在1e-6~1e-7
+
+* TF32:
+
+  * 精度：1e-10，对应3位，所以在1e-3
+
+* FP16: 2个字节 1位符号, 5位指数, 10位小数，**有效位数为3位**. 常用于精度更低的机器学习等
+
+  *  For FP16, the formula becomes (-1)^(sign) × 2^(decimal exponent **– 15**) × (implicit leading 1 + decimal mantissa), where 15 is the corresponding biased exponent value
+  * the value range for FP16 is approximately [-2¹⁵, 2¹⁵]=[-32768, 32768]
+  * ![image-20250627185839062](./MLSys+RecSys/image-20250627185839062.png)
 
 * 精度范围：
-  * <img src="./MLSys+RecSys/image-20250331122231657.png" alt="image-20250331122231657" style="zoom:50%;" />
+  * ![image-20250331122231657](./MLSys+RecSys/image-20250331122231657.png)
 
 * fp4
 
@@ -704,7 +711,178 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 * eXmY https://arxiv.org/abs/2405.13938
 
-#### 量化技术分类
+#### Intro: [学术]模型量化介绍
+
+* 神经网络：多函数的嵌套表示
+  * 越来越不规则
+* 训练量化和推理量化的异同
+  - 训练量化：用于计算的模型量化
+    - 权重和输入都有delta（预估时认为权重delta为零）
+    - 偏微分公式 -> 每层的输出到下一层的输入很重要
+      - 同样的量化方式，相同量化精度给不同层的输入带来不同的误差
+      - 存储量化 v.s 计算量化，后者更强调在存储约束下求解最优精度
+    - 核心：控制梯度噪音的范数
+    - 一种可求闭式解（分层量化模型）：量化标准排序、梯度排序，一一对应，排序不等式证明
+      * e.g. **HAWQ-v2**
+  - 推理量化：用于存储的模型量化
+    - 传统问题局限性：求解量化误差最小，不面向loss函数，面向策略，不可解
+  - 量化训练和预测是两个目标，训练结果应该恢复成全精度再用预测压缩的过程压缩一遍
+
+
+* Training 量化
+
+  * 量化感知训练的原理：李沐的ps文章《communication efficient distributed machine learning with the parameter server》https://www.cs.cmu.edu/~muli/file/parameter_server_nips14.pdf
+
+  * 结论：控制梯度噪音的范数
+    * 小结论：量化训练完后要恢复全精度进行计算，再用训练后量化手段进行量化
+    * 实现上：量化的正传，量化/全精度的反传，量化的更新
+      * 全精度反传，与自动求导模块的实现有关，可能存在
+
+
+* 总结：
+
+  * 量化问题本质是NP-hard问题，部分情况下可转换成指数规划问题
+
+  * 量化训练和预测是两个目标，训练结果应该恢复成全精度再用预测压缩的过程压缩一遍
+
+##### 神经网络误差公式推导
+
+* $$\Delta y \approx W\Delta x + \Delta W x + \Delta b$$
+  * 输入误差经权重 “放大” $$W\Delta x$$，对参数进行kernel norm或clip可以减少这种放大作用
+  * 参数误差与输入的 “乘积”$$\Delta W x$$，对activation进行layernorm可以缓解这种误差
+  * 偏置误差$$\Delta b$$
+* 考虑激活函数对误差的影响：
+  * ReLU截断负误差
+  * Sigmoid压缩误差
+  * GELU误差传递稳定
+* 多层误差：
+  * ${\Delta y_l = J_l \cdot \Delta x_l + G_l \cdot \Delta \theta_l}$ ，其中：
+    - $J_l = \frac{\partial y_l}{\partial x_l} \in \mathbb{R}^{d_l \times d_{l-1}}$ 为第 $l$ 层的雅可比矩阵（输入对输出的导数矩阵）
+    - $G_l = \frac{\partial y_l}{\partial \theta_l} \in \mathbb{R}^{d_l \times p_l}$ 为参数对输出的导数矩阵（$p_l$ 为第 $l$ 层参数数量）
+  * 由于 $x_{l+1} = y_l$，故 $\Delta x_{l+1} = \Delta y_l$，递归可得第 L 层的总误差：
+    * $\Delta y_L = \left( \prod_{l=L}^1 J_l \right) \Delta x_1 + \sum_{l=1}^L \left( \prod_{k=L}^{l+1} J_k \right) G_l \Delta \theta_l$
+  * 常用谱范数（最大奇异值）衡量：$||\prod_{l=L}^1 J_l||_2 \leq \prod_{l=1}^L ||J_l||_2$ （谱范数的次可乘性）。
+  * 残差网络 (ResNet) 的误差分析:
+    * 残差块的定义为 $y_l = F_l(x_l) + x_l$。
+    * 其雅可比矩阵为 $J_l = \frac{\partial y_l}{\partial x_l} = \frac{\partial F_l}{\partial x_l} + I = J_{F_l} + I$。
+    * 多层网络的雅可比矩阵乘积变为 $\prod_{l=L}^1 (J_{F_l} + I)$，为误差/梯度提供了一条“恒等路径 (Identity Path)”
+  * **层条件数 (Condition Number) 分析**:
+    *  $\kappa(J) = ||J||_2 \cdot ||J^{-1}||_2 = \frac{\sigma_{max}(J)}{\sigma_{min}(J)}$。它衡量了矩阵对输入扰动的敏感度，即最大拉伸与最大压缩的比率。
+  * **谱范数 vs. 条件数**: 两者相辅相成。**谱范数**主要回答“误差幅度是否会爆炸或消失”的问题；**条件数**主要回答“误差传播过程是否稳定、是否会导致训练困难”的问题。一个完整的分析需要同时考虑两者。
+
+
+
+##### [Stochastic Rounding: Deep Learning with Limited Numerical Precision](https://arxiv.org/abs/1502.02551)
+
+* 当前大规模深度学习系统**未充分利用神经网络的容错性**。
+* 本文 **发现采用随机舍入时，16 位定点数表示训练深度网络分类精度几乎无下降**。
+  * 通过 MNIST 和 CIFAR10 数据集实验验证了该方法
+  * 设计了基于 FPGA 的硬件加速器
+    * 利用大量定点运算单元、数据流架构和随机舍入模块，实现高吞吐量和低功耗，为软硬件协同设计的机器学习系统发展提供了思路。
+* 结论：
+  * 8位fractional length，MNIST + DNN精度下降小
+  * CIFAR10，FL14精度都不够......但随机舍入很有用
+  * FPGA：**脉动阵列架构**：每个节点含 DSP 单元，实现乘积累加操作。结果经随机舍入和截断处理后存储。随机舍入硬件开销小于 4%。
+* 理论 Setting
+  * 定点数表示：标准深度学习训练常用 32 位浮点数，本文采用广义定点数表示 [QI.QF]，用⟨IL, FL⟩表示，其精度为 FL 位，范围是$$[-2^{IL - 1}, 2^{IL - 1} - 2^{-FL}]$$ ，最小正数$$\epsilon = 2^{-FL}$$。
+  * 舍入模式
+    - **就近舍入**：根据数与相邻整数倍$$\epsilon$$的距离决定舍入值。
+    - **随机舍入**：数舍入到$$\lfloor x\rfloor$$的概率与它和$$\lfloor x\rfloor$$的接近程度成正比，是无偏舍入，预期舍入误差为 0。
+    - **饱和处理**：若数超出⟨IL, FL⟩范围，将结果饱和到上下限。
+  * **乘积累加（MACC）操作**：分两步，先计算向量内积和$$z=\sum_{i = 1}^{d}a_{i}b_{i}$$ ，再将z转换为目标定点格式$$c_{0}=Convert(z,<\tilde{IL}, \tilde{IF}>)$$。该方法模拟硬件行为，减少随机舍入硬件开销，便于使用 CPU/GPU 和 BLAS 库模拟定点计算。
+
+* 对比就近舍入：
+
+  * 梯度统计信息保留
+
+    * 传统舍入将 $$\Delta W \in (-\epsilon/2, \epsilon/2)$$ 强制归零，完全丢失梯度信息。
+    * 随机舍入通过概率机制（如 $$p = \frac{\Delta W}{\epsilon}$$）保留非零更新的可能性，确保梯度方向的统计正确性。
+
+  * 噪声正则化效应
+
+    - 随机舍入引入的噪声等价于在训练过程中注入随机扰动，类似于 Dropout 或数据增强，可提升模型泛化能力。
+    - 数学上，噪声使优化过程更易跳出局部极小值，增强鲁棒性（参考 Bishop, 1995）
+
+  * 传统舍入的误差方向固定，可能导致误差累积（如梯度消失或爆炸）。
+
+  * 浮点格式的局限性
+
+    - 浮点数（如 32 位）的精度由尾数决定，低精度定点数的舍入误差可能更显著。
+
+    - 随机舍入通过概率机制将误差均匀分布在量化步长 $$\epsilon$$ 内，减少对模型的系统性干扰。
+
+* 应用
+
+  * **前向传播中的 Activation 计算**
+    * “混合”精度训练：
+      * 在 CIFAR10 数据集训练时，低精度定点运算（如 16 位定点数）结合随机舍入，前期训练能保持一定稳定性，但随着精度降低（如 12 位），收敛速度会变慢，学习效果变差。此时切换到更高精度（如 20 位），网络性能可快速提升。这是因为前期低精度训练能利用其计算优势，后期高精度训练可弥补低精度带来的梯度信息损失，提高最终性能。
+  * 用于梯度更新
+
+##### Scaling Laws for Precision [ICLR 2025 Oral]
+
+> GPU Mode Lecture 52: https://www.youtube.com/watch?v=YCfzf0TunOM
+>
+> https://openreview.net/forum?id=wg1PCg3CUP
+
+* 问题：
+  * Scientific question; 1b with INT4 weights vs 500m in BF16, which wins?
+  * noise with variance O(2^{-P})
+
+* 要点:
+  * ![image-20250411001753645](./MLSys+RecSys/image-20250411001753645.png)
+  * lower precision reduces the model’s effective parameter count
+  * **training larger models in lower precision may be compute optimal**
+  * overtrained models，受量化影响更大（参数少、数据多）
+    * overtrain的定义：参考chinchilla paper，tokens seen
+    * 和QLoRa的观察相符，这也是QLoRa为什么提出NF4
+* 理论分析：
+  * ![image-20250411001515823](./MLSys+RecSys/image-20250411001515823.png)
+  * $$\delta_{\mathrm{PTQ}}(N, D, P_{\mathrm{post}}) = C_T \left( \frac{D^{\gamma_D}}{N^{\gamma_N}} \right) e^{-P_{\mathrm{post}} / \gamma_{\mathrm{post}}}$$
+    * 由于指数超参近似，类似于 D/N 的 power law
+  * Quantized training: $$L(N, D) = A[N(1 - e^{-P_{\mathrm{w}} / \gamma_{\mathrm{w}}})]^{-\alpha} + B D^{-\beta} + E$$
+  * ![image-20250411115840121](./MLSys+RecSys/image-20250411115840121.png)
+
+* SCALING LAWS FOR PTQ
+  * ![image-20250411013134252](./MLSys+RecSys/image-20250411013134252.png)
+  * 一种解释：D越大，N会学到越多信息，因此量化的损失增加
+  * 对GPTQ、AWQ、普通量化，均有效
+
+* Scaling law for quantized training
+  * ![image-20250411023740824](./MLSys+RecSys/image-20250411023740824.png)
+  * 模型越大，量化可以越激进
+  * ![image-20250411025219080](./MLSys+RecSys/image-20250411025219080.png)
+    * 敏感程度：a > w > kv cache
+* Guidance
+  * 4.3.1 IF YOU MUST TRAIN IN LOW PRECISION, INCREASE PARAMETERS BEFORE DATA
+    * ![image-20250411114729068](./MLSys+RecSys/image-20250411114729068.png)
+  * 4.3.2 COMPUTE-OPTIMAL PRETRAINING PRECISION IS IN GENERAL INDEPENDENT OF
+    COMPUTE
+  * 4.3.3 BUT COMPUTE-OPTIMAL PRETRAINING PRECISION CAN INCREASE IN COMPUTE IF
+    MODEL SIZE N IS CONSTRAINED
+    * 计算参考 E.2 COMPUTE-OPTIMALITY CALCULATIONS
+* 细节、例子：
+  * 对Q + KV cache量化和仅对KV cache量化区别不大
+  * llama3量化比llama2更难，原因是llama3 overtrained
+  * per channel会改变系数，但不会改变scaling law
+* Literature Review
+  * On the theoretical front, work on scaling laws (Bahri et al., 2024; Bordelon et al., 2024; Lin et al., 2024b) finds that noise to various parts of model or data affects loss in a predictable way. While previous works have explored the scaling behavior of post-training quantization in terms of total model bits (Dettmers & Zettle-moyer, 2023) and knowledge capacity (Allen-Zhu & Li, 2024), we focus instead on data scaling.
+  * We note that in general the exact fitted values of all coefficients and exponents can vary drastically
+    based on **small implementation differences**: Besiroglu et al. (2024) find different constants when
+    attempting to replicate (Hoffmann et al., 2022), Sardana & Frankle (2023) fit coefficients A,B of
+    different orders of magnitude.
+  * **Overtraining.** In practice, accounting for inference costs means training smaller models for sub-
+    stantially longer than Chinchilla-optimal (Sardana & Frankle, 2023; Gadre et al., 2024). For in-
+    stance, Llama-3-8B is trained to **D/N ≈ 2000** (Dubey et al., 2024) and the Gemma-2 series up
+    to **D/N > 1000** (Team et al., 2024). We refer to such models as “overtrained” in this paper, with
+    the token/parameter ratio D/N being a key quantity throughout. Work on inference-time compute
+    (Snell et al., 2024; Brown et al., 2024) and on synthetic and multimodal data (Yang et al., 2024; Fan
+    et al., 2024; Bauer et al., 2024) suggests future models may be even more overtrained.
+* 实验setting
+  * dataset：dolma https://huggingface.co/datasets/allenai/dolma
+
+
+
+#### Intro: 量化技术分类
 
 > * PTQ v.s. QAT
 >
@@ -1429,150 +1607,6 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
     - Bert + GLUE Task: 0-4层最敏感
     - Bert-Large for SQuAD finetuning： 后面层敏感
   * Enabling eigenvalue doesn’t guarantee better accuracy result, usually it needs tuning with other settings, such as `start_bits`, `quantize_period` and `quantize_groups`.
-
-#### [学术]模型量化介绍
-
-* 神经网络：多函数的嵌套表示
-  * 越来越不规则
-* 训练量化和推理量化的异同
-  - 训练量化：用于计算的模型量化
-    - 权重和输入都有delta（预估时认为权重delta为零）
-    - 偏微分公式 -> 每层的输出到下一层的输入很重要
-      - 同样的量化方式，相同量化精度给不同层的输入带来不同的误差
-      - 存储量化 v.s 计算量化，后者更强调在存储约束下求解最优精度
-    - 核心：控制梯度噪音的范数
-    - 一种可求闭式解（分层量化模型）：量化标准排序、梯度排序，一一对应，排序不等式证明
-      * e.g. **HAWQ-v2**
-  - 推理量化：用于存储的模型量化
-    - 传统问题局限性：求解量化误差最小，不面向loss函数，面向策略，不可解
-  - 量化训练和预测是两个目标，训练结果应该恢复成全精度再用预测压缩的过程压缩一遍
-
-
-* Training 量化
-
-  * 量化感知训练的原理：李沐的ps文章《communication efficient distributed machine learning with the parameter server》https://www.cs.cmu.edu/~muli/file/parameter_server_nips14.pdf
-
-  * 结论：控制梯度噪音的范数
-    * 小结论：量化训练完后要恢复全精度进行计算，再用训练后量化手段进行量化
-    * 实现上：量化的正传，量化/全精度的反传，量化的更新
-      * 全精度反传，与自动求导模块的实现有关，可能存在
-
-
-* 总结：
-
-  * 量化问题本质是NP-hard问题，部分情况下可转换成指数规划问题
-
-  * 量化训练和预测是两个目标，训练结果应该恢复成全精度再用预测压缩的过程压缩一遍
-
-##### [(Stochastic Rounding): Deep Learning with Limited Numerical Precision](https://arxiv.org/abs/1502.02551)
-
-* 当前大规模深度学习系统**未充分利用神经网络的容错性**。
-* 本文 **发现采用随机舍入时，16 位定点数表示训练深度网络分类精度几乎无下降**。
-  * 通过 MNIST 和 CIFAR10 数据集实验验证了该方法
-  * 设计了基于 FPGA 的硬件加速器
-    * 利用大量定点运算单元、数据流架构和随机舍入模块，实现高吞吐量和低功耗，为软硬件协同设计的机器学习系统发展提供了思路。
-* 结论：
-  * 8位fractional length，MNIST + DNN精度下降小
-  * CIFAR10，FL14精度都不够......但随机舍入很有用
-  * FPGA：**脉动阵列架构**：每个节点含 DSP 单元，实现乘积累加操作。结果经随机舍入和截断处理后存储。随机舍入硬件开销小于 4%。
-* 理论 Setting
-  * 定点数表示：标准深度学习训练常用 32 位浮点数，本文采用广义定点数表示 [QI.QF]，用⟨IL, FL⟩表示，其精度为 FL 位，范围是$$[-2^{IL - 1}, 2^{IL - 1} - 2^{-FL}]$$ ，最小正数$$\epsilon = 2^{-FL}$$。
-  * 舍入模式
-    - **就近舍入**：根据数与相邻整数倍$$\epsilon$$的距离决定舍入值。
-    - **随机舍入**：数舍入到$$\lfloor x\rfloor$$的概率与它和$$\lfloor x\rfloor$$的接近程度成正比，是无偏舍入，预期舍入误差为 0。
-    - **饱和处理**：若数超出⟨IL, FL⟩范围，将结果饱和到上下限。
-  * **乘积累加（MACC）操作**：分两步，先计算向量内积和$$z=\sum_{i = 1}^{d}a_{i}b_{i}$$ ，再将z转换为目标定点格式$$c_{0}=Convert(z,<\tilde{IL}, \tilde{IF}>)$$。该方法模拟硬件行为，减少随机舍入硬件开销，便于使用 CPU/GPU 和 BLAS 库模拟定点计算。
-
-* 对比就近舍入：
-
-  * 梯度统计信息保留
-
-    * 传统舍入将 $$\Delta W \in (-\epsilon/2, \epsilon/2)$$ 强制归零，完全丢失梯度信息。
-    * 随机舍入通过概率机制（如 $$p = \frac{\Delta W}{\epsilon}$$）保留非零更新的可能性，确保梯度方向的统计正确性。
-
-  * 噪声正则化效应
-
-    - 随机舍入引入的噪声等价于在训练过程中注入随机扰动，类似于 Dropout 或数据增强，可提升模型泛化能力。
-    - 数学上，噪声使优化过程更易跳出局部极小值，增强鲁棒性（参考 Bishop, 1995）
-
-  * 传统舍入的误差方向固定，可能导致误差累积（如梯度消失或爆炸）。
-
-  * 浮点格式的局限性
-
-    - 浮点数（如 32 位）的精度由尾数决定，低精度定点数的舍入误差可能更显著。
-
-    - 随机舍入通过概率机制将误差均匀分布在量化步长 $$\epsilon$$ 内，减少对模型的系统性干扰。
-
-* 应用
-
-  * **前向传播中的 Activation 计算**
-    * “混合”精度训练：
-      * 在 CIFAR10 数据集训练时，低精度定点运算（如 16 位定点数）结合随机舍入，前期训练能保持一定稳定性，但随着精度降低（如 12 位），收敛速度会变慢，学习效果变差。此时切换到更高精度（如 20 位），网络性能可快速提升。这是因为前期低精度训练能利用其计算优势，后期高精度训练可弥补低精度带来的梯度信息损失，提高最终性能。
-  * 用于梯度更新
-
-##### Scaling Laws for Precision [ICLR 2025 Oral]
-
-> GPU Mode Lecture 52: https://www.youtube.com/watch?v=YCfzf0TunOM
->
-> https://openreview.net/forum?id=wg1PCg3CUP
-
-* 问题：
-  * Scientific question; 1b with INT4 weights vs 500m in BF16, which wins?
-  * noise with variance O(2^{-P})
-
-* 要点:
-  * ![image-20250411001753645](./MLSys+RecSys/image-20250411001753645.png)
-  * lower precision reduces the model’s effective parameter count
-  * **training larger models in lower precision may be compute optimal**
-  * overtrained models，受量化影响更大（参数少、数据多）
-    * overtrain的定义：参考chinchilla paper，tokens seen
-    * 和QLoRa的观察相符，这也是QLoRa为什么提出NF4
-* 理论分析：
-  * ![image-20250411001515823](./MLSys+RecSys/image-20250411001515823.png)
-  * $$\delta_{\mathrm{PTQ}}(N, D, P_{\mathrm{post}}) = C_T \left( \frac{D^{\gamma_D}}{N^{\gamma_N}} \right) e^{-P_{\mathrm{post}} / \gamma_{\mathrm{post}}}$$
-    * 由于指数超参近似，类似于 D/N 的 power law
-  * Quantized training: $$L(N, D) = A[N(1 - e^{-P_{\mathrm{w}} / \gamma_{\mathrm{w}}})]^{-\alpha} + B D^{-\beta} + E$$
-  * ![image-20250411115840121](./MLSys+RecSys/image-20250411115840121.png)
-
-* SCALING LAWS FOR PTQ
-  * ![image-20250411013134252](./MLSys+RecSys/image-20250411013134252.png)
-  * 一种解释：D越大，N会学到越多信息，因此量化的损失增加
-  * 对GPTQ、AWQ、普通量化，均有效
-
-* Scaling law for quantized training
-  * ![image-20250411023740824](./MLSys+RecSys/image-20250411023740824.png)
-  * 模型越大，量化可以越激进
-  * ![image-20250411025219080](./MLSys+RecSys/image-20250411025219080.png)
-    * 敏感程度：a > w > kv cache
-* Guidance
-  * 4.3.1 IF YOU MUST TRAIN IN LOW PRECISION, INCREASE PARAMETERS BEFORE DATA
-    * ![image-20250411114729068](./MLSys+RecSys/image-20250411114729068.png)
-  * 4.3.2 COMPUTE-OPTIMAL PRETRAINING PRECISION IS IN GENERAL INDEPENDENT OF
-    COMPUTE
-  * 4.3.3 BUT COMPUTE-OPTIMAL PRETRAINING PRECISION CAN INCREASE IN COMPUTE IF
-    MODEL SIZE N IS CONSTRAINED
-    * 计算参考 E.2 COMPUTE-OPTIMALITY CALCULATIONS
-* 细节、例子：
-  * 对Q + KV cache量化和仅对KV cache量化区别不大
-  * llama3量化比llama2更难，原因是llama3 overtrained
-  * per channel会改变系数，但不会改变scaling law
-* Literature Review
-  * On the theoretical front, work on scaling laws (Bahri et al., 2024; Bordelon et al., 2024; Lin et al., 2024b) finds that noise to various parts of model or data affects loss in a predictable way. While previous works have explored the scaling behavior of post-training quantization in terms of total model bits (Dettmers & Zettle-moyer, 2023) and knowledge capacity (Allen-Zhu & Li, 2024), we focus instead on data scaling.
-  * We note that in general the exact fitted values of all coefficients and exponents can vary drastically
-    based on **small implementation differences**: Besiroglu et al. (2024) find different constants when
-    attempting to replicate (Hoffmann et al., 2022), Sardana & Frankle (2023) fit coefficients A,B of
-    different orders of magnitude.
-  * **Overtraining.** In practice, accounting for inference costs means training smaller models for sub-
-    stantially longer than Chinchilla-optimal (Sardana & Frankle, 2023; Gadre et al., 2024). For in-
-    stance, Llama-3-8B is trained to **D/N ≈ 2000** (Dubey et al., 2024) and the Gemma-2 series up
-    to **D/N > 1000** (Team et al., 2024). We refer to such models as “overtrained” in this paper, with
-    the token/parameter ratio D/N being a key quantity throughout. Work on inference-time compute
-    (Snell et al., 2024; Brown et al., 2024) and on synthetic and multimodal data (Yang et al., 2024; Fan
-    et al., 2024; Bauer et al., 2024) suggests future models may be even more overtrained.
-* 实验setting
-  * dataset：dolma https://huggingface.co/datasets/allenai/dolma
-
-
 
 #### Q-BERT: Hessian Based Ultra Low Precision Quantization of BERT
 

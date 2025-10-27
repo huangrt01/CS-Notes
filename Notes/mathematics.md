@@ -2,6 +2,11 @@
 
 ## 基础运算
 
+### 进制
+
+* 关于10进制有效数字位数可用下面这个公式来估算：
+  * $$n \approx log_{10}(2^m) = m \times log_{10}(2) \approx m \times 0.3010$$
+
 ### 位运算
 
 * 对于一个数 X 和一个2的幂 P ，$$X \% P = X \& (P - 1)$$
@@ -83,7 +88,7 @@
 
 ## A Course in Game Theory - Martin J. Osborne and Ariel Rubinstein
 
-![image-20240720183436637](mathematics/game-theory-structure.png)
+![image-20240720183436637](./Mathematics/game-theory-structure-1506147.png)
 
 ### Chpt 1: Introduction
 
@@ -141,7 +146,7 @@
 
   * Throughout we use N to denote the set of players. We refer to a collection of values of some variable, one for each player, as a profile       (xi)
 
-    * ![image-20240720191434381](mathematics/game-theory-xi.png)
+    * ![image-20240720191434381](./Mathematics/game-theory-xi-1506147.png)
 
   * A binary relation on set的可能的性质: complete、reflexive、transitive
 
@@ -153,11 +158,11 @@
 
     * quasi-concave
 
-      * ![image-20240720191747144](mathematics/game-theory-quasi-concave.png)
+      * ![image-20240720191747144](./Mathematics/game-theory-quasi-concave-1506147.png)
 
       * 在某条线上的点的连续性
       * https://en.wikipedia.org/wiki/Quasiconvex_function
-      * ![image-20240720192146282](mathematics/quasi-convex.png)
+      * ![image-20240720192146282](./Mathematics/quasi-convex-1506147.png)
 
   *  Pareto efficient 和 strongly Pareto efficient 
     *  Pareto efficient：没被碾压
@@ -173,7 +178,7 @@
 
 * Strategic Games
   * A strategic game is a model of interactive decision-making in which each decision-maker chooses his plan of action **once and for all,** and these **choices are made simultaneously**
-  * ![image-20240720225501522](mathematics/game-theory-strategic-game.png)
+  * ![image-20240720225501522](./Mathematics/game-theory-strategic-game-1506147.png)
   * finite/非有限
   * 分析：
     * the range of application of the model is limited by the requirement that we associate with each player a preference relation
@@ -190,11 +195,11 @@
     * 2 player时的矩阵表示：the convention is that the row player is player 1 and the column player is player 2
 
 * Nash Equilibrium
-  * ![image-20240721000029501](mathematics/game-theory-nash-equil.png)
+  * ![image-20240721000029501](./Mathematics/game-theory-nash-equil-1506147.png)
   * 分析：
     * This notion captures a steady state of the play of a strategic game in which each player holds the correct expectation about the other players’ behavior and acts rationally.
     * It does not attempt to examine the process by which a steady state is reached.
-  * ![image-20240721000209969](mathematics/game-theory-nash2.png)
+  * ![image-20240721000209969](./Mathematics/game-theory-nash2-1506147.png)
   * 延伸：一种可能的求解纳什均衡的方式，N个best-response function(如果是单值)
 
 * Examples
@@ -237,9 +242,9 @@
 
   * 表述为 a∗ ∈ B(a∗)
   * Lemma 20.1 (Kakutani’s fixed point theorem角谷静夫不动点定理)
-  * ![image-20240721011951283](mathematics/game-theory-kakutani.png)
+  * ![image-20240721011951283](./Mathematics/game-theory-kakutani-1506147.png)
 
-  * ![image-20240721013351172](mathematics/game-theory-nash-existence.png)
+  * ![image-20240721013351172](./Mathematics/game-theory-nash-existence-1506147.png)
     * 注意不适用于有限actions集合的情况
 
 * Strictly Competitive Games
@@ -250,12 +255,12 @@
 
   * for strictly competitive games that possess Nash equilibria all equilibria yield the same payoffs.
 
-  * ![image-20240721020542300](mathematics/game-theory-strictly.png)
+  * ![image-20240721020542300](./Mathematics/game-theory-strictly-1506147.png)
 
     * part c提供一种场景的解法
     * by parts (a) and (c), **the Nash equilibria of a strictly competitive game are interchangeable**: if (x, y) and (x′, y′) are equilibria then so are (x, y′) and (x′, y).
     * Thus in any game (whether or not it is strictly competitive) the payoff that player 1 can guarantee herself is at most the amount that player 2 can hold her down to
-      * ![image-20240721022026163](mathematics/image-20240721022026163.png)
+      * ![image-20240721022026163](./Mathematics/image-20240721022026163-1506147.png)
       * 需要额外条件来确保存在纳什均衡
 
     * Part b: this payoff, the equilibrium payoff of player 1, is **the value of the game**
@@ -266,14 +271,14 @@
   * 定义：Definition 25.1 A Bayesian game
     * We model the players’ uncertainty about each other by introducing a set Ω of possible “states of nature”, each of which is a description of all the players’ relevant characteristics. For convenience we assume that Ω is finite. Each player i has a prior belief about the state of nature given by a probability measure pi on Ω.
     * signal functions
-    * 先验信号 ![image-20240721050519922](mathematics/image-20240721050519922.png)
+    * 先验信号 ![image-20240721050519922](./Mathematics/image-20240721050519922-1506147.png)
   * 分析：
     * player has imperfect information about the state of nature
   * 用处：
     * a state of nature is a profile of parameters of the players’ preferences (for example, profiles of their valuations of an ob- ject)
     * player is uncertain about what the others know.（section 2.6.3
   * bayesian game的纳什均衡
-    * ![image-20240721051935708](mathematics/image-20240721051935708.png)
+    * ![image-20240721051935708](./Mathematics/image-20240721051935708-1506147.png)
   * Exercise 28.1 (An exchange game）
     * in any Nash equilibrium the highest prize that either player is willing to exchange is the smallest possible prize.
   * 贝叶斯纳什均衡的习题例子：https://www.cnblogs.com/haohai9309/p/17753112.html
@@ -297,8 +302,8 @@
 ## ML Theory
 
 * 神经网络的万能逼近公式
-  * ![image-20250408202259016](./mathematics/image-20250408202259016.png)（来源LHUC paper)
-  * ![image-20251004022110555](./mathematics/image-20251004022110555.png)
+  * ![image-20250408202259016](./Mathematics/image-20250408202259016-1506147.png)（来源LHUC paper)
+  * ![image-20251004022110555](./Mathematics/image-20251004022110555-1506147.png)
     * 每条边代表一个参数
   
 * 神经网络扰动
@@ -327,7 +332,7 @@ https://arxiv.org/pdf/2206.13446
 
 https://web.eecs.umich.edu/~justincj/teaching/eecs442/notes/linear-backprop.html
 
-![image-20250331145615951](./mathematics/image-20250331145615951.png)
+![image-20250331145615951](./Mathematics/image-20250331145615951-1506147.png)
 
 
 
@@ -467,69 +472,35 @@ VQ-VAE 的核心创新是引入了一个**离散的**隐空间，通过一个码
 
 * $$E_U^T E_U=\left(U_1,U_2,U_3, ... U_u\right)\left(\begin{array}{c}{U_1}^T\\{U_2}^T\\{U_3}^T\\...\\{U_u}^T\end{array}\right) = \sum_{i=1}^uU_i{U_i}^T$$
 
-### 特征值
+### SVD、矩阵分解
 
-* 特征值求解
-  * [幂迭代法 Power Iteration](https://en.wikipedia.org/wiki/Power_iteration) 求解最大特征值
-  * QR算法
-
-### matrix vector derivatives for machine learning
-
-> matrix vector derivatives for machine learning.pdf
-
-### Cholesky decomposition
-
-https://en.wikipedia.org/wiki/Cholesky_decomposition
-
-* 分解 a [Hermitian](https://en.wikipedia.org/wiki/Hermitian_matrix) [positive-definite matrix](https://en.wikipedia.org/wiki/Positive-definite_matrix) A
-* e.g.
-  * 解方程：提升数值计算稳定性
-  * non linear optimization
-    * GPTQ
-
-## SVD、矩阵分解
-
-### Application
-
-* [矩阵分解在协同过滤推荐算法中的应用 ](https://www.cnblogs.com/pinard/p/6351319.html)
-
-  * SVD，计算量大
-    * 稀疏SVD
-      * 平均值补全
-      * 随机投影或Lanczos迭代
-
-  * FunkSVD
-    * ![image-20241229023812815](./mathematics/image-20241229023812815.png)
-
-  * BiasSVD
-    * 考虑 评分系统平均分μ,第i个用户的用户偏置项,第j个物品的物品偏置项
-  * SVD++算法在BiasSVD算法上进一步做了增强，这里它增加考虑用户的隐式反馈
-    * ![image-20241229024446412](./mathematics/image-20241229024446412.png)
-
-* 文档矩阵、主题模型
-  *  Aij表示第 i 个文档中第 j 个词的出现情况
-    * 词频/ TF-IDF
-
-### Theory
+#### Theory
 
 * 求解SVD
+
   * $$A = U\Sigma V^T \Rightarrow A^T = V\Sigma U^T \Rightarrow A^T A = V\Sigma U^T U\Sigma V^T = V\Sigma^2 V^T$$
+  * $$A^{-1}=(U \Sigma V^T)^{-1} = (V^T)^{-1} \Sigma^{-1} U^{-1} = V \Sigma^{-1} U^T$$
 
 * [SVD分解(一)：自编码器与人工智能](https://spaces.ac.cn/archives/4208) —— 苏剑林
 
   * **不带激活函数的三层自编码器，跟传统的SVD分解是等价的。**
+
     * 我们降维，并不是纯粹地为了减少储存量或者减少计算量，而是**“智能”的初步体现**
 
   * SVD
+
     * (m+n)k < mn
+
   * 自编码器
+
     * 无视激活函数，只看线性结构。自编码器是希望训练一个f(x)=x的恒等函数，但是中间层节点做了压缩
-    * ![image-20241229231515019](./mathematics/image-20241229231515019.png)
+    * ![image-20241229231515019](./Mathematics/image-20241229231515019-1506147.png)
 
   * 压缩即智能
 
     * 通过压缩后进行重建，能够挖掘数据的共性，即我们所说的规律，然后得到更泛化的结果
-    * ![image-20241229231727074](./mathematics/image-20241229231727074.png)
+
+    * ![image-20241229231727074](./Mathematics/image-20241229231727074-1506147.png)
 
     * 我们通过SVD分解，原始的目的可能是压缩、降维，但复原后反而衍生出了更丰富、词汇量更多的结果。
 
@@ -543,9 +514,10 @@ https://en.wikipedia.org/wiki/Cholesky_decomposition
     * 当然，在神经网络中，激活函数有更深刻的意义，但在浅层的网络（矩阵分解）中，它给我们的直观感受，就是截断罢了。
 
 * SVD的聚类含义
+
   * https://spaces.ac.cn/archives/4216
   * 转化为三个矩阵相乘
-  * ![image-20241229233643160](./mathematics/image-20241229233643160.png)
+  * ![image-20241229233643160](./Mathematics/image-20241229233643160-1506147.png)
 
 * word2vec是SVD
 
@@ -571,13 +543,101 @@ https://en.wikipedia.org/wiki/Cholesky_decomposition
 
       2、Word2Vec最后接的是softmax来预测概率，也就是说实现了一个非线性变换，而自编码器或者SVD并没有。
 
-## 最优化
+
+
+#### Application
+
+* [矩阵分解在协同过滤推荐算法中的应用 ](https://www.cnblogs.com/pinard/p/6351319.html)
+  * SVD，计算量大
+    * 稀疏SVD
+      * 平均值补全
+      * 随机投影或Lanczos迭代
+
+  * FunkSVD
+    * ![image-20241229023812815](./Mathematics/image-20241229023812815-1506147.png)
+
+  * BiasSVD
+    * 考虑 评分系统平均分μ,第i个用户的用户偏置项,第j个物品的物品偏置项
+  * SVD++算法在BiasSVD算法上进一步做了增强，这里它增加考虑用户的隐式反馈
+    * ![image-20241229024446412](./Mathematics/image-20241229024446412-1506147.png)
+
+* 文档矩阵、主题模型
+  *  Aij表示第 i 个文档中第 j 个词的出现情况
+     * 词频/ TF-IDF
+
+### 特征值
+
+* 特征值求解
+  * [幂迭代法 Power Iteration](https://en.wikipedia.org/wiki/Power_iteration) 求解最大特征值
+  * QR算法
+
+#### 谱范数、次可乘性 --> 误差传播
+
+* 矩阵的谱范数 (Spectral Norm)
+  * 对于一个矩阵 $$A \in \mathbb{R}^{m \times n}$$，其 谱范数 （也称为2-范数，$$||A||_2$$）被定义为：
+  * $$||A||_2 = \sup_{x \neq 0} \frac{||Ax||_2}{||x||_2}$$
+  * 最大“拉伸”比例
+* 谱范数也等于矩阵 $$A$$ 的 最大奇异值 (Largest Singular Value) ，记为 $$\sigma_{max}(A)$$。
+  $$||A||_2 = \sigma_{max}(A) = \sqrt{\lambda_{max}(A^T A)}$$
+  其中，$$\lambda_{max}(A^T A)$$ 表示矩阵 $$A^T A$$ 的最大特征值。
+* 范数的次可乘性 (Submultiplicativity)
+  * 如果对于任意两个可相乘的矩阵 $$A$$ 和 $$B$$，都满足不等式$$||AB|| \leq ||A|| \cdot ||B||$$
+
+* 证明 :
+  * 利用谱范数的定义（$$||Az||_2 \leq ||A||_2 \cdot ||z||_2$$）：$$||A(Bx)||_2 \leq ||A||_2 \cdot ||Bx||_2$$
+  * ----> $$||AB||_2 \leq ||A||_2 \cdot ||B||_2$$
+
+#### 层条件数 (Condition Number)  -> 误差扰动
+
+* **定义**: 矩阵 $J$ 的条件数 $\kappa(J) = ||J||_2 \cdot ||J^{-1}||_2 = \frac{\sigma_{max}(J)}{\sigma_{min}(J)}$。它衡量了矩阵对输入扰动的敏感度，即最大拉伸与最大压缩的比率。
+
+* **分析**:
+
+  * $\kappa(J_l) \approx 1$ 表示该层是“良态的 (well-conditioned)”，对不同方向的误差分量处理方式相似。
+  * $\kappa(J_l) \gg 1$ 表示该层是“病态的 (ill-conditioned)”，变换是高度“各向异性 (anisotropic)”的。它会沿某些方向（最大奇异向量方向）急剧放大误差，同时沿另一些方向（最小奇异向量方向）急剧缩小误差。
+  * 在深度网络中，多个病态层的累积效应会导致训练极其不稳定，部分梯度爆炸而另一部分梯度消失同时发生。
+
+* 证明：
+
+  *  $$||J||_2 = \sigma {max}(J)$$。
+    * $$||J|| 2^2 = \sup {x \neq 0} \frac{(Jx)^T(Jx)}{x^T x} = \sup {x \neq 0} \frac{x^T J^T J x}{x^T x}$$
+    * 这个表达式 $$\frac{x^T (J^T J) x}{x^T x}$$ 是矩阵 $$J^T J$$ 的 瑞利商 (Rayleigh Quotient) 。根据瑞利商的性质，其最大值等于该矩阵的最大特征值。令 $$\lambda_{max}(J^T J)$$ 为矩阵 $$J^T J$$ 的最大特征值。$$||J||_2^2 = \lambda {max}(J^T J)$$
+    * 根据奇异值的定义，矩阵 $$J$$ 的奇异值 $$\sigma_i(J)$$ 是矩阵 $$J^T J$$ 的特征值的平方根。因此，$$J$$ 的最大奇异值 $$\sigma_{max}(J)$$ 等于 $$\sqrt{\lambda_{max}(J^T J)}$$。
+
+  * 证明 $$||J^{-1}||_2 = \frac{1}{\sigma {min}(J)}$$。 
+    * 利用奇异值分解
+
+
+
+### matrix vector derivatives for machine learning
+
+> matrix vector derivatives for machine learning.pdf
+
+### Cholesky decomposition
+
+https://en.wikipedia.org/wiki/Cholesky_decomposition
+
+* 分解 a [Hermitian](https://en.wikipedia.org/wiki/Hermitian_matrix) [positive-definite matrix](https://en.wikipedia.org/wiki/Positive-definite_matrix) A
+* e.g.
+  * 解方程：提升数值计算稳定性
+  * non linear optimization
+    * GPTQ
+
+## 最优化、凸优化
 
 ### 算法
 
 * hill climbing https://en.wikipedia.org/wiki/Hill_climbing
   * 多元函数，每次只改变一个输入
   * 容易陷入local maxima
+
+### 应用
+
+#### 飞行器精准制导
+
+【NASA公开课：凸优化如何实现飞行器精准制导 | Behçet Açıkmeşe讲座【中英双语】-哔哩哔哩】 [NASA公开课：凸优化如何实现飞行器精准制导 | Behçet Açıkmeşe讲座【中英双语】_哔哩哔哩_bilibili](https://b23.tv/aMLplAp)
+
+
 
 ## 数学分析
 
@@ -588,7 +648,7 @@ https://en.wikipedia.org/wiki/Cholesky_decomposition
 
 ### 压缩映射原理
 
-![image-20250402221637163](./mathematics/image-20250402221637163.png)
+![image-20250402221637163](./Mathematics/image-20250402221637163-1506147.png)
 
 * [压缩映射与皮卡迭代的简单比较](https://www.bilibili.com/video/BV1pjAte2EwV )
 
@@ -600,7 +660,7 @@ https://en.wikipedia.org/wiki/Cholesky_decomposition
 
 * [用特征线方法与傅里叶变换求解偏微分方程](https://www.bilibili.com/video/BV16JFTeVEGj)
 * 皮卡迭代
-  * ![image-20250402222144436](./mathematics/image-20250402222144436.png)
+  * ![image-20250402222144436](./Mathematics/image-20250402222144436-1506147.png)
 
 ### 应用
 
@@ -624,24 +684,24 @@ https://en.wikipedia.org/wiki/Cholesky_decomposition
 
 * Lp空间
 
-![image-20250405000218965](./mathematics/image-20250405000218965.png)
+![image-20250405000218965](./Mathematics/image-20250405000218965-1506147.png)
 
 * 一致凸空间
-  * ![image-20250405000623658](./mathematics/image-20250405000623658.png)
+  * ![image-20250405000623658](./Mathematics/image-20250405000623658-1506147.png)
 
 * Lp空间的一致凸性
 
-![image-20250405000829187](./mathematics/image-20250405000829187.png)
+![image-20250405000829187](./Mathematics/image-20250405000829187-1506147.png)
 
 
 
-![image-20250405000910294](./mathematics/image-20250405000910294.png)
+![image-20250405000910294](./Mathematics/image-20250405000910294-1506147.png)
 
 ## 数字信号处理
 
 ### DFT
 
-![image-20250605195600286](./mathematics/image-20250605195600286.png)
+![image-20250605195600286](./Mathematics/image-20250605195600286-1506147.png)
 
 
 
@@ -652,5 +712,5 @@ https://en.wikipedia.org/wiki/Cholesky_decomposition
 ## 数学在工科的应用
 
 * [为什么这么多年直到马斯克出来才想到做可复用火箭？](https://www.zhihu.com/question/597238433/answer/3080541702)
-  * ![image-20241110022322621](mathematics/image-20241110022322621.png)
+  * ![image-20241110022322621](./Mathematics/image-20241110022322621-1506147.png)
 

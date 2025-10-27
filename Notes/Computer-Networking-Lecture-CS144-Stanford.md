@@ -853,6 +853,18 @@ icmp.code == 0
 3.Traceroute
 * VM的第一跳是到laptop，不会decrement the TTL，因此hop 10对应TTL 9
 
+#### curl
+`curl` 是一个强大的命令行工具，用于通过URL进行数据传输。其原理可以看作是应用层和传输层协议的完整命令行实现：
+* **DNS解析**: 将URL中的主机名（如 `cs144.keithw.org`）解析为IP地址。
+* **建立TCP连接**: 与目标服务器的指定端口（HTTP为80，HTTPS为443）进行TCP三次握手，建立连接。
+* **（HTTPS）TLS握手**: 如果是HTTPS请求，会在TCP连接之上进行TLS握手，协商加密算法，建立安全的加密通道。
+* **发送HTTP请求**: 构造并发送一个HTTP请求报文。最简单的 `curl http://example.com` 会发送一个 `GET / HTTP/1.1` 请求，并附带 `Host: example.com` 等头部信息。
+* **接收HTTP响应**: 读取服务器返回的HTTP响应报文，包括状态码（如 `200 OK`）、响应头和响应体（即HTML页面内容、JSON数据等）。
+* **输出**: 默认情况下，`curl` 会将响应体打印到标准输出。
+* **关闭连接**: 完成数据传输后，关闭TCP连接。
+
+`curl` 支持众多协议（HTTP, HTTPS, FTP, SCP等）和复杂操作（如POST数据、设置Header、处理Cookie），是网络调试和自动化脚本中不可或缺的工具。
+
 
 #### WiFi 与 路由器
 

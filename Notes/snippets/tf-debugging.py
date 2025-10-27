@@ -17,3 +17,10 @@ def print_tensor(name, tensor):
     with tf.control_dependencies([print_op]):
         tensor = tf.identity(tensor)
     return tensor
+
+
+
+*** diff tensor/grad
+
+t = tf.get_default_graph().get_tensor_by_name("model_1/debug_tensor:0")
+grad_seq = tf.gradients(dummy_loss, t)

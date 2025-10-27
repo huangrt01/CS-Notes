@@ -62,7 +62,12 @@ pid_m, pid_n = tl.swizzle2d(
       pid_m, pid_n, num_pid_m, num_pid_n,
       group_sz)
 
-### benchmark
+*** tl.dot
+
+input_precision (string. Available options for nvidia: "tf32", "tf32x3", "ieee")
+
+
+*** benchmark
 - grad_to_none=[x]，避免累加开销
 
 if mode == 'forward':

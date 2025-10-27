@@ -30,7 +30,9 @@ Materials
   * 模型结构：
     * ResNet
 
-### Algorithms
+### Algorithms 演进
+
+#### Loss 设计和算法技巧
 
 * crossentropy、KL散度、logistic regression、softmax
   * KL散度 ---> CE loss: [看得见的信息论-为什么用交叉熵作为逻辑回归的代价函数](https://zhuanlan.zhihu.com/p/31207556)
@@ -38,9 +40,6 @@ Materials
   * CE loss + softmax ---> 极其简洁的梯度形式
     * [求导推导](https://zhuanlan.zhihu.com/p/27223959)
     * $\frac{\partial l_{CE}}{\partial a_j}=y_j -t_j$
-
-* XGBoost: gradient boosted trees works by combining predictions from many simple models, each of which tries to address the weaknesses of the previous models. By doing this the collection of simple models can actually outperform large, complex models.
-
 * Feature Bagging
 
   * offering a potentially useful way of managing the bias-variance tradeoff
@@ -63,6 +62,10 @@ Materials
   * 过拟合问题存在其他更深刻的原因。例如，将 28 × 28 的图片实施扁平化操作，将其变换为一个长度为 784 的一维向量，这将完全丢失了像素的空间排列信息
 
   * [为什么过多的特征（feature）导致过拟合（over-fitting)？ - Dr.Shiki的回答 - 知乎](https://www.zhihu.com/question/47375421/answer/306771331)
+
+#### AlexNet
+
+* AlexNet 在 ImageNet 竞赛中的突破性成功表明了 DNN 巨大潜力
 
 #### ResNet
 
@@ -588,24 +591,44 @@ https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html
 
 ##### 高维空间维度灾难（Curse of Dimensionality）和测度集中（Concentration of Measure）
 
-- 问题定义：$$Score = q · S = q · (v_1 + v_2 + ... + v_k + ... + v_N)$$
-  - 点积是Attention和各种模型的核心计算
-  - 问题的关键在于， 随着维度 D 的增加， $$q · v_k$$ 这一项相对于整个总和 $$Σ(q · v_i)$$ 的影响力是如何变化的。
-- 低维空间：
-  - 直观例子 (2维): 假设 $$v_1 = [10, 0]$$ ， $$v_2 = [1, 1]$$ 。它们的和 $$S = [11, 1]$$。向量 S 的方向几乎完全由 $$v_1$$ 决定。如果此时有一个查询向量 $$q = [1, 0]$$ ，那么：
-    - $$q · v_1$$ = 10
-    - $$q · v_2$$ = 1
-    - $$Score = q · S = 1$$
-    - 在这里， $$v_1$$ 的贡献占了总分的 10/11 ≈ 91% 。$$v_2$$ 对结果产生了 主导性影响 。
-  - 在低维空间，单个向量的“个性”或“方向性”容易保留下来并主导求和后的结果。
 - 高维空间的反直觉特性：**向量几乎总是近乎正交的**
   - 假设向量 $$q$$ 和 $$v$$ 的每个分量 $$q_i, v_i$$ 都是从均值为 $$0$$、方差为 $$1$$ 的分布中独立随机抽取的。
   - 点积的期望值：$$E[q \cdot v] = E\left[\sum_{i=1}^{D} q_i v_i\right] = \sum_{i=1}^{D} E[q_i v_i] = \sum_{i=1}^{D} E[q_i]E[v_i] = 0$$
   - 点积的方差： $$Var(q \cdot v) = Var\left(\sum_{i=1}^{D} q_i v_i\right) = \sum_{i=1}^{D} Var(q_i v_i) = \sum_{i=1}^{D} E[q_i^2]E[v_i^2] - (E[q_i]E[v_i])^2 = \sum_{i=1}^{D} (1 \cdot 1 - 0) = D$$
   - $$\cos(\theta) = \frac{q \cdot v}{||q|| \cdot ||v||}$$，其分子 $$q \cdot $$ 的标准差为 $$\sqrt{D}$$，而分母 $$||q|| \cdot ||v|$$ 的期望值约为 $$\sqrt{D} \cdot \sqrt{D} =D $$。因此，$$\cos(\theta)$$ 的值会随着 $$D$$ 的增大而向 $$0$$ 集中。
--  $$N$$ 个“随机噪声”加起来：$$Score = q \cdot v_1 + q \cdot v_2 + \dots + q \cdot v_N = \sum_{i=1}^{N} q \cdot v_i$$
-  - 根据中心极限定理，总和会趋向于一个正态分布。
-  - 单项 $$q \cdot v_k$$ 对总和的相对贡献 ≈ `StdDev(q · v_k) / StdDev(Score) = sqrt(D) / sqrt(N * D) = 1 / sqrt(N)`，N越大，相对贡献越小。
+
+- Avg Pooling的数值分析: $$V_p = \frac{1}{N} \sum_{k=1}^{N} v_k$$
+  - 背景：Attention和各种模型的核心计算
+  - 分析目标: 单个向量 $$v_k$$ 对最终池化向量 $$V_p$$ 几何稳定性的影响。鲁棒性体现为 $$V_p$$ 长度的相对波动性。
+  - 假设: $$v_k$$ 的分量为 i.i.d.，均值为0，方差为1。
+  - 推导:
+    - 期望能量: $$E[||V_p||^2] = D/N$$
+      - $$E[||V_p||^2] = \frac{1}{N^2} E[\sum_{k,j} (v_k \cdot v_j)] = \frac{1}{N^2} N E[||v_k||^2] = \frac{D}{N}$$
+    - 能量方差: $$Var(||V_p||^2) \approx \frac{2D}{N^2}$$
+      - $$Var(||V_p||^2) = \frac{1}{N^4}Var(||\sum v_k||^2) \approx \frac{1}{N^4} D \cdot Var((Normal(0,N))^2) = \frac{1}{N^4} D \cdot 2N^2 = \frac{2D}{N^2}$$
+    - 变异系数 (衡量相对稳定性):
+      $$CV(||V_p||^2) = \frac{StdDev(||V_p||^2)}{E[||V_p||^2]} = \frac{\sqrt{2D/N^2}}{D/N} = \frac{\sqrt{2}}{\sqrt{D}}$$
+  - 结论:
+    - 池化向量 $$V_p$$ 能量的相对波动与 $$\sqrt{D}$$ 成反比。
+    - $$D$$ 越大，池化结果的几何性质（如长度）越稳定，不易受单个异常向量的干扰。
+    - 数学上证明了高维Embedding在Pooling时更鲁棒，是测度集中现象 (Concentration of Measure) 的直接体现
+- 点积求和的数学分析：
+  - 定义: $$Score = \sum_{k=1}^{N} (q \cdot v_k)$$，结果为标量。
+  - 分析: 单个标量贡献 $$q \cdot v_k$$ 对最终标量和 $$Score$$ 的相对影响。
+  - 假设: $$q$$, $$v_k$$ 的分量为 i.i.d.，均值为0，方差为1。
+  - 推导:
+    - 单项方差: $$Var(q \cdot v_k) = D$$
+    - 总和方差: $$Var(Score) = Var(\sum (q \cdot v_k)) = N \cdot Var(q \cdot v_k) = ND$$
+    - 相对贡献 (标准差比率): $$StdDev(q \cdot v_k) / StdDev(Score) = \sqrt{D} / \sqrt{ND} = 1 / \sqrt{N}$$
+  - 结论:
+    - 单项对总和的相对贡献仅与 $$N$$ 有关
+    - 解释了Attention中 $$\sqrt{d_k}$$ 缩放的必要性
+  - Insight：点积求和相当于将高维向量投影到了q，类似于点积结果被映射到了单维，于是稳定性不受D的影响
+- 对应用的启发：
+  - 点积建模：`Pool(LLM_EMB(side_info) for side_info in side_infos)` 这种做法，side info越多越好，越多则系统鲁棒性越强
+  - 模型建模：如长序列建模
+    - 序列越长（N越大），预估分的鲁棒性越好
+    - D越大，模型learning鲁棒性越好，但D大则容易模型learning不充分，二者存在一个折中
 
 #### 利用 Embedding 的 Feature-based 方法
 

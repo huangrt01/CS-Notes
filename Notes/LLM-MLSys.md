@@ -719,6 +719,8 @@ print(f"Prompt的token数量为: {token_count}")
 ### LLM Hybrid Batching
 
 > 用TTFT换TPOT
+>
+> 和chunked prefill形成配合
 
 ![image-20251005173748976](./LLM-MLSys/image-20251005173748976.png)
 
@@ -1400,10 +1402,10 @@ https://arxiv.org/abs/2504.02263
 
 ![image-20251021140306069](./LLM-MLSys/image-20251021140306069.png)
 
-#### 优化：batching、streaming
+#### scheduling、batching、streaming
 
-* Client/server在本地：
-  * Reduces HTTP/gRPC overhead: Inputs/outputs needed to be passed to/from Triton are stored in system/CUDA shared memory. 
+* 默认是default scheduler
+
 * dynamic_batching
 
 
@@ -1418,19 +1420,37 @@ dynamic_batching {
 
 ![image-20251021014859343](./LLM-MLSys/image-20251021014859343.png)
 
-#### multi model serving
+##### 优化细节
+
+* Client/server在本地：
+  * Reduces HTTP/gRPC overhead: Inputs/outputs needed to be passed to/from Triton are stored in system/CUDA shared memory. 
+
+#### multi model serving、instance-group
 
 * [instance-group](https://docs.nvidia.com/deeplearning/triton-inference-server/archives/triton_inference_server_1140/user-guide/docs/model_configuration.html#section-instance-groups)
   * ![image-20250917200712691](./LLM-MLSys/image-20250917200712691.png)
-
+  * ![image-20251024004214705](./LLM-MLSys/image-20251024004214705.png)
+  
 * 使用 multi streams 实现
   * ![image-20250917201955610](./LLM-MLSys/image-20250917201955610.png)
 
-#### Ensemble model
+#### Stateful model
+
+![image-20251022004941200](./LLM-MLSys/image-20251022004941200.png)
+
+#### Model Pipelines
+
+##### Ensemble model
 
 https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/ensemble_models.html
 
 ![image-20251021014957347](./LLM-MLSys/image-20251021014957347.png)
+
+##### BLS(Business Logic Scripting)
+
+https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/bls.html
+
+
 
 #### Step-by-step
 
@@ -1454,15 +1474,35 @@ https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/use
 
 ![image-20251021182528915](./LLM-MLSys/image-20251021182528915.png)
 
+* Scheduling
 
+###### warmup
+
+![image-20251022005418293](./LLM-MLSys/image-20251022005418293.png)
+
+###### TensorRT优化
+
+![image-20251022005113058](./LLM-MLSys/image-20251022005113058.png)
+
+##### 
 
 ##### Launch Triton Server
+
+![image-20251022015043843](./LLM-MLSys/image-20251022015043843.png)
+
+![image-20251024004412153](./LLM-MLSys/image-20251024004412153.png)
+
+
 
 
 
 ##### Configure an Ensemble Model
 
+* [AI 推理入门必看 | Triton Inference Server 编程实战入门教程四](https://www.bilibili.com/video/BV1tt4y1h75i)
+
 ##### Send Requests to Triton Server
+
+* 三种：http、grpc、capi
 
 
 

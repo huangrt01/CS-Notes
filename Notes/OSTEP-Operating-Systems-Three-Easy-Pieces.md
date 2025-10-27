@@ -4,6 +4,44 @@ __主题：virtualization, concurrency, persistence__
 
 [book](http://pages.cs.wisc.edu/~remzi/OSTEP/), [book-code](https://github.com/remzi-arpacidusseau/ostep-code), [projects](https://github.com/remzi-arpacidusseau/ostep-projects), [homework](https://github.com/remzi-arpacidusseau/ostep-homework/) [xxxzz's homework answer](https://github.com/xxyzz/ostep-hw), [my homework answer](https://github.com/huangrt01/ostep-homework)
 
+### Intro
+
+> todo  [南京大学副教授蒋炎岩：Mosaic操作系统模型和检查器_哔哩哔哩_bilibili](https://b23.tv/ChWilgi)
+
+#### 1.Dialogue
+
+I hear and I forget. I see and I remember. I do and I understand.    其实是荀子说的
+
+#### 2.Introduction to Operating Systems
+
+* Von Neumann model
+* OS：并行，外设，resource manager
+* 概念：virtualization, API, system calls, standard library
+
+##### CRUX: how to virtualize resources
+
+##### CRUX: how to build correct concurrent programs
+
+* persistance
+* write有讲究：1）先延迟一会按batch操作    2）protocol, such as journaling or copy-on-write    3）复杂结构B-tree
+
+##### CRUX: how to store data persistently
+
+* 目标：
+  * performance: minimize the overheads
+  * protection ~ isolation
+  * reliability
+  * security
+  * mobility
+  * energy-efficiency
+* history: 
+  * libraries
+  * protection
+  * trap handler            user/kernel mode
+  * multiprogramming    minicomputer
+  * memory protection    concurrency    ASIDE:UNIX
+  * modern era: PC    Linus Torvalds: Linux
+
 ### Kernel
 
 * Meltdown patch
@@ -185,38 +223,6 @@ hugepage必须预先一次分配2M或者1GB的内存空间，并且使用mmap的
 * garbage collection
   * 《Quantifying the performance of garbage collection vs.
     explicit memory management.》
-
-
-
-### Intro
-
-#### 1.Dialogue
-
-I hear and I forget. I see and I remember. I do and I understand.    其实是荀子说的
-
-#### 2.Introduction to Operating Systems
-* Von Neumann model
-* OS：并行，外设，resource manager
-* 概念：virtualization, API, system calls, standard library
-##### CRUX: how to virtualize resources
-##### CRUX: how to build correct concurrent programs
-* persistance
-* write有讲究：1）先延迟一会按batch操作    2）protocol, such as journaling or copy-on-write    3）复杂结构B-tree
-##### CRUX: how to store data persistently
-* 目标：
-  * performance: minimize the overheads
-  * protection ~ isolation
-  * reliability
-  * security
-  * mobility
-  * energy-efficiency
-* history: 
-  * libraries
-  * protection
-  * trap handler            user/kernel mode
-  * multiprogramming    minicomputer
-  * memory protection    concurrency    ASIDE:UNIX
-  * modern era: PC    Linus Torvalds: Linux
 
 ### Virtualization
 

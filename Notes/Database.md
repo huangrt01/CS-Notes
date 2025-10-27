@@ -29,6 +29,25 @@ CREATE TABLE Persons (
 );
 ```
 
+* FOREIGN KEY
+  * 外键 (Foreign Key) 是一个用于建立和加强两个表数据之间连接的一列或多列。它是一个表中的字段，其值必须在另一个表的主键 (Primary Key) 中存在。
+  * 核心作用是保证数据的**引用完整性 (Referential Integrity)**。如果把被引用的表（包含主键）看作“父表”，把引用外部主键的表看作“子表”，那么外键约束确保了：
+    * 子表中不能插入父表中不存在的外键值。
+    * 不能删除父表中仍被子表引用的记录（除非定义了级联操作如 `ON DELETE CASCADE`）。
+  * 外键是 `JOIN` 操作的逻辑基础，通过它可以在多个表之间查询相关数据。
+
+```mysql
+-- 接着上面的 Persons 表，创建一个 Orders 表
+-- Orders 表中的 PersonID 列是外键，引用 Persons 表的 Personid 主键
+CREATE TABLE Orders (
+    OrderID int NOT NULL AUTO_INCREMENT,
+    OrderNumber int NOT NULL,
+    PersonID int,
+    PRIMARY KEY (OrderID),
+    FOREIGN KEY (PersonID) REFERENCES Persons(Personid)
+);
+```
+
 * NOT NULL
   * [为什么数据库字段要使用 NOT NULL？](https://mp.weixin.qq.com/s/XyOU6dimeZNjzIYyTv_fPA)
 

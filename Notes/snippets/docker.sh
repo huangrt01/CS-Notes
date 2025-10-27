@@ -1,27 +1,23 @@
 docker container run -itd \
+--gpus all \
 --network=host \
+--userns=host \
 --security-opt seccomp=unconfined \
 --mount type=bind,source=$(pwd),target=$(pwd) \
 --mount type=bind,source=$HOME/.ssh,target=$HOME/.ssh \
 --mount type=bind,source=/opt/tiger,target=/opt/tiger \
 --mount type=bind,source=$HOME/.cache/bazel,target=$HOME/.cache/bazel \
+-v ~/.cache/huggingface:/root/.cache/huggingface \
+-v ~/.cache/pip:/root/.cache/pip \
 --mount type=bind,source=/usr/local/bin/doas,target=/usr/local/bin/doas \
 --mount type=bind,source=/tmp,target=/tmp \
 --name $(whoami)_myproject_dev \
 hub.xxx.org:xxxyyy /bin/bash
 
-docker run -itd --gpus all \
-  --userns=host \
-  --mount type=bind,source=$(pwd),target=$(pwd) \
-  --mount type=bind,source=$HOME/.ssh,target=$HOME/.ssh \
-  --mount type=bind,source=/tmp,target=/tmp \
+
   --shm-size 32g \
   -p 30000:30000 \
-  -v ~/.cache/huggingface:/root/.cache/huggingface \
-  --env "HF_TOKEN=<your_hf_token>" \
-  --name sglang_container \
-  -d ml-platform-hub-cn-beijing.cr.volces.com/lmsysorg/sglang:latest \
-  /bin/bash
+
 # python3 -m sglang.launch_server --model-path meta-llama/llama-3.1-8b-instruct --host 0.0.0.0 --port 30000
 
 

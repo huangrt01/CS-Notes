@@ -161,6 +161,12 @@
   * 如果内部文档有矛盾，就必须梳理清楚，定义好不同信息来源的权威性；
   * 如果文档有新、老版本，召回逻辑必须考虑时效性
 
+#### 向量化召回的算法缺陷 [DeepMind]
+
+>  [[EP-23\] Deepmind: 单向量召回的根本缺陷_哔哩哔哩_bilibili](https://b23.tv/FZKVfnd)
+
+
+
 ### Literature Review
 
 #### RAG的几个关键问题
@@ -868,6 +874,103 @@ https://hazyresearch.stanford.edu/blog/2025-06-08-cartridges
 #### 未来展望
 
 ![image-20251003230508861](./AI-Applied-Algorithms/image-20251003230508861.png)
+
+### 演进路线：认知框架
+
+> todo https://www.zhihu.com/question/1927140506573435010/answer/1928873138189476851 作者：远洋之帆
+>
+> 后面还有更多技术介绍
+
+* 认知框架已形成四代技术脉络：
+
+1. **第一代**：线性推理（CoT/ReAct）  
+2. **第二代**：结构化探索（ToT/GoT）  
+3. **第三代**：程序增强（PAL/CR）  
+4. **第四代**：系统化协作（多Agent/von Neumann）
+
+* 演进路线
+
+  | 演进维度   | 代表框架                  | 核心突破                 |
+  | ---------- | ------------------------- | ------------------------ |
+  | 线性推理   | CoT, Self-Consistency     | 分步解决复杂问题         |
+  | 结构化探索 | ToT, GoT, SoT             | 多路径搜索与回溯机制     |
+  | 程序增强   | PAL, PoT                  | 代码执行确保计算精确性   |
+  | 动态优化   | BoT, RoT, VoT             | 迭代修正与验证机制       |
+  | 知识融合   | RAT, Analogical Prompting | 外部知识实时检索与整合   |
+  | 系统协作   | von Neumann Multi-Agent   | 仿计算机架构的分布式推理 |
+
+* **1. 基础推理框架**
+
+  | 框架                                                         | 核心技术                               | 突破性应用                |
+  | ------------------------------------------------------------ | -------------------------------------- | ------------------------- |
+  | CoT                                                          | 分步提示（"Let's think step by step"） | MATH数据集准确率提升300%  |
+  | [ReAct](https://zhida.zhihu.com/search?content_id=737342368&content_type=Answer&match_order=1&q=ReAct&zhida_source=entity) | 推理-行动循环（Think→Act→Observe）     | HotpotQA问答幻觉率降低58% |
+  | Self-Consistency                                             | 多路径投票机制                         | GSM8K数学题稳定性提升40%  |
+
+* **2. 结构化框架**
+
+| 框架 | 数据结构          | 创新点                             |
+| ---- | ----------------- | ---------------------------------- |
+| ToT  | 树状搜索          | DFS/BFS策略实现Game-of-24成功率74% |
+| GoT  | 有向无环图        | 思维聚合能力使排序任务成本降31%    |
+| SoT  | 骨架-细节二级结构 | 文本生成延迟降低2.4倍              |
+
+* **3. 程序辅助框架**
+
+```python
+# PAL典型工作流（数学问题求解）
+def pal_execute(question):
+    # 自然语言转代码
+    code_prompt = f"将问题转换为Python代码: {question}"
+    generated_code = llm.generate(code_prompt)
+
+    # 安全沙盒执行
+    with Sandbox() as env:
+        result = env.execute(generated_code)
+
+    # 结果验证
+    if validate(result):
+        return result
+    else:
+        return self_correction()  # 触发自我修正
+```
+
+> **优势**：在MATH数据集上准确率达85.3%（比纯CoT高22%） 
+
+* **4. 迭代优化框架**
+
+**Buffer of Thoughts (BoT) 核心机制**：
+
+![img](https://pic1.zhimg.com/80/v2-97f5e967113942d264d93e369ae1b935_1440w.webp?source=2c26e567)
+
+* **三、框架性能对比**
+
+| 评估维度       | CoT  | ToT  | PAL  | BoT  | RAT  |
+| -------------- | ---- | ---- | ---- | ---- | ---- |
+| 复杂推理准确率 | 57%  | 74%  | 85%  | 82%  | 79%  |
+| 响应延迟(ms)   | 1200 | 3500 | 2500 | 4200 | 2900 |
+| 外部知识依赖   | 无   | 无   | 低   | 无   | 高   |
+| 错误传播风险   | 高   | 中   | 低   | 低   | 中   |
+
+#### 框架选择决策树
+
+![img](./AI-Applied-Algorithms/v2-219dc4c28304e154e0c5a7b23e058c9c_1440w.webp)
+
+<img src="./AI-Applied-Algorithms/image-20251027022725724.png" alt="image-20251027022725724" style="zoom:50%;" />
+
+### 
+
+| 框架类别   | 代表框架                 | 核心特点   | 计算复杂度 | 适用场景     |
+| ---------- | ------------------------ | ---------- | ---------- | ------------ |
+| 基础推理   | CoT, Self-Consistency    | 线性推理   | 低         | 简单推理任务 |
+| 结构化推理 | ToT, GoT, SoT            | 树/图结构  | 中-高      | 复杂决策问题 |
+| 程序辅助   | PAL, PoT                 | 代码执行   | 中         | 数学计算密集 |
+| 迭代优化   | BoT, RoT, VoT            | 多轮优化   | 高         | 需要精确答案 |
+| 知识增强   | RAT, Analogical          | 外部知识   | 中         | 知识密集任务 |
+| 元认知     | Meta-Prompting, CCI      | 自我调节   | 中-高      | 自适应任务   |
+| 协作框架   | Multi-Agent, von Neumann | 多主体协作 | 最高       | 复杂系统问题 |
+
+
 
 ### Function Calling
 
@@ -2097,31 +2200,6 @@ Query扩展：根据粒度的不同分为Term粒度和Query粒度两种
   - **提高查询优化效率和质量**：现有方法多枚举耗时耗资源，应设计高效算法识别最优路径，如优化查询分解方式。
   - **Enhancing Query Optimization via**
     **Post-Performance**：基于提示的方法中 LLM 对检索质量感知不足，需进一步研究整合排名结果。
-
-
-
-#### Large Language Model based Long-tail Query Rewriting in Taobao Search
-
-* BEQUE, a comprehensive framework that Bridges the sEmantic gap for long-tail QUEries
-  * multi-instruction supervised fine tuning (SFT)
-    * based on rejection sampling and auxiliary tasks mixing to fine-tune LLM
-  * offline feedback
-  * objective alignment.
-  * beam search to generate multiple candidate rewrites
-
-* 现有查询改写方法的局限
-  - 基于嵌入的检索范式结果难解释
-  - “查询改写 & 精确匹配” 范式中判别式方法难以控制语义范围和确保相关性
-  - 生成式方法受限于模型规模对长尾查询理解不足，基于大语言模型的改写方法缺乏微调与目标对齐
-
-![image-20241117235808683](./AI-Applied-Algorithms/image-20241117235808683.png)
-
-* 多指令 SFT
-  - 收集改写相关任务数据微调大语言模型，包括:
-  - 构建查询改写数据集（经两轮拒绝采样提升质量并结合辅助任务数据）
-  - 利用辅助任务数据集（质量分类、产品标题预测、思维链任务）增强模型对长尾查询的理解
-
-* Evaluation: 利用taobao rele score function，定义hit rate
 
 #### Query Expansion by Prompting Large Language Models
 
