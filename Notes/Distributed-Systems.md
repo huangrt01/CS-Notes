@@ -291,6 +291,12 @@ ChildrenWatch
 
 #### Spark
 
+##### Stage划分
+
+* Stage的边界是Shuffle操作。一个Job中，没有Shuffle的线性处理流程只有一个Stage 0。
+* 宽依赖 (Shuffle, 触发新Stage): `groupByKey`, `reduceByKey`, `join`, `repartition`, `orderBy`。
+* 窄依赖 (不触发Shuffle): `map`, `filter`, `select`, `read`。
+
 ##### Shuffle策略
 
 - Shuffle Hash Join (洗牌哈希连接)

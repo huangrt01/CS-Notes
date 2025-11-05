@@ -277,6 +277,14 @@ todo [深度强化学习系列（二）强化学习基础 - iker peng的文章 -
 
 > reasoning模型和工具调用结合起来强化学习训练
 
+### ZeroSearch
+
+> https://alibaba-nlp.github.io/ZeroSearch/
+>
+> https://github.com/Alibaba-nlp/ZeroSearch
+
+
+
 
 
 ## RL的其它应用领域

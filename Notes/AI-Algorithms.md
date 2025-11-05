@@ -2166,6 +2166,7 @@ https://arxiv.org/pdf/2506.05176
 
 * lm-arena：https://lmarena.ai/?leaderboard
 * webdev-arena：https://web.lmarena.ai/leaderboard
+* 私有题库：https://llm2014.github.io/llm_benchmark/
 
 ![image-20250616165815319](./AI-Algorithms/image-20250616165815319.png)
 
@@ -2415,6 +2416,12 @@ https://www.zhihu.com/question/603488576/answer/3178990801
 ## RLHF —— 基于人类反馈的强化学习
 
 * 参考「Reinforcement-Learning」
+
+## 预训练小模型、模型融合
+
+TODO [前阿里、字节大模型带头人杨红霞创业：大模型预训练，不是少数顶尖玩家的算力竞赛｜智能涌现独家](https://mp.weixin.qq.com/s/v0ZEgpyJxjgTzbsyHTLI8g)
+
+
 
 ## MLLM(Multimodal LLM)
 
@@ -2909,24 +2916,17 @@ https://www.zhihu.com/question/603488576/answer/3178990801
 
 * Intro
   * 关于可解释性，诙谐的举例，青少年在想什么无法理解，有些东西就是很难理解，但他真实存在并work，青少年也是人
+* TODO：sparse autoencoders (SAEs) , Anthropic's paper https://transformer-circuits.pub/2024/scaling-monosemanticity/
 
-* sparse autoencoders (SAEs) , Anthropic's paper https://transformer-circuits.pub/2024/scaling-monosemanticity/
+### Transformer 的可解释性
 
-* Interpretability在电商场景的潜在应用 https://www.vantagediscovery.com/post/the-future-of-e-commerce-is-ai-powered-and-interpretable
+https://arxiv.org/pdf/2203.04212
 
-  * **Hyper-Personalized Product Discovery**
-    * Scenario: An e-commerce platform wants to move beyond basic recommendation algorithms and create truly personalized shopping experiences that resonate with individual customers. They need to understand not just what products customers interact with, but the underlying reasons and preferences driving their choices.
-    * Solution: By using SAEs to analyze the LLM activations associated with user browsing behavior, purchase history, and product interactions (e.g., reviews, ratings, wishlists), the platform can extract nuanced features representing individual preferences and decision criteria. For example, features might emerge for "aesthetic style," "sustainability concerns," "value for money," "brand affinity," or specific functional requirements.
-    * ![image-20241009174406858](./AI-Algorithms/interpretability1.png)
+https://www.youtube.com/@illcscience7479/videos
 
-  * **Optimized Merchandising and Assortment**
-    * Scenario: A retailer using an e-commerce platform wants to make data-driven decisions about inventory management, product assortment, and merchandising strategies. They need to understand which products are resonating with customers, which attributes are driving demand, and how to optimize pricing and promotions for maximum profitability.
-    * Solution: By applying SAEs to analyze the LLM activations linked to product sales data, customer reviews, and market trends, the platform can identify crucial features influencing purchasing decisions. These might include features like "price sensitivity," "seasonal demand," "regional preferences," or "emerging trends" related to specific product attributes.
-  * **Enhanced Explainable Search**
-    * Scenario: A customer searches for "running shoes" but is dissatisfied with the results, feeling they are too generic.
-    * Solution: The platform could use SAEs to analyze the search query's representation in the LLM's activation space. By identifying the activated features, they could provide an explanation to the customer, like "We are showing you popular running shoes based on your location and browsing history." Additionally, the platform could offer "steering" options based on other relevant features. For example, they could suggest refining the search by "cushioning," "terrain," or "price range."
 
-### [Language models can explain neurons in language models](https://openai.com/research/language-models-can-explain-neurons-in-language-models)
+
+### [Language models can explain neurons in language models](https://openai.com/research/language-models-can-explain-neurons-in-language-models): 自解释
 
 * 步骤：
   * GPT-4解释某个GPT-2神经元的行为
@@ -2942,6 +2942,22 @@ https://www.zhihu.com/question/603488576/answer/3178990801
 * 传统的视觉解释方法不能scale well
   * https://openai.com/research/microscope
   * https://distill.pub/2020/circuits/curve-detectors/
+
+### 可解释性在电商搜索的应用
+
+Interpretability在电商场景的潜在应用 https://www.vantagediscovery.com/post/the-future-of-e-commerce-is-ai-powered-and-interpretable
+
+* **Hyper-Personalized Product Discovery**
+  * Scenario: An e-commerce platform wants to move beyond basic recommendation algorithms and create truly personalized shopping experiences that resonate with individual customers. They need to understand not just what products customers interact with, but the underlying reasons and preferences driving their choices.
+  * Solution: By using SAEs to analyze the LLM activations associated with user browsing behavior, purchase history, and product interactions (e.g., reviews, ratings, wishlists), the platform can extract nuanced features representing individual preferences and decision criteria. For example, features might emerge for "aesthetic style," "sustainability concerns," "value for money," "brand affinity," or specific functional requirements.
+  * ![image-20241009174406858](./AI-Algorithms/interpretability1.png)
+
+* **Optimized Merchandising and Assortment**
+  * Scenario: A retailer using an e-commerce platform wants to make data-driven decisions about inventory management, product assortment, and merchandising strategies. They need to understand which products are resonating with customers, which attributes are driving demand, and how to optimize pricing and promotions for maximum profitability.
+  * Solution: By applying SAEs to analyze the LLM activations linked to product sales data, customer reviews, and market trends, the platform can identify crucial features influencing purchasing decisions. These might include features like "price sensitivity," "seasonal demand," "regional preferences," or "emerging trends" related to specific product attributes.
+* **Enhanced Explainable Search**
+  * Scenario: A customer searches for "running shoes" but is dissatisfied with the results, feeling they are too generic.
+  * Solution: The platform could use SAEs to analyze the search query's representation in the LLM's activation space. By identifying the activated features, they could provide an explanation to the customer, like "We are showing you popular running shoes based on your location and browsing history." Additionally, the platform could offer "steering" options based on other relevant features. For example, they could suggest refining the search by "cushioning," "terrain," or "price range."
 
 ## 幻觉
 

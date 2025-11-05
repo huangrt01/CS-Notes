@@ -91,6 +91,20 @@ unsigned u64ToAsciiTable(uint64_t value, char* dst) {
   * map只存indices，提升rehash速度
   
 
+##### Hash Collision
+
+https://preshing.com/20110504/hash-collision-probabilities/
+
+* 存在冲突的概率：$$\frac{k^2}{2N}$$
+
+![image-20251028140434370](./Algorithms-Potpourri/image-20251028140434370.png)
+
+* 冲突次数的期望：近似为 $$\frac{k^2}{N}$$
+  * 冲突率：近似为 $$\frac{k}{N}$$
+  * 证明：1）利用二项分布；2）假设每个位置最多冲突一次
+
+
+
 
 #### LRU cache
 

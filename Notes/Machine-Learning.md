@@ -938,6 +938,12 @@ def find_most_similar(input_word):
 
 ### 特征压缩、降维
 
+#### Intro
+
+* **Different from random projections, the hashing-trick**：
+  * preserves sparsity
+  * introduces no additional overhead to store projection matrices
+
 * According to [JL-lemma](https://en.wikipedia.org/wiki/Johnson–Lindenstrauss_lemma), [random projection](https://en.wikipedia.org/wiki/Random_projection) reduces the dimensionality of data while approximately preserving the pairwise distances between data points.
 
   * 压缩 feature num 而非压缩 embedding size (PCA, SVD)
@@ -948,10 +954,146 @@ def find_most_similar(input_word):
 
   * 对比：比[AutoInt](https://arxiv.org/pdf/1810.11921.pdf)计算量小；比[DCN-V2](https://arxiv.org/pdf/2008.13535.pdf)线上效果好
 
+  * 应用：
+    * Random projection in dimensionality reduction: Applications to image and text data
+
 * Q-Former
 
-* Random projection
-  * Random projection in dimensionality reduction: Applications to image and text data
+#### Feature Hashing
+
+> https://arxiv.org/pdf/0902.2206 Feature Hashing for Large Scale Multitask Learning
+
+##### Kernel Trick
+
+* **目标**: 在低维空间中计算高维特征空间的内积，以避免显式的高维映射带来的巨大计算量。
+* **核心思想**: 存在一个核函数 $$K(x_i, x_j)$$，它等于将向量 $$x_i, x_j$$ 映射到高维空间后的内积。
+  * 设 $$\phi(x)$$ 是一个从低维输入空间到高维特征空间的映射函数。
+  * 核技巧的关键在于，许多算法（如SVM）的计算只依赖于特征空间中样本的内积，即 $$<\phi(x_i), \phi(x_j)>$$。
+  * 我们可以直接定义核函数 $$K(x_i, x_j) = <\phi(x_i), \phi(x_j)>$$，从而无需计算高维映射 $$\phi(x)$$。
+* **示例 (多项式核)**:
+  * 设 $$x = (x_1, x_2)$$，映射 $$\phi(x) = (x_1^2, \sqrt{2}x_1x_2, x_2^2)$$
+  * 高维内积: $$<\phi(x), \phi(z)> = x_1^2z_1^2 + 2x_1x_2z_1z_2 + x_2^2z_2^2 = (x_1z_1 + x_2z_2)^2 = (<x, z>)^2$$。
+  *   这里的核函数就是 $K(x, z) = (<x, z>)^2$。我们只需在原始低维空间计算内积再平方，就等价于高维空间的内积结果。
+
+*   **局限性：核矩阵的存储**
+    *   **为何要存储**: 许多核方法（如SVM）的优化求解过程需要用到所有样本对之间的核函数值，即完整的 $n \times n$ 核矩阵（Gram matrix）$K$，其中 $K_{ij} = K(x_i, x_j)$。
+    *   **为何不可行**: 存储核矩阵的内存复杂度为 $O(n^2)$，其中 $n$ 是样本数。
+        *   当 $n$ 很大时，$n^2$ 会导致内存爆炸。例如，对于 $n=10^5$ 个样本，使用单精度浮点数（4字节），存储核矩阵需要 $(10^5)^2 \times 4 \text{ bytes} = 40 \text{ GB}$ 内存，这对于单机尤其是GPU来说是不可行的。
+    *   因此，核方法不适用于样本规模（$n$）极大的场景。
+
+##### Hashing Trick
+
+*   **核心思想**: 将高维、稀疏的类别特征（如单词、ID）通过哈希函数映射到一个固定长度的低维向量中，从而在不创建和维护巨大词典的情况下，直接将类别特征数值化。
+*   **与Feature Hashing的关系**: Hashing Trick是Feature Hashing思想在更广义特征工程中的应用，两者经常被混用。Feature Hashing通常指将整个特征向量降维的方法，而Hashing Trick更侧重于处理单个或多个离散特征的编码问题。
+*   **工作流程**:
+    1.  选择一个哈希函数 `h` 和一个目标维度 `m`（哈希桶的数量）。
+    2.  对于一个类别特征（如单词 `"apple"`），计算其哈希值：`index = h("apple") % m`。
+    3.  将这个特征在最终的输入向量中的第 `index` 个位置上置为1（或使用带符号的哈希增加数值稳定性）。
+*   **优缺点**:
+    *   **优点**: 无需预先构建词典、内存占用固定、可处理在线学习中出现的新特征。
+    *   **缺点**: 哈希碰撞。不同的原始特征可能被映射到同一个索引，导致信息损失。但实践证明，在推荐、广告等大规模稀疏场景下，适度的碰撞对模型效果影响有限，甚至有时能起到正则化的作用。
+*   **应用**: 广泛应用于计算广告（CTR预估）、推荐系统等需要处理海量ID类特征的场景。
+
+
+
+
+##### Feature Hashing 应用于 Multitask Learning
+
+* **目标**: 低维空间处理高维数据，规避核矩阵 O (n²) 存储 / 计算瓶颈，支持大规模多任务学习（如十万级用户垃圾过滤）。
+  * 核心思想: 设计无偏哈希函数，将高维输入映射到低维空间，用哈希内积近似原始内积，多任务独立哈希抑制参数干扰。
+* 设哈希函数对：h:ℕ→{1,...,m}（索引映射至 m 个哈希桶），ξ:ℕ→{±1}（符号随机化），高维 x→低维 φ(x)∈ℝ^m，满足$$\phi_i(x)=\sum_{j:h(j)=i}\xi(j)x_j$$。
+  - 注1：尽管定义1中的哈希函数是在自然数集N上定义的，但在实践中，我们通常考虑对任意字符串使用哈希函数。这两者是等价的，因为每个有限长度的字符串都可以用一个唯一的自然数来表示
+  - 注2： 二进制哈希值 $$\xi$$的目的是消除偏差
+  - 理解：x是高维特征，x_j是数值，0<=i<m,  $$\phi_i(x)$$是数值，φ(x) m维
+* 性质：
+  * 线性运算
+  * 流式计算
+    * $$\begin{array}{rcl} \phi_i^{(h, \xi)}(x \| \Delta x) &=& \phi_i^{(h, \xi)}(x \| 0 + 0 \| \Delta x) \\\\ &=& \phi_i^{(h, \xi)}(x \| 0) + \phi_i^{(h, \xi)}(0 \| \Delta x) \\\\ &=& \phi_i^{(h, \xi)}(x) + \phi_i^{(h, \xi)}(\Delta x) \end{array}$$
+* 无偏性：
+  * 哈希内积定义：$$\left<x,x'\right>_\phi = \left<\phi(x),\phi(x')\right>$$
+  * **定义 1**下**，**哈希核是无偏的，并且有：
+    * $$\begin{array}{rcl} \mathbf{E}_\phi\left[\langle x, x' \rangle_\phi\right] &=& \langle x, x' \rangle \\\\ \sigma_{x,x'}^2 &=& \frac{1}{m} \left( \sum_{i \neq j} x_i^2 x_j'^2 + x_i x_i' x_j x_j' \right) \\ \end{array}$$
+      * -> 替代核函数$$K(x,x')$$
+    * 因此，特别地，当$$\|x\|_2 = \|x'\|_2 = 1$$时，有$$\ \sigma_{x,x'}^2 = O( \frac{1}{m})$$。
+    * 注：这表明，哈希核的典型值应集中在目标值的 $$O(\sqrt{1/m})$$ 范围内。 
+    * 注：使用切比雪夫不等式证明，所有观测值中有一半落在 $$\sqrt{2}\sigma$$ 的范围内
+* Concentration of Measure Bounds
+  * <img src="./Machine-Learning/image-20251028014007258.png" alt="image-20251028014007258" style="zoom:50%;" />
+* 多任务适配：对任务 u∈U，映射$$\phi_u(x)=\phi(x,u)$$（输入扩展为 (x,u)），参数合并为$$w_h=\phi_0(w_0)+\sum_{u∈U}\phi_u(w_u)$$，存储量从 O (d×|U|) 降至 O (m)。
+* 示例 (个性化哈希): collaborative email spam filtering
+  - 设 x 为邮件词向量（d=4×10⁷），u 为用户 ID，$$\phi_u(x)=\phi(\text{concat}(x_j,u))$$（词 - 用户对哈希）。
+  - 预测内积：$$\left<\phi_0(x)+\phi_u(x),w_h\right> \approx \left<x,w_0\right>+\left<(x,u),w_u\right>$$，等价原始多任务预测。
+  - 仅需 m=2²²（≈4×10⁶）存储$$w_h$$，无需 O (4×10⁷×4×10⁵) 原始参数。
+* 局限性：哈希误差
+  - **误差来源**: 
+    - ①失真误差$$\epsilon_d=\sum_{v∈\{u,0\}}|\left<\phi_v(x),\phi_v(w_v)\right> - \left<x,w_v\right>|$$（内积偏差）；
+    - ②干扰误差$$\epsilon_i=\sum_{v≠0}\left<\phi_0(x),\phi_v(w_v)\right>+\sum_{v≠u}\left<\phi_u(x),\phi_v(w_v)\right>$$（多任务参数干扰）。
+  - **控制条件**: 需满足$$m≥\Omega(\frac{1}{\epsilon^2}\log(\frac{1}{\delta}))$$（定理 3），过小 m 会加剧哈希碰撞，导致误差超出阈值。
+
+##### 无偏性的数学证明和分析
+
+根据定义，哈希内积为： $$\left<x,x'\right>_\phi = \left<\phi(x),\phi(x')\right> = \sum_{i=1}^m \phi_i(x) \phi_i(x')$$ 其中 $$\phi_i(x)=\sum_{j:h(j)=i}\xi(j)x_j$$ 。
+
+$$E_\phi[\left<x,x'\right>_\phi] = E_{h,\xi}\left[\sum_{i=1}^m \left(\sum_{j:h(j)=i}\xi(j)x_j\right) \left(\sum_{k:h(k)=i}\xi(k)x'_k\right)\right]$$
+
+利用期望的线性性质，将求和移到外面： $$= \sum_{i=1}^m E_{h,\xi}\left[\sum_{j:h(j)=i}\sum_{k:h(k)=i} \xi(j)\xi(k)x_j x'_k\right]$$ $$= \sum_{j,k} x_j x'_k E_{h,\xi}\left[\xi(j)\xi(k) \cdot \mathbf{1}_{h(j)=h(k)}\right]$$ 其中 $\mathbf{1}_{h(j)=h(k)}$ 是指示函数，当 $h(j)=h(k)$ 时为1，否则为0。
+
+分情况讨论 $j$ 和 $k$ ，即可证明： $$E_\phi[\left<x,x'\right>_\phi] = \sum_{j=1}^d x_j x'_j \cdot 1 = \sum_{j=1}^d x_j x'_j = \langle x, x' \rangle$$ 
+
+
+
+* 数学意义：期望上的等价性
+
+  - “无偏性”意味着，虽然单次哈希映射得到的内积 $\langle\phi(x), \phi(x')\rangle$ 是一个随机值，它会因为哈希碰撞而偏离真实的内积 $\langle x, x' \rangle$ ，但如果我们进行无穷多次哈希（每次都用一组新的随机哈希函数），然后取所有结果的平均值，这个平均值会精确地收敛到真实的内积。
+  - --> Deep Hash Embedding 的思路，多组哈希函数的价值
+
+  - 这为Feature Hashing提供了理论上的正确性保证。它告诉我们，哈希映射不是一个随意的、破坏性的过程，而是一个在统计期望上保持了原始几何关系的变换。
+
+* 无偏性是Feature Hashing的灵魂。它保证了我们用一个计算上可行（低维、稀疏）的随机过程，去近似一个计算上不可行（超高维）的确定性过程时，在统计意义上是正确的。
+
+
+
+#### [DHE] Learning to Embed Categorical Features without Embedding Tables for Recommendation
+
+* Intro
+  * 挑战1: Highly-skewed data distribution: The categorical features
+    in recommendation data usually follow highly skewed power-
+    law distributions. The small number of training examples on
+    infrequent feature values hurts the embedding quality for the
+    tail items significantly.
+
+![image-20241226232352140](./Machine-Learning/image-20241226232352140.png)
+
+* 思路：
+  * 解决one-hot hashing的collision问题，兼顾压缩+唯一性
+  * 一种思路是concat多个hash embedding
+* 编码设计原则
+  - **唯一性**：确保每个特征值的编码唯一，避免冲突影响模型性能。
+  - **等相似性**：避免引入错误的归纳偏差，使任意两个编码在相似性上无差异。
+  - **高维度**：便于后续解码函数区分不同特征值，高维空间可分性更强。
+  - **高香农熵**：从信息论角度防止冗余维度，最大化每个维度的熵。
+
+- **密集哈希编码** Dense Hash Encoding：
+  - 使用 $$k$$ 个独立的通用哈希函数 $$\{H^{(i)}\}_{i=1}^k$$ 将单个特征值 $$s$$ 映射为一个 $$k$$ 维的密集整数向量。
+
+  - 编码函数: $$E(s) = [H^{(1)}(s), H^{(2)}(s), \dots, H^{(k)}(s)] \in \mathbb{R}^k$$
+  
+  - 其中每个哈希函数 $$H^{(i)}: \mathbb{N} \to \{1, 2, \dots, m\}$$。
+  
+  - $$m$$ 是一个与Embedding Table无关的足够大的数（如 $$10^6$$），以保证哈希值在 $$\{1, ..., m\}$$ 上近似均匀分布。
+  
+  - 此过程无需存储，可并行计算，生成的向量再通过后续网络（如MLP）学习为实值Embedding。
+  
+- **Deep Embedding Network**
+  - 发现 Mish 激活函数和批量归一化（BN）能提高性能。网络结构上，约五层隐藏层的效果较好，且简单等宽 MLP 架构表现最佳
+  - side feature enhanced encodings for DHE
+    - directly concatenating the generalizable features and the hash encodings.
+    - the hash encoding provides a unique identifier for memorization while the other features enable the generalization ability.
+
+* 结论：
+  * 1024个hash function效果最好
+  * RQ4: 批量归一化（BN）能显著稳定和加速训练并提高性能，在激活函数方面，Mish 激活函数优于 ReLU
+  * 4.8 简单等宽 MLP 表现最佳，添加残差连接反而略降性能
 
 ### AI4Science
 

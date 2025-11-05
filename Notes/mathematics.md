@@ -1,5 +1,13 @@
 # Mathematics
 
+## 数
+
+### 指数
+
+* $$\lim_{n\rightarrow \infty} (1+1/n)^n = e$$
+
+
+
 ## 基础运算
 
 ### 进制
@@ -56,6 +64,15 @@
 
   - 当 k = 4 ( std_scale = 4 )： P(|X - μ| < 4σ) ≥ 1 - 1/16 ≈ 0.9375 。
     - 数学含义 ： 至少有 93.75% 的数据点落在均值的 4 个标准差范围内。
+
+### 二项分布
+
+*   **定义**: 描述了在 $n$ 次独立的伯努利试验中，成功次数为 $k$ 的概率。每次试验只有两种结果（成功/失败），且单次成功的概率为 $p$。
+*   **概率质量函数 (PMF)**: 随机变量 $X \sim B(n, p)$，在 $n$ 次试验中恰好成功 $k$ 次的概率为：
+    $P(X=k) = C(n, k) p^k (1-p)^{n-k} = \frac{n!}{k!(n-k)!} p^k (1-p)^{n-k}$
+*   **核心性质**:
+    *   **期望 (均值)**: $E[X] = np$
+    *   **方差**: $Var(X) = np(1-p)$
 
 ### beta分布
 
@@ -624,6 +641,8 @@ https://en.wikipedia.org/wiki/Cholesky_decomposition
     * GPTQ
 
 ## 最优化、凸优化
+
+> todo 《Optimization in Theory and Practice》
 
 ### 算法
 

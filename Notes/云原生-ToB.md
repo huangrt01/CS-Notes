@@ -712,56 +712,17 @@ rclone copy README.txt tos:ABC --s3-no-head-object
 
 * 最简单的确认方式：控制有/无其它租户，做控制变量，测量e2e指标和微架构指标
 
-### Monitoring 可观测性服务 —— 运维监控
-
-> 经验中，云原生系统的可观测性开销，往往占到云开销的 15%-25%。
->
-> 这么高吗？
-
-#### Intro
-
-* 阿里云有非常丰富的可观测性服务，包括日志服务 SLS，云监控 CloudMonitor， 应用实时监控服务 ARMS
-
-#### 网络
-
-* PingMesh https://cloud.tencent.com/developer/article/1780947
-
-#### 通用
-
-* [Grafana：SpaceX 的数据监测利器，云原生领域的 Tableau](https://mp.weixin.qq.com/s/zgd8KjpGoqwPGC6b1I9owg)
-  * 本质是提升数据可观测性（Data Observability），打破数据边界，提供一个“统一的视窗”，实现对数据的全览和实时监控
-  * 也有观点认为，可视化的重要性远大于指标、日志和链路追踪
-  * 推动“数据民主化”
-
-### Logging
-
-
-
-### Tracing
-
-### Alert
-
-
-
-### CI/CD平台 DevOps
-
-* 阿里云云效
-  * https://www.aliyun.com/product/yunxiao
-* [vivo自建](https://mp.weixin.qq.com/mp/wappoc_appmsgcaptcha?poc_token=HCbf5Gij-A3fYkuQVymNKQEvJbLry_qZo2HlMLcR&target_url=https%3A%2F%2Fmp.weixin.qq.com%2Fs%3F__biz%3DMzI4NjY4MTU5Nw%3D%3D%26mid%3D2247498843%26idx%3D1%26sn%3D314aff57db845b164d2e70d0d58ad12a%26token%3D789170263%26lang%3Dzh_CN%26scene%3D21#wechat_redirect)
-
-
-
 ### 安全服务
 
 ![image-20251007155027318](./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20251007155027318.png)
 
 
 
+## DevOps --> 「Software-Engineering」
+
+
+
 ## 云产品
-
-
-
-
 
 ### ToB 产品 Overview
 

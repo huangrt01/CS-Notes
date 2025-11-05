@@ -1151,6 +1151,8 @@ Thought:{agent_scratchpad}
 
 ##### Intro
 
+>  DeepResearch 框架overview https://www.zhihu.com/question/1915818280955897431/answer/1916251134655443682
+>
 >  https://mp.weixin.qq.com/s/hTRDTu7y6_PuNOZwoxRJIg
 
 * Deep Research产生于OpenAI研究员的副业中，设计之初就定位为专注**海量信息整合类的“只读”任务，避免高风险操作，比如其他agent喜欢演示的**简单交易场景。
@@ -1207,6 +1209,10 @@ Thought:{agent_scratchpad}
 
 * 幻觉
   * **大多数情况是因为它错误地解读了某个信息来源。**这也是我们为什么坚持要**加上引用**的原因之一——**让用户能方便地核对信息来源**
+
+
+
+
 
 #### OpenAI AutoGPT
 
@@ -2006,9 +2012,9 @@ https://github.com/OpenBMB/XAgent
 
 ### Intro
 
-> TODO [搜索新范式！AI Search Paradigm重新定义复杂信息需求的智能搜索范式](https://zhuanlan.zhihu.com/p/1931375587781501201)
+> [搜索新范式！AI Search Paradigm重新定义复杂信息需求的智能搜索范式](https://zhuanlan.zhihu.com/p/1931375587781501201)
 >
-> TODO https://arxiv.org/abs/2506.17188
+> https://arxiv.org/abs/2506.17188
 
 ###  搜索算法
 
@@ -2071,7 +2077,43 @@ https://github.com/OpenBMB/XAgent
 * RL
   * ![image-20250822163935761](./AI-Applied-Algorithms/image-20250822163935761.png)
 
+### AI Search 中的复杂推理
 
+#### 多 Agent 架构与工作流
+
+* 从词法搜索到机器学习时代搜索，再到RAG，搜索技术一步步突破。尽管当前主流的RAG系统尽管能够直接提供自然语言形式的答案，但在面对需要多阶段推理、复杂任务分解或跨工具协同的Query时，仍捉襟见肘。其本质问题在于传统 RAG 系统以线性“检索-生成”为基础，缺乏认知规划、动态工具调用和反思式调整的机制，无法有效应对现实中复杂多样的信息需求。例如RAG可以回答“汉武帝的年龄? ”，但是很难回答“汉武帝和凯撒大帝谁的年龄更大，大几岁？”这种需要复杂推理流程的Query。
+
+* 核心原因在于：**大多数 RAG 系统本质上仍是“单轮检索 + 单轮生成”的线性流程，缺乏任务拆解规划、调度工具、验证信息、出错后的反思与重试以及综合回答等一系列机制**。针对上述问题，百度搜索团队提出AI搜索新范式，旨在模拟人类获取信息的方式，犹如将专家团队装入搜索引擎：它能自动分解任务、调用多种工具、Multi-Agent协同作业来解决复杂任务。
+
+![image-20251105112023109](./AI-Applied-Algorithms/image-20251105112023109.png)
+
+1. **核心架构**：四个专业化 LLM-Agent，职责明确且动态协同，避免单 Agent 任务过载，提升灵活性与可扩展性。
+
+2. 各 Agent 详细职责
+
+   | Agent 角色 | 核心职责                                                     | 关键差异（vs 传统系统）                       |
+   | ---------- | ------------------------------------------------------------ | --------------------------------------------- |
+   | Master     | 1. 分析查询复杂度与意图；2. 动态组建 Agent 团队；3. 监控下属 Agent 性能，失败时引导重规划 | 传统 RAG 为固定流水线，Master 为 “动态协调者” |
+   | Planner    | 1. 仅处理复杂查询，从 MCP 平台选工具；2. 分解查询为 DAG 结构子任务（节点 = 子任务，边 = 依赖）；3. 接收 Master 指令重配置 DAG | 传统 RAG 无显式 DAG 规划，仅简单分解          |
+   | Executor   | 1. 执行简单查询或 DAG 子任务；2. 调用 MCP 工具，评估结果；3. 工具失效时切换备份工具 | 传统 RAG 工具调用单一，无结果评估与备份机制   |
+   | Writer     | 1. 合成所有子任务结果；2. 生成连贯 / 多视角回答，过滤冗余与消歧；3. 补充背景信息提升完整性 | 传统 RAG 从扁平文档列表生成，合成能力弱       |
+
+3. 三种团队配置
+
+   - **Writer-Only**：处理简单查询（如 “汉武大帝的名字”），仅 Writer 依赖内置知识生成答案。
+   - **Executor-Inclusive**：处理中度复杂查询（如 “北京今日天气”），Executor 调用工具（天气查询），Writer 合成结果。
+   - **Planner-Enhanced**：处理复杂查询（如 “汉武大帝与凯撒谁年长，差几岁”），Planner 分解为 3 个子任务（查汉武生日、查凯撒生日、计算差值），Executor 执行，Writer 合成。
+
+#### Task Planner
+
+* **MCP中的工具聚类：**基于 API 功能相似度，自动聚类形成“工具包”，借助功能冗余提升整体系统韧性。
+* **面向查询的工具检索（COLT）：**文章提出 COLT 检索机制，支持基于语义表示选择相关工具、建图建模工具协同使用关系以及最终用多标签列表排序方式，确保工具组合“完整+合理”。
+* **基于DAG的任务规划：**Planner将复杂问题拆解为多个子任务并构建JSON格式的DAG，采用思维链→结构化模式，即LLM先在内部推理，再一键生成结构化DAG。
+* **Master指导下的DeepResearch机制：**每步执行由 Executor 完成并验证；若结果缺失、失败，Master 会启动反思机制；局部回滚 DAG 片段，Planner 重新规划，避免全局重算。
+* **基于强化学习（RL）的优化Planner策略：**提出了基于强化学习的 Planner 优化方法，通过定义明确的奖励机制（涵盖结果准确性、用户反馈、格式规范性与中间任务执行质量），实现 Planner 在复杂任务规划中的性能提升。
+* 动态能力边界
+
+<img src="./AI-Applied-Algorithms/image-20251105112737654.png" alt="image-20251105112737654" style="zoom:50%;" />
 
 ### LLM4电商搜索
 
@@ -2099,9 +2141,40 @@ https://github.com/OpenBMB/XAgent
 
 ![图片](./AI-Applied-Algorithms/640-20241011183258573)
 
-![img](./AI-Applied-Algorithms/78aa0a537b0122edf97ec9a6d01a4fbf.png)
+#### 实体识别
+
+![img](./AI-Applied-Algorithms/ab517b8391561f900d538776c1bc0381.png)
+
+* 领域知识积累
+  * e.g.
+    * 口条=猪舌
+    * 角瓜=茭瓜=西葫芦
+    * Redmi
+  * 词库挖掘
+    * 同义词挖掘
+      * 基于word2vec共现关系（噪声大）
+      * 百科爬取
+      * 运营提供
+      * 现有词库
+    * 上位词挖掘
+      * 类目作为上位词
+      * 爬取类目体系
+  * 商品知识图谱构建
+    * 知识图谱其实是做了一个非个性化全局的知识构建，通过商品库去分析静态概率，最后根据用户点击行为会做一些动态调整，调整完的知识图谱再用在后面的排序上。
+    * ![image-20241011154227917](./AI-Applied-Algorithms/image-20241011154227917.png)
+  * LLM都能搞定
+
+#### 意图识别
+
+![img](./AI-Applied-Algorithms/a0dd83557a74b8d07f3bed5e4a6fd0ef.png)
+
+![img](./AI-Applied-Algorithms/43f0a0f7c0b801a7be62446738bf1b6a.png)
+
+* FastText分类器 https://fasttext.cc/
 
 #### 分词与预处理
+
+![img](./AI-Applied-Algorithms/78aa0a537b0122edf97ec9a6d01a4fbf.png)
 
 * Query预处理
   * 运营审核干预
@@ -2397,7 +2470,7 @@ Query扩展：根据粒度的不同分为Term粒度和Query粒度两种
 * Recommendations and Refinement - Retrieval
 
   * Two-stage: with the added twist that the **ranker also jointly generates natural language explanations** for why each item is being selected
-  * ![image-20241005130712872](./AI-Applied-Algorithms/llm-retrieval.png)
+  * <img src="./AI-Applied-Algorithms/llm-retrieval.png" alt="image-20241005130712872" style="zoom:67%;" />
 
   * Generalized Dual Encoder Model: 
     * using an LLM as a context encoder
@@ -2422,7 +2495,7 @@ Query扩展：根据粒度的不同分为Term粒度和Query粒度两种
   * within RecLLM we use the simple approach of bucketing the range of possible scores and having the LLM output a semantically meaningful phrase (e.g. "excellent fit") corresponding to a bucket id
   * scores the item using chain-of-thought reasoning[95]
 
-![image-20241005140444126](./AI-Applied-Algorithms/rerank.png)
+<img src="./AI-Applied-Algorithms/rerank.png" alt="image-20241005140444126" style="zoom: 67%;" />
 
 * User Profile
   * 用自然语言表示

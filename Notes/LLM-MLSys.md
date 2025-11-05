@@ -587,6 +587,16 @@ print(f"Prompt的token数量为: {token_count}")
 
 ![image-20251005174802221](./LLM-MLSys/image-20251005174802221.png)
 
+### Linear/Sparse Attention 工程
+
+#### Intro
+
+> [为什么M2是FullAttention](https://www.xiaohongshu.com/explore/69018843000000000703bb85?app_platform=ios&app_version=8.86&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBeHBH61bxaVIZ4pyF_-YomNi6kafK79CLuiuoWHO9E9w=&author_share=1&xhsshare=CopyLink&shareRedId=N0lEN0Y6Rk82NzUyOTgwNjc5OTg2NUpP&apptime=1761736838&share_id=9f706ecf4b8f49f48240b83852de05d3)
+
+
+
+
+
 ### 分布式并行注意力
 
 #### Ring Attention —— Sequence Parallel Attention Across Devices
@@ -966,7 +976,7 @@ print(f"Prompt的token数量为: {token_count}")
 
 ### 访存优化
 
-#### FlashAttention: Fast and Memory-Eﬃcient Exact Attention with IO-Awareness
+#### FlashAttention: IO-Awareness
 > https://github.com/HazyResearch/flash-attention
 >
 > **flashattn + flash-decoding https://zhuanlan.zhihu.com/p/685020608**
@@ -1070,7 +1080,7 @@ for t_tile:
   * ![image-20250201160812250](./LLM-MLSys/image-20250201160812250.png)
   
 
-#### FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning
+#### FlashAttention-2: Better Parallelism and Work Partitioning
 
 > 核心：先遍历Q再遍历KV
 >
@@ -1101,7 +1111,7 @@ for t_tile:
   1. 还是按照列块进行并行，这样并行的组块之间有最小的通信行为，否则dk和dv也要共享通信了。
   2. 尽管按列分块后，dq，dk，dv之间的相互依赖很复杂，但避免切k，也依旧可以减少warp内部的共享内存读写的开销。
 
-#### FlashAttention-3: Fast and Accurate Attention with Asynchrony and Low-precision
+#### FlashAttention-3: Asynchrony and Low-precision
 
 **洞察**:  没有充分利用最新硬件中的新功能(tensor core 与 TMA)
 
@@ -1117,6 +1127,12 @@ for t_tile:
 3. 块量化/非相干处理:  补偿FP8量化造成的精度损失。
 
 * Triton实现：显存上实现ringbuffer
+
+#### FlashMask: Rich Mask Extension
+
+https://arxiv.org/pdf/2410.01359
+
+
 
 ### Decoding优化
 

@@ -711,6 +711,20 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 * eXmY https://arxiv.org/abs/2405.13938
 
+##### Fp8 v.s. Int8
+
+> Integer or Floating Point? New Outlooks for Low-Bit Quantization on Large Language Models https://arxiv.org/abs/2305.12356
+>
+> [Seed] INT v.s. FP: A Comprehensive Study of Fine-Grained Low-bit Quantization Formats https://arxiv.org/abs/2510.25602
+
+* 相对来说，INT8量化更适合于权重，FP8-E4量化更适合于大多数层的激活值，具体需要根据数值分布来定 
+* ![img_v3_02o8_a6b6845d-8878-462f-aae9-594f6ae23f0g](./MLSys+RecSys/img_v3_02o8_a6b6845d-8878-462f-aae9-594f6ae23f0g.png)
+* ![img_v3_02o8_b7b2fbf0-3e73-4d6f-a8ae-f5fdbe1e374g](./MLSys+RecSys/img_v3_02o8_b7b2fbf0-3e73-4d6f-a8ae-f5fdbe1e374g.png)
+
+
+
+
+
 #### Intro: [学术]模型量化介绍
 
 * 神经网络：多函数的嵌套表示

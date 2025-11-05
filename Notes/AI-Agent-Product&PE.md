@@ -498,6 +498,15 @@ TODO
 
 ## Agent ToB&ToC 产品
 
+### Teamo
+
+> 知友夕小瑶团队推出 Agent 产品 Teamo，主打超级搜写功能，有哪些亮点？ - 从不毒舌可达鸭的回答 - 知乎
+> https://www.zhihu.com/question/1915818280955897431/answer/1916251134655443682
+
+### Manus
+
+https://manus.im/app
+
 ### HiAgent
 
 ![image-20250616205439328](./AI-Agent-Product&PE/image-20250616205439328.png)
@@ -992,7 +1001,17 @@ Assistant：
 
 ### Intro
 
-[MCP Protocol](https://www.anthropic.com/news/model-context-protocol)
+* [MCP Protocol](https://www.anthropic.com/news/model-context-protocol), the protocol bundles four ingredients:
+  * (1) a manifest that advertises each endpoint’s name, semantic role, cost, and latency bounds;
+  * (2) machine-readable input/output schemas that ground the LLM’s function-calling tokens;
+  * (3) a capability handshake for tool discovery
+  * (4) an execution contract that guarantees idempotent, auditable calls.
+
+### 工程使用
+
+* Draft算法构造documentation
+
+<img src="./AI-Agent-Product&PE/image-20251105112904662.png" alt="image-20251105112904662" style="zoom: 50%;" />
 
 ### 衔接 MCP 和 Workflow 的产品
 
@@ -1299,13 +1318,9 @@ https://webkul.com/ai-semantic-search-services/
     - Style-specific: Cashmere sweaters, Puffer vests, Statement scarves, Athleisure-inspired winter looks
   * 优势：多样性强
   * 局限性：冷启动The models may not be familiar with newly added product names or trained to memorize millions of product model numbers in its embedding space. 用hybrid search解决
-* 在线链路：
-  * 核心是session id，先得到搜索结果+session id，再通过session id获取生成结果
-  
 * demo
   * stackoverflow的检索：https://ai-demos.dev/demos/matching-engine
     * https://cloud.google.com/blog/products/ai-machine-learning/how-to-use-grounding-for-your-llms-with-text-embeddings?hl=en
-
 * 算法进阶
   * 召回+rerank
   * Filtering and boosting
@@ -1318,7 +1333,6 @@ https://webkul.com/ai-semantic-search-services/
     * **Document understanding and text chunking**
     * **Document and query annotation with Knowledge Graph**
     * ![https://storage.googleapis.com/gweb-cloudblog-publish/images/15._document_processing.max-1100x1100.png](https://storage.googleapis.com/gweb-cloudblog-publish/images/15._document_processing.max-1100x1100.png)
-
 * 支持custom embedding能力
   * https://cloud.google.com/generative-ai-app-builder/docs/bring-embeddings
   * 场景：
@@ -1342,6 +1356,244 @@ https://webkul.com/ai-semantic-search-services/
   * [Get started with Vertex AI Search](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search)
   * [Vertex AI Search sample notebooks](https://github.com/GoogleCloudPlatform/generative-ai/tree/main/search) on GitHub Gen AI repo
   * Video: [Harnessing the power of generative AI to deliver next-gen search experiences](https://youtu.be/HD_xreaLKb4?feature=shared)
+
+##### 工程相关
+
+* 在线链路：
+
+  * 核心是session id，先得到搜索结果+session id，再通过session id获取生成结果
+
+
+  * Get answer/follow-ups:https://cloud.google.com/generative-ai-app-builder/docs/answer#commands_for_follow-up_questions
+
+
+  * Get search result:https://cloud.google.com/generative-ai-app-builder/docs/answer#commands_for_follow-up_questions
+
+  * grounding输出可支持返回对话中直接相关的内容/物品
+
+```
+{
+  "answer": {
+    "state": "SUCCEEDED",
+    "answerText": "SQL stands for Structured Query Language and is a programming language used to manage, query, and retrieve data in a relational database. It is the standard language used by relational database management systems (RDBMS) such as PostgreSQL, SQL Server, MySQL, and Oracle Database. SQL statements are written in a statement format for queries and other database operations, allowing users to manipulate data in relational database tables. SQL is used to create and update the structure of tables, read and write data, manage user permissions, and perform administrative tasks. While originally created for relational databases, SQL is now a foundation for many technology capabilities, making SQL knowledge essential for many technology roles. \n",
+    "citations": [
+      {
+        "endIndex": "137",
+        "sources": [
+          {
+            "referenceId": "0"
+          },
+          {
+            "referenceId": "1"
+          }
+        ]
+      },
+      {
+        "startIndex": "138",
+        "endIndex": "437",
+        "sources": [
+          {
+            "referenceId": "3"
+          }
+        ]
+      },
+      {
+        "startIndex": "438",
+        "endIndex": "575",
+        "sources": [
+          {
+            "referenceId": "2"
+          }
+        ]
+      },
+      {
+        "startIndex": "576",
+        "endIndex": "742",
+        "sources": [
+          {
+            "referenceId": "3"
+          }
+        ]
+      }
+    ],
+    "references": [
+      {
+        "chunkInfo": {
+          "content": "There may be a second table that stores visit information. A relational database uses a unique ID for each row to maintain the linked patient information across the two tables. This way, you can quickly look up the visits of each patient. Sign up for a free trial for any of Google Cloud's SQL databases, which include AlloyDB, Cloud SQL, and Spanner. Get started for free What is SQL? SQL (Structured Query Language) is a programming language used to store, retrieve, and manage data in a relational database. SQL statements are English-like, making the language accessible to software developers, data analysts, and other practitioners. Benefits of SQL databases Enterprises choose SQL databases for being: Efficient. Relational databases are incredibly efficient in managing complex queries. Fast. SQL databases can retrieve large amounts of data, quickly. This makes them highly desirable for real-time transactional data. Reliable. SQL databases provide a high degree of data integrity and are ACID-compliant. SQL database engines There are numerous SQL database engines (products) used to build software applications. Some of the most popular include PostgreSQL, MySQL, SQL Server, and Oracle. Some database engines are open source while others are commercial offerings. ",
+          "relevanceScore": 0.9,
+          "documentMetadata": {
+            "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/7218ff4f57328d86059246d4af3a9953",
+            "uri": "https://cloud.google.com/discover/what-are-sql-databases",
+            "title": "SQL Databases | Google Cloud"
+          }
+        }
+      },
+      {
+        "chunkInfo": {
+          "content": "PostgreSQL vs. SQL Server: What's the difference? | Google Cloud Page Contents Topics PostgreSQL vs. SQL PostgreSQL vs SQL Server: What are the key differences? Trying to find the right database for your applications? When it comes to choosing a database technology, the most common SQL options to consider are PostgreSQL vs. SQL Server. While both systems share many core features, there are some key differences—the major one being that PostgreSQL is open source and SQL Server is owned by Microsoft. Today, it is more vital than ever for companies to be able to manage, store, and activate data for modern business operations. With the growing assortment of databases available to choose from, it can be overwhelming to pick the right one for your applications. The most important thing to remember is that no single database will be a good match for every project requirement, so it's critical to understand the option that will work best for your specific use case. So, what is PostgreSQL vs. SQL Server? In this short guide, we'll discuss the basic differences between PostgreSQL and SQL Server. Get started for freeStay informed What is SQL? Structured Query Language or SQL, as it's more commonly known, is a programming language used to manage, query, and retrieve data in a relational database. ",
+          "relevanceScore": 0.8,
+          "documentMetadata": {
+            "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/f7cd9afab1282a9f57cdcee1885bb4c6",
+            "uri": "https://cloud.google.com/learn/postgresql-vs-sql",
+            "title": "PostgreSQL vs. SQL Server: What's the difference? | Google Cloud"
+          }
+        }
+      },
+      {
+        "chunkInfo": {
+          "content": "SQL Databases | Google Cloud Page Contents Topics What are SQL databases? What are SQL databases? A SQL database, also known as a relational database, is a system that stores and organizes data into highly structured tables of rows and columns. These databases offer Structured Query Language (SQL) to read and write the data, and are categorized as relational database management systems (RDBMS). SQL statements are used to create and update the structure of tables, read and write data, manage user permissions, and perform administrative tasks. For example, a CREATE statement is used to create a table, an INSERT statement adds a new row to a table, and a SELECT statement performs a database query. Statements that make structural or administrative changes are usually reserved for software developers and administrators, while read and write operations are performed by end-user applications. A relational database maintains the ability to link information across multiple tables. This format makes it easy to quickly gain insights about the relationships between various columns or data points in these tables. A relational database can create indexes for particular columns for faster lookups. For example, a healthcare facility might maintain a table containing rows of patient information, where each row is one patient and the columns contain data points, such as the patient's name, insurance information, and contact details. ",
+          "relevanceScore": 0.8,
+          "documentMetadata": {
+            "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/7218ff4f57328d86059246d4af3a9953",
+            "uri": "https://cloud.google.com/discover/what-are-sql-databases",
+            "title": "SQL Databases | Google Cloud"
+          }
+        }
+      },
+      {
+        "chunkInfo": {
+          "content": "It is the standard language used by relational database management systems (RDBMS), including PostgreSQL, SQL Server, MySQL, and Oracle Database. SQL typically uses commands written in statement format for queries and other database operations, which allow users to manipulate data in relational database tables. While originally created for relational databases, SQL acts as a foundation for many of today's technology capabilities, making SQL knowledge an essential skill for many technology roles today, including data analysts, database engineers, and even backend programming. However, you will find that there are different variants of SQL depending on the database or database management system that you choose. What is Microsoft SQL Server? SQL Server is a leading RDBMS that is built on top of SQL and developed by Microsoft. It is used to manage and store data to support numerous enterprise use cases for business intelligence, transaction processing, data analytics, and machine learning services. SQL Server has a row-based table structure that allows you to connect related data elements from different tables without having to store data multiple times in a database. In general, Microsoft SQL Server is known for its high availability, fast performance when handling large workloads, and easy integration with other applications to gain business intelligence across your entire data estate. For more information, we recommend reviewing the official SQL Server documentation. ",
+          "relevanceScore": 0.8,
+          "documentMetadata": {
+            "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/f7cd9afab1282a9f57cdcee1885bb4c6",
+            "uri": "https://cloud.google.com/learn/postgresql-vs-sql",
+            "title": "PostgreSQL vs. SQL Server: What's the difference? | Google Cloud"
+          }
+        }
+      },
+      {
+        "chunkInfo": {
+          "content": "Send feedback The GoogleSQL language in Spanner bookmark_borderbookmark Stay organized with collections Save and categorize content based on your preferences. Dismiss Got it GoogleSQL is the new name for Google Standard SQL! New name, same great SQL dialect. This page provides an overview of supported statements in GoogleSQL. GoogleSQL is an ANSI compliant Structured Query Language (SQL) which includes the following types of supported statements: Query statements, also known as Data Query Language (DQL) statements, are the primary method to analyze data in Spanner. They scan one or more tables or expressions and return the computed result rows. Data Definition Language (DDL) statements let you create and modify database objects such as tables, views, and database roles. Data Manipulation Language (DML) statements enable you to update, insert, and delete data from your Spanner tables. Data Access Control statements let you grant and revoke access privileges at the table and column level. Transaction Control statements allow you to manage transactions for data modifications. Was this helpful? Send feedback Except as otherwise noted, the content of this page is licensed under the Creative Commons Attribution 4.0 License, and code samples are licensed under the Apache 2.0 License. For details, see the Google Developers Site Policies. Java is a registered trademark of Oracle and/or its affiliates. ",
+          "relevanceScore": 0.7,
+          "documentMetadata": {
+            "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/0c5c094170756eeb6bdfec6eb5c7d081",
+            "uri": "https://cloud.google.com/spanner/docs/reference/standard-sql/overview",
+            "title": "The GoogleSQL language in Spanner | Google Cloud"
+          }
+        }
+      },
+      {
+        "chunkInfo": {
+          "content": "FAQ Expand all What is Cloud SQL? Cloud SQL is a service that delivers fully managed relational databases in the cloud. It offers MySQL, PostgreSQL, and SQL Server database engines. How is Cloud SQL different from other cloud databases? Cloud SQL is valued for its openness, ease of use, security, cost-efficiency, and Google Cloud integration—in fact, more than 95% of Google Cloud's top 100 customers use it. If you're comparing PostgreSQL options on Google Cloud, view our comparison chart. What's the difference between the Enterprise and Enterprise Plus editions? For PostgreSQL, the Enterprise Plus edition brings enhanced availability, performance, and data protection capabilities. Specifically, it provides a 99.99% availability SLA with near-zero downtime maintenance, optimized hardware and software configurations, intelligent data caching for read-intensive transactional workloads, a configurable data cache option and 35 days of log retention. For MySQL, the Enterprise Plus edition brings enhanced availability, performance, and data protection capabilities. Specifically, it provides a 99.99% availability SLA with near-zero downtime maintenance, optimized hardware and software configurations, intelligent data caching for read-intensive transactional workloads, a configurable data cache option, 35 days of log retention and advanced disaster recovery capabilities like orchestrated failover and switchback. ",
+          "relevanceScore": 0.7,
+          "documentMetadata": {
+            "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/931f2c8e19ed54a407857f1cad3b5aaa",
+            "uri": "https://cloud.google.com/sql",
+            "title": "Cloud SQL for MySQL, PostgreSQL, and SQL Server | Google Cloud"
+          }
+        }
+      },
+      {
+        "chunkInfo": {
+          "content": "PostgreSQL versus SQL PostgreSQL is an open-source, object-relational database (ORDBMS) designed for enterprise-level performance and is valued for its reliability and robust features. Its long history of development and its use of SQL makes it one of the most popular open source databases worldwide. Its default procedural language is an extension of pgSQL (PL/pgSQL), with procedural language extensions of Tcl, Perl, and Python included in the standard distribution (written as PL/Tcl, PL/Perl, and PL/Python). Many more languages are supported through extensions, including Java, Ruby, C, C++, Delphi, and JavaScript. For a more in-depth comparison, visit our PostgreSQL versus SQL guide. MySQL versus SQL MySQL is a popular open source relational database created in 1995 and currently sponsored by Oracle. It supports SQL queries and can be administered either through a graphical user interface (GUI) or a command line. MySQL can be deployed manually on a physical machine or through a cloud service provider. Enterprises are increasingly choosing fully managed services to reduce the maintenance burden of their databases. What is SQL Server? SQL Server is a Microsoft-owned database that runs SQL queries. Dive into the differences between PostgreSQL and SQL Server. ",
+          "relevanceScore": 0.6,
+          "documentMetadata": {
+            "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/7218ff4f57328d86059246d4af3a9953",
+            "uri": "https://cloud.google.com/discover/what-are-sql-databases",
+            "title": "SQL Databases | Google Cloud"
+          }
+        }
+      },
+      {
+        "chunkInfo": {
+          "content": "Send feedback On this page BigQuery SQL dialects Changing from the default dialect What's next Introduction to SQL in BigQuery bookmark_borderbookmark Stay organized with collections Save and categorize content based on your preferences. Dismiss Got it GoogleSQL is the new name for Google Standard SQL! New name, same great SQL dialect. This document provides an overview of supported statements and SQL dialects in BigQuery. GoogleSQL is an ANSI compliant Structured Query Language (SQL) which includes the following types of supported statements: Query statements, also known as Data Query Language (DQL) statements, are the primary method to analyze data in BigQuery. They scan one or more tables or expressions and return the computed result rows. Procedural language statements are procedural extensions to GoogleSQL that allow you to execute multiple SQL statements in one request. Procedural statements can use variables and control-flow statements, and can have side effects. Data Definition Language (DDL) statements let you create and modify database objects such as tables, views, functions, and row-level access policies. Data Manipulation Language (DML) statements enable you to update, insert, and delete data from your BigQuery tables. Data Control Language (DCL) statements let you control BigQuery system resources such as access and capacity. Transaction Control Language (TCL) statements allow you to manage transactions for data modifications. ",
+          "relevanceScore": 0.6,
+          "documentMetadata": {
+            "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/2f6fc3e29873518196cb50195d7ded45",
+            "uri": "https://cloud.google.com/bigquery/docs/introduction-sql",
+            "title": "Introduction to SQL in BigQuery | Google Cloud"
+          }
+        }
+      },
+      {
+        "chunkInfo": {
+          "content": "Database administration Cloud SQL pricing Connect to a Cloud SQL managed database Cloud SQL updates Configuration updates System updates What's next Home Cloud SQL Documentation Guides Was this helpful? Send feedback Cloud SQL overview bookmark_borderbookmark Stay organized with collections Save and categorize content based on your preferences. Dismiss Got it On this page Database configurations with Cloud SQL Use cases for Cloud SQL What Cloud SQL provides What is a Cloud SQL instance? Database administration Cloud SQL pricing Connect to a Cloud SQL managed database Cloud SQL updates Configuration updates System updates What's next Cloud SQL is a fully managed relational database service for MySQL, PostgreSQL, and SQL Server. This frees you from database administration tasks so that you have more time to manage your data. This page discusses basic concepts and terminology for Cloud SQL, which provides SQL data storage for Google Cloud. For a more in-depth explanation of key concepts, see the key terms and features pages. For information about how Cloud SQL databases compare with one another, see Cloud SQL feature support by database engine. Database configurations with Cloud SQL The following video shows you the benefits of using Cloud SQL. ",
+          "relevanceScore": 0.6,
+          "documentMetadata": {
+            "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/4098ae11bfa400e8f1b8e9ba59d2b71b",
+            "uri": "https://cloud.google.com/sql/docs/introduction",
+            "title": "Cloud SQL overview"
+          }
+        }
+      },
+      {
+        "chunkInfo": {
+          "content": "Cloud SQL documentation View all product documentation Cloud SQL is a fully-managed database service that helps you set up, maintain, manage, and administer your relational databases on Google Cloud Platform. You can use Cloud SQL with MySQL, PostgreSQL, or SQL Server. Not sure what database option is right for you? Learn more about our database services. Learn more about Cloud SQL. Documentation resources Find quickstarts and guides, review key references, and get help with common issues. format_list_numbered Guides Cloud SQL overview Database engine feature support MySQL PostgreSQL SQL Server find_in_page Reference gcloud commands REST API Client libraries info Resources Pricing Release notes Resources Try Cloud SQL for yourself Create an account to evaluate how our products perform in real-world scenarios. New customers also get $300 in free credits to run, test, and deploy workloads. Try Cloud SQL free Was this helpful? Except as otherwise noted, the content of this page is licensed under the Creative Commons Attribution 4.0 License, and code samples are licensed under the Apache 2.0 License. For details, see the Google Developers Site Policies. Java is a registered trademark of Oracle and/or its affiliates. Last updated 2024-08-29 UTC. ",
+          "relevanceScore": 0.5,
+          "documentMetadata": {
+            "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/37935181d99a6ad3b4897e673a7a7986",
+            "uri": "https://cloud.google.com/sql/docs",
+            "title": "Cloud SQL documentation"
+          }
+        }
+      }
+      ],
+    "steps": [
+      {
+        "state": "SUCCEEDED",
+        "description": "Rephrase the query and search.",
+        "actions": [
+          {
+            "searchAction": {
+              "query": "What is SQL?"
+            },
+            "observation": {
+              "searchResults": [
+                {
+                  "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/7218ff4f57328d86059246d4af3a9953",
+                  "uri": "https://cloud.google.com/discover/what-are-sql-databases",
+                  "title": "SQL Databases | Google Cloud",
+                  "snippetInfo": [
+                    {
+                      "snippet": "\u003cb\u003eSQL\u003c/b\u003e (Structured Query Language) is a programming language used to store, retrieve, and manage data in a relational database. \u003cb\u003eSQL\u003c/b\u003e statements are English-like, ...",
+                      "snippetStatus": "SUCCESS"
+                    }
+                  ]
+                },
+                {
+                  "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/f7cd9afab1282a9f57cdcee1885bb4c6",
+                  "uri": "https://cloud.google.com/learn/postgresql-vs-sql",
+                  "title": "PostgreSQL vs. SQL Server: What's the difference? | Google Cloud",
+                  "snippetInfo": [
+                    {
+                      "snippet": "\u003cb\u003eSQL\u003c/b\u003e typically uses commands written in statement format for queries and other database operations, which allow users to manipulate data in relational database ...",
+                      "snippetStatus": "SUCCESS"
+                    }
+                  ]
+                },
+                {
+                  "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/3afdede140d0906c2146a2f2b3a7821e",
+                  "uri": "https://cloud.google.com/blog/topics/developers-practitioners/what-cloud-sql",
+                  "title": "What is Cloud SQL? | Google Cloud Blog",
+                  "snippetInfo": [
+                    {
+                      "snippet": "It is a fully managed relational database for MySQL, PostgreSQL and \u003cb\u003eSQL\u003c/b\u003e Server. It reduces maintenance cost and automates database provisioning, storage ...",
+                      "snippetStatus": "SUCCESS"
+                    }
+                  ]
+                },
+                ...
+                {
+                  "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/0c5c094170756eeb6bdfec6eb5c7d081",
+                  "uri": "https://cloud.google.com/spanner/docs/reference/standard-sql/overview",
+                  "title": "The GoogleSQL language in Spanner | Google Cloud",
+                  "snippetInfo": [
+                    {
+                      "snippet": "\u003cb\u003eGoogleSQL\u003c/b\u003e is the new name for Google Standard \u003cb\u003eSQL\u003c/b\u003e! New name, same great \u003cb\u003eSQL\u003c/b\u003e dialect. This page provides an overview of supported statements in \u003cb\u003eGoogleSQL\u003c/b\u003e.",
+                      "snippetStatus": "SUCCESS"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "answerQueryToken": "NMwKDAiFm_y2BhC_nfrYAxIkNjZkYjg3NjItMDAwMC0yZTBkLTg0ZDAtMDg5ZTA4MmRjYjg0"
+}
+```
 
 
 
@@ -1444,6 +1696,10 @@ https://www.bbc.com/news/articles/c87p2rppx4po
     * 基于查询词匹配，这类似于传统的检索，例如TF-IDF风格的检索。
   * 搜集开放式信息
     * 我应该投资英伟达吗？我不太明白。所有信息都已被计入价格了吗？黑色世界芯片延误会怎样？对训练GPU的需求如何？英伟达现在的竞争对手是谁？它仍然没有竞争对手吗？五年后的市场会怎样？这将如何影响亚马逊网络服务（AWS）的收入？英伟达的利润率是如何被挤压的？谁可能会这么做？
+* Perplexity发布42页AI指南 http://xhslink.com/o/uRPa3J7QNd
+  * Scale yourself
+  * 
+  
 
 #### 科学类搜索 SciMaster
 

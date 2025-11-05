@@ -675,7 +675,18 @@ https://discuss.pytorch.org/t/feature-request-nvidia-gds-support-for-pytorch-ite
 * DL Serving框架对MPS的支持
   * 见「snippets/gpu-mps.sh」
 
+##### CUDA Green Context
 
+> [SGLang 支持 CUDA Green Context](https://www.xiaohongshu.com/explore/68757047000000000b02dd21?app_platform=ios&app_version=8.86&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBbLP3TUkUJ2rbc8p2ahs9MMMtK9_OshR_WS-aXR56eEY=&author_share=1&xhsshare=CopyLink&shareRedId=N0lEN0Y6Rk82NzUyOTgwNjc5OTg2NUpP&apptime=1761737262&share_id=6c31a6c4183d43d0b3ccf61d933e92bf)
+
+* Green Contexts 是 CUDA Driver API 的新成员，允许开发者在一张物理 GPU 上，创建多个轻量级的、资源隔离的 CUDA execution contexts，每个 context 拥有一个指定的 SM 子集。 
+  * 一个 SM 可以同时驻留多个 block（取决于 block 的资源需求是否允许，比如寄存器数、共享内存需求、warp 数等）
+  * 一个 Block 必须完全驻留在单个 SM 上执行。
+  * Green Contexts的意义在于，可以保证某些 kernel 永远不会互相抢占同一个 SM，也不会互相干扰，相当于给用户留了一个并发细粒度优化的口子。
+* 优化思路： 
+  * 不同 Green Contexts 对应的 kernel 可以在不同 stream 中异步提交，从而实现高效并发；
+  * 单个 kernel 内部的 block/threads 配置应当匹配分配给 Context 的 SM 数；
+  * 尽可能让数据局部性和 SM 绑定一致（如每个 SM 处理的数据块独立，避免全局乱跳）
 
 #### DCGM
 

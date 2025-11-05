@@ -108,6 +108,12 @@
 - OpenNMT
   - https://github.com/OpenNMT/OpenNMT-py.git
 
+
+#### RL
+
+- ZeroSearch
+  - https://github.com/Alibaba-nlp/ZeroSearch
+
 #### DLRM
 
 - simple-DLRM
@@ -130,6 +136,13 @@
 
 
 ### Applied Algo
+
+#### Deep Research
+
+- https://github.com/bytedance/deer-flow
+- https://github.com/langchain-ai/open_deep_research
+- https://github.com/nickscamara/open-deep-research
+- https://github.com/LearningCircuit/local-deep-research
 
 #### Context Engineering
 
