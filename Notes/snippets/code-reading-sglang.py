@@ -1,4 +1,4 @@
-### dev
+*** dev
 
 install: https://docs.sglang.ai/start/install.html
 
@@ -7,7 +7,7 @@ source $HOME/anaconda3/bin/activate
 conda activate sglang
 conda install pip
 
-### pip
+*** pip
 
 # Use the last release branch
 git clone -b v0.4.5 https://github.com/sgl-project/sglang.git
@@ -16,7 +16,7 @@ cd sglang
 pip install --upgrade pip
 pip install -e "python[all]" --find-links https://flashinfer.ai/whl/cu124/torch2.5/flashinfer-python
 
-### docker
+*** docker
 
 docker pull lmsysorg/sglang:latest
 
@@ -34,7 +34,7 @@ docker run -itd --gpus all \
   /bin/bash
 # python3 -m sglang.launch_server --model-path meta-llama/llama-3.1-8b-instruct --host 0.0.0.0 --port 30000
 
-### torchao集成
+*** torchao集成
 
 --torchao-config
 --tp-size
@@ -52,7 +52,7 @@ python3 -m sglang.bench_offline_throughput --model-path meta-llama/Llama-3.1-8B-
 
 
 
-### Torch Native Tensor Parallel Support in SGLang
+*** Torch Native Tensor Parallel Support in SGLang
 
 https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/models/torch_native_llama.py
 
@@ -74,3 +74,24 @@ We then define a TP engine in model_parallel.py.
 It searches for _tp_plan recursively within the model, and applies the indicated TP styles to the submodules 
 using PyTorch’s parallelize_module API.
 - https://pytorch.org/docs/stable/distributed.tensor.parallel.html#torch.distributed.tensor.parallel.parallelize_module
+
+
+*** 性能优化
+
+** SGLANG_ENABLE_LOGITS_PROCESSOR_CHUNK
+
+优化logits计算的显存消耗；  配合deterministic推理做测试
+
+https://www.xiaohongshu.com/explore/690af6dc0000000005002cb1?app_platform=ios&app_version=8.86&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBCcIgqWM7cWaaFvFdGrZ5JiCFVrFWVQD0FZi2fxxuskk=&author_share=1&xhsshare=CopyLink&shareRedId=N0lEN0Y6Rk82NzUyOTgwNjc5OTg2NUpP&apptime=1762336862&share_id=293a2f99a3c944da9090dbb4f2ef52df
+
+
+
+
+
+
+
+
+
+
+
+

@@ -996,6 +996,12 @@ https://www.anthropic.com/news/tool-use-ga
 
 > todo ReAct paper
 
+* thought 节点
+* action 节点
+* iteration and branch 节点
+
+
+
 ```
 Answer the following questions as best you can. You have access to the following tools:
 
@@ -2012,10 +2018,6 @@ https://github.com/OpenBMB/XAgent
 
 ### Intro
 
-> [搜索新范式！AI Search Paradigm重新定义复杂信息需求的智能搜索范式](https://zhuanlan.zhihu.com/p/1931375587781501201)
->
-> https://arxiv.org/abs/2506.17188
-
 ###  搜索算法
 
 #### Hybrid Search
@@ -2077,7 +2079,13 @@ https://github.com/OpenBMB/XAgent
 * RL
   * ![image-20250822163935761](./AI-Applied-Algorithms/image-20250822163935761.png)
 
-### AI Search 中的复杂推理
+### AI Search 中的推理
+
+> [搜索新范式！AI Search Paradigm重新定义复杂信息需求的智能搜索范式](https://zhuanlan.zhihu.com/p/1931375587781501201)
+>
+> https://arxiv.org/abs/2506.17188
+>
+> ![image-20251105175820036](./AI-Applied-Algorithms/image-20251105175820036.png)
 
 #### 多 Agent 架构与工作流
 
@@ -2111,9 +2119,50 @@ https://github.com/OpenBMB/XAgent
 * **基于DAG的任务规划：**Planner将复杂问题拆解为多个子任务并构建JSON格式的DAG，采用思维链→结构化模式，即LLM先在内部推理，再一键生成结构化DAG。
 * **Master指导下的DeepResearch机制：**每步执行由 Executor 完成并验证；若结果缺失、失败，Master 会启动反思机制；局部回滚 DAG 片段，Planner 重新规划，避免全局重算。
 * **基于强化学习（RL）的优化Planner策略：**提出了基于强化学习的 Planner 优化方法，通过定义明确的奖励机制（涵盖结果准确性、用户反馈、格式规范性与中间任务执行质量），实现 Planner 在复杂任务规划中的性能提升。
+  * Planner很关键，所以SFT和RL都有价值
 * 动态能力边界
 
 <img src="./AI-Applied-Algorithms/image-20251105112737654.png" alt="image-20251105112737654" style="zoom:50%;" />
+
+#### 召回排序层：用模型的方式减少策略的发散
+
+##### 方法一：RL 增强多维度 ranking / generation
+
+- 动机是多路召回，有不同的侧重点
+- RL增强排序和生成，根据reward，学习对不同路召回Score的倾向性
+
+![image-20251105154515094](./AI-Applied-Algorithms/image-20251105154515094.png)
+
+* For example, given a query “What is the current price of gold?”, the AI search system retrieves
+  relevant documents along with their metadata. The ranker may then select a policy, such as P1 :
+  {𝑟𝑒𝑐𝑒𝑛𝑐 𝑦 ≻ 𝑞𝑢𝑎𝑙𝑖𝑡 𝑦 ≻ 𝑟𝑒𝑙𝑒𝑣𝑎𝑛𝑐𝑒 ≻ 𝑎𝑢𝑡ℎ𝑜𝑟𝑖𝑡 𝑦}, or P2 : {𝑞𝑢𝑎𝑙𝑖𝑡 𝑦 ≻ 𝑟𝑒𝑙𝑒𝑣𝑎𝑛𝑐𝑒 ≻ 𝑟𝑒𝑐𝑒𝑛𝑐 𝑦 ≻ 𝑎𝑢𝑡ℎ𝑜𝑟𝑖𝑡 𝑦},
+  to sort these documents accordingly. The sorted results are forwarded to the generator, and
+  feedback from the generator is subsequently used to reward the ranker. This process facilitates
+  document ranking that effectively integrates metadata, thereby optimizing overall retrieval
+  performance.
+
+##### 方法二：Distillation of LLM Ranking
+
+- Step 1: 将业务规则、偏好，抽象为 LLM Prompt
+- Step 2: 使用 LLM Ranker 进行排序
+- Step 3: 用一个 Student 模型，蒸馏 LLM Ranker 的排序分数
+  - 难点：Student 模型的结构设计
+- ![image-20251105174057743](./AI-Applied-Algorithms/image-20251105174057743.png)
+
+#### Writer
+
+* **LLM生成的“3H标准”，即有用（Helpfulness）、无害（Harmlessness）和真实（Honesty）**
+* **鲁棒RAG系统（ATM）**，即通过对抗训练与多智能体迭代训练相结合，显著增强了Writer的鲁棒性
+  * <img src="./AI-Applied-Algorithms/image-20251105174549108.png" alt="image-20251105174549108" style="zoom: 33%;" />
+* **RAG任务对齐系统（PA-RAG）**，即先通过指令微调获得基础 RAG 能力，再进行多视角偏好优化，确保模型输出信息性强、鲁棒性佳且引用准确
+  * <img src="./AI-Applied-Algorithms/image-20251105174601250.png" alt="image-20251105174601250" style="zoom: 33%;" />
+* **基于用户反馈进行优化（RLHB）**，即通过显式与隐式用户反馈，利用RL直接对齐LLM，克服了传统对齐成本高且脱离真实在线行为的局限。
+
+#### 多智能体联合优化 MMOA-RAG、MAPPO
+
+**多智能体联合优化（MMOA-RAG）：**将 Planner、Executor和Writer 三个智能体视为协作团体，组成一个Multi-Agent系统，整体优化目标采用多智能体 PPO（MAPPO），使得所有Agent共同朝着同一个全局奖励方向前进，同时通过惩罚项约束各自的低效行为。
+
+![image-20251105175043353](./AI-Applied-Algorithms/image-20251105175043353.png)
 
 ### LLM4电商搜索
 

@@ -2300,12 +2300,21 @@ for hat in queue:
 
 * 其它：
 
-  * Annotations 获取参考资料地址：https://platform.openai.com/docs/assistants/how-it-works/message-annotations
-  2. 创建 thread 时立即执行：https://platform.openai.com/docs/api-reference/runs/createThreadAndRun
-  3. Run 的状态管理 (run steps）: https://platform.openai.com/docs/api-reference/run-steps
+  * 创建 thread 时立即执行：https://platform.openai.com/docs/api-reference/runs/createThreadAndRun
+  
+  * Run 的状态管理 (run steps）: https://platform.openai.com/docs/api-reference/run-steps
 
   * 官方Guide: https://platform.openai.com/docs/assistants/overview
   * API Reference: https://platform.openai.com/docs/api-reference/assistants
+
+#### annotations
+
+* openai
+  * https://platform.openai.com/docs/assistants/how-it-works/message-annotations
+  * https://platform.openai.com/docs/api-reference/assistants_streaming/message-delta-object
+
+* 方舟联网回答 agent
+  * https://www.volcengine.com/docs/85508/1510834
 
 ### 对话机器人
 
@@ -2469,6 +2478,19 @@ for hat in queue:
 * [Code Llama](https://ai.meta.com/blog/code-llama-large-language-model-coding/) - Meta 出品，可能是开源中最强的 （7B、13B、34B、70B）
 * [DeepSeek-Coder](https://github.com/deepseek-ai/DeepSeek-Coder) - 深度探索公司出品（1B、5.7B、6.7B、33B）
 * [CodeGemma](https://huggingface.co/blog/codegemma) - Google 出品（2B、7B）
+
+### AI Coding 的使用技巧: Claude Code 硬核指南
+
+> Todo
+
+https://www.xiaohongshu.com/explore/69086a080000000005001e09?app_platform=ios&app_version=8.86&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBV9m5rsWMZUsvRmaUopCNZSTk31ryR3K7h4M5ptuLpFk=&author_share=1&xhsshare=CopyLink&shareRedId=N0lEN0Y6Rk82NzUyOTgwNjc5OTg2NUpP&apptime=1762178692&share_id=29bf67b408a34a529dee9f5c6cfe76df
+
+* Skills自动激活系统：让Claude真正用上你写的技能文档
+* Dev Docs工作流：防止Claude失去上下文,忘记自己在干什么
+* PM2+Hooks零错误机制：不让任何TypeScript错误溜走
+* 专业化Agents军团：代码审查、调试、规划全自动化
+
+
 
 ### 强Agent尝试 —— 自动编写代码的机器人
 

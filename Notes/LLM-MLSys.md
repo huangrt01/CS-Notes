@@ -685,9 +685,9 @@ print(f"Prompt的token数量为: {token_count}")
 
 ## 训练调度
 
-#### 异构GPU集群调度器
+### 异构GPU集群调度器
 
-##### Metis: Heterogeneous GPUs + DP + TP + PP
+#### Metis: Heterogeneous GPUs + DP + TP + PP
 
 > InfiniTensor Paper讲解：https://www.bilibili.com/video/BV1oEZ1Y6EBv
 
@@ -1880,6 +1880,24 @@ https://github.com/pytorch/TensorRT/releases/tag/v2.8.0
 
 MTP ~ [**Zen5的2-Ahead Branch Predictor**](https://chipsandcheese.com/p/zen-5s-2-ahead-branch-predictor-unit-how-30-year-old-idea-allows-for-new-tricks)
 
+## Agent 系统优化
+
+> https://zhuanlan.zhihu.com/p/1931375587781501201
+
+- **算法层面优化方法：**
+  - 文章提出 Local Attention 方法，即通过 LightTransfer、LoLCATs 等方法，将 Transformer 的全局注意力替换为局部或低秩机制，大幅降低复杂度至近线性，且性能损失极小；
+  - 文章利用 Layer Collapse、SlimGPT 等结构化剪枝技术，删减冗余层、注意力头或通道，在无需大规模重训练的情况下压缩模型参数，并保持几乎相同的效果。
+- **架构层面优化方法：**
+  - 缩短输出长度（Output Length Reduction）
+  - 语义缓存（Semantic Caching）
+  - 量化（Quantization）
+  - 预填充与解码分离（Prefill-Decode Separation）
+  - 投机解码（Speculative Decoding）
+
+![image-20251105175253591](./LLM-MLSys/image-20251105175253591.png)
+
+
+
 ## Vision Model 推理
 
 * Swin：microsoft/swinv2-large-patch4-window12-192-22k
@@ -1892,6 +1910,8 @@ MTP ~ [**Zen5的2-Ahead Branch Predictor**](https://chipsandcheese.com/p/zen-5s-
 
 * Dinov2
   * Batch_size=4, qps=50: 显存 14G，120W
+
+
 
 ## 分布式 Agent
 
