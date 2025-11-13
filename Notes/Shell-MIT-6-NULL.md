@@ -224,17 +224,6 @@ debug(){
 }
 ```
 
-* `fd -e html -0 | xargs -0 zip output.zip`
-
-* 返回文件夹下最近修改的文件：
-
-    * `fd . -0 -t f | xargs -0 stat -f '%m%t%Sm %N' | sort -n | cut -f2- | tail -n 1` (设成了我的fdrecent命令)
-    * [stackoverflow讨论](https://stackoverflow.com/questions/5566310/how-to-recursively-find-and-list-the-latest-modified-files-in-a-directory-with-s)
-
-    * `find . -exec stat -f '%m%t%Sm %N' {} + | sort -n | cut -f2- | tail -n 1`
-
-    * `find . -type f -print0 | xargs -0 stat -f '%m%t%Sm %N' | sort -n | cut -f2- | tail -n 1`
-
 * import envs from main process
 
   * `. <(xargs -0 bash -c 'printf "export %q\n" "$@"' -- < /proc/${MAIN_PID}/environ)`

@@ -32,36 +32,7 @@ Materials
 
 ### Algorithms 演进
 
-#### Loss 设计和算法技巧
 
-* crossentropy、KL散度、logistic regression、softmax
-  * KL散度 ---> CE loss: [看得见的信息论-为什么用交叉熵作为逻辑回归的代价函数](https://zhuanlan.zhihu.com/p/31207556)
-  * logistic regression ---> softmax
-  * CE loss + softmax ---> 极其简洁的梯度形式
-    * [求导推导](https://zhuanlan.zhihu.com/p/27223959)
-    * $\frac{\partial l_{CE}}{\partial a_j}=y_j -t_j$
-* Feature Bagging
-
-  * offering a potentially useful way of managing the bias-variance tradeoff
-
-  * We were also interested in this as a potentially useful way to further parallelize training
-
-  * 《An experimental comparison of three methods for constructing ensembles of decision trees: Bagging, boosting, and randomization》
-
-
-* Dropout
-  * 保证training/serving一致性：training或serving时scale
-  * In the dense setting, dropout serves to separate effects from strongly correlated features, resulting in a more robust classifier. But in our sparse, noisy setting adding in dropout appears to simply reduce the amount of data available for learning. 《Ad Click Prediction: a View from the Trenches》
-* Initialization
-  
-  * Xavier Initialization
-  * ![image-20241219212615709](./Machine-Learning/image-20241219212615709.png)
-  * Kaiming Initialization主要用于激活函数为ReLU（Rectified Linear Unit）的神经网络。
-* 过拟合
-
-  * 过拟合问题存在其他更深刻的原因。例如，将 28 × 28 的图片实施扁平化操作，将其变换为一个长度为 784 的一维向量，这将完全丢失了像素的空间排列信息
-
-  * [为什么过多的特征（feature）导致过拟合（over-fitting)？ - Dr.Shiki的回答 - 知乎](https://www.zhihu.com/question/47375421/answer/306771331)
 
 #### AlexNet
 
@@ -435,9 +406,7 @@ https://github.com/google-research/tuning_playbook
 
 ![image-20250111195734138](./Machine-Learning/image-20250111195734138.png)
 
-
-
-#### Evalutaion/Validation
+### Evalutaion/Validation
 
 * Metrics
   * **Mean Absolute Error** (MAE)
@@ -451,7 +420,7 @@ https://github.com/google-research/tuning_playbook
 train_data, validation_data, test_data = np.split(model_data.sample(frac=1, random_state=1729), [int(0.7 * len(model_data)), int(0.9 * len(model_data))])   # Randomly sort the data then split out first 70%, second 20%, and last 10%
 ```
 
-### 衡量相关性
+#### 衡量相关性
 
 * cosine similarity
 * Pearson correlation
@@ -463,6 +432,58 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
 
 * Intro
   * https://www.tensorflow.org/extras/candidate_sampling.pdf
+
+
+
+### 模型训练技巧
+
+#### Loss 设计和算法技巧
+
+* crossentropy、KL散度、logistic regression、softmax
+  * KL散度 ---> CE loss: [看得见的信息论-为什么用交叉熵作为逻辑回归的代价函数](https://zhuanlan.zhihu.com/p/31207556)
+  * logistic regression ---> softmax
+  * CE loss + softmax ---> 极其简洁的梯度形式
+    * [求导推导](https://zhuanlan.zhihu.com/p/27223959)
+    * $\frac{\partial l_{CE}}{\partial a_j}=y_j -t_j$
+* Feature Bagging
+
+  * offering a potentially useful way of managing the bias-variance tradeoff
+
+  * We were also interested in this as a potentially useful way to further parallelize training
+
+  * 《An experimental comparison of three methods for constructing ensembles of decision trees: Bagging, boosting, and randomization》
+
+
+* Dropout
+  * 保证training/serving一致性：training或serving时scale
+  * In the dense setting, dropout serves to separate effects from strongly correlated features, resulting in a more robust classifier. But in our sparse, noisy setting adding in dropout appears to simply reduce the amount of data available for learning. 《Ad Click Prediction: a View from the Trenches》
+* Initialization
+  
+  * Xavier Initialization
+  * ![image-20241219212615709](./Machine-Learning/image-20241219212615709.png)
+  * Kaiming Initialization主要用于激活函数为ReLU（Rectified Linear Unit）的神经网络。
+* 过拟合
+
+  * 过拟合问题存在其他更深刻的原因。例如，将 28 × 28 的图片实施扁平化操作，将其变换为一个长度为 784 的一维向量，这将完全丢失了像素的空间排列信息
+
+  * [为什么过多的特征（feature）导致过拟合（over-fitting)？ - Dr.Shiki的回答 - 知乎](https://www.zhihu.com/question/47375421/answer/306771331)
+
+#### 提升生成多样性/防止模式坍塌
+
+为防止生成模型输出单一、固定的结果（模式坍塌），可在损失函数中引入正则化技巧：
+
+*   **标签平滑 (Label Smoothing)**
+    *   **核心**: 将 one-hot 硬标签转换为软标签，防止模型对预测过于自信。
+    *   **效果**: 降低过拟合，使输出概率分布更平滑。
+
+*   **熵正则化 (Entropy Regularization)**
+    *   **核心**: 在损失中加入惩罚项，鼓励模型输出的概率分布熵更大（更均匀）。
+    *   **效果**: 直接提升输出多样性，缓解 Beam Search 等解码策略中的趋同问题。
+    *   **实现**: 可通过最小化 `-log_probs.mean()` 实现，这等价于最小化输出分布与均匀分布的KL散度。
+
+*   **Logits 方差损失 (Variance Loss on Logits)**
+    *   **核心**: 直接惩罚 logits 的方差，当 logits 数值分布两极分化时施加损失。
+    *   **效果**: 迫使 logits 分布更平坦，降低模型对少数选项的“极端自信”。
 
 ### ML Theory
 
@@ -547,6 +568,26 @@ https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html
 * Query2Doc paper
   * For training dense retrievers, several factors can influence the final performance, such as hard negative mining (Xiong et al., 2021), intermediate pretraining (Gao and Callan, 2021), and knowledge distillation from a cross-encoder based re-ranker (Qu et al., 2021). In this paper, we investigate two settings to gain a more comprehensive understand- ing of our method. The first setting is training DPR (Karpukhin et al., 2020) models initialized from BERTbase with BM25 hard negatives only
   * ![image-20241117211622999](Machine-Learning/image-20241117211622999.png)
+
+### 无监督学习
+
+#### 聚类算法 (Clustering)
+
+##### K-Means
+
+K-Means是无监督学习中最基础的聚类算法之一。
+
+*   **核心思想**: 将数据集划分为K个不同的、非重叠的簇，使得每个数据点都属于离它最近的均值（簇中心）所代表的簇。
+
+*   **算法步骤**:
+    1.  **初始化**: 随机选择K个数据点作为初始的簇中心。
+        *   **改进 (K-Means++)**: 为避免随机初始化选点不佳，K-Means++ 采用一种更智能的策略：第一个中心点随机选择，后续每个中心点的选择概率与其离最近已有中心的距离成正比。这倾向于让初始中心点互相远离，从而获得更好的聚类效果和更快的收敛速度。
+    2.  **分配(Assignment)**: 计算每个数据点到各个簇中心的距离，并将其分配给距离最近的簇。
+    3.  **更新(Update)**: 对每个簇，重新计算其中心点（即簇内所有数据点的均值）。
+    4.  **迭代**: 重复步骤2和3，直到簇中心不再发生显著变化或达到最大迭代次数。
+
+*   **应用**:
+    *   在深度学习中，常用于初始化向量量化（Vector Quantization）模型中的码本（Codebook）。通过K-Means提供一个比随机初始化更好的起点，有助于模型稳定训练，缓解码本崩塌问题。 
 
 
 
@@ -994,6 +1035,18 @@ def find_most_similar(input_word):
     *   **缺点**: 哈希碰撞。不同的原始特征可能被映射到同一个索引，导致信息损失。但实践证明，在推荐、广告等大规模稀疏场景下，适度的碰撞对模型效果影响有限，甚至有时能起到正则化的作用。
 *   **应用**: 广泛应用于计算广告（CTR预估）、推荐系统等需要处理海量ID类特征的场景。
 
+```Python
+class UserIdEmbedder(nn.Module):
+    def __init__(self, num_buckets, embedding_dim) -> None:
+        super().__init__()
+        self.num_buckets = num_buckets
+        self.emb = nn.Embedding(num_buckets, embedding_dim)
+    
+    def forward(self, x: Tensor) -> Tensor:
+        hashed_indices = x % self.num_buckets
+        # hashed_indices = torch.tensor([hash(token) % self.num_buckets for token in x], device=x.device)
+        return self.emb(hashed_indices)
+```
 
 
 
