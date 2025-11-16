@@ -369,6 +369,76 @@ g.V().has("id", C.id).has("type", C.type)
 * 细节
   * p_date和p_hour是hive分区字段
 
+### MongoDB
+
+#### Aggregation Framework
+
+MongoDB 的聚合框架是处理和转换文档集合的强大工具。它通过一个由多个阶段（stage）组成的管道（pipeline）来处理数据。每个阶段对输入的文档进行操作，并将结果传递给下一个阶段。
+
+这对于数据分析和特征工程非常有用。
+
+**常用阶段 (Stages):**
+
+*   `$match`: 过滤文档，类似于 `find()` 查询。通常放在管道的开头以减少后续处理的数据量。
+*   `$project`: 重塑文档，可以指定包含/排除字段，或使用表达式创建新字段。
+*   `$group`: 按指定的键对文档进行分组，并对每个组应用累加器表达式（如 `$sum`, `$avg`, `$addToSet`）。
+*   `$sort`: 对文档进行排序。
+*   `$limit`: 限制输出的文档数量。
+*   `$unwind`: 将数组字段中的每个元素拆分为一个独立的文档。
+
+**示例：使用聚合管道进行分布式计算**
+
+以下示例展示了如何使用聚合管道计算每个用户的唯一物品交互次数，并支持分布式计算。
+
+```json
+// 假设集合中的文档结构为 { user_id: "...", item_id: "...", timestamp: ... }
+[
+  // 阶段 1: (可选) 按时间范围过滤
+  {
+    "$match": { "timestamp": { "$gte": 1672531200, "$lt": 1675209600 } }
+  },
+  // 阶段 2: 按 user_id 分区，用于分布式计算
+  // 通过对 user_id 的哈希值取模，可以将数据分散到不同的 worker
+  {
+    "$match": {
+      "$expr": {
+        "$eq": [
+          { "$mod": [{ "$toLong": { "$toHashedIndexKey": { "field": "$user_id" } } }, 4] }, // world_size = 4
+          0 // rank = 0
+        ]
+      }
+    }
+  },
+  // 阶段 3: 按 user_id 分组，并收集不重复的 item_id
+  {
+    "$group": {
+      "_id": "$user_id",
+      "unique_items": { "$addToSet": "$item_id" }
+    }
+  },
+  // 阶段 4: 计算唯一物品的数量
+  {
+    "$addFields": {
+      "unique_item_count": { "$size": "$unique_items" }
+    }
+  },
+  // 阶段 5: 整理输出
+  {
+    "$project": {
+      "user_id": "$_id",
+      "unique_item_count": 1,
+      "_id": 0
+    }
+  }
+]
+```
+
+**关键技巧:**
+
+*   **分布式计算/分区**: 使用 `$toHashedIndexKey` 将字符串字段转换为64位哈希值，然后通过 `$mod` 运算符实现数据分区，以便在多个 worker 上并行处理。`$bitAnd` 与 `0x7FFFFFFFFFFFFFFF` 一起使用可以确保结果为正数。
+*   **处理大数据集**: 在执行聚合时，设置 `allowDiskUse=True` 允许 MongoDB 在内存不足时使用磁盘空间，这对于大型数据集至关重要。
+*   **游标设置**: 对于可能长时间运行的查询，设置 `no_cursor_timeout=True` 可以防止游标因超时而关闭。
+
 ### 特征工程
 
 [滴滴特征工程](https://mp.weixin.qq.com/s/vUP4LAA7gAYDo91Wd5rSQQ)

@@ -196,7 +196,18 @@ File security is hard, and operates on many level. What is it you’re trying to
 
   - Think about whether an attacker can delete your backups if they get a hold of your laptop!
 
+#### 进程安全
 
+##### 最小权限原则
+
+**核心原则**: 任何程序、任何用户都只应拥有其完成任务所必需的最小权限 (Principle of Least Privilege)。以 root 用户运行服务是极大的安全风险。
+
+*   **应用服务 (Tomcat, Redis, Kafka)**: **绝对不应该**以 root 身份运行。
+    *   **原因**: 这些服务完全不需要 root 权限。如果服务本身或其上运行的应用被攻破，攻击者将直接获得整个服务器的 root 权限。
+    *   **特例**: 如果服务需要监听特权端口（< 1024，如80端口），可以 root *启动*，但必须在端口绑定后立即**降权**，将工作进程切换到低权限用户（如 `www-data`）运行。
+
+*   **系统/安全服务 (HostGuard)**: **通常必须**以 root 身份运行。
+    *   **原因**: 其核心功能（如监控所有进程、管理防火墙、扫描文件系统）要求必须具备系统级的最高权限才能有效执行。
 
 #### Internet Security & Privacy
 
@@ -207,6 +218,17 @@ If you’re ever on a network you don’t trust, a VPN *may* be worthwhile, but 
 If you’re particularly privacy-oriented, [privacytools.io](https://privacytools.io) is also a good resource.
 
 Some of you may wonder about [Tor](https://www.torproject.org/). Keep in mind that Tor is *not* particularly resistant to powerful global attackers, and is weak against traffic analysis attacks. It may be useful for hiding traffic on a small scale, but won’t really buy you all that much in terms of privacy. You’re better off using more secure services in the first place (Signal, TLS + certificate pinning, etc.).
+
+
+##### 常见高危端口
+
+在网络安全中，某些端口因其关联的服务非常核心或存在固有弱点，而成为攻击者的重点扫描和攻击目标。
+
+*   **21 (FTP - 文件传输协议)**: 主要风险在于其默认以**明文传输**数据和用户凭证，极易被网络嗅探工具截获。
+*   **22 (SSH - 安全外壳协议)**: 协议本身安全，但作为服务器远程管理的主要入口，是**暴力破解攻击**的常见目标。安全策略包括：禁用密码登录（改用密钥）、禁止root直接登录、更改默认端口。
+*   **3389 (RDP - 远程桌面协议)**: Windows远程桌面服务的默认端口。因其广泛使用和通常具备高权限，是勒索软件和黑客攻击的重点目标。
+*   **3306 (MySQL)**: MySQL数据库服务的默认端口。直接暴露在公网是极大的安全隐患，容易导致数据泄露或被攻击。
+
 
 #### Web Security
 

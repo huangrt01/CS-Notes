@@ -388,6 +388,75 @@ https://sathvikjoel.github.io/posts/tech/05032024_activationfunctions/
 
 
 
+### 损失函数 (Loss Functions)
+
+损失函数（或成本函数）用于衡量模型预测值与真实值之间的差异。模型训练的目标是最小化损失函数。
+
+#### BPR Loss (Bayesian Personalized Ranking)
+
+BPR Loss 是一种在推荐系统中广泛应用的**成对排序损失 (Pairwise Ranking Loss)**，尤其适用于处理隐式反馈数据（如点击、购买、观看等）。
+
+它的核心思想不是直接预测用户对物品的评分（pointwise），而是对物品进行排序（pairwise）。它试图最大化用户对“正样本”（用户交互过的物品 `i`）的预测分数高于“负样本”（用户未交互过的物品 `j`）的预测分数的概率。
+
+*   **数据假设**：BPR 假设用户对他们交互过的物品的偏好程度，要高于他们未交互过的物品。
+*   **训练数据**：训练数据由三元组 `(u, i, j)` 构成，其中 `u` 代表用户，`i` 是该用户交互过的正样本，`j` 是为该用户采样的、他未交互过的负样本。
+*   **损失函数**：
+    $ \mathcal{L}_{\text{BPR}} = \sum_{(u,i,j) \in D_S} -\ln \sigma(\hat{x}_{ui} - \hat{x}_{uj}) + \lambda ||\Theta||^2 $
+    *   $\hat{x}_{ui}$ 是模型预测的用户 `u` 对物品 `i` 的分数。在矩阵分解模型中，这通常是用户和物品隐向量的内积：$\hat{x}_{ui} = \mathbf{v}_u^T \mathbf{v}_i$。
+    *   我们希望正样本的分数高于负样本，即 $\hat{x}_{ui} > \hat{x}_{uj}$。当这个差值越大，$\sigma(\hat{x}_{ui} - \hat{x}_{uj})$ 越接近1，损失 $-\ln(\cdot)$ 越接近0。
+
+#### 交叉熵 (Cross-Entropy)
+
+*   交叉熵源于信息论，衡量两个概率分布之间的差异。在机器学习中，它常用于分类任务。
+*   **定义**: $H(p, q) = - \sum_{x} p(x) \log(q(x))$
+    *   `p`: 真实分布 (true distribution)
+    *   `q`: 预测分布 (predicted distribution)
+*   **分类任务中的应用**:
+    *   **二元交叉熵 (Binary Cross-Entropy)**: 用于二分类问题。对于单个样本，损失为 $L = -(y \log(\hat{y}) + (1-y) \log(1-\hat{y}))$，其中 `y` 是真实标签 (0或1)，$$\hat{y}$$ 是模型预测为类别1的概率。
+    *   **分类交叉熵 (Categorical Cross-Entropy)**: 用于多分类问题。对于单个样本，损失为 $L = - \sum_{c=1}^{M} y_c \log(\hat{y}_c)$，其中 `M` 是类别数，`y_c` 是一个 one-hot 向量，表示真实类别，$$\hat{y}_c$$ 是模型对类别 `c` 的预测概率。
+
+#### 均方误差 (Mean Squared Error, MSE)
+
+*   MSE 主要用于回归任务，计算预测值与真实值之差的平方的均值。
+*   **定义**: $MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$
+*   对异常值（outliers）非常敏感，因为误差被平方了。
+
+#### 平均绝对误差 (Mean Absolute Error, MAE)
+
+*   MAE 也用于回归任务，计算预测值与真实值之差的绝对值的均值。
+*   **定义**: $MAE = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|$
+*   相比 MSE，MAE 对异常值的鲁棒性更好。
+
+#### Hinge Loss
+
+*   主要用于“最大间隔”分类，特别是支持向量机 (SVM)。
+*   它会惩罚那些不仅被错误分类，而且离决策边界不够远的样本。
+*   **定义**: $L(y, \hat{y}) = \max(0, 1 - y \cdot \hat{y})$
+    *   `y` 是真实标签，取值为 `{-1, 1}`。
+    *   `\hat{y}` 是分类器的原始输出（不是概率）。当 `y` 和 `\hat{y}` 同号且 $$|\hat{y}| \ge 1$$ 时，损失为0。
+
+#### Huber Loss
+
+*   结合了 MSE 和 MAE 的优点，对异常值具有鲁棒性。当误差较小时，它像 MSE 一样是二次的；当误差较大时，它像 MAE 一样是线性的。
+*   **定义**:
+    $
+    L_{\delta}(y, \hat{y}) =
+    \begin{cases}
+    \frac{1}{2}(y - \hat{y})^2 & \text{for } |y - \hat{y}| \le \delta \\
+    \delta (|y - \hat{y}| - \frac{1}{2}\delta) & \text{otherwise}
+    \end{cases}
+    $
+    *   `\delta` 是一个超参数，用于区分“小误差”和“大误差”。
+
+#### Focal Loss
+
+*   对标准交叉熵的改进，旨在解决类别不平衡问题（如目标检测）。
+*   它通过降低已正确分类样本的权重，使模型更专注于学习难分类的样本。
+*   **定义**: $FL(p_t) = -\alpha_t (1-p_t)^\gamma \log(p_t)$
+    *   `p_t` 是模型对真实类别的预测概率。
+    *   `\gamma` (gamma) 是聚焦参数 (`\gamma > 0`)，`\gamma` 越大，对易分类样本的降权效果越明显。
+    *   `\alpha_t` 是一个平衡因子，用于平衡正负样本的重要性。
+
 ### Tuning
 
 https://github.com/google-research/tuning_playbook
@@ -468,6 +537,22 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
 
   * [为什么过多的特征（feature）导致过拟合（over-fitting)？ - Dr.Shiki的回答 - 知乎](https://www.zhihu.com/question/47375421/answer/306771331)
 
+#### Hard Negative Mining (难负样本挖掘)
+
+*   **核心思想**：在训练中，不使用全部的负样本，而是专注于挑选那些模型最容易误判为正样本的“困难”负样本（Hard Negatives）来进行训练。
+*   **动机**：在物体检测、图文匹配等任务中，负样本（如背景）数量远超正样本，造成样本失衡。
+    1.  **梯度被简单样本主导**：若使用全部样本，大量简单的、损失小的负样本会主导梯度计算，导致模型把精力浪费在已经学得很好的知识上。
+    2.  **训练效率低下**：反复学习简单样本会减慢模型的收敛速度。
+*   **定义“困难”负样本**：指那些**模型预测为正样本的概率很高，但真实标签却是负样本**的例子。它们是模型最容易犯错的、位于决策边界附近的样本，其损失值（Loss）通常最高。
+*   **在线困难样本挖掘 (Online Hard Negative Mining, OHEM)** 流程：
+    1.  **前向传播**：在一个 mini-batch 中，对所有正样本和大量候选负样本进行前向计算，得到每个样本的损失。
+    2.  **筛选样本**：保留所有正样本，然后从所有负样本中，根据损失值从高到低排序，选出损失最高的 Top-K 个作为困难负样本（通常会维持一个固定的正负样本比例，如 1:3）。
+    3.  **反向传播**：只用筛选出的正样本和困难负样本来计算总损失，并进行反向传播，更新模型参数。
+*   **应用场景**：
+    *   **物体检测** (Object Detection)，如 SSD 算法。
+    *   **图像检索/度量学习** (Metric Learning)，如 Triplet Loss。
+    *   **图文匹配** (Image-Text Matching)，如 BLIP-2 的 ITM 任务。
+
 #### 提升生成多样性/防止模式坍塌
 
 为防止生成模型输出单一、固定的结果（模式坍塌），可在损失函数中引入正则化技巧：
@@ -495,7 +580,35 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
 
 ### Learning To Rank
 
-#### GBDT（Gradient Boosting Decision Tree）
+#### Pairwise 方法与损失函数
+
+在排序学习（Learning to Rank, LTR）中，**Pairwise** 方法是一种主流思想，它将排序问题转化为对“物品对”的偏序关系的判断。其核心目标是学习一个排序函数 `f(x)`，使得对于任意一个正样本 `d+` 和负样本 `d-`，模型打分满足 `f(d+) > f(d-)`。以下是实现这一目标的两种核心损失函数。
+
+| 特性         | 交叉熵损失 (Cross-Entropy Loss)  | 铰链损失 (Hinge Loss)           |
+| :----------- | :------------------------------- | :------------------------------ |
+| **核心思想** | 概率最大化 (Maximize Likelihood) | 间隔最大化 (Maximize Margin)    |
+| **优化目标** | `s+` 远大于 `s-`                 | `s+` 至少比 `s-` 大一个间隔 `m` |
+| **损失特性** | 平滑，理论上永不为0              | 非平滑，当间隔满足时为0         |
+| **关注点**   | 所有序对                         | 违反间隔的“困难”序对            |
+
+##### 1. 交叉熵损失 (Cross-Entropy Loss) for Ranking
+
+这种方法将排序问题看作一个**概率问题**，核心是最大化模型正确预测偏序关系的概率。著名的 **RankNet** 算法就采用了这种损失。
+
+*   **概率建模**: 模型对正负样本的打分分别为 `s+` 和 `s-`。`d+` 排在 `d-` 前面的概率可以通过 Sigmoid 函数建模：
+    $ P(d^+ \succ d^-) = \sigma(s^+ - s^-) = \frac{1}{1 + e^{-(s^+ - s^-)}} $
+*   **损失函数**: 最小化正确排序概率的负对数，即交叉熵损失：
+    $ L_{CE} = -\log(\sigma(s^+ - s^-)) = \log(1 + e^{-(s^+ - s^-)}) $
+*   **直觉**: 这是一个“软”损失。它总是试图无限拉大正负样本的分数差距，因为即使 `s+ > s-`，只要差距不是无穷大，损失就不会为0。
+
+##### 2. 铰链损失 (Hinge Loss) for Ranking
+
+这种方法源于支持向量机 (SVM)，将排序问题看作一个**带间隔 (Margin) 的分类问题**。它追求的目标是正样本的分数要比负样本高出一个指定的间隔 `m`。著名的 **RankSVM** 算法采用了此损失。
+
+*   **间隔目标**: `s+ - s- ≥ m` (通常 `m` 设为1)。
+*   **损失函数**: 只有当间隔目标未被满足时，才产生损失：
+    $ L_{Hinge} = \max(0, m - (s^+ - s^-)) $
+*   **直觉**: 这是一个“硬”损失。一旦分数差满足了间隔要求，损失就降为0。这使得模型更专注于学习那些“难分的”或“排错的”样本对，而对已经“足够好”的样本对不再进行优化。GBDT（Gradient Boosting Decision Tree）
 
 * 通过拟合残差，生成第N颗子树
 

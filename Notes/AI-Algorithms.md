@@ -700,6 +700,16 @@ $$PE_{(pos, 2i + 1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)$$
 
 #### RoPE等参考「Long Context」
 
+#### 用户感知的位置编码
+
+> MMGRec
+
+-  $$\begin{array}{rcl} \mathbf{p}_Q^u(j) = \mathbf{e}_j \mathbf{W}_u^Q &;& \mathbf{W}_u^Q = MLP(\mathbf{h}_u) \mathbf{W}^Q\\\\ \mathbf{p}_K^u(j) = \mathbf{e}_j \mathbf{W}_u^K &;& \mathbf{W}_u^K = MLP(\mathbf{h}_u) \mathbf{W}^K\\\\ \mathbf{p}_V^u(j) = \mathbf{e}_j \mathbf{W}_u^V &;& \mathbf{W}_u^V = MLP(\mathbf{h}_u) \mathbf{W}^V \end{array}$$
+
+* $$score = softmax \left( \frac{QK^T + PE_{QK}}{\sqrt{D}} \right), \text{ where } PE_{QK} = \mathbf{p}_Q^u(j)\mathbf{p}_K^u(j)^T$$
+
+
+
 
 
 ### Output Embedding 映射到预测空间
@@ -749,6 +759,17 @@ $$PE_{(pos, 2i + 1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)$$
 #### Beam Search
 
 ![image-20251005011715687](./AI-Algorithms/image-20251005011715687.png)
+
+*   **基本思想**：为了克服贪心搜索的短视，Beam Search 在每一步都会保留 `k` (beam width) 个最可能的候选序列。在下一步，它会基于这 `k` 个序列，分别生成所有可能的下一个 token，并从中再次选出总概率最高的 `k` 个新序列。这个过程持续进行，直到生成结束符或达到最大长度。
+*   **优点**：通过保留多个候选，它有更大的机会找到全局最优或接近最优的序列，生成质量通常高于贪心搜索。
+*   **缺点**：需要更大的计算和内存开销，因为需要同时维护 `k` 个序列的状态，尤其是 KV Cache 的存储。
+
+*   **Trie-Based Beam Search (基于前缀树的束搜索优化)**
+    *   [Efficient Beam Search for LLMs Using Trie-Based Decoding](https://arxiv.org/html/2502.00085)
+    *   **动机**：传统的 Beam Search 为每个候选序列（beam）都独立存储一份 KV Cache，当多个 beam 共享相同的前缀时，这会造成大量的内存冗余。
+    *   **核心方法**：该方法使用 **Trie (前缀树)** 结构来统一管理所有 beam 的 KV Cache。共享相同前缀的 beam 在 Trie 树中会共享同一条路径，从而共享同一份 KV Cache。只有当 beam 发生分叉时，才会在树上创建新的节点来存储差异部分。
+    *   **效果**：在不牺牲生成质量的前提下，该方法能节省 4-8 倍的内存，并带来最高 2.4 倍的解码速度提升，极大地优化了 Beam Search 的推理效率。
+    
 
 
 
@@ -2534,6 +2555,8 @@ TODO [前阿里、字节大模型带头人杨红霞创业：大模型预训练�
 
 #### 基于transformer的图像-文本联合建模
 
+* VisualBert
+
 ![image-20241207210505919](./AI-Algorithms/image-20241207210505919.png)
 
 * BEit
@@ -2544,6 +2567,75 @@ TODO [前阿里、字节大模型带头人杨红霞创业：大模型预训练�
 ![image-20241207210538634](./AI-Algorithms/image-20241207210538634.png)
 
 ![image-20241207210618154](./AI-Algorithms/image-20241207210618154.png)
+
+##### BLIP-2: 表征学习 + 文生图、Q-Former、Image Captioning
+
+> https://www.nematilab.info/bmijc/assets/081823_paper.pdf
+>
+> * 核心：通过轻量级 Q-Former 连接冻结的图像编码器与冻结的 LLM，实现高效图文联合建模
+>   * 一阶段：学习图像和文本域的表征，对比学习+判别式+生成式loss
+>   * 二阶段：文本生成预测任务
+>   * 一二阶段都训练 Q-Former 的参数
+> * 支持 instructed zero-shot image-to-text generation
+
+BLIP-2 采用「双冻结 + 桥接」设计，避免端到端训练千亿级参数模型的高成本：
+* **冻结组件**：
+  - 图像编码器（如 ViT-L/14）：提取图像视觉特征
+  - 大语言模型（如 FlanT5, LLaMA）：负责文本生成
+* **桥接组件**：Q-Former（Query Transformer）—— 唯一可训练的轻量级模块
+
+Q-Former 是一个小型 Transformer，包含：
+* **可学习的查询向量（Query Tokens）**：
+  - 数量固定（如 32 个），作为图像与文本交互的「中介」
+  - 通过自注意力与交叉注意力同时建模视觉特征和文本序列
+* **双编码器结构**：
+  - **视觉编码器**：接收图像编码器输出的 patch 特征，与查询向量交互，生成「视觉感知查询特征」
+  - **文本编码器**：接收文本序列，与查询向量交互，生成「文本感知查询特征」
+
+<img src="./AI-Algorithms/image-20251114160143557.png" alt="image-20251114160143557" style="zoom:67%;" />  
+*Q-Former 与冻结图像编码器的交互：查询向量通过交叉注意力提取图像特征*
+
+#### 训练阶段
+
+![image-20251114175550796](./AI-Algorithms/image-20251114175550796.png)
+
+Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的损失函数组合：
+
+1.  **阶段一：视觉-语言表示学习 (Vision-Language Representation Learning)**
+    此阶段的目标是训练 Q-Former，使其可学习的查询向量（Queries）能够从**冻结的图像编码器**中提取出对文本最有效、最相关的视觉表征。为此，模型联合优化三个共享参数但采用不同注意力掩码机制的目标函数，总损失为 $L = L_{itc} + L_{itm} + L_{itg}$：
+    *   **图文对比学习 (Image-Text Contrastive, ITC)**:
+        *   **目标**：对齐图像和文本的全局表征，最大化其互信息。
+        *   **机制**：通过对比学习，让正样本（匹配的图文对）的相似度远高于负样本（不匹配的图文对）。具体地，计算每个查询向量输出与文本`[CLS]`表征的相似度，并选取最高分作为最终的图文相似度。
+        *   **掩码策略**：采用**单向自注意力 (Unimodal Self-Attention)**，查询向量和文本序列之间不可见，以学习各自模态的独立表示。
+        *   **损失函数**：$ L_{itc} = \frac{1}{2} \sum_{i=1}^{N} \left( H(y^{i2t}_i, p^{i2t}_i) + H(y^{t2i}_i, p^{t2i}_i) \right) $，其中 $p$ 是 softmax 归一化的相似度，$y$ 是 one-hot 标签，$H$ 为交叉熵。由于图像编码器被冻结，可以采用 **in-batch negatives** 提高效率。
+
+    *   **图文匹配 (Image-Text Matching, ITM)**:
+        *   **目标**：学习图像与文本间的细粒度对应关系。
+        *   **机制**：这是一个二分类任务，判断图文对是正样本（匹配）还是负样本（不匹配）。
+        *   **掩码策略**：采用**双向自注意力 (Bi-directional Self-Attention)**，所有查询向量和文本 Token 之间可以相互关注，使得查询向量的输出能够捕获跨模态信息。每个查询向量的输出都会经过一个分类头，最终将所有头的 logits 平均作为匹配分数。
+        *   **损失函数**：$ L_{itm} = - \mathbb{E}_{(I,T)} \left[ y \log \sigma(p(I,T)) + (1-y) \log(1-\sigma(p(I,T))) \right] $，其中 $p(I,T)$ 是预测的匹配分数，$y$ 是真值标签。此任务采用**难负例挖掘 (hard negative mining)** 来提升判别能力。
+
+    *   **图像引导的文本生成 (Image-Grounded Text Generation, ITG)**:
+        *   **目标**：强制查询向量包含生成对应文本所需的全部视觉细节。
+        *   **机制**：由于 Q-Former 的架构限制了图像编码器和文本 Token 的直接交互，生成文本所需的信息必须先由查询向量提取，再通过自注意力层传递给文本 Token。
+        *   **掩码策略**：采用**多模态因果自注意力 (Multimodal Causal Self-Attention)**。查询向量之间可以相互关注，但不能看到文本；每个文本 Token 可以关注所有查询向量及其前面的文本 Token。
+        *   **损失函数**：$ L_{itg} = - \mathbb{E}_{(I,T)} \sum_{k=1}^{|T|} \log P(T_k | T_{<k}, I) $，在给定图像 $I$ 的条件下，自回归地预测文本 $T$。
+
+2.  **阶段二：视觉到语言生成学习 (Vision-to-Language Generative Learning)**
+    此阶段的目标是训练 Q-Former 作为 LLM 的“视觉提示”生成器。
+    *   **语言模型损失 (Language Modeling Loss)**: 将第一阶段训练好的 Q-Former 输出的查询向量 $Z$ 作为软提示（soft prompt），与外部输入的文本提示 $T_{prompt}$ 一起送入**冻结的 LLM**，以生成答案 $T_{answer}$。
+        $ L_{gen} = - \mathbb{E}_{(I, T_{prompt}, T_{answer})} \sum_{k=1}^{|T_{answer}|} \log P_{LLM}(T_{answer,k} | T_{answer,<k}, Z, T_{prompt}) $
+        损失函数是标准的交叉熵损失，仅在答案 $T_{answer}$ 的 token 上计算，以此教会 LLM 理解 Q-Former 编码的视觉信息。
+
+![image-20251114160444328](./AI-Algorithms/image-20251114160444328.png) 
+
+* 核心优势
+  * **参数效率**：仅训练 Q-Former（约 1% 参数），避免微调千亿级 LLM/图像编码器
+  * **模态桥接**：查询向量同时建模视觉与文本特征，解决模态鸿沟问题
+  * **泛化能力**：支持零样本任务（如零样本图像描述、视觉问答）
+
+
+
 
 #### 多模态大语言模型
 
@@ -2827,6 +2919,24 @@ TODO [前阿里、字节大模型带头人杨红霞创业：大模型预训练�
 * Intro
   * LLM的发展触发具身智能的创业潮
   * AlphaGo，MCTS是在连续空间内，机器人也在连续空间内决策，启发了机器人
+
+##### ByteDance GR-3
+
+> 来源：[写在GR-3之后 - 知乎](https://zhuanlan.zhihu.com/p/1931870031035229302)
+
+*   **模型亮点**:
+    *   **通用抓取 (Generalizable Pick-and-Place)**: 能理解抽象语言指令。
+    *   **长序列任务 (Long-Horizon Table Bussing)**: 能纯端到端完成长程任务，无需传统规划。
+    *   **灵巧操作 (Dexterous Cloth Manipulation)**: 能双臂协同操作柔性物体（如叠衣服）。
+
+*   **行业洞察**:
+    *   **辩证看待发展**: 
+        *   **短期不能高估**: 现有具身智能模型的“智能”水平仅相当于1-2岁婴儿，VLA/VTLA模型成熟度远低于LLM/VLM。机器人的运动能力(locomotion)的巨大进步不等于机器人智能的突破。
+        *   **长期不能低估**: 相比5年前基于规则(rule-based)的方法，AI+机器人的能力已实现质的飞跃，能完成过去无法想象的复杂任务。
+    *   **具身智能三要素与当前短板**:
+        *   **三要素**: **本体 (Embodiment)**、**模型 (Model)**、**数据 (Data)**，三者需互相依赖、共同迭代。
+        *   **当前短板**: **模型和数据**。文章犀利地指出，当前机器人难以胜任各类任务的最大短板是“**脑子笨**”。一个核心论据是：人类远程遥操作机器人的能力远超任何自主模型。
+        *   **对本体设计的启示**: 机器人本体的设计不应“孤立”进行，而要与当前模型和数据的能力相匹配。过于超前的本体在“笨脑子”的驱动下也无法发挥价值。
 
 
 
