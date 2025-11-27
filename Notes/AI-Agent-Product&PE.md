@@ -1023,6 +1023,8 @@ Assistant：
 
 <img src="./AI-Agent-Product&PE/image-20251105112904662.png" alt="image-20251105112904662" style="zoom: 50%;" />
 
+* PageIndex 是一个使用 MCP 连接 AI Agent 的实际案例，它允许 AI Agent 利用其独特的树状搜索能力进行文档分析。
+
 ### 衔接 MCP 和 Workflow 的产品
 
 #### Claude Skills
@@ -1230,7 +1232,15 @@ https://hornet.dev/
 
 https://webkul.com/ai-semantic-search-services/
 
+#### PageIndex
 
+> 官网: [https://pageindex.ai/](https://pageindex.ai/)
+
+*   **定位**：专注于特定领域文档分析的AI产品，尤其适用于金融、法律、医疗、技术手册等语义相近的专业文档。
+*   **核心技术**：
+    *   **逻辑推理与树状搜索 (Logical Reasoning & Tree Search)**：与依赖语义相似性的向量数据库不同，PageIndex采用树状搜索，提供可追溯的推理过程和精确的页面引用。
+    *   **MCP (Model Context Protocol)**：通过MCP协议实现与AI Agent的“即插即用”，使其能力可以被灵活集成到各种AI工作流中。
+*   **案例**：业界领先的财务报告分析RAG模型 **Mafin 2.5** 正是基于PageIndex构建，在FinanceBench上实现了98.7%的准确率。
 
 
 

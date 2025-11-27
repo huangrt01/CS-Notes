@@ -53,24 +53,57 @@ class FullBasicModel(nn.Module):
   * An efﬁcient C++ core
     * Python bindings are generated using YAML meta-data ﬁles.
     * 比如可以用torchscript单独跑 https://pytorch.org/docs/stable/jit.html
-  * Separate control and data ﬂow
-    * PyTorch is designed to execute operators asynchronously on GPU by leveraging the CUDA stream mechanism [38] to queue CUDA kernel invocations to the GPUs hardware FIFO
-  * Custom caching tensor allocator
-    * cache cuda memory
-      * rounds up allocations to multiples of 512 bytes to avoid fragmentation issues.
-    * One-pool-per-stream Design：
-      * Moreover, it maintains a distinct pool of memory for every CUDA stream (work queue).
-      * 只要新的内存分配操作与之前释放的内存区域使用在同一个流中，内存分配器就可以立即重新分配这块已经在 CPU 端释放的内存
-        * 利用CPU释放更快的特点、流的序列化执行特性
-      * limit：the allocations end up fragmented per stream
-        * 很少用多流，Data loading and distributed computing utilities are exceptions，精心实现
-  * multiprocessing：
-    * PyTorch extends the Python multiprocessing module into torch.multiprocessing, which is a drop-in replacement for the built in package and automatically moves the data of tensors sent to other processes to shared memory instead of sending it over the communication channel.
-    * Another unique feature of this system is that it transparently handles sharing of CUDA tensors, making it easy to implement techniques like Hogwild [42].
 
-  * ref count
-    * PyTorch tracks both references internal to the libtorch library and external references made by
-      users in their Python code by integrating with Python’s own reference counting mechanism
+## 分布式
+
+### Intro
+
+* Separate control and data ﬂow
+  * PyTorch is designed to execute operators asynchronously on GPU by leveraging the CUDA stream mechanism [38] to queue CUDA kernel invocations to the GPUs hardware FIFO
+* Custom caching tensor allocator
+  * cache cuda memory
+    * rounds up allocations to multiples of 512 bytes to avoid fragmentation issues.
+  * One-pool-per-stream Design：
+    * Moreover, it maintains a distinct pool of memory for every CUDA stream (work queue).
+    * 只要新的内存分配操作与之前释放的内存区域使用在同一个流中，内存分配器就可以立即重新分配这块已经在 CPU 端释放的内存
+      * 利用CPU释放更快的特点、流的序列化执行特性
+    * limit：the allocations end up fragmented per stream
+      * 很少用多流，Data loading and distributed computing utilities are exceptions，精心实现
+* multiprocessing：
+  * PyTorch extends the Python multiprocessing module into torch.multiprocessing, which is a drop-in replacement for the built in package and automatically moves the data of tensors sent to other processes to shared memory instead of sending it over the communication channel.
+  * Another unique feature of this system is that it transparently handles sharing of CUDA tensors, making it easy to implement techniques like Hogwild [42].
+
+* ref count
+  * PyTorch tracks both references internal to the libtorch library and external references made by
+    users in their Python code by integrating with Python’s own reference counting mechanism
+
+### Join 上下文管理器：处理数据不均衡
+
+> https://docs.pytorch.org/tutorials/advanced/generic_join.html
+
+* **问题场景**：在分布式数据并行训练中，不同进程（rank）的输入数据量可能不一致。当某个进程提前处理完所有数据后，它在等待其他进程时会参与后续的集合通信（如梯度同步的 all-reduce），这可能导致整个训练过程挂起或出错。
+
+* **`Join` 上下文管理器**：
+  * `torch.distributed.algorithms.join` (PyTorch 1.10+ 原型功能) 提供了一个解决方案。它允许提前完成的进程“加入”(join)，并在其他进程继续训练时，以“影子”(shadow)模式参与集合通信，从而避免挂起。
+  * 这使得训练循环可以容忍不同 rank 之间输入数据量的不均衡。
+
+* **使用方法**：
+  * 将需要参与分布式通信的对象（如 `DistributedDataParallel` 模型实例、`ZeroRedundancyOptimizer` 优化器实例）传入 `Join` 上下文管理器。
+
+  ```python
+  from torch.distributed.algorithms.join import Join
+
+  # model 是 DDP 模型, optim 是 ZeRO 优化器
+  with Join([model, optim]):
+      for input in inputs:
+          # training loop
+          ...
+  ```
+
+* **兼容性**：
+  * `Join` 不仅支持 `DistributedDataParallel` (DDP)，也支持 `ZeroRedundancyOptimizer` (ZeRO)。
+  * 可以将多个兼容的对象实例列表传入 `Join`，实现对复杂分布式策略的统一管理。
+  * 在 `Join` 出现之前，`DDP` 自身也提供了 `model.join()` 的上下文管理器，但它不支持同时管理 DDP 和 ZeRO 等多个对象。
 
 ## API
 

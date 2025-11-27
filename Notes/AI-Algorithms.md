@@ -365,7 +365,16 @@
 
 ![image-20251004030028127](./AI-Algorithms/image-20251004030028127.png)
 
-* 减少未登录词（OOV）的问题 https://github.com/rsennrich/subword-nmt
+* 减少未登录词（OOV）的问题
+  - https://github.com/rsennrich/subword-nmt
+  - Qwen: Byte-level BPE、处理数字和多余空格
+
+* **Tokenizer的训练与使用**：
+  * **训练语料**：BPE算法的词频统计，来源于大模型自身的**预训练语料库**。在训练一个新模型（如Qwen、Llama）前，开发者会先用其海量的预训练数据（TB级别，包含多语言、代码等）来训练一个专属的Tokenizer。
+  * **为何要自己训练**：
+    1.  **效率最优化**：使Tokenizer能高效地编码其预训练数据中最高频的文本（如中文词语、常见代码片段），从而降低训练和推理成本。
+    2.  **词表覆盖度**：确保词表能覆盖预训练数据中的所有语言和领域。
+  * **模型与Tokenizer的绑定**：模型学习的是`token ID`与语义的映射关系。因此，一个预训练好的模型**必须**使用其在训练时配套的那个专属Tokenizer。使用者在加载模型时，是在加载一个现成的、配对好的Tokenizer，而非重新训练。
   
 
 ### Encoder Decoder v.s. Decoder Only

@@ -2580,3 +2580,6 @@ ptrToConsume = manager.manage(ptrToProduce); // Usage
 ### 晟腾 NPU
 
 * 知乎相关讨论，活成了华为的测试团队 https://www.zhihu.com/question/1952365913941729630/answer/1954950015760966264
+
+* CANN（Compute Architecture for Neural Networks）算子库
+  - https://www.hiascend.com/document/detail/zh/canncommercial/83RC1/API/aolapi/operatorlist_00097.html

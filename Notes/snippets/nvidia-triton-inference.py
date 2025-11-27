@@ -133,8 +133,9 @@ curl -X POST http://localhost:8000/v2/repository//models/cpu_1_ins/load  (unload
 
 *** Send Requests to Triton Server
 
-sync/async/streaming
+pip3 install tritonclient[all]
 
+sync/async/streaming 三种模式
 
 import tritonclient.grpc as grpcclient
 

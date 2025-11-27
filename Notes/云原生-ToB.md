@@ -1046,8 +1046,17 @@ rclone copy README.txt tos:ABC --s3-no-head-object
 
 ##### TODO [2023第一期|如何通过大模型应用，创新用户体验](https://www.volcengine.com/docs/6703/1113728)
 
+##### [火山引擎领跑Gartner®全球AI应⽤开发平台「挑战者」象限](https://mp.weixin.qq.com/s/Ehdo0fUzQEcd1jKPkrQMfQ)
 
+* Gartner® 2025年度全球《AI应用开发平台魔力象限》报告将火山引擎评为“挑战者”，其“执行能力”维度位列全球第五、中国第一。
+* 核心产品：豆包大模型、火山方舟大模型服务平台 (MaaS)。
+    * IDC报告显示，2025年上半年中国公有云大模型服务市场，火山引擎以49.2%的份额位居第一。
+    * 豆包大模型家族拥有全模态、全尺寸，日均处理30万亿 Tokens。
+* 火山方舟平台围绕“用好模型”，推出一系列框架、工具、产品，支撑AI应用更易落地，解决复杂 Agent 任务。
+    * 开源强化学习框架 `veRL`。
+    * 上下文工程产品：`PromptPilot`、`Responses API`、`Viking` 记忆库。
 
+<img src="./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20251119172603849.png" alt="image-20251119172603849" style="zoom:50%;" />
 
 
 

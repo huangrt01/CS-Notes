@@ -1317,8 +1317,34 @@ https://github.com/OpenBMB/XAgent
 > TODO anthropic context engineering https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
 >
 > TODO https://www.promptingguide.ai/guides/context-engineering-guide.en
+>
+> TODO Context Engineering 2.0: The Context of Context Engineering https://arxiv.org/pdf/2510.26493
 
 ![image-20250617211948454](./AI-Applied-Algorithms/image-20250617211948454.png)
+
+### File System as Meta Tool
+
+> File System as Meta Tool：AI Agent 基础设施新思路 https://mp.weixin.qq.com/s/seaRW3uKwNfX0pnis8g0Rw
+
+* **File System for Agent Context**:
+  * 最近，文件系统作为 AI Agent 的核心架构正在被重新审视。
+  * Manus、Claude Code、Anthropic Skill 系统等实践都指向文件系统在 AI Agent 架构中的价值。
+* **Unix 哲学：Everything is a file**:
+  * AGFS (Aggregated File System) 项目理念：Everything is a file system。队列、数据库、天气 API 都可以是文件系统。
+  * 这是对 Plan 9 操作系统 "用文件系统做一切事情" 理念的致敬。
+  * 目标：将工具通过文件系统接口提供，可以直接串联到 bash 上，以最小的代价组合出最多的可能性。
+* **Context, Context File System, Memory 的关系**:
+  * 当前 AI Agent 基础设施 (APIs + Containers + Local FS) 存在调试困难、协作依赖网络、可观测性差等问题。
+  * 数据库擅长数据存取，但不擅长控制流（if-else, for loop）。Agent 需要的是编程能力 + 数据访问能力的结合。
+  * **Context File System** 可作为承载 Context 和组织 Memory 的 **Meta Tool**。
+* **传统文件系统的缺陷**:
+  * 只适合非结构化数据。
+  * 难以支持 Agent 间的消息投递。
+* **解决方案**:
+  * 针对不同场景实现不同的文件系统，再串联到一个大平台上。
+  * Memory 可以通过文件夹（如 long_term, short_term）来组织。
+  * 消息传递用 QueueFS
+`cat context.txt | llm > output.txt && exec action.sh`
 
 ### 火山引擎 MineContext
 

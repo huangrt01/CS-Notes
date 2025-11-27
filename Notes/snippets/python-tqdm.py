@@ -36,7 +36,7 @@ def run_long_task():
     #    tqdm 会自动检测输出是否为终端（TTY）。
     #    - 如果是终端，显示动态进度条。
     #    - 如果重定向到文件，它会自动禁用动画，只进行简单的行输出。
-    with tqdm(total=len(item_list), desc="Processing items") as pbar:
+    with tqdm(total=len(item_list), desc="Processing items", file=sys.stdout, disable=None) as pbar:
         for i in item_list:
             time.sleep(0.5)
 
