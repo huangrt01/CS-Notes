@@ -288,6 +288,31 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
 
 ### Clion
 
+#### 基础设置
+
+* python interpreter
+
+##### Git
+
+* git插件生效
+  * `git config --global --add safe.directory /xxx`
+
+##### Format
+
+* **Format: option + shift + F**
+
+* **设置：command + Option + shift + L**
+
+* 细节：
+  * 需要重启IDE才能在KeyMap里看到
+  * 设置 External Tools，不要设置 Remote
+
+![-](./Editor/image-20250310171321679.png)
+
+
+
+
+
 #### 快捷键
 
 * 文件栏：`command + shift + E`
@@ -362,18 +387,6 @@ Advanced Text Objects - Text objects like searches can also be composed with vim
   * command + shift + 下箭头
 * 后缀补全：输入`.`，比如生成make_unique
 * 补全建议：Command I + Tab
-
-#### Format
-
-* **Format: option + shift + F**
-
-* **设置：command + Option + shift + L**
-
-![-](./Editor/image-20250310171321679.png)
-
-
-
-
 
 #### 编译
 

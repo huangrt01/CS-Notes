@@ -61,3 +61,17 @@ z.backward(torch.tensor([1.0, 1.0]))
 
 print(f"x.grad={x.grad}, y.grad={y.grad}")
 # x.grad=tensor([12., 24.]), y.grad=tensor([4., 9.])
+
+
+### Gradient Check
+
+from torch.autograd import gradcheck
+
+# gradcheck takes a tuple of tensors as input, check if your gradient
+# evaluated with these tensors are close enough to numerical
+# approximations and returns True if they all verify this condition.
+# Note: it's recommended to use double precision for gradcheck
+input1 = torch.randn(4, 4, dtype=torch.double, requires_grad=True)
+input2 = torch.randn(4, 4, dtype=torch.double, requires_grad=True)
+test = gradcheck(MyMul.apply, (input1, input2), eps=1e-6, atol=1e-4)
+print(f"Gradcheck result: {test}")

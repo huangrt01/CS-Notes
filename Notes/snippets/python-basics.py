@@ -57,3 +57,14 @@ def test_task_decorator(*args, task_filter: Union[str, List[str]] = None, **kwar
     return wrapper
 
   return decorator
+
+from pprint import pprint, pformat, PrettyPrinter
+
+data = {"a": [1, 2, {"x": 3}], "b": {"c": 4, "d": 5}}
+
+pprint(data, width=80, compact=True, sort_dicts=False)
+
+s = pformat(data, width=60, compact=True, sort_dicts=False)
+
+pp = PrettyPrinter(indent=2, width=60, compact=True, sort_dicts=False)
+pp.pprint(data)

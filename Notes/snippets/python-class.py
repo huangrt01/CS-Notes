@@ -62,3 +62,16 @@ class Schema(BaseModel):
     anyOf: Optional[List['Schema']] = None  # 前向声明
     items: Optional['Schema'] = None  # 前向声明
     properties: Optional[Dict[str, 'Schema']] = None  # 前向声明
+
+
+### type 与 mro
+
+# - type(obj)：精确类型，不考虑继承；调试/精确分派用
+# - isinstance(obj, Cls)：包含继承；大多数判定推荐用
+# - mro() / __mro__：方法解析顺序（C3 线性化），super 依赖此顺序
+# - 常见模式：注册检索时先用 type 精确匹配，再用 mro/issubclass 回退到父类
+# - 调试：打印 [c.__name__ for c in type(obj).mro()] 观察多重继承顺序
+
+# 查看 MRO 顺序（用于调试多重继承）
+def show_mro(cls):
+    return [c.__name__ for c in cls.__mro__]

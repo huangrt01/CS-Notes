@@ -111,9 +111,35 @@ print(square_matrix_extension.square_matrix(a))
 
 ### 写Op
 
-TODO： https://pytorch.org/tutorials/advanced/cpp_extension.html
+# TODO： https://pytorch.org/tutorials/advanced/cpp_extension.html
 
-https://pytorch.org/tutorials/advanced/python_custom_ops.html
+### Custom Python Operator (torch.library)
+# https://pytorch.org/tutorials/advanced/python_custom_ops.html
+# Use this to make arbitrary Python code compatible with torch.compile (no graph breaks)
+
+# from torchvision.transforms.functional import to_pil_image, pil_to_tensor
+# import PIL
+
+# 1. Define the custom op
+# @torch.library.custom_op("mylib::crop", mutates_args=())
+# def crop(pic: torch.Tensor, box: list[int]) -> torch.Tensor:
+#     # This implementation runs in eager mode
+#     img = to_pil_image(pic.cpu())
+#     cropped_img = img.crop(box)
+#     return (pil_to_tensor(cropped_img) / 255.).to(pic.device, pic.dtype)
+
+# 2. Register a FakeTensor kernel (Meta kernel) for torch.compile
+# This tells torch.compile how to compute the output metadata (shape, dtype, device)
+# without running the actual code.
+# @crop.register_fake
+# def _(pic, box):
+#     channels = pic.shape[0]
+#     x0, y0, x1, y1 = box
+#     # Return a dummy tensor with correct metadata
+#     return pic.new_empty(y1 - y0, x1 - x0, channels).permute(2, 0, 1)
+
+# Now torch.compile(crop) will work without graph breaks!
+
 
 * 关于非contiguous
 

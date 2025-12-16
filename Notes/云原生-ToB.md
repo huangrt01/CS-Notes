@@ -691,6 +691,45 @@ rclone copy README.txt tos:ABC --s3-no-head-object
 
 
 
+#### 托管 MongoDB 服务对比（VolcEngine / 阿里云 / AWS）
+
+* 火山引擎
+  * 版本支持：4.2/4.4/5.0/6.0
+  * 架构支持：副本集集群、分片集群
+  * 规格支持：单规格族（32 分片）
+  * 功能：较为丰富
+  * AI：暂无
+  * 参考：https://www.volcengine.com/
+
+* 阿里云
+  * 版本支持：4.4/5.0/6.0/7.0/8.0
+  * 架构支持：单节点、副本集集群、分片集群
+  * 规格支持：三规格族（32 分片）
+  * 功能：较为完善，集群管理/数据迁移产品生态更全
+  * AI：暂无
+  * 参考：https://cn.aliyun.com/product/mongodb
+
+* AWS（DocumentDB）
+  * 兼容：兼容到 MongoDB 5.0 API（并非所有特性兼容）
+  * 规格支持：32 分片 16 副本
+  * 功能：与扩展产品交互良好；提供 Point-in-Time 恢复能力
+  * AI：支持向量检索
+  * 参考：https://aws.amazon.com/documentdb/
+
+* 选型提示
+  * 完全兼容诉求：优先原生 MongoDB 托管（版本/特性覆盖更稳）。
+  * 生态整合诉求：DocumentDB 与 AWS 生态结合度高，但需评估 API/特性差异。
+  * 规模与成本：关注分片/副本规格与存储-计算分离能力，结合迁移工具与备份恢复能力。
+  * 备份与恢复：托管服务通常提供自动快照与时间点恢复（PITR）能力；AWS DocumentDB 已支持 PITR。自管部署需结合快照+oplog回放方案（详见 Database.md“备份与恢复”）。
+
+#### MongoDB 应用场景
+
+- 文档数据库：CMS 内容、评论、图片等半结构化/非结构化数据。
+- 位置信息存储：地理空间索引与位置查询分析。
+  - 参考：MongoDB 地理空间查询与索引 https://www.mongodb.com/docs/manual/geospatial-queries/
+- 用户/设备信息存储：用户 profile、IoT 设备日志，支持在线密度分析与索引查询。
+- AI 场景：语义检索、个性化推荐、聊天机器人，结合向量检索能力。
+
 ### k8s 下的系统性能
 
 #### 主机超售
@@ -720,7 +759,90 @@ rclone copy README.txt tos:ABC --s3-no-head-object
 
 ## DevOps --> 「Software-Engineering」
 
+### Cloud Native Dev Tools
 
+#### Nocalhost
+
+* **定位**：云原生开发环境工具，旨在解决微服务开发中的“Inner Loop”效率问题。
+* **核心功能**：
+  * **一键开发环境 (DevMode)**：直接在 K8s 集群中启动开发容器，替换原有的工作负载（Workload）。
+  * **实时代码同步**：本地代码修改后，自动同步到远程开发容器，无需重新构建镜像和部署。
+  * **调试支持**：支持远程调试（Remote Debug），直接在 IDE 中断点调试集群中的代码。
+* **Quick Start 流程**：
+  1.  **准备环境**：K8s 集群（Minikube/TKE/EKS 等）、kubectl、Helm、VS Code。
+  2.  **安装插件**：在 VS Code 中安装 Nocalhost 插件。
+  3.  **连接集群**：通过 KubeConfig 连接到目标 K8s 集群。
+  4.  **启动 DevMode**：
+      *   选择目标 Workload（如 Deployment）。
+      *   点击 "Start DevMode"，选择源码目录。
+      *   Nocalhost 会自动将本地源码同步到容器，并替换原有镜像为开发镜像。
+  5.  **开发与调试**：
+      *   修改本地代码 -> 自动同步 -> 容器内热加载/重启 -> 验证效果。
+      *   设置断点 -> 启动 Debug 模式 -> 触发请求 -> 命中本地断点。
+* **优势**：
+  *   **快**：告别 "Coding -> Build -> Push -> Pull -> Redeploy" 的漫长循环。
+  *   **省**：本地无需运行完整的微服务全家桶，只需运行当前开发的微服务，其他依赖复用集群环境。
+  *   **真**：开发环境即类生产环境，减少“本地能跑，上线就挂”的问题。
+
+#### KubeVPN
+
+* **定位**：轻量级的 Kubernetes 网络隧道工具，主打**双向网络互通**。
+* **核心功能**：
+  * **本地访问云端 (Local to Remote)**：本地开发机可直接访问 K8s 集群内的 Service/Pod IP，仿佛在同一内网。
+  * **云端访问本地 (Remote to Local)**：将本地服务注册到集群网络中，让集群内的其他 Pod 能访问本地启动的服务（便于联调）。
+  * **Docker 运行模式**：利用本地 Docker 运行远程镜像，但网络层无缝对接集群。
+* **Quick Start 流程**：
+  1.  **安装 Client**：本地安装 `kubevpn` 命令行工具。
+  2.  **安装 Server (可选)**：`helm install kubevpn`（若不手动安装，Client 连接时会自动安装）。
+  3.  **连接集群**：
+      ```bash
+      kubevpn connect --namespace test
+      ```
+  4.  **验证连接**：直接 `ping $POD_IP` 或 `curl $SERVICE_IP`。
+  5.  **开发/代理模式**：
+      *   `kubevpn proxy deployment/productpage`：劫持特定流量到本地。
+* **对比 Nocalhost**：
+  *   **KubeVPN** 更侧重于**网络层面的打通**（VPN 体验），适合需要频繁访问多个集群服务或需要被集群反向访问的场景。
+  * **Nocalhost** 更侧重于**容器替换与文件同步**（IDE 体验），适合单个微服务的深度开发与代码热更。
+* **常见问题**
+  * **Prometheus/VMP 监控缺失**
+    * **现象**：本地通过 Kubevpn 启动服务后，无法在监控面板看到打点数据。
+    * **原理**：监控系统（Prometheus/VMP）默认采用 **Pull（拉取）模式**，即 Server 主动连接 Client（Pod）的 Metrics 接口。
+    * **解释**：Kubevpn 虽然劫持了集群内的业务流量（Service IP）转发到本地，但监控系统通常直接通过 Pod IP 抓取数据。本地开发机的进程并不存在于 K8s 集群的网络平面中（没有 Pod IP），且 VMP Server 无法主动建立到本地开发机的连接，导致采集失败。
+
+### GitOps & ArgoCD
+
+#### GitOps 理念
+
+* **核心定义**：以 Git 仓库作为基础设施和应用程序配置的**唯一事实来源（Single Source of Truth）**。
+* **工作流**：
+  * 开发者修改代码 -> Push 到 Git。
+  * CI 流水线构建镜像 -> Push 到 Registry -> 修改 Helm/Kustomize 配置仓库 (Config Repo)。
+  * CD 系统（如 ArgoCD）监测 Config Repo 变化 -> 自动同步到 Kubernetes 集群。
+
+#### ArgoCD
+
+* **定位**：Kubernetes 原生的声明式持续交付（CD）工具。
+* **核心组件**：
+  * **API Server**：处理 API 请求。
+  * **Repository Server**：缓存 Git 仓库内容，生成 K8s Manifests (Helm/Kustomize)。
+  * **Application Controller**：核心控制器，对比 Git 状态与集群实际状态 (Live State)，执行同步 (Sync)。
+* **关键概念**：
+  * **Application**：定义源（Source: Git Repo + Path）和目标（Destination: Cluster + Namespace）。
+  * **Sync Status**：
+    * `Synced`：状态一致。
+    * `OutOfSync`：Git 配置与集群状态不一致。
+  * **Health Status**：
+    * `Healthy`：资源运行正常。
+    * `Degraded`：资源运行异常（如 Pod CrashLoopBackOff）。
+    * `Progressing`：资源正在部署中。
+* **常用功能**：
+  * **Auto Sync**：自动监测 Git 变化并应用。
+  * **Prune**：自动删除 Git 中已不存在的资源。
+  * **Self Heal**：当集群资源被手动修改（Drift）时，自动还原回 Git 定义的状态。
+* **最佳实践**：
+  * **配置分离**：源代码仓库 (App Repo) 与配置仓库 (Config Repo) 分离，避免 CI 循环触发。
+  * **Kustomize / Helm**：使用模板引擎管理多环境（Dev/Staging/Prod）差异。
 
 ## 云产品
 
@@ -1057,6 +1179,34 @@ rclone copy README.txt tos:ABC --s3-no-head-object
     * 上下文工程产品：`PromptPilot`、`Responses API`、`Viking` 记忆库。
 
 <img src="./%E4%BA%91%E5%8E%9F%E7%94%9F-ToB/image-20251119172603849.png" alt="image-20251119172603849" style="zoom:50%;" />
+
+##### [2024 冬季 Force 原动力大会：AI Cloud 与 Agent 战略](https://mp.weixin.qq.com/s/5gctyoqHWGHF0aDInW5Swg)
+
+* **战略升级与决心**
+  * **营收目标上调**：2021 年定下的千亿元年营收目标，金额上调数百亿元（实现周期 2029-2031 年不变）。
+  * **信心来源**：MaaS 收入超预期；豆包大模型能力提升带动 Token 增长。
+  * **竞争态势**：
+    * **后发优势**：“后发有劣势也有优势，关键是把手里的牌打好。”
+    * **加速度最重要**：基础大模型追赶 + 业务规模追赶。
+    * **ToC/ToB 协同**：品牌优势 + 积累的 know-how（不仅仅是卖云，而是输出经验）。
+    * **市场地位**：日均 Token 处理量超 50 万亿（2025.12），外部万亿 Token 客户超 100 家（>AWS 2倍）。
+* **技术演进：从 MaaS 到 Agent 全栈**
+  * **开发范式变革**：从 `if-else` 定义工作流 $\rightarrow$ 基于 Prompt 和模型驱动 Agent。
+  * **运维范式变革**：从管理服务器 (Ops) $\rightarrow$ 运营数字员工 (Agent Ops)。
+  * **全栈体系**：搭建 MaaS $\rightarrow$ Agent 开发 $\rightarrow$ 运营的全栈产品；封装 Agent API（对话、搜索、思考），降低调用门槛。
+* **模型产品升级**
+  * **豆包 1.8**：
+    * 强化多轮指令遵循与 OS Agent 能力。
+    * **长视频理解**：支持 1.5 小时视频（5秒1帧）。场景举例：小区车被划，模型可处理监控长视频快速定位事实片段。
+  * **Seedance 1.5 pro（视频生成）**：
+    * **核心差异**：细节（音画同步、多语言、方言）。
+    * **能力**：解决中文对口型难题，支持四川话/陕西话等方言，多人多语言对话，电影级质感。
+  * **豆包 2.0**：训练中，预期在功能和表现上有“非常大的跃迁”。
+  * **豆包手机助手**：GUI 操作能力（对外开放谨慎）；视觉理解能力提升。
+* **商业化与新定价逻辑**
+  * **“节省计划”**：从“单点降价”转向“整体 ROI”。
+  * **覆盖范围**：豆包系列、DeepSeek/Moonshot 等开源模型、向量数据库、Trae 等周边产品。
+  * **逻辑**：客户深入使用 AI 会调用多种模型组合，整体打包降低试错成本（用得越多，省得更多）。
 
 
 

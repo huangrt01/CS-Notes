@@ -22,6 +22,36 @@ todo [深度强化学习系列（二）强化学习基础 - iker peng的文章 -
 
 
 
+## RL基础理论
+
+### 核心概念：Bias, Variance, Bootstrapping
+
+在强化学习（特别是 Value-based 方法）中，估计价值函数（Value Function）的方式决定了算法的性质。
+
+* **Bootstrapping (自举)**
+  * **定义**：利用后续状态的**估计值**来更新当前状态的估计值。
+  * **例子**：TD(0) 更新 $$V(S_t) \leftarrow V(S_t) + \alpha [R_{t+1} + \gamma V(S_{t+1}) - V(S_t)]$$。这里 $$V(S_{t+1})$$ 本身就是个猜测（估计），用它来更新 $$V(S_t)$$ 就是 Bootstrapping。
+  * **对比**：Monte Carlo (MC) 方法不使用 Bootstrapping，它等到 Episode 结束，用真实的累积回报 $$G_t$$ 来更新。
+
+* **Bias (偏差) vs Variance (方差)**
+  * **Monte Carlo (MC)**：
+    * **无偏差 (Unbiased)**：目标是真实回报 $$G_t$$，期望等于真实价值。
+    * **高方差 (High Variance)**：$$G_t$$ 依赖于整个轨迹上的所有随机动作和状态转移，随机性累积导致方差大。
+  * **Temporal Difference (TD)**：
+    * **有偏差 (Biased)**：目标包含估计值 $$V(S_{t+1})$$，初始时估计不准，导致更新有偏差。随着训练进行，偏差会减小。
+    * **低方差 (Low Variance)**：只依赖一步的随机性（一步转移和奖励），比 MC 方差小得多。
+  * **权衡**：$$TD(\lambda)$$ 或 n-step TD 可以在二者之间权衡。
+
+### TD Error Accumulation (TD 误差累积)
+
+* **现象**：由于 Bootstrapping 的存在，如果 $$V(S_{t+1})$$ 估计偏高，这个误差会回传给 $$V(S_t)$$，导致 $$V(S_t)$$ 也偏高。误差会在状态之间传播和累积。
+* **致命三要素 (The Deadly Triad)**：当以下三个条件同时满足时，强化学习训练极其容易不稳定甚至发散：
+  1. **Function Approximation (函数近似)**：如使用深度神经网络（Deep RL）。
+  2. **Bootstrapping (自举)**：如 TD learning, Q-learning。
+  3. **Off-policy Training (异策略)**：训练数据的分布与当前策略分布不一致（如 Replay Buffer）。
+* **后果**：值函数可能无法收敛，误差无限放大。
+* **解决方案**：Target Network（固定目标网络）、Double Q-learning（解耦选择和评估）、Clipped Double Q-learning (TD3) 等技术旨在缓解这些问题。
+
 
 ## Algorithm
 
@@ -103,7 +133,7 @@ todo [深度强化学习系列（二）强化学习基础 - iker peng的文章 -
 
 #### Why RL work?
 
-* 5.2.2. Why RLWorks?
+* 5.2.2. Why RL Works?
   * In this paper, we conduct reinforcement learning based on a subset of instruction tuning
     data, and it achieves significant performance enhancement upon the instruction tuning model.
     To further explain why reinforcement learning works. We evaluate the Pass@K and Maj@K

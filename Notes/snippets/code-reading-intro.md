@@ -52,6 +52,7 @@
 - RingAttention
   - https://github.com/gpu-mode/ring-attention
 
+
 #### 推理
 
 - TensorRT
@@ -136,6 +137,13 @@
 
 
 ### Applied Algo
+
+#### Search Engine
+
+- Typesense
+  - https://github.com/typesense/typesense
+  - Open Source alternative to Algolia and an Easier-to-Use alternative to ElasticSearch
+  - Written in C++
 
 #### Deep Research
 

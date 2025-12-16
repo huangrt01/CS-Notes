@@ -74,6 +74,7 @@
 
 ![structure](./AI-Agent-Product&PE/structure.png)
 
+
 ## ToC 产品
 
 ### 模型能力
@@ -89,6 +90,47 @@
 * 实现 Copilot 的主流架构是 **多 Agent 架构**
   * 模仿人做事，将业务拆成工作流（workflow、SOP、pipeline）
   * 每个 Agent 负责一个工作流节点
+
+### 手机助手（豆包）
+
+* 定义：面向手机厂商的系统级服务，将豆包大模型深度融入手机操作系统，实现跨应用的自动化执行与自然语言交互。
+* 关键能力
+  * 系统级集成与唤醒：支持专属物理按键、语音唤醒；以悬浮窗/顶部状态区域呈现，不打断当前应用。
+  * 屏幕理解与问答：对屏幕内容进行理解，支持“屏幕问答”“屏幕记忆”。
+  * 直接操控手机：系统交互与跨应用任务自动执行（如下载、批量处理、跨APP跳转与表单操作）。
+  * 后台执行：任务在后台持续运行，状态吸附于顶部区域，用户可继续使用手机。
+* 产品定位：在豆包 App 基础上与手机厂商 OS 层对接，获得厂商授权以实现系统交互与控制能力。
+* 参考
+  * 说明与定位：http://m.toutiao.com/group/7579935469794886187/
+  * 实测体验1：http://m.toutiao.com/group/7578806856575910435/
+  * 实测体验2：http://m.toutiao.com/group/7578873886368924201/
+
+### OpenCode (Coding Agent)
+
+* **Link**: [opencode.ai](https://opencode.ai/) | [GitHub](https://github.com/sst/opencode)
+* **定位**: 开源 AI 编程 Agent，支持 Terminal, IDE, Desktop 多端。
+* **核心数据**: 95k+ Stars (SST生态), 2.5M+ developers。
+* **技术与产品特性**:
+  * **LSP Integration**: 内置 LSP (Language Server Protocol) 支持，自动加载正确的语言服务，像 IDE 一样理解代码结构和上下文。
+  * **Privacy First**: 隐私优先设计，不存储代码和上下文数据，适合企业环境。
+  * **Model Agnostic**:
+    * 支持 75+ LLM providers (via Models.dev)，包括 Claude, GPT, Gemini 等。
+    * **BYO Keys/Account**: 支持接入 GitHub Copilot, ChatGPT Plus/Pro 账号。
+    * 支持本地模型。
+  * **Multi-session**: 支持并行多 Agent 会话，同时处理多个任务。
+  * **Zen**: 提供经过 Coding 场景测评和优化的模型集合 (Validated models)。
+
+### OpenClaw (Personal Assistant)
+
+* **Link**: [GitHub](https://github.com/openclaw/openclaw)
+* **定位**: Local-first 个人 AI 助手，聚合多渠道 (Omni-channel)。
+* **核心特性**:
+  * **Multi-channel Inbox**: 统一管理 WhatsApp, Telegram, Slack, Discord, iMessage, Signal 等消息渠道。
+  * **Local-first Gateway**: 控制平面运行在本地，确保数据隐私。
+  * **Capabilities**:
+    * **Voice**: 支持语音唤醒和实时对话 (Voice Wake + Talk Mode)。
+    * **Canvas**: 支持 Live Canvas 可视化交互。
+    * **Multi-agent Routing**: 支持将不同渠道或任务路由给不同的 Agent 处理。
 
 ### 产品逻辑
 
@@ -507,6 +549,13 @@ TODO
 
 https://manus.im/app
 
+*   **2025-2026 行业回顾与 Manus 访谈**：
+    *   **R1 爆火原因**：开源、思考过程可见 (CoT)、以及一个（至今为止都）非常简陋的 APP。
+    *   **关于“套壳” (Wrapper)**：
+        *   **安迪比尔定律 (Andy and Bill's Law)**：硬件提高的性能，很快被软件消耗掉。套壳本身毫无问题，是商业和技术最正常的行为。
+        *   **分工与价值**：微软不用自己造 CPU（Intel），NV 不用亲自去无尘间操作光刻机（台积电）。Claude 也没涉足 IDE，但这不妨碍 Cursor 成为值得尊敬的公司。
+        *   **核心**：商业模式的本质在于创造价值，而非必须全栈自研。
+
 ### HiAgent
 
 ![image-20250616205439328](./AI-Agent-Product&PE/image-20250616205439328.png)
@@ -540,6 +589,19 @@ https://lingowhale.com/topics
 
 
 
+
+
+### 行业思考 & 文化
+
+*   **做技术的人，谦逊而不谦卑 (Humble but not Submissive)**
+    *   **圈层文化差异**：
+        *   **Infra 圈**：倾向于“低声下气”，多为自嘲。
+        *   **应用圈**：倾向于“趾高气昂”，往往过度肯定自己。
+        *   **理想状态**：保持谦逊（Humble）但不谦卑，避免自欺欺人。
+    *   **Agent 领域的反思**：
+        *   **拒绝 Overclaim**：学术界/工业界部分 Agent 工作存在严重的 Overclaim 现象（“在学校挂几面旗旗，让大家看看世界上最没用的研究是什么样的”）。
+        *   **信任与崩塌**：在 AI 时代，实现和验证 Idea 的速度极快。一个团队建立信任很难，但一次 Overclaim 就可能导致信任崩塌。
+        *   **标准**：**Humble, Modest, and Love**. Do not overclaim yourself.
 
 ## 本地开发
 
@@ -1244,6 +1306,22 @@ https://webkul.com/ai-semantic-search-services/
 
 
 
+#### Typesense
+
+> 官网: [https://typesense.org/](https://typesense.org/)
+> 文档: [Recommendations Guide](https://typesense.org/docs/guide/recommendations.html)
+
+*   **定位**：开源、高性能的内存搜索引擎 (In-Memory Search Engine)，定位为 **Algolia 的开源替代品** 和 **Elasticsearch 的易用替代品**。
+*   **核心特点**：
+    *   **极致性能**：基于 C++ 编写，索引全内存存储（磁盘备份），实现 **<50ms** 的即时搜索响应。
+    *   **容错与体验**：内置 **Typo Tolerance**（拼写纠错）、**Geo-Search**（地理位置搜索）、**Faceted Search**（分面搜索）。
+    *   **易用性**：配置简单，无 Schema 负担（Auto-Schema），API 设计开发者友好。
+*   **AI & 推荐能力**：
+    *   **Vector Search**：原生支持向量搜索，可结合 embedding 模型（如 OpenAI, PaLM, Bert）实现语义搜索。
+    *   **Hybrid Search**：支持关键词 + 向量混合搜索，平衡精确匹配与语义理解。
+    *   **Recommendation**：基于向量相似度实现 "More like this" 推荐；结合用户行为向量可实现个性化推荐 (Personalization)。
+    *   **RAG 支持**：常作为 LLM 应用的 Context Retrieval 组件。
+
 #### VantageDiscovery AI Search
 
 > https://www.vantagediscovery.com/blog
@@ -1630,6 +1708,25 @@ https://webkul.com/ai-semantic-search-services/
 * 实体标注抽取，Key phrase extraction to identify and output important terms
 * OCR，Optical Character Recognition (OCR) to recognize printed and handwritten text in binary files
 * 图文多模，Image analysis to describe image content, and output the descriptions as searchable text file
+
+#### 火山 Viking AI 搜索解决方案
+
+> 引自白皮书：https://bytedance.larkoffice.com/file/LwHqbgN2oo4YQuxf6KucPowYnHe
+
+* **核心定位**：火山引擎推出的一站式 AI 搜索与知识管理解决方案，基于“大模型+搜索引擎”的 RAG 架构，旨在解决大模型在企业应用中的幻觉、知识滞后及数据安全问题。
+* **技术架构**：
+  * **VikingDB**：自研全托管向量数据库，支持百亿级向量检索，提供毫秒级延迟，支撑海量非结构化数据的高效存储与检索。
+  * **混合检索（Hybrid Search）**：结合关键词检索（BM25）和向量检索（Embedding），兼顾精确匹配与语义理解，提升召回率。
+  * **多路召回与精排（Rerank）**：支持多路召回策略，并内置 Cross-Encoder 精排模型，对召回结果进行深度语义重排序，显著提升 TopK 准确性。
+  * **LLM 集成**：无缝接入豆包（Doubao）、Skylark 等大模型，支持 Prompt 编排，实现高质量的问答与摘要生成。
+* **核心优势**：
+  * **端到端全链路**：提供从数据解析（ETL）、切片、向量化、索引构建到检索增强生成的全流程能力，降低开发门槛。
+  * **高性能与弹性**：针对云原生架构优化，支持弹性伸缩，满足高并发查询需求。
+  * **数据安全与私有化**：支持私有化部署（VPC），保障企业核心数据资产安全。
+* **典型应用场景**：
+  * **企业知识库**：构建企业内部的“第二大脑”，帮助员工快速查找文档、政策、代码及技术资料。
+  * **智能客服**：基于知识库自动回答用户咨询，提升服务效率与准确度，降低人工成本。
+  * **电商导购**：理解用户复杂的自然语言购物意图，推荐精准商品，提升转化率。
 
 #### Algolia (电商搜索推荐)
 
@@ -2746,8 +2843,8 @@ file_extractor={".pdf": PyMuPDFReader()} # 指定特定的文件加载器
 from llama_index.readers.feishu_docs import FeishuDocsReader
 
 # 见说明文档
-app_id = "cli_a6f1c0fa1fd9d00b"
-app_secret = "dMXCTy8DGaty2xn8I858ZbFDFvcqgiep"
+app_id = ""
+app_secret = ""
 
 # https://agiclass.feishu.cn/docx/FULadzkWmovlfkxSgLPcE4oWnPf
 # 链接最后的 "FULadzkWmovlfkxSgLPcE4oWnPf" 为文档 ID 

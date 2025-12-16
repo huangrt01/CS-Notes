@@ -76,6 +76,25 @@
   * ![image-20250509140316594](./Computer-Architecture/image-20250509140316594.png)
   * 用于分析reduce sum的优化
 
+#### Case Study: Unique Kernel Optimization
+
+> Reference: [PyTorch 工程实践（二）：Unique 的性能优化](https://zhuanlan.zhihu.com/p/652659936)
+
+*   **问题背景**：PyTorch CPU 版 `unique` 算子性能远慢于 NumPy（慢约 6-20 倍）。
+*   **Architecture Analysis**：
+    *   **CPI (Cycles Per Instruction)**: Profiling 显示 CPI Rate > 5（很差），说明 CPU 流水线停顿严重，通常由**随机访存 (Random Access)** 导致的 Cache Miss 引起。
+    *   **Bottleneck**: 热点集中在 `std::unordered_set`（哈希表）操作。
+*   **Optimization Strategy** (Sort-based vs Hash-based)：
+    *   **Hash-based (Original)**: 随机内存访问，破坏局部性 (Locality)；串行执行，无法利用多核 (Multi-core) 和 SIMD。
+    *   **Sort-based (Optimized)**: 
+        1.  **Sort**: 将相同元素聚在一起，利用连续内存访问。
+        2.  **Unique Mask**: `mask[i] = (input[i] != input[i-1])`，无依赖，可完全并行 (Embarrassingly Parallel)。
+        3.  **Scan (Prefix Sum)**: 计算输出位置。这是并行计算中的经典原语 (Parallel Primitive)。
+        4.  **Scatter**: 并行写入。
+*   **收益**：
+    *   **Memory Efficiency**: 避免了细粒度内存分配，利用了 Spatial Locality。
+    *   **Parallelism**: 全流程可并行，利用多核带宽。
+
 #### [OSDI 25] 八种系统性能优化方法论
 
 > https://www.usenix.org/system/files/osdi25-park-sujin.pdf

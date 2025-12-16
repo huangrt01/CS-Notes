@@ -297,23 +297,31 @@ git push origin HEAD --force
 	  
 	- `git stash show -p | git apply -R`
 	
-- `git cherry-pick`
+- `git cherry-pick <commit>`: 将指定的提交（的变更）应用到当前分支。
   - [利用它只pull request一个特定的commit](https://www.iteye.com/blog/bucketli-2442195)
-  - `git cherry-pick commit1..commit2`
+  - `git cherry-pick commit1..commit2`：应用从 commit1 (不含) 到 commit2 (含) 的所有提交。
+  - **处理合并提交 (Merge Commit)**: 直接 `cherry-pick` 一个合并提交会失败，因为 Git 不知道应该采用哪个父分支的变更。
+    - **解决方案**: 使用 `-m` (mainline) 选项指定“主线”。
+    1.  **查看父提交**: `git show <merge-commit-hash>`，输出中会包含 `Merge: <parent-1-hash> <parent-2-hash>`。
+    2.  **确定主线**: 父提交1通常是**被合并的目标分支** (如 `master`)，父提交2是**来源分支**。我们通常想应用来源分支的变更。
+    3.  **执行命令**: `git cherry-pick -m 1 <merge-commit-hash>`。此命令意为“将该合并提交与它的第一个父提交进行比较，然后将差异应用到当前分支”。
+  - **注意**: 操作前最好确保不在“分离头指针”(`detached HEAD`)状态，可以先 `git checkout -b <new-branch-name>` 创建一个新分支，否则 `cherry-pick` 产生的新提交可能会丢失。
 - `git bisect`: binary search history (e.g. for regressions)
 - [`git ls-files`](https://git-scm.com/docs/git-ls-files)
-- `git submodule add <url> /path`
-    * clone之后初始化：`git submodule update --init --recursive`
-      * 仅初始化一个特定的submodule：`git submodule update <specific path to submodule>`
-    * 更新：`git submodule update --remote & ga . & gc -m "commit message"  `
-    * 清除change:
-      * `git submodule deinit -f .`, `git submodule update --init`
-    
+- `git submodule add <url> /path`: 添加子模块。
+- `git submodule update`: 更新子模块，使其与主项目的记录匹配。
+    * `--init`: 初始化尚未克隆的子模块。
+    * `--recursive`: 递归更新所有嵌套的子模块。
+    * **常用组合**: `git submodule update --init --recursive` 是克隆一个带子模块的仓库后，最常用的初始化命令。
+    * `--remote`: **拉取最新代码**。此选项会忽略主项目记录的 commit SHA-1，转而检出子模块远程跟踪分支的最新 commit。这对于始终希望使用子模块最新版本的场景非常有用。
+    * `--force`: **强制覆盖**。此选项会强制检出子模块，丢弃所有本地的修改。这在需要将子模块重置为干净状态时非常有用，但操作具有破坏性，需谨慎使用。例如：`git submodule update --force --recursive`。
+- `git submodule deinit -f .`: 反初始化子模块。
+- **其他技巧与注意事项**:
     * 移除submodule：https://stackoverflow.com/questions/1260748/how-do-i-remove-a-submodule/36593218#36593218
-    * 如果报错already exists in the index ，用`git rm -r --cached /path`解决此问题 
-    * 这个特性很适合和[dotfiles](https://github.com/huangrt01/dotfiles)搭配，但如果用在项目里可能[出现问题](https://codingkilledthecat.wordpress.com/2012/04/28/why-your-company-shouldnt-use-git-submodules/)，尤其是需要commit模块代码的时候
+    * 如果报错 `already exists in the index`，用 `git rm -r --cached /path` 解决此问题。
+    * `submodule` 很适合和[dotfiles](https://github.com/huangrt01/dotfiles)搭配，但如果用在项目里可能[出现问题](https://codingkilledthecat.wordpress.com/2012/04/28/why-your-company-shouldnt-use-git-submodules/)，尤其是需要 commit 模块代码的时候。
     * [使用时可能遇到的坑的集合](https://blog.csdn.net/a13271785989/article/details/42777793)
-    * commit的时候有坑，需要先commit子模块，再commit主体，参考：https://stackoverflow.com/questions/8488887/git-error-changes-not-staged-for-commit
+    * commit 时有坑，需要先 commit 子模块，再 commit 主体，参考：https://stackoverflow.com/questions/8488887/git-error-changes-not-staged-for-commit
 - `.gitignore`: [specify](https://git-scm.com/docs/gitignore) intentionally untracked files to ignore
   - `.gitignore_global`，[我的设定](https://github.com/huangrt01/dotfiles/blob/master/gitignore_global)
 

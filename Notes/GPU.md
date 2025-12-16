@@ -939,6 +939,12 @@ RTX 3090, has 82 SMs.
 
 * https://www.pugetsystems.com/labs/articles/puget-systems-most-reliable-hardware-of-2024
 
+##### CUDA_ERROR_ECC_UNCORRECTABLE
+
+* nvidia-smi -q -d ECC
+* ECC (Error-Correcting Code) 是一种内存技术，常见于服务器和数据中心级的高端 GPU。它能够自动检测并 纠正 内存中发生的轻微数据错误（比如由宇宙射线或电磁干扰导致的比特翻转）。
+
+
 ### 新硬件架构
 
 #### Ampere

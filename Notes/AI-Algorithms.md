@@ -98,6 +98,11 @@
   * ![image-20251001201117306](./AI-Algorithms/image-20251001201117306.png)
 * 核心思路：
   * $$L(N,D)=AN^{-\alpha}+BD^{\beta}+E$$
+
+#### 数据范式演进 (Data Paradigm)
+
+* **数据受限 (Data Constrained)**：随着模型规模增长，业界正从“数据无限”进入“数据受限”阶段。
+* **合成数据 (Synthetic Data)**：Gemini 3 等前沿模型开始大量使用合成数据作为 Scaling 的关键燃料，以突破自然数据枯竭的瓶颈。
     * Chinchilla-optimal
     * loss和参数量呈现对数线性下降
     * $$D/N \approx 20$$
@@ -254,11 +259,11 @@
 
 ### Seq2seq
 
-#### 为什么需要seq2seq建模
+#### 为什么需要 seq2seq 建模
 
 ![image-20251004025701238](./AI-Algorithms/image-20251004025701238.png)
 
-#### 从RNN到 Transformer
+#### 从 RNN 到 Transformer
 
 * 以RNN为核心的Encoder Decoder有以下几个重要的问题
   * 信息丢失：每次传递乘了系数，丢失前面的信息
@@ -266,7 +271,7 @@
     * the number of operations required to relate signals from two arbitrary input or output positions grows in the distance between positions, linearly for ConvS2S and logarithmically for ByteNet.
     * RNN是sequence-aligned实现
   * 不能并行计算，对GPU不友好
-* 以上问题，对**从序列到序列(seq2seq)的模型**很重要
+* 以上问题，对 **从序列到序列(seq2seq)的模型** 很重要
 
 ![image-20251005165225825](./AI-Algorithms/image-20251005165225825.png)
 
@@ -535,7 +540,7 @@ softcapping
 
 ![image-20251004224418837](./AI-Algorithms/image-20251004224418837.png)
 
-#### 广义的decoder
+#### 广义的 decoder
 
 * 也参考「深度学习推荐系统——VQ-VAE」
 
@@ -733,6 +738,31 @@ $$PE_{(pos, 2i + 1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)$$
 * 可以只对需要输出的logits进行这步计算
 
 ### 训练策略
+
+#### 序列打包（Sequence Packing）
+
+* 动机：将变长语料构造成固定长度训练序列，最大化有效上下文与吞吐，最小化无效 padding。
+* 训练目标：
+  * $$\min_{\theta}\; \mathbb{E}_{x_{1:L}\sim \mathcal{S}} \sum_{t=1}^{L} -\log p_{\theta}(x_t \mid x_{<t})$$
+  * `EOS` 用作语义边界；是否允许跨文档注意由策略决定。
+* GPT 系列的默认实践：
+  * 文档流式拼接（Streaming with `EOS`），截断为固定长度：GPT-1（≈512）、GPT-2（1024）、GPT-3（2048）。
+  * 长度分桶（Bucketing）与最小填充，降低 pad 比例，提升吞吐。
+  * 一般允许跨文档注意，无显式跨样本掩码。
+* 现代工程扩展：
+  * 跨样本打包 + 注意力掩码（packed samples with masks）：将多条短样本拼接为一条，并用掩码阻断跨样本注意，兼顾“无填充”与样本独立性。
+  * Token-budget 动态批（token-based batching）：以固定 token 预算组织 batch，样本数随长度变化，提高设备利用率。
+* 影响与权衡（Zhao et al., 2024）：
+  * 过度碎片化削弱长程依赖；保持文档连续性与明确 `EOS` 边界通常更优。
+  * 当任务对边界敏感时，打包+掩码更稳；一般预训练场景允许跨文档注意更有利。
+  * 调参关注“有效 token 利用率”（非 padding token 占比）与“跨文档比率”。
+* 实操建议：
+  * 默认采用“流式拼接 + `EOS` + 长度分桶/Token-budget 动态批”。
+  * 需要严格样本独立时，使用“打包 + 掩码”。
+* 参考：
+  * Radford (2018): Improving language understanding by generative pretraining — https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf
+  * Radford et al. (2019): Language models are unsupervised multitask learners — https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf
+  * Zhao et al. (2024): Analysing The Impact of Sequence Composition on Language Model Pre-Training — https://arxiv.org/abs/2402.13991
 
 #### Label Smoothing
 
@@ -1992,9 +2022,7 @@ utilize MTP to improve training.
 ### Pretraining、model结构
 
 * data
-  * Inspired by Ding et al. (2024), we implement the document
-    packing method for data integrity but do not incorporate cross-sample attention masking during
-    training
+  * Inspired by Ding et al. (2024), we implement the document packing method for data integrity but do not incorporate cross-sample attention masking during training
   * Fill-in-Middle (FIM) strategy does not compromise the next-token prediction capability while
     enabling the model to accurately predict middle text based on contextual cues
     * ![image-20250501215109853](./AI-Algorithms/image-20250501215109853.png)
@@ -2005,7 +2033,7 @@ utilize MTP to improve training.
       multi-line prompts without terminal line breaks, particularly for few-shot evaluation prompts.
       To address this issue, we randomly split a certain proportion of such combined tokens during
       training, which exposes the model to a wider array of special cases and mitigates this bias.
-
+  
 * model
   * We set the number of Transformer layers to 61 and the hidden
     dimension to 7168. All learnable parameters are randomly initialized with a standard deviation
@@ -2055,7 +2083,7 @@ utilize MTP to improve training.
 * Distillation from DeepSeek-R1
 * Self-Rewarding
 
-# DeepSeek-OCR todo
+## DeepSeek-OCR todo
 
 > https://github.com/deepseek-ai/DeepSeek-OCR/blob/main/DeepSeek_OCR_paper.pdf
 
@@ -2065,111 +2093,29 @@ utilize MTP to improve training.
 
 https://ezml.io/blog/beyond-clip-the-future-of-multimodal-retrieval-with-visualized-bge-vista-and-magiclens
 
-### CLIP
+### CLIP -> 参考 MLLM
 
-**What is CLIP?**
 
-CLIP, developed by OpenAI, is a model designed to understand and relate images and text through contrastive learning. It learns to match images with their corresponding text descriptions and to differentiate these pairs from mismatches, enabling it to perform various tasks, from image classification to zero-shot learning.
-
-**How Does CLIP Work?**
-
-- **Contrastive Learning:** CLIP is trained on a vast dataset of image-text pairs, learning to create a shared embedding space where both images and texts are represented as vectors. The model maximizes the similarity of correct image-text pairs and minimizes it for incorrect pairs.
-- **Joint Embedding Space:** CLIP’s ability to create a joint embedding space for images and text allows it to generalize across different tasks and domains.
-
-**Limitations of CLIP**
-
-- **Fine-Grained Visual Understanding:** CLIP struggles with fine-grained visual details due to its broad learning approach. It can miss subtle distinctions within images that are critical for certain tasks.
-- **Imprecise Multimodal Alignment:** The alignment between text and images can be imprecise, especially when dealing with complex or nuanced relationships.
-- **Retrieval Performance Variability:** CLIP's performance can vary depending on the specificity of the query and the image, sometimes leading to suboptimal results.
 
 ### CoCa
 
 https://research.google/blog/image-text-pre-training-with-contrastive-captioners/
 
-### Visualized BGE (Bootstrapped Grid Embedding)
+## Seed 1.8 通用 Agent 模型
 
-**How Does Visualized BGE Work?**
-
-- **Grid-Based Embeddings:** Unlike CLIP, which processes entire images, Visualized BGE (specifically the BGE-Visualized-M3 variant) breaks down images into grids and embeds each segment separately. This grid-based approach allows the model to capture more localized and detailed visual information.
-- **Bootstrapping:** Visualized BGE uses a bootstrapping process where the model iteratively refines its understanding of the image’s content. This iterative training enhances the model's ability to differentiate between subtle visual details.
-- **Leveraging Stable Diffusion:** The training process of Visualized BGE, especially in its M3 variant, incorporates techniques similar to stable diffusion to generate edited images. These variations expose the model to a diverse set of images, thereby improving its ability to recognize and embed fine-grained details across various scenarios.
-
-**Prominent Example - BGE-Visualized-M3**
-
-The **BGE-Visualized-M3** model is a prominent example of the Visualized BGE architecture. It supports multiple retrieval functionalities such as:
-
-- **Dense Retrieval:** Standard dense retrieval, commonly seen in text embeddings.
-- **Multi-Vector Retrieval:** Fine-grained interactions between multiple vectors.
-- **Sparse Retrieval:** Term-based retrieval with enhanced importance assigned to certain terms.
-
-**Advantages of Visualized BGE**
-
-- **Fine-Grained Detail Recognition:** The grid-based embedding method enhances the model’s ability to recognize and differentiate fine details within images.
-- **Improved Retrieval Accuracy:** The detailed focus leads to more accurate retrieval results, particularly in scenarios where specific visual features are critical.
-- **Complex Image Handling:** Visualized BGE, especially in its BGE-Visualized-M3 variant, excels in understanding complex images with multiple elements, where generalist models like CLIP might struggle.
-
-### VISTA
-
-> Visualized Text Embedding for Universal Multimodal Retrieval
-
-![img](./AI-Algorithms/rygUM4x9yYMvOzaCGkxrVuR0.png)
-
-**What is VISTA?**
-
-VISTA (Visualized Text Embedding for Universal Multimodal Retrieval) takes the advancements of Visualized BGE even further by enhancing the integration of text and image data. VISTA introduces a sophisticated method of embedding text in a way that is deeply integrated with visual data, making it a versatile model for a broad range of multimodal tasks.
-
-**How Does VISTA Work?**
-
-- **ViT and Text Tokenization:** VISTA uses a Vision Transformer (ViT) as an image tokenizer, feeding the visual tokens into a pre-trained text encoder. This allows the model to handle images, text, and multimodal data seamlessly.
-- **In-Depth Fusion:** VISTA creates a deeply fused multimodal representation by concatenating the visual tokens from the ViT encoder with the text tokens and processing this interleaved sequence through a frozen text encoder. This ensures that the text embedding capabilities are preserved while enhancing image-text alignment.
-- **Two-Stage Training Process:** VISTA employs a two-stage training process. In the first stage, it performs cross-modal training using massive weakly labeled data, aligning visual tokens with the text encoder. In the second stage, VISTA fine-tunes this alignment with high-quality composed image-text datasets, significantly improving the model's ability to handle complex multimodal tasks.
-
-**Improvements Over CLIP**
-
-- **Unified Embedding Space:** Unlike CLIP, which handles text and image embeddings separately, VISTA creates a unified embedding space that ensures better integration and alignment of text and image data.
-- **Versatility:** VISTA’s architecture allows it to excel across a broader range of multimodal retrieval tasks, from simple image-text matching to complex multimodal document retrieval.
-- **Enhanced Detail and Context Understanding:** By deeply integrating visual and textual data, VISTA can better understand and retrieve information based on nuanced and detailed queries.
-
-### MagicLens by Google 
-
-![img](./AI-Algorithms/ZlUMrMOnFObZ7sRbqFe7d8QYZcI.png)
-
-**What is MagicLens?**
-
-MagicLens is a cutting-edge, self-supervised image retrieval model designed to handle **open-ended instructions** for image search. Unlike traditional models that focus on visual similarities, MagicLens allows users to express complex search intents through natural language, retrieving images based on diverse semantic relations beyond mere visual features.
-
-**How Does MagicLens Work?**
-
-- **Training on Web Data:** MagicLens is trained on **36.7 million image triplets** (query image, instruction, target image) mined from naturally occurring web image pairs. These pairs contain implicit relations (e.g., “inside view of,” “different angle”), which are made explicit using large multimodal models (LMMs) and large language models (LLMs).
-
-- **Self-Supervised Learning:** The model generates diverse instructions using foundation models (PaLM and PaLI) and learns to align image-text pairs via contrastive learning, allowing it to support open-ended, complex queries.
-- **Dual-Encoder Architecture:** A dual-encoder system processes the query image and integrates the instruction into the target image retrieval, making the system highly efficient for diverse retrieval tasks.
-
-**Key Innovations:**
-
-- **Beyond Visual Similarity:** MagicLens excels at retrieving images based on **non-visual relations**, such as context, object-specific queries, or semantic differences (e.g., “different product angle” or “related landmarks”).
-- **Efficient Model Size:** Despite being **50x smaller** than previous state-of-the-art models, MagicLens achieves superior performance across various image retrieval benchmarks.
-- **Real-Time and Accurate Retrieval:** MagicLens allows for **interactive, real-time search** and refines results based on user feedback, making it adaptable to dynamic retrieval tasks.
-
-**Why It’s an Advancement:**
-
-MagicLens moves beyond the visual similarity limitations of CLIP and Visualized BGE, supporting **open-ended, natural language-driven searches**. It represents a significant leap in the ability to handle complex, contextually rich image queries, making it highly effective and scalable for modern multimodal search applications.
-
-### Qwen-3 Embedding
-
-https://arxiv.org/pdf/2506.05176
-
-* Intro
-  * 基于合成数据的multi-stage训练
-  * 构建高质量合成数据
-  * 引入模型合并（model merging）
-  * 有reranking模型
-* 训练
-  * 在输入序列的末尾添加 [EOS]，使用其最终一层 hidden state 作为 embedding 表示；
-  * **Embedding 模型采用 InfoNCE 对比损失**
-    - InfoNCE loss 的目标是最大化正样本对的相似度，同时最小化负样本对的相似度。
-    - 负样本包括硬负样本、批内负样本等
-    - ![image-20250708163208666](./AI-Algorithms/image-20250708163208666.png)
+- **简介**：通用 Agent 模型，集搜索、代码与 GUI 能力于一体，原生多模态（图文）输入与界面交互，强调低延迟与高效响应。被评测视为“小号 Gemini”，重回国产第一梯队。
+- **核心能力**：
+  - **高效推理**：Medium 档位仅需 5K Token 即可达到前代 15K Token 的智力水平，性价比极高；High 档位通过更多思考预算逼近北美头部模型。
+  - **多模态融合**：坚持统一多模态路线，视觉理解与多模态交互能力优秀。
+- **能力改进**：
+  - **长链推理**：相比 1.6 版本 CoT 专注力翻倍，能逐步验证排除分支，适合解决复杂问题（虽然仍偏向暴力穷举，硬智力相比 Gemini 3 Pro 仍有差距）。
+  - **信息提取**：精度高，但 Token 消耗大（需在 CoT 中完整复述细节），强依赖推理模式。
+- **不足之处**：
+  - **编程能力**：虽有起色但工程思维不足，难以作为复杂工程的主模型。
+  - **多轮对话**：超过 10 轮后思路易发散，无法稳定跟踪任务目标。
+  - **空间智力**：缺乏训练，处理复杂空间形状问题能力较弱。
+- **评测亮点**：GUI Agent 能力在电脑/网页/移动端环境中表现可靠；在 BrowseComp-en 等基准中处于第一梯队。
+- **参考**：[Model Card](https://seed.bytedance.com/seed1_8)；[原文](https://mp.weixin.qq.com/s/N2TkulYSo5SeT9tlu-62jw)；[第三方测评](https://mp.weixin.qq.com/s/In1w4lIO-Jo7BxWXly1AFg)
 
 ## Datasets and Evaluation
 
@@ -2278,6 +2224,86 @@ https://github.com/huggingface/peft
   * https://lightning.ai/lightning-ai/studios/code-lora-from-scratch?view=public&section=featured
   * 效果比只训练最后两层好
 
+### Prefix Tuning & P-Tuning
+
+| 特性 | Prefix Tuning | P-Tuning v1 | P-Tuning v2 |
+| :--- | :--- | :--- | :--- |
+| **论文** | Li & Liang (ACL 2021) | Liu et al. (GPT-3 authors) | Liu et al. (ACL 2022) |
+| **作用位置** | **每一层** Transformer (K/V) | **仅输入层** (Embedding) | **每一层** Transformer (Prompts) |
+| **机制结构** | Deep Modification (深层) | Shallow Modification (浅层) | Deep Modification (深层) |
+| **参数化方式**| MLP 重参数化 (仅训练时) | LSTM/MLP Encoder (关键) | **无重参数化** (直接优化) |
+| **适用任务** | NLG (生成) | NLU (分类/LAMA) | **全能** (NLU+NLG) |
+| **微调参数量**| 0.1% ~ 3% | <0.1% | 0.1% ~ 3% |
+
+#### Prefix Tuning
+
+*   **核心思想**: 在 Transformer 的**每一层** Multi-Head Attention 的 Key/Value 之前拼接可训练的 prefix 向量。
+    *   公式：$$ h_i = \text{Transformer}(z, h_{<i}) $$，其中 $$z$$ 是 prefix。
+    *   **Deep Modification**: 每一层都加，直接影响每一层的特征表示。
+*   **重参数化 (Reparameterization)**:
+    *   直接优化 $$P$$ 参数不稳定。作者引入 MLP (Matrix-Vector) 来生成 $$P$$：$$ P = \text{MLP}(\theta') $$。
+    *   训练后丢弃 MLP，只存 $$P$$。
+*   **优缺点**:
+    *   NLG 任务（如 GPT-2 生成）效果极好。
+    *   NLU 任务上效果一般。
+
+#### P-Tuning v1
+
+*   **核心思想**: 将自然语言 Prompt 替换为**可学习的连续 Embedding**，仅插入在**输入层**。
+*   **Prompt Encoder**:
+    *   发现直接训练 Embedding 难收敛（离散性与关联性问题）。
+    *   使用 **LSTM/MLP** 对 pseudo embeddings 进行建模，使得 Prompt token 之间具有依赖关系。
+*   **局限**: 由于只在输入层修改，对于深层模型（如 100+ 层的 LLM），Prompt 的影响力随着层数加深而迅速衰减，导致在复杂的 NLU 任务（如序列标注）上表现不佳。
+
+#### P-Tuning v2
+
+*   **核心思想**: **Deep Prompt Tuning**。吸取 Prefix Tuning 的“深层”思想，解决了 v1 的痛点。
+*   **机制**:
+    *   **Deep Prompting**: 像 Prefix Tuning 一样，在 Transformer 的**每一层**都插入可训练的 Prompt 向量（通常视作在序列前加 token）。
+    *   **移除重参数化**: V2 发现，在 Deep 设定下，**不需要** v1 中的 LSTM/MLP Encoder，直接优化 Prompt 参数即可收敛。
+*   **优势**:
+    *   **全能**: NLU 和 NLG 任务都接近全量微调。
+    *   **解决难题**: 在序列标注（Sequence Labeling）等硬 NLU 任务上表现大幅提升。
+    *   **适用性**: 在小模型（如 300M）到大模型上都有效（v1 在小模型上效果差）。
+
+#### P-tuning vs Prompt Engineering 本质区别
+
+*   **Prompt Engineering (Hard Prompt)**:
+    *   **离散空间搜索**: 在人类可读的自然语言空间中寻找最佳 Token 组合（如 "Translate this to French:"）。
+    *   **不涉及训练**: 模型参数完全冻结，只改变输入文本。
+    *   **局限**: 容易陷入次优解，对措辞极其敏感（微小的词汇变化导致巨大输出差异）。
+
+*   **P-tuning (Soft Prompt)**:
+    *   **连续空间搜索**: 在高维连续的向量空间中学习最佳 Embedding 参数。
+    *   **参数微调**: 这一串 Embedding 不需要对应具体的自然语言单词，通过反向传播更新这些 Prompt 参数（模型主体参数通常冻结）。
+    *   **优势**: 突破了自然语言的离散限制，能找到人类语言无法描述但对模型最优的“触发器”。
+
+### Mid Training
+
+#### Pre/Mid/RL 在推理LM中的作用（Interplay）
+
+> - On the Interplay of Pre-Training, Mid-Training, and RL on Reasoning Language Models（CMU LTI）
+> - 链接：https://arxiv.org/html/2512.07783v1
+
+* 背景：现代RL显著提升LM推理，但是否真正超越预训练能力存在争议；预训练语料不透明使因果归因困难。
+* 方法：构建可控框架，用合成推理任务（显式原子操作、可解析步骤轨迹）与系统化分布操控，沿两条轴线评估：外推泛化（更复杂组合）与上下文泛化（跨表层语境）。
+* 术语：OOD（Out-of-Distribution）指超出模型训练/假设数据分布的样本或任务；与 ID（In-Distribution）相对。
+* 术语：长尾语境与“暴露”比例
+  - 长尾语境：在预训练语料中出现频率低但对目标任务关键的语境（如法律文本、低资源语言、特定格式/风格、长链路推理样式、程序化符号操作）。
+  - 暴露比例 $$p_{exposure}\in[0,1]$$：指预训练数据中属于目标长尾语境的样本占比（按样本数、token数或任务实例数度量）。
+  - 近零暴露：$$p_{exposure}\approx0\%$$（如 <0.1%），模型几乎未见该语境；RL 难以迁移。
+  - 稀疏暴露：$$p_{exposure}\geq1\%$$ 但远小于主分布，模型具备最低限度的语境先验；RL 可稳健迁移。
+  - 最小但充分暴露：使模型在预训练阶段获得必要的语境先验与表示支撑，达到 RL 可转移的临界点（经验阈值约在 ≥1%）。
+* 结论1（能力增益的前提）：只有当预训练留有“能力余量”且RL样本定位于模型能力边界（略难但可达）时，RL才产生真实增益；若任务已被预训练覆盖或过于OOD，增益消失（最高可达 +42% pass@128）。
+* 结论2（上下文泛化的最小暴露）：上下文泛化需要预训练阶段对长尾语境的最小但充分暴露；近零暴露时RL失败，稀疏暴露（≥1%）即能让RL稳健迁移（最高 +60% pass@128）。
+* 结论3（固定算力下的中期训练价值）：在固定计算预算下，引入中期训练（mid-training，亦称CPT）作为分布桥接显著提升OOD推理；“mid + RL”较“仅RL”在 OOD-hard 上提升约 +10.8%。
+* 结论4（过程级奖励）：过程级奖励（奖励推理步骤正确性）减少 reward hacking，提升推理一致性与保真度。
+* 实践建议：
+  - 难度校准：采样位于能力边界的RL数据，避免过易/过难。
+  - 语境暴露：保证预训练中对关键语境≥1%的稀疏覆盖。
+  - 预算分配：**边界内任务更多预算给mid-training；边界外难题更多预算给RL**。
+  - 奖励设计：采用过程级奖励以减少投机取巧。
+
 
 
 ### Instruction tuning
@@ -2352,61 +2378,7 @@ https://github.com/huggingface/peft
 
 ![image-20251002030655684](./AI-Algorithms/image-20251002030655684.png)
 
-#### 指令微调+检索 Task-aware Retrieval with Instructions
 
-> https://github.com/facebookresearch/tart
-
-* Intro
-  * ![image-20241210014430460](./AI-Algorithms/image-20241210014430460.png)
-  * In summary, our contributions are as follows:
-    * Retrieval with instructions, a new formulation
-      to model users’ intent explicitly (Section 3).
-    * BERRI, a new large-scale collection of approximately 40 retrieval datasets in diverse domains with instructions (Section 4).
-    * TART, a task-aware retriever trained on
-      BERRI that advances state of the art on zero-
-      shot and cross-task retrieval (Section 5).
-* 数据
-  * berri 数据集
-    * intent domain unit
-    * ![image-20241210015507819](./AI-Algorithms/image-20241210015507819.png)
-    * https://huggingface.co/datasets/sentence-transformers/embedding-training-data
-  * ERRI (Bank of Explicit RetRieval Instructions), a collection of
-    approximately 40 retrieval datasets with diverse in-
-    structions in a unified format, covering 10 diverse
-    domains. Each task has on average 3.5 diverse
-    instructions annotated by experts, 
-  * 难负例：![image-20241210015627115](./AI-Algorithms/image-20241210015627115.png)
-    * We mine hard negative documents dHD us-
-      ing an off-the-shelf retriever and then **filter out**
-      **false negative documents using an off-the-shelf**
-      **reranker**, following Qu et al. (2021).
-      * ms-marco-MiniLM-L-12-v27
-* 模型
-  * dual-encoder，instruction和query相连
-    * The bi-encoder architecture is
-      known to be less expressive since it only has
-      limited interactions between queries and docu-
-      ments (Khattab and Zaharia, 2020), especially
-      when the training data is limited (Hofstätter et al.,
-      2021). 
-  * cross-encoder做rank
-    * To address this issue, we also explore a
-      cross-encoder architecture (Nogueira and Cho,
-      2019), which computes the relevance between
-      a query and each document by jointly encoding
-      them with cross-attention.
-* Training
-  * 用cross-encoder rank model更准确地挖掘hard negative，给dual model学习
-  * ![image-20241210024754923](./AI-Algorithms/image-20241210024754923.png)
-* 评估
-  * 评测数据集：beir、lotte-pooled
-  * a new evaluation setup, X2-Retrieval
-    * closed performance and pooled performance
-* 结论：
-  * ![image-20241210030107766](./AI-Algorithms/image-20241210030107766.png)
-  * ![image-20241210030310460](./AI-Algorithms/image-20241210030310460.png)
-  * 8.2 Dataset Scale
-  * dual model效果一般(110M，table-3)，猜测需要参数量比较大或者cross-encoder才能学好
 
 
 
@@ -2573,7 +2545,61 @@ TODO [前阿里、字节大模型带头人杨红霞创业：大模型预训练�
 
 #### 大规模图文Token对齐模型 CLIP
 
+**What is CLIP?**
+
+**CLIP** (*Contrastive Language-Image Pre-training*; [Radford et al. 2021](https://arxiv.org/abs/2103.00020)) jointly trains a text encoder and an image feature extractor over the pretraining task that predicts which caption goes with which image.
+
+CLIP, developed by OpenAI, is a model designed to understand and relate images and text through contrastive learning. It learns to match images with their corresponding text descriptions and to differentiate these pairs from mismatches, enabling it to perform various tasks, from image classification to zero-shot learning.
+
+**How Does CLIP Work?**
+
+- **Contrastive Learning:** CLIP is trained on a vast dataset of image-text pairs, learning to create a shared embedding space where both images and texts are represented as vectors. The model maximizes the similarity of correct image-text pairs and minimizes it for incorrect pairs.
+- **Joint Embedding Space:** CLIP’s ability to create a joint embedding space for images and text allows it to generalize across different tasks and domains.
+
+**Limitations of CLIP**
+
+- **Fine-Grained Visual Understanding:** CLIP struggles with fine-grained visual details due to its broad learning approach. It can miss subtle distinctions within images that are critical for certain tasks.
+- **Imprecise Multimodal Alignment:** The alignment between text and images can be imprecise, especially when dealing with complex or nuanced relationships.
+- **Retrieval Performance Variability:** CLIP's performance can vary depending on the specificity of the query and the image, sometimes leading to suboptimal results.
+
 ![image-20241207210538634](./AI-Algorithms/image-20241207210538634.png)
+
+Given a batch of $N$ (image, text) pairs, CLIP computes the dense cosine similarity matrix between all $N \times N$ possible (image, text) candidates within this batch. The text and image encoders are jointly trained to maximize the similarity between $N$ correct pairs of (image, text) associations while minimizing the similarity for $N(N-1)$ incorrect pairs via a symmetric cross entropy loss over the dense matrix.
+
+See the numpy-like pseudo code for CLIP in:
+
+```python
+# image_encoder - ResNet or Vision Transformer
+# text_encoder  - CBOW or Text Transformer
+# I[n, h, w, c] - minibatch of aligned images
+# T[n, l]       - minibatch of aligned texts
+# W_i[d_i, d_e] - learned proj of image to embed
+# W_t[d_t, d_e] - learned proj of text to embed
+# t             - learned temperature parameter
+
+# extract feature representations of each modality
+I_f = image_encoder(I) #[n, d_i]
+T_f = text_encoder(T)  #[n, d_t]
+
+# joint multimodal embedding [n, d_e]
+I_e = l2_normalize(np.dot(I_f, W_i), axis=1)
+T_e = l2_normalize(np.dot(T_f, W_t), axis=1)
+
+# scaled pairwise cosine similarities [n, n]
+logits = np.dot(I_e, T_e.T) * np.exp(t)
+
+# symmetric loss function
+labels = np.arange(n)
+loss_i = cross_entropy_loss(logits, labels, axis=0)
+loss_t = cross_entropy_loss(logits, labels, axis=1)
+loss = (loss_i + loss_t) / 2
+```
+
+Compared to other methods above for learning good visual representation, what makes CLIP really special is ***“the appreciation of using natural language as a training signal”***. It does demand access to supervised dataset in which we know which text matches which image. It is trained on 400 million (text, image) pairs, collected from the Internet. The query list contains all the words occurring at least 100 times in the English version of Wikipedia. Interestingly, they found that Transformer-based language models are 3x slower than a bag-of-words (BoW) text encoder at zero-shot ImageNet classification. Using contrastive objective instead of trying to predict the exact words associated with images (i.e. a method commonly adopted by image caption prediction tasks) can further improve the data efficiency another 4x.
+
+<img src="./AI-Algorithms/image-20251220033339399.png" alt="image-20251220033339399" style="zoom:67%;" />
+
+CLIP produces good visual representation that can non-trivially transfer to many CV benchmark datasets, achieving results competitive with supervised baseline. Among tested transfer tasks, CLIP struggles with very fine-grained classification, as well as abstract or systematic tasks such as counting the number of objects. The transfer performance of CLIP models is smoothly correlated with the amount of model compute.
 
 ![image-20241207210618154](./AI-Algorithms/image-20241207210618154.png)
 
@@ -2662,6 +2688,18 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
 * Gemini：原生多模态大模型
 
 ![image-20241207211915709](./AI-Algorithms/image-20241207211915709.png)
+
+* Gemini 3
+  * **Reference**: [Gemini3预训练负责人访谈](https://mp.weixin.qq.com/s/3dpZPC1r2U1dp-YuiP8lng)
+  * **模型架构**：
+    * **Transformer MoE**：核心架构未变，强调模块化复用与组合。
+    * **非单一突破**：性能跃迁是大中小多重因素（旋钮微调）叠加及大规模团队协作改进的累积。
+  * **系统工程**：
+    * **研究即工程**：构建围绕神经网络的**复杂系统**，边界模糊化。
+    * **Pre+Post**：核心优势源于“更好的预训练”叠加“更好的后训练”（Post-training，如RLHF/RLAIF）。
+  * **趋势观点**：
+    * **数据范式**：从“无限数据”进入**“数据受限”**阶段，**合成数据**（Synthetic Data）成为Scaling关键燃料。
+    * **Scaling Law**：短期内（1年+）持续有效，Benchmark难度提升但模型智能仍在增长。
 
 * GPT-4o
   * GPT 4o本质上是要探索不同模态相互融合的大一统模型应该怎么做的问题，对于提升大模型的智力水平估计帮助不大
@@ -2929,7 +2967,7 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
   * LLM的发展触发具身智能的创业潮
   * AlphaGo，MCTS是在连续空间内，机器人也在连续空间内决策，启发了机器人
 
-##### ByteDance GR-3
+### ByteDance GR-3
 
 > 来源：[写在GR-3之后 - 知乎](https://zhuanlan.zhihu.com/p/1931870031035229302)
 
@@ -2946,6 +2984,32 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
         *   **三要素**: **本体 (Embodiment)**、**模型 (Model)**、**数据 (Data)**，三者需互相依赖、共同迭代。
         *   **当前短板**: **模型和数据**。文章犀利地指出，当前机器人难以胜任各类任务的最大短板是“**脑子笨**”。一个核心论据是：人类远程遥操作机器人的能力远超任何自主模型。
         *   **对本体设计的启示**: 机器人本体的设计不应“孤立”进行，而要与当前模型和数据的能力相匹配。过于超前的本体在“笨脑子”的驱动下也无法发挥价值。
+
+
+### DexGraspVLA：共享自主与VLA的灵巧抓取范式
+
+* 概述：字节跳动 Seed 团队提出的层级式 VLA（Vision-Language-Action）框架，结合共享自主采集与扩展触觉，解决数据采集瓶颈与泛化难题。
+* 共享自主采集（Human-in-the-loop）
+  - 人控机械臂 6-DoF，AI 控灵巧手 12-DoF；采集效率≈110条/小时，开发周期≈1天。
+  - 失败纠正闭环：失败时人类介入，系统自动积累“难例”，持续提升策略稳健性。
+  - ![image-20251218202650427](./AI-Algorithms/image-20251218202650427.png)
+* 两阶段训练（AI 副驾驶）
+  - 盲抓策略：仅依赖触觉，实现从纸杯到 1.2kg 重物的鲁棒抓取。
+  - 多模态融合：视觉+语言+双触觉特征，形成域不变表示，降低分布偏移后用模仿学习稳定训练。
+* 特征增强与臂手解耦
+  - 臂手动作解耦并融合，整体成功率由 88%→95%；遮挡场景从 19%→58%。
+* 触觉的重要性（XHAND）
+  - 无触觉 21%→单触觉 70%→双触觉 90%，触觉显著提升抓取与接触状态估计。
+* 泛化与跨硬件迁移
+  - 杂乱场景成功率≈95.5%，新物体零样本泛化≈85.6%。
+  - 跨硬件迁移：零样本到 RY-H2 仍≈81% 成功率。
+* 能力特性
+  - 长时序自然语言指令执行、对抗性物体与人为扰动鲁棒、失败恢复。
+* 关键设计洞察
+  - 用基础模型迭代将多样语言与视觉输入映射到域不变表示，再用模仿学习高效泛化。
+* 引用
+  - DexGraspVLA: A Vision-Language-Action Framework Towards General Dexterous Grasping
+  - 链接：https://arxiv.org/html/2502.20900v5
 
 
 

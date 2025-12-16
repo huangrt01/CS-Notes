@@ -123,6 +123,13 @@
   * **Milvus**: 开源向量数据库，同时有云服务 https://milvus.io/
     * 性能优化较多
   * Weaviate: 开源向量数据库，同时有云服务 https://weaviate.io/
+    * **Multi-vector Support (ColBERT/ColPali)**: 
+        * Weaviate v1.29+ 正式支持生产级多向量检索。
+        * **量化方案**: 提供 Binary/Scalar Quantization，大幅降低多向量的存储开销（e.g. 25KB -> 生产可用）。
+        * **MUVERA Encoding**:
+            * Multi-Vector Retrieval via Fixed Dimensional Encodings.
+            * 将多向量编码为单个固定维度的向量，比单纯量化更激进的压缩策略，用于平衡精度与资源。
+            * [Docs: MUVERA Encoding](https://docs.weaviate.io/weaviate/configuration/compression/multi-vectors#muvera-encoding)
   * Qdrant: 开源向量数据库，同时有云服务 https://qdrant.tech/
   * PGVector: Postgres 的开源向量检索引擎 https://github.com/pgvector/pgvector
   * RediSearch: Redis 的开源向量检索引擎 https://github.com/RediSearch/RediSearch
@@ -152,6 +159,34 @@
 * chroma https://mp.weixin.qq.com/s/D5MXQKMffdGS_gTMHE4LIQ
   * 原生支持正则搜索，因为它对代码搜索特别好用。我们还专门做了索引优化，让正则搜索在大数据量下也能跑得很快。
   * “forking”功能，可以在一百毫秒内复制一个已有索引
+
+#### 高级检索机制：ColBERT 与 PLAID
+
+*   **ColBERT (Contextualized Late Interaction over BERT)**
+    *   **Late Interaction (晚期交互)**: 传统的双塔模型 (Dual Encoder) 将 Query 和 Document 分别压缩为单个向量，丢失了细粒度信息；Cross Encoder 保留了全部交互但计算昂贵。ColBERT 采用 Late Interaction，将 Query 和 Document 编码为**多向量 (Bag of Vectors)**，即每个 Token 一个向量。
+    *   **MaxSim 操作**: 相似度计算是通过 Query 中的每个 Token 向量去寻找 Document 中与其最相似的 Token 向量 (Max)，然后将这些最大相似度求和 (Sum)。
+    *   **优势**: 兼顾了双塔的预计算特性（Document 向量可离线计算）和 Cross Encoder 的细粒度交互能力。
+    *   **挑战**: 存储和检索成本高。每个文档存 $N$ 个向量，检索时需要进行大量的向量相似度计算。
+
+*   **PLAID (Performance-optimized Late Interaction Driver)**
+    *   PLAID 是 ColBERT 团队推出的工程优化方案，旨在解决 Late Interaction 在大规模检索时的延迟问题。它通过**质心剪枝 (Centroid Pruning)** 极大地加速了候选生成过程。
+
+*   **PLAID 的核心机制：Centroid Pruning**
+    1.  **聚类与索引 (Clustering & Indexing)**:
+        *   使用 K-means 将所有文档的 Token 向量聚类成 $K$ 个簇 (Centroids)。
+        *   构建倒排索引 (IVF)，将 Centroid ID 映射到对应的 Document Token 列表。
+        *   文档 Token 存储为 `(Centroid_ID, Residual)` 的形式，其中 Residual 是量化后的残差向量。
+    2.  **质心交互 (Centroid Interaction)**:
+        *   在检索时，首先计算 Query Token 向量与所有 Centroids 的相似度。这一步计算量相对较小（因为 Centroids 数量有限，且 Query Token 少）。
+    3.  **动态剪枝 (Dynamic Pruning)**:
+        *   这是 PLAID 的关键创新。对于每个 Query Token，不需要扫描所有包含相关 Token 的倒排链。
+        *   PLAID 根据 Query Token 与 Centroids 的相似度分数，动态选择**少量高分 Centroids**。
+        *   **剪枝策略**: 通常选择分数最高的 top-k 个 Centroids，或者选择分数总和占一定比例（如 90% 质量）的 Centroids 集合。
+        *   这大大减少了后续需要解压和计算真实距离的 Token 数量。
+    4.  **多阶段检索 (Multistage Pipeline)**:
+        *   **Stage 1: 质心过滤**: 利用上述剪枝机制，快速筛选出候选文档列表 (Candidate Generation)。
+        *   **Stage 2: 粗略评分**: 使用解压后的近似向量计算 MaxSim，进一步过滤。
+        *   **Stage 3: 精细重排**: 对极少数顶层候选文档，加载原始高精度向量进行最终打分。
 
 ### 难点
 
@@ -262,17 +297,18 @@
     * complex reasoning across multiple evidence graphs grounded on KGs
       * MindMap
 
-### Embedding模型
+### Embedding 模型
+
+#### 训练原理
 
 * 向量模型怎么训练：
-
   * 构建相关（正例）与不相关（负例）的句子对儿样本
-
   * 训练双塔式模型，让正例间的距离小，负例间的距离大
-
   * https://www.sbert.net/
 
-* OpenAI 新发布的两个 Embedding 模型
+#### 典型模型
+
+* **OpenAI Embeddings**
   * text-embedding-3-large、text-embedding-3-small
   * 特点：**越大越准、越小越快**
     * 支持自定义的缩短向量维度，从而在几乎不影响最终效果的情况下降低向量检索与相似度计算的复杂度
@@ -280,6 +316,77 @@
   * 可变长度的 Embedding 技术：
     * https://arxiv.org/abs/2205.13147 Matryoshka Representation Learning
   * ![mteb](./AI-Applied-Algorithms/mteb.png)
+
+* **Doubao Embeddings**
+  * **豆包向量模型 (Doubao-Embedding)**
+    * 在 CMTEB 中文文本向量评测榜单上，以 75.62 高分刷新榜单 SOTA。
+    * 在多模态评测榜单 MMEB_v2 中，图片、视频向量化任务双双登顶 SOTA。
+      * MMEB_v2 Image 榜单：77.78 分，领先第二名 5.6 分。
+      * MMEB_v2 Video 榜单：大幅领先第二名 20.1 分。
+  * **豆包重排模型 (Doubao-Rerank)**
+    * 纯文本任务：在 CMTEB 中文文本向量评测榜单上，以 79.00 高分超过其他 Rerank 模型。
+    * 多模态任务：在 ViDoRe V1/V2、MMEB V1 中均取得榜单第 1 名。
+
+* **Jina Embeddings (v3 & ColBERT)**
+    * **Jina Embeddings v3**:
+        * **LoRA Adapters**: 针对不同任务（Retrieval, Clustering, Classification 等）动态切换 Adapter，实现 Task-specific 优化。
+        * **8192 Context**: 支持超长上下文（ALiBi），适合长文档检索。
+        * **Matryoshka Representation**: 支持弹性输出维度（如 1024->128），灵活平衡存储与精度。
+    * **Jina ColBERT**:
+        * **Late Interaction**: 采用 Multi-vector (MaxSim) 机制，保留细粒度交互信息。
+        * **Integration**: 常作为 Reranker 或 High-precision Retrieval 阶段使用。
+
+* **Qwen-3 Embedding**
+    * [arXiv:2506.05176](https://arxiv.org/pdf/2506.05176)
+    * **核心特性**:
+        * **Multi-stage Training**: 基于合成数据（Synthetic Data）的多阶段训练策略。
+        * **InfoNCE Loss**: 采用对比损失最大化正样本相似度，挖掘 Hard Negatives。
+        * **Model Merging**: 引入模型合并技术提升泛化能力。
+    * **架构**: 在输入序列末尾添加 `[EOS]`，取其 hidden state 作为 embedding。
+    * ![image-20250708163208666](./AI-Applied-Algorithms/image-20250708163208666.png)
+
+#### 多模态 Embedding (Multimodal Embeddings)
+
+* **Visualized BGE (Bootstrapped Grid Embedding)**
+    * **原理**:
+        * **Grid-Based**: 不像 CLIP 处理整图，BGE-Visualized-M3 将图像切分为 Grid 分别 Embedding，捕捉局部细节。
+        * **Bootstrapping**: 迭代优化对图像内容的理解。
+        * **Stable Diffusion Augmentation**: 利用 SD 生成编辑后的图像作为增强数据。
+    * **BGE-Visualized-M3**: 支持 Dense Retrieval, Multi-Vector Retrieval, Sparse Retrieval。
+    * **优势**: 细粒度细节识别，复杂图像理解优于 CLIP。
+
+* **VISTA (Visualized Text Embedding)**
+    * **核心**: Deep fusion of text and image data.
+    * **架构**:
+        * ViT 作为图像 Tokenizer。
+        * 将 Visual Tokens 与 Text Tokens 拼接，输入 Frozen Text Encoder。
+        * **Unified Embedding Space**: 统一的图文空间。
+    * **训练**: 两阶段（Cross-modal training -> Fine-tuning on composed image-text data）。
+    * ![VISTA](./AI-Applied-Algorithms/rygUM4x9yYMvOzaCGkxrVuR0.png)
+
+* **MagicLens (Google)**
+    * **核心**: 支持 **Open-ended Instructions** 的图像检索（不仅仅是视觉相似度）。
+    * **训练**: 36.7M image triplets (Query Image, Instruction, Target Image)。
+    * **架构**: Dual-encoder。
+    * **优势**: 能理解 "inside view of", "different angle" 等语义指令，支持自然语言表达的复杂搜索意图。
+    * ![MagicLens](./AI-Applied-Algorithms/ZlUMrMOnFObZ7sRbqFe7d8QYZcI.png)
+
+#### 进阶技术
+
+##### **Instruction-Tuned & Task-Aware Retrieval**
+
+* 传统 Embedding 模型通常只能处理语义相似度，缺乏对用户意图的显式建模。
+* **TART (Task-aware Retrieval with Instructions)**:
+    * 提出了一种新的范式：Retrieval with instructions。显式建模用户的 Intent。
+    * **BERRI 数据集**: 收集了 ~40 个不同领域的检索数据集，并由专家标注了 diverse instructions。
+    * ![image-20241210015507819](./AI-Applied-Algorithms/image-20241210015507819.png)
+    * **模型架构**: Dual-encoder，将 Instruction 和 Query 拼接后输入。通过 Cross-encoder 挖掘 Hard Negatives。
+    * **Hard Negatives**:
+        * ![image-20241210015627115](./AI-Applied-Algorithms/image-20241210015627115.png)
+    * ![image-20241210014430460](./AI-Applied-Algorithms/image-20241210014430460.png)
+    * [Ref: TART GitHub](https://github.com/facebookresearch/tart)
+
+#### 开源工具
 
 * 开源库：
   * https://github.com/FlagOpen/FlagEmbedding
@@ -1310,6 +1417,24 @@ https://github.com/OpenBMB/XAgent
 
 
 
+#### AutoGLM & Security Risks
+> https://mp.weixin.qq.com/s/O_tysMMxYv9nkmcFCHC72g
+* **AutoGLM 技术原理**：
+    * 智谱开源的 AutoGLM 是一个能够模拟用户在手机上操作的 Agent。
+    * 它通过 ADB (Android Debug Bridge) 权限控制手机，并依赖第三方输入法 `AdbKeyBoard` 来实现文本输入（因为通过 ADB 直接输入中文存在限制）。
+* **AdbKeyBoard 安全风险**：
+    * **原理**：AdbKeyBoard 作为一个 Android 输入法，通过接收广播（Broadcast）来获取需要输入的文本。
+    * **广播机制的脆弱性**：
+        1. **无权限验证**：广播机制不需要特殊权限，任何 App 都可以发送和接收。
+        2. **任意输入**：恶意 App 可以发送广播，指示 AdbKeyBoard 输入任意内容。
+        3. **输入嗅探**：恶意 App 可以注册相同的 BroadcastReceiver，从而窃取所有通过 AdbKeyBoard 输入的内容（包括隐私信息）。
+        4. **输入拦截 (DoS)**：恶意 App 可以通过 `abortBroadcast()` 中断广播，导致 AutoGLM 无法输入。
+        5. **中间人攻击 (MITM)**：恶意 App 可以拦截广播，篡改内容后再发送给 AdbKeyBoard，导致 Agent 输入错误或恶意指令。
+* **结论**：
+    * 将依赖 AdbKeyBoard 的方案直接开放给普通用户使用是极不负责任的。
+    * 任何安装了此类 Agent（及 AdbKeyBoard）的手机，其输入内容都暴露在被所有 App 监听和篡改的风险下。
+    * AutoGLM 请求 ADB 权限本身也带来了巨大的攻击面（自动获得大量敏感权限）。
+
 ## Context-Engineering、记忆与个性化
 
 > TODO 上下文工程Intro https://mp.weixin.qq.com/s/3t4PjpZcMVU1wCO0ThUs2A
@@ -1344,7 +1469,7 @@ https://github.com/OpenBMB/XAgent
   * 针对不同场景实现不同的文件系统，再串联到一个大平台上。
   * Memory 可以通过文件夹（如 long_term, short_term）来组织。
   * 消息传递用 QueueFS
-`cat context.txt | llm > output.txt && exec action.sh`
+  `cat context.txt | llm > output.txt && exec action.sh`
 
 ### 火山引擎 MineContext
 
@@ -1554,6 +1679,35 @@ https://github.com/OpenBMB/XAgent
 
 **49.** 也有观点认为，虽然 Online Learning 具体实现形式尚不清晰，但研究方向已经较为明确，也就是**通过交互、探索（exploration）和奖励的自我收集（reward self-collection），让模型能够不断改进自身能力**。
 
+##### **案例：推荐系统中的延迟反馈与生存分析**
+
+**问题背景：延迟反馈 (Delayed Feedback)**
+在推荐系统（尤其是广告 CVR 预估）中，用户点击广告后，可能不会立即发生转化（Conversion），而是经过一段时间（几分钟到几天）才转化。
+*   **Online Learning 的困境**：如果模型只使用“已完成”的样本训练，会丢失最新的实时数据；如果将“点击但尚未转化”的样本直接标为负样本，会产生 **False Negative**。
+*   **Censored Data (删失数据)**：对于那些在观测时刻 $t$ 已经点击但尚未转化的样本，我们只知道它在 $[0, t]$ 期间未转化，但不知道未来是否会转化。这类样本被称为**右删失 (Right Censored)** 样本。
+
+**核心概念：生存分析 (Survival Analysis)**
+生存分析是统计学中用于分析“事件发生时间”的方法，完美契合延迟反馈问题。
+*   **$T$**: 从点击到转化的时间随机变量。
+*   **生存函数 (Survival Function) $S(t)$**:
+    $$ S(t) = P(T > t) $$
+    表示经过时间 $t$ 后仍未发生转化的概率。
+*   **风险函数 (Hazard Function) $h(t)$**:
+    $$ h(t) = \lim_{\Delta t \to 0} \frac{P(t \le T < t + \Delta t | T \ge t)}{\Delta t} = \frac{f(t)}{S(t)} $$
+    表示在时间 $t$ 瞬间发生转化的条件概率密度。
+
+**解决方案**
+利用生存分析改进 CVR 模型损失函数，同时利用“已转化”和“未转化（删失）”样本。
+假设样本 $i$ 的点击时间为 $c_i$，观测时间为 $o_i$，如果发生了转化，转化时间为 $t_i$。
+*   **已转化样本 (Uncensored)**: 发生了转化，持续时间 $y_i = t_i - c_i$。
+    *   Likelihood Contribution: $f(y_i) = h(y_i) S(y_i)$
+*   **未转化样本 (Censored)**: 截止观测时刻 $o_i$ 仍未转化，持续时间 $e_i = o_i - c_i$。
+    *   Likelihood Contribution: $P(T > e_i) = S(e_i)$
+
+**损失函数 (Negative Log-Likelihood)**:
+$$ L = - \sum_{i \in \text{observed}} \log(h(y_i) S(y_i)) - \sum_{j \in \text{censored}} \log(S(e_j)) $$
+
+通过优化该 Loss，模型可以同时学习 CVR（是否转化）和 CTCVR（何时转化），从而无偏地利用实时流数据。
 
 
 ##### **Memory 是重要组成部分**
@@ -2046,40 +2200,66 @@ https://github.com/OpenBMB/XAgent
 
 ###  搜索算法
 
-#### Hybrid Search
+#### Hybrid Search (多路召回与融合检索)
 
-* Hybrid search is a combination of full text and vector queries that execute against a search index that **contains both searchable plain text content and generated embeddings**. For query purposes, hybrid search is:
-  * A single query request that includes both `search` and `vectors` query parameters
-  * Executing in parallel
-  * With merged results in the query response, scored using Reciprocal Rank Fusion (RRF)
-* 背景：
-  * 实际生产中，传统的关键字检索（稀疏表示）与向量检索（稠密表示）各有优劣。
-    * 举个具体例子，比如文档中包含很长的专有名词，关键字检索往往更精准而向量检索容易引入概念混淆。
-    * e.g. 在医学中“小细胞肺癌”和“非小细胞肺癌”是两种不同的癌症
-  * 很多向量数据库都支持混合检索，比如 [Weaviate](https://weaviate.io/blog/hybrid-search-explained)、[Pinecone](https://www.pinecone.io/learn/hybrid-search-intro/) 等
-  
-* [Relevance scoring in hybrid search using Reciprocal Rank Fusion (RRF)](https://learn.microsoft.com/en-us/azure/search/hybrid-search-ranking)
-  * Kv search (BM25)
-  * Vector search (HNSW)
-  * RRF: $rrf(d)=\sum_{a\in A}\frac{1}{k+rank_a(d)}$
+*   **核心定义**
+    *   **Hybrid Search**：一种结合全文检索（Keyword-based）和向量检索（Vector-based）的融合策略。它在一个搜索索引中同时利用**可搜索的纯文本内容**和**生成的 Embeddings**。
+    *   **多路召回 (Multi-channel Recall)**：利用多种检索方法（视角）从庞大数据集中检索信息，确保召回的全面性（Recall）。除了关键字和向量，还可以扩展到知识图谱索引、树状摘要索引等。
 
-* [VantageDiscovery的电商搜索实践](https://www.vantagediscovery.com/post/compound-ai-search-where-keywords-and-vectors-are-just-the-beginning)
+*   **背景与动机**
+    *   **互补优势**：传统的关键字检索（稀疏表示）与向量检索（稠密表示）各有优劣。
+        *   **关键字 (BM25)**：擅长精确匹配，特别是包含专有名词、产品型号或精确短语的查询。
+            *   *e.g. 在医学中“小细胞肺癌”和“非小细胞肺癌”是两种不同的癌症，向量检索容易混淆，而关键字检索能精确区分。*
+        *   **向量 (HNSW/Embedding)**：擅长语义理解，处理模糊查询、同义词或跨语言检索。
+    *   **融合必要性**：单一索引难以应对复杂查询。融合检索结合多种方法，利用排序算法重排，弥补单一索引不足。
 
-  * 高级能力
-    * **Intelligent Weighting**: Dynamically adjust the importance of different search factors based on business goals or seasonal priorities.
-    * **Flexible Matching Criteria**: Find relevant results even with partial query matches, ensuring customers always find suitable products.
-    * **Contextual Semantic Adjustment**: Control the degree of semantic interpretation based on product categories or query types, optimizing for both precision and recall.
-    * **Category-Specific Models**: Utilize different AI models for various product types, ensuring specialized understanding across diverse catalogs.
+*   **技术实现与融合策略**
+    *   **并行检索**：单次查询请求同时包含 `search` (文本) 和 `vectors` (向量) 参数，并行执行。
+    *   **融合算法 (Fusion Algorithms)**：
+        *   **RRF (Reciprocal Rank Fusion)**：一种无需归一化分数的简单高效算法，通过倒数排名融合结果。
+            *   公式：$rrf(d)=\sum_{a\in A}\frac{1}{k+rank_a(d)}$
+        *   **加权融合 (Intelligent Weighting)**：根据业务目标或查询类型，动态调整不同路（如关键字 vs 向量）的权重。
+    *   **高级融合策略**：
+        *   **Query Rewrite & Expansion**：将输入问题扩展为多种表达形式分别检索（LLM实现或 `QueryTransform`），再对结果重排。
+        *   **递归分层检索 (Recursive Retrieval)**：类似找书过程（出版社->简介->目录->章节），在不同层次构建节点和检索器，建立层级链接，自动向下递归探索。相比扁平检索，能更精准定位细节。
+        *   **复合方案**：同时结合问题扩展和多种索引扩展（向量、关键词、KG等）。
 
-  * Imagine a customer searching for a "cozy blue sweater for a winter wedding." A compound AI system handles this complex query by:
-    * Analyzing intent: identifying style, color, item, and occasion.
-    * Expanding context: considering related concepts like "formal knitwear" or "elegant cold-weather attire."
-    * Performing semantic search using advanced embeddings.
-    * Conducting traditional keyword search in parallel.
-    * Blending results, prioritizing wedding-appropriate items.
-    * Returning a curated selection of relevant products, including complementary accessories.
-  * https://docs.vantagediscovery.com/docs/search-more-like-these-tm#example-soft-chair--item-27--two-pinterest-images
-    * ![more-like-these-overview](./AI-Applied-Algorithms/more-like-these-overview.webp)
+*   **实践案例：电商搜索 (VantageDiscovery)**
+    *   **场景**：用户搜索 *"cozy blue sweater for a winter wedding"*。
+    *   **Compound AI System 处理流程**：
+        1.  **意图分析 (Intent)**：识别风格、颜色、单品、场合。
+        2.  **上下文扩展 (Context)**：关联概念如 *"formal knitwear"* 或 *"elegant cold-weather attire"*。
+        3.  **多路并行**：执行语义搜索 (Advanced Embeddings) + 传统关键词搜索。
+        4.  **结果融合**：混合结果，优先排序适合婚礼的商品。
+    *   **高级能力**：
+        *   **Flexible Matching Criteria**：部分匹配也能召回相关结果。
+        *   **Category-Specific Models**：不同品类使用不同的 AI 模型。
+    *   https://docs.vantagediscovery.com/docs/search-more-like-these-tm#example-soft-chair--item-27--two-pinterest-images
+        *   ![more-like-these-overview](./AI-Applied-Algorithms/more-like-these-overview.webp)
+
+*   **工具支持**
+    *   很多向量数据库都支持混合检索，比如 [Weaviate](https://weaviate.io/blog/hybrid-search-explained)、[Pinecone](https://www.pinecone.io/learn/hybrid-search-intro/) 等。
+    *   框架支持：LlamaIndex (`QueryFusionRetriever`), LangChain 等。
+
+#### 实验分析：Trade-offs in Hybrid Search
+
+*   **论文**: [Balancing the Blend: An Experimental Analysis of Trade-offs in Hybrid Search (arXiv:2508.01405)](https://arxiv.org/abs/2508.01405)
+*   **核心背景**: 混合检索（Lexical + Semantic）已成主流，但系统设计面临“准确率-效率-成本”的复杂权衡。该研究首次系统性评估了四种检索范式及其组合在 11 个数据集上的表现。
+*   **四大检索范式**:
+    *   **FTS (Full-Text Search)**: 传统全文检索（BM25），擅长精确匹配。
+    *   **SVS (Sparse Vector Search)**: 学习型稀疏检索（如 SPLADE），弥补词汇不匹配。
+    *   **DVS (Dense Vector Search)**: 稠密向量检索（Bi-encoder），擅长语义泛化。
+    *   **TenS (Tensor Search)**: 多向量 Late Interaction（如 ColBERT），精度最高但开销最大。
+*   **关键发现 (Key Findings)**:
+    1.  **"Weakest Link" 现象**: 在融合（Fusion）时，引入一个**弱路径**可能会显著拖累整体准确率。
+        *   *Implication*: 融合前必须进行 Path-wise Quality Assessment，宁缺毋滥。
+        *   *Example*: 如果 **DVS** (90分) 已经找到了正确文档，但强行融合一个低质量的 **FTS** (40分)，FTS 带来的大量噪声文档可能会在 RRF 排序中挤占正确文档的位置，导致最终效果 (e.g. 80分) 反而不如单路 DVS。
+    2.  **无万能解 (No One-Size-Fits-All)**: 最优配置高度依赖数据特征和资源限制。
+        *   *Data-driven Trade-offs*: 需要根据 Resource Constraints 动态选择方案。
+    3.  **TRF (Tensor-based Re-ranking Fusion) 的优越性**:
+        *   **定义**: 使用 Tensor Search (ColBERT) 仅作为**重排序器 (Reranker)**，而非全库检索。
+        *   **效果**: 被识别为**High-efficacy Alternative**。它提供了接近 Tensor Search 的高语义精度，但计算和内存成本仅为其一小部分（Fraction of cost）。
+        *   *Recommendation*: 相比于复杂的 Multi-way Fusion，"Simple Recall + Tensor Reranking" 往往是性价比最高的选择。
 
 #### 多目标 LLM Ranking、插件系统
 
@@ -2322,7 +2502,6 @@ Query扩展：根据粒度的不同分为Term粒度和Query粒度两种
 #### Literature Review
 
 * Pseudo-Relevance Feed- back (PRF)
-* Document Expansion
 * 数据集 Evaluation：https://github.com/amazon-science/esci-data
 
 #### A Survey of Query Optimization in Large Language Models

@@ -135,6 +135,9 @@ class FullBasicModel(nn.Module):
   * torch.profile
 * operator call
   * ![image-20250320022630969](./pytorch/image-20250320022630969.png)
+* Custom Python Operators
+  * Use `torch.library.custom_op` + `register_fake` to make Python code compatible with `torch.compile` (avoid graph breaks).
+  * [Snippet](snippets/pytorch-op.py)
   
 
 ## Tensor
@@ -199,6 +202,15 @@ class FullBasicModel(nn.Module):
 * ![image-20250319231025721](./pytorch/image-20250319231025721.png)
   * **在多输出操作的反向传播中，前向传播的输出会作为反向传播对应模块的输入**。通过 `output_nr`（前向输出编号）和 `input_nr`（反向输入编号）的映射，PyTorch 的自动求导系统能准确传递梯度，保证复杂计算图（如特征值分解 + 矩阵乘法）的反向传播正确执行。
 * ![image-20250320020726734](./pytorch/image-20250320020726734.png)
+
+### Gradient Check
+
+*   **`torch.autograd.gradcheck`**: 用于验证自定义 Autograd Function 的梯度计算是否正确。
+*   **原理**：通过数值微分（Finite Difference）计算近似梯度，并与反向传播（Analytical Gradient）计算的梯度进行对比。
+*   **Best Practices**:
+    *   使用 `double` 精度 (float64) 以减少数值误差。
+    *   输入 Tensor 需要设置 `requires_grad=True`。
+    *   Example: [pytorch-autograd.py](snippets/pytorch-autograd.py)
 
 ## Module
 

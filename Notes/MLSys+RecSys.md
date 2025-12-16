@@ -1569,6 +1569,28 @@ $$\hat{X} = X \cdot \text{diag}(s)^{-1}, \quad \hat{W} = \text{diag}(s) \cdot W$
 * 细节techniques：
   * **without quantizing residuals**： F(x) + x，仅对F(x)量化
 
+##### Element-wise Gradient Scaling (EWGS)
+
+> **Network Quantization with Element-wise Gradient Scaling** (Lee et al., 2021)
+
+* **Motivation**:
+    * 在量化感知训练 (QAT) 中，通常使用 Straight-Through Estimator (STE) 来解决量化函数不可导的问题。
+    * **STE 的局限性**: STE 简单地将梯度视为 1（透传），**忽略了权重在量化区间内的具体位置（即量化误差的大小）**。
+        * **无法有效跨越边界**: 无论 $x$ 是在量化中心（误差小）还是在边界边缘（误差大），STE 提供的梯度大小都一样。当优化方向需要 $x$ 跳变到下一个量化级时，STE 的梯度可能不足以推动 $x$ 跨越决策边界，导致其在边缘无效震荡。
+        * **中心稳定性差**: 当 $x$ 已经处于正确的量化级并接近中心时，STE 仍提供全量梯度，容易将 $x$ 推离中心，反而增加了量化噪声。
+* **Method**:
+    * 提出一种基于量化误差自适应调整梯度的机制 **EWGS**。
+    * 梯度缩放公式：
+        $$ g_{in} = g_{out} \cdot (1 + \alpha \cdot \text{sign}(g_{out}) \cdot \text{error}) $$
+        其中 $error = Q(x) - x$。
+    * **机制解析**:
+        * **加速翻转 (Boost)**: 当梯度方向指向“下一个量化区间”（即试图跨越边界）时，梯度被放大，像“助推器”一样帮助权重快速跳出当前状态。
+        * **稳定收敛 (Dampen)**: 当梯度方向指向“当前量化中心”时，梯度被缩小，起到“刹车”作用，使权重稳定在量化中心附近，减小最终误差。
+* **Advantage**:
+    * 相比 STE，EWGS 提供了更准确的梯度估计，提高了训练稳定性和模型收敛速度。
+    * 易于实现，计算开销极小（仅增加了逐元素的乘加操作）。
+
+
 ##### W4A8 + QAT 工程实践
 
 >  [Quantization-Aware Training for Large Language Models with PyTorch](https://pytorch.org/blog/quantization-aware-training/)
@@ -2911,6 +2933,39 @@ for prediction, label, img in zip(p,l,i):
       * 《Observational data for heterogeneous treatment effects with application to recommender systems》
       * People with higher correlation gain more value from that specific event, as long as we make this method incremental and control for potential confounding variables.
     * pass 2: 混排，contextual features, such as content-type diversity rules
+
+#### 在线服务稳定性与容错
+
+推荐系统在线服务（Online Serving）面临高并发、低延迟、高可用的严格要求。稳定性治理主要针对以下四类难点：
+
+1. **扇出复杂度（Fan-out Complexity）**
+   * **问题**：推荐系统通常需要并发调用多个下游服务（召回、粗排、精排、过滤等），扇出系数大。
+   * **策略**：
+     * **子请求失败策略**：需根据链路重要性灵活决策。
+       * **Core Path**（如精排）：失败即 Fail，或重试（需控制粒度）。
+       * **Non-Core Path**（如某些非关键召回源）：忽略失败 (Best-effort)，或使用默认值兜底。
+     * **熔断与降级**：当下游服务不可用时，快速熔断，避免拖垮上游；启用降级方案（如返回热门列表）。
+
+2. **下游延时波动（Latency Variability）**
+   * **问题**：高并发下，下游服务的 P99 延迟尖刺会被放大（Tail at Scale）。假设一个请求需要扇出 $N$ 个子请求，如果每个子请求的 P99 是 $p$，则整体请求遇到慢节点的概率是 $1 - (1 - p)^N$。当 $N$ 很大时，长尾概率显著增加。
+   * **对策**：
+     * **Backup Requests / Hedged Requests**：在请求发出一段时间后未收到响应，发送第二个请求，取最快返回的那个（参考 Jeff Dean 的 *The Tail at Scale*）。
+     * **Timeouts**：设置合理的超时时间，避免无限等待。
+     * **Caching**：利用缓存减少对后端服务的依赖（参考 RobinHood）。
+
+3. **系统技术复杂度（System Complexity）**
+   * **问题**：涉及底层软硬件依赖、多机房部署、异构计算（GPU/TPU）。
+   * **对策**：
+     * **异构硬件容错**：GPU 故障时 fallback 到 CPU 或其他可用节点。
+     * **多机房容灾**：异地多活，具备流量快速切换和切分能力。
+     * **全链路压测**：定期模拟故障和高负载，验证系统的健壮性。
+
+4. **业务复杂度（Business Complexity）**
+   * **问题**：业务维度（大促、热点事件）或模型维度（复杂模型上线）导致的流量突增。
+   * **对策**：
+     * **自动扩缩容（Auto-scaling）**：基于 CPU/GPU 利用率、QPS 等指标自动调整资源。
+     * **限流（Rate Limiting）**：在入口处限制流量，保护系统不过载。
+     * **资源隔离**：不同业务或模块间资源隔离，防止相互影响。
 
 #### Facebook
 

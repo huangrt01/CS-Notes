@@ -439,7 +439,7 @@ i:s:1
 
 #### Profilers
 
-**CPU**: [两种CPU profilers](https://jvns.ca/blog/2017/12/17/how-do-ruby---python-profilers-work-)，tracing and sampling profilers
+*   **CPU**: [perf](https://perf.wiki.kernel.org/index.php/Main_Page)
 
 * Python
   * cProfile: `python -m cProfile -s tottime grep.py 1000 '^(import|\s*def)[^,]*$' *.py`
@@ -565,6 +565,12 @@ Summary
   'fd -e jpg' ran
    21.89 ± 2.33 times faster than 'find . -iname "*.jpg"'
 ```
+
+###### Network Benchmark
+
+* [`wrk`](https://github.com/wg/wrk) - A modern HTTP benchmarking tool capable of generating significant load when run on a single multi-core CPU.
+  * Supports Lua scripting for dynamic request generation and response processing.
+  * [Snippet: wrk POST with Lua script](snippets/lua-wrk-post.lua)
 
 As it was the case for debugging, browsers also come with a fantastic set of tools for profiling webpage loading, letting you figure out  where time is being spent (loading, rendering, scripting, &c). More info for [Firefox](https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler) and [Chrome](https://developers.google.com/web/tools/chrome-devtools/rendering-tools).
 

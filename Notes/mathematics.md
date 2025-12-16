@@ -80,6 +80,142 @@
   * **共轭先验分布的概念**：根据先验分布计算后验分布，后验分布和先验分布属于同一个分布族
   * 应用：Thompson sampling
 
+### 样本均值的方差 (Variance of Sample Mean)
+
+**核心结论**：样本均值 $\bar{Y}$ 的方差是总体方差 $\sigma^2$ 的 $1/N$。即：
+$$Var(\bar{Y}) = \frac{\sigma^2}{N}$$
+
+**直观理解**：
+*   **平均作用抵消波动**：当你取平均值时，极大的数和极小的数会相互抵消，使得平均值 $\bar{Y}$ 比单个样本 $Y_i$ 更稳定（波动更小）。
+*   **大数定律**：样本量 $N$ 越大，平均值越接近真实的总体均值，其波动范围（方差）就越小。如果 $N$ 无穷大，方差趋近于 0，均值就变成了一个确定值。
+
+**推导过程**：
+1.  **定义**：假设有 $N$ 个**独立同分布 (i.i.d)** 的随机变量 $Y_1, Y_2, ..., Y_N$，每个变量的方差都是 $\sigma^2$，即 $Var(Y_i) = \sigma^2$。
+2.  **样本均值公式**：$\bar{Y} = \frac{1}{N} \sum_{i=1}^{N} Y_i = \frac{Y_1 + Y_2 + ... + Y_N}{N}$
+3.  **计算方差**：
+    $$
+    \begin{aligned}
+    Var(\bar{Y}) &= Var(\frac{1}{N} \sum_{i=1}^{N} Y_i) \\
+    &= \frac{1}{N^2} Var(\sum_{i=1}^{N} Y_i) \quad \text{(常数提取性质: } Var(kX) = k^2 Var(X) \text{)} \\
+    &= \frac{1}{N^2} \sum_{i=1}^{N} Var(Y_i) \quad \text{(独立性: 独立变量和的方差等于方差的和)} \\
+    &= \frac{1}{N^2} \sum_{i=1}^{N} \sigma^2 \\
+    &= \frac{1}{N^2} \cdot (N \cdot \sigma^2) \\
+    &= \frac{\sigma^2}{N}
+    \end{aligned}
+    $$
+
+### 假设检验 (Hypothesis Testing)
+
+用于判断样本观测结果是否支持某个假设（如 AB Test 中“新策略比旧策略好”），排除随机波动的干扰。
+
+#### Z-score (标准分数)
+
+*   **定义**：描述观测值距离总体均值有多少个标准差。用于衡量数据点在分布中的相对位置。
+*   **公式**：$$z = \frac{\bar{x} - \mu}{\sigma / \sqrt{n}}$$
+    *   $$\bar{x}$$: 样本均值
+    *   $$\mu$$: 总体均值（或原假设下的均值，如 0）
+    *   $$\sigma$$: 总体标准差
+    *   $$n$$: 样本量
+*   **解读**：
+    *   $$z > 0$$: 高于均值；$$z < 0$$: 低于均值。
+    *   $$|z|$$ 越大，偏离均值越远，发生该事件的概率越低（在 $$H_0$$ 成立时）。
+
+#### P-value (P值)
+
+*   **定义**：在**原假设 ($$H_0$$) 成立**的前提下，观察到当前样本统计量（或更极端情况）的概率。
+*   **解读**：
+    *   P 值是**反对原假设的证据强度**。P 值越小，拒绝 $$H_0$$ 的理由越充分（结果越显著）。
+    *   通常设定显著性水平 $$\alpha$$ (如 0.05)：
+        *   $$P < 0.05$$：**统计显著 (Significant)**，拒绝 $$H_0$$（认为差异真实存在）。
+        *   $$P \ge 0.05$$：**不显著 (Not Significant)**，不能拒绝 $$H_0$$（可能是真的没区别，也可能是样本量太小，Power 不足）。
+*   **Z-score 与 P-value 的关系** (在正态分布下)：
+    *   $$|z| = 1.96 \Rightarrow P = 0.05$$ (双尾)
+    *   $$|z| = 2.58 \Rightarrow P = 0.01$$ (双尾)
+    *   $$|z| > 1.96$$ 即意味着 $$P < 0.05$$。
+
+#### 单样本检验 (One-Sample Testing)
+
+*   **定义**：检验单个样本的均值 $\bar{X}$ 是否显著不同于一个预设的已知值 $\mu_0$。
+*   **统计量 (t-test)**: $t = \frac{\bar{X} - \mu_0}{s / \sqrt{n}}$
+*   **关于时间维度 (Time Dimension)**:
+    *   **通常情况**：单样本检验是**横截面**的（比较当前样本 vs 标准值）。
+    *   **特殊情况 (配对检验)**：当进行“前后对比”（Pre-Post Analysis）时，我们会计算差值 $D_i = X_{after} - X_{before}$。对差值序列 $D$ 做**单样本检验**（检验均值是否为0），本质上就是**配对样本 t 检验 (Paired Sample t-test)**。这是单样本检验处理时间维度最常见的方式。
+    *   **注意**：如果是长周期的**时间序列数据**（如股票价格），由于存在自相关性（Autocorrelation），不能直接使用简单的单样本检验，需使用时间序列模型。
+
+#### 双样本检验 (Two-Sample Testing)
+
+*   **Welch's t-test (韦尔奇 t 检验)**
+    *   **适用场景**：比较两个独立样本的均值是否相等。**不需要**假设两个总体的方差相等（即具有异方差性），也不要求样本量相等。比 Student's t-test 更通用且稳健。
+    *   **统计量**:
+        $$t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{\frac{s_1^2}{N_1} + \frac{s_2^2}{N_2}}}$$
+        *   $\bar{X}_i, s_i^2, N_i$: 第 $i$ 组的样本均值、样本方差、样本量。
+    *   **自由度 (df)**: 计算较复杂（Welch–Satterthwaite equation），通常非整数。
+
+#### 集成检验与元分析 (Ensemble Testing & Meta-Analysis)
+
+用于将多个独立的微小实验结果聚合，解决单次实验样本不足导致统计效力（Power）低下的问题。
+
+*   **符号检验 (Sign Test)**
+    *   **原理**：一种非参数检验方法。将每个实验看作一次伯努利试验（Bernoulli Trial）。
+    *   **假设**：
+        *   $H_0$: 新策略无正向效果，即单个实验正向的概率 $P(Lift > 0) = 0.5$。
+        *   $H_1$: 新策略有正向效果，即 $P(Lift > 0) > 0.5$。
+    *   **统计量**：$N$ 个实验中正向结果的个数 $k$。服从二项分布 $k \sim B(N, 0.5)$。
+    *   **P值计算**：$P(X \ge k) = \sum_{i=k}^{N} \binom{N}{i} 0.5^N$。
+
+*   **固定效应模型 (Fixed Effect Model)**
+    *   **原理**：假设所有实验都在测量同一个真实的总体效应值 $\theta$（True Effect Size），观测值的差异仅源于抽样误差。
+    *   **逆方差加权 (Inverse-Variance Weighting)**：
+        *   为了获得最小方差无偏估计 (MVUE)，权重应与方差成反比。
+        *   权重 $w_i = \frac{1}{Var(\hat{\theta}_i)} \approx \frac{1}{\sigma_i^2}$。
+    *   **聚合公式**：
+        *   全局效应估计：$\hat{\theta}_{global} = \frac{\sum w_i \hat{\theta}_i}{\sum w_i}$
+        *   全局标准误：$SE(\hat{\theta}_{global}) = \frac{1}{\sqrt{\sum w_i}}$
+        *   全局 Z-score：$Z = \frac{\hat{\theta}_{global}}{SE(\hat{\theta}_{global})}$
+
+### 比率指标的方差估计 (Variance Estimation for Ratios)
+
+#### Delta Method (Delta 方法)
+
+*   **背景**：在 AB 实验中，很多核心指标是比率形式（Ratio Metric），如 $CTR = \frac{\sum Clicks}{\sum Views}$。若定义 $Y$ 为分子（如 Clicks），$X$ 为分母（如 Views），则指标估计量为 $\hat{R} = \frac{\bar{Y}}{\bar{X}}$。
+*   **核心思想**：利用泰勒展开（Taylor Expansion）将非线性函数近似为线性函数，从而估算其方差。
+*   **方差公式**:
+    *   **通用形式** (针对任意随机变量的商 $Y/X$):
+        $$Var(\frac{Y}{X}) \approx \frac{1}{\mu_X^2} Var(Y) + \frac{\mu_Y^2}{\mu_X^4} Var(X) - 2 \frac{\mu_Y}{\mu_X^3} Cov(X, Y)$$
+    *   **样本均值形式** (常用工程公式):
+        $$Var(CTR) \approx \frac{1}{N} \cdot \frac{1}{\mu_x^2} (\sigma_y^2 - 2R\sigma_{xy} + R^2\sigma_x^2)$$
+        *   **公式关系**: 这是通用公式在**样本均值**上的具体应用。
+        *   **推导逻辑**: 
+            1.  将 $Var(\bar{Y}) = \frac{\sigma_y^2}{N}, Var(\bar{X}) = \frac{\sigma_x^2}{N}, Cov(\bar{Y}, \bar{X}) = \frac{\sigma_{xy}}{N}$ 代入通用公式。
+            2.  提取公因式 $\frac{1}{N}$ 得到该式。
+        *   **符号含义**:
+            *   $N$: 样本量 (Sample Size)。
+            *   $\sigma_y^2, \sigma_x^2, \sigma_{xy}$: **个体层面 (User-level)** 数据的方差和协方差。
+            *   $R$: 总体比率真值 ($\mu_y / \mu_x$)。
+*   **应用**：计算 CTR、CVR 等比率指标的置信区间和显著性检验。
+
+### 方差缩减 (Variance Reduction)
+
+#### CUPED (Controlled-experiment Using Pre-Experiment Data)
+
+*   **背景**：在 AB 实验中，指标的方差越大，检测显著性所需的样本量就越大（Sensitivity 越低）。CUPED 是一种利用实验前数据（Pre-experiment Data）来降低指标方差的技术。
+*   **核心思想**：利用实验前数据 $X$（Covariate）与实验期间指标 $Y$ 的相关性，移除 $Y$ 中可以被 $X$ 解释的方差部分。
+*   **修正公式**：
+    $$Y_{cuped} = Y - \theta (X - E[X])$$
+    *   $Y$: 实验期间的观测指标（如实验周的人均时长）。
+    *   $X$: 实验前的协变量（如实验前一周的人均时长）。$X$ 必须不受实验干预影响（通常取实验前数据）。
+    *   $E[X]$: 协变量的总体均值（通常用所有样本的均值估计）。
+    *   $\theta$: 调节系数。
+*   **最优 $\theta$ 与方差缩减**：
+    *   使 $Var(Y_{cuped})$ 最小的 $\theta$ 为：
+        $$\theta^* = \frac{Cov(Y, X)}{Var(X)}$$
+    *   修正后的方差为：
+        $$Var(Y_{cuped}) = Var(Y) (1 - \rho^2)$$
+    *   其中 $\rho$ 是 $Y$ 和 $X$ 的相关系数。相关性越高，方差缩减效果越好。
+*   **性质**：
+    *   **无偏性**：$E[Y_{cuped}] = E[Y]$，即修正后的指标均值期望不变（假设 $E[X]$ 估计准确）。
+    *   **独立性**：协变量 $X$ 的选择必须独立于实验干预（Pre-experiment data 天然满足）。
+
 ### 聚类 & 相似度
 
 * Silhouette coefficient（轮廓系数）是一种用于评估聚类效果的指标，它综合考虑了聚类的紧密性和分离性，能有效衡量一个样本与其所属聚类以及相邻聚类之间的关系，其具体信息如下：

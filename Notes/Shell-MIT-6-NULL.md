@@ -268,6 +268,10 @@ debug(){
 
   * ESC进入Vim-mode，ESC-v进入Vim直接编辑
 
+##### Shell 终端
+
+*   iTerm2: macOS 下的终端神器，高度可定制，支持分屏、自定义配色、快捷键等。
+*   MobaXterm: Windows 下的强大终端，内置 X11 server，支持 SSH, FTP, MOSH 等多种远程协议，并且有图形化的文件传输界面。
 
 ##### zsh
 * [oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh)
