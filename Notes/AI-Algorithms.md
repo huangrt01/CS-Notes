@@ -21,7 +21,52 @@
 
 ![image-20241019021542281](./AI-Algorithms/image-20241019021542281.png)
 
+## 主流大模型系列
 
+### 豆包大模型 2.0 (Doubao-Seed-2.0)
+
+参考：[豆包大模型2.0发布](https://mp.weixin.qq.com/s/1dlAeBOu1FPkCabQ_UIMEA) | [Seed2.0 正式发布](https://mp.weixin.qq.com/s/zLk7dRFreI4gVj6lJhR9OQ)
+
+**定位**：围绕大规模生产环境使用需求优化的大模型系列，支持豆包等上亿用户产品，旨在突破真实世界中的复杂任务。
+
+**模型系列**：
+- **Pro**：面向深度推理与长链路任务执行场景，全面对标 GPT 5.2 与 Gemini 3 Pro
+- **Lite**：兼顾性能与成本，综合能力超越上一代主力模型豆包 1.8
+- **Mini**：面向低时延、高并发与成本敏感场景
+- **Code** (Doubao-Seed-2.0-Code)：专为编程场景打造，与 TRAE 结合使用效果更佳
+
+**能力表现**：
+
+**多模态理解**
+- 视觉推理、感知能力、空间推理与长上下文理解能力表现尤为突出
+- 数学与视觉推理：在 MathVista、MathVision、MathKangaroo、MathCanvas 等基准上达业界最优
+- 视觉感知：在 VLMsAreBiased、VLMsAreBlind、BabyVision 等基准中取得业界最高分
+- 文档理解：在 ChartQAPro 与 OmniDocBench 1.5 基准上达顶尖模型水准
+- 长上下文：在 DUDE、MMLongBench 等榜单上取得业界最佳分数
+- 视频理解：在 TVBench、TempCompass、MotionBench 等关键测评中处于领先，EgoTempo 基准上超过人类分数
+- 长视频处理：可高效准确处理小时级别长视频，配合 VideoCut 工具进一步提升时长范围和推理精度
+- 流式实时问答：在多个流式实时问答视频基准测试中表现优异，可应用于健身、穿搭等陪伴场景
+
+**LLM 与 Agent 能力**
+- 科学领域：在 SuperGPQA 上分数超过 GPT 5.2，整体成绩与 Gemini 3 Pro 和 GPT 5.2 相当
+- 数学与推理：在 IMO、CMO 数学奥赛和 ICPC 编程竞赛中获得金牌成绩，超越 Gemini 3 Pro 在 Putnam Bench 上的表现
+- 综合考试：在 HLE-text（人类的最后考试）上取得最高分 54.2 分
+- 工具调用与指令遵循：表现出色
+- 长程任务执行：通过加强长尾领域知识，提升真实世界复杂任务执行能力
+
+**成本优势**
+- 模型效果与业界顶尖大模型相当，但 token 定价降低了约一个数量级
+- 在大规模推理与长链路生成场景下，成本优势更为关键
+
+**应用案例**
+- 基于 OpenClaw 框架和豆包 2.0 Pro 模型构建智能客服 Agent，可完成客户对话、拉群求助、预约维修、回访和产品推荐等全流程
+- 豆包 2.0 Code + TRAE：可快速搭建复杂应用，例如 5 轮提示词完成「TRAE 春节小镇 · 马年庙会」互动项目（含 11 位 NPC、AI 游客、烟花/孔明灯实时生成等），相关提示词与素材已开源：https://github.com/Trae-AI/TRAELand
+
+**上线情况**
+- 豆包 2.0 Pro 已在豆包 App、电脑端和网页版上线，选择「专家」模式即可体验
+- 豆包 2.0 Code 接入 AI 编程产品 TRAE
+- 火山引擎已上线豆包 2.0 系列模型 API 服务
+- 项目主页：https://seed.bytedance.com/zh/seed2
 
 ## 算法 Overview
 
@@ -2101,7 +2146,32 @@ https://ezml.io/blog/beyond-clip-the-future-of-multimodal-retrieval-with-visuali
 
 https://research.google/blog/image-text-pre-training-with-contrastive-captioners/
 
-## Seed 1.8 通用 Agent 模型
+## 字节跳动 Seed 团队
+
+> **晚点独家：吴永辉接管字节 Seed 这一年 (2025回顾)**
+> 来源：[晚点独家丨吴永辉接管字节 Seed 这一年](https://mp.weixin.qq.com/s/snXZ1wUdfjdh5FOmdgnR0g) (公开信源)
+>
+> *   **背景与目标**
+>     *   2025年初接管，面临追赶压力（投入大、起步晚）。
+>     *   目标：做到国内第一，与国际领先模型竞争。
+> *   **管理风格与策略**
+>     *   **“务实又浪漫”**：Google 背景（Search -> Brain -> DeepMind），懂技术，能判断方向。
+>     *   **虚拟团队机制**：
+>         *   `Seed Edge`：3年考核，攻坚 AGI 长期课题。
+>         *   `Focus`：打破边界，攻坚下一代模型。
+>         *   `Base`：负责当前一代模型（工程、数据、测评）。
+>     *   **透明化尝试**：推动数据/代码库透明（虽因泄密有所回调），打破“小组制”壁垒。
+> *   **组织架构 (2025)**
+>     *   **负责人**：吴永辉（直接汇报给集团管理层）。
+>     *   **多模态/应用**：周畅（豆包助手、Seedream 文生图、Seedance 文生视频）。
+>     *   **Infra**：项亮。
+>     *   **AI Lab 并入**：李航（负责 AI for Science, Robotics, Responsible AI）。
+>     *   **大模型应用**：朱文佳。
+> *   **成果**
+>     *   Seed 迭代 4 版（含豆包 2.0），文生图/视频处于前列。
+>     *   豆包手机助手成为焦点。
+
+### Seed 1.8 通用 Agent 模型
 
 - **简介**：通用 Agent 模型，集搜索、代码与 GUI 能力于一体，原生多模态（图文）输入与界面交互，强调低延迟与高效响应。被评测视为“小号 Gemini”，重回国产第一梯队。
 - **核心能力**：
@@ -2956,6 +3026,57 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
 评估使用 acceptance rate
 
 
+#### 音视频联合生成
+
+##### 概述
+
+- 视频生成领域早期以生成无声视频为主，后来 veo3、sora2、Seedance 2.0 等模型实现了音画同步，但大多闭源
+- **MOVA**：复旦大学发布的开源音画同出模型，是少数接近商用的开源选择，完全开放推理和训练微调代码
+
+参考：
+- 论文：[MOVA: Towards Scalable and Synchronized Video-Audio Generation](https://arxiv.org/abs/2602.08794)
+- GitHub：[https://github.com/OpenMOSS/MOVA](https://github.com/OpenMOSS/MOVA)
+
+##### 传统方案 vs 联合生成方案
+
+**传统方案：流水线拼接**
+- 4个模型串联，推理开销高
+- 误差累积，每一步的错误传递给下一步
+- 时序对齐困难，音画同步靠后期硬凑
+- 各模型独立训练，风格难统一
+
+**联合生成方案：端到端一体化**
+- 视频和音频在生成过程中互相感知，信息融合
+- 一个模型同时输出画面和声音，无需后期拼接
+
+##### MOVA 技术架构
+
+<img src="./AI-Algorithms/image-20260216031935350.png" alt="image-20260216031935350" style="zoom:67%;" />
+
+核心架构：双塔 DiT + 条件桥接，包含：
+- 多语种 prompt 解析模块 UMT5
+- Video DiT Block：负责视频建模
+- Audio DiT Block：用于音频建模
+- Bridge CrossAttn：桥接交叉注意力机制
+- Video/Audio 编解码器
+
+**核心创新：Dual-Tower DiT**
+- 传统多模态模型通常单向：先生成视频，再根据视频生成音频，后生成的模态只能被动适配
+- MOVA 的 Dual-Tower Conditional Bridge 实现**双向条件控制**
+  ```python
+  # 伪代码示意
+  video_tokens = video_self_attention(video_tokens)
+  audio_tokens = audio_self_attention(audio_tokens)
+  # 双向交叉注意力
+  video_tokens = video_cross_attention(video_tokens, key=audio_tokens, value=audio_tokens)
+  audio_tokens = audio_cross_attention(audio_tokens, key=video_tokens, value=video_tokens)
+  ```
+
+**时序对齐：RoPE 频率同步**
+- 音频和视频时间尺度不同：
+  - 视频：24 fps，每秒 24 帧
+  - 音频：44100 Hz / 2048 ≈ 21.5 步/秒
+- 通过 `build_aligned_freqs()` 构建对齐的 RoPE 频率，将两者映射到统一时间坐标系，确保时序对齐
 
 ## VLA (Vision Language Action) and Robot Foundation Model
 

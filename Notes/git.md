@@ -449,6 +449,33 @@ git pull --rebase origin master
 git push --set-upstream origin master
 ```
 
+#### Git Worktree
+
+Git Worktree 允许在同一仓库的多个分支上同时工作，无需多次克隆仓库。
+
+* 核心概念：
+  * 一个 `.git` 目录可以关联多个工作目录（worktree）
+  * 每个 worktree 对应一个不同的分支或 commit
+  * 避免频繁切换分支的麻烦
+
+* 常用命令：
+  ```shell
+  # 创建新的 worktree，关联到特定分支
+  git worktree add ../feature-branch feature
+  
+  # 查看所有 worktree
+  git worktree list
+  
+  # 删除 worktree
+  git worktree remove ../feature-branch
+  git worktree prune  # 清理已删除的 worktree
+  ```
+
+* 适用场景：
+  * 同时开发多个功能分支
+  * 紧急修复 bug 不打断当前开发
+  * 对比不同分支的代码
+
 #### Other Resources
 - [Oh Shit, Git!?!](https://ohshitgit.com/) is a short guide on how to recover
 from some common Git mistakes.

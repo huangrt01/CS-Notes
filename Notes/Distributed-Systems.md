@@ -102,6 +102,32 @@
 * 消息重试
 * 幂等（接口支持重入）：数据库唯一键挡重入
 
+##### 可靠性与容错模式 (Reliability & Fault Tolerance)
+
+* **重试 (Retry)**
+  * **定义**：在操作失败后重新尝试，以应对网络抖动、服务瞬时不可用等**暂时性故障 (Transient Failures)**。
+  * **风险**：
+    * **重试风暴 (Retry Storm)**：如果服务因为过载而失败，大量客户端同时重试会进一步加剧负载，导致服务雪崩。
+    * **级联故障 (Cascading Failure)**：上游的重试可能导致下游服务压力倍增。
+
+* **退避 (Backoff)**
+  * **目的**：避免立即重试给故障服务带来持续压力，给系统恢复的时间。
+  * **策略**：
+    * **固定退避 (Fixed Backoff)**：每次重试等待固定时间 (e.g., 1s, 1s, 1s)。
+    * **指数退避 (Exponential Backoff)**：等待时间随重试次数指数增长 (e.g., 1s, 2s, 4s, 8s)。
+      * 公式：$$WaitTime = Base \times 2^{Attempt}$$
+      * 通常会设置最大等待时间 (Max Interval) 和最大重试次数 (Max Retries)。
+
+* **抖动 (Jitter)**
+  * **目的**：防止所有客户端在同一时刻重试（即**惊群效应, Thundering Herd**），将流量打散。
+  * **Full Jitter**：$$Wait = Random(0, Base \times 2^{Attempt})$$
+  * **Equal Jitter**：$$Temp = Base \times 2^{Attempt}; Wait = Temp/2 + Random(0, Temp/2)$$
+  * **Decorrelated Jitter**：$$Wait = Random(Base, Wait_{prev} \times 3)$$
+
+* **相关模式**
+  * **断路器 (Circuit Breaker)**：当失败率达到阈值时，暂时切断请求，快速失败，避免无意义的重试。
+  * **Hedging Requests (对冲请求)**：向多个副本发送请求，使用最快返回的结果（解决长尾延迟）。
+
 #### Kafka
 
 ##### Kafka 核心设计原理

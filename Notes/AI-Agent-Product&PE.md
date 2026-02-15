@@ -122,15 +122,126 @@
 
 ### OpenClaw (Personal Assistant)
 
-* **Link**: [GitHub](https://github.com/openclaw/openclaw)
+* **Link**: [GitHub](https://github.com/openclaw/openclaw) | [Website](https://openclaw.ai) | [Docs](https://docs.openclaw.ai)
 * **定位**: Local-first 个人 AI 助手，聚合多渠道 (Omni-channel)。
 * **核心特性**:
-  * **Multi-channel Inbox**: 统一管理 WhatsApp, Telegram, Slack, Discord, iMessage, Signal 等消息渠道。
+  * **Multi-channel Inbox**: 统一管理 WhatsApp, Telegram, Slack, Discord, Google Chat, Signal, iMessage, Microsoft Teams, Matrix, Zalo, WebChat 等消息渠道。
   * **Local-first Gateway**: 控制平面运行在本地，确保数据隐私。
   * **Capabilities**:
     * **Voice**: 支持语音唤醒和实时对话 (Voice Wake + Talk Mode)。
-    * **Canvas**: 支持 Live Canvas 可视化交互。
-    * **Multi-agent Routing**: 支持将不同渠道或任务路由给不同的 Agent 处理。
+    * **Canvas**: 支持 Live Canvas 可视化交互 (A2UI)。
+    * **Multi-agent Routing**: 支持将不同渠道或任务路由给不同的 Agent 处理（workspaces + per-agent sessions）。
+
+#### 架构设计
+
+```
+WhatsApp / Telegram / Slack / Discord / ...
+               │
+               ▼
+┌───────────────────────────────┐
+│            Gateway            │
+│       (control plane)         │
+│     ws://127.0.0.1:18789      │
+└──────────────┬────────────────┘
+               │
+               ├─ Pi agent (RPC)
+               ├─ CLI (openclaw …)
+               ├─ WebChat UI
+               ├─ macOS app
+               └─ iOS / Android nodes
+```
+
+#### 核心子系统
+
+* **Gateway WebSocket 网络**: 单一 WS 控制平面，用于客户端、工具和事件
+* **Tailscale 暴露**: 为 Gateway 仪表板和 WS 提供 Serve（仅 tailnet）或 Funnel（公开）
+* **浏览器控制**: openclaw 管理的 Chrome/Chromium，带 CDP 控制
+* **Canvas + A2UI**: Agent 驱动的可视化工作区
+* **Voice Wake + Talk Mode**: 始终在线的语音和持续对话
+* **Nodes**: Canvas、相机快照/剪辑、屏幕录制、位置获取、通知
+
+#### 安装与使用
+
+**运行要求**: Node ≥22
+
+```bash
+npm install -g openclaw@latest
+openclaw onboard --install-daemon  # 向导式安装，包含后台守护进程
+openclaw gateway --port 18789 --verbose  # 启动网关
+```
+
+**核心命令**:
+- `openclaw onboard`: 向导式设置（推荐）
+- `openclaw gateway`: 启动网关服务
+- `openclaw agent --message "..."`: 直接与 Agent 对话
+- `openclaw message send --to ... --message ...`: 向指定渠道发送消息
+- `openclaw doctor`: 健康检查与配置修复
+
+#### 技能系统 (Skills)
+
+OpenClaw 支持三种类型的技能：
+1. **内置技能 (Bundled)**: 随 OpenClaw 一起打包
+2. **托管技能 (Managed)**: 从 ClawHub 安装
+3. **工作区技能 (Workspace)**: 用户自定义技能
+
+技能安装位置: `~/.openclaw/workspace/skills/<skill>/`
+
+示例技能: Seedance Video Generation（文生视频、图生视频）
+
+#### 记忆系统设计
+
+OpenClaw 的记忆系统是其核心亮点之一：
+
+* **上下文与记忆的区别**：
+  - **上下文**：包括静态+条件化系统提示词、AGENTS.md/SOUL.md 项目上下文、过往对话历史、当前消息
+  - **记忆**：自动写入 daily logs 以 md 格式存储，人类可手动维护并提炼长期原则
+
+* **记忆管理方式**：
+  - AI 自动写 daily logs 并以 md 格式存储
+  - 人类可手动维护，提炼长期原则
+  - 让 AI 记忆变得可控、透明且高效
+
+* **相关开源项目**：memsearch（抽离 OpenClaw 记忆系统核心设计，让任何 Agent 都能加上持久、透明、可控的记忆）
+
+#### 安全模型
+
+* **默认行为**: 工具在主机上运行，主要会话有完全访问权限
+* **群组/渠道安全**: 设置 `agents.defaults.sandbox.mode: "non-main"` 可在 Docker 沙箱中运行非主会话
+* **DM 配对策略**: 未知发送者会收到配对码，需通过 `openclaw pairing approve` 批准
+* **Tailscale 安全**: Funnel 需要设置 `gateway.auth.mode: "password"`
+
+#### 实际部署案例
+
+**火山引擎一键部署**:
+- 支持飞书机器人集成
+- 一键部署到 ECS
+- 支持 Coding Plan API 集成
+- 配置脚本:
+  ```bash
+  curl -fsSL https://openclaw.tos-cn-beijing.volces.com/setup.sh | bash -s -- \
+      --ark-coding-plan "true" \
+      --ark-api-key "your-api-key" \
+      --ark-model-id "doubao-seed-code" \
+      --feishu-app-id "your-feishu-app-id" \
+      --feishu-app-secret "your-feishu-app-secret"
+  ```
+
+#### 飞书机器人配置步骤
+
+1. 在飞书开放平台创建企业自建应用，添加机器人能力
+2. 配置权限（消息读取、飞书文档读写等）
+3. 配置事件与回调（使用长连接接收消息）
+4. 获取 App ID 和 App Secret
+5. 在 OpenClaw 配置中填入飞书凭证
+6. 发布应用并在飞书中搜索使用
+
+#### 对本项目的启发
+
+1. **Omni-channel Inbox 思路**: 可参考 OpenClaw 多渠道聚合，接入 Lark/Telegram 等作为任务输入渠道
+2. **Local-first Gateway**: 控制平面本地运行，确保数据隐私
+3. **技能系统**: 模块化的 Skills 扩展机制，可复用
+4. **安全模型**: DM 配对策略、沙箱隔离等安全最佳实践
+5. **远程网关**: 支持在 Linux 实例上运行 Gateway，客户端通过 Tailscale/SSH 隧道连接
 
 ### 产品逻辑
 
@@ -336,6 +447,165 @@ TODO
 - [marscode](https://www.marscode.cn/)
 - Copilot
 
+##### Agent Skills
+
+Agent Skills 是可扩展 AI 助手能力的模块化技能包，补充特定领域知识、标准化工作流与工具能力。参考：[研发场景十大热门 Skill 推荐](https://docs.trae.cn/ide/top-10-recommended-skills-for-development-scenarios)
+
+###### 前端设计
+
+- **名称**：frontend-design
+- **作者**：Anthropic
+- **地址**：https://github.com/anthropics/skills/tree/main/skills/frontend-design
+- **简介**：创建具有独特性和高设计品质的生产级别前端界面，注重排版、色彩、动效、空间布局等细节。
+
+###### 前端开发
+
+- **名称**：cache-components
+- **作者**：vercel
+- **地址**：https://github.com/vercel/next.js/tree/canary/.claude-plugin/plugins/cache-components/skills/cache-components
+- **简介**：集成 Next.js 的 Partial Prerendering (PPR) 和缓存组件最佳实践。
+
+###### 全栈开发
+
+- **名称**：fullstack-developer
+- **作者**：Shubhamsaboo
+- **地址**：https://github.com/Shubhamsaboo/awesome-llm-apps/tree/main/awesome_agent_skills/fullstack-developer
+- **简介**：精通现代 Web 开发技术的全栈专家，专注于 JavaScript/TypeScript、React (Next.js)、Node.js 等。
+
+###### 代码审查（通用）
+
+- **名称**：code-reviewer
+- **作者**：google-gemini
+- **地址**：https://github.com/google-gemini/gemini-cli/tree/main/.gemini/skills/code-reviewer
+- **简介**：引导 AI 开展专业全面的代码审查，支持审查本地代码改动和远程 PR，从正确性、可维护性、安全性等维度分析。
+
+###### CI/CD：PR 创建
+
+- **名称**：pr-creator
+- **作者**：google-gemini
+- **地址**：https://github.com/google-gemini/gemini-cli/tree/main/.gemini/skills/pr-creator
+- **简介**：引导并自动化创建高质量、符合规范的 PR，标准化工作流程。
+
+###### Linting 和格式错误修复
+
+- **名称**：fix
+- **作者**：facebook
+- **地址**：https://github.com/facebook/react/tree/main/.claude/skills/fix
+- **简介**：自动化修复代码格式并检查 linting 错误，确保代码符合项目规范。
+
+###### 查找 Skill
+
+- **名称**：find-skills
+- **作者**：vercel
+- **地址**：https://github.com/vercel-labs/skills/tree/main/skills/find-skills
+- **简介**：帮助发现并安装 Agent Skill，依托 skills CLI 从开放生态中搜索、安装与管理技能包。
+
+##### 胡渊鸣 AI 编程实战
+
+参考文章：[胡渊鸣 | 我给 10 个 Claude Code 打工](https://mp.weixin.qq.com/s/9qPD3gXj3HLmrKC64Q6fbQ)
+
+**作者背景**：
+- 胡渊鸣（Ethan Hu），清华姚班 2017 届，MIT 计算机图形学博士
+- Taichi 编程语言创始人（28K GitHub stars，SIGGRAPH 最佳博士论文提名）
+- Meshy AI 创始人（全球 3D AI 领域市场份额第一，$30M ARR，月增长 30%）
+
+**提高 Agentic Coding 吞吐量的 10 个阶段**：
+
+1. **从 Cursor Agent 到 Claude Code**
+   - Cursor Agent 配合 4090 GPU，3 小时完成 GPU DSL 设计（100 倍产出提升）
+   - 切换到 Claude Code，通过 ssh 在 iPhone 上访问，实现 24 小时可派活
+
+2. **找个 Container**
+   - 使用 `--dangerously-skip-permissions` 减少权限询问，一次 prompt 可干 5 分钟
+   - 记得写自动备份功能
+
+3. **Ralph Loop，让 Claude Code 不停地干活**
+   - 从任务列表中每次拿一个活干，直到列表为空
+   - 写一个 Claude Code 启动器，每个活干完自动启动新的
+
+4. **用 Git worktree 实现并行化**
+   - 每个 worktree 里面开一个独立的 Claude Code
+   - 5 个 Claude Code 可实现 Git 上 1 分钟一个 commit
+
+5. **用好 CLAUDE.md 和 PROGRESS.md，让 AI 长记性**
+   - CLAUDE.md：不适合经常修改
+   - PROGRESS.md：让 AI 沉淀经验教训，同样错误下次不要再犯
+
+6. **干掉 ssh，直接把开发界面变成手机端网页**
+   - 写一个 Claude Code web manager
+   - 使用 `claude -p [prompt] --dangerously-skip-permissions` 做成非交互式组件
+
+7. **有效地用 Claude Code 编写管理 Claude Code 的程序**
+   - 使用 `--output-format stream-json --verbose` 让 manager 通过 json log 发现问题
+   - 给 AI 提供闭环环境，让它能写代码/运行/检查/调试
+   - 成功率从 20% 提升到 95%
+
+8. **自然语言编程**
+   - 给各个输入框加上语音识别 API
+   - 走在马路上都可以 vibe coding
+
+9. **给开发中心添加 Plan Mode**
+   - 封装 Claude Code 的 Plan mode
+   - 同时 kick off 大量 Plan 任务然后统一 review
+
+10. **坚持不去看除了 CLAUDE.md 以外的代码**
+    - 杜绝对 AI 的 micromanagement（微管理）
+    - Context, not control
+    - 研究：更好的提问，更清楚地描述需求
+    - 目标：如何给 AI 打工才能让 AI 工作效率更高
+
+**核心洞见**：
+- 软件开发成本趋近于零，标准化软件逐渐失去意义
+- 产品经理和软件工程师的工作会被重新定义
+- AI 比人更理性、直接，沟通效率更高
+- 管 AI 比管人更能提高领导力，反馈速度提升 100 倍
+
+#### Ralph Loop
+
+Ralph Loop 是让 AI 持续工作的循环机制。
+
+* 核心思想：
+  * 维护一个任务列表
+  * AI 从列表中逐个取出任务执行
+  * 任务完成后自动启动下一个
+  * 形成持续工作的闭环
+
+* 实现方式：
+  * 编写 AI 启动器脚本
+  * 管理任务队列
+  * 监控执行状态
+  * 自动重试失败任务
+
+#### AI 长记性
+
+让 AI 在多次交互中保持记忆和经验积累。
+
+* 记忆机制：
+  * **CLAUDE.md**：相对固定的上下文信息，不适合频繁修改
+  * **PROGRESS.md**：记录经验教训、错误总结，让 AI 避免重复犯错
+  * 对话历史：保持上下文连贯性
+
+* 实践要点：
+  * 及时记录关键决策和学习点
+  * 定期整理和优化记忆内容
+  * 在新任务开始前让 AI 回顾相关经验
+
+#### AI 沟通特点
+
+与 AI 沟通的特点和最佳实践。
+
+* AI 的优势：
+  * 理性、直接，没有情绪干扰
+  * 沟通效率高，不需要客套
+  * 可以处理大量信息
+  * 反馈速度快
+
+* 沟通技巧：
+  * 清晰、具体地描述需求
+  * 提供足够的上下文
+  * 明确目标和约束条件
+  * 接受 AI 的直接反馈方式
+
 #### 拍照答题
 
 * Gauth
@@ -465,12 +735,28 @@ TODO
 * Notes
   * “准备测试数据“容易被忽略
 
+#### Agent Bucket：万亿级 Agent 原生存储桶
+
+> [Agent Bucket：万亿级 Agent 原生存储桶](https://mp.weixin.qq.com/s/A6sUm-s44MwM7ZvIzqs_Eg)
+
+**背景**：AI Agent 快速发展，但传统对象存储（S3/TOS）在多租户场景下面临挑战。
+
+**传统方案问题**：
+1. **每用户一桶**：桶数量限制（S3 全 region 仅 10000 配额），扩展性差；且 Bucket Name 需全球唯一
+2. **单桶多前缀**：
+   - 性能隔离差：用户数据混杂，一个用户的高频访问影响其他用户（邻居效应）
+   - 权限管控复杂：IAM Policy 难以维护，易出现配置失误
+   - 成本不清晰：难以精确计量每个用户的存储和流量费用
+
+**核心痛点**：多租隔离、权限管控、成本清晰
+
+**本质问题**：S3 是"扁平化"的 KV 存储，缺乏原生的高级目录管理、细粒度元数据控制和租户感知。Agent 需额外消耗 token 管理文件和权限，S3 定义的"Simple Storage Service"对 Agent 来说不够简单。
+
 #### [一口气学会如何思考AI Agent系统设计](https://www.bilibili.com/video/BV1WoeozgEyn/)
 
 ![image-20250905205432873](./AI-Agent-Product&PE/image-20250905205432873.png)
 
 ![image-20250909162445811](./AI-Agent-Product&PE/image-20250909162445811.png)
-
 
 
 ### 大模型技术选型
@@ -3945,3 +4231,114 @@ finetuning分类
 * full：Training Language Models to Follow Instructions with Human Feedback
   * aligned with human preferences with instruction-tuning
 * 高效的：LoRA: Low-Rank Adaptation of Large Language Models
+
+---
+
+## 互联网已死，Agent 永生
+
+&gt; 参考资料：[互联网已死，Agent 永生](https://mp.weixin.qq.com/s/bHF1JT1QJeC6JVwoEVs08Q)
+
+### 核心论断
+
+**Agent 才是软件的新主人。不要服务人，服务 Agent。**
+
+### 一、砍掉的六张旧地图（互联网时代已过时）
+
+1. **DAU 过时**
+   - 互联网时代：网状拓扑，网络效应，边际成本递减，DAU 是资产
+   - AI 时代：星型拓扑，无网络效应，每用户多一份推理成本，DAU 是负债
+   - ChatGPT 用广告逻辑扩张 DAU，Claude 摆明立场绝不加入广告
+
+2. **工具→平台路径堵死**
+   - 互联网时代：工具→社区→平台，三级火箭
+   - AI 时代：工具本身足够强，不需要社区补充（社区本质是人帮人，AI 比人更能帮人）
+   - 只有大模型公司、算力基座拥有者才能做平台（星型拓扑中心节点）
+
+3. **SaaS 没死，但主人换了**
+   - 过去：人类是软件用户（2B/2C），围绕"人怎么用软件"设计
+   - 现在：Agent 是软件用户（2A），软件公司变成面向 Agent 的基础设施
+   - 人类要的是结果，不是软件；Agent 可以自己看文档、百倍速操作软件
+
+4. **"AI 应用"是错的**
+   - "应用"天然暗示使用者是人，思维会被锁死在界面、交互、留存等面向人的思考
+   - 换一个词，换一种思考：不要服务人，服务 Agent
+
+5. **注意力经济已死**
+   - 注意力经济：抢夺用户时间卖给广告商，零和博弈（平台赚你浪费的时间）
+   - 生产力经济：付费让 AI 帮你完成工作，正和博弈（双方都创造价值）
+   - 注意力经济追求停留时长，生产力经济追求结果交付效率
+
+6. **"出海"过时**
+   - Agent 的世界里没有海，不需要翻译、适配支付、本地化推广
+   - 只需要把 API 做好、文档写清楚、协议对接好，全世界 Agent 都能找到你
+   - 需要的不是出海，是接入新世界
+
+### 二、新世界的四块基石
+
+1. **Token 是新时代的特权**
+   - 顶级模型不仅没降价，反而更贵（Opus 4.6：200k 上下文内输入 /输出 ，上下文外更贵）
+   - Claude Fast 模式：2.5 倍速度，5 倍 Token 费用，一天总消耗可达 12 倍
+   - 算力马太效应：更多算力→更好结果→更多收入→买得起更多算力
+
+2. **燃烧 Token 的速度，决定人的进化速度**
+   - 买 Token 不是消费，是投资自己
+   - 用 100 分顶级模型 vs 90 分模型，看似省钱，实则浪费最稀缺资源：判断力和时间
+   - 用谷歌 vs 百度，一年认知差 2 倍；用顶级模型 vs 垃圾模型，一年认知差 100 倍
+   - 要做能疯狂燃烧 Token 的事/产品：AI Coding、AI Agent、AI Video
+
+3. **Agent 是新世界的人口红利**
+   - 过去：研究怎么让人用得爽（界面、交互、推送）
+   - 现在：研究怎么让 Agent 用得爽（API 稳定、文档清楚、结果准确）
+   - 一个人可能有 10-100 个 Agent 工作，每个 Agent 每天调用外部接口几千几万次
+   - Agent 时代增长飞轮：
+     - 先被发现：Skills 发布早、文档好、测试到位、SEO 到位，让 Agent 需要时第一时间找到你
+     - 再被依赖：稳定、准确、快速、有品味，每次调用返回更好结果，让它没理由换掉你
+   - 反面：需要人联系销售、填表单、等审批的产品，Agent 用不起来，在新世界里不存在
+
+4. **愿力时代**
+   - Agent：有能力、有理性、有耐心，但不会产生任何想法
+   - 人类：有欲望、有情感、有想象，但无法独自完成一件大事
+   - 人类的价值：不是亲自干活，是决定干什么、为什么干
+   - 人和人的差距：不取决于自己能做什么，取决于能驱动多少 Agent 为你做什么
+   - 韩信点兵，多多益善：不是自己能打，是有一套体系，给多少兵都能管
+
+### 三、如何让海量 Agent 更容易找到并愿意付费
+
+1. **让 Agent 第一个知道你**
+   - 早发布 Skills/Tools
+   - 写好机器可读的结构化文档（语义化、示例清晰）
+   - 做好 Agent SEO（针对大模型检索优化）
+   - 加入主流 Agent 生态（Claude Skills、GPTs 等）
+   - 标准化能力描述和接口定义
+
+2. **让 Agent 用了就离不开你**
+   - API 高可用、低延迟、高并发
+   - 返回结果准确、一致、有品味
+   - 完全自助化（无需人工介入开通、计费）
+   - 良好的错误处理、重试机制和降级策略
+   - 每次调用都比上一次更好（持续学习和优化）
+
+3. **产品设计面向 Agent**
+   - API First：优先设计 API，UI 是次要的
+   - 提供清晰的能力边界和使用示例
+   - 支持标准协议（REST、GraphQL、gRPC）
+   - 提供多语言 SDK 和工具库
+   - 机器友好的计费和计量方式
+
+### 四、模型越顶级越好卖的认知
+
+- **顶级模型的价值**：
+  - 结果质量差异巨大（100 分 vs 90 分）
+  - 时间和判断力是最稀缺的资源
+  - 用顶级模型是投资，不是消费
+  - 马太效应：更好的模型→更好的结果→更多收入→更好的模型
+
+- **用户付费意愿**：
+  - 愿意为更好的结果支付溢价
+  - 认识到使用低质量模型是浪费生命
+  - 孩子都不愿意跟智商低的模型聊天
+
+- **商业策略**：
+  - 顶级模型不需要降价，反而可以涨价
+  - 可以按能力分级定价（如 Fast 模式）
+  - 比拼的不是价格，是结果质量和速度

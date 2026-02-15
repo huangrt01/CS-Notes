@@ -454,6 +454,35 @@ e420a97835d9692df5b90b47e7951bc3fad48269eb2c8b1fa782527e0ae91c8e
   * /var/lib/docker
   * /etc/docker/daemon.json
 
+#### Container 权限技巧
+
+* 常见权限问题：
+  * 容器内用户权限不足
+  * 挂载卷权限不匹配
+  * 需要访问宿主机资源
+
+* 权限控制技巧：
+  ```shell
+  # 使用非 root 用户运行容器
+  docker run --user 1000:1000 myimage
+  
+  # 挂载时指定权限
+  docker run -v /host/path:/container/path:ro myimage  # 只读
+  docker run -v /host/path:/container/path:z myimage   # SELinux 标签
+  
+  # 添加特定权限
+  docker run --cap-add NET_ADMIN myimage  # 添加网络管理权限
+  
+  # 禁用所有权限后按需添加
+  docker run --cap-drop all --cap-add CHOWN myimage
+  ```
+
+* 安全最佳实践：
+  * 最小权限原则
+  * 避免使用 --privileged
+  * 使用用户命名空间隔离
+  * 定期扫描容器镜像漏洞
+
 #### docker-compose
 
 ```
@@ -857,6 +886,18 @@ rclone copy README.txt tos:ABC --s3-no-head-object
   * 产品线相对可控，单个产品硬件成本低、可以开渠道做销售。需要的营销方向的人手相对少。渠道要分润，所以毛利低，项目周期相对短一些。
     * 渠道不是越多越好：市场中渠道太多，区域市场价格竞争激烈，渠道毛利就会降低，渠道伙伴不赚钱，就没有积极性。
   * 服务类：做项目服务业务，产品方向多，难以标准化，单个产品硬件成本高，需要很多人手。需要自己做项目交付，所以毛利高项目周期长。
+
+#### 标准化软件的终结
+
+* Agentic Coding 对软件行业的影响：
+  * 传统标准化软件的局限性：一个产品满足所有用户需求，但实际上用户需求高度个性化
+  * AI 编程的新范式：由 AI 根据用户特定需求定制化开发，而非使用标准化产品
+  * 价值创造的转移：从生产标准化软件转向通过 AI 快速满足个性化需求
+
+* 核心观点：
+  * 标准化软件不再是唯一最优解
+  * 个性化、定制化将成为主流
+  * 开发效率极大提升，使得定制化成本大幅降低
 
 #### ToB 阶段
 

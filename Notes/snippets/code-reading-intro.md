@@ -123,6 +123,15 @@
 - facebook-DLRM
   - https://github.com/facebookresearch/dlrm
 
+#### 生成式推荐
+
+- MIMIGenRec
+  - https://github.com/cocoshe/MIMIGenRec
+  - 灵活的生成式推荐训练框架，集成 LlamaFactory 和 TRL
+- MiniOneRec
+  - https://github.com/AkaliKong/MiniOneRec
+  - 端到端生成式推荐框架开源复现
+
 #### GR、RQ-VAE
 
 - GRID

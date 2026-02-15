@@ -887,6 +887,49 @@ DSL like ES -> (forward/aggregation/post-aggregation) -> view -> physical table
 
 * [滴滴指标体系](https://mp.weixin.qq.com/s/-pLpLD_HMiasyyRxo5oTRQ)
 
+### 离线任务与主从隔离
+
+> "离线任务别读从节点了，读写统一约束在主节点，这样能和在线隔离一下"
+
+这句话触及了数据库架构中**负载隔离 (Workload Isolation)** 的核心痛点。
+针对**离线写入 (Offline Batch Write)** 场景（如数据回流、定期更新），这种“写主库”的策略是**必要但高风险**的；
+针对**离线读取 (Offline Read)** 场景（如 ETL 抽取），这通常是**反模式**（除非主库极度空闲）。
+
+#### 1. 场景一：离线写入 (Batch Write)
+
+**背景**：在 MySQL/MongoDB 副本集架构中，**写操作必须在主节点 (Master)** 执行。
+**矛盾**：离线写入通常伴随**高并发、大批量**，极易挤占主库的 CPU/IO，甚至导致**主从延迟 (Replication Lag)**，进而拖垮依赖从库的在线读业务。
+
+**最佳实践**：
+
+*   **✅ 智能限流 (Throttling with Lag Awareness)**
+    *   **核心**：写入程序必须**感知从库延迟**。
+    *   **实现**：写入线程每秒检查 `SHOW SLAVE STATUS` 的 `Seconds_Behind_Master`。若延迟 > 3s，立即暂停写入；待延迟归零后再恢复。这是保护在线读业务的最有效手段。
+*   **✅ 事务切分 (Chunking)**
+    *   **原则**：严禁大事务（Big Transaction）。一个执行 60s 的大事务，从库回放至少也需 60s，直接导致延迟飙升。
+    *   **做法**：将百万级写入拆解为 2000 行/批次的小事务，高频少食。
+*   **✅ 关闭 Binlog (仅限中间数据)**
+    *   如果写入的是无需同步的临时表（Staging Table），执行 `SET sql_log_bin = 0`，可节省 50%+ 的 I/O 开销。
+*   **✅ 影子表切换 (Shadow Table Swap)**
+    *   **做法**：全量写入无索引的 `table_new`，完成后建索引，利用 `RENAME TABLE` 原子切换。
+    *   **优势**：避免了写入期间的索引维护开销和在线锁竞争。
+
+#### 2. 场景二：离线读取 (Batch Read)
+
+**背景**：离线任务（ETL/报表）需要扫描全量数据。
+
+*   **❌ 反模式：读“在线从库”**
+    *   **后果**：全表扫描会迅速挤出 Buffer Pool 中的热点页（LRU 淘汰），导致在线业务的缓存命中率骤降，接口耗时飙升。
+*   **⚠️ 风险方案：读“主库”**
+    *   **风险**：主库是核心单点。离线读取的高 CPU/IO 消耗可能导致主库写入变慢，甚至引发主从切换。仅在主库资源严重过剩时考虑。
+*   **✅ 最佳实践 1：专用离线从库 (Dedicated Offline Slave)**
+    *   **隔离**：搭建专用从库，**不注册**到在线服务发现，仅供离线任务连接。
+*   **✅ 最佳实践 2：CDC 到异构存储 (CDC -> Data Warehouse)**
+    *   **架构**：Binlog -> Kafka -> Hive/Doris/ClickHouse。
+    *   **优势**：离线分析直接查数仓，**完全不碰**在线数据库。这是云原生架构下的终极解法。
+
+### 论文
+
 ### 论文
 
 #### Spitfire: A Three-Tier Buffer Manager for Volatile and Non-Volatile Memory, SIGMOD 2021
