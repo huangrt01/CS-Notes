@@ -12,7 +12,7 @@ import json
 
 
 REPO_NAME = "CS-Notes"
-REPO_URL = "https://github.com/username/CS-Notes.git"
+REPO_URL = "https://github.com/huangrt01/CS-Notes.git"
 WORKSPACE_ROOT = Path.home() / ".openclaw" / "workspace"
 REPO_PATH = WORKSPACE_ROOT / REPO_NAME
 INBOX_PATH = REPO_PATH / ".trae" / "documents" / "INBOX.md"
