@@ -351,6 +351,19 @@ Lark 通知完成
 
 ##### 笔记整理
 
+* [ ] 探索如何让你能阅读微信公众号的文章
+  - Priority：high
+  - Assignee：AI
+  - Feedback Required：否
+  - Definition of Done：
+    * 研究微信公众号文章的反爬机制
+    * 找到可靠的获取完整文章内容的方法
+    * 测试方法是否有效
+  - Plan：
+    * 尝试使用不同的工具/方法（browser 工具、curl 配置合适的 headers、第三方 API 等）
+    * 分析失败原因
+    * 找到可行的解决方案
+
 * [x] 整理笔记：年末 AI 回顾：从模型到应用，从技术到商战，拽住洪流中的意义之线
   - Priority：high
   - Assignee：AI
