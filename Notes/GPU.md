@@ -2589,3 +2589,12 @@ ptrToConsume = manager.manage(ptrToProduce); // Usage
 
 * CANN（Compute Architecture for Neural Networks）算子库
   - https://www.hiascend.com/document/detail/zh/canncommercial/83RC1/API/aolapi/operatorlist_00097.html
+
+### 算力趋势：从拼单颗芯片性能到优化多芯片互联
+
+> 来源：[晚点AI](https://mp.weixin.qq.com/s/gyEbK_UaUO3AeQvuhhRZ6g)
+> 整理时间：2026-02-16
+
+算力层面的大趋势：从拼单颗芯片的性能，到优化多芯片互联的系统。
+- 华为：384 Matrix 超节点
+- 英伟达：NVL72

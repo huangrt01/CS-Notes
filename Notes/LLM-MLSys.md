@@ -1879,6 +1879,23 @@ https://github.com/pytorch/TensorRT/releases/tag/v2.8.0
   - **时间共享调度**：按节点粒度分配资源，利用率达 99%，支持任务断点续传。
   - **故障恢复**：Checkpoint Manager 每 5 分钟异步保存，仅丢失最新 5 分钟数据；Validator 工具周检硬件状态，提前识别 GPU Xid 错误（表 VI）。
 
+### 协同优化
+
+> 来源：[晚点AI](https://mp.weixin.qq.com/s/gyEbK_UaUO3AeQvuhhRZ6g)
+> 整理时间：2026-02-16
+
+#### 阿里千问、腾讯 AI 的研发组织整合
+Google 卷土重来的一个关键——Co-design(协同设计)：从底层到上层（芯片、软件库、Infra、云平台、模型、应用）一路协同优化。
+
+- 阿里："通云哥"战略组合（通义-阿里云-平头哥），千问团队从 25 年下半年开始招募自己的 Infra 人才
+- 腾讯：AI 大模型新负责人姚顺雨提到 Co-design，已把 AI Infra 部门划到其管辖范围
+
+#### DeepSeek 开源周
+25 年年初的 DeepSeek 开源周（2 月 24 日-28 日），每一天放出一个 Infra 领域的开源成果，周六发布收官博客《DeepSeek-V3/R1 推理系统总结》。
+
+#### 注意力机制改进：稀疏与线性
+25 年做了 3 期和注意力机制改进相关的节目，涵盖稀疏注意力和线性注意力两个主流方向。
+
 ### 其它
 
 MTP ~ [**Zen5的2-Ahead Branch Predictor**](https://chipsandcheese.com/p/zen-5s-2-ahead-branch-predictor-unit-how-30-year-old-idea-allows-for-new-tricks)
