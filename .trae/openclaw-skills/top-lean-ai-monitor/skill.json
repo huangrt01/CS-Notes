@@ -1,0 +1,26 @@
+{
+  "name": "top-lean-ai-monitor",
+  "version": "1.0.0",
+  "description": "Top Lean AI 榜单监控 - 每日检查更新并通知",
+  "author": "AI",
+  "commands": [
+    {
+      "name": "check",
+      "description": "检查榜单更新",
+      "handler": "handle_check"
+    },
+    {
+      "name": "status",
+      "description": "查看监控状态",
+      "handler": "handle_status"
+    }
+  ],
+  "scheduled_tasks": [
+    {
+      "name": "daily-check",
+      "description": "每日检查榜单更新",
+      "cron": "0 9 * * *",
+      "handler": "handle_daily_check"
+    }
+  ]
+}
