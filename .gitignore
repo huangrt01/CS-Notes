@@ -3,4 +3,4 @@
 **/.env
 tmp*
 # **/创作/**
-**/.trae/documents/**
+./trae/logs
