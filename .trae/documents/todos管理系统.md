@@ -356,7 +356,7 @@ Lark 通知完成
   - Assignee：AI
   - Feedback Required：否
   - Links：https://mp.weixin.qq.com/s/gyEbK_UaUO3AeQvuhhRZ6g
-  - Output：创作/年末AI回顾-2025.md
+  - Output：Notes/AI/年末AI回顾-2025.md
   - Definition of Done：
     * 找到最合适的现有笔记文件或创作文件 ✓
     * 提取文章核心要点 ✓
