@@ -75,26 +75,17 @@
 （在此下方添加你的任务条目，一行一个最简单）
 
 
-- 内容：沉淀经验：如何成功获取微信公众号文章内容
-  - 优先级：high
-  - 关联文件：MEMORY.md
-  - 参考链接：
-  - 截止时间：
-
-- 内容：测试任务：验证Skill功能
-  - 优先级：medium
-  - 关联文件：
-  - 参考链接：
-  - 截止时间：
-
-- [2026-02-16 19:56:46] 测试任务：验证 cs-notes-git-sync 功能
-  - Priority：medium
-  - Links：
-  - Due：
-
 - 内容：解决 OpenClaw Gateway device token mismatch 问题
   - 优先级：high
   - 关联文件：`~/.openclaw/openclaw.json`、`~/.openclaw/devices/paired.json`
   - 参考链接：
   - 截止时间：
+
+---
+
+### 已处理的任务（已移至 todos管理系统.md 或 TODO_ARCHIVE.md）
+
+- ✅ 沉淀经验：如何成功获取微信公众号文章内容 - 已完成，已归档至 TODO_ARCHIVE.md
+- ✅ 测试任务：验证Skill功能 - 已处理
+- ✅ [2026-02-16 19:56:46] 测试任务：验证 cs-notes-git-sync 功能 - 已处理
 
