@@ -33,7 +33,11 @@
   - 向用户报告进度，不要等待用户询问
   - 进度报告要包含：百分比、预估剩余时间
 * **Git 操作 SOP（第一原则：公司项目文档绝对不能 push 到 git）**：
-  - **验证步骤**：每次 commit 前，必须先执行 `git status`，检查 `公司项目/` 目录下的文件是否被 staging
+  - **公用 Skill 能力**：使用 `Notes/snippets/todo-push.sh` 和 `Notes/snippets/todo-pull.sh` 作为标准 git 操作流程
+  - **todo-push.sh 白名单机制**：仅允许 `Notes/`、`.trae/`、`创作/` 三个文件夹
+  - **todo-push.sh 黑名单机制**：绝对禁止 `公司项目/` 文件夹
+  - **todo-push.sh 排除模式**：排除 `.trae/logs/`、`*.pyc`、`__pycache__/`、`.DS_Store`
+  - **验证步骤**：每次 commit 前，先执行 `git status` 检查，或直接运行 `todo-push.sh`
   - **.gitignore 配置**：确保 `**/公司项目/**` 在 .gitignore 中（已有配置）
   - **公司项目/ 目录规则**：该目录下的所有内容永远不要 git add 到公开仓库
   - 每次进行 git commit 并 push 后，必须在回复中包含对应的 GitHub commit 链接
