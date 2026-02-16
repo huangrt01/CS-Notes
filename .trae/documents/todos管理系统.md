@@ -356,17 +356,17 @@ Lark 通知完成
   - Assignee：AI
   - Feedback Required：否
   - Links：https://mp.weixin.qq.com/s/gyEbK_UaUO3AeQvuhhRZ6g
-  - Output：Notes/AI/年末AI回顾-2025.md
+  - Output：Notes/AI-Agent-Product&PE.md（新增"2025 年末 AI 回顾"章节）
   - Definition of Done：
-    * 找到最合适的现有笔记文件或创作文件 ✓
+    * 找到最合适的现有笔记文件 ✓（Notes/AI-Agent-Product&PE.md）
     * 提取文章核心要点 ✓
-    * 整合到笔记的合适章节 ✓
+    * 整合到笔记的合适位置 ✓（在文件末尾新增"2025 年末 AI 回顾"章节）
     * 附上引用链接 ✓
   - Plan：
     * 获取文章完整内容 ✓
     * 分析文章结构和核心观点 ✓
-    * 找到最合适的笔记文件（Notes/ 或 创作/）✓
-    * 整合内容，附上引用 ✓
+    * 找到最合适的笔记文件（Notes/）✓
+    * 整合内容到现有文件，附上引用 ✓
 
 ##### OpenClaw集成
 
