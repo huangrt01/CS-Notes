@@ -364,23 +364,6 @@ Lark 通知完成
     * 分析失败原因
     * 找到可行的解决方案
 
-* [x] 整理笔记：年末 AI 回顾：从模型到应用，从技术到商战，拽住洪流中的意义之线
-  - Priority：high
-  - Assignee：AI
-  - Feedback Required：否
-  - Links：https://mp.weixin.qq.com/s/gyEbK_UaUO3AeQvuhhRZ6g
-  - Output：Notes/AI-Agent-Product&PE.md（新增"2025 年末 AI 回顾"章节）
-  - Definition of Done：
-    * 找到最合适的现有笔记文件 ✓（Notes/AI-Agent-Product&PE.md）
-    * 提取文章核心要点 ✓
-    * 整合到笔记的合适位置 ✓（在文件末尾新增"2025 年末 AI 回顾"章节）
-    * 附上引用链接 ✓
-  - Plan：
-    * 获取文章完整内容 ✓
-    * 分析文章结构和核心观点 ✓
-    * 找到最合适的笔记文件（Notes/）✓
-    * 整合内容到现有文件，附上引用 ✓
-
 ##### OpenClaw集成
 
 * [ ] 火山引擎端：创建cs-notes-git-sync Skill
