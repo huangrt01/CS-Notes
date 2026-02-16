@@ -80,3 +80,8 @@
   - 关联文件：
   - 参考链接：
   - 截止时间：
+
+- [2026-02-16 19:56:46] 测试任务：验证 cs-notes-git-sync 功能
+  - Priority：medium
+  - Links：
+  - Due：
