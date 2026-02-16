@@ -1,0 +1,8 @@
+{
+  "name": "cs-notes-todo-sync",
+  "version": "0.1.0",
+  "description": "CS-Notes 项目 Todo 同步 Skill - 拉取 Git、扫描任务、生成执行提示",
+  "author": "Your Name",
+  "entry": "main.py",
+  "capabilities": ["filesystem", "network"]
+}

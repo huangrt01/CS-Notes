@@ -1,0 +1,8 @@
+{
+  "name": "cs-notes-git-sync",
+  "version": "0.1.0",
+  "description": "CS-Notes 项目 Git 同步 Skill - 接收 Lark 消息并同步到 Git 仓库",
+  "author": "Your Name",
+  "entry": "main.py",
+  "capabilities": ["filesystem", "network"]
+}
