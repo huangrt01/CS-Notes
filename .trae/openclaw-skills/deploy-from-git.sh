@@ -79,18 +79,41 @@ else
 fi
 echo ""
 
-# 步骤 4: 克隆/更新主仓库到 workspace
-print_info "步骤 4/7: 克隆/更新主仓库"
+# 步骤 4: 克隆/更新主仓库到 workspace（优先使用本地已存在的仓库）
+print_info "步骤 4/7: 准备主仓库"
 cd "$WORKSPACE_DIR"
+
+# 检查常见的本地仓库位置
+COMMON_PATHS=(
+    "$HOME/$REPO_NAME"
+    "$HOME/Desktop/$REPO_NAME"
+    "$HOME/Documents/$REPO_NAME"
+    "$PWD"
+)
+
+FOUND_LOCAL_REPO=""
+for path in "${COMMON_PATHS[@]}"; do
+    if [ -d "$path/.git" ]; then
+        FOUND_LOCAL_REPO="$path"
+        break
+    fi
+done
+
 if [ -d "$REPO_NAME" ]; then
-    print_warn "主仓库已存在，尝试拉取最新代码"
+    print_warn "工作区仓库已存在，尝试拉取最新代码"
     cd "$REPO_NAME"
     git pull || {
         print_error "Git pull 失败"
         exit 1
     }
+elif [ -n "$FOUND_LOCAL_REPO" ]; then
+    print_info "发现本地仓库: $FOUND_LOCAL_REPO"
+    print_info "复制到工作区..."
+    cp -r "$FOUND_LOCAL_REPO" "$WORKSPACE_DIR/"
+    cd "$REPO_NAME"
+    git pull || print_warn "Git pull 失败，请手动处理"
 else
-    print_info "克隆主仓库..."
+    print_info "未找到本地仓库，克隆远程仓库..."
     git clone "$GIT_REPO_URL" "$REPO_NAME" || {
         print_error "Git clone 失败"
         exit 1
