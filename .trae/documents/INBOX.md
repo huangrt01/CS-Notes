@@ -85,3 +85,8 @@
   - Priority：medium
   - Links：
   - Due：
+
+- [2026-02-16 20:03:42] 整理笔记：年末 AI 回顾：从模型到应用，从技术到商战，拽住洪流中的意义之线，链接：https://mp.weixin.qq.com/s/gyEbK_UaUO3AeQvuhhRZ6g
+  - Priority：medium
+  - Links：
+  - Due：
