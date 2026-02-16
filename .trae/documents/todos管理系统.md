@@ -36,7 +36,7 @@
    - 托管 CS-Notes 仓库的克隆
    - 通过自定义 Skill 接收 Lark 消息，写入 `.trae/documents/INBOX.md`
    - 自动 commit &amp; push 到远程 Git 仓库
-   - 内置 `coding-agent` skill，可直接调用 Claude Code、Codex、OpenCode 等 CLI 形态的 AI 编程工具
+   - 内置方舟代码模型 `ark/doubao-seed-2-0-code-preview-260215`，可直接执行编码任务
 
 4. **Git 仓库**：
    - 作为唯一的真相源（single source of truth）
@@ -57,11 +57,11 @@
 | 飞书集成 | 需要手动配置 | 预集成飞书，零代码配置 |
 | 稳定性 | 受 Mac 休眠、关机影响 | 24/7 稳定运行 |
 
-### OpenClaw + coding-agent skill 一体化方案
+### OpenClaw + 方舟代码模型一体化方案
 
 #### 核心思路
 
-利用 OpenClaw 的 `coding-agent` skill 直接调用编码能力，结合我们已有的 `cs-notes-git-sync` skill，形成完整闭环：
+利用 OpenClaw 内置的方舟代码模型 `ark/doubao-seed-2-0-code-preview-260215` 直接调用编码能力，结合我们已有的 `cs-notes-git-sync` skill，形成完整闭环：
 
 ```
 Lark 发送任务
@@ -70,24 +70,42 @@ OpenClaw Gateway
     ↓
 cs-notes-git-sync skill（写入 INBOX.md）
     ↓
-coding-agent skill（执行编码任务）
+方舟代码模型（执行编码任务）
     ↓
 Git commit &amp; push
     ↓
 Lark 通知完成
 ```
 
-#### OpenClaw coding-agent skill 介绍
+#### OpenClaw 可用 Skills 清单
+
+**本地工作区中的 Skills**：
+1. image-generate - 使用内置 image_generate.py 脚本生成图片，需要准备清晰具体的 prompt
+2. veadk-skills - VeADK 技能集合，包括根据需求生成 Agent、将 Enio Agent 转换为 VeADK-Go Agent
+3. veadk-skills - VeADK 技能集合，包括根据需求生成 Agent、将 Langchain/Langgraph/Dify 工作流转换为 VeADK Agent
+4. video-generate - 使用 video_generate.py 脚本生成视频，需要提供文件名和 prompt，可选提供首帧图片（URL 或本地路径）
+
+**系统内置 Skills**：
+1. feishu-doc - 飞书文档读写操作
+2. feishu-drive - 飞书存储空间文件管理
+3. feishu-perm - 飞书文档和文件权限管理
+4. feishu-wiki - 飞书知识库导航
+5. healthcheck - 主机安全加固和风险容忍度配置
+6. skill-creator - 创建或更新 AgentSkills
+7. tmux - 远程控制 tmux 会话
+8. weather - 获取当前天气和预报
+
+#### 方舟代码模型能力
 
 **功能**：
-- 运行 Claude Code、Codex、OpenCode、Pi Coding Agent 等工具
-- 自动安装和配置编码工具
+- 直接使用 `ark/doubao-seed-2-0-code-preview-260215` 模型
 - 支持自然语言指令执行编码任务
+- 可以直接创建和修改代码文件
 - 与 OpenClaw 其他 skill 无缝集成
 
 **优势**：
-- 开箱即用，无需单独部署
-- OpenClaw 生态原生支持
+- 开箱即用，无需单独部署 coding-agent skill
+- 火山引擎方舟模型原生支持
 - 结合 Lark 多渠道输入
 - 已有 Git 同步 skill 可以复用
 
@@ -211,42 +229,38 @@ Lark 通知完成
 
 ##### 阶段一：基础配置与验证
 
-* [ ] 验证 OpenClaw coding-agent skill 可用性
+* [x] 验证 OpenClaw 可用 Skills 和编码能力
   * **Assignee**：User
   * **Priority**：high
-  * **你需要做的**：
-    1. 在 Lark 中对 OpenClaw bot 说：**"你有哪些可用的 Skills？"**
-    2. 然后问：**"coding-agent skill 是做什么的？"**
-    3. 如果存在，尝试：**"使用 coding-agent 创建一个简单的 hello world Python 脚本"**
+  * **已完成内容**：
+    1. 查询了可用 Skills（image-generate、veadk-skills、video-generate、feishu-doc、feishu-drive、feishu-perm、feishu-wiki、healthcheck、skill-creator、tmux、weather）
+    2. 确认没有 coding-agent skill
+    3. 确认 OpenClaw 正在使用方舟代码模型 `ark/doubao-seed-2-0-code-preview-260215`
+    4. 确认可以直接创建代码
   * **Definition of Done**：
-    * 确认 OpenClaw 内置了 coding-agent skill
-    * 了解其使用方法
-    * 完成简单编码任务验证
+    * 确认 OpenClaw 可用 Skills 清单
+    * 确认方舟代码模型已配置
+    * 了解直接编码能力
 
-* [ ] 配置火山引擎方舟 API
+* [x] 配置火山引擎方舟 API
   * **Assignee**：User
   * **Priority**：high
-  * **Links**：火山引擎方舟平台
-  * **你需要做的**：
-    1. 登录火山引擎方舟平台
-    2. 开通 **Doubao-Seed-Code** 模型服务
-    3. 获取 API Key
-    4. 在 OpenClaw WebChat 或配置文件中设置 API Key
+  * **状态**：已配置完成
   * **Definition of Done**：
     * 模型服务已开通
-    * API Key 已获取
-    * OpenClaw 已配置使用方舟 API
+    * API Key 已配置
+    * OpenClaw 正在使用 `ark/doubao-seed-2-0-code-preview-260215` 模型
 
 * [ ] 通过 Lark 发送第一个编码任务
   * **Assignee**：User
   * **Priority**：high
   * **你需要说的（在 Lark 中）**：
     ```
-    使用 coding-agent skill，帮我创建一个简单的 Python 脚本，打印 "Hello from OpenClaw!"
+    帮我创建一个简单的 Python 脚本，打印 "Hello from OpenClaw!"
     ```
   * **Definition of Done**：
     * OpenClaw 接收到任务
-    * coding-agent 执行并生成代码
+    * 方舟代码模型执行并生成代码
     * 验证代码正常
 
 ##### 阶段二：完整闭环测试
@@ -258,13 +272,13 @@ Lark 通知完成
     ```
     帮我记录一个任务：创建一个简单的 Python 脚本
     优先级：high
-    然后使用 coding-agent 来执行这个任务
+    然后帮我执行这个任务
     ```
   * **或者分两步说**：
     1. 先添加任务：**"帮我添加任务：测试编码能力，优先级 high"**
-    2. 再执行：**"使用 cs-notes-git-sync 和 coding-agent 来处理 INBOX 中的任务"**
+    2. 再执行：**"使用 cs-notes-git-sync 来处理 INBOX 中的任务，然后帮我执行编码任务"**
   * **Definition of Done**：
-    * Lark 消息 → INBOX.md → coding-agent 执行 → Git commit &amp; push → Lark 通知完成
+    * Lark 消息 → INBOX.md → 方舟代码模型执行 → Git commit &amp; push → Lark 通知完成
 
 * [ ] OpenClaw实操实践
   * Priority：medium
@@ -398,15 +412,15 @@ Lark 通知完成
 
 ##### Skill 整合
 
-* [ ] 分析并整合 cs-notes-git-sync 和 coding-agent skills
+* [ ] 分析并整合 cs-notes-git-sync 和方舟代码模型
   * Assignee：AI
   * Priority：high
   * Definition of Done：
-    * 两个 skill 可以配合工作
+    * cs-notes-git-sync skill 和方舟代码模型可以配合工作
     * 设计工作流：Lark 消息 → INBOX.md → 编码执行 → Git 同步
   * Plan：
-    * 分析两个 skill 的工作流
-    * 设计整合方案
+    * 分析 cs-notes-git-sync skill 的工作流
+    * 设计与方舟代码模型的整合方案
     * 如果需要，创建整合 skill
 
 ##### 其他待处理任务
@@ -710,15 +724,15 @@ cd /path/to/CS-Notes
 优先级：high|medium|low
 ```
 
-**使用 coding-agent 编码**：
+**直接编码**：
 ```
-使用 coding-agent，&lt;编码任务描述&gt;
+帮我&lt;编码任务描述&gt;
 ```
 
 **测试完整流程**：
 ```
 帮我添加任务：&lt;任务描述&gt;，优先级 high
-然后使用 coding-agent 来执行这个任务
+然后帮我执行这个任务
 ```
 
 ***
