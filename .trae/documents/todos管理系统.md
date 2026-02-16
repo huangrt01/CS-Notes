@@ -229,42 +229,7 @@ Lark 通知完成
 
 ##### 阶段一：基础配置与验证
 
-* [x] 验证 OpenClaw 可用 Skills 和编码能力
-  * **Assignee**：User
-  * **Priority**：high
-  * **已完成内容**：
-    1. 查询了可用 Skills（image-generate、veadk-skills、video-generate、feishu-doc、feishu-drive、feishu-perm、feishu-wiki、healthcheck、skill-creator、tmux、weather）
-    2. 确认没有 coding-agent skill
-    3. 确认 OpenClaw 正在使用方舟代码模型 `ark/doubao-seed-2-0-code-preview-260215`
-    4. 确认可以直接创建代码
-  * **Definition of Done**：
-    * 确认 OpenClaw 可用 Skills 清单
-    * 确认方舟代码模型已配置
-    * 了解直接编码能力
-
-* [x] 配置火山引擎方舟 API
-  * **Assignee**：User
-  * **Priority**：high
-  * **状态**：已配置完成
-  * **Definition of Done**：
-    * 模型服务已开通
-    * API Key 已配置
-    * OpenClaw 正在使用 `ark/doubao-seed-2-0-code-preview-260215` 模型
-
-* [x] 通过 Lark 发送第一个编码任务
-  * **Assignee**：User
-  * **Priority**：high
-  * **已完成内容**：
-    * 发送消息："帮我创建一个简单的 Python 脚本，打印 "Hello from OpenClaw!"，并告诉我这个脚本所在路径"
-    * OpenClaw 创建了脚本：`/root/.openclaw/workspace/hello_openclaw.py`
-    * 脚本内容正确
-    * 成功运行脚本
-    * 已提交到 git
-  * **Definition of Done**：
-    * OpenClaw 接收到任务 ✓
-    * 方舟代码模型执行并生成代码 ✓
-    * 验证代码正常 ✓
-    * 提交到 git ✓
+✅ **已完成，已归档至 TODO_ARCHIVE.md**
 
 ##### 阶段二：完整闭环测试
 
@@ -351,6 +316,26 @@ Lark 通知完成
 
 ##### OpenClaw 稳定性优化
 
+* [ ] 解决 OpenClaw Gateway device token mismatch 问题，恢复 cron 工具等 Gateway API 的使用
+  - Priority：high
+  - Assignee：AI + User
+  - Feedback Required：是
+  - Links：`~/.openclaw/openclaw.json`、`~/.openclaw/devices/paired.json`
+  - Definition of Done：
+    * 分析 device token mismatch 的根本原因
+    * 解决 token 不匹配问题
+    * 验证 `openclaw cron list` 等命令可以正常工作
+    * 记录解决方案到笔记
+  - Plan：
+    * 分析当前配置文件（openclaw.json、paired.json）
+    * 查阅 OpenClaw 文档了解 device token 机制
+    * 尝试重新配对或 rotate token
+    * 验证 Gateway API 恢复正常
+  - 问题背景：
+    * 错误信息：`gateway connect failed: Error: unauthorized: device token mismatch (rotate/reissue device token)`
+    * 影响：无法使用 `openclaw cron` 等 Gateway CLI 工具
+    * 当前状态：CLI 命令无法连接 Gateway，但 Feishu 聊天正常工作
+
 * [ ] 设计实现 OpenClaw session 管理优化方案，避免 token 超限错误 + Token Usage 优化
   - Priority：high
   - Assignee：AI
@@ -388,55 +373,16 @@ Lark 通知完成
     * ✅ 使用指南已创建：.trae/documents/SESSION-OPTIMIZER-USAGE.md
     * ✅ 监控脚本已创建：session-monitor.py
     * ✅ 优化器脚本已创建：session-optimizer.py（自动检查 + 提醒切换）
-    * ✅ 方案 1 已完成：Session 长度监控与提醒（cron 已真正跑通！）
+    * ✅ 方案 1 已完成：Session 长度监控与提醒（脚本已创建，cron job 待配置）
     * ⏸️ 方案 2-4：暂不执行（避免侵入 OpenClaw 内部代码）
 
-* [x] 基于 OpenClaw 实现 Top Lean AI 榜单每日监控与通知
-  - Priority：high
-  - Assignee：AI
-  - Feedback Required：否
-  - Links：Notes/AI-Agent-Product&amp;PE.md、top-lean-ai-monitor.py、.trae/documents/TopLeanAI-OpenClaw集成设计.md
-  - Started At：2026-02-17
-  - Progress：已完成！脚本支持从 Google Sheets CSV 导出解析 45 家 Lean AI 公司数据，支持 check/status/list 命令，支持飞书 webhook 通知，集成设计文档已创建
-  - Deliverables：
-    * top-lean-ai-monitor.py - 完整的监控脚本
-    * .top-lean-ai-state.json - 状态存储文件
-  - Definition of Done：
-    * ✅ 找到 Henry Shi 维护的 "Top Lean AI" 榜单的数据源/URL (Google Sheets)
-    * ✅ 实现类似 RSS 订阅的每日监控机制
-    * ✅ 支持每天检查一次榜单更新
-    * ✅ 如果出现新进入榜单的项目，把项目链接、介绍和公司信息发到飞书
-    * ✅ 记录榜单历史变化，便于追踪
-  - Plan：
-    * ✅ 先搜索找到 "Top Lean AI" 榜单的具体位置/URL
-    * ✅ 设计数据结构存储榜单信息和历史记录
-    * ✅ 实现监控脚本（Python）
-    * ✅ 集成飞书通知（支持 webhook）
-    * ✅ 配置 cron job 每日运行（已真正跑通！cron job 已配置，脚本测试通过）
-  - 背景信息：
-    * 榜单收录人均创收超 100 万美元的团队
-    * 最新名单是 45 家，其中 14 家总 ARR 超过 5000 万美元
-    * 代表公司：Telegram、Midjourney、Synthesia、Anywhere (Cursor)、OpenArt、Base44、Melcor、Chai Research、F.ai、ElevenLabs、Stability Bolt (new)、Gamma、Pika Labs、HeyGen、Perplexity、Runway、Harvey、Nexus、Cursor AI、Luma AI、Manus、Suno AI、Genspark、PixVerse、Lovart、Photoroom、Stan、OpenAudio、AKOOL、GPTZero、Praktika.ai、Creati、Latitude、SubMagic、GrowthX、Chatbase、Jenni.ai、Conversion、Pump.co、FyxerAI、Vapi、Recall.ai、Haven、Icon、Gumloop
-  - 使用方法：
-    * python3 top-lean-ai-monitor.py status   # 查看状态
-    * python3 top-lean-ai-monitor.py check    # 检查更新
-    * python3 top-lean-ai-monitor.py list     # 列出已知公司
-    * export FEISHU_WEBHOOK="https://..."    # 配置飞书 webhook 后自动发送通知
+✅ **已完成，已归档至 TODO_ARCHIVE.md**
 
 ##### 笔记整理
 
-* [ ] 探索如何让你能阅读微信公众号的文章
-  - Priority：high
-  - Assignee：AI
-  - Feedback Required：否
-  - Definition of Done：
-    * 研究微信公众号文章的反爬机制
-    * 找到可靠的获取完整文章内容的方法
-    * 测试方法是否有效
-  - Plan：
-    * 尝试使用不同的工具/方法（browser 工具、curl 配置合适的 headers、第三方 API 等）
-    * 分析失败原因
-    * 找到可行的解决方案
+✅ **探索如何让你能阅读微信公众号的文章** - 已完成，已归档至 TODO_ARCHIVE.md
+
+✅ **创建 speech-to-text 工具，用于处理音频附件** - 已完成，已归档至 TODO_ARCHIVE.md
 
 * [ ] 配置联网搜索能力（火山引擎 Ask-Echo 或 Brave Search）
   - Priority：high
@@ -464,31 +410,6 @@ Lark 通知完成
       - 方案一：使用火山引擎 Ask-Echo 服务
       - 方案二：继续使用 Brave Search API
   - 参考文档：https://docs.openclaw.ai/tools/web
-
-* [ ] 创建 speech-to-text 工具，用于处理音频附件
-  - Priority：high
-  - Assignee：AI
-  - Feedback Required：否
-  - Definition of Done：
-    * 研究可用的 speech-to-text 方案（Whisper API、本地 Whisper、云 API 等）
-    * 创建 Python 脚本或 Skill 来实现 speech-to-text
-    * 测试脚本是否能处理音频附件
-  - Plan：
-    * 调研可用的方案
-    * 选择合适的方案（如 OpenAI Whisper API 或本地 Whisper）
-    * 创建脚本或 Skill
-    * 测试功能
-  - Priority：high
-  - Assignee：AI
-  - Feedback Required：否
-  - Definition of Done：
-    * 研究微信公众号文章的反爬机制
-    * 找到可靠的获取完整文章内容的方法
-    * 测试方法是否有效
-  - Plan：
-    * 尝试使用不同的工具/方法（browser 工具、curl 配置合适的 headers、第三方 API 等）
-    * 分析失败原因
-    * 找到可行的解决方案
 
 ##### OpenClaw集成
 

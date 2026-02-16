@@ -92,3 +92,9 @@
   - Links：
   - Due：
 
+- 内容：解决 OpenClaw Gateway device token mismatch 问题
+  - 优先级：high
+  - 关联文件：`~/.openclaw/openclaw.json`、`~/.openclaw/devices/paired.json`
+  - 参考链接：
+  - 截止时间：
+

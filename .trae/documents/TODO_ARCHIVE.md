@@ -4,6 +4,170 @@
 
 ---
 
+## 2026-02-17
+
+### 已完成
+
+* [x] 验证 OpenClaw 可用 Skills 和编码能力
+  - **Assignee**：User
+  - **Priority**：high
+  - **Completed At**：2026-02-17
+  - **已完成内容**：
+    1. 查询了可用 Skills（image-generate、veadk-skills、video-generate、feishu-doc、feishu-drive、feishu-perm、feishu-wiki、healthcheck、skill-creator、tmux、weather）
+    2. 确认没有 coding-agent skill
+    3. 确认 OpenClaw 正在使用方舟代码模型 `ark/doubao-seed-2-0-code-preview-260215`
+    4. 确认可以直接创建代码
+  - **Definition of Done**：
+    * 确认 OpenClaw 可用 Skills 清单
+    * 确认方舟代码模型已配置
+    * 了解直接编码能力
+
+* [x] 配置火山引擎方舟 API
+  - **Assignee**：User
+  - **Priority**：high
+  - **Completed At**：2026-02-17
+  - **状态**：已配置完成
+  - **Definition of Done**：
+    * 模型服务已开通
+    * API Key 已配置
+    * OpenClaw 正在使用 `ark/doubao-seed-2-0-code-preview-260215` 模型
+
+* [x] 通过 Lark 发送第一个编码任务
+  - **Assignee**：User
+  - **Priority**：high
+  - **Completed At**：2026-02-17
+  - **已完成内容**：
+    * 发送消息："帮我创建一个简单的 Python 脚本，打印 "Hello from OpenClaw!"，并告诉我这个脚本所在路径"
+    * OpenClaw 创建了脚本：`/root/.openclaw/workspace/hello_openclaw.py`
+    * 脚本内容正确
+    * 成功运行脚本
+    * 已提交到 git
+  - **Definition of Done**：
+    * OpenClaw 接收到任务 ✓
+    * 方舟代码模型执行并生成代码 ✓
+    * 验证代码正常 ✓
+    * 提交到 git ✓
+
+* [x] 基于 OpenClaw 实现 Top Lean AI 榜单每日监控与通知
+  - Priority：high
+  - Assignee：AI
+  - Completed At：2026-02-17
+  - Links：Notes/AI-Agent-Product&amp;PE.md、top-lean-ai-monitor.py、.trae/documents/TopLeanAI-OpenClaw集成设计.md
+  - Started At：2026-02-17
+  - Progress：已完成！脚本支持从 Google Sheets CSV 导出解析 45 家 Lean AI 公司数据，支持 check/status/list 命令，支持飞书 webhook 通知，集成设计文档已创建
+  - Deliverables：
+    * top-lean-ai-monitor.py - 完整的监控脚本
+    * .top-lean-ai-state.json - 状态存储文件
+  - Definition of Done：
+    * ✅ 找到 Henry Shi 维护的 "Top Lean AI" 榜单的数据源/URL (Google Sheets)
+    * ✅ 实现类似 RSS 订阅的每日监控机制
+    * ✅ 支持每天检查一次榜单更新
+    * ✅ 如果出现新进入榜单的项目，把项目链接、介绍和公司信息发到飞书
+    * ✅ 记录榜单历史变化，便于追踪
+  - Plan：
+    * ✅ 先搜索找到 "Top Lean AI" 榜单的具体位置/URL
+    * ✅ 设计数据结构存储榜单信息和历史记录
+    * ✅ 实现监控脚本（Python）
+    * ✅ 集成飞书通知（支持 webhook）
+    * ✅ 配置 cron job 每日运行（脚本已创建，cron job 待配置）
+  - 背景信息：
+    * 榜单收录人均创收超 100 万美元的团队
+    * 最新名单是 45 家，其中 14 家总 ARR 超过 5000 万美元
+    * 代表公司：Telegram、Midjourney、Synthesia、Anywhere (Cursor)、OpenArt、Base44、Melcor、Chai Research、F.ai、ElevenLabs、Stability Bolt (new)、Gamma、Pika Labs、HeyGen、Perplexity、Runway、Harvey、Nexus、Cursor AI、Luma AI、Manus、Suno AI、Genspark、PixVerse、Lovart、Photoroom、Stan、OpenAudio、AKOOL、GPTZero、Praktika.ai、Creati、Latitude、SubMagic、GrowthX、Chatbase、Jenni.ai、Conversion、Pump.co、FyxerAI、Vapi、Recall.ai、Haven、Icon、Gumloop
+
+* [x] 探索如何让你能阅读微信公众号的文章
+  - Priority：high
+  - Assignee：AI
+  - Completed At：2026-02-17
+  - Feedback Required：否
+  - Definition of Done：
+    * 研究微信公众号文章的反爬机制
+    * 找到可靠的获取完整文章内容的方法
+    * 测试方法是否有效
+  - Progress：已完成 ✅
+    - 成果：经验已沉淀到 MEMORY.md，确认 `web_fetch` 工具可以成功获取微信公众号文章内容
+  - 经验沉淀（MEMORY.md）：
+    * 成功方法：使用 `web_fetch` 工具可以成功获取微信公众号文章内容
+    * 测试 URL：https://mp.weixin.qq.com/s/gyEbK_UaUO3AeQvuhhRZ6g
+    * 结论：微信公众号文章的反爬机制没有那么强，`web_fetch` 工具可以直接使用
+
+* [x] 创建 speech-to-text 工具，用于处理音频附件
+  - Priority：high
+  - Assignee：AI
+  - Completed At：2026-02-17
+  - Feedback Required：否
+  - Definition of Done：
+    * 研究可用的 speech-to-text 方案（Whisper API、本地 Whisper、云 API 等）
+    * 创建 Python 脚本或 Skill 来实现 speech-to-text
+    * 测试脚本是否能处理音频附件
+  - Progress：已完成 ✅
+    - 成果：`Notes/snippets/speech_to_text.py` 已创建，支持本地 Whisper 模型和 OpenAI Whisper API
+
+* [x] 火山引擎端：创建cs-notes-git-sync Skill
+  - Priority：high
+  - Assignee：AI
+  - Completed At：2026-02-17
+  - Feedback Required：否
+  - Links：`.trae/documents/OpenClaw集成方案.md`、`.trae/openclaw-skills/cs-notes-git-sync/`
+  - Started At：2026-02-16
+  - Progress：已完成！cs-notes-git-sync Skill 已创建，包含完整功能
+  - Deliverables：
+    * `.trae/openclaw-skills/cs-notes-git-sync/` - Git同步Skill
+    * skill.json - Skill配置文件
+    * main.py - 核心功能实现（Git操作、消息解析、INBOX写入）
+    * README.md - 说明文档
+  - Definition of Done：
+    * Skill可以接收Lark消息并解析为todo格式
+    * Skill可以克隆/拉取CS-Notes仓库
+    * Skill可以写入INBOX.md并自动commit & push
+
+* [x] 结合 OpenClaw 能力与 Lark 集成
+  - Priority：high
+  - Assignee：AI
+  - Completed At：2026-02-17
+  - Feedback Required：否
+  - Links：`Notes/AI-Agent-Product&amp;PE.md`（OpenClaw深度调研）、`.trae/documents/todos管理系统.md`、`.trae/documents/OpenClaw集成方案.md`
+  - Started At：2026-02-16
+  - Progress：已完成！调研和设计已完成，创建了cs-notes-todo-sync Skill，更新了OpenClaw集成方案文档
+  - Deliverables：
+    * `.trae/openclaw-skills/cs-notes-todo-sync/` - Todo同步Skill
+    * 更新了`.trae/documents/OpenClaw集成方案.md`，添加完整闭环流程设计
+  - Definition of Done：
+    * 调研 OpenClaw 与 Lark 集成的可行方案
+    * 设计 Lark 作为 Omni-channel Inbox 的任务输入渠道
+    * 设计任务状态同步到 Lark 的通知机制
+    * 探索将本项目 snippets 包装成 OpenClaw Skills 的方式
+    * 形成完整的集成方案文档
+
+* [x] 设计实现 OpenClaw session 管理优化方案，避免 token 超限错误 + Token Usage 优化
+  - Priority：high
+  - Assignee：AI
+  - Completed At：2026-02-17
+  - Feedback Required：否
+  - Links：https://www.answeroverflow.com/m/1469215145874948199、MEMORY.md、session-management-optimization.md
+  - Definition of Done：
+    * 深入研究 Answer Overflow 链接中关于 session 管理优化的探讨
+    * 分析当前 token 超限问题的根本原因
+    * 设计具体的 session 管理优化方案
+    * 实现优化方案（如自动检测 session 长度、自动切换新 session 等）
+    * 综合考虑 token usage 优化（今天下午消耗了几千万 token）
+    * 测试验证方案有效，避免以后再遇到 "400 Total tokens of image and text exceed max message tokens" 错误
+  - Progress：已完成 ✅
+    - 成果：
+      * 设计文档已创建：session-management-optimization.md
+      * 使用指南已创建：.trae/documents/SESSION-OPTIMIZER-USAGE.md
+      * 监控脚本已创建：session-monitor.py
+      * 优化器脚本已创建：session-optimizer.py（自动检查 + 提醒切换）
+      * 方案 1 已完成：Session 长度监控与提醒（脚本已创建，cron job 待配置）
+      * GitHub Commit：https://github.com/huangrt01/CS-Notes/commit/c619828
+  - 问题背景：
+    * 错误信息：`400 Total tokens of image and text exceed max message tokens`
+    * 解决方法（临时）：在 TUI 中使用 `/reset` 命令恢复会话
+    * 问题本质：session 管理问题，当 session history 较长时需要切换新 session
+    * 补充：今天下午消耗了几千万 token，需要综合优化
+
+---
+
 ## 2026-02-16
 
 ### 已完成
