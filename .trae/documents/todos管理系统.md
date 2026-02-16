@@ -318,23 +318,41 @@ Lark 通知完成
 
 * [ ] 解决 OpenClaw Gateway device token mismatch 问题，恢复 cron 工具等 Gateway API 的使用
   - Priority：high
-  - Assignee：AI + User
-  - Feedback Required：是
-  - Links：`~/.openclaw/openclaw.json`、`~/.openclaw/devices/paired.json`
+  - Assignee：User
+  - Feedback Required：否
+  - Links：`~/.openclaw/openclaw.json`、`~/.openclaw/devices/paired.json`、MEMORY.md
+  - **【重要！需要你执行！】**
   - Definition of Done：
-    * 分析 device token mismatch 的根本原因
-    * 解决 token 不匹配问题
+    * 执行 `openclaw gateway install --force`
+    * 执行 `openclaw gateway restart`
     * 验证 `openclaw cron list` 等命令可以正常工作
-    * 记录解决方案到笔记
-  - Plan：
-    * 分析当前配置文件（openclaw.json、paired.json）
-    * 查阅 OpenClaw 文档了解 device token 机制
-    * 尝试重新配对或 rotate token
-    * 验证 Gateway API 恢复正常
+  - **【AI 已经完成的工作】**
+    * ✅ 分析 device token mismatch 的根本原因
+    * ✅ 发现环境变量 `OPENCLAW_GATEWAY_TOKEN` 会覆盖 `gateway.auth.token`
+    * ✅ 找到三个 token 都不一样：
+      - paired.json：`fad65644b7374e54b6f512a0a3af3f87`
+      - openclaw.json：`8a952b9ebe4779d29c6bf018196e5b5d67b43ea5f77237ee`
+      - 环境变量：`59ac1f34670bb1c61a7bef9e29745b55507f0bb9170b35b1`
+    * ✅ 找到解决方案（来自官方文档）
+    * ✅ 记录到 MEMORY.md
+  - **【需要你执行的步骤】**
+    ```bash
+    openclaw gateway install --force
+    openclaw gateway restart
+    ```
+  - **【验证步骤】**
+    ```bash
+    openclaw cron list
+    ```
+  - **参考文档**：
+    * Reddit 讨论 1：https://www.reddit.com/r/clawdbot/comments/1qujzgm/openclaw_gateway_token_mismatch_error/
+    * Reddit 讨论 2：https://www.reddit.com/r/openclaw/comments/1r18u6b/mismatching_tokens/
+    * OpenClaw 官方文档：https://docs.openclaw.ai/gateway/troubleshooting
   - 问题背景：
     * 错误信息：`gateway connect failed: Error: unauthorized: device token mismatch (rotate/reissue device token)`
     * 影响：无法使用 `openclaw cron` 等 Gateway CLI 工具
     * 当前状态：CLI 命令无法连接 Gateway，但 Feishu 聊天正常工作
+    * AI 已经完成分析和记录，需要你执行命令！
 
 * [ ] 设计实现 OpenClaw session 管理优化方案，避免 token 超限错误 + Token Usage 优化
   - Priority：high
