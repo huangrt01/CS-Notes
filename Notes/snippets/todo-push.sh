@@ -1,0 +1,198 @@
+#!/bin/bash
+# Todo Push 脚本 - 生成变更摘要，供 AI 智能生成 commit message
+# 严格控制 git add 范围，保护隐私
+
+# 配置
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+LOG_DIR="$REPO_ROOT/.trae/logs"
+LOG_FILE="$LOG_DIR/todo-push-$(date +%Y%m%d).log"
+DIFF_SUMMARY="$LOG_DIR/git-diff-summary-$(date +%Y%m%d-%H%M%S).md"
+DEFAULT_BRANCH="master"
+
+# Git add 白名单：仅允许这三个文件夹
+ALLOWED_FOLDERS=(
+    "Notes/"
+    ".trae/"
+    "创作/"
+)
+
+# Git add 黑名单：绝对禁止的文件夹
+FORBIDDEN_FOLDERS=(
+    "公司项目/"
+)
+
+# 排除的文件/文件夹（即使在白名单内也排除）
+EXCLUDE_PATTERNS=(
+    ".trae/logs/"
+    "*.pyc"
+    "__pycache__/"
+    ".DS_Store"
+)
+
+# 创建日志目录
+mkdir -p "$LOG_DIR"
+
+# 日志函数
+log() {
+    local level="$1"
+    shift
+    local message="$*"
+    local timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+    echo "[$timestamp] [$level] $message" | tee -a "$LOG_FILE"
+}
+
+# 错误处理函数
+error_exit() {
+    log "ERROR" "$1"
+    exit 1
+}
+
+# 检查文件是否在允许范围内
+is_file_allowed() {
+    local file="$1"
+    
+    # 检查是否在黑名单中（绝对禁止）
+    for forbidden in "${FORBIDDEN_FOLDERS[@]}"; do
+        if [[ "$file" == "$forbidden"* ]]; then
+            return 1
+        fi
+    done
+    
+    # 检查是否在白名单中
+    local in_allowed=0
+    for allowed in "${ALLOWED_FOLDERS[@]}"; do
+        if [[ "$file" == "$allowed"* ]]; then
+            in_allowed=1
+            break
+        fi
+    done
+    
+    if [ $in_allowed -eq 0 ]; then
+        return 1
+    fi
+    
+    # 检查是否需要排除
+    for exclude in "${EXCLUDE_PATTERNS[@]}"; do
+        if [[ "$file" == *"$exclude"* ]]; then
+            return 1
+        fi
+    done
+    
+    return 0
+}
+
+# 生成变更摘要文件
+generate_diff_summary() {
+    local allowed_files=("$@")
+    
+    log "INFO" "生成变更摘要: $DIFF_SUMMARY"
+    
+    {
+        echo "# Git 变更摘要"
+        echo ""
+        echo "生成时间: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo ""
+        echo "## 变更文件列表"
+        echo ""
+        
+        # 显示每个文件的状态
+        while read -r status file; do
+            if is_file_allowed "$file"; then
+                case "$status" in
+                    M*) echo "- [修改] $file" ;;
+                    A*) echo "- [新增] $file" ;;
+                    D*) echo "- [删除] $file" ;;
+                    R*) echo "- [重命名] $file" ;;
+                    *) echo "- [$status] $file" ;;
+                esac
+            fi
+        done < <(git status --porcelain)
+        
+        echo ""
+        echo "## 详细变更内容"
+        echo ""
+        
+        # 生成每个允许文件的 diff
+        for file in "${allowed_files[@]}"; do
+            if [ -f "$file" ] || [ -d "$file" ]; then
+                echo "### $file"
+                echo ""
+                echo '```diff'
+                git diff --no-color -- "$file" 2>/dev/null || echo "(新文件，无 diff)"
+                echo '```'
+                echo ""
+            fi
+        done
+        
+        echo ""
+        echo "---"
+        echo "请 AI 基于以上变更，生成一个清晰、人性化的 commit message。"
+        echo "要求："
+        echo "- 用中文"
+        echo "- 简洁明了，不超过 50 字符"
+        echo "- 体现变更的核心内容"
+        echo "- 格式建议：type: description（如：feat: 添加xxx功能, fix: 修复xxx问题, docs: 更新文档, refactor: 重构代码）"
+    } > "$DIFF_SUMMARY"
+    
+    log "INFO" "变更摘要已生成: $DIFF_SUMMARY"
+    echo ""
+    echo "========================================"
+    echo "变更摘要已生成！"
+    echo "文件位置: $DIFF_SUMMARY"
+    echo ""
+    echo "请 AI 读取此文件，分析变更并生成 commit message。"
+    echo "生成后，运行 todo-push-commit.sh '<commit-message>' 来提交。"
+    echo "========================================"
+    echo ""
+}
+
+# 主函数
+main() {
+    log "INFO" "========================================"
+    log "INFO" "Todo Push 脚本开始执行"
+    log "INFO" "========================================"
+    
+    cd "$REPO_ROOT" || error_exit "无法进入仓库目录"
+    
+    # 1. 获取所有更改
+    log "INFO" "步骤 1/3: 检查更改"
+    local all_changes=$(git status --porcelain)
+    if [ -z "$all_changes" ]; then
+        log "INFO" "没有需要提交的更改"
+        exit 0
+    fi
+    
+    # 显示所有更改
+    log "INFO" "检测到以下更改："
+    echo "$all_changes" | while read -r line; do
+        log "INFO" "  $line"
+    done
+    
+    # 2. 过滤允许的文件
+    log "INFO" "步骤 2/3: 过滤允许的文件（仅 Notes/、.trae/、创作/）"
+    local allowed_files=()
+    while read -r status file; do
+        if is_file_allowed "$file"; then
+            allowed_files+=("$file")
+        else
+            log "WARN" "  [跳过] $file"
+        fi
+    done < <(git status --porcelain)
+    
+    if [ ${#allowed_files[@]} -eq 0 ]; then
+        log "INFO" "没有允许提交的文件，退出"
+        exit 0
+    fi
+    
+    log "INFO" "允许提交的文件："
+    for file in "${allowed_files[@]}"; do
+        log "INFO" "  ✓ $file"
+    done
+    
+    # 3. 生成变更摘要
+    log "INFO" "步骤 3/3: 生成变更摘要"
+    generate_diff_summary "${allowed_files[@]}"
+}
+
+# 运行主函数
+main
