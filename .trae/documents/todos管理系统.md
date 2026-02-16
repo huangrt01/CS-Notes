@@ -364,6 +364,31 @@ Lark 通知完成
     * 分析失败原因
     * 找到可行的解决方案
 
+* [ ] 创建 speech-to-text 工具，用于处理音频附件
+  - Priority：high
+  - Assignee：AI
+  - Feedback Required：否
+  - Definition of Done：
+    * 研究可用的 speech-to-text 方案（Whisper API、本地 Whisper、云 API 等）
+    * 创建 Python 脚本或 Skill 来实现 speech-to-text
+    * 测试脚本是否能处理音频附件
+  - Plan：
+    * 调研可用的方案
+    * 选择合适的方案（如 OpenAI Whisper API 或本地 Whisper）
+    * 创建脚本或 Skill
+    * 测试功能
+  - Priority：high
+  - Assignee：AI
+  - Feedback Required：否
+  - Definition of Done：
+    * 研究微信公众号文章的反爬机制
+    * 找到可靠的获取完整文章内容的方法
+    * 测试方法是否有效
+  - Plan：
+    * 尝试使用不同的工具/方法（browser 工具、curl 配置合适的 headers、第三方 API 等）
+    * 分析失败原因
+    * 找到可行的解决方案
+
 ##### OpenClaw集成
 
 * [ ] 火山引擎端：创建cs-notes-git-sync Skill
