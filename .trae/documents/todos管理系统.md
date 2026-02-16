@@ -385,18 +385,19 @@ Lark 通知完成
     * 补充：今天下午消耗了几千万 token，需要综合优化
   - 进展：
     * ✅ 设计文档已创建：session-management-optimization.md
+    * ✅ 使用指南已创建：.trae/documents/SESSION-OPTIMIZER-USAGE.md
     * ✅ 监控脚本已创建：session-monitor.py
     * ✅ 优化器脚本已创建：session-optimizer.py（自动检查 + 提醒切换）
-    * 🔄 方案 1 执行中：Session 长度监控与提醒
+    * ✅ 方案 1 执行中：Session 长度监控与提醒
     * ⏸️ 方案 2-4：暂不执行（避免侵入 OpenClaw 内部代码）
 
 * [x] 基于 OpenClaw 实现 Top Lean AI 榜单每日监控与通知
   - Priority：high
   - Assignee：AI
   - Feedback Required：否
-  - Links：Notes/AI-Agent-Product&amp;PE.md、top-lean-ai-monitor.py
+  - Links：Notes/AI-Agent-Product&amp;PE.md、top-lean-ai-monitor.py、.trae/documents/TopLeanAI-OpenClaw集成设计.md
   - Started At：2026-02-17
-  - Progress：已完成！脚本支持从 Google Sheets CSV 导出解析 45 家 Lean AI 公司数据，支持 check/status/list 命令，支持飞书 webhook 通知
+  - Progress：已完成！脚本支持从 Google Sheets CSV 导出解析 45 家 Lean AI 公司数据，支持 check/status/list 命令，支持飞书 webhook 通知，集成设计文档已创建
   - Deliverables：
     * top-lean-ai-monitor.py - 完整的监控脚本
     * .top-lean-ai-state.json - 状态存储文件
