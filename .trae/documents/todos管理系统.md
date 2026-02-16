@@ -386,6 +386,7 @@ Lark 通知完成
   - 进展：
     * ✅ 设计文档已创建：session-management-optimization.md
     * ✅ 监控脚本已创建：session-monitor.py
+    * ✅ 优化器脚本已创建：session-optimizer.py（自动检查 + 提醒切换）
     * 🔄 方案 1 执行中：Session 长度监控与提醒
     * ⏸️ 方案 2-4：暂不执行（避免侵入 OpenClaw 内部代码）
 

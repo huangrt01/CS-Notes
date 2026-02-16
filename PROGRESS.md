@@ -20,21 +20,21 @@
   - 规划了 4 个实施阶段：Phase 1-4
 - **GitHub Commit**：https://github.com/huangrt01/CS-Notes/commit/eafa223
 
-#### 3. Session 监控脚本实现 ✅（方案 1 执行中）
+#### 3. Session 监控与优化脚本实现 ✅（方案 1 执行中）
 - **任务**：创建 session 监控脚本，基于 OpenClaw 现有能力，不侵入内部代码
 - **完成**：
   - 创建了 `session-monitor.py`
+  - 创建了 `session-optimizer.py`（更实用的版本）
   - **重要原则强调**：基于 OpenClaw 现有能力，不侵入内部代码
     - ✅ 不修改 OpenClaw 源代码
     - ✅ 不修改 OpenClaw 配置文件
     - ✅ 仅使用 OpenClaw 已提供的功能
     - ✅ 推荐使用 OpenClaw 内置的 `/reset` 命令
-  - 功能包括：
-    - Session 长度监控
-    - Token 使用估算
-    - 自动警告（消息数量、token 使用量）
-    - 推荐使用 `/reset` 命令切换 session
-    - 状态报告
+  - **session-optimizer.py 功能**：
+    - ✅ 自动检查 session 状态（消息数量、运行时间）
+    - ✅ 在需要时提醒用户切换 session
+    - ✅ 提供清晰的操作步骤
+    - ✅ 记录 session 历史
   - 测试通过 ✅
 - **GitHub Commit**：https://github.com/huangrt01/CS-Notes/commit/24f4c07
 
