@@ -364,6 +364,28 @@ Lark 通知完成
     * 分析失败原因
     * 找到可行的解决方案
 
+* [ ] 配置联网搜索能力（Brave Search API key）
+  - Priority：high
+  - Assignee：User
+  - Feedback Required：否
+  - Definition of Done：
+    * 分析当前联网搜索能力现状
+    * 确认 web_search 和 web_fetch 工具可用
+    * 配置 Brave Search API key
+    * 测试联网搜索功能是否正常工作
+  - Plan：
+    * 分析当前工具状态（已完成：确认有 web_search 和 web_fetch 工具）
+    * 获取 Brave Search API key
+    * 运行 `openclaw configure --section web` 配置 API key
+    * 测试 web_search 功能
+  - 当前状态：
+    * ✅ 已确认有 web_search 和 web_fetch 工具
+    * ❌ 缺少 Brave Search API key 配置
+  - 分析结果：
+    * 不需要去火山引擎找调用方式，已有内置工具
+    * 只需要配置 Brave Search API key 即可
+  - 参考文档：https://docs.openclaw.ai/tools/web
+
 * [ ] 创建 speech-to-text 工具，用于处理音频附件
   - Priority：high
   - Assignee：AI
