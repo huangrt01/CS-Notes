@@ -35,7 +35,8 @@
    - 运行在云端 ECS 上
    - 托管 CS-Notes 仓库的克隆
    - 通过自定义 Skill 接收 Lark 消息，写入 `.trae/documents/INBOX.md`
-   - 自动 commit & push 到远程 Git 仓库
+   - 自动 commit &amp; push 到远程 Git 仓库
+   - 内置 `coding-agent` skill，可直接调用 Claude Code、Codex、OpenCode 等 CLI 形态的 AI 编程工具
 
 4. **Git 仓库**：
    - 作为唯一的真相源（single source of truth）
@@ -44,7 +45,7 @@
 5. **本地 Mac**：
    - Trae 定期（或手动执行 `todo-sync.sh`）从 Git 拉取最新代码
    - 执行任务，处理代码
-   - 执行完成后，commit & push 回远程仓库
+   - 执行完成后，commit &amp; push 回远程仓库
    - 火山引擎 OpenClaw 拉取更新，通过 Lark 通知用户任务完成
 
 ### 火山引擎部署 vs 本地 Mac 部署的核心区别
@@ -55,6 +56,40 @@
 | 网络架构 | OpenClaw Gateway 运行在 127.0.0.1:18789 | OpenClaw 运行在云端服务器 |
 | 飞书集成 | 需要手动配置 | 预集成飞书，零代码配置 |
 | 稳定性 | 受 Mac 休眠、关机影响 | 24/7 稳定运行 |
+
+### OpenClaw + coding-agent skill 一体化方案
+
+#### 核心思路
+
+利用 OpenClaw 的 `coding-agent` skill 直接调用编码能力，结合我们已有的 `cs-notes-git-sync` skill，形成完整闭环：
+
+```
+Lark 发送任务
+    ↓
+OpenClaw Gateway
+    ↓
+cs-notes-git-sync skill（写入 INBOX.md）
+    ↓
+coding-agent skill（执行编码任务）
+    ↓
+Git commit &amp; push
+    ↓
+Lark 通知完成
+```
+
+#### OpenClaw coding-agent skill 介绍
+
+**功能**：
+- 运行 Claude Code、Codex、OpenCode、Pi Coding Agent 等工具
+- 自动安装和配置编码工具
+- 支持自然语言指令执行编码任务
+- 与 OpenClaw 其他 skill 无缝集成
+
+**优势**：
+- 开箱即用，无需单独部署
+- OpenClaw 生态原生支持
+- 结合 Lark 多渠道输入
+- 已有 Git 同步 skill 可以复用
 
 ## 核心概念
 
@@ -75,8 +110,6 @@
 ## 当前任务列表
 
 ### 进行中 (In Progress)
-
-
 
 #### OpenClaw集成（阶段二：Git同步机制实现）
 
@@ -106,7 +139,7 @@
 
     * Skill可以克隆/拉取CS-Notes仓库
 
-    * Skill可以写入INBOX.md并自动commit & push
+    * Skill可以写入INBOX.md并自动commit &amp; push
 
   * Plan：
 
@@ -117,130 +150,6 @@
     * 实现消息解析与INBOX.md写入
 
     * 测试端到端流程：Lark发消息 → Skill写入 → Git push
-
-### 待处理 (Pending)
-
-
-
-
-
-  * Priority：high
-
-  * Assignee：AI
-
-  * Feedback Required：否
-
-  * Links：`.trae/documents/OpenClaw集成方案.md`
-
-  * Definition of Done：
-
-    * Skill可以接收Lark消息并解析为todo格式
-
-    * Skill可以克隆/拉取CS-Notes仓库
-
-    * Skill可以写入INBOX.md并自动commit & push
-
-  * Plan：
-
-    * 创建Skill目录结构（skill.json、main.py）
-
-    * 实现Git操作（clone、pull、commit、push）
-
-    * 实现消息解析与INBOX.md写入
-
-    * 测试端到端流程：Lark发消息 → Skill写入 → Git push
-
-#### OpenClaw集成（阶段三：任务状态同步）
-
-* [ ] 实现任务状态同步到Lark的通知机制
-
-  * Priority：medium
-
-  * Assignee：AI
-
-  * Feedback Required：否
-
-  * Links：`.trae/documents/OpenClaw集成方案.md`
-
-  * Definition of Done：
-
-    * 火山引擎端可以监听Git仓库变化
-
-    * 任务完成时可以通过OpenClaw message send发送通知到Lark
-
-    * 支持卡片展示任务状态
-
-  * Plan：
-
-    * 研究Git webhook或定期轮询机制
-
-    * 编写状态同步脚本
-
-    * 集成openclaw message send命令
-
-#### 测试与验证
-
-* [ ] 测试完整的Lark → 火山引擎OpenClaw → Git → 本地Mac闭环流程
-
-  * Priority：high
-
-  * Assignee：User + AI
-
-  * Feedback Required：是
-
-  * Links：`.trae/documents/OpenClaw集成方案.md`
-
-  * Definition of Done：
-
-    * 从Lark发送消息，火山引擎端可以接收并写入INBOX.md
-
-    * 火山引擎端可以自动commit & push到Git仓库
-
-    * 本地Mac端可以pull到最新代码，todo-sync.sh扫描新任务
-
-    * 本地Mac执行任务后commit & push，火山引擎端拉取更新并通过Lark通知用户
-
-  * Plan：
-
-    * 从Lark发送测试消息
-
-    * 验证火山引擎端是否接收并push到Git
-
-    * 本地Mac运行todo-sync.sh验证是否拉取到新任务
-
-    * 模拟本地执行任务并push，验证Lark通知
-
-* [ ] 验证cs-notes-git-sync Skill的能力
-
-  * Priority：medium
-
-  * Assignee：AI
-
-  * Feedback Required：否
-
-  * Links：`.trae/documents/OpenClaw集成方案.md`、`.trae/documents/TODO_ARCHIVE.md`
-
-  * Definition of Done：
-
-    * 验证火山引擎上 `~/.openclaw/workspace/skills/cs-notes-git-sync/` 目录存在且完整
-
-    * 验证 skill.json 配置正确
-
-    * 验证 main.py 可以正常从OpenClaw接收消息、写入INBOX.md、并执行Git操作
-
-    * 验证端到端流程正常工作
-
-  * Plan：
-
-    * 检查目录结构完整性
-
-    * 验证skill.json配置
-
-    * 测试main.py功能
-
-    * 结合OpenClaw gateway进行端到端测试
-
-### 进行中 (In Progress)
 
 #### 结合 OpenClaw 能力与 Lark 集成
 
@@ -294,51 +203,213 @@
 
     * **Skills包装**：将本项目snippets包装成OpenClaw Skills，通过Lark Bot触发
 
-#### 其他待处理任务
+### 待处理 (Pending)
+
+#### User 需要做的任务
+
+这些任务需要你在 Mac 上操作，或通过 Lark 与 OpenClaw bot 对话。
+
+##### 阶段一：基础配置与验证
+
+* [ ] 验证 OpenClaw coding-agent skill 可用性
+  * **Assignee**：User
+  * **Priority**：high
+  * **你需要做的**：
+    1. 在 Lark 中对 OpenClaw bot 说：**"你有哪些可用的 Skills？"**
+    2. 然后问：**"coding-agent skill 是做什么的？"**
+    3. 如果存在，尝试：**"使用 coding-agent 创建一个简单的 hello world Python 脚本"**
+  * **Definition of Done**：
+    * 确认 OpenClaw 内置了 coding-agent skill
+    * 了解其使用方法
+    * 完成简单编码任务验证
+
+* [ ] 配置火山引擎方舟 API
+  * **Assignee**：User
+  * **Priority**：high
+  * **Links**：火山引擎方舟平台
+  * **你需要做的**：
+    1. 登录火山引擎方舟平台
+    2. 开通 **Doubao-Seed-Code** 模型服务
+    3. 获取 API Key
+    4. 在 OpenClaw WebChat 或配置文件中设置 API Key
+  * **Definition of Done**：
+    * 模型服务已开通
+    * API Key 已获取
+    * OpenClaw 已配置使用方舟 API
+
+* [ ] 通过 Lark 发送第一个编码任务
+  * **Assignee**：User
+  * **Priority**：high
+  * **你需要说的（在 Lark 中）**：
+    ```
+    使用 coding-agent skill，帮我创建一个简单的 Python 脚本，打印 "Hello from OpenClaw!"
+    ```
+  * **Definition of Done**：
+    * OpenClaw 接收到任务
+    * coding-agent 执行并生成代码
+    * 验证代码正常
+
+##### 阶段二：完整闭环测试
+
+* [ ] 测试端到端完整流程
+  * **Assignee**：User
+  * **Priority**：high
+  * **你需要说的（在 Lark 中）**：
+    ```
+    帮我记录一个任务：创建一个简单的 Python 脚本
+    优先级：high
+    然后使用 coding-agent 来执行这个任务
+    ```
+  * **或者分两步说**：
+    1. 先添加任务：**"帮我添加任务：测试编码能力，优先级 high"**
+    2. 再执行：**"使用 cs-notes-git-sync 和 coding-agent 来处理 INBOX 中的任务"**
+  * **Definition of Done**：
+    * Lark 消息 → INBOX.md → coding-agent 执行 → Git commit &amp; push → Lark 通知完成
+
+* [ ] OpenClaw实操实践
+  * Priority：medium
+  * Assignee：User
+  * Feedback Required：是（实操过程中可能需要反馈，实操完成后需记录）
+  * Links：&lt;https://mp.weixin.qq.com/s/Mkbbqdvxh-95pVlnLv9Wig、`Notes/AI-Agent-Product&amp;PE.md`&gt;
+  * Definition of Done：用户完成OpenClaw实操，将实践过程和结果记录到笔记
+  * Plan：基于AI的调研分析，用户按照实践例子完成实操
+
+#### AI 需要做的任务
+
+这些任务由 AI 自动执行，或在 OpenClaw 云端运行。
+
+##### OpenClaw集成
+
+* [ ] 火山引擎端：创建cs-notes-git-sync Skill
 
   * Priority：high
 
-  * Links：`Notes/AI-Agent-Product&amp;PE.md`（OpenClaw深度调研）、`.trae/documents/todos管理系统.md`
+  * Assignee：AI
+
+  * Feedback Required：否
+
+  * Links：`.trae/documents/OpenClaw集成方案.md`
 
   * Definition of Done：
 
-    * 调研 OpenClaw 与 Lark 集成的可行方案
+    * Skill可以接收Lark消息并解析为todo格式
 
-    * 设计 Lark 作为 Omni-channel Inbox 的任务输入渠道
+    * Skill可以克隆/拉取CS-Notes仓库
 
-    * 设计任务状态同步到 Lark 的通知机制
-
-    * 探索将本项目 snippets 包装成 OpenClaw Skills 的方式
-
-    * 形成完整的集成方案文档
+    * Skill可以写入INBOX.md并自动commit &amp; push
 
   * Plan：
 
-    * <br />
+    * 创建Skill目录结构（skill.json、main.py）
 
-      1. 深入分析 OpenClaw 的多渠道架构和 Lark 机器人能力
+    * 实现Git操作（clone、pull、commit、push）
 
-    * <br />
+    * 实现消息解析与INBOX.md写入
 
-      1. 设计 Lark ↔ OpenClaw ↔ 本项目的完整闭环流程
+    * 测试端到端流程：Lark发消息 → Skill写入 → Git push
 
-    * <br />
+* [ ] 实现任务状态同步到Lark的通知机制
 
-      1. 调研 OpenClaw 的 Skill 系统如何与本项目结合
+  * Priority：medium
 
-    * <br />
+  * Assignee：AI
 
-      1. 形成集成方案文档，明确技术实现路径
+  * Feedback Required：否
 
-  * 集成思路参考：
+  * Links：`.trae/documents/OpenClaw集成方案.md`
 
-    * **Lark作为任务输入渠道**：从Lark群聊/私聊/机器人接收任务，自动结构化成本项目todo格式
+  * Definition of Done：
 
-    * **任务状态同步**：任务开始/完成时自动在Lark通知，支持卡片展示
+    * 火山引擎端可以监听Git仓库变化
 
-    * **Lark文档集成**：任务相关内容写入Lark文档，从Lark文档读取上下文
+    * 任务完成时可以通过OpenClaw message send发送通知到Lark
 
-    * **Skills包装**：将本项目snippets包装成OpenClaw Skills，通过Lark Bot触发
+    * 支持卡片展示任务状态
+
+  * Plan：
+
+    * 研究Git webhook或定期轮询机制
+
+    * 编写状态同步脚本
+
+    * 集成openclaw message send命令
+
+##### 测试与验证
+
+* [ ] 测试完整的Lark → 火山引擎OpenClaw → Git → 本地Mac闭环流程
+
+  * Priority：high
+
+  * Assignee：User + AI
+
+  * Feedback Required：是
+
+  * Links：`.trae/documents/OpenClaw集成方案.md`
+
+  * Definition of Done：
+
+    * 从Lark发送消息，火山引擎端可以接收并写入INBOX.md
+
+    * 火山引擎端可以自动commit &amp; push到Git仓库
+
+    * 本地Mac端可以pull到最新代码，todo-sync.sh扫描新任务
+
+    * 本地Mac执行任务后commit &amp; push，火山引擎端拉取更新并通过Lark通知用户
+
+  * Plan：
+
+    * 从Lark发送测试消息
+
+    * 验证火山引擎端是否接收并push到Git
+
+    * 本地Mac运行todo-sync.sh验证是否拉取到新任务
+
+    * 模拟本地执行任务并push，验证Lark通知
+
+* [ ] 验证cs-notes-git-sync Skill的能力
+
+  * Priority：medium
+
+  * Assignee：AI
+
+  * Feedback Required：否
+
+  * Links：`.trae/documents/OpenClaw集成方案.md`、`.trae/documents/TODO_ARCHIVE.md`
+
+  * Definition of Done：
+
+    * 验证火山引擎上 `~/.openclaw/workspace/skills/cs-notes-git-sync/` 目录存在且完整
+
+    * 验证 skill.json 配置正确
+
+    * 验证 main.py 可以正常从OpenClaw接收消息、写入INBOX.md、并执行Git操作
+
+    * 验证端到端流程正常工作
+
+  * Plan：
+
+    * 检查目录结构完整性
+
+    * 验证skill.json配置
+
+    * 测试main.py功能
+
+    * 结合OpenClaw gateway进行端到端测试
+
+##### Skill 整合
+
+* [ ] 分析并整合 cs-notes-git-sync 和 coding-agent skills
+  * Assignee：AI
+  * Priority：high
+  * Definition of Done：
+    * 两个 skill 可以配合工作
+    * 设计工作流：Lark 消息 → INBOX.md → 编码执行 → Git 同步
+  * Plan：
+    * 分析两个 skill 的工作流
+    * 设计整合方案
+    * 如果需要，创建整合 skill
+
+##### 其他待处理任务
 
 * [ ] 接入 Lark Bot 自动写入 Inbox
 
@@ -440,19 +511,16 @@
 
     * Plan 与执行拆分成两类条目：Plan 条目更强调意图与验收；执行条目更强调产物与可追溯性
 
-* [ ] OpenClaw实操实践
+##### 备份方案
 
-  * Priority：medium
-
-  * Assignee：User
-
-  * Feedback Required：是（实操过程中可能需要反馈，实操完成后需记录）
-
-  * Links：<https://mp.weixin.qq.com/s/Mkbbqdvxh-95pVlnLv9Wig、`Notes/AI-Agent-Product&amp;PE.md`>
-
-  * Definition of Done：用户完成OpenClaw实操，将实践过程和结果记录到笔记
-
-  * Plan：基于AI的调研分析，用户按照实践例子完成实操
+* [ ] trae-agent 调研
+  * Assignee：AI
+  * Priority：low
+  * Links：https://github.com/bytedance/trae-agent
+  * Definition of Done：
+    * 克隆 trae-agent 仓库
+    * 阅读项目文档
+    * 了解项目架构和功能
 
 ### 已完成 (Completed)
 
@@ -464,7 +532,7 @@
 
 1. 用 Working Copy 打开 CS-Notes 仓库
 2. 编辑 `.trae/documents/INBOX.md`，一行添加一个任务
-3. Commit & Push
+3. Commit &amp; Push
 
 **电脑端同步任务**：
 
@@ -621,162 +689,9 @@ cd /path/to/CS-Notes
 
 1. **与最近高关注主题高度相关的任务 → 提升优先级**
 2. **已标记为 high 且与关注点相关 → 最高优先级**
-3. **知识整理类任务 > 实操类任务**（如笔记整理、文档更新、知识归纳等优先于需要用户手动操作的任务）
+3. **知识整理类任务 &gt; 实操类任务**（如笔记整理、文档更新、知识归纳等优先于需要用户手动操作的任务）
 4. **Assignee 为 User 的任务 → 保持原优先级，不主动执行**
 5. **阶段性进展优先，小步快跑**
-
-***
-
-## 云端自动化方案调研与设计
-
-### 背景与问题
-
-当前仓库工作流程受制于需要手动在 Mac 上连接 IDE，无法在火山引擎云端自动完成编码和处理流程。
-
-### 重大发现：OpenClaw 本身就有 coding-agent skill！
-
-**关键信息**：OpenClaw 内置了一个叫 **`coding-agent`** 的 skill，可以直接调用 Claude Code、Codex、OpenCode 等 CLI 形态的 AI 编程工具！
-
-**来源**：从社区调研发现，OpenClaw 通过 `coding-agent` skill 就可以完成编码任务，无需单独部署 trae-agent 或 Claude Code。
-
----
-
-### 方案重新设计：OpenClaw + coding-agent skill 一体化方案
-
-#### 核心思路
-
-利用 OpenClaw 的 `coding-agent` skill 直接调用编码能力，结合我们已有的 `cs-notes-git-sync` skill，形成完整闭环：
-
-```
-Lark 发送任务
-    ↓
-OpenClaw Gateway
-    ↓
-cs-notes-git-sync skill（写入 INBOX.md）
-    ↓
-coding-agent skill（执行编码任务）
-    ↓
-Git commit & push
-    ↓
-Lark 通知完成
-```
-
-#### OpenClaw coding-agent skill 介绍
-
-**功能**：
-- 运行 Claude Code、Codex、OpenCode、Pi Coding Agent 等工具
-- 自动安装和配置编码工具
-- 支持自然语言指令执行编码任务
-- 与 OpenClaw 其他 skill 无缝集成
-
-**优势**：
-- 开箱即用，无需单独部署
-- OpenClaw 生态原生支持
-- 结合 Lark 多渠道输入
-- 已有 Git 同步 skill 可以复用
-
----
-
-### 待处理任务 (Pending)
-
----
-
-## 📋 User（你）需要做的任务
-
-这些任务需要你在 Mac 上操作，或通过 Lark 与 OpenClaw bot 对话。
-
-### 阶段一：基础配置与验证
-
-#### 1️⃣ 验证 OpenClaw coding-agent skill 可用性
-* **Assignee**：User
-* **Priority**：high
-* **你需要做的**：
-  1. 在 Lark 中对 OpenClaw bot 说：**"你有哪些可用的 Skills？"**
-  2. 然后问：**"coding-agent skill 是做什么的？"**
-  3. 如果存在，尝试：**"使用 coding-agent 创建一个简单的 hello world Python 脚本"**
-* **Definition of Done**：
-  * 确认 OpenClaw 内置了 coding-agent skill
-  * 了解其使用方法
-  * 完成简单编码任务验证
-
-#### 2️⃣ 配置火山引擎方舟 API
-* **Assignee**：User
-* **Priority**：high
-* **Links**：火山引擎方舟平台
-* **你需要做的**：
-  1. 登录火山引擎方舟平台
-  2. 开通 **Doubao-Seed-Code** 模型服务
-  3. 获取 API Key
-  4. 在 OpenClaw WebChat 或配置文件中设置 API Key
-* **Definition of Done**：
-  * 模型服务已开通
-  * API Key 已获取
-  * OpenClaw 已配置使用方舟 API
-
-#### 3️⃣ 通过 Lark 发送第一个编码任务
-* **Assignee**：User
-* **Priority**：high
-* **你需要说的（在 Lark 中）**：
-  ```
-  使用 coding-agent skill，帮我创建一个简单的 Python 脚本，打印 "Hello from OpenClaw!"
-  ```
-* **Definition of Done**：
-  * OpenClaw 接收到任务
-  * coding-agent 执行并生成代码
-  * 验证代码正常
-
----
-
-### 阶段二：完整闭环测试
-
-#### 4️⃣ 测试端到端完整流程
-* **Assignee**：User
-* **Priority**：high
-* **你需要说的（在 Lark 中）**：
-  ```
-  帮我记录一个任务：创建一个简单的 Python 脚本
-  优先级：high
-  然后使用 coding-agent 来执行这个任务
-  ```
-* **或者分两步说**：
-  1. 先添加任务：**"帮我添加任务：测试编码能力，优先级 high"**
-  2. 再执行：**"使用 cs-notes-git-sync 和 coding-agent 来处理 INBOX 中的任务"**
-* **Definition of Done**：
-  * Lark 消息 → INBOX.md → coding-agent 执行 → Git commit & push → Lark 通知完成
-
----
-
-## 🤖 AI/OpenClaw 需要做的任务
-
-这些任务由 AI 自动执行，或在 OpenClaw 云端运行。
-
-### 阶段一：Skill 整合
-
-#### 1️⃣ 分析并整合 cs-notes-git-sync 和 coding-agent skills
-* **Assignee**：AI
-* **Priority**：high
-* **Definition of Done**：
-  * 两个 skill 可以配合工作
-  * 设计工作流：Lark 消息 → INBOX.md → 编码执行 → Git 同步
-* **Plan**：
-  * 分析两个 skill 的工作流
-  * 设计整合方案
-  * 如果需要，创建整合 skill
-
----
-
-### （备份方案）仅在 OpenClaw coding-agent 不可用时
-
-#### trae-agent 调研
-* **Assignee**：AI
-* **Priority**：low
-* **Links**：https://github.com/bytedance/trae-agent
-* **Definition of Done**：
-  * 克隆 trae-agent 仓库
-  * 阅读项目文档
-  * 了解项目架构和功能
-
----
 
 ## 📖 与 OpenClaw Bot 对话参考
 
@@ -791,22 +706,20 @@ Lark 通知完成
 
 **使用 cs-notes-git-sync 添加任务**：
 ```
-帮我添加一个任务：<任务内容>
+帮我添加一个任务：&lt;任务内容&gt;
 优先级：high|medium|low
 ```
 
 **使用 coding-agent 编码**：
 ```
-使用 coding-agent，<编码任务描述>
+使用 coding-agent，&lt;编码任务描述&gt;
 ```
 
 **测试完整流程**：
 ```
-帮我添加任务：<任务描述>，优先级 high
+帮我添加任务：&lt;任务描述&gt;，优先级 high
 然后使用 coding-agent 来执行这个任务
 ```
-
-
 
 ***
 
