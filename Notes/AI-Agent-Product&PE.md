@@ -185,6 +185,20 @@
 
 
 
+## 头部 AI 产品与公司
+
+关键词：5000万美元ARR、Top Lean AI榜单、人均创收
+
+#### 5000 万美元 ARR 的 AI 应用公司有多少家？
+- 全球 ARR 超过或等于 5000 万美元的 AI 原生企业约 40-70 家，主要集中在 AI Coding、内容创作 Agent、法律及教育等场景
+- 中国背景或华人创立的公司：
+  - Manus（蝴蝶效应）：25 年底以超过 20 亿美元被 Meta 收购
+  - Genspark：前小度 CEO 景鲲创立，25 年 9 月 ARR 达 5000 万美元
+  - OpenArt：Coco Mao 创立，20 人团队实现 7000 万美元 ARR
+  - PixVerse 与 Lovart：PixVerse 25 年总收入超 4000 万美元；Lovart 10 月 ARR 突破 3000 万美元
+- 推荐榜单：Henry Shi 维护的 "Top Lean AI" 榜单，收录人均创收超 100 万美元的团队
+
+
 ## ToC 产品
 
 ### 模型能力
@@ -5040,15 +5054,6 @@ finetuning分类
   - 对比：OpenAI 25 年营收超 130 亿美元，Anthropic 45 亿美元
 - 中国一级市场后续资金不及美国充沛，上市成了拓展定增、大规模融资的必要手段
 - 仍坚持基础模型研发且未上市的中国头部公司：DeepSeek（幻方自有资金）、Kimi（月之暗面）、阶跃星辰（近期大额融资）
-
-#### 5000 万美元 ARR 的 AI 应用公司有多少家？
-- 全球 ARR 超过或等于 5000 万美元的 AI 原生企业约 40-70 家，主要集中在 AI Coding、内容创作 Agent、法律及教育等场景
-- 中国背景或华人创立的公司：
-  - Manus（蝴蝶效应）：25 年底以超过 20 亿美元被 Meta 收购
-  - Genspark：前小度 CEO 景鲲创立，25 年 9 月 ARR 达 5000 万美元
-  - OpenArt：Coco Mao 创立，20 人团队实现 7000 万美元 ARR
-  - PixVerse 与 Lovart：PixVerse 25 年总收入超 4000 万美元；Lovart 10 月 ARR 突破 3000 万美元
-- 推荐榜单：Henry Shi 维护的 "Top Lean AI" 榜单，收录人均创收超 100 万美元的团队
 
 #### 全球化与中美之间
 三个 AI 创业团队的对比：
