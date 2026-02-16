@@ -291,6 +291,60 @@ Lark 通知完成
   * Definition of Done：用户完成OpenClaw实操，将实践过程和结果记录到笔记
   * Plan：基于AI的调研分析，用户按照实践例子完成实操
 
+* [ ] 解决火山引擎 OpenClaw Web Manager 访问问题
+
+  * Priority：high
+
+  * Assignee：User
+
+  * Feedback Required：否
+
+  * Links：`Notes/AI-Agent-Product&amp;PE.md`、`.trae/documents/OpenClaw集成方案.md`
+
+  * 问题现状：
+    * OpenClaw 部署在火山引擎 ECS 云服务器上
+    * 直接访问公网 IP + 端口被拒绝
+    * 无法进入 Web Manager
+
+  * 原因分析：
+    * OpenClaw 默认仅绑定 127.0.0.1:18789（本地优先架构）
+    * 火山引擎 ECS 安全组默认限制入站访问
+    * 火山引擎提供的三层安全防护方案减少公网暴露面
+
+  * 可选方案（按推荐优先级排序）：
+
+    **方案一：SSH 隧道转发（推荐，最安全）**
+    * 优点：无需开放公网端口，安全性最高
+    * 缺点：需要本地有 SSH 客户端
+    * 操作：在本地 Mac 执行 `ssh -L 18789:127.0.0.1:18789 root@<ECS公网IP>`
+    * 访问：本地浏览器打开 `http://127.0.0.1:18789`
+
+    **方案二：配置安全组 + 修改绑定地址**
+    * 优点：直接访问，无需 SSH 隧道
+    * 缺点：需要开放公网端口，存在安全风险
+    * 操作：
+      1. 火山引擎控制台配置安全组，开放 18789 端口入站访问
+      2. SSH 登录 ECS，修改 OpenClaw 配置绑定 0.0.0.0
+      3. 重启 OpenClaw 服务
+    * 访问：浏览器打开 `http://<ECS公网IP>:18789`
+
+    **方案三：Nginx 反向代理 + HTTPS**
+    * 优点：更安全，支持 HTTPS，可配置访问控制
+    * 缺点：配置相对复杂
+    * 操作：
+      1. 安装 Nginx
+      2. 配置反向代理到 127.0.0.1:18789
+      3. 配置 SSL 证书（可选）
+      4. 配置安全组开放 80/443 端口
+
+  * Definition of Done：
+    * 成功访问 OpenClaw Web Manager
+    * 方案已记录在笔记中
+
+  * Plan：
+    * 先尝试方案一（SSH 隧道），这是最简单安全的方式
+    * 如果需要长期稳定访问，再考虑方案二或三
+
 #### AI 需要做的任务
 
 这些任务由 AI 自动执行，或在 OpenClaw 云端运行。

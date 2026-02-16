@@ -44,3 +44,8 @@
   - 提示清单保存到 `.trae/logs/pending-tasks-*.md`，避免遗忘
 - **OpenClaw 集成思路**：OpenClaw 适合作为多渠道 Inbox（Lark/Telegram 等），通过自定义 Skill 写入本项目的 INBOX.md
   - 完整集成方案见 `.trae/documents/OpenClaw集成方案.md`
+- **Todo 分类原则（重要！）**：严格区分 User 需要做的任务 vs AI 需要做的任务
+  - **User 需要做的任务**：需要用户在 Mac/手机/控制台操作的（如 SSH 配置、浏览器访问、安全组设置等）
+  - **AI 需要做的任务**：AI 可以完全自动执行的（写代码、整理笔记、调研分析等）
+  - **示例**："解决火山引擎 OpenClaw Web Manager 访问问题" → 需要用户操作 SSH/安全组，属于 User 任务
+  - **本次教训**：差点把 User 任务放在 AI 任务分类下，被用户及时纠正
