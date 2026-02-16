@@ -1,6 +1,7 @@
 #!/bin/bash
 # Todo Push 脚本 - 生成变更摘要，供 AI 智能生成 commit message
 # 严格控制 git add 范围，保护隐私
+# 集成 OpenClaw 记忆文件同步功能
 
 # 配置
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -9,11 +10,15 @@ LOG_FILE="$LOG_DIR/todo-push-$(date +%Y%m%d).log"
 DIFF_SUMMARY="$LOG_DIR/git-diff-summary-$(date +%Y%m%d-%H%M%S).md"
 DEFAULT_BRANCH="master"
 
-# Git add 白名单：仅允许这三个文件夹
+# OpenClaw 工作区路径（相对于 REPO_ROOT 的父目录）
+OPENCLAW_WORKSPACE="$(dirname "$REPO_ROOT")"
+
+# Git add 白名单：仅允许这些文件夹
 ALLOWED_FOLDERS=(
     "Notes/"
     ".trae/"
     "创作/"
+    ".openclaw-memory/"
 )
 
 # Git add 黑名单：绝对禁止的文件夹
@@ -27,6 +32,7 @@ EXCLUDE_PATTERNS=(
     "*.pyc"
     "__pycache__/"
     ".DS_Store"
+    "venv/"
 )
 
 # 创建日志目录
@@ -146,6 +152,74 @@ generate_diff_summary() {
     echo ""
 }
 
+# 同步 OpenClaw 记忆文件到 .openclaw-memory/ 目录
+sync_openclaw_memory() {
+    log "INFO" "步骤 0/3: 同步 OpenClaw 记忆文件"
+    
+    # OpenClaw 记忆文件列表
+    local memory_files=(
+        "MEMORY.md"
+        "AGENTS.md"
+        "IDENTITY.md"
+        "SOUL.md"
+        "TOOLS.md"
+        "USER.md"
+        "HEARTBEAT.md"
+    )
+    
+    local memory_dir="memory"
+    
+    # 同步单个文件
+    sync_file() {
+        local src_file="$1"
+        local dest_file="$2"
+        
+        if [ -f "$src_file" ]; then
+            if [ ! -f "$dest_file" ] || [ "$src_file" -nt "$dest_file" ]; then
+                cp "$src_file" "$dest_file"
+                log "INFO" "  ✓ 已同步: $src_file → $dest_file"
+            else
+                log "INFO" "  [跳过] $src_file (未变更)"
+            fi
+        else
+            log "WARN" "  [跳过] $src_file (文件不存在)"
+        fi
+    }
+    
+    # 同步记忆目录
+    sync_directory() {
+        local src_dir="$1"
+        local dest_dir="$2"
+        
+        if [ -d "$src_dir" ]; then
+            mkdir -p "$dest_dir"
+            
+            # 同步目录下的所有文件
+            for file in "$src_dir"/*; do
+                if [ -f "$file" ]; then
+                    local filename="$(basename "$file")"
+                    sync_file "$file" "$dest_dir/$filename"
+                fi
+            done
+        else
+            log "WARN" "  [跳过] $src_dir (目录不存在)"
+        fi
+    }
+    
+    # 开始同步
+    log "INFO" "从 OpenClaw 工作区同步记忆文件: $OPENCLAW_WORKSPACE"
+    
+    # 同步单个记忆文件
+    for file in "${memory_files[@]}"; do
+        sync_file "$OPENCLAW_WORKSPACE/$file" "$REPO_ROOT/.openclaw-memory/$file"
+    done
+    
+    # 同步 memory 目录
+    sync_directory "$OPENCLAW_WORKSPACE/$memory_dir" "$REPO_ROOT/.openclaw-memory/$memory_dir"
+    
+    log "INFO" "OpenClaw 记忆文件同步完成"
+}
+
 # 主函数
 main() {
     log "INFO" "========================================"
@@ -153,6 +227,9 @@ main() {
     log "INFO" "========================================"
     
     cd "$REPO_ROOT" || error_exit "无法进入仓库目录"
+    
+    # 0. 同步 OpenClaw 记忆文件
+    sync_openclaw_memory
     
     # 1. 获取所有更改
     log "INFO" "步骤 1/3: 检查更改"

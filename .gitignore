@@ -6,3 +6,7 @@ tmp*
 .trae/logs
 # 公司项目（保密项目，不push到git）
 **/公司项目/**
+# Python 虚拟环境和缓存
+**/__pycache__/
+**/venv/
+**/venv3.12/
