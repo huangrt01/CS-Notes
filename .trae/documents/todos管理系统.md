@@ -349,6 +349,30 @@ Lark 通知完成
 
 这些任务由 AI 自动执行，或在 OpenClaw 云端运行。
 
+##### OpenClaw 稳定性优化
+
+* [ ] 设计实现 OpenClaw session 管理优化方案，避免 token 超限错误
+  - Priority：high
+  - Assignee：AI
+  - Feedback Required：否
+  - Links：https://www.answeroverflow.com/m/1469215145874948199、MEMORY.md
+  - Definition of Done：
+    * 深入研究 Answer Overflow 链接中关于 session 管理优化的探讨
+    * 分析当前 token 超限问题的根本原因
+    * 设计具体的 session 管理优化方案
+    * 实现优化方案（如自动检测 session 长度、自动切换新 session 等）
+    * 测试验证方案有效，避免以后再遇到 "400 Total tokens of image and text exceed max message tokens" 错误
+  - Plan：
+    * 先尝试访问并学习 Answer Overflow 链接中的内容
+    * 分析当前 OpenClaw session 管理机制
+    * 设计优化方案（可能包括：session 长度监控、自动切换新 session、context 压缩等）
+    * 实现优化方案
+    * 测试验证
+  - 问题背景：
+    * 错误信息：`400 Total tokens of image and text exceed max message tokens`
+    * 解决方法（临时）：在 TUI 中使用 `/reset` 命令恢复会话
+    * 问题本质：session 管理问题，当 session history 较长时需要切换新 session
+
 ##### 笔记整理
 
 * [ ] 探索如何让你能阅读微信公众号的文章

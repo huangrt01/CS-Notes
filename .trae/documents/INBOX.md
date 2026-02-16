@@ -75,6 +75,12 @@
 （在此下方添加你的任务条目，一行一个最简单）
 
 
+- 内容：沉淀经验：如何成功获取微信公众号文章内容
+  - 优先级：high
+  - 关联文件：MEMORY.md
+  - 参考链接：
+  - 截止时间：
+
 - 内容：测试任务：验证Skill功能
   - 优先级：medium
   - 关联文件：
@@ -85,4 +91,14 @@
   - Priority：medium
   - Links：
   - Due：
+
+- 内容：设计实现 OpenClaw session 管理优化方案，避免 token 超限错误
+  - 优先级：high
+  - 关联文件：MEMORY.md
+  - 参考链接：https://www.answeroverflow.com/m/1469215145874948199
+  - 截止时间：
+  - 详细描述：
+    - 问题本质：session 管理问题，当 session history 较长时需要切换新 session
+    - 目标：设计并实现具体的优化方案，避免以后再遇到 "400 Total tokens of image and text exceed max message tokens" 错误
+    - 需要结合 Answer Overflow 链接中的相关探讨
 
