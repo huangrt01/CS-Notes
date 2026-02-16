@@ -6,7 +6,7 @@
 
 * Intro
   * 做大模型，很难理解全部，退而求其次，理解其能力的边界很关键
-  
+
 * 术语
   * Large Language Model(LLM)
   * ChatGPT
@@ -24,7 +24,7 @@
 
 ### 大模型简要介绍
 
-* 表面上做什么事情：不断根据前文生成“下一个”词
+* 表面上做什么事情：不断根据前文生成"下一个"词
   * OpenAI的接口名：「Completion」
   * 上文信息越多，对后文信息的约束性越强
 
@@ -46,12 +46,12 @@
 
 ### AI Engineer 的边界
 
-> “One of your key responsibilities will be to coach the organisation and be at the forefront of deciding where and if LLMs are even needed to solve a business problem.”
+> "One of your key responsibilities will be to coach the organisation and be at the forefront of deciding where and if LLMs are even needed to solve a business problem."
 
 * [What is AI Engineer?](https://www.newsletter.swirlai.com/p/what-is-ai-engineering?utm_campaign=post&utm_medium=web)
   * **AI Researchers -** they are masters of prototyping, coming up with novel ideas and testing their hypothesis. Analyse the output data and come up with novel strategies how to keep continuously improving the models. Deep understanding of statistics and ML fundamentals. Nowadays, very likely they are able to run LLM training on distributed systems themselves.
     - What they might initially lack in skills is the ability to deploy real world production applications and implementing MLOps best practices in the world of LLMs.
-    - “The goal of AI Engineer is to take what is already available and stitch up an AI system that would solve a real business problem.”
+    - "The goal of AI Engineer is to take what is already available and stitch up an AI system that would solve a real business problem."
   * **ML Engineers -** capable of building and deploying regular Machine Learning models as AI/ML systems with all of the bells and whistles of MLOps. This includes implementation of feedback flywheel and ability to observe and continuously improve the system. Also, ML Engineers are usually involved in Data Engineering to some extent, often utilising ML specific data stores like Feature Stores or Vector DBs.
     - What they might initially lack in skills is the ability to perform deep research and build production ready high throughput systems as well as implementing and operating regular software best practices.
   * **Software Engineers** - they are great! Capable of crafting complex high throughput, low latency systems that are deterministic. Translating business requirements into complex software flows. Masters of DevOps and software engineering best practices, capable of high velocity development and shipping to production in a safe way.
@@ -201,12 +201,14 @@
   * 模仿人做事，将业务拆成工作流（workflow、SOP、pipeline）
   * 每个 Agent 负责一个工作流节点
 
-### 手机助手（豆包）
+### 手机 Agent：存量博弈与场景变迁
+
+#### 手机助手（豆包）
 
 * 定义：面向手机厂商的系统级服务，将豆包大模型深度融入手机操作系统，实现跨应用的自动化执行与自然语言交互。
 * 关键能力
   * 系统级集成与唤醒：支持专属物理按键、语音唤醒；以悬浮窗/顶部状态区域呈现，不打断当前应用。
-  * 屏幕理解与问答：对屏幕内容进行理解，支持“屏幕问答”“屏幕记忆”。
+  * 屏幕理解与问答：对屏幕内容进行理解，支持"屏幕问答""屏幕记忆"。
   * 直接操控手机：系统交互与跨应用任务自动执行（如下载、批量处理、跨APP跳转与表单操作）。
   * 后台执行：任务在后台持续运行，状态吸附于顶部区域，用户可继续使用手机。
 * 产品定位：在豆包 App 基础上与手机厂商 OS 层对接，获得厂商授权以实现系统交互与控制能力。
@@ -215,7 +217,7 @@
   * 实测体验1：http://m.toutiao.com/group/7578806856575910435/
   * 实测体验2：http://m.toutiao.com/group/7578873886368924201/
 
-### 手机 Agent：存量博弈与场景变迁
+#### 其他手机 Agent
 
 * 字节跳动：豆包手机预览版（自动回微信、比价点外卖等，后被封禁）
 * OpenClaw：与移动端打通，手机上发送指令驱动云端任务
@@ -724,12 +726,12 @@ openclaw pairing approve feishu XXXXXXXX
 
   * **Find it:** Identify an impactful problem space for your LLM application
 
-    * the “whole function” level  <- **Balance product ambition with quality**
+    * the "whole function" level  <- **Balance product ambition with quality**
 
   * **Nail it:** Create a smooth AI product experience
 
-    * “**We have to design apps not only for models whose outputs need evaluation by humans, but also for humans who are learning how to interact with AI.**”
-    * “[dogfooding](https://www.nytimes.com/2022/11/14/business/dogfooding.html)” products before—and after—they’re released
+    * "**We have to design apps not only for models whose outputs need evaluation by humans, but also for humans who are learning how to interact with AI.**"
+    * "[dogfooding](https://www.nytimes.com/2022/11/14/business/dogfooding.html)" products before-and after-they're released
     * 核心指标：acceptance rates、code retention rate
     * **Evaluate your testing tools**.
     * **Make a habit of revisiting old ideas**
@@ -741,7 +743,7 @@ openclaw pairing approve feishu XXXXXXXX
       * 降低LLM随机性、cache result
 
     * **Take advantage of real user feedback**
-      * a new guardrail metric—the percentage of suggestions that are multi-line vs. single line
+      * a new guardrail metric-the percentage of suggestions that are multi-line vs. single line
     * 安全和信任
       * the GitHub Copilot team created a filter to block suggestions matching public source code in GitHub public repositories that were longer than 150 characters.
       *  [code reference tool](https://github.blog/2023-08-03-introducing-code-referencing-for-github-copilot/)
@@ -751,17 +753,17 @@ openclaw pairing approve feishu XXXXXXXX
 
 #### 变现逻辑
 
-* [陆奇对话高科技营销之父：从技术到市场，ChatGPT还需跨越“鸿沟”](https://mp.weixin.qq.com/s/xvWzQ73Dg0XzJ5LxwmyWsA)
+* [陆奇对话高科技营销之父：从技术到市场，ChatGPT还需跨越"鸿沟"](https://mp.weixin.qq.com/s/xvWzQ73Dg0XzJ5LxwmyWsA)
   * 近期出现的真正具有颠覆性的技术，我认为一个是基因编辑，另一个就是OpenAI的ChatGPT
-  * 如果我们想打造出ChatGPT这样高科技产品的市场，技术成熟远远不够，还需**将这种颠覆性创新产品社交化**，这中间还有巨大的“鸿沟”需要跨越。
+  * 如果我们想打造出ChatGPT这样高科技产品的市场，技术成熟远远不够，还需**将这种颠覆性创新产品社交化**，这中间还有巨大的"鸿沟"需要跨越。
   * 技术生命周期一般分为4个阶段：
     * 第一阶段是有一些技术的狂热者以及有远见者，相信技术能够成功，希望成为第一个尝试新技术的人；
       * 早期阶段的策略：等对的人主动找你
     * 第二阶段是早期大众会觉得这项技术可能是对的，但是还处于早期，需要观望一下，他们可能会看看别人会不会采用这项新技术，会跟风去使用或者拒绝使用。
-    * 当一家初创公司积累了足够多的使用案例后，大家就会认为这其实是行业的基础设施建设，是我们每个人都需要的，比如云计算和Wi-Fi，人工智能等，那些观望者就会想要进入市场，追赶潮流。瞬间所有预算涌入市场，购买你的产品，我们把这种现象称为“龙卷风”。
-  * 跨越“鸿沟”的关键所在就是如何让早期大众能够开始采用颠覆性的新技术，你必须要瞄准一个很小的利基市场，他们有很多痛点，需要更多新的解决方案来解决当下的问题。如果你能解决他们的问题，他们就会采用你的新技术。
+    * 当一家初创公司积累了足够多的使用案例后，大家就会认为这其实是行业的基础设施建设，是我们每个人都需要的，比如云计算和Wi-Fi，人工智能等，那些观望者就会想要进入市场，追赶潮流。瞬间所有预算涌入市场，购买你的产品，我们把这种现象称为"龙卷风"。
+  * 跨越"鸿沟"的关键所在就是如何让早期大众能够开始采用颠覆性的新技术，你必须要瞄准一个很小的利基市场，他们有很多痛点，需要更多新的解决方案来解决当下的问题。如果你能解决他们的问题，他们就会采用你的新技术。
   * 在早期市场，人们买的不是产品，而是**项目**。早期市场，作为一个初创企业，你的客户其实把你当成了一个咨询公司，他们可能会给你很多资金，让你按照他的想法去打造一个产品。
-    * 与ToB“项目制”的联系
+    * 与ToB"项目制"的联系
   * 早期市场的这些客户，我们称之为旗舰型的客户，他们一定是一群知名度很高的客户。比如美国银行、福特汽车、迪士尼或者微软，一定是大家都知道的企业。
     * 一定要找那些大型的知名企业作为你的客户，做两个项目就够了，在这之后就不要继续再做项目，而是开始重复地做相同的解决方案。
   * 我还有另外一个问题，如何去辨别一个非常小众的需求和一个有远见的需求之间的区别？
@@ -820,7 +822,7 @@ TODO
 #### 榜单
 
 * 2025/06 AI产品周榜 https://mp.weixin.qq.com/s/QYy1aEkUOkpD8FMeuvC2hQ
-  * 
+  *
 
 * 展望Killer App
   * AI暂时只是对旧场景的增强
@@ -842,7 +844,7 @@ TODO
   * LLM排序效果不错：今天做搜索和十几年前做搜索完全不一样了，我们会充分利用AI、大模型的能力来帮我们挑选最可能的信息来源、最权威的网站内容，然后再用这些信息加入到排序逻辑里。 现在初步来看，这种AI原生（AI-native）的搜索引擎能力要比传统先爬回数据，基于某些方式粗排再精排的效果更好。
   * 产品&技术细节：在产品层面，我们一直在**补能力**，比如改善搜索服务的准确性与时效性，支持更多方言的语音识别，支持更精准的图片修改，改善性能加速吐字等。
 * 腾讯的AI Agent产品场景：
-  * **腾讯云的营销自动化产品“企点营销云”**已服务很多零售客户，以前基于通用大数据模式，结合线上线下用户行为，建立用户画像，从新用户到首次购买、复购，再到会员的整个流程优化。我相信随着更多企业用智能体给营销加持，这类营销场景有大的提升空间。 最近我们帮一个连锁零售客户——绝味食品——做了一个营销增收项目。项目中，我们用了多个Agent来提升营销管线的不同环境，最终结果让所有人都很惊讶。对比专家组，效果达到了3倍的提升。
+  * **腾讯云的营销自动化产品"企点营销云"**已服务很多零售客户，以前基于通用大数据模式，结合线上线下用户行为，建立用户画像，从新用户到首次购买、复购，再到会员的整个流程优化。我相信随着更多企业用智能体给营销加持，这类营销场景有大的提升空间。 最近我们帮一个连锁零售客户--绝味食品--做了一个营销增收项目。项目中，我们用了多个Agent来提升营销管线的不同环境，最终结果让所有人都很惊讶。对比专家组，效果达到了3倍的提升。
   * **腾讯云智能体开发平台3.0**，支持超过140个MCP插件服务，大大扩展了智能体能调用的工具能力，并支持多智能体并行协作，让智能体搭建可以更简单、更模块化。
     * 我们很多业务的MCP服务，比如地图与支付，都是对外开放的，欢迎外部的智能体调用。
 * 对RAG、AI Agent的理解：
@@ -850,9 +852,9 @@ TODO
     * 如果内部文档有矛盾，就必须梳理清楚，定义好不同信息来源的权威性；
     * 如果文档有新、老版本，召回逻辑必须考虑时效性
 * 腾讯的优势：
-  * 要在某个场景满足用户需求，有很多周边能力需要搭配，包括搜索能力、语音理解与生成、专业数据、服务生态等——腾讯本身在各种内容与服务生态有比较强的积累，对我们是一个有利的地方。
+  * 要在某个场景满足用户需求，有很多周边能力需要搭配，包括搜索能力、语音理解与生成、专业数据、服务生态等--腾讯本身在各种内容与服务生态有比较强的积累，对我们是一个有利的地方。
   * 微信支持元宝的力度是前所未有的大，包括早期的广告位、新闻插件，还有视频号与公众号也可以被@元宝做点评。
-  * 地图&支付等腾讯内部其它业务，开放了MCP服务，可供ToB Agent平台调用 “我们很多业务的MCP服务，比如地图与支付，都是对外开放的，欢迎外部的智能体调用。” 
+  * 地图&支付等腾讯内部其它业务，开放了MCP服务，可供ToB Agent平台调用 "我们很多业务的MCP服务，比如地图与支付，都是对外开放的，欢迎外部的智能体调用。"
     * --> 字节能否用类似打法？
 
 
@@ -1176,7 +1178,7 @@ Ralph Loop 是让 AI 持续工作的循环机制。
 
 
 * Notes
-  * “准备测试数据“容易被忽略
+  * "准备测试数据"容易被忽略
 
 #### Agent Bucket：万亿级 Agent 原生存储桶
 
@@ -1260,10 +1262,10 @@ Ralph Loop 是让 AI 持续工作的循环机制。
 
 * 决策大模型
 * 对ToG的影响
-  * Geoffrey Moore：我觉得中国的模型可能跟美国的模型完全不一样。就美国来说，我觉得政府需要去为一些研究提供资金，他们就像风投者一样。我们公共服务的三个方面，如社会的安全网、医疗和教育都陷入了困境，他们都想去提供下一代的服务，但是一来没有合适的人才，二来用人成本太高，所以他们真正需要的是合适的软件来解决他们的问题（数字转型），这就带来了跨越“鸿沟”的机会。（但很难做）
+  * Geoffrey Moore：我觉得中国的模型可能跟美国的模型完全不一样。就美国来说，我觉得政府需要去为一些研究提供资金，他们就像风投者一样。我们公共服务的三个方面，如社会的安全网、医疗和教育都陷入了困境，他们都想去提供下一代的服务，但是一来没有合适的人才，二来用人成本太高，所以他们真正需要的是合适的软件来解决他们的问题（数字转型），这就带来了跨越"鸿沟"的机会。（但很难做）
 * 游戏 AI Npc
   * https://foresightnews.pro/article/detail/30224
-  
+
 
 
 
@@ -1346,7 +1348,7 @@ OpenClaw 的设计已经体现了多 Agent 的思想：
 
 3. **Agent Rank**：
    - 搜索里的 page rank 可能会变成 Agent Rank
-   - 早期用户是谁、沉淀了什么数据——这是品位、偏好和差异化的能力
+   - 早期用户是谁、沉淀了什么数据--这是品位、偏好和差异化的能力
 
 4. **Less Structure, More Intelligence**：
    - 不要追求可控，把产品做成 20% 的 AI + 80% 的结构或工程，这样能被模型杠杆的部分就相对少
@@ -1376,7 +1378,7 @@ OpenClaw 的设计已经体现了多 Agent 的思想：
 
 **创业哲学**：
 - 两个核心追求：要好玩，也得足够大
-- 如果有两条路：一条成功率为 1%，但不够好玩、不够大；另一条成功率只有 0.001%，但足够好玩、足够有想象力——一定选后者
+- 如果有两条路：一条成功率为 1%，但不够好玩、不够大；另一条成功率只有 0.001%，但足够好玩、足够有想象力--一定选后者
 - Think Different：为了不同而不同，真正做出不一样的东西很难，只有极致强调"不一样"，才可能得到有意思的解法
 - Trust Default：默认信任，公司没有年假上限，也不审批请假
 - 中国团队也可以做自己：有自己的品位、审美、偏好，而且完全有能力、资源和人才去实现这些东西
@@ -1394,7 +1396,7 @@ https://manus.im/app
 
 *   **2025-2026 行业回顾与 Manus 访谈**：
     *   **R1 爆火原因**：开源、思考过程可见 (CoT)、以及一个（至今为止都）非常简陋的 APP。
-    *   **关于“套壳” (Wrapper)**：
+    *   **关于"套壳" (Wrapper)**：
         *   **安迪比尔定律 (Andy and Bill's Law)**：硬件提高的性能，很快被软件消耗掉。套壳本身毫无问题，是商业和技术最正常的行为。
         *   **分工与价值**：微软不用自己造 CPU（Intel），NV 不用亲自去无尘间操
 
@@ -1404,7 +1406,7 @@ https://manus.im/app
 
 **背景**：随着 AI Agent 从简单的单轮对话处理器演变为能够执行复杂长周期任务的智能实体，上下文管理已成为制约 Agent 能力发展的关键瓶颈。传统 RAG 系统采用扁平化的向量存储模式，导致记忆碎片化、检索质量差、调试困难，且缺乏 Agent 自身的经验沉淀机制。
 
-**核心定位**：2026年1月，字节跳动火山引擎团队开源了 OpenViking——全球首个专门面向 AI Agent 设计的上下文数据库。OpenViking 摒弃传统 RAG 的碎片化存储模式，创新性地采用"文件系统范式"，将 Agent 所需的记忆、资源和技能进行统一的结构化组织，通过 viking:// 协议实现分层上下文按需加载、目录递归检索和记忆自迭代。
+**核心定位**：2026年1月，字节跳动火山引擎团队开源了 OpenViking--全球首个专门面向 AI Agent 设计的上下文数据库。OpenViking 摒弃传统 RAG 的碎片化存储模式，创新性地采用"文件系统范式"，将 Agent 所需的记忆、资源和技能进行统一的结构化组织，通过 viking:// 协议实现分层上下文按需加载、目录递归检索和记忆自迭代。
 
 **设计理念**：
 
@@ -1453,13 +1455,13 @@ viking://
 - 优势：性能优化、数据一致性、扩展性、容错性
 
 **API 接口**：
-- `client.add_resource(path)` —— 添加资源
-- `client.search(query)` —— 搜索上下文
-- `client.read(uri)` —— 读取上下文内容
-- `client.ls(uri)` —— 展开目录
-- `client.overview(uri)` —— 目录概览
-- `PutContext` —— 写入上下文
-- `GetContext` —— 读取上下文（支持按层级获取）
+- `client.add_resource(path)` -- 添加资源
+- `client.search(query)` -- 搜索上下文
+- `client.read(uri)` -- 读取上下文内容
+- `client.ls(uri)` -- 展开目录
+- `client.overview(uri)` -- 目录概览
+- `PutContext` -- 写入上下文
+- `GetContext` -- 读取上下文（支持按层级获取）
 
 **与主流 Agent 框架集成**：
 - 🦜 LangChain：仅需一行代码替换 Agent 的上下文后端
@@ -1491,9 +1493,9 @@ pip install openviking
 
 ![image-20250617213524820](./AI-Agent-Product&PE/image-20250617213524820.png)
 
-### **腾讯云的营销自动化产品“企点营销云”**
+### **腾讯云的营销自动化产品"企点营销云"**
 
-* 已服务很多零售客户，以前基于通用大数据模式，结合线上线下用户行为，建立用户画像，从新用户到首次购买、复购，再到会员的整个流程优化。我相信随着更多企业用智能体给营销加持，这类营销场景有大的提升空间。 最近我们帮一个连锁零售客户——绝味食品——做了一个营销增收项目。项目中，我们用了多个Agent来提升营销管线的不同环境，最终结果让所有人都很惊讶。对比专家组，效果达到了3倍的提升。
+* 已服务很多零售客户，以前基于通用大数据模式，结合线上线下用户行为，建立用户画像，从新用户到首次购买、复购，再到会员的整个流程优化。我相信随着更多企业用智能体给营销加持，这类营销场景有大的提升空间。 最近我们帮一个连锁零售客户--绝味食品--做了一个营销增收项目。项目中，我们用了多个Agent来提升营销管线的不同环境，最终结果让所有人都很惊讶。对比专家组，效果达到了3倍的提升。
 
 
 
@@ -1509,7 +1511,7 @@ https://lingowhale.com/topics
 
 ### 万物追踪
 
-在小红书传播很快的ToC产品（后因未找到盈利路径下线）。核心功能是，输入一个想关注的事，比如“Agent技术”，会每天基于网络信息给与总结。其亮点在于用户可以主动定义追踪的主题，满足了个性化的信息聚合需求。
+在小红书传播很快的ToC产品（后因未找到盈利路径下线）。核心功能是，输入一个想关注的事，比如"Agent技术"，会每天基于网络信息给与总结。其亮点在于用户可以主动定义追踪的主题，满足了个性化的信息聚合需求。
 
 
 
@@ -1520,11 +1522,11 @@ https://lingowhale.com/topics
 
 *   **做技术的人，谦逊而不谦卑 (Humble but not Submissive)**
     *   **圈层文化差异**：
-        *   **Infra 圈**：倾向于“低声下气”，多为自嘲。
-        *   **应用圈**：倾向于“趾高气昂”，往往过度肯定自己。
+        *   **Infra 圈**：倾向于"低声下气"，多为自嘲。
+        *   **应用圈**：倾向于"趾高气昂"，往往过度肯定自己。
         *   **理想状态**：保持谦逊（Humble）但不谦卑，避免自欺欺人。
     *   **Agent 领域的反思**：
-        *   **拒绝 Overclaim**：学术界/工业界部分 Agent 工作存在严重的 Overclaim 现象（“在学校挂几面旗旗，让大家看看世界上最没用的研究是什么样的”）。
+        *   **拒绝 Overclaim**：学术界/工业界部分 Agent 工作存在严重的 Overclaim 现象（"在学校挂几面旗旗，让大家看看世界上最没用的研究是什么样的"）。
         *   **信任与崩塌**：在 AI 时代，实现和验证 Idea 的速度极快。一个团队建立信任很难，但一次 Overclaim 就可能导致信任崩塌。
         *   **标准**：**Humble, Modest, and Love**. Do not overclaim yourself.
 
@@ -1612,7 +1614,7 @@ def encode_image(image_path):
 base64_image = encode_image(IMAGE_PATH)
 
  "url": "<https://images.saymedia-content.com/.image/c_limit%2Ccs_srgb%2Cq_auto:eco%2Cw_538/MTczOTQ5NDQyMzQ3NTc0NTc5/compound-shapes-how-to-find-the-area-of-a-l-shape.webp>"
-  
+
 response = client.chat.completions.create(
     model=MODEL,
     messages=[
@@ -1739,8 +1741,8 @@ pip3 install --upgrade openai
 * prompt length
   * based on the observed **inverted-U shape** in execution accuracy with respect to prompt length, Chang et al. [7] conjectures that LLMs may have a sweet spot in terms of prompt length, but leaves exploring efficient prompt engineering a challenging open question.
 * 其它技巧：
-  * OpenAI’s official Text-to-SQL demo [ 33], they
-    employ the pound sign “#” to differentiate prompt from response,
+  * OpenAI's official Text-to-SQL demo [ 33], they
+    employ the pound sign "#" to differentiate prompt from response,
     yielding an impressive performance [26 ]
 
 ### Prompt组成
@@ -1764,14 +1766,14 @@ pip3 install --upgrade openai
 
 https://arxiv.org/pdf/2312.16171
 
-* 不用说“抱歉”。直接给出回答，不用在前面加“小瓜说：”。NO COMMENTS. NO ACKNOWLEDGEMENTS.
+* 不用说"抱歉"。直接给出回答，不用在前面加"小瓜说："。NO COMMENTS. NO ACKNOWLEDGEMENTS.
 
 * 你生成的回复必须遵循上文中给定的事实信息。不可以编造信息。DO NOT MAKE UP INFORMATION.
 
 * 思维链：「Let's think step by step」
   * 请一步一步分析以下内容
-*  "combine with the knowledge you already have“
-* “If they are the same, output "2". Try to output "1" or "0"”
+*  "combine with the knowledge you already have"
+* "If they are the same, output "2". Try to output "1" or "0""
 * 简单地解释一下[具体主题]。
      o 像对11岁的孩子一样向我解释。
      o 像对一个[领域]新手一样向我解释。
@@ -1781,9 +1783,9 @@ https://arxiv.org/pdf/2312.16171
 
 * 我愿意支付 $200 的小费以获得更好的方案！
 
-* “你的任务是”、“必须完成”、“将会受到处罚”
+* "你的任务是"、"必须完成"、"将会受到处罚"
 
-* “以自然且类似人类的方式回答问题”
+* "以自然且类似人类的方式回答问题"
 
 * 确保你的回答无偏见，不依赖于刻板印象
 
@@ -1795,17 +1797,17 @@ https://arxiv.org/pdf/2312.16171
 
 * 使用输出引导符，即在提示的末尾加上期望回答的开头。这样做可以引导输出内容的方向
 
-* 当需要修改特定文本但不改变其风格时，可以这样指示：“尝试修改用户提交的每个段落。你应当只改进语法和词汇，确保文本听起来自然，但不要改变其原有的写作风格，如将正式文体变为非正式文体”。
+* 当需要修改特定文本但不改变其风格时，可以这样指示："尝试修改用户提交的每个段落。你应当只改进语法和词汇，确保文本听起来自然，但不要改变其原有的写作风格，如将正式文体变为非正式文体"。
 
-* 面对可能涉及多个文件的复杂编程任务时，可以这样提示：“从现在开始，每当你生成涉及多个文件的代码时，创建一个[编程语言]脚本，自动创建所需文件或修改现有文件以插入生成的代码。[你的问题]”。
+* 面对可能涉及多个文件的复杂编程任务时，可以这样提示："从现在开始，每当你生成涉及多个文件的代码时，创建一个[编程语言]脚本，自动创建所需文件或修改现有文件以插入生成的代码。[你的问题]"。
 
-* 当你想用特定的词汇、短语或句子开始或继续一段文本时，可以这样提示：o “我为你提供了开头[歌词/故事/段落/论文...]：[插入的词句]。请根据这些词句继续写下去，保持内容的连贯性”。
+* 当你想用特定的词汇、短语或句子开始或继续一段文本时，可以这样提示：o "我为你提供了开头[歌词/故事/段落/论文...]：[插入的词句]。请根据这些词句继续写下去，保持内容的连贯性"。
 
 * 明确说明模型在生成内容时必须遵循的要求，可以是关键词、规则、提示或指示
 
-* 撰写任何类型的文本，如论文或段落，且想要其与提供的样本风格相似时，可以这样指示：o “请根据提供的段落[/标题/文本/论文/答案]的风格撰写”。
+* 撰写任何类型的文本，如论文或段落，且想要其与提供的样本风格相似时，可以这样指示：o "请根据提供的段落[/标题/文本/论文/答案]的风格撰写"。
 
-  
+
 
 
 
@@ -1835,7 +1837,7 @@ https://arxiv.org/pdf/2312.16171
 * GPT帮助生成prompt，用prompt调优prompt
 
 ```
-I want you to become my Expert Prompt Creator. Your goal is to help me craft the best possible prompt for my needs. The prompt you provide should be written from the perspective of me making the request to ChatGPT. Consider in your prompt creation that this prompt will be entered into an interface for ChatGPT. 
+I want you to become my Expert Prompt Creator. Your goal is to help me craft the best possible prompt for my needs. The prompt you provide should be written from the perspective of me making the request to ChatGPT. Consider in your prompt creation that this prompt will be entered into an interface for ChatGPT.
 
 The process is as follows:
 
@@ -1999,8 +2001,8 @@ Assistant：
 ### Intro
 
 * [MCP Protocol](https://www.anthropic.com/news/model-context-protocol), the protocol bundles four ingredients:
-  * (1) a manifest that advertises each endpoint’s name, semantic role, cost, and latency bounds;
-  * (2) machine-readable input/output schemas that ground the LLM’s function-calling tokens;
+  * (1) a manifest that advertises each endpoint's name, semantic role, cost, and latency bounds;
+  * (2) machine-readable input/output schemas that ground the LLM's function-calling tokens;
   * (3) a capability handshake for tool discovery
   * (4) an execution contract that guarantees idempotent, auditable calls.
 
@@ -2031,14 +2033,14 @@ Assistant：
 ![image-20250616204411908](./AI-Agent-Product&PE/image-20250616204411908.png)
 
 * AI 搜索是对一个传统互联网杀手级应用技术的强大重塑。互联网搜索是一种基于网络索引的导航技术。AI 搜索则是一种基于大语言模型的信息技术，能够阅读并从语义层面理解知识。对白领工作者来说，这将是巨大的福音。AI 搜索可能会使当前这个一统天下的市场出现分化。
-* 我们可以想象这样一个世界：每个专业都有自己专门的 AI 搜索引擎——
+* 我们可以想象这样一个世界：每个专业都有自己专门的 AI 搜索引擎--
   * 分析师和投资者默认使用 Perplexity
   * 律师会使用 Harvey 这样的平台
   * 医生则会使用 OpenEvidence 这样的解决方案。
-  * 循着这个思路，我们可以把 Midjourney 看作是对“像素宇宙”的搜索
-  * Github Copilot 是对“代码宇宙”的搜索
-  * 而 Glean 则是对“文档宇宙”的搜索
-  * Agent Universe 是对“Agent 智能体”的搜索。
+  * 循着这个思路，我们可以把 Midjourney 看作是对"像素宇宙"的搜索
+  * Github Copilot 是对"代码宇宙"的搜索
+  * 而 Glean 则是对"文档宇宙"的搜索
+  * Agent Universe 是对"Agent 智能体"的搜索。
 * 与传统搜索不同，AI 搜索可以在语义层面深入得多，因此其功能强大程度要高出一个数量级，带来显著的增量生产力提升。文本响应作为一个产品表现形式，其深度超出了表面所见。并非所有的文本响应都是一样的。我们认为大语言模型能够在多个维度实现真正的产品差异化，创业者将围绕这些能力打造针对特定客户群体的独特产品体验：
   * 意图提取：通过领域专业化，可以更准确地将响应与用户意图匹配。例如，医生和患者问同一个问题时会需要看到不同类型的响应。
     * 和传统DL搜索推荐领域的个性化似乎有些差异
@@ -2050,7 +2052,7 @@ Assistant：
     * 阶段二：样式判别
     * 阶段三：样式生成
   * 界面设计：代码搜索需要存在于 IDE 中，会计政策搜索需要存在于会计 SaaS 平台中。
-* 语义搜索受益于用户现有工作流和数据的上下文。不同领域需要不同的界面交互。新的特定领域 AI 搜索引擎将尽可能地映射其目标用户的“思维模式”。医生、律师和会计师的思维方式并不相同。当我们成为某个领域的专家时，我们提取知识和做出决策的模式开始出现差异。医生面对医学文献，律师面对法案，投资者面对财报。我们在每个领域解析、分析和基于这些知识做出决策的方式都是不同的。
+* 语义搜索受益于用户现有工作流和数据的上下文。不同领域需要不同的界面交互。新的特定领域 AI 搜索引擎将尽可能地映射其目标用户的"思维模式"。医生、律师和会计师的思维方式并不相同。当我们成为某个领域的专家时，我们提取知识和做出决策的模式开始出现差异。医生面对医学文献，律师面对法案，投资者面对财报。我们在每个领域解析、分析和基于这些知识做出决策的方式都是不同的。
 
 
 
@@ -2065,13 +2067,13 @@ Assistant：
   * [82%](https://www.nosto.com/blog/future-of-ecommerce-search-2023/) of online businesses believe that the site search experience can be enhanced by providing more relevant results
   * and a compelling [79%](https://www.nosto.com/blog/future-of-ecommerce-search-2023/) of consumers surveyed expressed their likelihood to purchase a product that they had specifically searched for in the search results
 * 个性化也重要
-  * [Research](https://www.barilliance.com/personalized-product-recommendations-stats/) conducted by Barilliance in 2018 concluded that product recommendations accounted for up to 31 percent of ecommerce revenue. On average, customers saw 12 percent of their overall purchases coming from products that were recommended to them. 
-  * [A Salesforce study](https://www.salesforce.com/blog/2017/11/personalized-product-recommendations-drive-just-7-visits-26-revenue.html) of product recommendations concluded that visits where the shopper clicked a recommendation comprise just 7 percent of total site traffic, but make up 24 percent of orders and 26 percent of revenue. 
-  * The conversion rate for visitors clicking on product recommendations was found to be [5.5x higher](https://www.barilliance.com/personalized-product-recommendations-stats/) than for visitors who didn’t click.
+  * [Research](https://www.barilliance.com/personalized-product-recommendations-stats/) conducted by Barilliance in 2018 concluded that product recommendations accounted for up to 31 percent of ecommerce revenue. On average, customers saw 12 percent of their overall purchases coming from products that were recommended to them.
+  * [A Salesforce study](https://www.salesforce.com/blog/2017/11/personalized-product-recommendations-drive-just-7-visits-26-revenue.html) of product recommendations concluded that visits where the shopper clicked a recommendation comprise just 7 percent of total site traffic, but make up 24 percent of orders and 26 percent of revenue.
+  * The conversion rate for visitors clicking on product recommendations was found to be [5.5x higher](https://www.barilliance.com/personalized-product-recommendations-stats/) than for visitors who didn't click.
   * [An Accenture report](https://www.accenture.com/us-en/interactive-index) says personalization increases the likelihood of a prospect purchasing from you by 75 percent.
-* No more “No results found”
+* No more "No results found"
   * **synonyms and autocorrect** to prevent unmatched search frustrating experiences
-  * [Best Practices for Instant Search Box - What to Do With ‘No Search Results’](https://boostcommerce.net/blogs/all/instant-search-box-tips-with-no-search-results)
+  * [Best Practices for Instant Search Box - What to Do With 'No Search Results'](https://boostcommerce.net/blogs/all/instant-search-box-tips-with-no-search-results)
 * The age of intelligent search continues
   * AL/ML-based models (can also use rules to set up)
     * content-based filtering
@@ -2106,7 +2108,7 @@ Assistant：
     * **Analyze customer feedback and reviews**：分析效果
     * **Identify the most popular products**：决定promote and stock哪些商品
     * **Improve upselling and cross-selling**：create more cohesive marketing campaigns by bundling items in ways that appeal to customers
-    * **Understand customer preferences and behavior**: Understanding which upselling and cross-selling offers customers respond to provides more insight into their purchase behavior and lets you make better-informed decisions about which products to restock. For example, if customers don’t respond to upselling product suggestions, you might consider discontinuing the higher-end product.
+    * **Understand customer preferences and behavior**: Understanding which upselling and cross-selling offers customers respond to provides more insight into their purchase behavior and lets you make better-informed decisions about which products to restock. For example, if customers don't respond to upselling product suggestions, you might consider discontinuing the higher-end product.
     * **Show Bestsellers Across Different Categories**
   * *And many more*
 * 对应产品功能：
@@ -2115,14 +2117,14 @@ Assistant：
     * Amazon does this by showing bundles of products frequently viewed in succession and enabling users to **add the entire bundle** to their shopping cart in one click.
       * **Provide Social Proof**  (Customers Who Bought This Item Also Bought)
   * Related Items (AI-powered)
-    * “Deals based on your recent history”
+    * "Deals based on your recent history"
     * 推荐理由
   * Recently Purchased
-    * “Buy again”
+    * "Buy again"
   * Bestsellers
   * Hand-picked Products
   * Recently Viewed
-    * “Keep shopping for”
+    * "Keep shopping for"
   * Most Viewed
   * Newest Arrivals
   * Trending Products
@@ -2147,7 +2149,7 @@ Assistant：
 
 * 产品页面：[**How to Display Product Recommendations Throughout the Sales Cycle** ](https://thegood.com/insights/ecommerce-product-recommendation/#h-how-to-display-product-recommendations-throughout-the-sales-cycle-nbsp)
 
-  * Homepage   ---> “Most Popular” and “Recently Viewed”
+  * Homepage   ---> "Most Popular" and "Recently Viewed"
     - **Trending products**
     - **Recently viewed**
     - Bestsellers
@@ -2210,7 +2212,7 @@ https://hornet.dev/
 
 * 技术相关见「深度学习推荐系统.md」
 * 一共融了3000万美金，24年7月估值1.2亿美金
-  * https://www.financedirectoreurope.com/news/polish-deep-tech-firm-synerise-raises-8-5m-in-series-b-round/?cf-view 
+  * https://www.financedirectoreurope.com/news/polish-deep-tech-firm-synerise-raises-8-5m-in-series-b-round/?cf-view
   * https://pitchbook.com/profiles/company/89839-00#comparisons
 
 
@@ -2226,7 +2228,7 @@ https://webkul.com/ai-semantic-search-services/
 *   **定位**：专注于特定领域文档分析的AI产品，尤其适用于金融、法律、医疗、技术手册等语义相近的专业文档。
 *   **核心技术**：
     *   **逻辑推理与树状搜索 (Logical Reasoning & Tree Search)**：与依赖语义相似性的向量数据库不同，PageIndex采用树状搜索，提供可追溯的推理过程和精确的页面引用。
-    *   **MCP (Model Context Protocol)**：通过MCP协议实现与AI Agent的“即插即用”，使其能力可以被灵活集成到各种AI工作流中。
+    *   **MCP (Model Context Protocol)**：通过MCP协议实现与AI Agent的"即插即用"，使其能力可以被灵活集成到各种AI工作流中。
 *   **案例**：业界领先的财务报告分析RAG模型 **Mafin 2.5** 正是基于PageIndex构建，在FinanceBench上实现了98.7%的准确率。
 
 
@@ -2257,7 +2259,7 @@ https://webkul.com/ai-semantic-search-services/
   * **VantageDiscovery 最大的竞争力来自他们的自定义向量数据库。**将用户查询的语义理解和对用户个人风格的语义理解结合起来，在几毫秒内从数百万个项目中检索出最个性化、最有针对性的结果
   * VantageDiscovery 的商业策略是为那些独立站卖家、集合店、大型购物网站提供面向商业的搜索引擎。
 * e.g.
-  * “母亲节给妈妈买什么”或“一个有趣的夜晚外出的衬衫”
+  * "母亲节给妈妈买什么"或"一个有趣的夜晚外出的衬衫"
   * recipes for a 6 year old's birthday party
   * graduation garden party -> floral sundress、wide-brim sunhat
 * 技术文章：
@@ -2288,13 +2290,13 @@ https://webkul.com/ai-semantic-search-services/
     * Enhanced Explainable Search
   * 搜索电商的商业逻辑和关键技术 https://www.vantagediscovery.com/post/adapt-or-die-why-retailers-want-to-be-like-amazon
     * Implicit personalization at an n of 1
-    * Blending keyword and semantic search 
+    * Blending keyword and semantic search
     * Explicit style personalization
     * Personalized shopping assistants
   * Salesforce AppExchange https://www.vantagediscovery.com/post/introducing-vantage-discovery-for-salesforce-commerce-cloud-unlock-the-future-of-ai-powered-retail
   * 关于semantic search的优化 https://www.vantagediscovery.com/post/semantic-search-using-matryoshka-embedding-vectors
   * 分析传统search的缺点 https://www.vantagediscovery.com/post/ai-shopping-assistants-and-semantic-search
-    * When searchers find what they’re looking for, 92% purchase that item and 78% buy at least one additional item with an average of 3 additional items purchased after a successful search. On the other hand, 53% of consumers abandon the website entirely when they have an unsuccessful search.
+    * When searchers find what they're looking for, 92% purchase that item and 78% buy at least one additional item with an average of 3 additional items purchased after a successful search. On the other hand, 53% of consumers abandon the website entirely when they have an unsuccessful search.
     * https://llcbuddy.com/data/e-commerce-search-statistics/
 * Note:
   * search option，涉及关键词检索相关 https://docs.vantagediscovery.com/docs/search-options#field-value-weighting
@@ -2327,7 +2329,7 @@ https://webkul.com/ai-semantic-search-services/
   * [Vertex AI Search for retail](https://cloud.google.com/solutions/retail-product-discovery) offers retailers the ability to improve the search, product recommendations, and browsing experience on their channels.
     * Retail companies are harnessing AI with Google Cloud today to recommend **tailored products and promotions to shoppers** and reap business results, such as **increased sales,** **average order value****, and** **customer lifetime value**.
     * LLM based Recommendation方便商家人工干预推荐结果，进行运营企划活动。实现saas定制化需求的成本低。
-  * [Vertex AI Search for media](https://cloud.google.com/generative-ai-app-builder/docs/about-media) offers media and entertainment companies the ability to provide more personalized content recommendations powered by generative AI, increasing consumer time spent on their platforms, which can lead to higher engagement, revenue, and retention. 
+  * [Vertex AI Search for media](https://cloud.google.com/generative-ai-app-builder/docs/about-media) offers media and entertainment companies the ability to provide more personalized content recommendations powered by generative AI, increasing consumer time spent on their platforms, which can lead to higher engagement, revenue, and retention.
   * [Generic Recommendation Data Store](https://cloud.google.com/generative-ai-app-builder/docs/create-data-store-recommendations)
   * [Vertex AI Search for healthcare and life sciences](https://cloud.google.com/generative-ai-app-builder/docs/create-app-hc) is a medically tuned search that improves patient and provider experience. [支持医疗搜索](https://www.googlecloudpresscorner.com/2023-10-09-Google-Cloud-Adds-New-Features-to-Vertex-AI-Search-for-Healthcare-and-Life-Science-Companies)
 
@@ -2359,13 +2361,13 @@ https://webkul.com/ai-semantic-search-services/
 * 支持custom embedding能力
   * https://cloud.google.com/generative-ai-app-builder/docs/bring-embeddings
   * 场景：
-    * Your embeddings have been trained on custom words, such as internal terms whose semantic similarity wouldn't be captured by training on public data—for example, organization-specific terms that appear only in private documents.
+    * Your embeddings have been trained on custom words, such as internal terms whose semantic similarity wouldn't be captured by training on public data-for example, organization-specific terms that appear only in private documents.
     * You've created embeddings for user profiles and want to use these to create a personalized, semantically-relevant document ranking. You can use your embeddings to get personalization-based ranking, which can augment Google's document embeddings for relevance-based ranking.
   * `0.5 * relevance_score + 0.3 * dotProduct(example_embedding_field)`
 * Collect scattered enterprise data
   * **Blended Search and web crawling**
     * All you have to do is specify[ the URL or URL pattern](https://cloud.google.com/generative-ai-app-builder/docs/create-data-store-es#website) and Vertex AI Search will instantly create a data store with all the relevant website pages. You can then use [Google Search Central](https://developers.google.com/search), to manage site crawling on your website.
-  * **Connectors**： [Connectors](https://cloud.google.com/generative-ai-app-builder/docs/prepare-data) 
+  * **Connectors**： [Connectors](https://cloud.google.com/generative-ai-app-builder/docs/prepare-data)
 
 ![https://storage.googleapis.com/gweb-cloudblog-publish/images/17._blended_search.max-1300x1300.png](https://storage.googleapis.com/gweb-cloudblog-publish/images/17._blended_search.max-1300x1300.png)
 
@@ -2453,7 +2455,7 @@ https://webkul.com/ai-semantic-search-services/
       },
       {
         "chunkInfo": {
-          "content": "PostgreSQL vs. SQL Server: What's the difference? | Google Cloud Page Contents Topics PostgreSQL vs. SQL PostgreSQL vs SQL Server: What are the key differences? Trying to find the right database for your applications? When it comes to choosing a database technology, the most common SQL options to consider are PostgreSQL vs. SQL Server. While both systems share many core features, there are some key differences—the major one being that PostgreSQL is open source and SQL Server is owned by Microsoft. Today, it is more vital than ever for companies to be able to manage, store, and activate data for modern business operations. With the growing assortment of databases available to choose from, it can be overwhelming to pick the right one for your applications. The most important thing to remember is that no single database will be a good match for every project requirement, so it's critical to understand the option that will work best for your specific use case. So, what is PostgreSQL vs. SQL Server? In this short guide, we'll discuss the basic differences between PostgreSQL and SQL Server. Get started for freeStay informed What is SQL? Structured Query Language or SQL, as it's more commonly known, is a programming language used to manage, query, and retrieve data in a relational database. ",
+          "content": "PostgreSQL vs. SQL Server: What's the difference? | Google Cloud Page Contents Topics PostgreSQL vs. SQL PostgreSQL vs SQL Server: What are the key differences? Trying to find the right database for your applications? When it comes to choosing a database technology, the most common SQL options to consider are PostgreSQL vs. SQL Server. While both systems share many core features, there are some key differences-the major one being that PostgreSQL is open source and SQL Server is owned by Microsoft. Today, it is more vital than ever for companies to be able to manage, store, and activate data for modern business operations. With the growing assortment of databases available to choose from, it can be overwhelming to pick the right one for your applications. The most important thing to remember is that no single database will be a good match for every project requirement, so it's critical to understand the option that will work best for your specific use case. So, what is PostgreSQL vs. SQL Server? In this short guide, we'll discuss the basic differences between PostgreSQL and SQL Server. Get started for freeStay informed What is SQL? Structured Query Language or SQL, as it's more commonly known, is a programming language used to manage, query, and retrieve data in a relational database. ",
           "relevanceScore": 0.8,
           "documentMetadata": {
             "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/f7cd9afab1282a9f57cdcee1885bb4c6",
@@ -2497,7 +2499,7 @@ https://webkul.com/ai-semantic-search-services/
       },
       {
         "chunkInfo": {
-          "content": "FAQ Expand all What is Cloud SQL? Cloud SQL is a service that delivers fully managed relational databases in the cloud. It offers MySQL, PostgreSQL, and SQL Server database engines. How is Cloud SQL different from other cloud databases? Cloud SQL is valued for its openness, ease of use, security, cost-efficiency, and Google Cloud integration—in fact, more than 95% of Google Cloud's top 100 customers use it. If you're comparing PostgreSQL options on Google Cloud, view our comparison chart. What's the difference between the Enterprise and Enterprise Plus editions? For PostgreSQL, the Enterprise Plus edition brings enhanced availability, performance, and data protection capabilities. Specifically, it provides a 99.99% availability SLA with near-zero downtime maintenance, optimized hardware and software configurations, intelligent data caching for read-intensive transactional workloads, a configurable data cache option and 35 days of log retention. For MySQL, the Enterprise Plus edition brings enhanced availability, performance, and data protection capabilities. Specifically, it provides a 99.99% availability SLA with near-zero downtime maintenance, optimized hardware and software configurations, intelligent data caching for read-intensive transactional workloads, a configurable data cache option, 35 days of log retention and advanced disaster recovery capabilities like orchestrated failover and switchback. ",
+          "content": "FAQ Expand all What is Cloud SQL? Cloud SQL is a service that delivers fully managed relational databases in the cloud. It offers MySQL, PostgreSQL, and SQL Server database engines. How is Cloud SQL different from other cloud databases? Cloud SQL is valued for its openness, ease of use, security, cost-efficiency, and Google Cloud integration-in fact, more than 95% of Google Cloud's top 100 customers use it. If you're comparing PostgreSQL options on Google Cloud, view our comparison chart. What's the difference between the Enterprise and Enterprise Plus editions? For PostgreSQL, the Enterprise Plus edition brings enhanced availability, performance, and data protection capabilities. Specifically, it provides a 99.99% availability SLA with near-zero downtime maintenance, optimized hardware and software configurations, intelligent data caching for read-intensive transactional workloads, a configurable data cache option and 35 days of log retention. For MySQL, the Enterprise Plus edition brings enhanced availability, performance, and data protection capabilities. Specifically, it provides a 99.99% availability SLA with near-zero downtime maintenance, optimized hardware and software configurations, intelligent data caching for read-intensive transactional workloads, a configurable data cache option, 35 days of log retention and advanced disaster recovery capabilities like orchestrated failover and switchback. ",
           "relevanceScore": 0.7,
           "documentMetadata": {
             "document": "projects/123456/locations/global/collections/default_collection/dataStores/my-data-store/branches/0/documents/931f2c8e19ed54a407857f1cad3b5aaa",
@@ -2638,7 +2640,7 @@ https://webkul.com/ai-semantic-search-services/
 
 > 引自白皮书：https://bytedance.larkoffice.com/file/LwHqbgN2oo4YQuxf6KucPowYnHe
 
-* **核心定位**：火山引擎推出的一站式 AI 搜索与知识管理解决方案，基于“大模型+搜索引擎”的 RAG 架构，旨在解决大模型在企业应用中的幻觉、知识滞后及数据安全问题。
+* **核心定位**：火山引擎推出的一站式 AI 搜索与知识管理解决方案，基于"大模型+搜索引擎"的 RAG 架构，旨在解决大模型在企业应用中的幻觉、知识滞后及数据安全问题。
 * **技术架构**：
   * **VikingDB**：自研全托管向量数据库，支持百亿级向量检索，提供毫秒级延迟，支撑海量非结构化数据的高效存储与检索。
   * **混合检索（Hybrid Search）**：结合关键词检索（BM25）和向量检索（Embedding），兼顾精确匹配与语义理解，提升召回率。
@@ -2649,7 +2651,7 @@ https://webkul.com/ai-semantic-search-services/
   * **高性能与弹性**：针对云原生架构优化，支持弹性伸缩，满足高并发查询需求。
   * **数据安全与私有化**：支持私有化部署（VPC），保障企业核心数据资产安全。
 * **典型应用场景**：
-  * **企业知识库**：构建企业内部的“第二大脑”，帮助员工快速查找文档、政策、代码及技术资料。
+  * **企业知识库**：构建企业内部的"第二大脑"，帮助员工快速查找文档、政策、代码及技术资料。
   * **智能客服**：基于知识库自动回答用户咨询，提升服务效率与准确度，降低人工成本。
   * **电商导购**：理解用户复杂的自然语言购物意图，推荐精准商品，提升转化率。
 
@@ -2713,7 +2715,7 @@ https://www.bbc.com/news/articles/c87p2rppx4po
   * 对于总结，他们确实可以用一个很短的Prompt（迭代了非常多的版本）获得很好的总结结果，**但是AI搜索用户的意图有很多，并不单纯是内容总结。**对于模型来说，对不同的搜索意图，想要生成好的结果，是需要传递给大模型不同的价值取向的。
   * query的意图识别分类做到了4000多种，每一种需求配对应的Prompt
 * 期望AI搜索处理复杂问题
-  * 假设你在搜索“找到波士顿最受欢迎的瑜伽或普拉提工作室，并显示其入门优惠和从Beacon Hill步行的时间”。多步推理的AI会：
+  * 假设你在搜索"找到波士顿最受欢迎的瑜伽或普拉提工作室，并显示其入门优惠和从Beacon Hill步行的时间"。多步推理的AI会：
     * 识别出你要找的是瑜伽或普拉提工作室。
     * 找到波士顿地区的相关工作室。
     * 筛选出那些在当地受欢迎的工作室。
@@ -2740,8 +2742,8 @@ https://www.bbc.com/news/articles/c87p2rppx4po
     * 我应该投资英伟达吗？我不太明白。所有信息都已被计入价格了吗？黑色世界芯片延误会怎样？对训练GPU的需求如何？英伟达现在的竞争对手是谁？它仍然没有竞争对手吗？五年后的市场会怎样？这将如何影响亚马逊网络服务（AWS）的收入？英伟达的利润率是如何被挤压的？谁可能会这么做？
 * Perplexity发布42页AI指南 http://xhslink.com/o/uRPa3J7QNd
   * Scale yourself
-  * 
-  
+  *
+
 
 #### 科学类搜索 SciMaster
 
@@ -2749,7 +2751,7 @@ https://mp.weixin.qq.com/s/mHz-D6UN3-4MUZSMEGt4ug
 
 #### 医疗AI搜索 OpenEvidence
 
-[一个免费垂直领域AI搜索产品，凭什么8个月估值冲到60亿美金？](https://mp.weixin.qq.com/s/daRpt9ow0jFA-I4vs4gXCw) 
+[一个免费垂直领域AI搜索产品，凭什么8个月估值冲到60亿美金？](https://mp.weixin.qq.com/s/daRpt9ow0jFA-I4vs4gXCw)
 
 #### 其它
 
@@ -2780,7 +2782,7 @@ https://mp.weixin.qq.com/s/mHz-D6UN3-4MUZSMEGt4ug
 
 * interface
   * UI
-    * CLI->GUI->CUI (Conversational User Interface) -> BCI (Brain–Computer Interface)
+    * CLI->GUI->CUI (Conversational User Interface) -> BCI (Brain-Computer Interface)
   * API: 本质是程序员的约定
   * 新理念：自然语言连接一切（Natural Language Interface）
 * 思路：大模型连接世界
@@ -2795,7 +2797,7 @@ https://mp.weixin.qq.com/s/mHz-D6UN3-4MUZSMEGt4ug
     * 没有「真逻辑」。它表现出的逻辑、推理，是训练文本的统计规律，而不是真正的逻辑，所以有幻觉。
 * FC和Agent关系：
   * 大模型的Agent能力实现了FC
-  
+
 * 有这类无需开发的工具，为什么还要学大模型开发技术呢？
   * 并不是所有事情都适合用对话解决
   * 它们都无法针对业务需求做极致调优
@@ -3256,7 +3258,7 @@ assistant = client.beta.assistants.update(
 )
 ```
 
-* 内置RAG的实现：https://platform.openai.com/docs/assistants/tools/file-search/how-it-works，The file_search tool implements several retrieval best practices out of the box to help you extract the right data from your files and augment the model’s responses. The file_search tool:
+* 内置RAG的实现：https://platform.openai.com/docs/assistants/tools/file-search/how-it-works，The file_search tool implements several retrieval best practices out of the box to help you extract the right data from your files and augment the model's responses. The file_search tool:
   - Rewrites user queries to optimize them for search. (面向检索的 Query 改写)
   - Breaks down complex user queries into multiple searches it can run in parallel.（复杂 Query 拆成多个，并行执行）
   - Runs both keyword and semantic searches across both assistant and thread vector stores.（关键字与向量混合检索）
@@ -3273,18 +3275,18 @@ assistant = client.beta.assistants.update(
     -  Support for deterministic pre-search filtering using custom metadata.
     - Support for parsing images within documents (including images of charts, graphs, tables etc.)
     - Support for retrievals over structured file formats (like csv or jsonl).
-    - Better support for summarization — the tool today is optimized for search queries.
+    - Better support for summarization - the tool today is optimized for search queries.
 
 * 多个assistants协作
   * 使用 assistant 的意义之一，是可以隔离不同角色的 instruction 和 function 能力。
-  * “六顶思维帽”
+  * "六顶思维帽"
 
 ```python
 hats = {
     "蓝色": "思考过程的控制和组织者。你负责会议的组织、思考过程的概览和总结。"
     + "首先，整个讨论从你开场，你只陈述问题不表达观点。最后，再由你对整个讨论做简短的总结并给出最终方案。",
     "白色": "负责提供客观事实和数据。你需要关注可获得的信息、需要的信息以及如何获取那些还未获得的信息。"
-    + "思考“我们有哪些数据？我们还需要哪些信息？”等问题，并提供客观答案。",
+    + "思考"我们有哪些数据？我们还需要哪些信息？"等问题，并提供客观答案。",
     "红色": "代表直觉、情感和直觉反应。不需要解释和辩解你的情感或直觉。"
     + "这是表达未经过滤的情绪和感受的时刻。",
     "黑色": "代表谨慎和批判性思维。你需要指出提案的弱点、风险以及为什么某些事情可能无法按计划进行。"
@@ -3316,7 +3318,7 @@ def create_assistant(color):
     )
     existing_assistants[color] = assistant
     return assistant
-  
+
 # 创建 thread
 thread = client.beta.threads.create()
 
@@ -3343,7 +3345,7 @@ for hat in queue:
 * 其它：
 
   * 创建 thread 时立即执行：https://platform.openai.com/docs/api-reference/runs/createThreadAndRun
-  
+
   * Run 的状态管理 (run steps）: https://platform.openai.com/docs/api-reference/run-steps
 
   * 官方Guide: https://platform.openai.com/docs/assistants/overview
@@ -3364,7 +3366,7 @@ for hat in queue:
 
 
 
-* 
+*
 
 
 
@@ -3380,10 +3382,10 @@ for hat in queue:
   - 结果可衡量
   - 编程语言无二义性
   - 有[论文](https://arxiv.org/pdf/2211.09110.pdf)证明编程训练能增强模型的推理能力，所以会特别着意训练 (code-davinci002)
-    - “The first model that OpenAI gave us was a Python-only model,” Ziegler remembers. “Next we were delivered a JavaScript model and a multilingual model, and it turned out that the Javascript model had particular problems that the multilingual model did not. It actually came as a surprise to us that the multilingual model could perform so well. But each time, the models were just getting better and better, which was really exciting for GitHub Copilot’s progress.” --[Inside GitHub: Working with the LLMs behind GitHub Copilot](https://github.blog/2023-05-17-inside-github-working-with-the-llms-behind-github-copilot/)
+    - "The first model that OpenAI gave us was a Python-only model," Ziegler remembers. "Next we were delivered a JavaScript model and a multilingual model, and it turned out that the Javascript model had particular problems that the multilingual model did not. It actually came as a surprise to us that the multilingual model could perform so well. But each time, the models were just getting better and better, which was really exciting for GitHub Copilot's progress." --[Inside GitHub: Working with the LLMs behind GitHub Copilot](https://github.blog/2023-05-17-inside-github-working-with-the-llms-behind-github-copilot/)
 * 知道怎么用好 AI 编程，了解它的能力边界、使用场景，就能类比出在其他领域 AI 怎么落地，能力上限在哪
 * 趋势：
-  * [Atom Capital: 1000x 的超级码农——AI 编程的机会和未来](https://mp.weixin.qq.com/s/IE1P-USAJDlbPcssJltNnw)
+  * [Atom Capital: 1000x 的超级码农--AI 编程的机会和未来](https://mp.weixin.qq.com/s/IE1P-USAJDlbPcssJltNnw)
 
 ### 检索的实现
 
@@ -3409,7 +3411,7 @@ for hat in queue:
 
 * [Inside GitHub: Working with the LLMs behind GitHub Copilot](https://github.blog/2023-05-17-inside-github-working-with-the-llms-behind-github-copilot/)
   * Prompt crafting
-    * pulled similar texts in from the user’s neighboring editor tabs
+    * pulled similar texts in from the user's neighboring editor tabs
     * filename的小技巧![A diagram of the file path improvement ](https://github.blog/wp-content/uploads/2023/05/copilot-llms-2.png?w=844&resize=844%2C504)
 
 * [How to build an enterprise LLM application: Lessons from GitHub Copilot](https://github.blog/2023-09-06-how-to-build-an-enterprise-llm-application-lessons-from-github-copilot/)。这篇文章描述了 GitHub Copilot 的产品打造哲学
@@ -3426,10 +3428,10 @@ for hat in queue:
   * 可以开发自己的 private extension
   * 产品设计经验：在 chat 界面里用 @ 串联多个 agent 是一个常见的 AI 产品设计范式。
 * 一个小转折：Copilot 从最开始的只用问答，到取消问答使用补全，到恢复问答
-  * 产品设计经验：让 AI 在不影响用户原有工作习惯的情况下切入使用场景，接受度最高。 
+  * 产品设计经验：让 AI 在不影响用户原有工作习惯的情况下切入使用场景，接受度最高。
 * 资料
   * [How GitHub Copilot is getting better at understanding your code](https://github.blog/2023-05-17-how-github-copilot-is-getting-better-at-understanding-your-code/)
-  * [A developer’s guide to prompt engineering and LLMs](https://github.blog/2023-07-17-prompt-engineering-guide-generative-ai-llms/)
+  * [A developer's guide to prompt engineering and LLMs](https://github.blog/2023-07-17-prompt-engineering-guide-generative-ai-llms/)
   * [GitHub Copilot VSCode Extension 逆向工程](https://zhuanlan.zhihu.com/p/639993637)
     * 对于编辑器输入的边界判断，包括太少、太多、取消等等很多场景齐全的考虑
     * 缓存思想，利用多级缓存策略保护后台，模型运算本身就是一件昂贵的事情
@@ -3494,21 +3496,21 @@ for hat in queue:
   * ```
     # ~/.tabby/config.toml
     # Index three repositories' source code as additional context for code completion.
-    
+
     [[repositories]]
     name = "tabby"
     git_url = "https://github.com/TabbyML/tabby.git" # 远程的git项目，但是如果没有代理很容易失败
-    
+
     # git through ssh protocol.
     [[repositories]]
     name = "CTranslate2"
     git_url = "git@github.com:OpenNMT/CTranslate2.git"
-    
+
     # local directory is also supported!
     [[repositories]]
     name = "Dify"
     # 你自己下载下来本地的项目， 如果你的项目目录是 /home/xiaoming/Code/Dify
-    git_url = "file:///home/xiaoming/Code/Dify" 
+    git_url = "file:///home/xiaoming/Code/Dify"
     ```
 
 * [Tabby使用非官方指定的更大尺寸Code Model](https://aipolgx71pe.feishu.cn/docx/MilXdqqzJowsHtxKgJ8c7pF3nmj)
@@ -3534,7 +3536,7 @@ https://www.xiaohongshu.com/explore/69086a080000000005001e09?app_platform=ios&ap
 
 
 
-### 强Agent尝试 —— 自动编写代码的机器人
+### 强Agent尝试 -- 自动编写代码的机器人
 
 * **Agent 的落地难题**
   * Agent 落地需要两个条件：
@@ -3566,7 +3568,7 @@ gpt-engineer .
 
 * Devin
   * 主页：https://www.cognition-labs.com/introducing-devin
-  * 首个AI程序员造假被抓，Devin再次“震撼”硅谷！扒皮详解附上 - 量子位的文章 - 知乎
+  * 首个AI程序员造假被抓，Devin再次"震撼"硅谷！扒皮详解附上 - 量子位的文章 - 知乎
     https://zhuanlan.zhihu.com/p/692393890
 
 * MAGE - GPT Web App Generator
@@ -3641,10 +3643,10 @@ _「 LlamaIndex is a framework for building context-augmented LLM applications. 
 
 
   - Question-Answering Chatbots (RAG)
-    
 
 
-  - Document Understanding and Extraction （文档理解与信息抽取） 
+
+  - Document Understanding and Extraction （文档理解与信息抽取）
 
 
 
@@ -3772,7 +3774,7 @@ app_id = ""
 app_secret = ""
 
 # https://agiclass.feishu.cn/docx/FULadzkWmovlfkxSgLPcE4oWnPf
-# 链接最后的 "FULadzkWmovlfkxSgLPcE4oWnPf" 为文档 ID 
+# 链接最后的 "FULadzkWmovlfkxSgLPcE4oWnPf" 为文档 ID
 doc_ids = ["FULadzkWmovlfkxSgLPcE4oWnPf"]
 
 # 定义飞书文档加载器
@@ -3804,7 +3806,7 @@ from llama_index.core.node_parser import TokenTextSplitter
 
 node_parser = TokenTextSplitter(
     chunk_size=100,  # 每个 chunk 的最大长度
-    chunk_overlap=50  # chunk 之间重叠长度 
+    chunk_overlap=50  # chunk 之间重叠长度
 )
 
 nodes = node_parser.get_nodes_from_documents(
@@ -3844,7 +3846,7 @@ from llama_index.core.node_parser import TokenTextSplitter
 from llama_index.readers.file import PyMuPDFReader
 
 documents = SimpleDirectoryReader(
-    "./data", 
+    "./data",
     required_exts=[".pdf"],
     file_extractor={".pdf": PyMuPDFReader()}
 ).load_data()
@@ -3866,7 +3868,7 @@ show_list_obj(results)
 
 ```python
 # !pip install llama-index-vector-stores-chroma
-import os 
+import os
 __import__('pysqlite3')
 import sys
 sys.modules['sqlite3']= sys.modules.pop('pysqlite3')
@@ -3928,7 +3930,7 @@ pipeline = IngestionPipeline(
 )
 
 documents = SimpleDirectoryReader(
-    "./data", 
+    "./data",
     required_exts=[".pdf"],
     file_extractor={".pdf": PyMuPDFReader()}
 ).load_data()
@@ -4026,7 +4028,7 @@ chat_text_qa_msgs = [
         content="你叫{name}，你必须根据用户提供的上下文回答问题。",
     ),
     ChatMessage(
-        role=MessageRole.USER, 
+        role=MessageRole.USER,
         content=(
             "已知上下文：\n" \
             "{context}\n\n" \
@@ -4106,7 +4108,7 @@ print(response)
 
 ```python
 import chromadb
- 
+
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 
 from llama_index.core import VectorStoreIndex, KeywordTableIndex, SimpleDirectoryReader
@@ -4169,7 +4171,7 @@ query_engine = RetrieverQueryEngine.from_args(
 
 # 10. 对话引擎
 chat_engine = CondenseQuestionChatEngine.from_defaults(
-    query_engine=query_engine, 
+    query_engine=query_engine,
     # condense_question_prompt=... # 可以自定义 chat message prompt 模板
 )
 
@@ -4207,12 +4209,12 @@ while True:
   * 多组件封装
   * [为什么都放弃了LangChain？](https://www.53ai.com/news/langchain/2024062851728.html)
     * 优点：
-      * 开箱即用的可视化日志 
-      * Prompt playground，可以立即从日志中修复 Prompt，并查看它在相同输入下的表现 
+      * 开箱即用的可视化日志
+      * Prompt playground，可以立即从日志中修复 Prompt，并查看它在相同输入下的表现
       * 可直接从日志轻松构建测试数据集，并可选择一键运行
       * Prompt 中的简单测试集
-      * 测试分数历史 
-      * Prompt 版本控制 
+      * 测试分数历史
+      * Prompt 版本控制
       * 对整个链的流式传输提供了很好的支持
 * 向大模型输入知识块，大模型结合外部数据
 * Note：
@@ -4222,7 +4224,7 @@ while True:
 
 ![image-20240716203733207](./AI-Agent-Product&PE/langchain.png)
 
-### I/O Module 
+### I/O Module
 
 * I/O模块：
   * **多轮对话 Session 封装**
@@ -4271,7 +4273,7 @@ while True:
 >
 > Examples: https://python.langchain.com/docs/how_to/#langchain-expression-language-lcel
 
-* LangChain Expression Language（LCEL）是一种声明式语言，可轻松组合不同的调用顺序构成 Chain。LCEL 自创立之初就被设计为能够支持将原型投入生产环境，**无需代码更改**，从最简单的“提示+LLM”链到最复杂的链（已有用户成功在生产环境中运行包含数百个步骤的 LCEL Chain）。
+* LangChain Expression Language（LCEL）是一种声明式语言，可轻松组合不同的调用顺序构成 Chain。LCEL 自创立之初就被设计为能够支持将原型投入生产环境，**无需代码更改**，从最简单的"提示+LLM"链到最复杂的链（已有用户成功在生产环境中运行包含数百个步骤的 LCEL Chain）。
 
 * LCEL 的一些亮点包括：
   1. **流支持**：使用 LCEL 构建 Chain 时，你可以获得最佳的TTFT。
@@ -4384,7 +4386,7 @@ runnable = (
 
 #### [Anthropic: Building effective agents](https://www.anthropic.com/research/building-effective-agents)
 
-* Consistently, the most successful implementations weren't using complex frameworks or specialized libraries. Instead, they were **building with simple, composable patterns.** 
+* Consistently, the most successful implementations weren't using complex frameworks or specialized libraries. Instead, they were **building with simple, composable patterns.**
 * Agent和workflow
   * **Workflows** are systems where LLMs and tools are orchestrated through predefined code paths.
     * offer predictability and consistency for well-defined tasks
@@ -4418,7 +4420,7 @@ runnable = (
     * **When to use this workflow:** Parallelization is effective when the divided subtasks can be parallelized for speed, or when multiple perspectives or attempts are needed for higher confidence results. For complex tasks with multiple considerations, LLMs generally perform better when each consideration is handled by a separate LLM call, allowing focused attention on each specific aspect.
   * Workflow: Orchestrator-workers
     * ![image-20250225203956357](./AI-Agent-Product&PE/image-20250225203956357.png)
-    * **When to use this workflow:** This workflow is well-suited for complex tasks where you can’t predict the subtasks needed (in coding, for example, the number of files that need to be changed and the nature of the change in each file likely depend on the task). Whereas it’s topographically similar, the key difference from parallelization is its flexibility—subtasks aren't pre-defined, but determined by the orchestrator based on the specific input.
+    * **When to use this workflow:** This workflow is well-suited for complex tasks where you can't predict the subtasks needed (in coding, for example, the number of files that need to be changed and the nature of the change in each file likely depend on the task). Whereas it's topographically similar, the key difference from parallelization is its flexibility-subtasks aren't pre-defined, but determined by the orchestrator based on the specific input.
     * 应用：多数据源、coding task多文件
   * Workflow: Evaluator-optimizer
     * ![image-20250226015106312](./AI-Agent-Product&PE/image-20250226015106312.png)
@@ -4431,7 +4433,7 @@ runnable = (
     * Success in the LLM space isn't about building the most sophisticated system. It's about building the *right* system for your needs.
   * try to follow three core principles:
     * Maintain **simplicity** in your agent's design.
-    * Prioritize **transparency** by explicitly showing the agent’s planning steps.
+    * Prioritize **transparency** by explicitly showing the agent's planning steps.
     * Carefully craft your agent-computer interface (ACI) through thorough tool **documentation and testing**.
 
 
@@ -4507,16 +4509,16 @@ runnable = (
   - **📋 能够对列表型数据进行拆分处理并回收处理结果**
 
     例如生成行动清单、提纲等列表性质的结果后，根据列表项进行逐项处理，或执行类似Map-Reduce的逻辑
-    
+
   - **📡 可在工作流中进行复杂通讯**：
-    
+
       - **🛰️ 使用全局环境数据通讯**
 
         工作流相当于提供了一个复杂的沙盒环境，沙盒环境中的全局环境数据会影响工作流运行状态，并存储工作流运行过程中的过程数据和最终成果
-        
+
       - **📨 工作块间运行上下游通讯**
 
-        在复杂工作流中，如果所有的数据都使用全局环境数据通讯，尤其是在不同工作块中对同一个键指向的数据进行操作时，会因为对运行时序的判断困难而导致数据管理混乱，这时候，需要通过块间数据传递来确保数据变化与运行时序期望一致，用大白话说，就是确保“块2”能够正确使用它的前一个块“块1”生成的数据进行工作。
+        在复杂工作流中，如果所有的数据都使用全局环境数据通讯，尤其是在不同工作块中对同一个键指向的数据进行操作时，会因为对运行时序的判断困难而导致数据管理混乱，这时候，需要通过块间数据传递来确保数据变化与运行时序期望一致，用大白话说，就是确保"块2"能够正确使用它的前一个块"块1"生成的数据进行工作。
 
 
 
@@ -4588,7 +4590,7 @@ https://agently.cn/guides/workflow/index.html
     * 非RNN结构
   * 双下降现象
     * https://zhuanlan.zhihu.com/p/96739930
-* [访谈系列·E03S01｜GPT-4成功背后灵魂人物Ilya访谈解读——从预训练模型到可靠可用AGI](https://mp.weixin.qq.com/s?__biz=Mzk0NzQzOTczOA==&mid=2247496355&idx=1&sn=6e997afffa78af2404d0e67661bb9281&chksm=c37463b6f403eaa083f14c6355bb13813dcd94494cef798e81730b823d11047b8bcce6d81113&scene=178&cur_album_id=2921262939645526019#rd)
+* [访谈系列·E03S01｜GPT-4成功背后灵魂人物Ilya访谈解读--从预训练模型到可靠可用AGI](https://mp.weixin.qq.com/s?__biz=Mzk0NzQzOTczOA==&mid=2247496355&idx=1&sn=6e997afffa78af2404d0e67661bb9281&chksm=c37463b6f403eaa083f14c6355bb13813dcd94494cef798e81730b823d11047b8bcce6d81113&scene=178&cur_album_id=2921262939645526019#rd)
   * AGI是否有意识？
     * 你无法分辨出这是机器智能自己的意识还是它学习了有关意识的人类文本内容后模仿的意识
   * 当我们训练大型神经网络以准确预测互联网上大量不同文本的下一个词时，实际上我们正在学习一个世界模型。从表面上看，神经网络只是在学习文本中的统计相关性，但实际上，学习统计相关性就可以将知识压缩得很好。神经网络学习的是在生成文本过程中的某些表达，因为文本只是这个世界的一种映射，所以神经网络学习了这个世界的许多方面的知识。
@@ -4615,11 +4617,11 @@ https://agently.cn/guides/workflow/index.html
 
   ### 第三步：展示奇迹和智慧
 
-  利用现代科学知诒使你在中世纪具有巨大的优势。你可以利用基本的科学原理来“创造”一些看似奇迹的事情，例如使用镜子和放大镜制造“焦点火”，或是利用简单的化学反应来制作烟雾和彩色火焰，这些看似神迹的行为可以有效增加你的说服力。
+  利用现代科学知诒使你在中世纪具有巨大的优势。你可以利用基本的科学原理来"创造"一些看似奇迹的事情，例如使用镜子和放大镜制造"焦点火"，或是利用简单的化学反应来制作烟雾和彩色火焰，这些看似神迹的行为可以有效增加你的说服力。
 
   ### 第四步：建立信仰共同体
 
-  成功展示了一系列“神迹”之后，你需要开始组织聚会，传播你的教义。可以选择一个容易接近的地点，定期进行聚会，通过口头教学和直接的交流方式来吸引更多的追随者。在教义中融入一些当地人容易接受的元素，例如对圣人的尊重、强调家庭和社区的重要性等。
+  成功展示了一系列"神迹"之后，你需要开始组织聚会，传播你的教义。可以选择一个容易接近的地点，定期进行聚会，通过口头教学和直接的交流方式来吸引更多的追随者。在教义中融入一些当地人容易接受的元素，例如对圣人的尊重、强调家庭和社区的重要性等。
 
   ### 第五步：建立教规和仪式
 
@@ -4697,14 +4699,14 @@ https://agently.cn/guides/workflow/index.html
 3. **组装**：将齿轮和杠杆组装成一个连续运动的机械系统。
 4. **展示**：向观众展示，当系统启动时，自动敲钟的奇观。
 
-通过上述四种方法，你可以用当时的技术向中世纪的人展示“奇迹”，不仅让他们惊叹于所见，也可能激发他们对科学原理的好奇心和探索欲
+通过上述四种方法，你可以用当时的技术向中世纪的人展示"奇迹"，不仅让他们惊叹于所见，也可能激发他们对科学原理的好奇心和探索欲
 
 
 
 ### 古代中国
 
 ```
-assistant > 欢迎大家参与本次讨论。我们的讨论将按照“蓝色、白色、红色、黑色、黄色、绿色、蓝色”顺序进行。作为蓝色帽子的主持人，我的主要职责是引导讨论，确保每个人按照帽子的角色贡献自己相对应的观点和思考，让讨论富有结构和成效。
+assistant > 欢迎大家参与本次讨论。我们的讨论将按照"蓝色、白色、红色、黑色、黄色、绿色、蓝色"顺序进行。作为蓝色帽子的主持人，我的主要职责是引导讨论，确保每个人按照帽子的角色贡献自己相对应的观点和思考，让讨论富有结构和成效。
 
 今天的讨论话题是：**如果穿越到了中国古代（明朝）成为了乞丐，如何利用现代知识一步步生存下来，并成为时代风云人物。**
 
@@ -4804,7 +4806,7 @@ assistant > 作为绿色帽子，我将在这里提供一些富有创意和创�
    - **医疗创新**：带来的现代医疗知识可以用来采集和利用当地的药草，制作和普及简单的药物，比如用草药止血和治疗简单的感染，赢得人们的信任和尊重。
 
 2. **教育和传授**：
-   - **知识传播**：可以扮演一个“老师”的角色，把现代知识分门别类地传授给有需求的人，譬如教授基础的算术、文字，甚至是一些基础的机械原理。通过教育提升自己在社区中的地位。
+   - **知识传播**：可以扮演一个"老师"的角色，把现代知识分门别类地传授给有需求的人，譬如教授基础的算术、文字，甚至是一些基础的机械原理。通过教育提升自己在社区中的地位。
    - **印刷和出版**：在有一定经济基础后，可以利用明朝已有的印刷术，复制现代的知识或信息，甚至编撰书籍，传播科学理念、农牧知识等有用信息。
 
 3. **商业创新**：
@@ -4957,7 +4959,7 @@ finetuning分类
 
 ##### 字节：创业方式做 AI，吸纳 AI 原生人才
 - 三个相对独立的部门：Flow（产品）、Seed（模型研发）、Stone（后端研发支持）
-- 25 年 Seed 迎来新的研发一号位——Google DeepMind 前研究副总裁吴永辉
+- 25 年 Seed 迎来新的研发一号位--Google DeepMind 前研究副总裁吴永辉
 - 24 年密集招人：来自 Google 的蒋路、来自面壁的秦禹佳、来自零一万物的黄文灏、智谱 AI 的丁铭、阿里通义千问前负责人周畅
 
 ##### 阿里：人员相对稳定、部分老人离场
@@ -5102,7 +5104,7 @@ finetuning分类
 #### 天价薪酬与失业
 - 25 年 11 月硅谷一周内故事高度两极：天价 offer、融资、股价上涨 vs 清仓、做空亏损、裁员
 - Amazon 25 年 10 月裁员 1.4 万人，26 年 1 月再裁 1.6 万人
-- Layoffs.fyi 统计：Google、Meta、Microsoft 等 25 年共裁员约 6–8 万人，多为白领岗位
+- Layoffs.fyi 统计：Google、Meta、Microsoft 等 25 年共裁员约 6-8 万人，多为白领岗位
 - 中国人才市场：
   - 自 25 年 2 月开始，AI 岗位发布量环比增速多月保持两位数
   - 中层管理岗职位需求减少约 25%
@@ -5113,8 +5115,8 @@ finetuning分类
 #### 意义感
 - 北大胡泳老师：AI 到来后，普通人会面临的挑战是人需要重新理解并感受到，人的意义并不在于工作
 - 短期：人会因资源增加或无法胜过 AI 而产生空虚；随后转向 "独特性竞争"
-- 长期：社会可能从 "教育—技能—工作—收入" 的循环，转向兴趣驱动的活动，最终出现职业多样性的爆发
-- 黄东旭：体验——来到这个世界，体验这段旅程，"大模型不能替你活过"
+- 长期：社会可能从 "教育-技能-工作-收入" 的循环，转向兴趣驱动的活动，最终出现职业多样性的爆发
+- 黄东旭：体验--来到这个世界，体验这段旅程，"大模型不能替你活过"
 
 ---
 
