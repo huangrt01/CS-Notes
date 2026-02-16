@@ -72,7 +72,11 @@
   - ⏸️ **方案 2-4: 暂不执行**（可能侵入 OpenClaw 内部实现）
 
 #### Top Lean AI 榜单监控
-- [ ] 找到榜单的实际数据源/URL（需要搜索 Henry Shi 的 Top Lean AI 榜单）
+- ✅ 找到榜单的实际数据源/URL：https://leanaileaderboard.com/
+  - 创建者：Henry Shi（LinkedIn: https://www.linkedin.com/in/henrythe9th/，X: https://x.com/henrythe9ths/）
+  - 资格标准：超过 $5MM ARR、少于 50 名员工、成立不到 5 年
+  - 更新频率：每周更新
+  - GitHub Commit: https://github.com/huangrt01/CS-Notes/commit/e9ab013
 - [ ] 集成 OpenClaw message send 能力发送飞书通知
 - [ ] 配置 cron job 每日运行
 
