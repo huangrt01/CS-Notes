@@ -349,6 +349,24 @@ Lark 通知完成
 
 这些任务由 AI 自动执行，或在 OpenClaw 云端运行。
 
+##### 笔记整理
+
+* [ ] 整理笔记：年末 AI 回顾：从模型到应用，从技术到商战，拽住洪流中的意义之线
+  - Priority：high
+  - Assignee：AI
+  - Feedback Required：是（需要用户提供或确认文章完整内容）
+  - Links：https://mp.weixin.qq.com/s/gyEbK_UaUO3AeQvuhhRZ6g
+  - Definition of Done：
+    * 找到最合适的现有笔记文件或创作文件
+    * 提取文章核心要点
+    * 整合到笔记的合适章节
+    * 附上引用链接
+  - Plan：
+    * 获取文章完整内容
+    * 分析文章结构和核心观点
+    * 找到最合适的笔记文件（Notes/ 或 创作/）
+    * 整合内容，附上引用
+
 ##### OpenClaw集成
 
 * [ ] 火山引擎端：创建cs-notes-git-sync Skill
