@@ -101,4 +101,15 @@
     - 问题本质：session 管理问题，当 session history 较长时需要切换新 session
     - 目标：设计并实现具体的优化方案，避免以后再遇到 "400 Total tokens of image and text exceed max message tokens" 错误
     - 需要结合 Answer Overflow 链接中的相关探讨
+    - 补充：今天下午消耗了几千万 token，需要综合考虑 token usage 优化
+
+- 内容：实现 Top Lean AI 榜单每日监控与通知
+  - 优先级：high
+  - 关联文件：Notes/AI-Agent-Product&amp;PE.md
+  - 参考链接：
+  - 截止时间：
+  - 详细描述：
+    - 类似 RSS 订阅方式，每天检查一次 Henry Shi 维护的 "Top Lean AI" 榜单
+    - 如果出现新进入榜单的项目，把项目链接、介绍和公司信息发到飞书
+    - 榜单收录人均创收超 100 万美元的团队，最新名单是 44 家，其中 14 家总 ARR 超过 5000 万美元
 

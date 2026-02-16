@@ -351,7 +351,7 @@ Lark 通知完成
 
 ##### OpenClaw 稳定性优化
 
-* [ ] 设计实现 OpenClaw session 管理优化方案，避免 token 超限错误
+* [ ] 设计实现 OpenClaw session 管理优化方案，避免 token 超限错误 + Token Usage 优化
   - Priority：high
   - Assignee：AI
   - Feedback Required：否
@@ -361,17 +361,42 @@ Lark 通知完成
     * 分析当前 token 超限问题的根本原因
     * 设计具体的 session 管理优化方案
     * 实现优化方案（如自动检测 session 长度、自动切换新 session 等）
+    * 综合考虑 token usage 优化（今天下午消耗了几千万 token）
     * 测试验证方案有效，避免以后再遇到 "400 Total tokens of image and text exceed max message tokens" 错误
   - Plan：
     * 先尝试访问并学习 Answer Overflow 链接中的内容
     * 分析当前 OpenClaw session 管理机制
-    * 设计优化方案（可能包括：session 长度监控、自动切换新 session、context 压缩等）
+    * 分析今天 token 消耗异常的原因
+    * 设计优化方案（可能包括：session 长度监控、自动切换新 session、context 压缩、token 使用监控等）
     * 实现优化方案
     * 测试验证
   - 问题背景：
     * 错误信息：`400 Total tokens of image and text exceed max message tokens`
     * 解决方法（临时）：在 TUI 中使用 `/reset` 命令恢复会话
     * 问题本质：session 管理问题，当 session history 较长时需要切换新 session
+    * 补充：今天下午消耗了几千万 token，需要综合优化
+
+* [ ] 实现 Top Lean AI 榜单每日监控与通知
+  - Priority：high
+  - Assignee：AI
+  - Feedback Required：否
+  - Links：Notes/AI-Agent-Product&amp;PE.md
+  - Definition of Done：
+    * 找到 Henry Shi 维护的 "Top Lean AI" 榜单的数据源/URL
+    * 实现类似 RSS 订阅的每日监控机制
+    * 每天检查一次榜单更新
+    * 如果出现新进入榜单的项目，把项目链接、介绍和公司信息发到飞书
+    * 记录榜单历史变化，便于追踪
+  - Plan：
+    * 先搜索找到 "Top Lean AI" 榜单的具体位置/URL
+    * 设计数据结构存储榜单信息和历史记录
+    * 实现监控脚本（Python）
+    * 集成 OpenClaw message send 能力发送飞书通知
+    * 配置 cron job 每日运行
+  - 背景信息：
+    * 榜单收录人均创收超 100 万美元的团队
+    * 最新名单是 44 家，其中 14 家总 ARR 超过 5000 万美元
+    * 代表公司：Perplexity、Cursor、Runway、HeyGen、Harvey、Manus、Genspark、OpenArt、PixVerse、Lovart 等
 
 ##### 笔记整理
 
