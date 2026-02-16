@@ -2,6 +2,11 @@
 """
 Top Lean AI 榜单监控脚本
 类似 RSS 订阅方式，每天检查榜单更新，发现新项目时发送飞书通知
+
+数据源：https://leanaileaderboard.com/
+创建者：Henry Shi（LinkedIn: https://www.linkedin.com/in/henrythe9th/，X: https://x.com/henrythe9ths/）
+资格标准：超过 $5MM ARR、少于 50 名员工、成立不到 5 年
+更新频率：每周更新
 """
 
 import os
@@ -14,6 +19,7 @@ class TopLeanAIMonitor:
     def __init__(self, workspace_path=None):
         self.workspace_path = Path(workspace_path) if workspace_path else Path.cwd()
         self.state_file = self.workspace_path / ".top-lean-ai-state.json"
+        self.leaderboard_url = "https://leanaileaderboard.com/"
         
         # 已知的榜单信息（从笔记中提取）
         self.known_companies = {
@@ -29,6 +35,18 @@ class TopLeanAIMonitor:
             "Lovart": {"category": "Content Creation", "arr": "3000万+", "notes": "视频生成"}
         }
         
+        # 榜单资格标准
+        self.qualification_criteria = {
+            "min_arr": "5MM ARR (run rate)",
+            "max_employees": 50,
+            "max_age_years": 5,
+            "creator": "Henry Shi",
+            "linkedin": "https://www.linkedin.com/in/henrythe9th/",
+            "x_twitter": "https://x.com/henrythe9ths/",
+            "update_frequency": "weekly",
+            "vision": "1-person billion dollar company"
+        }
+        
         self.state = self.load_state()
     
     def load_state(self):
@@ -40,7 +58,9 @@ class TopLeanAIMonitor:
             "last_check": None,
             "known_companies": self.known_companies.copy(),
             "new_companies": [],
-            "check_history": []
+            "check_history": [],
+            "leaderboard_url": self.leaderboard_url,
+            "qualification_criteria": self.qualification_criteria
         }
     
     def save_state(self):
@@ -51,21 +71,24 @@ class TopLeanAIMonitor:
     def search_for_list(self):
         """搜索 Top Lean AI 榜单
         
-        TODO: 需要找到榜单的实际数据源/URL
-        可能的位置:
-        - Henry Shi 的 Twitter/X
-        - GitHub 仓库
-        - 网站
-        - 某个公开的榜单页面
+        数据源：https://leanaileaderboard.com/
+        TODO: 需要解析 JavaScript 加载的榜单数据
+        当前状态：页面显示 "Loading leaderboard data..."
         """
-        # 这里是占位实现，需要找到实际的数据源
-        print("🔍 正在搜索 Top Lean AI 榜单...")
-        print("⚠️ 需要找到榜单的实际数据源/URL")
+        print("🔍 正在检查 Top Lean AI 榜单...")
+        print(f"📊 榜单 URL: {self.leaderboard_url}")
         print()
-        print("可能的线索:")
-        print("- Henry Shi 的社交媒体账号")
-        print("- GitHub 上的仓库")
-        print("- 某个公开的榜单页面")
+        print("📋 榜单资格标准:")
+        print(f"   - 超过 {self.qualification_criteria['min_arr']}")
+        print(f"   - 少于 {self.qualification_criteria['max_employees']} 名员工")
+        print(f"   - 成立不到 {self.qualification_criteria['max_age_years']} 年")
+        print()
+        print("👤 创建者信息:")
+        print(f"   - LinkedIn: {self.qualification_criteria['linkedin']}")
+        print(f"   - X (Twitter): {self.qualification_criteria['x_twitter']}")
+        print()
+        print("⚠️ 注意: 页面显示 'Loading leaderboard data...'")
+        print("   需要进一步解析 JavaScript 加载的榜单数据")
         print()
         
         # 返回已知的公司列表作为占位
@@ -137,6 +160,7 @@ class TopLeanAIMonitor:
         
         # 构建通知内容
         message = "🔔 Top Lean AI 榜单更新!\n\n"
+        message += f"榜单链接: {self.leaderboard_url}\n\n"
         message += f"发现 {len(new_companies)} 家新公司:\n\n"
         
         for company in new_companies:
@@ -155,7 +179,9 @@ class TopLeanAIMonitor:
             "known_companies_count": len(self.state["known_companies"]),
             "new_companies_count": len(self.state["new_companies"]),
             "check_count": len(self.state["check_history"]),
-            "new_companies": self.state["new_companies"]
+            "new_companies": self.state["new_companies"],
+            "leaderboard_url": self.leaderboard_url,
+            "qualification_criteria": self.qualification_criteria
         }
     
     def print_report(self):
@@ -166,11 +192,20 @@ class TopLeanAIMonitor:
         print("📊 Top Lean AI 榜单监控状态")
         print("=" * 60)
         print()
-        
+        print(f"📊 榜单 URL: {status['leaderboard_url']}")
         print(f"🕐 上次检查: {status['last_check'] or '从未检查'}")
         print(f"🏢 已知公司总数: {status['known_companies_count']}")
         print(f"🆕 历史新公司数: {status['new_companies_count']}")
         print(f"🔍 检查次数: {status['check_count']}")
+        print()
+        print("📋 资格标准:")
+        print(f"   - 超过 {status['qualification_criteria']['min_arr']}")
+        print(f"   - 少于 {status['qualification_criteria']['max_employees']} 名员工")
+        print(f"   - 成立不到 {status['qualification_criteria']['max_age_years']} 年")
+        print()
+        print("👤 创建者:")
+        print(f"   - LinkedIn: {status['qualification_criteria']['linkedin']}")
+        print(f"   - X (Twitter): {status['qualification_criteria']['x_twitter']}")
         print()
         
         if status['new_companies']:
