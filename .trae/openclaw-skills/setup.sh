@@ -1,6 +1,6 @@
 #!/bin/bash
-# OpenClaw 容器内快速设置脚本
-# 在容器内直接运行此脚本
+# OpenClaw 统一设置脚本
+# 在容器/服务器内直接运行此脚本
 
 set -e
 
@@ -23,7 +23,7 @@ print_error() {
 }
 
 print_info "=========================================="
-print_info "OpenClaw 容器内快速设置"
+print_info "OpenClaw 统一设置脚本"
 print_info "=========================================="
 echo ""
 
@@ -66,7 +66,7 @@ mkdir -p "$OPENCLAW_SKILLS_DIR"
 if [ -d "$SKILLS_SOURCE" ]; then
     for skill_dir in "$SKILLS_SOURCE"/*/; do
         skill_name=$(basename "$skill_dir")
-        if [ "$skill_name" != "." ] && [ "$skill_name" != ".." ]; then
+        if [ "$skill_name" != "." ] && [ "$skill_name" != ".." ] && [ -d "$skill_dir" ]; then
             print_info "安装 Skill: $skill_name"
             cp -r "$skill_dir" "$OPENCLAW_SKILLS_DIR/"
         fi
@@ -85,13 +85,13 @@ if [ -z "$REPO_URL" ]; then
 fi
 
 if [ -f "$OPENCLAW_SKILLS_DIR/cs-notes-git-sync/main.py" ]; then
-    sed -i.bak "s|REPO_URL = \".*\"|REPO_URL = \"$REPO_URL\"|" "$OPENCLAW_SKILLS_DIR/cs-notes-git-sync/main.py"
-    rm -f "$OPENCLAW_SKILLS_DIR/cs-notes-git-sync/main.py.bak"
+    sed -i.bak "s|REPO_URL = \".*\"|REPO_URL = \"$REPO_URL\"|" "$OPENCLAW_SKILLS_DIR/cs-notes-git-sync/main.py" 2>/dev/null || true
+    rm -f "$OPENCLAW_SKILLS_DIR/cs-notes-git-sync/main.py.bak" 2>/dev/null || true
     print_info "已更新 cs-notes-git-sync 的 REPO_URL: $REPO_URL"
 fi
 echo ""
 
-# 步骤 5: 配置 Git 凭据（如果使用 HTTPS）
+# 步骤 5: 配置 Git 推送权限
 print_info "步骤 5/6: 配置 Git 推送权限"
 if [[ "$REPO_URL" == https://* ]]; then
     print_warn "检测到使用 HTTPS 协议"
@@ -135,7 +135,7 @@ echo ""
 print_info "步骤 6/6: 验证"
 echo ""
 print_info "检查 Skills:"
-ls -la "$OPENCLAW_SKILLS_DIR/"
+ls -la "$OPENCLAW_SKILLS_DIR/" 2>/dev/null || print_warn "Skills 目录为空"
 echo ""
 print_info "检查 Git 仓库:"
 git status
@@ -144,12 +144,12 @@ print_info "尝试测试推送权限..."
 read -p "是否进行测试推送？(y/n, 会创建一个测试提交): " test_push
 if [ "$test_push" = "y" ] || [ "$test_push" = "Y" ]; then
     touch .test-push-$(date +%s)
-    git add .test-push-*
-    git commit -m "test: 验证推送权限"
-    if git push; then
+    git add .test-push-* 2>/dev/null || true
+    git commit -m "test: 验证推送权限" 2>/dev/null || true
+    if git push 2>&1; then
         print_info "测试推送成功！"
-        git reset --mixed HEAD~1
-        rm -f .test-push-*
+        git reset --mixed HEAD~1 2>/dev/null || true
+        rm -f .test-push-* 2>/dev/null || true
     else
         print_error "测试推送失败，请检查权限配置"
     fi
