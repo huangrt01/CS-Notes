@@ -2,6 +2,12 @@
 """
 OpenClaw Session 监控脚本
 用于监控 session 长度和 token 使用情况，提供优化建议
+
+⚠️ 重要原则：基于 OpenClaw 现有能力，不侵入内部代码！
+- 不修改 OpenClaw 源代码
+- 不修改 OpenClaw 配置文件
+- 仅使用 OpenClaw 已提供的功能
+- 推荐使用 OpenClaw 内置的 `/reset` 命令
 """
 
 import os
@@ -55,15 +61,15 @@ class SessionMonitor:
         
         # 消息数量警告
         if session["message_count"] >= 50:
-            warnings.append(f"⚠️ Session 已包含 {session['message_count']} 条消息，建议切换新 session")
+            warnings.append(f"⚠️ Session 已包含 {session['message_count']} 条消息，建议使用 `/reset` 命令切换新 session")
         elif session["message_count"] >= 30:
             warnings.append(f"📊 Session 已包含 {session['message_count']} 条消息")
         
         # Token 使用警告（估算）
         if session["token_estimate"] >= 80000:  # 假设 100k 是上限
-            warnings.append(f"🚨 Token 使用量已达 {session['token_estimate']:,}，强烈建议切换新 session")
+            warnings.append(f"🚨 Token 使用量已达 {session['token_estimate']:,}，强烈建议使用 `/reset` 命令切换新 session")
         elif session["token_estimate"] >= 50000:
-            warnings.append(f"⚠️ Token 使用量已达 {session['token_estimate']:,}，建议考虑切换")
+            warnings.append(f"⚠️ Token 使用量已达 {session['token_estimate']:,}，建议考虑使用 `/reset` 命令")
         
         # 今日总 token 警告
         if self.state["total_tokens_today"] >= 10000000:  # 10M
@@ -76,7 +82,11 @@ class SessionMonitor:
         return warnings
     
     def reset_session(self):
-        """重置 session"""
+        """重置 session（推荐使用 OpenClaw 内置的 `/reset` 命令）"""
+        print("⚠️ 推荐使用 OpenClaw 内置的 `/reset` 命令！")
+        print("   这个脚本的 reset 功能仅用于演示，建议在 OpenClaw TUI 中使用 `/reset`")
+        print()
+        
         # 归档当前 session
         if self.state["current_session"]["message_count"] > 0:
             self.state["current_session"]["end_time"] = datetime.now().isoformat()
@@ -92,7 +102,7 @@ class SessionMonitor:
         self.state["last_reset"] = datetime.now().isoformat()
         self.save_state()
         
-        return "✅ Session 已重置，新 session 已开始"
+        return "✅ Session 已重置，新 session 已开始（建议在 OpenClaw TUI 中使用 `/reset` 命令）"
     
     def get_status(self):
         """获取当前状态"""
@@ -116,6 +126,12 @@ class SessionMonitor:
         print("=" * 60)
         print("📊 OpenClaw Session 状态报告")
         print("=" * 60)
+        print()
+        print("⚠️  重要原则：基于 OpenClaw 现有能力，不侵入内部代码！")
+        print("   - 不修改 OpenClaw 源代码")
+        print("   - 不修改 OpenClaw 配置文件")
+        print("   - 仅使用 OpenClaw 已提供的功能")
+        print("   - 推荐使用 OpenClaw 内置的 `/reset` 命令")
         print()
         
         print(f"🕐 当前 Session 开始时间: {status['current_session']['start_time']}")
@@ -163,7 +179,7 @@ def main():
             print(f"未知命令: {command}")
             print("使用:")
             print("  python session-monitor.py status    # 查看状态")
-            print("  python session-monitor.py reset     # 重置 session")
+            print("  python session-monitor.py reset     # 重置 session（推荐使用 OpenClaw 内置的 `/reset` 命令）")
             print("  python session-monitor.py log [tokens]  # 记录消息")
     else:
         monitor.print_report()
