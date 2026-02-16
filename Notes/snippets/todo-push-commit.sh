@@ -107,13 +107,42 @@ main() {
     # 2. 过滤允许的文件
     log "INFO" "步骤 2/4: 过滤允许的文件（仅 Notes/、.trae/、创作/）"
     local allowed_files=()
-    while read -r status file; do
-        if is_file_allowed "$file"; then
-            allowed_files+=("$file")
-        else
-            log "WARN" "  [跳过] $file"
+    
+    # 使用更可靠的方式获取文件名（支持中文）
+    # 先获取所有已修改的文件
+    while IFS= read -r file; do
+        if [ -n "$file" ]; then
+            if is_file_allowed "$file"; then
+                allowed_files+=("$file")
+                log "INFO" "  ✓ $file"
+            else
+                log "WARN" "  [跳过] $file"
+            fi
         fi
-    done < <(git status --porcelain)
+    done < <(git diff --name-only)
+    
+    # 再获取所有未跟踪的文件
+    while IFS= read -r file; do
+        if [ -n "$file" ]; then
+            if is_file_allowed "$file"; then
+                allowed_files+=("$file")
+                log "INFO" "  ✓ $file"
+            else
+                log "WARN" "  [跳过] $file"
+            fi
+        fi
+    done < <(git ls-files --others --exclude-standard)
+    
+    # 去重
+    local unique_allowed_files=()
+    declare -A seen
+    for file in "${allowed_files[@]}"; do
+        if [ -z "${seen["$file"]}" ]; then
+            seen["$file"]=1
+            unique_allowed_files+=("$file")
+        fi
+    done
+    allowed_files=("${unique_allowed_files[@]}")
     
     if [ ${#allowed_files[@]} -eq 0 ]; then
         log "INFO" "没有允许提交的文件，退出"
