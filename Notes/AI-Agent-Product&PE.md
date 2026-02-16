@@ -74,6 +74,116 @@
 
 ![structure](./AI-Agent-Product&PE/structure.png)
 
+### 互联网已死，Agent 永生
+
+> 参考资料：[互联网已死，Agent 永生](https://mp.weixin.qq.com/s/bHF1JT1QJeC6JVwoEVs08Q)
+
+#### 核心论断
+
+**Agent 才是软件的新主人。不要服务人，服务 Agent。**
+
+#### 一、砍掉的六张旧地图（互联网时代已过时）
+
+1. **DAU 过时**
+   - 互联网时代：网状拓扑，网络效应，边际成本递减，DAU 是资产
+   - AI 时代：星型拓扑，无网络效应，每用户多一份推理成本，DAU 是负债
+   - ChatGPT 用广告逻辑扩张 DAU，Claude 摆明立场绝不加入广告
+
+2. **工具→平台路径堵死**
+   - 互联网时代：工具→社区→平台，三级火箭
+   - AI 时代：工具本身足够强，不需要社区补充（社区本质是人帮人，AI 比人更能帮人）
+   - 只有大模型公司、算力基座拥有者才能做平台（星型拓扑中心节点）
+
+3. **SaaS 没死，但主人换了**
+   - 过去：人类是软件用户（2B/2C），围绕"人怎么用软件"设计
+   - 现在：Agent 是软件用户（2A），软件公司变成面向 Agent 的基础设施
+   - 人类要的是结果，不是软件；Agent 可以自己看文档、百倍速操作软件
+
+4. **"AI 应用"是错的**
+   - "应用"天然暗示使用者是人，思维会被锁死在界面、交互、留存等面向人的思考
+   - 换一个词，换一种思考：不要服务人，服务 Agent
+
+5. **注意力经济已死**
+   - 注意力经济：抢夺用户时间卖给广告商，零和博弈（平台赚你浪费的时间）
+   - 生产力经济：付费让 AI 帮你完成工作，正和博弈（双方都创造价值）
+   - 注意力经济追求停留时长，生产力经济追求结果交付效率
+
+6. **"出海"过时**
+   - Agent 的世界里没有海，不需要翻译、适配支付、本地化推广
+   - 只需要把 API 做好、文档写清楚、协议对接好，全世界 Agent 都能找到你
+   - 需要的不是出海，是接入新世界
+
+#### 二、新世界的四块基石
+
+1. **Token 是新时代的特权**
+   - 顶级模型不仅没降价，反而更贵（Opus 4.6：200k 上下文内输入 /输出 ，上下文外更贵）
+   - Claude Fast 模式：2.5 倍速度，5 倍 Token 费用，一天总消耗可达 12 倍
+   - 算力马太效应：更多算力→更好结果→更多收入→买得起更多算力
+
+2. **燃烧 Token 的速度，决定人的进化速度**
+   - 买 Token 不是消费，是投资自己
+   - 用 100 分顶级模型 vs 90 分模型，看似省钱，实则浪费最稀缺资源：判断力和时间
+   - 用谷歌 vs 百度，一年认知差 2 倍；用顶级模型 vs 垃圾模型，一年认知差 100 倍
+   - 要做能疯狂燃烧 Token 的事/产品：AI Coding、AI Agent、AI Video
+
+3. **Agent 是新世界的人口红利**
+   - 过去：研究怎么让人用得爽（界面、交互、推送）
+   - 现在：研究怎么让 Agent 用得爽（API 稳定、文档清楚、结果准确）
+   - 一个人可能有 10-100 个 Agent 工作，每个 Agent 每天调用外部接口几千几万次
+   - Agent 时代增长飞轮：
+     - 先被发现：Skills 发布早、文档好、测试到位、SEO 到位，让 Agent 需要时第一时间找到你
+     - 再被依赖：稳定、准确、快速、有品味，每次调用返回更好结果，让它没理由换掉你
+   - 反面：需要人联系销售、填表单、等审批的产品，Agent 用不起来，在新世界里不存在
+
+4. **愿力时代**
+   - Agent：有能力、有理性、有耐心，但不会产生任何想法
+   - 人类：有欲望、有情感、有想象，但无法独自完成一件大事
+   - 人类的价值：不是亲自干活，是决定干什么、为什么干
+   - 人和人的差距：不取决于自己能做什么，取决于能驱动多少 Agent 为你做什么
+   - 韩信点兵，多多益善：不是自己能打，是有一套体系，给多少兵都能管
+
+#### 三、如何让海量 Agent 更容易找到并愿意付费
+
+1. **让 Agent 第一个知道你**
+   - 早发布 Skills/Tools
+   - 写好机器可读的结构化文档（语义化、示例清晰）
+   - 做好 Agent SEO（针对大模型检索优化）
+   - 加入主流 Agent 生态（Claude Skills、GPTs 等）
+   - 标准化能力描述和接口定义
+
+2. **让 Agent 用了就离不开你**
+   - API 高可用、低延迟、高并发
+   - 返回结果准确、一致、有品味
+   - 完全自助化（无需人工介入开通、计费）
+   - 良好的错误处理、重试机制和降级策略
+   - 每次调用都比上一次更好（持续学习和优化）
+
+3. **产品设计面向 Agent**
+   - API First：优先设计 API，UI 是次要的
+   - 提供清晰的能力边界和使用示例
+   - 支持标准协议（REST、GraphQL、gRPC）
+   - 提供多语言 SDK 和工具库
+   - 机器友好的计费和计量方式
+
+#### 四、模型越顶级越好卖的认知
+
+- **顶级模型的价值**：
+  - 结果质量差异巨大（100 分 vs 90 分）
+  - 时间和判断力是最稀缺的资源
+  - 用顶级模型是投资，不是消费
+  - 马太效应：更好的模型→更好的结果→更多收入→更好的模型
+
+- **用户付费意愿**：
+  - 愿意为更好的结果支付溢价
+  - 认识到使用低质量模型是浪费生命
+  - 孩子都不愿意跟智商低的模型聊天
+
+- **商业策略**：
+  - 顶级模型不需要降价，反而可以涨价
+  - 可以按能力分级定价（如 Fast 模式）
+  - 比拼的不是价格，是结果质量和速度
+
+
 
 ## ToC 产品
 
@@ -123,6 +233,7 @@
 ### OpenClaw (Personal Assistant)
 
 * **Link**: [GitHub](https://github.com/openclaw/openclaw) | [Website](https://openclaw.ai) | [Docs](https://docs.openclaw.ai)
+* **参考文章**: [飞书聊天直接生视频！OpenClaw × Seedance Skill王炸组合](https://mp.weixin.qq.com/s/Mkbbqdvxh-95pVlnLv9Wig)
 * **定位**: Local-first 个人 AI 助手，聚合多渠道 (Omni-channel)。
 * **核心特性**:
   * **Multi-channel Inbox**: 统一管理 WhatsApp, Telegram, Slack, Discord, Google Chat, Signal, iMessage, Microsoft Teams, Matrix, Zalo, WebChat 等消息渠道。
@@ -186,7 +297,45 @@ OpenClaw 支持三种类型的技能：
 
 技能安装位置: `~/.openclaw/workspace/skills/<skill>/`
 
-示例技能: Seedance Video Generation（文生视频、图生视频）
+##### Seedance Video Generation Skill
+
+* **Link**: [ClawHub](https://clawhub.ai/JackyCSer/seedance-video-generation)
+* **功能**: 文生视频、图生视频（支持首帧、首尾帧、参考图 1-4 张）
+* **支持模型**:
+
+| 模型 | Model ID | 能力 |
+|------|----------|------|
+| Seedance 1.5 Pro | `doubao-seedance-1-5-pro-251215` | Text-to-video, Image-to-video (首帧、首尾帧), 音频支持, Draft mode |
+| Seedance 1.0 Pro | `doubao-seedance-1-0-pro-250428` | Text-to-video, Image-to-video (首帧、首尾帧) |
+| Seedance 1.0 Pro Fast | `doubao-seedance-1-0-pro-fast-250528` | Text-to-video, Image-to-video (仅首帧) |
+| Seedance 1.0 Lite T2V | `doubao-seedance-1-0-lite-t2v-250219` | 仅 Text-to-video |
+| Seedance 1.0 Lite I2V | `doubao-seedance-1-0-lite-i2v-250219` | Image-to-video (首帧、首尾帧、参考图 1-4) |
+
+* **默认模型**: `doubao-seedance-1-5-pro-251215`（最新，支持音频）
+* **切换模型**: 直接在对话中跟 OpenClaw 说即可
+* **Seedance 2.0**: 火山引擎 GA 后支持，当前可在火山方舟体验中心测试
+
+##### 安装 Seedance Skill
+
+**前置条件**: 安装 ClawHub skill
+
+**方式 1**: 通过 OpenClaw Web 控制台点击安装（推荐）
+**方式 2**: 通过聊天安装
+  ```
+  帮我通过clawhub安装一下这个skill：https://clawhub.ai/JackyCSer/seedance-video-generation
+  ```
+**方式 3**: 下载 zip 包放到本地 skill 目录
+  - 下载地址: https://clawhub.ai/JackyCSer/seedance-video-generation
+  - 本地目录: `~/.openclaw/skills/`
+
+安装完成后在 `http://127.0.0.1:18789/skills` 可查看。
+
+##### 使用示例
+
+- 文生视频: "帮我生成给航天飞船启动的视频，15s左右"
+- 图生视频（首帧）: "基于这张参考图生成一段15s左右的主角在雨中穿过不同街区的电影镜头"
+- 图生视频（多张参考图）: "我给你发了四张照片，分别是春夏秋冬。请帮我使用 SeeDance Skill 帮我生成一个视频，体验出春夏秋冬的变化，并且非常适合在抖音上发布"
+- 古诗场景: "生成一个15s左右的视频，内容是一首古诗：枯藤老树昏鸦，小桥流水人家，古道西风瘦马。夕阳西下，断肠人在天涯"
 
 #### 记忆系统设计
 
@@ -213,6 +362,7 @@ OpenClaw 的记忆系统是其核心亮点之一：
 #### 实际部署案例
 
 **火山引擎一键部署**:
+> 参考来源: 火山引擎OpenClaw预集成部署方案（2026-02）
 - 支持飞书机器人集成
 - 一键部署到 ECS
 - 支持 Coding Plan API 集成
@@ -226,22 +376,287 @@ OpenClaw 的记忆系统是其核心亮点之一：
       --feishu-app-secret "your-feishu-app-secret"
   ```
 
+##### 火山引擎方案优势
+
+* **适配节奏快**: 2026年2月2日后购买的服务器已支持最新版OpenClaw部署
+* **飞书深度协同**: 部署模板中预集成了飞书AI助手方案，无需额外复杂配置就能实现飞书接入
+* **安全保障**: 火山引擎提供三层纵深安全防护方案
+  - 平台安全：访问控制、指令过滤、执行沙箱、技能准入扫描
+  - AI助手安全：防范提示词注入、高危操作、敏感信息泄露
+  - 供应链安全：Skills深度安全检测
+* **部署便捷**: 实测部署耗时约15-25分钟，提供视频教程和数据迁移指南
+* **零代码飞书配置**: 访问OpenClaw WebChat页面，输入"帮我接飞书"即可按AI指引完成配置
+
+##### 火山引擎部署详细教程
+
+> 参考来源：[快速部署OpenClaw（原Moltbot），集成飞书AI助手](https://www.volcengine.com/docs/6396/2189942?lang=zh)
+
+**版本说明**：
+- 2026年02月02日21:08前购买：使用Moltbot标签对应的配置命令
+- 2026年02月02日21:08后购买：使用OpenClaw标签对应的配置命令
+
+**地域支持**：
+- 暂仅支持华南1（广州）、华北2（北京）、华东2（上海）及亚太东南（雅加达）
+
+**部署步骤**：
+
+1. **创建ECS服务器**
+   - 登录云服务器控制台
+   - 应用模板选择「OpenClaw（Moltbot）」
+   - 实例规格：2 vCPU、2 GiB内存及以上
+   - 配置登录密码
+   - 安全防护：推荐启用AI助手安全功能（防范提示词注入、敏感信息泄露、高危操作）
+
+2. **两个场景选择**：
+   - **场景一（新用户）**：购买后配置模型并集成飞书应用
+     - 开通火山方舟大模型服务
+     - 创建飞书企业应用
+     - 在实例内完成OpenClaw与飞书集成
+   - **场景二（已有资源）**：购买时配置模型并集成飞书应用
+     - 已开通火山方舟大模型服务且已创建飞书企业应用
+     - 购买实例时通过"高级配置"快速配置方舟模型与飞书企业应用信息
+
+3. **多模态能力**（可选）：
+   - 如需使用原生支持生图、生视频的多模态能力，请选择以下模型：
+     - doubao-seedream-4-5 (251128)
+     - doubao-seedance-1-5-pro (251215)
+
+##### 火山引擎服务状态检查
+
+**查看OpenClaw服务状态**：
+```bash
+systemctl --user status openclaw-gateway.service
+```
+
+**查看更完整的日志**：
+```bash
+# 查看完整日志（包含历史）
+journalctl --user -u openclaw-gateway.service
+
+# 实时跟踪日志
+journalctl --user -u openclaw-gateway.service -f
+
+# 查看最近N行日志
+journalctl --user -u openclaw-gateway.service -n 100
+```
+
+**验证部署状态**：
+- 服务状态应为 `Active: active (running)`
+- WebSocket客户端应正常启动
+- 如有飞书集成，应看到 `[feishu] feishu[default]: WebSocket client started` 日志
+
+##### 飞书用户配对
+
+**问题现象**：首次给飞书bot发消息，会收到：
+```
+OpenClaw: access not configured.
+Your Feishu user id: ou_xxxxxxxx
+Pairing code: XXXXXXXX
+Ask the bot owner to approve with:
+openclaw pairing approve feishu XXXXXXXX
+```
+
+**解决步骤**：
+1. 登录火山引擎服务器
+2. 执行配对批准命令：
+   ```bash
+   openclaw pairing approve feishu <配对码>
+   ```
+3. 配对成功后即可正常对话
+
+##### 安全方案详情
+
+火山引擎为OpenClaw提供以下安全保障：
+- **入口层**: 默认仅绑定本地端口，减少公网暴露面，强制token/密码认证及网关鉴权
+- **决策层**: 镜像预置提示词加固策略，自动识别并过滤恶意注入指令
+- **执行层**: 沙箱隔离环境，防止系统破坏
+- **准入层**: Skills安全扫描，避免供应链攻击
+
 #### 飞书机器人配置步骤
 
 1. 在飞书开放平台创建企业自建应用，添加机器人能力
+   - 登录飞书账号，进入开发者后台"创建企业自建应用"
+   - 选择"按能力添加" -> 添加机器人
 2. 配置权限（消息读取、飞书文档读写等）
+   - 在左侧目录树中找到：开发配置 -> 权限管理
+   - 选择"批量导入/导出权限"，复制以下 JSON 代码进行权限导入：
+     ```json
+     {
+       "scopes": {
+         "tenant": [
+           "docs:document.content:read",
+           "docs:document.media:upload",
+           "docs:document.subscription",
+           "docs:document.subscription:read",
+           "docs:permission.member:auth",
+           "docs:permission.member:create",
+           "docs:permission.member:delete",
+           "docs:permission.member:retrieve",
+           "docs:permission.member:transfer",
+           "docs:permission.member:update",
+           "docs:permission.setting:read",
+           "docs:permission.setting:readonly",
+           "docs:permission.setting:write_only",
+           "docx:document.block:convert",
+           "docx:document:create",
+           "docx:document:readonly",
+           "docx:document:write_only",
+           "im:chat:read",
+           "im:chat:update",
+           "im:message.group_at_msg:readonly",
+           "im:message.p2p_msg:readonly",
+           "im:message.pins:read",
+           "im:message.pins:write_only",
+           "im:message.reactions:read",
+           "im:message.reactions:write_only",
+           "im:message:readonly",
+           "im:message:recall",
+           "im:message:send_as_bot",
+           "im:message:send_multi_users",
+           "im:message:send_sys_msg",
+           "im:message:update",
+           "im:resource"
+         ],
+         "user": [
+           "contact:contact.base:readonly",
+           "contact:user.employee_id:readonly",
+           "docx:document.block:convert",
+           "docx:document:create",
+           "docx:document:readonly",
+           "docx:document:write_only"
+         ]
+       }
+     }
+     ```
+   - 确认权限并申请开通
+   - 后续可在"开通权限"中为机器人开通更多权限
 3. 配置事件与回调（使用长连接接收消息）
+   - 在左侧目录树中找到"开发配置"->"事件与回调"
+   - 点击"订阅方式"旁的按钮添加事件配置
+   - 选择"使用 长连接 接收事件"
+   - 添加事件 -> 接收消息
 4. 获取 App ID 和 App Secret
+   - 在机器人应用的凭证页面获取
 5. 在 OpenClaw 配置中填入飞书凭证
+   - 选择飞书
+   - 粘贴对应的 App ID 和 App Secret
 6. 发布应用并在飞书中搜索使用
+   - 确保应用已发布
+   - 在飞书搜索框中搜索机器人应用的名称
+   - 检查应用可用范围是否包含自己的账号
 
-#### 对本项目的启发
+#### 深度调研分析
 
-1. **Omni-channel Inbox 思路**: 可参考 OpenClaw 多渠道聚合，接入 Lark/Telegram 等作为任务输入渠道
-2. **Local-first Gateway**: 控制平面本地运行，确保数据隐私
-3. **技能系统**: 模块化的 Skills 扩展机制，可复用
-4. **安全模型**: DM 配对策略、沙箱隔离等安全最佳实践
-5. **远程网关**: 支持在 Linux 实例上运行 Gateway，客户端通过 Tailscale/SSH 隧道连接
+##### 核心设计理念
+
+1. **Local-first 优先原则**
+   - 控制平面完全运行在本地，数据不经过第三方服务器
+   - 确保隐私安全，所有消息、记忆、工具执行都在本地
+   - Gateway 仅作为本地控制中心，绑定在 127.0.0.1:18789
+
+2. **单一控制平面架构**
+   - 单一 WebSocket 网关作为所有组件的控制中心
+   - 统一管理：会话、渠道、工具、事件
+   - 简化架构，降低复杂度
+
+3. **多渠道聚合但不锁定**
+   - 支持 10+ 主流消息渠道：WhatsApp、Telegram、Slack、Discord、Google Chat、Signal、iMessage、Microsoft Teams、Matrix、Zalo、WebChat
+   - 用户可以用自己习惯的渠道与 AI 交互
+   - 渠道是可选的，Gateway 本身就提供完整功能
+
+##### 核心子系统深度分析
+
+1. **Gateway 系统**
+   - WebSocket 网络：单一 WS 控制平面，用于客户端、工具和事件
+   - Tailscale 暴露：Serve（仅 tailnet）或 Funnel（公开）
+   - Control UI + WebChat：直接从 Gateway 提供的 Web 界面
+
+2. **会话模型**
+   - 主会话（main）：直接对话
+   - 群组隔离：不同群组/渠道有独立会话
+   - 激活模式：mention/always
+   - 队列模式：消息排队处理
+   - 回复策略：reply-back
+
+3. **工具系统**
+   - 浏览器控制：专用 Chrome/Chromium，带 CDP 控制
+   - Canvas + A2UI：Agent 驱动的可视化工作区
+   - Nodes：相机快照/剪辑、屏幕录制、位置获取、通知
+   - Cron + wakeups：定时任务
+   - Webhooks + Gmail Pub/Sub：外部触发
+
+4. **技能系统**
+   - 三层架构：内置（Bundled）、托管（Managed from ClawHub）、工作区（Workspace）
+   - 技能安装位置：`~/.openclaw/workspace/skills/&lt;skill&gt;/`
+   - 技能配置文件：SKILL.md
+
+5. **记忆系统**
+   - 上下文与记忆分离：
+     - 上下文：静态+条件化系统提示词、AGENTS.md/SOUL.md、过往对话、当前消息
+     - 记忆：自动写入 daily logs，人类可手动维护并提炼长期原则
+   - 相关开源项目：memsearch（抽离 OpenClaw 记忆系统）
+
+##### 安全模型
+
+1. **DM 配对策略**
+   - 未知发送者收到配对码
+   - 通过 `openclaw pairing approve &lt;channel&gt; &lt;code&gt;` 批准
+   - 批准后加入本地白名单
+
+2. **沙箱隔离**
+   - 默认：主会话工具在主机上运行，完全访问
+   - 非主会话：可设置 `agents.defaults.sandbox.mode: "non-main"` 在 Docker 沙箱中运行
+   - 允许/拒绝列表：可精细控制每个会话的工具权限
+
+3. **Tailscale 安全**
+   - Serve：tailnet-only HTTPS，默认使用 Tailscale 身份头
+   - Funnel：公开 HTTPS，必须设置 `gateway.auth.mode: "password"`
+   - Gateway 始终绑定 loopback
+
+##### 部署模式
+
+1. **本地部署**（推荐个人使用）
+   - macOS/Linux/Windows（WSL2）
+   - `openclaw onboard --install-daemon` 向导式安装
+   - 后台守护进程：launchd/systemd 用户服务
+
+2. **远程网关部署**
+   - Gateway 运行在小型 Linux 实例（如 ECS）
+   - 客户端通过 Tailscale Serve/Funnel 或 SSH 隧道连接
+   - 设备节点（macOS/iOS/Android）仍可执行本地操作
+
+3. **火山引擎一键部署**（中国用户）
+   - 支持飞书机器人集成
+   - 一键部署到 ECS
+   - 预置 Coding Plan API 集成
+
+##### 多 Agent 路由
+
+- Workspaces：不同工作区隔离
+- Per-agent sessions：每个 Agent 独立会话
+- 可将不同渠道/任务路由给不同 Agent 处理
+
+##### 对本项目的深度启发
+
+1. **任务管理的 Omni-channel Inbox**
+   - 不仅是 Git 提交，可接入 Lark/Telegram/微信等多渠道作为任务输入
+   - 统一的任务 Inbox，不管从哪个渠道来的都能处理
+
+2. **任务状态的可见性**
+   - 学习 OpenClaw 的会话模型：Pending → In Progress → Completed
+   - 每个任务有清晰的状态转换、执行者、开始时间
+
+3. **技能系统的借鉴**
+   - 本项目的 "snippets" 可视为 OpenClaw 的 "Skills"
+   - 可建立技能目录，让 AI 能自动发现和使用
+
+4. **记忆系统的应用**
+   - 任务执行的经验沉淀到 PROGRESS.md，类似 daily logs
+   - 长期原则提炼，让 AI 越来越懂用户的工作习惯
+
+5. **远程网关的思路**
+   - 本项目的 todo-sync.sh 是本地脚本，可考虑类似 Gateway 的架构
+   - 支持远程触发执行，手机提交后自动在电脑端处理
 
 ### 产品逻辑
 
@@ -606,6 +1021,13 @@ Ralph Loop 是让 AI 持续工作的循环机制。
   * 明确目标和约束条件
   * 接受 AI 的直接反馈方式
 
+* 如何恰当催促用户完成任务：
+  * 明确提醒：清晰告知用户当前待办事项和进度状态
+  * 提供支持：主动询问是否需要帮助解决障碍
+  * 降低门槛：把大任务拆解成可立即执行的小步骤
+  * 等待响应：不要过度打扰，给用户留出决策和行动空间
+  * 状态可视：及时更新任务状态，让用户清楚知道进度
+
 #### 拍照答题
 
 * Gauth
@@ -839,7 +1261,89 @@ https://manus.im/app
     *   **R1 爆火原因**：开源、思考过程可见 (CoT)、以及一个（至今为止都）非常简陋的 APP。
     *   **关于“套壳” (Wrapper)**：
         *   **安迪比尔定律 (Andy and Bill's Law)**：硬件提高的性能，很快被软件消耗掉。套壳本身毫无问题，是商业和技术最正常的行为。
-        *   **分工与价值**：微软不用自己造 CPU（Intel），NV 不用亲自去无尘间操作光刻机（台积电）。Claude 也没涉足 IDE，但这不妨碍 Cursor 成为值得尊敬的公司。
+        *   **分工与价值**：微软不用自己造 CPU（Intel），NV 不用亲自去无尘间操
+
+### OpenViking：AI Agents 上下文数据库
+
+&gt; [https://openviking.ai/](https://openviking.ai/)、[OpenViking上下文数据库Golang集成实践](https://blog.csdn.net/shaobingj126/article/details/157869295)
+
+**背景**：随着 AI Agent 从简单的单轮对话处理器演变为能够执行复杂长周期任务的智能实体，上下文管理已成为制约 Agent 能力发展的关键瓶颈。传统 RAG 系统采用扁平化的向量存储模式，导致记忆碎片化、检索质量差、调试困难，且缺乏 Agent 自身的经验沉淀机制。
+
+**核心定位**：2026年1月，字节跳动火山引擎团队开源了 OpenViking——全球首个专门面向 AI Agent 设计的上下文数据库。OpenViking 摒弃传统 RAG 的碎片化存储模式，创新性地采用"文件系统范式"，将 Agent 所需的记忆、资源和技能进行统一的结构化组织，通过 viking:// 协议实现分层上下文按需加载、目录递归检索和记忆自迭代。
+
+**设计理念**：
+
+1. **上下文组织为文件系统**
+   - 所有记忆、资源和技能组织在类似文件系统的层次结构中
+   - 为 Agent 提供稳定、可导航的上下文结构
+   - 替代扁平的上下文池，避免 Token 截断风险
+   - 通过 viking:// 协议的虚拟目录进行统一 URI 寻址
+
+2. **三层分层上下文（L0/L1/L2）**
+   - **L0（Abstract）**：~100 tokens，向量搜索，快速过滤，"知道有这个东西"
+   - **L1（Overview）**：~2000 tokens，重排序，内容导航，"理解大致内容与位置"
+   - **L2（Detail）**：无限制，完整原始数据，按需加载，"获取精准细节并执行"
+   - 大幅优化 Token 消耗，提升推理效率
+
+3. **目录递归检索策略**
+   - 意图分析：生成多个检索条件，理解查询的深层意图
+   - 全局向量搜索：找到 top-3 最相关的目录作为"种子"
+   - 递归精细探索：在种子目录下进行二次检索，逐层深入子目录
+   - 分数传播：score = α × child_score + (1-α) × parent_score
+   - 收敛检测：top-k 结果连续 3 轮不变时提前停止
+   - 优势：全局相关性、效率优化、可解释性
+
+4. **可观测与自演进上下文**
+   - 每个检索路径可追溯，使 Agent 的上下文推理过程可观测
+   - 从执行和对话中提炼经验，持续优化记忆
+
+**虚拟文件系统结构**：
+```
+viking://
+├── resources/          # 项目资源
+│   ├── docs/          # 文档
+│   ├── repos/         # 代码仓库
+│   └── web/           # 网页内容
+├── user/              # 用户相关
+│   └── memories/      # 用户记忆
+└── agent/             # Agent 相关
+    ├── memories/      # Agent 记忆
+    └── skills/        # Agent 技能
+```
+
+**双存储架构**：
+- **VikingFS（URI 抽象层）**：统一的 URI 映射/文件操作/关系管理
+- **AGFS（内容存储）**：L0/L1/L2 文件、多媒体资源、关系 JSON
+- **VectorDB（索引存储）**：URI 索引、Dense 向量、Sparse 向量、标量元数据
+- 优势：性能优化、数据一致性、扩展性、容错性
+
+**API 接口**：
+- `client.add_resource(path)` —— 添加资源
+- `client.search(query)` —— 搜索上下文
+- `client.read(uri)` —— 读取上下文内容
+- `client.ls(uri)` —— 展开目录
+- `client.overview(uri)` —— 目录概览
+- `PutContext` —— 写入上下文
+- `GetContext` —— 读取上下文（支持按层级获取）
+
+**与主流 Agent 框架集成**：
+- 🦜 LangChain：仅需一行代码替换 Agent 的上下文后端
+- 🦌 DeerFlow：原生支持长文档、会话级上下文管理和持久长期记忆
+
+**快速开始**：
+```bash
+pip install openviking
+```
+
+**对本项目的启发**：
+1. **上下文管理**：可参考文件系统式的上下文组织，用于管理任务执行的历史记录和知识沉淀
+2. **分层加载**：在任务执行时，先加载轻量级 Plan，执行时按需获取详细上下文
+3. **可追溯性**：让每个任务的执行路径可追溯，便于复盘和经验沉淀
+4. **与 OpenClaw 结合**：OpenViking 可作为 OpenClaw 的记忆系统补充，提供更强大的上下文管理能力
+5. **双存储架构借鉴**：可考虑内容与索引分离的设计，提升检索效率和可扩展性
+
+
+作光刻机（台积电）。Claude 也没涉足 IDE，但这不妨碍 Cursor 成为值得尊敬的公司。
         *   **核心**：商业模式的本质在于创造价值，而非必须全栈自研。
 
 ### HiAgent
@@ -4232,113 +4736,3 @@ finetuning分类
   * aligned with human preferences with instruction-tuning
 * 高效的：LoRA: Low-Rank Adaptation of Large Language Models
 
----
-
-## 互联网已死，Agent 永生
-
-&gt; 参考资料：[互联网已死，Agent 永生](https://mp.weixin.qq.com/s/bHF1JT1QJeC6JVwoEVs08Q)
-
-### 核心论断
-
-**Agent 才是软件的新主人。不要服务人，服务 Agent。**
-
-### 一、砍掉的六张旧地图（互联网时代已过时）
-
-1. **DAU 过时**
-   - 互联网时代：网状拓扑，网络效应，边际成本递减，DAU 是资产
-   - AI 时代：星型拓扑，无网络效应，每用户多一份推理成本，DAU 是负债
-   - ChatGPT 用广告逻辑扩张 DAU，Claude 摆明立场绝不加入广告
-
-2. **工具→平台路径堵死**
-   - 互联网时代：工具→社区→平台，三级火箭
-   - AI 时代：工具本身足够强，不需要社区补充（社区本质是人帮人，AI 比人更能帮人）
-   - 只有大模型公司、算力基座拥有者才能做平台（星型拓扑中心节点）
-
-3. **SaaS 没死，但主人换了**
-   - 过去：人类是软件用户（2B/2C），围绕"人怎么用软件"设计
-   - 现在：Agent 是软件用户（2A），软件公司变成面向 Agent 的基础设施
-   - 人类要的是结果，不是软件；Agent 可以自己看文档、百倍速操作软件
-
-4. **"AI 应用"是错的**
-   - "应用"天然暗示使用者是人，思维会被锁死在界面、交互、留存等面向人的思考
-   - 换一个词，换一种思考：不要服务人，服务 Agent
-
-5. **注意力经济已死**
-   - 注意力经济：抢夺用户时间卖给广告商，零和博弈（平台赚你浪费的时间）
-   - 生产力经济：付费让 AI 帮你完成工作，正和博弈（双方都创造价值）
-   - 注意力经济追求停留时长，生产力经济追求结果交付效率
-
-6. **"出海"过时**
-   - Agent 的世界里没有海，不需要翻译、适配支付、本地化推广
-   - 只需要把 API 做好、文档写清楚、协议对接好，全世界 Agent 都能找到你
-   - 需要的不是出海，是接入新世界
-
-### 二、新世界的四块基石
-
-1. **Token 是新时代的特权**
-   - 顶级模型不仅没降价，反而更贵（Opus 4.6：200k 上下文内输入 /输出 ，上下文外更贵）
-   - Claude Fast 模式：2.5 倍速度，5 倍 Token 费用，一天总消耗可达 12 倍
-   - 算力马太效应：更多算力→更好结果→更多收入→买得起更多算力
-
-2. **燃烧 Token 的速度，决定人的进化速度**
-   - 买 Token 不是消费，是投资自己
-   - 用 100 分顶级模型 vs 90 分模型，看似省钱，实则浪费最稀缺资源：判断力和时间
-   - 用谷歌 vs 百度，一年认知差 2 倍；用顶级模型 vs 垃圾模型，一年认知差 100 倍
-   - 要做能疯狂燃烧 Token 的事/产品：AI Coding、AI Agent、AI Video
-
-3. **Agent 是新世界的人口红利**
-   - 过去：研究怎么让人用得爽（界面、交互、推送）
-   - 现在：研究怎么让 Agent 用得爽（API 稳定、文档清楚、结果准确）
-   - 一个人可能有 10-100 个 Agent 工作，每个 Agent 每天调用外部接口几千几万次
-   - Agent 时代增长飞轮：
-     - 先被发现：Skills 发布早、文档好、测试到位、SEO 到位，让 Agent 需要时第一时间找到你
-     - 再被依赖：稳定、准确、快速、有品味，每次调用返回更好结果，让它没理由换掉你
-   - 反面：需要人联系销售、填表单、等审批的产品，Agent 用不起来，在新世界里不存在
-
-4. **愿力时代**
-   - Agent：有能力、有理性、有耐心，但不会产生任何想法
-   - 人类：有欲望、有情感、有想象，但无法独自完成一件大事
-   - 人类的价值：不是亲自干活，是决定干什么、为什么干
-   - 人和人的差距：不取决于自己能做什么，取决于能驱动多少 Agent 为你做什么
-   - 韩信点兵，多多益善：不是自己能打，是有一套体系，给多少兵都能管
-
-### 三、如何让海量 Agent 更容易找到并愿意付费
-
-1. **让 Agent 第一个知道你**
-   - 早发布 Skills/Tools
-   - 写好机器可读的结构化文档（语义化、示例清晰）
-   - 做好 Agent SEO（针对大模型检索优化）
-   - 加入主流 Agent 生态（Claude Skills、GPTs 等）
-   - 标准化能力描述和接口定义
-
-2. **让 Agent 用了就离不开你**
-   - API 高可用、低延迟、高并发
-   - 返回结果准确、一致、有品味
-   - 完全自助化（无需人工介入开通、计费）
-   - 良好的错误处理、重试机制和降级策略
-   - 每次调用都比上一次更好（持续学习和优化）
-
-3. **产品设计面向 Agent**
-   - API First：优先设计 API，UI 是次要的
-   - 提供清晰的能力边界和使用示例
-   - 支持标准协议（REST、GraphQL、gRPC）
-   - 提供多语言 SDK 和工具库
-   - 机器友好的计费和计量方式
-
-### 四、模型越顶级越好卖的认知
-
-- **顶级模型的价值**：
-  - 结果质量差异巨大（100 分 vs 90 分）
-  - 时间和判断力是最稀缺的资源
-  - 用顶级模型是投资，不是消费
-  - 马太效应：更好的模型→更好的结果→更多收入→更好的模型
-
-- **用户付费意愿**：
-  - 愿意为更好的结果支付溢价
-  - 认识到使用低质量模型是浪费生命
-  - 孩子都不愿意跟智商低的模型聊天
-
-- **商业策略**：
-  - 顶级模型不需要降价，反而可以涨价
-  - 可以按能力分级定价（如 Fast 模式）
-  - 比拼的不是价格，是结果质量和速度
