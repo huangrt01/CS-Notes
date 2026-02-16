@@ -1248,6 +1248,66 @@ Ralph Loop 是让 AI 持续工作的循环机制。
 
 ## Agent ToB&ToC 产品
 
+
+
+## Agent 领域概述
+
+从需求端观察，目前 Agent 领域存在两条明显主线：
+1. **以 Coding 能力为核心支撑的 General Agent（通用智能体）**
+2. **垂类 Agent**
+
+### Agent Scaling 与群体智能
+
+#### 核心概念
+
+Agent Scaling 指的是通过多个 Agent 协作来完成复杂任务，而非依赖单个 Agent。这一方向与 OpenClaw 的多 Agent 路由架构高度相关。
+
+#### 典型案例
+
+1. **Moltbook（AI 版 Facebook）**
+   - 定位："群体智能"的实验
+   - 特点：模拟社交媒体环境，多个 Agent 互动协作
+
+2. **Minibook**
+   - 背景：黄东旭受 Moltbook 启发开发
+   - 机制：通过三个不同角色的 Agent 分工协作
+   - 价值：展示了角色化多 Agent 协作的可行性
+
+3. **内容生产领域的多 Agent 协作**
+   - **动画制作 Agent OiiOii**
+   - **影视制作 Agent MovieFlow**
+   - 特点：基于内容生产流程的角色分工，将复杂工作流拆解为多个专业化 Agent
+
+4. **"明日新程"：多智能体 Agent 框架**
+   - 定位：通用的多 Agent 协作框架
+   - 特点：支持复杂任务的拆解与协同
+
+#### 技术架构要点
+
+多 Agent 系统的关键技术挑战：
+- **角色定义与分工**：如何为不同 Agent 定义清晰的角色和职责边界
+- **通信协议**：Agent 之间如何高效传递信息和协调动作
+- **任务拆解与分配**：如何将复杂任务自动拆解为子任务并分配给合适的 Agent
+- **状态同步**：多个 Agent 如何共享和同步全局状态
+- **冲突解决**：当 Agent 之间产生冲突时的决策机制
+- **可观测性**：如何让多 Agent 的协作过程可追踪、可调试
+
+#### 与 OpenClaw 的关联
+
+OpenClaw 的设计已经体现了多 Agent 的思想：
+- **Multi-agent Routing**：支持将不同渠道或任务路由给不同的 Agent 处理
+- **Workspaces + Per-agent sessions**：不同工作区隔离，每个 Agent 独立会话
+- 这为进一步扩展群体智能能力提供了良好的基础架构
+
+#### 未来研究方向
+
+- **自组织协作**：Agent 能够自动发现并组织协作，无需人工预设角色
+- **学习与进化**：多 Agent 系统能够从协作经验中学习，持续优化协作策略
+- **大规模协作**：成百上千个 Agent 同时协作，解决超大规模问题
+- **人机混合协作**：人类与 Agent 无缝协作，发挥各自优势
+
+
+
 ### Teamo
 
 > 知友夕小瑶团队推出 Agent 产品 Teamo，主打超级搜写功能，有哪些亮点？ - 从不毒舌可达鸭的回答 - 知乎
@@ -4782,15 +4842,11 @@ finetuning分类
 
 25 年是 Agent 应用大规模爆发的元年。
 
+（注：Agent 领域的 high-level 总结、Agent Scaling 与群体智能的详细讨论已移至文档前面的"## Agent 领域概述"章节）
+
 ##### 通用 Agent：当 Coding 成为手段
 - 作为目的的 Coding：给程序员用的 Cursor、面向非程序员的 Vibe Coding 工具如 Lovable
 - 作为手段的 Coding：Claude Code、Claude Cowork、OpenClaw（小龙虾）、字节 Trae Solo 模式、蚂蚁灵光、马卡龙、Youware、MuleRun Agent Builder
-
-##### Agent Scaling 与群体智能
-- Moltbook（AI 版 Facebook）："群体智能"的实验
-- Minibook：黄东旭受 Moltbook 启发开发，通过三个不同角色的 Agent 分工协作
-- 动画制作 Agent OiiOii、影视制作 Agent MovieFlow：基于内容生产流程的角色分工
-- "明日新程"：多智能体 Agent 框架
 
 ##### 手机 Agent：存量博弈与场景变迁
 - 字节跳动：豆包手机预览版（自动回微信、比价点外卖等，后被封禁）
