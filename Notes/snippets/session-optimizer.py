@@ -11,6 +11,7 @@ OpenClaw Session 优化器
 
 import os
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -19,6 +20,7 @@ class SessionOptimizer:
         # 固定使用 CS-Notes 目录作为 workspace
         self.workspace_path = Path("/root/.openclaw/workspace/CS-Notes")
         self.state_file = self.workspace_path / ".openclaw-session-optimizer.json"
+        self.todo_archive_file = self.workspace_path / ".trae/documents/TODO_ARCHIVE.md"
         self.state = self.load_state()
     
     def load_state(self):
@@ -35,8 +37,13 @@ class SessionOptimizer:
             "session_start_time": datetime.now().isoformat(),
             "warnings_given": [],
             "last_reset": None,
-            "history": []
+            "history": [],
+            "last_archive_count": 0,
+            "tasks_completed_in_session": 0
         }
+        
+        # 初始化时记录当前的 archive 数量
+        new_state["last_archive_count"] = self.count_archived_tasks()
         
         # 立即保存
         try:
@@ -46,6 +53,36 @@ class SessionOptimizer:
             print(f"[警告] 保存状态失败: {e}")
         
         return new_state
+    
+    def count_archived_tasks(self):
+        """统计 TODO_ARCHIVE.md 中已完成的任务数量"""
+        if not self.todo_archive_file.exists():
+            return 0
+        
+        try:
+            with open(self.todo_archive_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # 统计所有 `- [x]` 标记的任务
+            completed_tasks = re.findall(r'- \[x\]', content)
+            return len(completed_tasks)
+        except Exception as e:
+            print(f"[警告] 统计归档任务失败: {e}")
+            return 0
+    
+    def check_new_archived_tasks(self):
+        """检查是否有新的归档任务"""
+        current_count = self.count_archived_tasks()
+        last_count = self.state.get("last_archive_count", 0)
+        
+        if current_count > last_count:
+            new_tasks = current_count - last_count
+            self.state["last_archive_count"] = current_count
+            self.state["tasks_completed_in_session"] = self.state.get("tasks_completed_in_session", 0) + new_tasks
+            self.save_state()
+            return new_tasks
+        
+        return 0
     
     def save_state(self):
         """保存状态"""
@@ -61,18 +98,32 @@ class SessionOptimizer:
         minutes = int((session_age % 3600) // 60)
         seconds = int(session_age % 60)
         
+        # 检查是否有新的归档任务
+        new_archived_tasks = self.check_new_archived_tasks()
+        tasks_completed_in_session = self.state.get("tasks_completed_in_session", 0)
+        
         print("=" * 60)
         print("🔍 OpenClaw Session 检查")
         print("=" * 60)
         print()
         print(f"🕐 Session 开始时间: {self.state['session_start_time']}")
         print(f"⏱️  Session 已运行: {hours}小时 {minutes}分 {seconds}秒 ({session_age/3600:.2f} 小时)")
+        print(f"✅ 本 session 已完成任务: {tasks_completed_in_session} 个")
+        if new_archived_tasks > 0:
+            print(f"🆕 本次检查新发现: {new_archived_tasks} 个归档任务")
         print()
         
         need_reset = False
         warnings = []
         
-        # 检查: 时间
+        # 检查 1: 已完成任务数量
+        if tasks_completed_in_session >= 3:
+            warnings.append(f"⚠️ 本 session 已完成 {tasks_completed_in_session} 个任务，超过 3 个，建议切换 session！")
+            need_reset = True
+        elif tasks_completed_in_session >= 2:
+            warnings.append(f"📊 本 session 已完成 {tasks_completed_in_session} 个任务")
+        
+        # 检查 2: 时间
         if session_age >= 24 * 3600:  # 24 小时
             warnings.append(f"⚠️ Session 已运行超过 24 小时，建议切换！")
             need_reset = True
@@ -120,13 +171,16 @@ class SessionOptimizer:
         self.state["history"].append({
             "start_time": self.state["session_start_time"],
             "end_time": datetime.now().isoformat(),
-            "warnings_given": self.state["warnings_given"]
+            "warnings_given": self.state["warnings_given"],
+            "tasks_completed": self.state.get("tasks_completed_in_session", 0)
         })
         
         # 重置状态
         self.state["session_start_time"] = datetime.now().isoformat()
         self.state["warnings_given"] = []
         self.state["last_reset"] = datetime.now().isoformat()
+        self.state["tasks_completed_in_session"] = 0
+        self.state["last_archive_count"] = self.count_archived_tasks()
         self.save_state()
         
         print("✅ 状态已记录！")
@@ -151,6 +205,7 @@ class SessionOptimizer:
             print(f"Session {len(self.state['history']) - i}:")
             print(f"  开始: {session['start_time']}")
             print(f"  结束: {session['end_time']}")
+            print(f"  完成任务: {session.get('tasks_completed', 0)} 个")
             print(f"  警告数: {len(session['warnings_given'])}")
             print()
         

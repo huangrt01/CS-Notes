@@ -1,6 +1,6 @@
 ---
 name: session-optimizer
-description: OpenClaw Session 优化器 - 监控 session 状态，在需要时提醒用户切换 session。包括 session 长度监控、时间显示等功能。
+description: OpenClaw Session 优化器 - 监控 session 状态，在需要时提醒用户切换 session。包括 session 长度监控、已完成任务数量统计、时间显示等功能。
 ---
 
 # Session Optimizer Skill
@@ -10,22 +10,17 @@ description: OpenClaw Session 优化器 - 监控 session 状态，在需要时�
 ## 核心功能
 
 1. **Session 状态检查** - 检查当前 session 的运行时间
-2. **自动警告** - 在达到阈值时提醒用户
-3. **历史记录** - 记录 session 切换历史
+2. **已完成任务统计** - 监控 TODO_ARCHIVE.md 中的归档任务数量
+3. **自动警告** - 在达到阈值时提醒用户
+4. **历史记录** - 记录 session 切换历史
 
 ## 使用方法
 
 ### 检查 Session 状态
 
 ```bash
-cd /root/.openclaw/workspace/CS-Notes/Notes/snippets/
+cd /root/.openclaw/workspace/CS-Notes/.trae/openclaw-skills/session-optimizer/scripts/
 python3 session-optimizer.py check
-```
-
-### 记录消息
-
-```bash
-python3 session-optimizer.py log
 ```
 
 ### 查看历史记录
@@ -42,8 +37,8 @@ python3 session-optimizer.py reset
 
 ## 阈值配置
 
-- **消息数量警告**: 30 条消息
-- **消息数量强烈建议**: 50 条消息
+- **已完成任务警告**: 2 个任务
+- **已完成任务强烈建议**: 3 个任务（超过 3 个建议切换 session）
 - **时间警告**: 12 小时
 - **时间强烈建议**: 24 小时
 
@@ -58,3 +53,4 @@ python3 session-optimizer.py reset
 - 不修改 OpenClaw 配置文件
 - 仅使用 OpenClaw 已提供的功能
 - 推荐使用 OpenClaw 内置的 `/reset` 命令
+- 监控 TODO_ARCHIVE.md 中的归档任务数量，超过 3 个建议切换 session
