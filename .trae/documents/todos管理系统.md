@@ -248,11 +248,6 @@ Lark 通知完成
 
 #### 其他待处理任务
 
-* [ ] 接入 Lark Bot 自动写入 Inbox
-  - Priority：high
-  - Links：`.trae/documents/INBOX.md`
-  - Definition of Done：从手机将公网文章链接发到 Lark Bot 后，Bot 自动把内容同步进仓库 Inbox；Trae 可基于 Inbox 执行后续整理
-
 * [ ] 落地 Todos Web Manager（手机提交 + 执行闭环）
   - Priority：high
   - Links：`.trae/documents/INBOX.md`、`.trae/documents/TEMPLATES.md`

@@ -604,6 +604,18 @@
     * ✅ 取消环境变量 `OPENCLAW_GATEWAY_TOKEN` 后，`openclaw cron list` 可以正常工作！
     * ✅ 验证成功！输出："No cron jobs."
 
+* [x] 接入 Lark Bot 自动写入 Inbox
+  - Priority：high
+  - Assignee：User + AI
+  - Completed At：2026-02-17
+  - Links：`.trae/documents/INBOX.md`、`.trae/openclaw-skills/cs-notes-git-sync/`
+  - Definition of Done：从手机将公网文章链接发到 Lark Bot 后，Bot 自动把内容同步进仓库 Inbox；Trae 可基于 Inbox 执行后续整理
+  - Progress：
+    * ✅ 零代码配置飞书机器人（火山引擎方式）
+    * ✅ 创建 cs-notes-git-sync Skill，支持接收 Lark 消息并写入 INBOX.md
+    * ✅ 验证端到端流程：Lark 消息 → 火山引擎 OpenClaw → INBOX.md → Git commit & push
+    * ✅ 飞书机器人已正常工作，可以接收消息并同步到仓库
+
 ---
 
 *最后更新：2026-02-17*
