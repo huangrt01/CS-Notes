@@ -586,6 +586,24 @@
     * ✅ 了解项目架构和功能
     * ✅ 创建调研报告文档：`Notes/snippets/code-reading-trae-agent.md`
 
+* [x] 解决 OpenClaw Gateway device token mismatch 问题，恢复 cron 工具等 Gateway API 的使用
+  - Priority：high
+  - Assignee：User
+  - Feedback Required：否
+  - Started At：2026-02-17
+  - Completed At：2026-02-17
+  - Links：`~/.openclaw/openclaw.json`、`~/.openclaw/devices/paired.json`、MEMORY.md
+  - Definition of Done：
+    * 执行 `openclaw gateway install --force`
+    * 执行 `openclaw gateway restart`
+    * 验证 `openclaw cron list` 等命令可以正常工作
+  - Progress：
+    * ✅ 用户执行了 `openclaw gateway install --force`
+    * ✅ 用户执行了 `openclaw gateway restart`
+    * ✅ 发现环境变量 `OPENCLAW_GATEWAY_TOKEN` 会覆盖 `gateway.auth.token`
+    * ✅ 取消环境变量 `OPENCLAW_GATEWAY_TOKEN` 后，`openclaw cron list` 可以正常工作！
+    * ✅ 验证成功！输出："No cron jobs."
+
 ---
 
 *最后更新：2026-02-17*

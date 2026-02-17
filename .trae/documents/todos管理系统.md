@@ -148,27 +148,23 @@ Lark 通知完成
 
 #### User 需要做的任务
 
-* [ ] 解决 OpenClaw Gateway device token mismatch 问题，恢复 cron 工具等 Gateway API 的使用
+* [x] 解决 OpenClaw Gateway device token mismatch 问题，恢复 cron 工具等 Gateway API 的使用
   - Priority：high
   - Assignee：User
   - Feedback Required：否
   - Links：`~/.openclaw/openclaw.json`、`~/.openclaw/devices/paired.json`、MEMORY.md
-  - **【重要！需要你执行！】**
+  - Started At：2026-02-17
+  - Completed At：2026-02-17
   - Definition of Done：
     * 执行 `openclaw gateway install --force`
     * 执行 `openclaw gateway restart`
     * 验证 `openclaw cron list` 等命令可以正常工作
-  - **【AI 已经完成的工作】**：
-    * ✅ 分析 device token mismatch 的根本原因
+  - Progress：
+    * ✅ 用户执行了 `openclaw gateway install --force`
+    * ✅ 用户执行了 `openclaw gateway restart`
     * ✅ 发现环境变量 `OPENCLAW_GATEWAY_TOKEN` 会覆盖 `gateway.auth.token`
-    * ✅ 找到三个 token 都不一样
-    * ✅ 找到解决方案（来自官方文档）
-    * ✅ 记录到 MEMORY.md
-  - **【需要你执行的步骤】**：
-    ```bash
-    openclaw gateway install --force
-    openclaw gateway restart
-    ```
+    * ✅ 取消环境变量 `OPENCLAW_GATEWAY_TOKEN` 后，`openclaw cron list` 可以正常工作！
+    * ✅ 验证成功！输出："No cron jobs."
 
 * [ ] 配置联网搜索能力（火山引擎 Ask-Echo 或 Brave Search）
   - Priority：high
