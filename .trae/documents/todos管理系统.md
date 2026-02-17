@@ -223,6 +223,22 @@ Lark 通知完成
 
 ### 待处理 (Pending)
 
+#### 新增任务
+
+* [ ] 每天整合5条重要AI新闻、5条重要AI产品发布，推送给我
+  - Priority：high
+  - Assignee：AI
+  - Feedback Required：否
+  - 前置依赖：联网搜索搞定
+  - Definition of Done：
+    * 每天整合 5 条重要 AI 新闻
+    * 每天整合 5 条重要 AI 产品发布
+    * 推送给我（通过 Lark/Feishu）
+  - Plan：
+    * 等待联网搜索权限开通
+    * 设计新闻和产品发布的整合方案
+    * 实现定时推送机制
+
 #### User 需要做的任务
 
 这些任务需要你在 Mac 上操作，或通过 Lark 与 OpenClaw bot 对话。
