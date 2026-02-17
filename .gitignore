@@ -10,3 +10,7 @@ tmp*
 **/__pycache__/
 **/venv/
 **/venv3.12/
+# OpenClaw skill 状态文件
+.openclaw-session-optimizer.json
+.top-lean-ai-state.json
+.openclaw-background-state.json
