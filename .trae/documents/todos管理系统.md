@@ -685,7 +685,7 @@ Lark 通知完成
     * ✅ 克隆 trae-agent 仓库
     * ✅ 阅读项目文档
     * ✅ 了解项目架构和功能
-    * ✅ 创建调研报告文档：`trae-agent-调研报告.md`
+    * ✅ 创建调研报告文档：`Notes/snippets/code-reading-trae-agent.md`
 
 ### 已完成 (Completed)
 
