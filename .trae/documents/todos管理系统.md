@@ -210,6 +210,20 @@ Lark 通知完成
 
 #### AI 需要做的任务（优先执行）
 
+* [ ] 评估 trae-agent 的能力，对比 OpenClaw + 方舟代码模型，评估它改笔记代码的效果
+  - Priority：high
+  - Assignee：AI
+  - Feedback Required：是
+  - Links：trae-agent/、Notes/snippets/code-reading-trae-agent.md
+  - Definition of Done：
+    * 跑通 trae-agent client
+    * 设计一些需求让 trae-agent 来改笔记代码
+    * 评估它改的效果如何
+    * 对比 OpenClaw + 方舟代码模型的效果
+  - Progress：
+    * ✅ trae-agent 已成功跑通，创建了测试文件 test_trae_agent.txt
+    * ⏳ 下一步：设计更多测试需求，评估它改笔记代码的能力
+
 * [ ] 每天整合5条重要AI新闻、5条重要AI产品发布，推送给我
   - Priority：high
   - Assignee：AI
@@ -250,15 +264,27 @@ Lark 通知完成
 
 * [ ] 落地 Todos Web Manager（手机提交 + 执行闭环）
   - Priority：high
-  - Links：`.trae/documents/INBOX.md`、`.trae/documents/TEMPLATES.md`
+  - Assignee：AI
+  - Feedback Required：是
+  - Links：`.trae/documents/INBOX.md`、`.trae/documents/TEMPLATES.md`、`.trae/documents/Todos-Web-Manager-设计方案.md`
   - Definition of Done：
     * 提供一个手机可用的提交入口，把任务写入 `.trae/documents/INBOX.md` 或 Pending
     * 提供一个列表页可查看 Pending/进行中/已完成，并支持标记完成与筛选
     * 每个任务支持 Plan 与执行产物回写（摘要/链接/diff/复现命令）
+  - Progress：
+    * ✅ 设计方案已创建：`.trae/documents/Todos-Web-Manager-设计方案.md`
+    * ⏳ 等待用户决策：技术方案选择、UI/UX 偏好、功能优先级、部署方式
+  - 需要用户决策：
+    1. 技术方案选择：纯静态 HTML + JavaScript / 轻量级后端 + 前端 / 基于现有工具
+    2. UI/UX 偏好：简洁实用 / 现代化 / 手机端优先
+    3. 功能优先级：哪些功能是必须的，哪些是可选的
+    4. 部署方式：本地运行 / 部署到火山引擎 / 部署到 GitHub Pages
 
 * [ ] 实现 Todos Web Manager 核心功能
   - Priority：high
-  - Links：`.trae/documents/INBOX.md`
+  - Assignee：AI
+  - Feedback Required：是
+  - Links：`.trae/documents/INBOX.md`、`.trae/documents/Todos-Web-Manager-核心功能实现方案.md`
   - Definition of Done：
     * 显示任务列表
     * 添加新任务
@@ -266,23 +292,70 @@ Lark 通知完成
     * 任务分类和筛选
     * 优先级设置
     * 手机端快速提交任务
+  - Progress：
+    * ✅ 实现方案已创建：`.trae/documents/Todos-Web-Manager-核心功能实现方案.md`
+    * ⏳ 等待用户决策：MVP 范围确认、Markdown 格式标准化、文件保存方式、实时同步
+  - 需要用户决策：
+    1. MVP 范围确认：Phase 1 的功能是否够用？
+    2. Markdown 格式标准化：是否需要标准化 todos管理系统.md 的格式？
+    3. 文件保存方式：直接覆盖 / 先备份再保存 / 使用 Git 版本控制
+    4. 实时同步：是否需要实时同步多个用户的修改？
 
 * [ ] 为任务执行引入可观测闭环
   - Priority：high
+  - Assignee：AI
+  - Feedback Required：是
+  - Links：`.trae/documents/任务执行可观测闭环设计方案.md`
   - Definition of Done：
     * 任务执行采用结构化日志输出（如 stream-json），让调度器能识别执行阶段、失败原因、重试点与最终产物
     * 任务完成率作为核心系统指标：失败任务进入重试队列，超过阈值自动降级为"需要人工补充信息/拆分"的任务
     * 每个任务沉淀产物：执行摘要、产物链接、关键 diff、失败复现命令，回写到任务条目下，便于长期复盘
+  - Progress：
+    * ✅ 设计方案已创建：`.trae/documents/任务执行可观测闭环设计方案.md`
+    * ⏳ 等待用户决策：存储方案选择、告警阈值设置、重试策略、任务产物沉淀、指标展示
+  - 需要用户决策：
+    1. 存储方案选择：日志文件 + JSON / SQLite 数据库 / 基于现有 Git 历史
+    2. 告警阈值设置：任务完成率、失败率、平均执行时间阈值
+    3. 重试策略：最多重试几次？重试间隔如何设置？
+    4. 任务产物沉淀：每个任务需要沉淀哪些产物？
+    5. 指标展示：是否需要一个 Web 界面展示指标？
 
 * [ ] 用自然语言与语音提高任务输入吞吐
   - Priority：medium
+  - Assignee：AI
+  - Feedback Required：是
+  - Links：`.trae/documents/自然语言与语音任务输入方案.md`
   - Definition of Done：
     * 手机端支持语音输入，将语音转写后再结构化为 todo（content/priority/tags/links/due）
     * 支持"口述式任务模板"：例如"高优先级：把 X 文档改成 Y 风格，关联链接 Z，明天前完成"
     * 支持将口述内容自动补全上下文：如自动带上当前正在编辑的文档路径或最近打开的文件列表
+  - Progress：
+    * ✅ 设计方案已创建：`.trae/documents/自然语言与语音任务输入方案.md`
+    * ⏳ 等待用户决策：语音输入方案选择、口述式任务模板需求、自动补全上下文需求、移动端集成
+  - 需要用户决策：
+    1. 语音输入方案选择：浏览器 Web Speech API / OpenAI Whisper API / 本地 Whisper 模型
+    2. 口述式任务模板：是否需要支持？需要支持哪些模板？
+    3. 自动补全上下文：是否需要？需要补全哪些上下文信息？
+    4. 移动端集成：作为 Web Manager 的一部分 / 单独的 App / 集成到 Lark/飞书
 
 * [ ] 给任务系统添加 Plan Mode 与批量 Review
   - Priority：medium
+  - Assignee：AI
+  - Feedback Required：是
+  - Links：`.trae/documents/Plan-Mode-与批量-Review-设计方案.md`
+  - Definition of Done：
+    * 新任务默认先产出 Plan（目标、假设、改动点、验收标准、风险），Plan 通过后才进入执行队列
+    * 支持批量 kick off Plan 并统一 review
+    * Plan 与执行拆分成两类条目：Plan 条目更强调意图与验收；执行条目更强调产物与可追溯性
+  - Progress：
+    * ✅ 设计方案已创建：`.trae/documents/Plan-Mode-与批量-Review-设计方案.md`
+    * ⏳ 等待用户决策：Plan Mode 是否默认开启、Plan 生成方式、Review 流程、批量 Review 的粒度、Plan 的存储位置
+  - 需要用户决策：
+    1. Plan Mode 是否默认开启：是 / 否 / 混合（高优先级任务默认开启）
+    2. Plan 生成方式：AI 自动生成 / 用户手动编写 / AI 生成 + 用户编辑
+    3. Review 流程：必须用户 review / AI 生成后自动执行 / 混合（低优先级自动执行）
+    4. 批量 Review 的粒度：只能批量批准/拒绝 / 可以逐个查看详情再批量操作
+    5. Plan 的存储位置：直接嵌入 todos管理系统.md / 单独的 Plan 文件
   - Definition of Done：
     * 新任务默认先产出 Plan（目标、假设、改动点、验收标准、风险），Plan 通过后才进入执行队列
     * 支持批量 kick off Plan 并统一 review：先把需求对齐成本前置，避免大量无效执行
