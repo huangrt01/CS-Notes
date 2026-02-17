@@ -90,7 +90,4 @@
 - ✅ [2026-02-16 19:56:46] 测试任务：验证 cs-notes-git-sync 功能 - 已处理
 
 
-- [2026-02-17 05:08:08] 测试消息：验证 cs-notes-git-sync Skill
-  - Priority：medium
-  - Links：
-  - Due：
+- ✅ [2026-02-17 05:08:08] 测试消息：验证 cs-notes-git-sync Skill - 已处理
