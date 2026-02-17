@@ -3426,6 +3426,22 @@ Interpretability在电商场景的潜在应用 https://www.vantagediscovery.com/
 * 关键问题：如何在一个学习了的系统中检测危险（比如混合某些化合物），并且你无法直接询问它这些内容
   * 解决方案：设定一个阈值，超过了向政府报告
 
+* **火山引擎（BytePlus）ModelArk Content Pre-filter**
+  - **功能**：内容预过滤系统，用于检测输入提示词和输出补全中的特定类别的潜在风险内容
+  - **过滤类别**：
+    - Minor Safety：涉及儿童和未成年人隐私侵犯、身心健康伤害的内容
+    - Hate Speech and Hateful Content：包括但不限于种族歧视、国籍歧视、民族歧视、性取向、外貌、身体残疾等
+    - Nudity, Sexual, and Graphic Content：包括但不限于色情、虐待、暴力、自残等
+    - Misinformation：明显具有欺骗性且与事实严重不符的内容
+  - **如何启用/禁用**：
+    - 在 ModelArk 平台的导航栏中点击 Online Inference，进入 Custom inference endpoint 界面
+    - 在该界面中可以启用或禁用 Content Pre-filter System 功能
+  - **重要说明**：
+    - **即使禁用此功能，我们的服务仍会维护基线内容安全政策**，努力为每个用户提供积极的使用环境
+    - 调用 API 时，Response 中会返回一个字段，帮助用户确定模型生成的内容是否被过滤（finish_reason 字段为 "content_filter"）
+  - **参考文档**：
+    - https://docs.byteplus.com/en/docs/ModelArk/Content_Pre-filter
+
 ### AI政治
 
 * 对民主的威胁-虚假信息-aigc
