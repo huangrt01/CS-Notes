@@ -1,6 +1,6 @@
 ---
 name: session-optimizer
-description: OpenClaw Session 优化器 - 监控 session 状态，在需要时提醒用户切换 session。包括 session 长度监控、消息数量统计、时间显示等功能。
+description: OpenClaw Session 优化器 - 监控 session 状态，在需要时提醒用户切换 session。包括 session 长度监控、时间显示等功能。
 ---
 
 # Session Optimizer Skill
@@ -9,7 +9,7 @@ description: OpenClaw Session 优化器 - 监控 session 状态，在需要时�
 
 ## 核心功能
 
-1. **Session 状态检查** - 检查当前 session 的运行时间、消息数量
+1. **Session 状态检查** - 检查当前 session 的运行时间
 2. **自动警告** - 在达到阈值时提醒用户
 3. **历史记录** - 记录 session 切换历史
 

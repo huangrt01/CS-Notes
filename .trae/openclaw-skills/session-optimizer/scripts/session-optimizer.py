@@ -33,7 +33,6 @@ class SessionOptimizer:
         # 创建新状态
         new_state = {
             "session_start_time": datetime.now().isoformat(),
-            "message_count": 0,
             "warnings_given": [],
             "last_reset": None,
             "history": []
@@ -56,7 +55,6 @@ class SessionOptimizer:
     def check_session(self):
         """检查 session 状态，返回是否需要切换"""
         session_age = (datetime.now() - datetime.fromisoformat(self.state["session_start_time"])).total_seconds()
-        message_count = self.state["message_count"]
         
         # 计算更友好的时间显示
         hours = int(session_age // 3600)
@@ -69,20 +67,12 @@ class SessionOptimizer:
         print()
         print(f"🕐 Session 开始时间: {self.state['session_start_time']}")
         print(f"⏱️  Session 已运行: {hours}小时 {minutes}分 {seconds}秒 ({session_age/3600:.2f} 小时)")
-        print(f"💬 消息数量: {message_count}")
         print()
         
         need_reset = False
         warnings = []
         
-        # 检查 1: 消息数量
-        if message_count >= 50:
-            warnings.append(f"⚠️ 消息数量已达 {message_count} 条，强烈建议切换 session！")
-            need_reset = True
-        elif message_count >= 30:
-            warnings.append(f"📊 消息数量已达 {message_count} 条，请注意")
-        
-        # 检查 2: 时间
+        # 检查: 时间
         if session_age >= 24 * 3600:  # 24 小时
             warnings.append(f"⚠️ Session 已运行超过 24 小时，建议切换！")
             need_reset = True
@@ -116,14 +106,6 @@ class SessionOptimizer:
         
         return need_reset
     
-    def log_message(self):
-        """记录一条消息"""
-        self.state["message_count"] += 1
-        self.save_state()
-        
-        # 检查是否需要警告
-        return self.check_session()
-    
     def reset_session(self):
         """重置 session（记录状态，实际切换在 OpenClaw TUI 中执行）"""
         print()
@@ -135,17 +117,14 @@ class SessionOptimizer:
         print()
         
         # 记录历史
-        if self.state["message_count"] > 0:
-            self.state["history"].append({
-                "start_time": self.state["session_start_time"],
-                "end_time": datetime.now().isoformat(),
-                "message_count": self.state["message_count"],
-                "warnings_given": self.state["warnings_given"]
-            })
+        self.state["history"].append({
+            "start_time": self.state["session_start_time"],
+            "end_time": datetime.now().isoformat(),
+            "warnings_given": self.state["warnings_given"]
+        })
         
         # 重置状态
         self.state["session_start_time"] = datetime.now().isoformat()
-        self.state["message_count"] = 0
         self.state["warnings_given"] = []
         self.state["last_reset"] = datetime.now().isoformat()
         self.save_state()
@@ -172,7 +151,6 @@ class SessionOptimizer:
             print(f"Session {len(self.state['history']) - i}:")
             print(f"  开始: {session['start_time']}")
             print(f"  结束: {session['end_time']}")
-            print(f"  消息数: {session['message_count']}")
             print(f"  警告数: {len(session['warnings_given'])}")
             print()
         
@@ -190,8 +168,6 @@ def main():
         
         if command == "check":
             optimizer.check_session()
-        elif command == "log":
-            optimizer.log_message()
         elif command == "reset":
             optimizer.reset_session()
         elif command == "history":
@@ -200,7 +176,6 @@ def main():
             print(f"未知命令: {command}")
             print("使用:")
             print("  python session-optimizer.py check     # 检查 session 状态")
-            print("  python session-optimizer.py log       # 记录一条消息并检查")
             print("  python session-optimizer.py reset     # 准备重置 session")
             print("  python session-optimizer.py history   # 查看历史记录")
     else:
