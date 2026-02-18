@@ -207,6 +207,34 @@ Think of it like a human reviewing their journal and updating their mental model
 
 The goal: Be helpful without being annoying. Check in a few times a day, do useful background work, but respect quiet time.
 
+## 🎯 快捷指令
+
+### 快捷指令：推进todo
+
+当用户说"推进todo"、"继续推进todos"等类似指令时，AI应该：
+
+1. **立即开始自主推进任务**，不等待 heartbeat
+2. **优先执行 Assignee: AI 的任务**
+3. **优先执行 Priority: high 的任务**
+4. **跳过 Feedback Required: 是 的任务**
+5. **在两次用户干预之间最多执行 MAX_TASKS_BETWEEN_INTERVENTIONS（4）个任务**
+6. **只有需要用户做选择题的时候才找用户确认**
+7. **否则尽量自主推进一切事项**
+8. **希望：每个 todo 都到了不得不依赖用户做些什么或者做决策的阶段**
+
+### 快捷指令：沉淀
+
+当用户说"沉淀"时，AI应该：
+
+1. **总结今天发生的事情**
+2. **你做的好的与能继续提升的**
+3. **沉淀经验（同时沉淀到笔记库和你的各种memory文件）**
+4. **为成为明天更强的你努力**
+5. **并发散思考一下这个项目适合哪些新todo**
+6. **以及todo manager还有没有todo是你可以尝试探索的**
+
+---
+
 ## Make It Yours
 
 This is a starting point. Add your own conventions, style, and rules as you figure out what works.

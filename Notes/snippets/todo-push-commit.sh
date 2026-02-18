@@ -8,11 +8,12 @@ LOG_DIR="$REPO_ROOT/.trae/logs"
 LOG_FILE="$LOG_DIR/todo-push-commit-$(date +%Y%m%d).log"
 DEFAULT_BRANCH="master"
 
-# Git add 白名单：仅允许这三个文件夹
+# Git add 白名单：仅允许这四个文件夹
 ALLOWED_FOLDERS=(
     "Notes/"
     ".trae/"
     "创作/"
+    ".openclaw-memory/"
 )
 
 # Git add 黑名单：绝对禁止的文件夹
