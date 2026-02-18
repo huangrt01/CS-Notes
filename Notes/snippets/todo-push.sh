@@ -153,71 +153,12 @@ generate_diff_summary() {
 }
 
 # 同步 OpenClaw 记忆文件到 .openclaw-memory/ 目录
+# ⚠️ 注意：现在本地的记忆文件已经是软链接，指向仓库中的 .openclaw-memory/ 目录
+# ⚠️ 所以不需要再次同步，跳过这个步骤
 sync_openclaw_memory() {
-    log "INFO" "步骤 0/3: 同步 OpenClaw 记忆文件"
-    
-    # OpenClaw 记忆文件列表
-    local memory_files=(
-        "MEMORY.md"
-        "AGENTS.md"
-        "IDENTITY.md"
-        "SOUL.md"
-        "TOOLS.md"
-        "USER.md"
-        "HEARTBEAT.md"
-    )
-    
-    local memory_dir="memory"
-    
-    # 同步单个文件
-    sync_file() {
-        local src_file="$1"
-        local dest_file="$2"
-        
-        if [ -f "$src_file" ]; then
-            if [ ! -f "$dest_file" ] || [ "$src_file" -nt "$dest_file" ]; then
-                cp "$src_file" "$dest_file"
-                log "INFO" "  ✓ 已同步: $src_file → $dest_file"
-            else
-                log "INFO" "  [跳过] $src_file (未变更)"
-            fi
-        else
-            log "WARN" "  [跳过] $src_file (文件不存在)"
-        fi
-    }
-    
-    # 同步记忆目录
-    sync_directory() {
-        local src_dir="$1"
-        local dest_dir="$2"
-        
-        if [ -d "$src_dir" ]; then
-            mkdir -p "$dest_dir"
-            
-            # 同步目录下的所有文件
-            for file in "$src_dir"/*; do
-                if [ -f "$file" ]; then
-                    local filename="$(basename "$file")"
-                    sync_file "$file" "$dest_dir/$filename"
-                fi
-            done
-        else
-            log "WARN" "  [跳过] $src_dir (目录不存在)"
-        fi
-    }
-    
-    # 开始同步
-    log "INFO" "从 OpenClaw 工作区同步记忆文件: $OPENCLAW_WORKSPACE"
-    
-    # 同步单个记忆文件
-    for file in "${memory_files[@]}"; do
-        sync_file "$OPENCLAW_WORKSPACE/$file" "$REPO_ROOT/.openclaw-memory/$file"
-    done
-    
-    # 同步 memory 目录
-    sync_directory "$OPENCLAW_WORKSPACE/$memory_dir" "$REPO_ROOT/.openclaw-memory/$memory_dir"
-    
-    log "INFO" "OpenClaw 记忆文件同步完成"
+    log "INFO" "步骤 0/3: 同步 OpenClaw 记忆文件（跳过）"
+    log "INFO" "  本地记忆文件已设为软链接，指向仓库中的 .openclaw-memory/ 目录"
+    log "INFO" "  跳过同步步骤"
 }
 
 # 主函数
