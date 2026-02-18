@@ -178,6 +178,13 @@ main() {
         log "INFO" "========================================"
         log "INFO" "推送完成！"
         log "INFO" "========================================"
+        
+        # 输出 GitHub commit 链接
+        local commit_hash=$(git rev-parse HEAD)
+        local repo_url=$(git remote get-url origin | sed 's|git@github.com:|https://github.com/|; s|\.git$||')
+        local commit_url="${repo_url}/commit/${commit_hash}"
+        log "INFO" "GitHub Commit 链接: ${commit_url}"
+        echo "GitHub Commit 链接: ${commit_url}"
     else
         log "ERROR" "Push 失败，请检查日志"
         exit 1
