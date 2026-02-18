@@ -115,7 +115,7 @@ class BlogMonitor:
     def _add_blog_if_valid(self, blogs, name, url):
         """如果博主信息有效，添加到列表中"""
         # 过滤掉一些明显不是博主的
-        if len(name) &lt; 2:
+        if len(name) < 2:
             return
         if not url.startswith('http://') and not url.startswith('https://'):
             return
@@ -231,7 +231,7 @@ def main():
     
     monitor = BlogMonitor()
     
-    if len(sys.argv) &gt; 1:
+    if len(sys.argv) > 1:
         command = sys.argv[1]
         
         if command == "status":
