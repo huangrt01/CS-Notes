@@ -1,0 +1,15 @@
+{
+  "name": "hybrid-executor",
+  "version": "0.1.0",
+  "description": "Hybrid Executor - 混合执行调度器",
+  "author": "AI",
+  "entry": "main.py",
+  "capabilities": ["filesystem", "shell"],
+  "commands": [
+    {
+      "name": "execute",
+      "description": "混合执行任务",
+      "handler": "handle_execute"
+    }
+  ]
+}

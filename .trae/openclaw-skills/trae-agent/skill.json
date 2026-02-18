@@ -1,0 +1,19 @@
+{
+  "name": "trae-agent",
+  "version": "0.1.0",
+  "description": "Trae Agent Skill - 调用 trae-agent 执行复杂任务，利用其强可观测性和完整轨迹记录",
+  "author": "CS-Notes",
+  "license": "MIT",
+  "main": "main.py",
+  "requirements": [],
+  "permissions": [
+    "read",
+    "write",
+    "exec"
+  ],
+  "config": {
+    "trae_agent_path": "/root/.openclaw/workspace/trae-agent",
+    "workspace": "/root/.openclaw/workspace/CS-Notes",
+    "model": "doubao-seed-2-0-code-preview-260215"
+  }
+}

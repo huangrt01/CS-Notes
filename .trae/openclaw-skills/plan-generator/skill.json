@@ -1,0 +1,15 @@
+{
+  "name": "plan-generator",
+  "version": "0.1.0",
+  "description": "Plan Generator - 自动生成任务执行计划",
+  "author": "AI",
+  "entry": "main.py",
+  "capabilities": ["filesystem"],
+  "commands": [
+    {
+      "name": "generate",
+      "description": "生成执行计划",
+      "handler": "handle_generate"
+    }
+  ]
+}

@@ -24,6 +24,9 @@ except ImportError:
     HAS_OPENAI = False
     print("Warning: openai not installed")
 
+# 配置 Whisper 模型下载路径
+WHISPER_MODEL_DIR = os.path.expanduser("~/.cache/whisper")
+os.makedirs(WHISPER_MODEL_DIR, exist_ok=True)
 
 def transcribe_audio(file_path: str, model: str = "large-v3") -> str:
     """
@@ -31,8 +34,17 @@ def transcribe_audio(file_path: str, model: str = "large-v3") -> str:
     """
     if HAS_WHISPER:
         print(f"Using local Whisper model: {model}")
-        model = whisper.load_model(model)
-        result = model.transcribe(file_path)
+        print(f"Model directory: {WHISPER_MODEL_DIR}")
+        
+        # 如果 model 参数是一个文件路径，直接加载
+        if os.path.exists(model):
+            print(f"Loading model from file path: {model}")
+            model_obj = whisper.load_model(model)
+        else:
+            # 指定模型下载路径
+            model_obj = whisper.load_model(model, download_root=WHISPER_MODEL_DIR)
+        
+        result = model_obj.transcribe(file_path)
         return result["text"]
     elif HAS_OPENAI:
         print("Using OpenAI Whisper API")

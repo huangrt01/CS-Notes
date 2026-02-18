@@ -1,0 +1,15 @@
+{
+  "name": "plan-executor",
+  "version": "0.1.0",
+  "description": "Plan Executor - 执行任务计划",
+  "author": "AI",
+  "entry": "main.py",
+  "capabilities": ["filesystem", "shell"],
+  "commands": [
+    {
+      "name": "execute",
+      "description": "执行 Plan",
+      "handler": "handle_execute"
+    }
+  ]
+}
