@@ -15,7 +15,7 @@
     * 现在为了提高模型逻辑能力，往往在预训练阶段和Post-training阶段，大幅增加逻辑推理数据占比的原因，且是有成效的。
   * 语言能力已不是问题。
 
-* [Yann LeCun演讲“人类水平的AI”@ Husdon论坛 2024.10](https://www.bilibili.com/video/BV1b1ycYTECU)
+* [Yann LeCun演讲"人类水平的AI"@ Husdon论坛 2024.10](https://www.bilibili.com/video/BV1b1ycYTECU)
   * 介绍了算法沿袭
   * Moravec's Paradox: AI做不到一些人类很容易做的事情
 
@@ -155,7 +155,7 @@ Agentic Model 就是能支持 Agent 能力的模型。总结来说，Agent 需�
 
 #### 数据范式演进 (Data Paradigm)
 
-* **数据受限 (Data Constrained)**：随着模型规模增长，业界正从“数据无限”进入“数据受限”阶段。
+* **数据受限 (Data Constrained)**：随着模型规模增长，业界正从"数据无限"进入"数据受限"阶段。
 * **合成数据 (Synthetic Data)**：Gemini 3 等前沿模型开始大量使用合成数据作为 Scaling 的关键燃料，以突破自然数据枯竭的瓶颈。
     * Chinchilla-optimal
     * loss和参数量呈现对数线性下降
@@ -179,18 +179,18 @@ Agentic Model 就是能支持 Agent 能力的模型。总结来说，Agent 需�
 
 #### Data Scaling
 
-> 也参考 「SFT — 指令微调」，有一些手段
+> 也参考 「SFT - 指令微调」，有一些手段
 
 ##### 高质量数据的价值
 
 ![image-20251002023555458](./AI-Algorithms/image-20251002023555458.png)
 
-##### 缓解数据衰竭 —— ”左脚踩右脚“
+##### 缓解数据衰竭 -- "左脚踩右脚"
 
 * 当前普遍的做法
-* 并不单纯是“左脚踩右脚”，过程中，引入了人工校准
+* 并不单纯是"左脚踩右脚"，过程中，引入了人工校准
 
-##### 缓解数据衰竭 —— Multi-Epoch
+##### 缓解数据衰竭 -- Multi-Epoch
 
 * 数据规模有限时，重复四遍以内基本不影响Scaling Law
 
@@ -278,23 +278,23 @@ Agentic Model 就是能支持 Agent 能力的模型。总结来说，Agent 需�
 > from MindMap
 
 * LLM应用于生产的局限性
-  * Inflexibility. 
+  * Inflexibility.
     * The pre-trained LLMs possess outdated knowledge and are inflexible to parameter updating. Fine-tuning LLMs can be tricky be-
       cause either collecting high-quality instruction
       data and building the training pipeline can be
       costly (Cao et al., 2023), or continually fine-
       tuning LLMs renders a risk of catastrophic for-
       getting (Razdaibiedina et al., 2022).
-  * Hallucination. 
+  * Hallucination.
     * LLMs are notoriously known to produce hallucinations with plausible-sounding
       but wrong outputs (Ji et al., 2023), which causes
       serious concerns for high-stake applications such
       as medical diagnosis.
-  * Transparency. 
+  * Transparency.
     * LLMs are also criticized for their
       lack of transparency due to the black-box na-
       ture (Danilevsky et al., 2020). The knowledge
-      is implicitly stored in LLM’s parameters, thus
+      is implicitly stored in LLM's parameters, thus
       infeasible to be validated. Also, the inference
       process in deep neural networks remains elusive
       to be interpretable
@@ -348,7 +348,7 @@ Agentic Model 就是能支持 Agent 能力的模型。总结来说，Agent 需�
 ### Intro
 
 * Intro
-  * connect the encoder and decoder through an attention mechanism. 
+  * connect the encoder and decoder through an attention mechanism.
   * Encoder: 映射到另一个语义空间
   * Self-attention, sometimes called intra-attention is an attention mechanism relating different positions of a single sequence in order to compute a representation of the sequence.
 * 公式
@@ -399,7 +399,7 @@ Agentic Model 就是能支持 Agent 能力的模型。总结来说，Agent 需�
   麒, unicode:40594, utf8:b'\xe9\xba\x92'<br/>
   麟, unicode:40607, utf8:b'\xe9\xba\x9f'<br/>
   瓜, unicode:29916, utf8:b'\xe7\x93\x9c'<br/><br/>
-  
+
 通过tiktoken处理之后得到的Token序列是：（共11个Token）<br/>
   b'\xe6\xb5\xb7'<br/>
   b'\xe5\x8d\x97'<br/>
@@ -418,7 +418,7 @@ Agentic Model 就是能支持 Agent 能力的模型。总结来说，Agent 需�
   * https://huggingface.co/docs/transformers/en/tokenizer_summary
   * Byte-level BPE
   * GPT-2 has a vocabulary size of 50,257, which corresponds to the 256 bytes base tokens, a special end-of-text token and the symbols learned with 50,000 merges.
-  
+
 
 #### BPE (Byte Pair Encoding): 常用于文本处理的分词算法
 
@@ -434,7 +434,7 @@ Agentic Model 就是能支持 Agent 能力的模型。总结来说，Agent 需�
     1.  **效率最优化**：使Tokenizer能高效地编码其预训练数据中最高频的文本（如中文词语、常见代码片段），从而降低训练和推理成本。
     2.  **词表覆盖度**：确保词表能覆盖预训练数据中的所有语言和领域。
   * **模型与Tokenizer的绑定**：模型学习的是`token ID`与语义的映射关系。因此，一个预训练好的模型**必须**使用其在训练时配套的那个专属Tokenizer。使用者在加载模型时，是在加载一个现成的、配对好的Tokenizer，而非重新训练。
-  
+
 
 ### Encoder Decoder v.s. Decoder Only
 
@@ -462,7 +462,7 @@ Agentic Model 就是能支持 Agent 能力的模型。总结来说，Agent 需�
   * 并且Encoder-Decoder架构，可以减小Encoder的层数
 
 
->  [2025了，如何回答“为什么现在的大模型都是decoder-only的架构？”](https://mp.weixin.qq.com/s/sFgtCmRdOpxQZy7zqey-fw)
+>  [2025了，如何回答"为什么现在的大模型都是decoder-only的架构？"](https://mp.weixin.qq.com/s/sFgtCmRdOpxQZy7zqey-fw)
 
 - **表达能力**：Decoder-Only模型的自回归注意力矩阵为严格下三角形式并含单位对角线，**在理论上保持满秩**。Encoder-Decoder结构可能破坏注意力矩阵的满秩性，**潜在限制了模型性能上限。**
   - 因为Decoder 只关注 Encoder 的 最终输出层
@@ -470,7 +470,7 @@ Agentic Model 就是能支持 Agent 能力的模型。总结来说，Agent 需�
 - **预训练难度**：每一步都只看左侧信息，任务难度大，因此大模型+大数据下能逼出更通用的表征上限。
 - **few-shot/zero-shot**：Prompt在所有层都可注入梯度（隐式微调），比 Enc-Dec 两段式更直接。、
 - **隐式位置编码与外推优势**：Decoder-Only 将输入输出视为单一连续序列，仅依赖相对位置关系，无需显式对齐编码器-解码器的绝对位置索引。训练后可通过微调或插值轻松扩展上下文窗口（如 LongRoPE），而 Enc-Dec 需处理两套位置系统的兼容性问题。
-- **多模态角度**: 主流方案（Gemini/GPT-4o）直接将视觉/音频 tokens 拼接至文本序列，由同一解码器处理，实现“早融合”的工程最优解。
+- **多模态角度**: 主流方案（Gemini/GPT-4o）直接将视觉/音频 tokens 拼接至文本序列，由同一解码器处理，实现"早融合"的工程最优解。
 - **轨迹依赖**：openai率先验证了该架构的训练方法和scaling law，后来者鉴于时间和计算成本，自然不愿意做太多结构上的大改动，就继续沿用decoder-only架构，迭代 MoE、长上下文、多模态。
 
 
@@ -485,9 +485,9 @@ Agentic Model 就是能支持 Agent 能力的模型。总结来说，Agent 需�
 
 > * 从模型复杂度的角度：假设超参对效果贡献相同，优先让模型更复杂，利于Scalable，更晚遇到天花板
 >
->   - “多头”比“单头”复杂，是比较直观的
+>   - "多头"比"单头"复杂，是比较直观的
 >
->   - “多头” v.s. overlap，类似于推荐系统中的share emb，不确定哪种“更复杂”
+>   - "多头" v.s. overlap，类似于推荐系统中的share emb，不确定哪种"更复杂"
 >     - overlap利于提取特征的局部细节，对于语言类模型，不知道有没有用
 >
 > - 动机：缓解全局attention的信息丢失
@@ -531,7 +531,7 @@ Agentic Model 就是能支持 Agent 能力的模型。总结来说，Agent 需�
 * 《Attn is all you need》
   "Multi-head attention allows the model to **jointly attend to information from different representation subspaces at different positions**. With a single attention head, averaging inhibits this."
 
-- But it also is a formidable computational simplifications: The heads operate fully independently, so computing them is (like batch) “embarrassingly parallel”
+- But it also is a formidable computational simplifications: The heads operate fully independently, so computing them is (like batch) "embarrassingly parallel"
   - **head dim是性能的一个限制因素** --> GPU Kernel，SM并行计算
 
 ##### Q和KV的head num可为倍数关系（GQA）
@@ -596,7 +596,7 @@ softcapping
 
 #### 广义的 decoder
 
-* 也参考「深度学习推荐系统——VQ-VAE」
+* 也参考「深度学习推荐系统--VQ-VAE」
 
 #### Masked Softmax 因果掩码机制
 
@@ -650,7 +650,7 @@ softcapping
 
 ![image-20251002161617087](./AI-Algorithms/image-20251002161617087.png)
 
-##### 激活函数的稀疏化探索 —— ReLUfication、ProSparse、ReLU^2
+##### 激活函数的稀疏化探索 -- ReLUfication、ProSparse、ReLU^2
 
 * 图中s1:Swish替换为ReLU
 * 图中s2: 也在layernorm后插入额外的relu层
@@ -683,10 +683,10 @@ softcapping
 * 主要原因和优点如下：
   1. 训练稳定性 ：这是采用 Pre-LN 最主要的原因。在原始的 Post-LN 结构 (Input -> Sublayer -> Add -> LayerNorm) 中，随着网络层数加深，每一层的输出在累加（Add 操作）后才进行归一化，可能导致梯度在反向传播时出现剧烈变化（梯度消失或爆炸），使得训练过程不稳定，尤其是在模型很深的时候。Pre-LN 结构 (Input -> LayerNorm -> Sublayer -> Add) 通过在每个子层的输入处进行归一化，稳定了传递给子层的激活值范围，从而也稳定了反向传播时的梯度流。这使得训练过程更加平滑，不易发散。
      * 反向传播路径 : d(Output) -> d(Add) -> [d(Sublayer) -> d(LayerNorm)] AND [d(Input)]
-     * 在 Add 节点，梯度“兵分两路”：
-       - 路径一（主干道/残差连接） : 梯度 直接、原封不动地 流向 Input 。这是一个恒等映射（Identity Path），梯度值乘以1。这是最关键的一点，它为梯度提供了一条 畅通无阻、无任何缩放 的“高速公路”，可以直接回传到网络的更深层。
+     * 在 Add 节点，梯度"兵分两路"：
+       - 路径一（主干道/残差连接） : 梯度 直接、原封不动地 流向 Input 。这是一个恒等映射（Identity Path），梯度值乘以1。这是最关键的一点，它为梯度提供了一条 畅通无阻、无任何缩放 的"高速公路"，可以直接回传到网络的更深层。
        - 路径二（分支） : 另一份梯度流向 Sublayer ，然后穿过 Sublayer 的反向传播，再穿过 LayerNorm 的反向传播，最后这个经过计算和缩放的梯度也作用于 Input 。
-     * 结论（Pre-LN） :Pre-LN 之所以稳定，是因为 主干道是“干净”的 。无论分支（路径二）上的 Sublayer 和 LayerNorm 产生了多大的梯度，它们只是作为一部分“增量”被 加到 主干道的梯度上，而不会改变主干道梯度本身的直接传导。
+     * 结论（Pre-LN） :Pre-LN 之所以稳定，是因为 主干道是"干净"的 。无论分支（路径二）上的 Sublayer 和 LayerNorm 产生了多大的梯度，它们只是作为一部分"增量"被 加到 主干道的梯度上，而不会改变主干道梯度本身的直接传导。
   2. 减少对学习率 Warmup 的依赖
   3. 更快的收敛（有时）
 
@@ -727,7 +727,7 @@ softcapping
 https://arxiv.org/pdf/1705.03122
 
 * 为什么引入？
-  * MSA的计算，改变Q和K的词元位置，计算结果不变，**“invariant to position”**
+  * MSA的计算，改变Q和K的词元位置，计算结果不变，**"invariant to position"**
 
 * 绝对位置编码：
   * Convolutional Sequence to Sequence Learning
@@ -804,19 +804,19 @@ $$PE_{(pos, 2i + 1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)$$
   * 长度分桶（Bucketing）与最小填充，降低 pad 比例，提升吞吐。
   * 一般允许跨文档注意，无显式跨样本掩码。
 * 现代工程扩展：
-  * 跨样本打包 + 注意力掩码（packed samples with masks）：将多条短样本拼接为一条，并用掩码阻断跨样本注意，兼顾“无填充”与样本独立性。
+  * 跨样本打包 + 注意力掩码（packed samples with masks）：将多条短样本拼接为一条，并用掩码阻断跨样本注意，兼顾"无填充"与样本独立性。
   * Token-budget 动态批（token-based batching）：以固定 token 预算组织 batch，样本数随长度变化，提高设备利用率。
 * 影响与权衡（Zhao et al., 2024）：
   * 过度碎片化削弱长程依赖；保持文档连续性与明确 `EOS` 边界通常更优。
   * 当任务对边界敏感时，打包+掩码更稳；一般预训练场景允许跨文档注意更有利。
-  * 调参关注“有效 token 利用率”（非 padding token 占比）与“跨文档比率”。
+  * 调参关注"有效 token 利用率"（非 padding token 占比）与"跨文档比率"。
 * 实操建议：
-  * 默认采用“流式拼接 + `EOS` + 长度分桶/Token-budget 动态批”。
-  * 需要严格样本独立时，使用“打包 + 掩码”。
+  * 默认采用"流式拼接 + `EOS` + 长度分桶/Token-budget 动态批"。
+  * 需要严格样本独立时，使用"打包 + 掩码"。
 * 参考：
-  * Radford (2018): Improving language understanding by generative pretraining — https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf
-  * Radford et al. (2019): Language models are unsupervised multitask learners — https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf
-  * Zhao et al. (2024): Analysing The Impact of Sequence Composition on Language Model Pre-Training — https://arxiv.org/abs/2402.13991
+  * Radford (2018): Improving language understanding by generative pretraining - https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf
+  * Radford et al. (2019): Language models are unsupervised multitask learners - https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf
+  * Zhao et al. (2024): Analysing The Impact of Sequence Composition on Language Model Pre-Training - https://arxiv.org/abs/2402.13991
 
 #### Label Smoothing
 
@@ -862,7 +862,7 @@ $$PE_{(pos, 2i + 1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)$$
     *   **动机**：传统的 Beam Search 为每个候选序列（beam）都独立存储一份 KV Cache，当多个 beam 共享相同的前缀时，这会造成大量的内存冗余。
     *   **核心方法**：该方法使用 **Trie (前缀树)** 结构来统一管理所有 beam 的 KV Cache。共享相同前缀的 beam 在 Trie 树中会共享同一条路径，从而共享同一份 KV Cache。只有当 beam 发生分叉时，才会在树上创建新的节点来存储差异部分。
     *   **效果**：在不牺牲生成质量的前提下，该方法能节省 4-8 倍的内存，并带来最高 2.4 倍的解码速度提升，极大地优化了 Beam Search 的推理效率。
-    
+
 
 
 
@@ -940,7 +940,7 @@ $$PE_{(pos, 2i + 1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)$$
 
 * 同时处理多模态是趋势：Biological systems perceive the world by simultaneously processing high-dimensional inputs from modalities as diverse as vision, audition, touch, proprioception, etc.
 * 过往CV和语音模型设计，局限于单模态的处理：The perception models used in deep learning on the other hand are designed for individual modalities, often relying on **domain-speciﬁc assumptions such as the local grid structures** exploited by virtually all existing vision models. These priors introduce helpful inductive biases, but also lock models to individual modalities.
-* Perceiver – a model that builds upon Transformers and hence makes few architectural assumptions about the relationship between its inputs, but that also scales to hundreds of thousands of inputs, like ConvNets.
+* Perceiver - a model that builds upon Transformers and hence makes few architectural assumptions about the relationship between its inputs, but that also scales to hundreds of thousands of inputs, like ConvNets.
   * 算法考虑：同时处理多模态
   * 工程考虑：
     * NLP：几千token； CV：50k~224^2 token
@@ -960,9 +960,9 @@ $$PE_{(pos, 2i + 1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)$$
   * 不同点：
     * latent array（output sequence)是随机初始化的，大小可以随便控制；而原来的面向seq-to-seq学习的transformer中的output sequence是来自目标语言的表示层；
     * transformer中对output sequence是先self-attention，然后cross-attention；而perceiver中则相反，是先cross-attention，然后再进行若干次self-attention。
-  
+
   * <img src="./AI-Algorithms/image-20250627151342683.png" alt="image-20250627151342683" style="zoom:50%;" />
-  
+
 
 1. **核心机制**
    - **非对称交叉注意力**：查询（Q）来自可学习的低维潜在单元（N=512），键（K）和值（V）来自输入数据（M≥50,000），将复杂度降至 O (MN)。
@@ -1007,7 +1007,7 @@ $$PE_{(pos, 2i + 1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)$$
 
 https://arxiv.org/pdf/2103.00112
 
-* 在CV中应用，主要解决image token化时， patch过大(16X16)内部信息没有得到较好提取的问题。解决方法是在16X16的patch分解出4X4的patch, 先做一次transformer, 再在外层用16X16的token做trans. 
+* 在CV中应用，主要解决image token化时， patch过大(16X16)内部信息没有得到较好提取的问题。解决方法是在16X16的patch分解出4X4的patch, 先做一次transformer, 再在外层用16X16的token做trans.
 
 ![image-20250606173644337](./AI-Algorithms/image-20250606173644337.png)
 
@@ -1020,9 +1020,9 @@ https://arxiv.org/pdf/2103.00112
 
 ![image-20251007014852428](./AI-Algorithms/image-20251007014852428.png)
 
-#### Sliding Window Attn —— Mistral-7B
+#### Sliding Window Attn -- Mistral-7B
 
-> 本质上是为 Transformer 模型注入 **“局部性优先” 归纳偏置 (Inductive Bias)**
+> 本质上是为 Transformer 模型注入 **"局部性优先" 归纳偏置 (Inductive Bias)**
 
 * GQA + Sliding Window Attn + Rolling Buffer Cache
   * 减少计算和KV存储
@@ -1066,7 +1066,7 @@ https://arxiv.org/pdf/2103.00112
 
 ![image-20251007134921672](./AI-Algorithms/image-20251007134921672.png)
 
-#### MoBA Attn (Moonshot AI): 压缩 — hard选择
+#### MoBA Attn (Moonshot AI): 压缩 - hard选择
 
 > https://arxiv.org/pdf/2502.13189
 >
@@ -1085,19 +1085,19 @@ https://arxiv.org/pdf/2103.00112
 
 ![image-20251007140911453](./AI-Algorithms/image-20251007140911453.png)
 
-#### [DeepSeek] NSA (native sparse attn) 压缩 — soft选择 — 滑窗
+#### [DeepSeek] NSA (native sparse attn) 压缩 - soft选择 - 滑窗
 
 > DeepSeek的优势在于基本是最早用NSA方案**做了pre-train**，预训练做稀疏训练
 >
 > 面向 Inference Time Scaling
 
 * 架构概览
-  * 压缩 —— 选择 —— 滑窗
+  * 压缩 -- 选择 -- 滑窗
   * ![image-20251005145437139](./AI-Algorithms/image-20251005145437139.png)
   * 压缩：8倍，比较激进
   * 选择：
     * 图右上角的mask比较有意思，对于尾部token的处理
-    * **Gated Output** 
+    * **Gated Output**
 
 * kernel design
   * <img src="./AI-Algorithms/image-20251005150446270.png" alt="image-20251005150446270" style="zoom:50%;" />
@@ -1147,12 +1147,12 @@ https://arxiv.org/pdf/2103.00112
   * mamba：选择性SSM架构
 * Additive Attention https://arxiv.org/abs/1409.0473
 
-#### Linear Attn 基础 — Transformer without softmax == RNN
+#### Linear Attn 基础 - Transformer without softmax == RNN
 
 * $$V' = (φ(Q)φ(K)^T)V$$
   * 复杂度从序列长度N的平方，降到了线性
-  * 可以把 (φ(K)^T * V) 看作一个 全局的“状态”或“记忆” 。它把所有 Key 和 Value 的信息压缩成了一个小矩阵。
-  - 在自回归生成（一个一个token地生成）的场景下，这个“状态”可以迭代更新
+  * 可以把 (φ(K)^T * V) 看作一个 全局的"状态"或"记忆" 。它把所有 Key 和 Value 的信息压缩成了一个小矩阵。
+  - 在自回归生成（一个一个token地生成）的场景下，这个"状态"可以迭代更新
 
 ![image-20251007015959086](./AI-Algorithms/image-20251007015959086.png)
 
@@ -1236,8 +1236,8 @@ https://arxiv.org/pdf/2103.00112
   * MoE：不同层的gating不一样，相当于不同层激活的专家可能对于不同任务有复杂的组合。
 * 可解释性
   * 人脑 ：神经科学家通过**功能性磁共振成像（fMRI）**等技术，观察人类在执行特定任务时大脑的哪些区域（模块）被激活，从而推断这些区域的功能。例如，当一个人说话时，如果**布罗卡区（Broca's area）**被点亮，我们就能理解它在语言生成中的关键作用。
-  * MoE：虽然模型的完全可解释性仍是一个前沿课题，但相比于密集的“黑箱”模型，MoE在可解释性上提供了重要的突破口。
-    * 通过分析和追踪哪些类型的输入token总是被路由到某一个特定的专家，研究人员可以推断出这个专家的“专长”。例如，已经有研究发现，在多语言模型中，存在专门处理特定语种（如德语、日语）的专家，也存在专门处理代码、JSON格式或科学文献的专家。
+  * MoE：虽然模型的完全可解释性仍是一个前沿课题，但相比于密集的"黑箱"模型，MoE在可解释性上提供了重要的突破口。
+    * 通过分析和追踪哪些类型的输入token总是被路由到某一个特定的专家，研究人员可以推断出这个专家的"专长"。例如，已经有研究发现，在多语言模型中，存在专门处理特定语种（如德语、日语）的专家，也存在专门处理代码、JSON格式或科学文献的专家。
 
 #### LLM神经元的稀疏激活特性
 
@@ -1275,7 +1275,7 @@ https://arxiv.org/pdf/2103.00112
   * 情感神经元在所有层 --> 需要微调来实现角色扮演的大模型
   * ![image-20251003002341416](./AI-Algorithms/image-20251003002341416.png)
 
-#### 神经元激活的稀疏性 —— MoeFication
+#### 神经元激活的稀疏性 -- MoeFication
 
 > Question: paper如何去判断神经元功能分布相似的，需要批量输入+统计？
 
@@ -1298,7 +1298,7 @@ https://arxiv.org/pdf/2103.00112
 
 #### Load Balance
 
-##### auxiliary loss —— DeepSeek-V2
+##### auxiliary loss -- DeepSeek-V2
 
 ![image-20251003010847599](./AI-Algorithms/image-20251003010847599.png)
 
@@ -1306,7 +1306,7 @@ https://arxiv.org/pdf/2103.00112
 
 ![image-20251003005507992](./AI-Algorithms/image-20251003005507992.png)
 
-##### auxiliary-loss-free —— DeepSeek-V3
+##### auxiliary-loss-free -- DeepSeek-V3
 
 * For MoE models, an unbalanced expert load will lead to routing collapse (Shazeer et al., 2017) and diminish computational efficiency in scenarios with expert parallelism. Conventional solutions usually rely on the auxiliary loss (Fedus et al., 2021; Lepikhin et al., 2021) to avoid unbalanced load. However, too large an auxiliary loss will impair the model performance (Wang et al., 2024a). To achieve a better trade-off between load balance and model performance, we pioneer an auxiliary-loss-free load balancing strategy (Wang et al., 2024a) to ensure load balance.【deepseek-v3】
   * Auxiliary-Loss-Free Load Balancing.
@@ -1334,11 +1334,11 @@ https://arxiv.org/pdf/2103.00112
 * 对于输入的$$N$$个 tokens 通过线性组合（Dispatch）得到$$S$$个 slot，由$$E$$个 Expert 均匀处理$$S$$个 slot 后再映射回（Combine）$$N$$个 tokens，该方案可以看作是某种Merge Tokens的思想。当$$S<N$$可显著减少 FLOPS，同时可以通过 Expert 的数目来控制参数量。
   * S == E 时，理解为 Merge Tokens
 
-### HardMoE —— PertokensFFN
+### HardMoE -- PertokensFFN
 
 * N == S，不再对输入tokens进行dispatch，PertokensFFN
   * 根据语义信息分配token
-  * 能保留token间的异构性特点 —— 适用token异构的场景
+  * 能保留token间的异构性特点 -- 适用token异构的场景
 
 ### MoE + Sparsity
 
@@ -1364,7 +1364,7 @@ https://arxiv.org/pdf/2103.00112
   * RAG / Vector-DBs (ANN search, LSH)
   * **Brute-force compute** (tiling, blockwise)
 
-### “Train Short, Test Long”, Positional Embedding
+### "Train Short, Test Long", Positional Embedding
 
 * TSTL指的是一种训练和评估大型语言模型（LLM）或其他序列处理模型的方法和期望能力。具体含义如下：
 
@@ -1425,7 +1425,7 @@ https://zhuanlan.zhihu.com/p/631363482
 
 ### 也参考 「稀疏注意力」
 
-### [LWM —— Large World Model with Blockwise Ring-Attn](https://arxiv.org/pdf/2402.08268)
+### [LWM -- Large World Model with Blockwise Ring-Attn](https://arxiv.org/pdf/2402.08268)
 
 > WORLD MODEL ON MILLION-LENGTH VIDEO AND LANGUAGE WITH BLOCKWISE RINGATTENTION
 
@@ -1455,7 +1455,7 @@ https://zhuanlan.zhihu.com/p/631363482
 
 
 
-## Bert —— 掩码语言模型
+## Bert -- 掩码语言模型
 
 > 完形填空的训练难度比NTP小
 
@@ -1476,8 +1476,8 @@ https://zhuanlan.zhihu.com/p/631363482
   * 方法：feature-based and fine-tuning
     *  In previous work, both approaches share the same objective function during pre-training, where they use unidirectional language models to learn general language representations.
   * BERT addresses the previously mentioned uni-directional constraints by proposing a new pre-training objective:
-    * the “masked language model" (MLM)
-    * “next sentence prediction” task
+    * the "masked language model" (MLM)
+    * "next sentence prediction" task
 
 ![image-20250102001058277](./AI-Algorithms/image-20250102001058277.png)
 
@@ -1541,12 +1541,12 @@ https://zhuanlan.zhihu.com/p/631363482
   * 改造模型输入or输出
     * 模型输入
       * 简单的title+summary+username+query拼接
-      * 多域分隔：“考虑到title和summary对于query的相关性是类似的分布，username和query的相关性关联是潜在的。所以给user_name单独设了一个域，用sep分隔”
+      * 多域分隔："考虑到title和summary对于query的相关性是类似的分布，username和query的相关性关联是潜在的。所以给user_name单独设了一个域，用sep分隔"
     * 模型输出
       * 门过滤机制，用某些表示向量的相应分数加权CLS的语句类型输出分
       * 引入UE，直接和CLS输出向量concat
   * 素材的进一步处理，引入无监督学习
-    * 在model finetune的有监督训练之前，利用text rank算法处理finetune素材，相当于利用无监督学习提升了挖掘数据 —— 喂入BERT的数据的质量。
+    * 在model finetune的有监督训练之前，利用text rank算法处理finetune素材，相当于利用无监督学习提升了挖掘数据 -- 喂入BERT的数据的质量。
     * 截断摘要，实测有效
   * Bert训练任务的设计方式对模型效果影响大
     * 将finetune进一步分为两阶段，把质量较低、挖掘的数据放在第一阶段finetune，质量高的标注数据放在第二阶段finetune，优化finetune的整体效果。
@@ -1561,7 +1561,7 @@ https://zhuanlan.zhihu.com/p/631363482
 
 * 维特根斯坦：语言是思想的边界
   * NLP是实现AGI的关键
-* 目标：建设NLP领域的“预训练+微调“的训练范式
+* 目标：建设NLP领域的"预训练+微调"的训练范式
   * 为什么NLP的研发效率低？
     * 训练速度慢、成本高
     * 任务种类多、繁杂
@@ -1688,11 +1688,11 @@ https://zhuanlan.zhihu.com/p/631363482
 
 
 * Note
-  
+
   * **大模型具备了对知识的跨语言能力**
   * 科技部部长王志刚表示，ChatGPT有很好的计算方法，同样一种原理，在于做得好不好；就像踢足球，都是盘带、射门，但是要做到像梅西那么好也不容易。
   * 客观题高考515分水平
-  
+
 * [专访Altman](https://www.pingwest.com/a/285835)
 
   * **感想**：有几个点值得关注：ai自运行的能力、ai隐藏意图的能力、ai与真实物质世界接口的能力、ai认识到自己的现实处境并差异化处理的能力
@@ -1702,7 +1702,7 @@ https://zhuanlan.zhihu.com/p/631363482
   * 当他观察模型的隐藏层时，发现它有一个专门的神经元用于分析评论的情感。神经网络以前也做过情感分析，但必须有人告诉它们这样做，而且必须使用根据情感标记的数据对它们进行专门的训练。而这个神经网络已经自行开发出了这种能力。
   * 语言是一种特殊的输入，信息量极为密集
   * "假设我们真的造出了这个人工智能，其他一些人也造出了"。他认为，随之而来的变革将是历史性的。他描述了一个异常乌托邦的愿景，包括重塑钢筋水泥的世界。他说："使用太阳能发电的机器人可以去开采和提炼它们需要的所有矿物，可以完美地建造东西，不需要人类劳动。"你可以与 17 版 DALL-E 共同设计你想要的家的样子，"Altman说。"每个人都将拥有美丽的家园。在与我的交谈中，以及在巡回演讲期间的舞台上，他说他预见到人类生活的几乎所有其他领域都将得到巨大的改善。音乐将得到提升（"艺术家们将拥有更好的工具"），人际关系（人工智能可以帮助我们更好地 "相互对待"）和地缘政治也将如此（"我们现在非常不擅长找出双赢的妥协方案"）。
-  * GPT-4学会了“说谎”：验证码
+  * GPT-4学会了"说谎"：验证码
 
     * -> 让GPT-4讲解自己做事情的目的，将不再可靠
     * Sutskever 说，他们可能会在弱小的时候采取一种行动，而在强大的时候采取另一种行动。我们甚至不会意识到，我们创造的东西已经决定性地超越了我们，我们也不知道它打算用自己的超能力做些什么。
@@ -1787,7 +1787,7 @@ https://zhuanlan.zhihu.com/p/631363482
 
 ## DeepSeek
 
-* [逐篇讲解DeepSeek关键9篇论文及创新点 —— 香港科技大学计算机系助理教授何俊贤](https://www.bilibili.com/video/BV1xuK5eREJi)
+* [逐篇讲解DeepSeek关键9篇论文及创新点 -- 香港科技大学计算机系助理教授何俊贤](https://www.bilibili.com/video/BV1xuK5eREJi)
   * https://www.xiaoyuzhoufm.com/episode/67aacd6b247d51713cedbeda
   * 有10000张比较老的A100、V3训练2000张H800
   * RL，LLM领域中，从无人问津到价值对齐（DPO）到reasoning（DeepSeekMatch过程监督）到R1
@@ -1818,7 +1818,7 @@ https://zhuanlan.zhihu.com/p/631363482
   * Model weights and optimizer states are saved every 5 minutes asynchronously
 * 算法
   * 2.**在查询方式上改进（分组查询注意力**-Grouped Query Attention，简称 GQA），通过分组查询减少计算复杂度，提高模型性能；
-  * 3.**深度优先设计**（Depth-First Design ，简称DFD），**加高模型层数，**这更类似于人类解题时“一层层”推理的思维方式，使其在数学推理、代码生成等任务中表现更优。
+  * 3.**深度优先设计**（Depth-First Design ，简称DFD），**加高模型层数，**这更类似于人类解题时"一层层"推理的思维方式，使其在数学推理、代码生成等任务中表现更优。
 * evaluation
   * **拒绝刷榜**
     * 20 million MC questions
@@ -1896,7 +1896,7 @@ but can achieve stronger performance than MHA
   **(GRPO)**, a variant of Proximal Policy Optimization (PPO), that enhances mathematical reasoning
   abilities while concurrently optimizing the memory usage of PPO
 * 第4章，**Reinforcement Learning，值得学习**
-  * 见「Machine-Learning」—— RL
+  * 见「Machine-Learning」-- RL
 * 仍然有reward model
   * We construct the training set of reward models following (Wang et al., 2023b). We train our initial reward model based on the DeepSeekMath-Base 7B with a learning rate of 2e-5. For GRPO, we set the learning rate of the policy model as 1e-6. The KL coefficient is 0.04.
 
@@ -1938,7 +1938,7 @@ but can achieve stronger performance than MHA
 * Rewards. When training LLMs via RL, a trained reward model typically provides feedback
   signals. In contrast, formal theorem proving benefits from the rigorous verification of generated
   proofs by proof assistants, offering a significant advantage. Specifically, each generated proof
-  receives a reward of 1 if verified as correct, and 0 otherwise. 
+  receives a reward of 1 if verified as correct, and 0 otherwise.
   * While this binary reward signal
     is accurate, it is also sparse, especially for theorems that are challenging for the supervised
     fine-tuned model. To mitigate this sparsity, we select training prompts that are challenging yet
@@ -2016,7 +2016,7 @@ but can achieve stronger performance than MHA
     practices often employ a limited number of experts (e.g., 8 or 16), and thus tokens assigned to a
     specific expert will be likely to cover diverse knowledge. Consequently, the designated expert
     will intend to assemble vastly different types of knowledge in its parameters, which are hard to
-    utilize simultaneously. 
+    utilize simultaneously.
   * (2) Knowledge Redundancy: tokens assigned to different experts may
     require common knowledge. As a result, multiple experts may converge in acquiring shared
     knowledge in their respective parameters, thereby leading to redundancy in expert parameters.
@@ -2062,7 +2062,7 @@ utilize MTP to improve training.
 
 * customize efficient cross-node all-to-all communication kernels (including dispatching and combining) to conserve the number of SMs dedicated to communication.
   * In detail, we employ the **warp specialization technique** (Bauer et al., 2014) and partition
-    20 SMs into 10 communication channels. 
+    20 SMs into 10 communication channels.
   * During the dispatching process, (1) IB sending, (2)
     IB-to-NVLink forwarding, and (3) NVLink receiving are handled by respective warps. The
     number of warps allocated to each communication task is dynamically adjusted according to the
@@ -2089,7 +2089,7 @@ utilize MTP to improve training.
       multi-line prompts without terminal line breaks, particularly for few-shot evaluation prompts.
       To address this issue, we randomly split a certain proportion of such combined tokens during
       training, which exposes the model to a wider array of special cases and mitigates this bias.
-  
+
 * model
   * We set the number of Transformer layers to 61 and the hidden
     dimension to 7168. All learnable parameters are randomly initialized with a standard deviation
@@ -2097,7 +2097,7 @@ utilize MTP to improve training.
   * In MLA, we set the number of attention heads 𝑛ℎ to 128 and the per-head dimension 𝑑ℎ
     to 128. The KV compression dimension 𝑑𝑐 is set to 512, and the query compression dimension 𝑑′𝑐
     is set to 1536. For the decoupled queries and key, we set the per-head dimension 𝑑𝑅ℎ to 64. We
-    **substitute all FFNs except for the first three layers with MoE layers**. 
+    **substitute all FFNs except for the first three layers with MoE layers**.
   * **Each MoE layer consists of 1 shared expert and 256 routed experts, where the intermediate hidden dimension of each expert is 2048. Among the routed experts, 8 experts will be activated for each token, and each token will be ensured to be sent to at most 4 nodes.** The multi-token prediction depth 𝐷 is set to 1, i.e., besides the exact next token, each token will predict one additional token. As DeepSeek-V2, DeepSeek-V3 also employs additional RMSNorm layers after the compressed latent vectors, and multiplies additional scaling factors at the width bottlenecks. Under this configuration, DeepSeek-V3 comprises 671B total parameters, of which 37B are activated for each token.
   * 4.3. Long Context Extension
 
@@ -2121,7 +2121,7 @@ utilize MTP to improve training.
       ple question answering, we utilize DeepSeek-V2.5 to generate responses and enlist human
       annotators to verify the accuracy and correctness of the data.
 * SFT Settings：We fine-tune DeepSeek-V3-Base for two epochs using the SFT dataset, using the
-  cosine decay learning rate scheduling that starts at 5 × 10−6 and gradually decreases to 1 × 10−6.
+  cosine decay learning rate scheduling that starts at 5 × 10-6 and gradually decreases to 1 × 10-6.
   During training, **each single sequence is packed from multiple samples**. However, we adopt a
   sample masking strategy to ensure that these examples remain isolated and mutually invisible.
 
@@ -2166,12 +2166,12 @@ https://research.google/blog/image-text-pre-training-with-contrastive-captioners
 >     *   2025年初接管，面临追赶压力（投入大、起步晚）。
 >     *   目标：做到国内第一，与国际领先模型竞争。
 > *   **管理风格与策略**
->     *   **“务实又浪漫”**：Google 背景（Search -> Brain -> DeepMind），懂技术，能判断方向。
+>     *   **"务实又浪漫"**：Google 背景（Search -> Brain -> DeepMind），懂技术，能判断方向。
 >     *   **虚拟团队机制**：
 >         *   `Seed Edge`：3年考核，攻坚 AGI 长期课题。
 >         *   `Focus`：打破边界，攻坚下一代模型。
 >         *   `Base`：负责当前一代模型（工程、数据、测评）。
->     *   **透明化尝试**：推动数据/代码库透明（虽因泄密有所回调），打破“小组制”壁垒。
+>     *   **透明化尝试**：推动数据/代码库透明（虽因泄密有所回调），打破"小组制"壁垒。
 > *   **组织架构 (2025)**
 >     *   **负责人**：吴永辉（直接汇报给集团管理层）。
 >     *   **多模态/应用**：周畅（豆包助手、Seedream 文生图、Seedance 文生视频）。
@@ -2184,7 +2184,7 @@ https://research.google/blog/image-text-pre-training-with-contrastive-captioners
 
 ### Seed 1.8 通用 Agent 模型
 
-- **简介**：通用 Agent 模型，集搜索、代码与 GUI 能力于一体，原生多模态（图文）输入与界面交互，强调低延迟与高效响应。被评测视为“小号 Gemini”，重回国产第一梯队。
+- **简介**：通用 Agent 模型，集搜索、代码与 GUI 能力于一体，原生多模态（图文）输入与界面交互，强调低延迟与高效响应。被评测视为"小号 Gemini"，重回国产第一梯队。
 - **核心能力**：
   - **高效推理**：Medium 档位仅需 5K Token 即可达到前代 15K Token 的智力水平，性价比极高；High 档位通过更多思考预算逼近北美头部模型。
   - **多模态融合**：坚持统一多模态路线，视觉理解与多模态交互能力优秀。
@@ -2232,16 +2232,16 @@ https://research.google/blog/image-text-pre-training-with-contrastive-captioners
 * BPB (Bits Per Byte) 与模型的交叉熵损失（Cross-Entropy Loss）直接相关，这源于它们在信息论和模型评估中的基本含义。以下是详细解释：
 
 1. 交叉熵损失的含义 ：
-   
-   - 在语言模型中，交叉熵损失衡量的是模型预测的下一个字节（或 token）的概率分布与真实下一个字节的概率分布之间的“距离”或差异。
-   - 具体来说，对于一个给定的上下文，模型会输出一个概率分布 Q ，表示它预测下一个字节是词汇表中每个可能字节的概率。真实的下一个字节对应一个“one-hot”分布 P （真实字节的概率为 1，其他为 0）。
+
+   - 在语言模型中，交叉熵损失衡量的是模型预测的下一个字节（或 token）的概率分布与真实下一个字节的概率分布之间的"距离"或差异。
+   - 具体来说，对于一个给定的上下文，模型会输出一个概率分布 Q ，表示它预测下一个字节是词汇表中每个可能字节的概率。真实的下一个字节对应一个"one-hot"分布 P （真实字节的概率为 1，其他为 0）。
    - 交叉熵损失计算的是 -sum(P(byte) * log(Q(byte))) 。由于 P 是 one-hot 的，这简化为 -log(Q(actual_next_byte)) ，即模型赋予真实发生的下一个字节的概率的负对数。
    - 关键点 ：**这个 -log(Q(actual_next_byte)) 值，从信息论的角度来看，可以解释为：根据模型 Q 的预测，编码（表示）实际发生的那个字节 actual_next_byte 所需要的信息量（比特数，如果对数以 2 为底）。**损失越低，意味着模型赋予真实字节的概率越高，编码它所需的信息量就越少。
 2. BPB 的含义 ：
-   
+
    - **BPB 定义为：模型平均需要多少比特（bit）来编码输入文本中的每一个字节（byte）**。
 3. 两者之间的联系 ：
-   
+
    - 模型的平均交叉熵损失（Average Cross-Entropy Loss）计算的是在整个数据集上，模型编码每个真实字节所需的 平均信息量 。
    - 如果交叉熵损失是以 2 为底的对数（ log2 ）计算的，那么这个平均损失值 直接就是 BPB。因为 log2 计算的结果单位就是比特（bit）。
    - 在深度学习实践中，交叉熵损失通常使用自然对数（ ln 或 log_e ）计算，得到的单位是奈特（nats）。由于 log2(x) = ln(x) / ln(2) ，因此： BPB = AverageCrossEntropyLoss_nats / ln(2)
@@ -2249,7 +2249,7 @@ https://research.google/blog/image-text-pre-training-with-contrastive-captioners
 
 #### 个性化能力
 
-* PersonaMem —— 记忆个性化评测
+* PersonaMem -- 记忆个性化评测
 
 ## In-context Learning
 
@@ -2301,7 +2301,7 @@ https://ai.stanford.edu/blog/understanding-incontext/
 
 https://github.com/huggingface/peft
 
-* LoRA implementation 
+* LoRA implementation
   * https://lightning.ai/lightning-ai/studios/code-lora-from-scratch?view=public&section=featured
   * 效果比只训练最后两层好
 
@@ -2338,7 +2338,7 @@ https://github.com/huggingface/peft
 
 #### P-Tuning v2
 
-*   **核心思想**: **Deep Prompt Tuning**。吸取 Prefix Tuning 的“深层”思想，解决了 v1 的痛点。
+*   **核心思想**: **Deep Prompt Tuning**。吸取 Prefix Tuning 的"深层"思想，解决了 v1 的痛点。
 *   **机制**:
     *   **Deep Prompting**: 像 Prefix Tuning 一样，在 Transformer 的**每一层**都插入可训练的 Prompt 向量（通常视作在序列前加 token）。
     *   **移除重参数化**: V2 发现，在 Deep 设定下，**不需要** v1 中的 LSTM/MLP Encoder，直接优化 Prompt 参数即可收敛。
@@ -2357,9 +2357,79 @@ https://github.com/huggingface/peft
 *   **P-tuning (Soft Prompt)**:
     *   **连续空间搜索**: 在高维连续的向量空间中学习最佳 Embedding 参数。
     *   **参数微调**: 这一串 Embedding 不需要对应具体的自然语言单词，通过反向传播更新这些 Prompt 参数（模型主体参数通常冻结）。
-    *   **优势**: 突破了自然语言的离散限制，能找到人类语言无法描述但对模型最优的“触发器”。
+    *   **优势**: 突破了自然语言的离散限制，能找到人类语言无法描述但对模型最优的"触发器"。
 
 ### Mid Training
+
+#### 为什么 Mid-training 在 Agent 时代变得如此关键？
+
+> 刘鹏飞团队：Mid-training是Agent时代胜负手，全球首个全面开源
+> 链接：https://mp.weixin.qq.com/s/jUIR_5XUfZH1nMkjemqx_g
+
+* 在推理（Reasoning）时代，Mid-training（中期训练）还只是"锦上添花"；到了Agent时代，Mid-training从"锦上添花"变成了"不可或缺"。
+* Agent时代的能力需求，已经超出了Post-training的能力边界：
+  - 在传统的单轮对话或推理任务中，模型需要的是单一能力的纵深——把推理做到极致，把对话做得流畅。
+  - 但在Agent场景下，模型面对的是多能力的动态编排：一个完整的软件开发任务，可能需要串联代码定位、bug诊断、测试生成、工具调用、上下文管理等10+种能力，每个环节都可能触发不同的子任务分支。
+* Post-training的逻辑是：在预训练模型已有的能力边界内，通过人类（或AI）反馈、强化学习等方式优化表现。它可以让模型更好地"对齐"人类（AI）偏好，可以纠正特定错误模式，但它无法凭空创造模型不曾见过的能力项。
+* 更致命的是，长链条任务的容错率极低：在一个包含20步的开发流程中，每步成功率95%，最终成功率只有35%。任何一个环节的能力缺失，都可能导致整个任务失败。
+* Post-training擅长修补"已知问题"，但面对"未知的能力缺口"——比如从未学过的"工具调用后的异常处理"，再多的Post-training也无济于事。
+* 而这些能力基建，必须在Mid-training阶段通过大规模、高复杂度的长链条数据来构建。
+
+#### 现有训练数据的根本性缺陷：分布偏差
+
+* 目前的开源代码模型，大多是用GitHub上的代码数据训练出来的。但这里有一个巨大的分布偏差（Distribution Mismatch）。
+* GitHub上的代码（Pull Request），通常是静态的"快照"：它告诉你"结果是什么"，却没告诉你"过程是怎么来的"。
+  - 它没记录开发者为了改这行代码，翻看了哪三个相关文件（Context）；
+  - 它没记录开发者第一次改错了，看了什么报错信息（Traceback），才修正成最终版本；
+  - 它没记录开发者如何在测试失败后，迭代修正代码直到通过。
+* 用静态的结果去训练动态的Agent，就像是给想学开车的人看了一万张"汽车停在车库里"的照片，却从来不带他上路。
+
+#### Agent-Native Data：还原"思考"与"体感"
+
+为了填补这一鸿沟，构建了两类核心数据，重塑了模型对软件工程的认知：
+
+**Contextually-native Trajectories（上下文原生轨迹，686亿token）：还原"思考流"**
+
+* 不仅仅是代码补全。团队从1000万+真实GitHub PR中，重构了代码变更背后的完整程序化过程。
+* 关键创新：Bundle Everything Together（捆绑一切上下文）
+  - 模拟定位：模型需要学习开发者是如何在几百个文件中找到由于依赖关系需要修改的那一个；
+  - 模拟推理：还原开发者"阅读 Issue -> 分析现有代码 -> 构思修改方案"的完整心路历程。
+  - 这让模型不再是"盲写"，而是学会了先看后写（Navigation before Editing）。
+
+**Environmentally-native Trajectories（环境原生轨迹，31亿token）：还原"真实体感"**
+
+* 这是最残酷但也最有效的一环。团队在2万个真实Docker环境中部署Agent，让它"真刀真枪"地干活。
+* 关键创新：Real Execution Loop（真实执行循环）
+  - 真实交互：调用 Linter，运行 Unit Tests，拿真实的 Build System 交互。
+  - 真实反馈：模型看到的不是人工构造的完美数据，而是真实的 Runtime Error。它必须学会根据报错去自我修正。
+  - 这赋予了模型"自我反思"的本能。
+
+**两类数据的协同效应：1+1>2**
+
+* 团队的实验揭示了一个关键发现：两类数据形成互补，缺一不可。
+* 这说明：
+  - PR数据提供"知识和广度"：跨语言、跨框架的软件工程模式，让模型见识足够多的"什么样的问题对应什么样的解决思路"；
+  - 环境轨迹提供"深度和真实性"：动态交互和反馈循环，让模型习得"如何在不确定环境中迭代求解"。
+* 就像学开车：PR数据是"科目一理论学习"，环境轨迹是"科目三实际上路"。两者结合，才能培养出真正的Agent。
+
+#### 实验结果：以小博大，效率倍增
+
+基于 Qwen 2.5 Base 模型进行了验证，结果令人振奋：配方（Recipe）的重要性，甚至超越了单纯的数据堆砌。
+
+**01 效率的胜利：数据减半，性能反超**
+
+* 相比于此前开源界最先进的 Kimi-Dev 训练配方，我们仅使用了其 50% 的数据量（73.1B vs ~150B tokens），就在两种后训练方式均下实现了性能反超。这说明，Agent-Native 数据的"含金量"远高于普通的合成数据。
+
+**02 跨代际的打击**
+
+* 在 SWE-Bench Verified（公认的真实软件工程评测）上，我们的 daVinci-Dev-72B 和 daVinci-Dev-32B 模型分别达到了 58.5% 和 56.1% 的解决率。
+* 更值得注意的是，在 Agentic Scaffold（智能体框架）下，该模型的表现超越了目前基于 Qwen 2.5 Coder 甚至 Qwen 3 的开源训练方案。
+* 这揭示了一个深刻的道理：与其盲目追求更新的基座，不如用更符合 Agent 本能的数据去重塑现有的模型。
+
+**03 能力的泛化：Agent思维的溢出效应**
+
+* 虽然团队专注于软件工程，但Agent的决策和规划能力展现出了惊人的迁移性（科学推理、科学计算），这说明，在Agent化过程中习得的"定位-推理-行动-反思"范式，本身就是一种通用的问题解决能力，可以迁移到其他需要多步推理的领域。
+* 模型在Mid-training中学到的不只是"如何写代码"，更是"如何分解问题、寻找信息、验证假设、迭代优化"——这是Agent的底层操作系统。
 
 #### Pre/Mid/RL 在推理LM中的作用（Interplay）
 
@@ -2369,15 +2439,15 @@ https://github.com/huggingface/peft
 * 背景：现代RL显著提升LM推理，但是否真正超越预训练能力存在争议；预训练语料不透明使因果归因困难。
 * 方法：构建可控框架，用合成推理任务（显式原子操作、可解析步骤轨迹）与系统化分布操控，沿两条轴线评估：外推泛化（更复杂组合）与上下文泛化（跨表层语境）。
 * 术语：OOD（Out-of-Distribution）指超出模型训练/假设数据分布的样本或任务；与 ID（In-Distribution）相对。
-* 术语：长尾语境与“暴露”比例
+* 术语：长尾语境与"暴露"比例
   - 长尾语境：在预训练语料中出现频率低但对目标任务关键的语境（如法律文本、低资源语言、特定格式/风格、长链路推理样式、程序化符号操作）。
   - 暴露比例 $$p_{exposure}\in[0,1]$$：指预训练数据中属于目标长尾语境的样本占比（按样本数、token数或任务实例数度量）。
   - 近零暴露：$$p_{exposure}\approx0\%$$（如 <0.1%），模型几乎未见该语境；RL 难以迁移。
   - 稀疏暴露：$$p_{exposure}\geq1\%$$ 但远小于主分布，模型具备最低限度的语境先验；RL 可稳健迁移。
   - 最小但充分暴露：使模型在预训练阶段获得必要的语境先验与表示支撑，达到 RL 可转移的临界点（经验阈值约在 ≥1%）。
-* 结论1（能力增益的前提）：只有当预训练留有“能力余量”且RL样本定位于模型能力边界（略难但可达）时，RL才产生真实增益；若任务已被预训练覆盖或过于OOD，增益消失（最高可达 +42% pass@128）。
+* 结论1（能力增益的前提）：只有当预训练留有"能力余量"且RL样本定位于模型能力边界（略难但可达）时，RL才产生真实增益；若任务已被预训练覆盖或过于OOD，增益消失（最高可达 +42% pass@128）。
 * 结论2（上下文泛化的最小暴露）：上下文泛化需要预训练阶段对长尾语境的最小但充分暴露；近零暴露时RL失败，稀疏暴露（≥1%）即能让RL稳健迁移（最高 +60% pass@128）。
-* 结论3（固定算力下的中期训练价值）：在固定计算预算下，引入中期训练（mid-training，亦称CPT）作为分布桥接显著提升OOD推理；“mid + RL”较“仅RL”在 OOD-hard 上提升约 +10.8%。
+* 结论3（固定算力下的中期训练价值）：在固定计算预算下，引入中期训练（mid-training，亦称CPT）作为分布桥接显著提升OOD推理；"mid + RL"较"仅RL"在 OOD-hard 上提升约 +10.8%。
 * 结论4（过程级奖励）：过程级奖励（奖励推理步骤正确性）减少 reward hacking，提升推理一致性与保真度。
 * 实践建议：
   - 难度校准：采样位于能力边界的RL数据，避免过易/过难。
@@ -2404,20 +2474,20 @@ https://github.com/huggingface/peft
     * 无监督：leveraging another model to automatically generate training data (Wang et al., 2022a).[TRwI]
     * 生成label（template-based)：Dai et al. (2022) use task-speciﬁc templates and few-shot samples to automatically generate in-domain training queries given randomly sampled documents from the target corpus using
       FLAN (Wei et al., 2022a)..[TRwI]
-  
+
 * Instruction Tuning
 
   * Weiet al., 2022a; Sanh et al., 2022; Ouyang et al., 2022; Min et al., 2022; Wang et al., 2022b; Mishra et al.,
     2022; Chung et al., 2022 .[TRwI]
   * 缺少指令tuning的retrieval[TRwI]
     * 缺少标注数据集
-    * llm生成海量emb的成本高 
+    * llm生成海量emb的成本高
     * Retrieval with descriptions的路线：效果一般
-  
+
   * dataset scale提升instruction的泛化能力
     * Recent work (Wang et al., 2022b; Chung et al., 2022)
       show that scaling up the number of the training
-      datasets improves LLMs’ ability to adapt to new
+      datasets improves LLMs' ability to adapt to new
       task via instructions. We open-source our instruc-
       tion data and call for community efforts to collect
       more retrieval tasks and human-written instructions
@@ -2471,9 +2541,9 @@ https://github.com/tatsu-lab/stanford_alpaca
 https://www.zhihu.com/question/603488576/answer/3178990801
 
 * 指令微调是一种特定的微调方式，在不同的论文中以不同的方式引入。我们在一个新的语言建模任务上对模型进行微调，其中的示例具有额外的结构，嵌入到模型提示中。
-  * 先无监督训练，再用有监督的“指令-回答“预料
+  * 先无监督训练，再用有监督的"指令-回答"预料
   * 指令调整模型接收一对输入和输出，描述引导模型的任务。
-* 核心思路：解决“回答问题”与“接话”的差异
+* 核心思路：解决"回答问题"与"接话"的差异
 * Note：
   * 数据获取昂贵（RLHF人工打分的成本比人工写故事要低）
   * 对开放性问题效果不好（write a story about ...）
@@ -2484,7 +2554,7 @@ https://www.zhihu.com/question/603488576/answer/3178990801
   * 图像和扫描文档
     * 存储大量领域标准文档信息，使用 OCR 技术处理。因文档可能超模型训练序列长度，按章节拆分，为防描述冲突，给数据章节添加前缀（通过 UIE 模型提取文档名，启发式生成方法构建前缀）。同时用 BERT 和 GPT - 2 计算文本章节中句子的困惑度，排除高困惑度句子。
   * 结构化知识
-    * 存在于私有结构化数据库，由人工输入的表格组成。创建 Datav1 和 Datav2 两个版本用于增量预训练。Datav1 去除机密隐私信息后用字典构建数据，以 “测试项目” 为键，对应多个具体测试项目的表格（markdown 格式）为值；Datav2 采用新方法序列化，去除机密隐私信息后合并部分无单独意义的字段，输入 ChatGPT 按规则随机生成文本。
+    * 存在于私有结构化数据库，由人工输入的表格组成。创建 Datav1 和 Datav2 两个版本用于增量预训练。Datav1 去除机密隐私信息后用字典构建数据，以 "测试项目" 为键，对应多个具体测试项目的表格（markdown 格式）为值；Datav2 采用新方法序列化，去除机密隐私信息后合并部分无单独意义的字段，输入 ChatGPT 按规则随机生成文本。
   * 其他类型数据
     * 包括食品检测字典、中国食品检测教程和研究论文、食品情感数据、食品安全相关法律、食品安全相关考题等，选择 Chinese - LLaMA2 - 13B 为基础模型，用 LoRA 方法进行增量预训练。
 
@@ -2496,7 +2566,7 @@ https://www.zhihu.com/question/603488576/answer/3178990801
   - 训练过程
     - 用 LoRA 方法对 Chinese - LLaMA2 - 13B 的指令进行微调。
 
-## RLHF —— 基于人类反馈的强化学习
+## RLHF -- 基于人类反馈的强化学习
 
 * 参考「Reinforcement-Learning」
 
@@ -2535,19 +2605,19 @@ TODO [前阿里、字节大模型带头人杨红霞创业：大模型预训练�
         * 情感色彩、语调，一般
       * ChatTTS
         * 有情感色彩
-      
+
       * SUNO：音乐生成
       * 开源工具
         * Meta：audiodraft
         * stable-audio-open-1.0
-  
+
   * 多模态模型
     * ![image-20241207210031737](./AI-Algorithms/image-20241207210031737.png)
 
 ### Literature Review
 
 * Vision Transformers       [Beyond the CLS Token: Image Reranking using Pretrained Vision Transformers]
-  * Vision Transformers (ViT) [9], directly applied transformer architectures from NLP to image classification. 
+  * Vision Transformers (ViT) [9], directly applied transformer architectures from NLP to image classification.
   * To improve the training efficiency of ViT, DeiT [28] introduced token-based distillation with Convolutional Neural Networks (CNNs) as the teacher.
   * combine CNNs and ViT
     * PVT [30] introduced the pyramid structure into ViT, which generates
@@ -2568,7 +2638,7 @@ TODO [前阿里、字节大模型带头人杨红霞创业：大模型预训练�
 
 ![image-20241207210250921](./AI-Algorithms/image-20241207210250921.png)
 
-#####  [ViT-MAE] Vision Transformer based on Masked Autoencoding  (Kaiming He) 
+#####  [ViT-MAE] Vision Transformer based on Masked Autoencoding  (Kaiming He)
 
 * In the input image, 75% patches are randomly masked; the encoder module of ViT only takes unmasked patches as input, and produces an embedding. This embedding is then concatenated with learnable masked image patch encoding.
 * ![img](./AI-Algorithms/figure_6-1.png)
@@ -2584,7 +2654,7 @@ TODO [前阿里、字节大模型带头人杨红霞创业：大模型预训练�
 * SWIN is a hierarchical transformer which addresses this problem of scale variation by computing transformer representation with shifted windows. The idea is to further divide usual image patches of input image to even smaller patches. These smaller non overlapping patches are then presented to attention layers.
 
 * The output from these attention layers are then **concatenated in pairs** to combine attention output the two higher level patches, this concatenated output is presented to next set of attention modules.
-* This hierarchical propagation through attention layers, allows transformer to **pay attention to smaller scale features and deal with variation in scales for image data.** 
+* This hierarchical propagation through attention layers, allows transformer to **pay attention to smaller scale features and deal with variation in scales for image data.**
   * brings greater efﬁciency by lim-
     iting self-attention computation to non-overlapping local
     windows while also allowing for cross-window connection.
@@ -2635,7 +2705,7 @@ CLIP, developed by OpenAI, is a model designed to understand and relate images a
 **How Does CLIP Work?**
 
 - **Contrastive Learning:** CLIP is trained on a vast dataset of image-text pairs, learning to create a shared embedding space where both images and texts are represented as vectors. The model maximizes the similarity of correct image-text pairs and minimizes it for incorrect pairs.
-- **Joint Embedding Space:** CLIP’s ability to create a joint embedding space for images and text allows it to generalize across different tasks and domains.
+- **Joint Embedding Space:** CLIP's ability to create a joint embedding space for images and text allows it to generalize across different tasks and domains.
 
 **Limitations of CLIP**
 
@@ -2676,7 +2746,7 @@ loss_t = cross_entropy_loss(logits, labels, axis=1)
 loss = (loss_i + loss_t) / 2
 ```
 
-Compared to other methods above for learning good visual representation, what makes CLIP really special is ***“the appreciation of using natural language as a training signal”***. It does demand access to supervised dataset in which we know which text matches which image. It is trained on 400 million (text, image) pairs, collected from the Internet. The query list contains all the words occurring at least 100 times in the English version of Wikipedia. Interestingly, they found that Transformer-based language models are 3x slower than a bag-of-words (BoW) text encoder at zero-shot ImageNet classification. Using contrastive objective instead of trying to predict the exact words associated with images (i.e. a method commonly adopted by image caption prediction tasks) can further improve the data efficiency another 4x.
+Compared to other methods above for learning good visual representation, what makes CLIP really special is ***"the appreciation of using natural language as a training signal"***. It does demand access to supervised dataset in which we know which text matches which image. It is trained on 400 million (text, image) pairs, collected from the Internet. The query list contains all the words occurring at least 100 times in the English version of Wikipedia. Interestingly, they found that Transformer-based language models are 3x slower than a bag-of-words (BoW) text encoder at zero-shot ImageNet classification. Using contrastive objective instead of trying to predict the exact words associated with images (i.e. a method commonly adopted by image caption prediction tasks) can further improve the data efficiency another 4x.
 
 <img src="./AI-Algorithms/image-20251220033339399.png" alt="image-20251220033339399" style="zoom:67%;" />
 
@@ -2698,7 +2768,7 @@ BLIP-2 采用「双冻结 + 桥接」设计，避免端到端训练千亿级参�
 * **冻结组件**：
   - 图像编码器（如 ViT-L/14）：提取图像视觉特征
   - 大语言模型（如 FlanT5, LLaMA）：负责文本生成
-* **桥接组件**：Q-Former（Query Transformer）—— 唯一可训练的轻量级模块
+* **桥接组件**：Q-Former（Query Transformer）-- 唯一可训练的轻量级模块
 
 Q-Former 是一个小型 Transformer，包含：
 * **可学习的查询向量（Query Tokens）**：
@@ -2708,7 +2778,7 @@ Q-Former 是一个小型 Transformer，包含：
   - **视觉编码器**：接收图像编码器输出的 patch 特征，与查询向量交互，生成「视觉感知查询特征」
   - **文本编码器**：接收文本序列，与查询向量交互，生成「文本感知查询特征」
 
-<img src="./AI-Algorithms/image-20251114160143557.png" alt="image-20251114160143557" style="zoom:67%;" />  
+<img src="./AI-Algorithms/image-20251114160143557.png" alt="image-20251114160143557" style="zoom:67%;" />
 *Q-Former 与冻结图像编码器的交互：查询向量通过交叉注意力提取图像特征*
 
 #### 训练阶段
@@ -2738,12 +2808,12 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
         *   **损失函数**：$ L_{itg} = - \mathbb{E}_{(I,T)} \sum_{k=1}^{|T|} \log P(T_k | T_{<k}, I) $，在给定图像 $I$ 的条件下，自回归地预测文本 $T$。
 
 2.  **阶段二：视觉到语言生成学习 (Vision-to-Language Generative Learning)**
-    此阶段的目标是训练 Q-Former 作为 LLM 的“视觉提示”生成器。
+    此阶段的目标是训练 Q-Former 作为 LLM 的"视觉提示"生成器。
     *   **语言模型损失 (Language Modeling Loss)**: 将第一阶段训练好的 Q-Former 输出的查询向量 $Z$ 作为软提示（soft prompt），与外部输入的文本提示 $T_{prompt}$ 一起送入**冻结的 LLM**，以生成答案 $T_{answer}$。
         $ L_{gen} = - \mathbb{E}_{(I, T_{prompt}, T_{answer})} \sum_{k=1}^{|T_{answer}|} \log P_{LLM}(T_{answer,k} | T_{answer,<k}, Z, T_{prompt}) $
         损失函数是标准的交叉熵损失，仅在答案 $T_{answer}$ 的 token 上计算，以此教会 LLM 理解 Q-Former 编码的视觉信息。
 
-![image-20251114160444328](./AI-Algorithms/image-20251114160444328.png) 
+![image-20251114160444328](./AI-Algorithms/image-20251114160444328.png)
 
 * 核心优势
   * **参数效率**：仅训练 Q-Former（约 1% 参数），避免微调千亿级 LLM/图像编码器
@@ -2777,9 +2847,9 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
     * **非单一突破**：性能跃迁是大中小多重因素（旋钮微调）叠加及大规模团队协作改进的累积。
   * **系统工程**：
     * **研究即工程**：构建围绕神经网络的**复杂系统**，边界模糊化。
-    * **Pre+Post**：核心优势源于“更好的预训练”叠加“更好的后训练”（Post-training，如RLHF/RLAIF）。
+    * **Pre+Post**：核心优势源于"更好的预训练"叠加"更好的后训练"（Post-training，如RLHF/RLAIF）。
   * **趋势观点**：
-    * **数据范式**：从“无限数据”进入**“数据受限”**阶段，**合成数据**（Synthetic Data）成为Scaling关键燃料。
+    * **数据范式**：从"无限数据"进入**"数据受限"**阶段，**合成数据**（Synthetic Data）成为Scaling关键燃料。
     * **Scaling Law**：短期内（1年+）持续有效，Benchmark难度提升但模型智能仍在增长。
 
 * GPT-4o
@@ -2833,7 +2903,7 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
 #### 原生MLLM
 
 * Next-GPT训练
-  * 阶段一：更新input projection layer 
+  * 阶段一：更新input projection layer
   * 阶段二：decoder段输出结果与指令对齐，只更新output projection layer
   * 阶段三：
 
@@ -2873,7 +2943,7 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
 
 ![image-20241207230211854](./AI-Algorithms/image-20241207230211854.png)
 
-![image-20241207230235619](./AI-Algorithms/image-20241207230235619.png)  
+![image-20241207230235619](./AI-Algorithms/image-20241207230235619.png)
 
 
 
@@ -2981,7 +3051,7 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
     * 根据阈值对比
   * shot based approaches
     * drawing only one frame
-      from each shot is insufficient to fully describe videos’ visual
+      from each shot is insufficient to fully describe videos' visual
       contents;
     * using traditional features for boundary
       detection might be inaccurate for shot segmentations.
@@ -3026,13 +3096,13 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
 
 #### rejection sampling
 
-本质是 **“生成一批样本，筛选后保留优质样本” 的后处理方法 **。
+本质是 **"生成一批样本，筛选后保留优质样本" 的后处理方法 **。
 
 论文中用于类条件（ImageNet）和文本条件（CC-3M）图像生成：
 
-- 背景：自回归模型（如 RQ-Transformer）生成样本时，受 “预测误差累积” 影响，部分样本会出现细节模糊、类别偏离（如类条件生成中 “猫” 生成成 “狗”）或文本 - 图像不对齐（如文本 “雪山汉堡” 生成成 “普通汉堡”）的问题；
-- 操作逻辑：先让模型生成远多于目标数量的样本（如需要 50K 最终样本，先生成 200K），再用一个 “质量评判标准” 对这些样本打分，**拒绝低分劣质样本，只保留高分优质样本**，最终得到符合目标数量的高质量样本。
-- 论文中的 “评判标准”：类条件生成用预训练的 ResNet-101 分类器（判断生成样本是否符合目标类别），文本条件生成用 CLIP 模型（判断生成图像与文本的对齐度）。
+- 背景：自回归模型（如 RQ-Transformer）生成样本时，受 "预测误差累积" 影响，部分样本会出现细节模糊、类别偏离（如类条件生成中 "猫" 生成成 "狗"）或文本 - 图像不对齐（如文本 "雪山汉堡" 生成成 "普通汉堡"）的问题；
+- 操作逻辑：先让模型生成远多于目标数量的样本（如需要 50K 最终样本，先生成 200K），再用一个 "质量评判标准" 对这些样本打分，**拒绝低分劣质样本，只保留高分优质样本**，最终得到符合目标数量的高质量样本。
+- 论文中的 "评判标准"：类条件生成用预训练的 ResNet-101 分类器（判断生成样本是否符合目标类别），文本条件生成用 CLIP 模型（判断生成图像与文本的对齐度）。
 
 评估使用 acceptance rate
 
@@ -3091,7 +3161,7 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
 
 ## VLA (Vision Language Action) and Robot Foundation Model（具身智能）
 
-&gt; [逐篇解析机器人基座模型和VLA经典论文——"人就是最智能的VLA"](https://www.bilibili.com/video/BV1q6RzYnENi)  —— 张小珺商业访谈录
+&gt; [逐篇解析机器人基座模型和VLA经典论文--"人就是最智能的VLA"](https://www.bilibili.com/video/BV1q6RzYnENi)  -- 张小珺商业访谈录
 &gt; [年末 AI 回顾：从模型到应用，从技术到商战，拽住洪流中的意义之线](https://mp.weixin.qq.com/s/gyEbK_UaUO3AeQvuhhRZ6g)
 &gt; 整理时间：2026-02-17
 
@@ -3121,7 +3191,7 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
 
 3. **更明确的退出路径**：中国二级市场对制造业更友好。除了宇树，智元、银河通用、星海图等公司据传均计划在 26 年冲击 IPO，他们多选择港股。即使是像智元机器人收购上纬新材股权这种尚未完成实质 "借壳" 的动作，也能让后者的市值从 30 亿暴涨至 500 亿以上。
 
-一批具身公司计划上市，港股宏观行情可能发生波动，以及很多公司还在亏损——这几个因素碰到一起——这场具身上市潮会如何发展？会成为 26 年非常值得关注的一个行业悬念。
+一批具身公司计划上市，港股宏观行情可能发生波动，以及很多公司还在亏损--这几个因素碰到一起--这场具身上市潮会如何发展？会成为 26 年非常值得关注的一个行业悬念。
 
 ### 具身智能三要素：数据、模型与本体
 
@@ -3147,10 +3217,10 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
 
 1. **VLA 模型（Vision-Language-Action）**：目前的主流路径，即通过多模态 VLM 训练出直接输出机器人动作的神经网络。
 2. **端到端**：试图用一个深度神经网络解决从感知到规控的全过程。
-3. **世界模型**：现在大家主要探索的方向是 "生成式的世界模型"——从世界的这一个状态，预测和生成世界的下一个状态。
+3. **世界模型**：现在大家主要探索的方向是 "生成式的世界模型"--从世界的这一个状态，预测和生成世界的下一个状态。
    - 如果以 2D 视觉信息表达，是可以无限延续的视频生成模型；所以当 OpenAI 发布 Sora 时，便有人认为这是世界模型的雏形。
    - 若以 3D 视觉信息表达，便是 Google 在 25 年发布的 Genie 3。它能生成一个可供探索的 3D 空间，并配合 Google 的另一个 AI 项目 SIMA 2，让用户创建的 Agent 在其中自由移动。
-   - 而真正被期待的 "完整的世界模型"，是能实现与环境和物体的直接交互——比如当你戳破一只气球或摘下一朵花时，系统能符合物理规律地预测并生成交互后的下一个状态。
+   - 而真正被期待的 "完整的世界模型"，是能实现与环境和物体的直接交互--比如当你戳破一只气球或摘下一朵花时，系统能符合物理规律地预测并生成交互后的下一个状态。
 
 #### 硬件本体
 
@@ -3174,13 +3244,13 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
     *   **灵巧操作 (Dexterous Cloth Manipulation)**: 能双臂协同操作柔性物体（如叠衣服）。
 
 *   **行业洞察**:
-    *   **辩证看待发展**: 
-        *   **短期不能高估**: 现有具身智能模型的“智能”水平仅相当于1-2岁婴儿，VLA/VTLA模型成熟度远低于LLM/VLM。机器人的运动能力(locomotion)的巨大进步不等于机器人智能的突破。
+    *   **辩证看待发展**:
+        *   **短期不能高估**: 现有具身智能模型的"智能"水平仅相当于1-2岁婴儿，VLA/VTLA模型成熟度远低于LLM/VLM。机器人的运动能力(locomotion)的巨大进步不等于机器人智能的突破。
         *   **长期不能低估**: 相比5年前基于规则(rule-based)的方法，AI+机器人的能力已实现质的飞跃，能完成过去无法想象的复杂任务。
     *   **具身智能三要素与当前短板**:
         *   **三要素**: **本体 (Embodiment)**、**模型 (Model)**、**数据 (Data)**，三者需互相依赖、共同迭代。
-        *   **当前短板**: **模型和数据**。文章犀利地指出，当前机器人难以胜任各类任务的最大短板是“**脑子笨**”。一个核心论据是：人类远程遥操作机器人的能力远超任何自主模型。
-        *   **对本体设计的启示**: 机器人本体的设计不应“孤立”进行，而要与当前模型和数据的能力相匹配。过于超前的本体在“笨脑子”的驱动下也无法发挥价值。
+        *   **当前短板**: **模型和数据**。文章犀利地指出，当前机器人难以胜任各类任务的最大短板是"**脑子笨**"。一个核心论据是：人类远程遥操作机器人的能力远超任何自主模型。
+        *   **对本体设计的启示**: 机器人本体的设计不应"孤立"进行，而要与当前模型和数据的能力相匹配。过于超前的本体在"笨脑子"的驱动下也无法发挥价值。
 
 
 ### DexGraspVLA：共享自主与VLA的灵巧抓取范式
@@ -3188,7 +3258,7 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
 * 概述：字节跳动 Seed 团队提出的层级式 VLA（Vision-Language-Action）框架，结合共享自主采集与扩展触觉，解决数据采集瓶颈与泛化难题。
 * 共享自主采集（Human-in-the-loop）
   - 人控机械臂 6-DoF，AI 控灵巧手 12-DoF；采集效率≈110条/小时，开发周期≈1天。
-  - 失败纠正闭环：失败时人类介入，系统自动积累“难例”，持续提升策略稳健性。
+  - 失败纠正闭环：失败时人类介入，系统自动积累"难例"，持续提升策略稳健性。
   - ![image-20251218202650427](./AI-Algorithms/image-20251218202650427.png)
 * 两阶段训练（AI 副驾驶）
   - 盲抓策略：仅依赖触觉，实现从纸杯到 1.2kg 重物的鲁棒抓取。
@@ -3228,7 +3298,7 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
 
 研发和表演需求都有阶段性，也有比较明显的规模上限，长期大家想实现的，还是让机器人进入工厂、商店甚至家庭里，自己干活。
 
-虽然 Sunday Robotics 或 1X 的原型机在视频里表现惊人——比如叠衣服、拿高脚杯——但在真实的餐厅、酒店或家庭里，我们依然很难见到它们的身影。这需要机器人能处理多种家务、适应不同家庭环境（一定的泛化性），更要极度耐用且安全。
+虽然 Sunday Robotics 或 1X 的原型机在视频里表现惊人--比如叠衣服、拿高脚杯--但在真实的餐厅、酒店或家庭里，我们依然很难见到它们的身影。这需要机器人能处理多种家务、适应不同家庭环境（一定的泛化性），更要极度耐用且安全。
 
 #### 4. 工业生产：被寄予厚望的 "深水区"
 
@@ -3256,12 +3326,12 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
 
 > LeCun: https://www.bilibili.com/video/BV1b1ycYTECU
 >
-> 视频其中一个核心思想是“预测能力的本质是我们找到我们观察的事物的良好表征”，事实上现在人类做机器学习的工作大部分是在 寻找表征、优化表征。
+> 视频其中一个核心思想是"预测能力的本质是我们找到我们观察的事物的良好表征"，事实上现在人类做机器学习的工作大部分是在 寻找表征、优化表征。
 >
 > 最近一段时间伴随LLM出现，技术领域的发展不外乎这两种：1）利用LLM学到的表征去做一些事情；2）让LLM学会更多表征。
 
 * Lecun的Insight：需要视觉信息训练
-  * 反驳“视觉信息冗余”
+  * 反驳"视觉信息冗余"
     * 视神经纤维 1byte/s 已经相比视网膜光传感器有1/100的压缩比了
       * 6000w-1e8光传感器
       * 100w神经纤维
@@ -3455,7 +3525,7 @@ Interpretability在电商场景的潜在应用 https://www.vantagediscovery.com/
 
 ### AI伦理
 
-* 算法演变到最后会扩大“out of rage”，因为冲突带来流量
+* 算法演变到最后会扩大"out of rage"，因为冲突带来流量
 * 关于丢失工作：需要高等教育的工作没事，因为这些人会和系统协作
 
 ## 下一个学习范式
