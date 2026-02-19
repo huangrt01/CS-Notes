@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""
+智能任务解析 Skill - 基于 LLM 智能解析口述式任务，写入 todos.json
+"""
+
+import os
+import sys
+import json
+import argparse
+from pathlib import Path
+from datetime import datetime
+
+
+class SmartTaskParser:
+    """智能任务解析器"""
+    
+    def __init__(self, config: dict):
+        """初始化"""
+        self.config = config
+        self.todos_json_path = Path(config.get("todos_json_path", ""))
+        self.workspace = Path(config.get("workspace", ""))
+    
+    def parse_task(self, task_text: str) -> dict:
+        """
+        解析任务文本
+        
+        这里是一个简单的示例，实际使用时可以调用 LLM 进行智能解析
+        """
+        # 简单的解析逻辑（示例）
+        # 实际使用时应该调用 LLM 进行智能解析
+        
+        task = {
+            "id": f"todo-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+            "title": task_text[:100] if len(task_text) > 100 else task_text,
+            "status": "pending",
+            "priority": "high",
+            "assignee": "ai",
+            "feedback_required": False,
+            "created_at": datetime.now().isoformat(),
+            "definition_of_done": [
+                "完成任务",
+                "验证结果"
+            ],
+            "progress": "⏸️ 待执行"
+        }
+        
+        return task
+    
+    def write_to_todos_json(self, task: dict) -> bool:
+        """写入 todos.json"""
+        try:
+            if not self.todos_json_path.exists():
+                print(f"Error: todos.json not found at {self.todos_json_path}")
+                return False
+            
+            # 读取现有的 todos.json
+            with open(self.todos_json_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            # 添加新任务
+            if "todos" not in data:
+                data["todos"] = []
+            
+            data["todos"].append(task)
+            data["updated_at"] = datetime.now().isoformat()
+            
+            # 写回文件
+            with open(self.todos_json_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            print(f"✅ 任务已写入 todos.json: {task['id']}")
+            return True
+            
+        except Exception as e:
+            print(f"Error writing to todos.json: {e}")
+            return False
+    
+    def run(self, task_text: str) -> dict:
+        """运行解析流程"""
+        print("=" * 60)
+        print("🤖 智能任务解析")
+        print("=" * 60)
+        print()
+        print(f"输入任务: {task_text}")
+        print()
+        
+        # 解析任务
+        print("🔍 解析任务...")
+        task = self.parse_task(task_text)
+        print(f"✅ 任务解析完成: {task['title']}")
+        print()
+        
+        # 写入 todos.json
+        print("📝 写入 todos.json...")
+        success = self.write_to_todos_json(task)
+        print()
+        
+        if success:
+            print("=" * 60)
+            print("✅ 任务解析成功！")
+            print("=" * 60)
+        else:
+            print("=" * 60)
+            print("❌ 任务解析失败！")
+            print("=" * 60)
+        
+        return task
+
+
+def main():
+    """主函数"""
+    parser = argparse.ArgumentParser(description="智能任务解析 Skill")
+    parser.add_argument("task_text", help="任务文本")
+    parser.add_argument("--config", help="配置文件路径")
+    args = parser.parse_args()
+    
+    # 加载配置
+    config = {}
+    if args.config:
+        config_path = Path(args.config)
+        if config_path.exists():
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+    
+    # 使用默认配置
+    if not config:
+        config = {
+            "todos_json_path": "/root/.openclaw/workspace/CS-Notes/.trae/todos/todos.json",
+            "workspace": "/root/.openclaw/workspace/CS-Notes"
+        }
+    
+    # 创建解析器并运行
+    parser_instance = SmartTaskParser(config)
+    parser_instance.run(args.task_text)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,17 @@
+{
+  "name": "smart-task-parser",
+  "version": "0.1.0",
+  "description": "智能任务解析 Skill - 基于 LLM 智能解析口述式任务，写入 todos.json",
+  "author": "CS-Notes",
+  "license": "MIT",
+  "main": "main.py",
+  "requirements": [],
+  "permissions": [
+    "read",
+    "write"
+  ],
+  "config": {
+    "todos_json_path": "/root/.openclaw/workspace/CS-Notes/.trae/todos/todos.json",
+    "workspace": "/root/.openclaw/workspace/CS-Notes"
+  }
+}

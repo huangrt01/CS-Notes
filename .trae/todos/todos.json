@@ -773,13 +773,13 @@
     {
       "id": "todo-20260219-039",
       "title": "实现 OpenClaw 消息触发的交互方式（方案二）",
-      "status": "pending",
+      "status": "in-progress",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-19T18:47:07.445375",
       "links": [
-        "`.trae/documents/LLM-智能解析-重新设计方案.md`、`.trae/openclaw-skills/`"
+        "`.trae/documents/LLM-智能解析-重新设计方案.md`、`.trae/openclaw-skills/smart-task-parser/`"
       ],
       "definition_of_done": [
         "创建智能解析 OpenClaw Skill",
@@ -792,7 +792,8 @@
         "用户倾向于方案二和三融合",
         "最好是通过触发一条 OpenClaw 消息来触发，而不是写一套调 API 的逻辑",
         "和 Todos Web Manager 融合也有类似的问题"
-      ]
+      ],
+      "progress": "🔨 已创建智能解析 Skill 的基础框架（skill.json、main.py、README.md），下一步集成 LLM 智能解析"
     },
     {
       "id": "todo-20260219-040",
