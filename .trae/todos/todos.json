@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-19T17:30:00.000000",
+  "updated_at": "2026-02-19T17:54:59.389259",
   "todos": [
     {
       "id": "todo-20260219-001",
@@ -184,7 +184,7 @@
     {
       "id": "todo-20260219-010",
       "title": "实现 LLM 智能解析口述式任务模板",
-      "status": "completed",
+      "status": "pending",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -197,29 +197,25 @@
         "支持更自然的口述方式",
         "测试 LLM 智能解析功能"
       ],
-      "progress": "✅ 已完成！voice_task_parser.py 已包含 LLM 智能解析功能，测试通过！",
-      "started_at": "2026-02-17",
-      "completed_at": "2026-02-17"
+      "progress": ""
     },
     {
       "id": "todo-20260219-011",
       "title": "实现自动补全上下文",
-      "status": "completed",
+      "status": "pending",
       "priority": "medium",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-19T14:16:05.624463",
       "links": [
-        "`Notes/snippets/context_completer.py`"
+        "`Notes/snippets/voice_task_parser.py`"
       ],
       "definition_of_done": [
         "实现自动补全上下文",
         "从最近的 git commit 历史和文件操作记录提取上下文",
         "测试自动补全上下文功能"
       ],
-      "progress": "✅ 已完成！context_completer.py 已实现，支持从 git commit 历史和文件操作记录提取上下文，测试通过！",
-      "started_at": "2026-02-18",
-      "completed_at": "2026-02-18"
+      "progress": ""
     },
     {
       "id": "todo-20260219-012",
@@ -246,22 +242,20 @@
     {
       "id": "todo-20260219-013",
       "title": "创建 Hybrid Executor Skill",
-      "status": "completed",
+      "status": "pending",
       "priority": "medium",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-19T14:16:05.624558",
       "links": [
-        "`.trae/openclaw-skills/hybrid-executor/`"
+        "`.trae/documents/Plan-Mode-混合执行实现方案.md`"
       ],
       "definition_of_done": [
         "创建 Hybrid Executor Skill",
         "调度混合执行流程",
         "测试 Hybrid Executor"
       ],
-      "progress": "✅ 已完成！Hybrid Executor Skill 已经完整存在！包含 main.py、skill.json，功能完整，已验证通过！",
-      "started_at": "2026-02-19",
-      "completed_at": "2026-02-19"
+      "progress": ""
     },
     {
       "id": "todo-20260219-014",
@@ -446,53 +440,49 @@
     {
       "id": "todo-20260219-023",
       "title": "为任务执行引入可观测闭环",
-      "status": "completed",
+      "status": "pending",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-19T14:16:05.624923",
       "links": [
-        "`.trae/documents/任务执行可观测闭环设计方案.md`、`.trae/documents/任务执行可观测闭环-实现方案.md`、`Notes/snippets/task_execution_logger.py`"
+        "`.trae/documents/任务执行可观测闭环设计方案.md`、`.trae/documents/任务执行可观测闭环-实现方案.md`"
       ],
       "definition_of_done": [
         "任务执行采用结构化日志输出（如 stream-json），让调度器能识别执行阶段、失败原因、重试点与最终产物",
         "任务完成率作为核心系统指标：失败任务进入重试队列，超过阈值自动降级为\"需要人工补充信息/拆分\"的任务",
         "每个任务沉淀产物：执行摘要、产物链接、关键 diff、失败复现命令，回写到任务条目下，便于长期复盘"
       ],
-      "progress": "✅ 已完成！创建了完整的 task_execution_logger.py，包含结构化日志输出、任务状态机、重试队列、指标收集、任务产物沉淀功能！测试通过！任务产物已保存到 .trae/logs/artifacts/todo-20260219-023.json",
-      "started_at": "2026-02-19",
-      "completed_at": "2026-02-19"
+      "progress": ""
     },
     {
       "id": "todo-20260219-024",
       "title": "用自然语言与语音提高任务输入吞吐",
-      "status": "completed",
+      "status": "pending",
       "priority": "medium",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-19T14:16:05.624950",
       "links": [
-        "`.trae/documents/自然语言与语音任务输入方案.md`、`Notes/snippets/voice_task_parser.py`、`Notes/snippets/context_completer.py`"
+        "`.trae/documents/自然语言与语音任务输入方案.md`、`Notes/snippets/voice_task_parser.py`、`Notes/snippets/speech_to_text.py`"
       ],
       "definition_of_done": [
         "手机端支持语音输入，将语音转写后再结构化为 todo（content/priority/tags/links/due）",
         "支持\"口述式任务模板\"：例如\"高优先级：把 X 文档改成 Y 风格，关联链接 Z，明天前完成\"",
         "支持将口述内容自动补全上下文：如自动带上当前正在编辑的文档路径或最近打开的文件列表"
       ],
-      "progress": "✅ 已完成！voice_task_parser.py 和 context_completer.py 都已实现并测试通过！voice_task_parser.py 支持模板匹配和 LLM 智能解析，context_completer.py 支持从 git 历史和文件操作记录提取上下文",
-      "started_at": "2026-02-19",
-      "completed_at": "2026-02-19"
+      "progress": ""
     },
     {
       "id": "todo-20260219-025",
       "title": "给任务系统添加 Plan Mode 与批量 Review",
-      "status": "completed",
+      "status": "pending",
       "priority": "medium",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-19T14:16:05.624976",
       "links": [
-        "`.trae/plans/Plan-Mode-与批量-Review-设计方案.md`、`.trae/plans/Plan-Mode-混合执行实现方案.md`、`.trae/openclaw-skills/plan-generator/`、`.trae/openclaw-skills/hybrid-executor/`"
+        "`.trae/documents/Plan-Mode-与批量-Review-设计方案.md`、`.trae/documents/Plan-Mode-混合执行实现方案.md`"
       ],
       "definition_of_done": [
         "新任务默认先产出 Plan（目标、假设、改动点、验收标准、风险），Plan 通过后才进入执行队列",
@@ -500,14 +490,12 @@
         "Plan 与执行拆分成两类条目：Plan 条目更强调意图与验收；执行条目更强调产物与可追溯性",
         "支持混合执行方式：当遇到复杂任务时，先生成 Plan，然后先自动执行，再用 AI 自动生成的方式"
       ],
-      "progress": "✅ 已完成！Plan Mode 与批量 Review 功能已完整实现！Plan Generator 和 Hybrid Executor 都已创建并验证通过！Plan 存储在 .trae/plans/ 目录，支持 Markdown 格式带 YAML frontmatter！",
-      "started_at": "2026-02-19",
-      "completed_at": "2026-02-19"
+      "progress": ""
     },
     {
       "id": "todo-20260219-026",
       "title": "整体仓库架构设计，考虑决策反馈方式，与 Plan 能力融合",
-      "status": "completed",
+      "status": "pending",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": true,
@@ -521,9 +509,7 @@
         "将决策反馈方式与 Plan 能力融合起来",
         "形成完整的架构设计文档"
       ],
-      "progress": "✅ 已完成！创建了完整的架构设计文档，包含现有架构分析、决策反馈方式设计、Plan 能力融合设计、整体架构设计、数据流向设计、实施路线图",
-      "started_at": "2026-02-19",
-      "completed_at": "2026-02-19"
+      "progress": ""
     },
     {
       "id": "todo-20260219-027",
@@ -565,5 +551,155 @@
     {
       "id": "todo-20260219-029",
       "title": "修复 Flask 安装问题，修复 blinker 包冲突，使 server.py 可以正常启动",
-      "status": "completed",
-      "
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T14:18:36.706306",
+      "links": [
+        "`.trae/documents/Flask-安装问题-复现与修复方案.md",
+        "`.trae/web-manager/server.py"
+      ],
+      "definition_of_done": [
+        "找到可靠的 Flask 安装方法",
+        "修复 blinker 包冲突问题",
+        "验证 server.py 可以正常启动",
+        "测试所有 API 端点正常工作"
+      ],
+      "progress": "问题已记录，待修复"
+    },
+    {
+      "id": "todo-20260219-030",
+      "title": "Playwright 模拟浏览器抓取知乎文章",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T16:00:00.000000",
+      "links": [
+        "https://playwright.dev/"
+      ],
+      "definition_of_done": [
+        "调研 Playwright 的使用方法",
+        "实现 Playwright 模拟浏览器抓取知乎文章的功能",
+        "测试 Playwright 抓取知乎文章的效果",
+        "将抓取的内容整理到笔记库中"
+      ],
+      "background": [
+        "web_fetch 工具直接请求知乎网页返回 403 错误",
+        "知乎 API 接口也返回 403 错误",
+        "RSSHub 也返回 403 错误",
+        "需要使用 Playwright 模拟浏览器来绕过反爬机制"
+      ]
+    },
+    {
+      "id": "todo-20260219-031",
+      "title": "基于 ClawHub 增强能力，摸索完整的发掘 skill、增强能力的流程",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T16:00:00.000000",
+      "definition_of_done": [
+        "探索 ClawHub 相关能力",
+        "摸索如何基于 ClawHub 增强我的能力",
+        "能更好应对我们这整个场景的需求",
+        "帮助我成为更好的我",
+        "落地验证完整的发掘 skill、增强能力的流程"
+      ],
+      "user_requirements": [
+        "你现在可以使用 ClawHub 相关能力了",
+        "摸索一下基于 ClawHub 增强你的能力",
+        "能更好应对我们这整个场景的需求",
+        "帮助你成为更好的你",
+        "落地验证完整地发掘 skill、增强你的能力的流程"
+      ]
+    },
+    {
+      "id": "todo-20260219-032",
+      "title": "落地可观测闭环：让 task_execution_logger.py 成为本仓库在各种交互方式下的默认 setting",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T17:50:00.000000",
+      "links": [
+        "`Notes/snippets/task_execution_logger.py`、`.trae/documents/任务执行可观测闭环设计方案.md`"
+      ],
+      "definition_of_done": [
+        "让 task_execution_logger.py 成为本仓库在各种交互方式下的默认 setting",
+        "在所有任务执行中使用 task_execution_logger.py",
+        "体验和效果良好",
+        "不仅是有个设计文档和玩具代码即算落地"
+      ],
+      "user_requirements": [
+        "落地的定义是【成为了本仓库在各种交互方式下的默认setting，并体验和效果良好，而不仅是有个设计文档和玩具代码即算落地】"
+      ]
+    },
+    {
+      "id": "todo-20260219-033",
+      "title": "用自然语言与语音提高任务输入吞吐：与 Todos Web Manager 达成融合",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T17:50:00.000000",
+      "links": [
+        "`.trae/web-manager/`、`Notes/snippets/voice_task_parser.py`、`Notes/snippets/context_completer.py`"
+      ],
+      "definition_of_done": [
+        "在 Todos Web Manager 中提供口述式任务输入界面",
+        "提供语音输入按钮",
+        "自动补全上下文功能",
+        "调用 voice_task_parser.py 进行智能解析",
+        "与 Todos Web Manager 达成融合"
+      ],
+      "user_requirements": [
+        "如何和todos web manager达成融合？如果无法融合，则需要你增加todo"
+      ]
+    },
+    {
+      "id": "todo-20260219-034",
+      "title": "落地 Plan Mode 与批量 Review：成为本仓库在各种交互方式下的默认 setting",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T17:50:00.000000",
+      "links": [
+        "`.trae/openclaw-skills/plan-generator/`、`.trae/openclaw-skills/hybrid-executor/`、`.trae/plans/`"
+      ],
+      "definition_of_done": [
+        "让 Plan Mode 与批量 Review 成为本仓库在各种交互方式下的默认 setting",
+        "在各种交互方式下都使用这个功能",
+        "体验和效果良好",
+        "不仅是有个设计文档和玩具代码即算落地"
+      ],
+      "user_requirements": [
+        "落地的定义是【成为了本仓库在各种交互方式下的默认setting，并体验和效果良好】，而不仅是有个设计文档和玩具代码即算落地"
+      ]
+    },
+    {
+      "id": "todo-20260219-035",
+      "title": "落地 Hybrid Executor：让所有指令都走到这个调用链路",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T17:50:00.000000",
+      "links": [
+        "`.trae/openclaw-skills/hybrid-executor/`"
+      ],
+      "definition_of_done": [
+        "让 Hybrid Executor 成为默认的任务执行链路",
+        "在各种交互方式下（Feishu、Web、语音）都使用这个链路",
+        "复杂任务 → 先生成 Plan → Plan Review → Hybrid Executor 执行",
+        "简单任务 → 直接执行，不需要 Plan",
+        "根据任务复杂度智能选择执行方式"
+      ],
+      "user_requirements": [
+        "预期是否我的所有指令都会走到这个调用链路？"
+      ]
+    }
+  ]
+}
