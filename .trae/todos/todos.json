@@ -1161,6 +1161,53 @@
         "引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接",
         "限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息"
       ]
+    },
+    {
+      "id": "todo-20260220-003",
+      "title": "允许手机访问云端部署的 web manager",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T01:15:00.000000",
+      "links": [
+        "https://www.volcengine.com/docs/6396/2198425?lang=zh#Lw6xz8ZI"
+      ],
+      "dependencies": [
+        "修复 Flask 安装问题，修复 blinker 包冲突"
+      ],
+      "definition_of_done": [
+        "参考火山云 ECS 文档，走通公网访问流程",
+        "配置火山云 ECS 的安全组，允许公网访问",
+        "配置防火墙，允许 5000 端口（或其他端口）的入站访问",
+        "确保 Todos Web Manager 的后端服务可以从公网访问",
+        "测试手机是否可以访问云端部署的 Todos Web Manager"
+      ],
+      "user_requirements": [
+        "允许手机访问云端部署的web manager",
+        "云端是火山云ecs，也许得参考 https://www.volcengine.com/docs/6396/2198425?lang=zh#Lw6xz8ZI 这里走通公网访问流程"
+      ]
+    },
+    {
+      "id": "todo-20260220-004",
+      "title": "优化 OpenClaw 响应速度：查看 OpenClaw 配置，确保 TUI 里的进展都实时发给用户",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T01:15:00.000000",
+      "links": [
+        "`~/.openclaw/openclaw.json`、OpenClaw 官方文档"
+      ],
+      "definition_of_done": [
+        "查看 OpenClaw 的配置文件，找出可能影响响应速度的配置项",
+        "分析为什么 OpenClaw 回复消息不及时",
+        "调整配置，确保 TUI 里的进展都实时发给用户",
+        "测试优化后的响应速度"
+      ],
+      "user_requirements": [
+        "你（openclaw）回复我的消息不及时，查看openclaw配置看能否优化（所有tui里的你的进展都实时发给我）"
+      ]
     }
   ]
 }
