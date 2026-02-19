@@ -159,17 +159,32 @@
     * 测试自动补全上下文功能
   - Progress：
 
-* [ ] 实现 Todos Web Manager Phase 2
+* [x] 实现 Todos Web Manager Phase 2 + 开发验证能力增强
   - Priority：High
   - Assignee：Ai
   - Feedback Required：否
-  - Links：`.trae/web-manager/index.html`、`.trae/documents/Todos-Web-Manager-核心功能实现方案.md`
+  - Links：`.trae/web-manager/index.html`、`.trae/web-manager/index-enhanced.html`、`.trae/web-manager/server.py`、`.trae/documents/Todos-Web-Manager-核心功能实现方案.md`、`.trae/documents/Todos-Web-Manager-开发验证增强报告.md`
   - Definition of Done：
     * 实现任务分类和筛选
     * 实现搜索功能
     * 实现 Git 集成
     * 部署到火山引擎
-  - Progress：
+    * 开发验证能力增强（Git 集成、Markdown 解析/生成测试、任务数据验证、JSON 导出）
+  - Progress：✅ 已完成！Todos Web Manager Phase 2 + 开发验证能力增强完成！
+  - Started At：2026-02-19
+  - Completed At：2026-02-19
+  - Deliverables：
+    * `.trae/web-manager/index-enhanced.html` - 增强版前端界面（开发验证面板）
+    * `.trae/web-manager/server.py` - Python 后端服务（Git 集成、任务解析 API）
+    * `.trae/web-manager/requirements.txt` - Python 依赖文件
+    * `.trae/documents/Todos-Web-Manager-开发验证增强报告.md` - 完整的增强报告
+  - 增强功能：
+    * 🔧 开发验证面板（加载示例任务、Markdown 解析/生成测试、Git 集成测试、任务数据验证、JSON 导出）
+    * 📊 实时日志显示（成功/错误/信息，不同颜色区分）
+    * 🔗 Git 集成 API（status/add/commit/push/pull/log）
+    * 📝 任务解析 API（从 Markdown 读取任务）
+    * ✅ 任务数据验证（检查字段完整性和有效性）
+    * 📤 JSON 导出功能（导出任务数据）
 
 * [ ] 创建 Hybrid Executor Skill
   - Priority：Medium
@@ -289,11 +304,11 @@
     * 每个任务支持 Plan 与执行产物回写（摘要/链接/diff/复现命令）
   - Progress：
 
-* [ ] 实现 Todos Web Manager 核心功能
+* [x] 实现 Todos Web Manager 核心功能 + 开发验证能力增强
   - Priority：High
   - Assignee：Ai
   - Feedback Required：否
-  - Links：`.trae/documents/INBOX.md`、`.trae/documents/Todos-Web-Manager-核心功能实现方案.md`、`.trae/web-manager/index.html`
+  - Links：`.trae/documents/INBOX.md`、`.trae/documents/Todos-Web-Manager-核心功能实现方案.md`、`.trae/web-manager/index.html`、`.trae/web-manager/index-enhanced.html`、`.trae/web-manager/server.py`、`.trae/documents/Todos-Web-Manager-开发验证增强报告.md`
   - Definition of Done：
     * 显示任务列表
     * 添加新任务
@@ -301,7 +316,22 @@
     * 任务分类和筛选
     * 优先级设置
     * 手机端快速提交任务
-  - Progress：
+    * 开发验证能力增强（Git 集成、Markdown 解析/生成测试、任务数据验证、JSON 导出）
+  - Progress：✅ 已完成！Todos Web Manager 开发验证能力增强完成！
+  - Started At：2026-02-19
+  - Completed At：2026-02-19
+  - Deliverables：
+    * `.trae/web-manager/index-enhanced.html` - 增强版前端界面（开发验证面板）
+    * `.trae/web-manager/server.py` - Python 后端服务（Git 集成、任务解析 API）
+    * `.trae/web-manager/requirements.txt` - Python 依赖文件
+    * `.trae/documents/Todos-Web-Manager-开发验证增强报告.md` - 完整的增强报告
+  - 增强功能：
+    * 🔧 开发验证面板（加载示例任务、Markdown 解析/生成测试、Git 集成测试、任务数据验证、JSON 导出）
+    * 📊 实时日志显示（成功/错误/信息，不同颜色区分）
+    * 🔗 Git 集成 API（status/add/commit/push/pull/log）
+    * 📝 任务解析 API（从 Markdown 读取任务）
+    * ✅ 任务数据验证（检查字段完整性和有效性）
+    * 📤 JSON 导出功能（导出任务数据）
 
 * [ ] 为任务执行引入可观测闭环
   - Priority：High

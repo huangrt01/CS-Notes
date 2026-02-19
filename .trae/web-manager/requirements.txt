@@ -1,0 +1,5 @@
+# Todos Web Manager - 后端服务依赖
+# 安装命令: pip install -r requirements.txt
+
+flask>=2.0.0
+flask-cors>=4.0.0
