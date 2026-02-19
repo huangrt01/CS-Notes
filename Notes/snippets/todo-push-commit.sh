@@ -2,6 +2,11 @@
 # Todo Push Commit 脚本 - 接受 commit message，执行 git add/commit/push
 # 严格控制 git add 范围，保护隐私
 
+# 设置 UTF-8 编码，确保能正确处理中文文件名
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+
 # 配置
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LOG_DIR="$REPO_ROOT/.trae/logs"
@@ -110,8 +115,9 @@ main() {
     local allowed_files=()
     
     # 使用更可靠的方式获取文件名（支持中文）
+    # 使用 -z 选项来获取 NUL 分隔的文件名，确保能正确处理中文和特殊字符
     # 先获取所有已修改的文件
-    while IFS= read -r file; do
+    while IFS= read -r -d $'\0' file; do
         if [ -n "$file" ]; then
             if is_file_allowed "$file"; then
                 allowed_files+=("$file")
@@ -120,10 +126,10 @@ main() {
                 log "WARN" "  [跳过] $file"
             fi
         fi
-    done < <(git diff --name-only)
+    done < <(git diff --name-only -z)
     
     # 再获取所有未跟踪的文件
-    while IFS= read -r file; do
+    while IFS= read -r -d $'\0' file; do
         if [ -n "$file" ]; then
             if is_file_allowed "$file"; then
                 allowed_files+=("$file")
@@ -132,7 +138,7 @@ main() {
                 log "WARN" "  [跳过] $file"
             fi
         fi
-    done < <(git ls-files --others --exclude-standard)
+    done < <(git ls-files --others --exclude-standard -z)
     
     # 去重
     local unique_allowed_files=()
