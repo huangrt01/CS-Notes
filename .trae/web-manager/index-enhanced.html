@@ -1,9 +1,55 @@
+<!--
+=======================================================================
+CS-Notes Todos Web Manager - 使用说明
+=======================================================================
+
+启动后端 API 的步骤：
+
+1. 安装依赖（首次使用）：
+   cd /Users/bytedance/CS-Notes/.trae/web-manager
+   pip3 install flask flask-cors
+
+2. 启动后端服务器：
+   cd /Users/bytedance/CS-Notes/.trae/web-manager
+   python3 server.py
+
+3. 在浏览器中访问：
+   http://localhost:5000
+
+=======================================================================
+本次运行的有效指令记录：
+=======================================================================
+
+安装依赖：
+pip3 install flask flask-cors
+
+启动服务器：
+python3 server.py
+
+=======================================================================
+API 端点说明：
+=======================================================================
+
+GET    /api/tasks              - 获取任务列表
+POST   /api/tasks              - 添加新任务
+PUT    /api/tasks/<id>         - 更新任务
+DELETE /api/tasks/<id>         - 删除任务
+PUT    /api/tasks/<id>/status  - 更新任务状态
+POST   /api/tasks/<id>/review  - Review 任务（通过/不通过）
+GET    /api/tasks/archive      - 获取归档任务
+GET    /api/git/status         - 获取 Git 状态
+POST   /api/git/commit         - 提交 Git 更改
+POST   /api/git/push           - 推送到远程仓库
+POST   /api/git/pull           - 从远程仓库拉取
+
+=======================================================================
+-->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS-Notes Todos Web Manager - 增强版（开发验证）</title>
+    <title>CS-Notes Todos Web Manager</title>
     <style>
         * {
             margin: 0;
@@ -45,25 +91,16 @@
             font-size: 14px;
         }
         
-        .dev-badge {
-            display: inline-block;
-            background: #ff6b6b;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 8px;
-        }
-        
         .tabs {
             display: flex;
             background: #f7f7f7;
             border-bottom: 1px solid #e0e0e0;
+            flex-wrap: wrap;
         }
         
         .tab {
             flex: 1;
+            min-width: 100px;
             padding: 16px;
             text-align: center;
             cursor: pointer;
@@ -88,84 +125,92 @@
             padding: 24px;
         }
         
-        /* 开发验证面板 */
-        .dev-panel {
-            background: #1a1a2e;
+        .status-bar {
+            background: #f0f4ff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .status-bar-text {
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        .status-bar button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .status-bar button:hover {
+            background: #5568d3;
+        }
+        
+        .stats-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 20px;
             border-radius: 12px;
             margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
         }
         
-        .dev-panel h3 {
-            color: #667eea;
-            margin-bottom: 16px;
+        .stat-item {
+            text-align: center;
         }
         
-        .dev-row {
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .sub-tabs {
             display: flex;
-            gap: 12px;
+            gap: 8px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
-            margin-bottom: 12px;
         }
         
-        .dev-btn {
+        .sub-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #f0f0f0;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .sub-tab:hover {
+            background: #e0e0e0;
+        }
+        
+        .sub-tab.active {
             background: #667eea;
             color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
         }
         
-        .dev-btn:hover {
-            background: #764ba2;
-            transform: translateY(-2px);
-        }
-        
-        .dev-btn-secondary {
-            background: #4a5568;
-        }
-        
-        .dev-btn-success {
-            background: #38a169;
-        }
-        
-        .dev-btn-danger {
-            background: #e53e3e;
-        }
-        
-        .dev-status {
-            background: #2d3748;
-            padding: 16px;
-            border-radius: 8px;
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 12px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .dev-status-line {
-            margin-bottom: 4px;
-            padding: 4px 0;
-        }
-        
-        .dev-status-line.success {
-            color: #68d391;
-        }
-        
-        .dev-status-line.error {
-            color: #fc8181;
-        }
-        
-        .dev-status-line.info {
-            color: #63b3ed;
-        }
-        
-        /* 筛选和搜索区域 */
         .filters {
             background: #f7f7f7;
             padding: 20px;
@@ -210,6 +255,10 @@
         .filter-group input:focus {
             outline: none;
             border-color: #667eea;
+        }
+        
+        .add-task-toggle {
+            margin-bottom: 16px;
         }
         
         .add-task {
@@ -305,6 +354,11 @@
             font-weight: 600;
             color: #333;
             flex: 1;
+            cursor: pointer;
+        }
+        
+        .task-title:hover {
+            color: #667eea;
         }
         
         .task-priority {
@@ -336,11 +390,73 @@
             line-height: 1.6;
         }
         
+        .task-details {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+            display: none;
+        }
+        
+        .task-details.expanded {
+            display: block;
+        }
+        
+        .task-details-section {
+            margin-bottom: 12px;
+        }
+        
+        .task-details-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .task-details-section p,
+        .task-details-section ul {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .task-details-section ul {
+            padding-left: 20px;
+        }
+        
+        .review-comment {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+        }
+        
+        .review-comment h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+        
+        .review-comment p {
+            font-size: 14px;
+            color: #856404;
+        }
+        
         .task-meta {
             display: flex;
             gap: 16px;
             font-size: 13px;
             color: #888;
+            flex-wrap: wrap;
+        }
+        
+        .task-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         
         .task-actions {
@@ -349,6 +465,7 @@
             margin-top: 16px;
             padding-top: 16px;
             border-top: 1px solid #e0e0e0;
+            flex-wrap: wrap;
         }
         
         .btn-secondary {
@@ -356,6 +473,10 @@
             color: #333;
             padding: 8px 16px;
             font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
         
         .btn-secondary:hover {
@@ -364,6 +485,86 @@
         
         .btn-success {
             background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-1px);
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-warning:hover {
+            background: #d97706;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .review-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .review-modal.active {
+            display: flex;
+        }
+        
+        .review-modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .review-modal-content h3 {
+            margin-bottom: 16px;
+            color: #333;
+        }
+        
+        .review-modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            justify-content: flex-end;
         }
         
         .empty-state {
@@ -372,9 +573,67 @@
             color: #888;
         }
         
+        .review-section {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border: 1px solid #e0e4ff;
+        }
+        
+        .review-input-group {
+            margin-bottom: 12px;
+        }
+        
+        .review-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .review-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
         .empty-state-icon {
             font-size: 64px;
             margin-bottom: 16px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #667eea;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
         
         @media (max-width: 600px) {
@@ -399,6 +658,10 @@
             .filters-row {
                 flex-direction: column;
             }
+            
+            .stats-panel {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
@@ -406,40 +669,50 @@
     <div class="container">
         <div class="header">
             <h1>📝 CS-Notes Todos</h1>
-            <p>任务管理系统 - 增强版（开发验证专用）</p>
-            <div class="dev-badge">🔧 开发验证模式</div>
+            <p>任务管理系统</p>
         </div>
         
         <div class="tabs">
-            <div class="tab active" data-tab="all">📋 全部</div>
-            <div class="tab" data-tab="pending">⏸️ 待处理</div>
-            <div class="tab" data-tab="in-progress">🚀 进行中</div>
-            <div class="tab" data-tab="completed">✅ 已完成</div>
-            <div class="tab" data-tab="dev">🔧 开发验证</div>
+            <div class="tab active" data-tab="completed" onclick="switchTab('completed')">👀 已完成（待 review）</div>
+            <div class="tab" data-tab="in-progress" onclick="switchTab('in-progress')">🚀 进行中</div>
+            <div class="tab" data-tab="pending" onclick="switchTab('pending')">⏸️ 待处理</div>
+            <div class="tab" data-tab="archive" onclick="switchTab('archive')">📦 归档</div>
+            <div class="tab" data-tab="all" onclick="switchTab('all')">📋 全部</div>
         </div>
         
         <div class="content">
-            <!-- 开发验证面板 -->
-            <div class="dev-panel" id="devPanel">
-                <h3>🔧 开发验证工具</h3>
-                <div class="dev-row">
-                    <button class="dev-btn" onclick="loadSampleTasks()">📥 加载示例任务</button>
-                    <button class="dev-btn dev-btn-success" onclick="document.getElementById('jsonFileInput').click()">📂 加载 JSON 文件</button>
-                    <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="loadJSONFile(event)">
-                    <button class="dev-btn dev-btn-secondary" onclick="parseMarkdownTest()">📝 测试 Markdown 解析</button>
-                    <button class="dev-btn dev-btn-danger" onclick="clearDevStatus()">🗑️ 清空日志</button>
+            <div class="status-bar">
+                <div class="status-bar-text" id="statusText">🔄 正在加载任务...</div>
+                <button onclick="loadTasks()">🔄 刷新</button>
+            </div>
+            
+            <div id="errorMessage" style="display: none;"></div>
+            
+            <div class="stats-panel">
+                <div class="stat-item">
+                    <div class="stat-number" id="statCompleted">0</div>
+                    <div class="stat-label">待 review</div>
                 </div>
-                <div class="dev-row">
-                    <button class="dev-btn" onclick="testGitIntegration()">🔗 测试 Git 集成</button>
-                    <button class="dev-btn dev-btn-secondary" onclick="exportTasksJSON()">📤 导出任务 JSON</button>
-                    <button class="dev-btn dev-btn-success" onclick="validateTasks()">✅ 验证任务数据</button>
+                <div class="stat-item">
+                    <div class="stat-number" id="statInProgress">0</div>
+                    <div class="stat-label">进行中</div>
                 </div>
-                <div class="dev-status" id="devStatus">
-                    <div class="dev-status-line info">👉 开发验证工具已就绪，点击上方按钮开始测试</div>
+                <div class="stat-item">
+                    <div class="stat-number" id="statPending">0</div>
+                    <div class="stat-label">待处理</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="statTotal">0</div>
+                    <div class="stat-label">总计</div>
                 </div>
             </div>
             
-            <!-- 筛选和搜索区域 -->
+            <div class="sub-tabs" id="subTabs" style="display: none;">
+                <button class="sub-tab active" data-subtab="all" onclick="switchSubTab('all')">全部</button>
+                <button class="sub-tab" data-subtab="user" onclick="switchSubTab('user')">👤 待人处理</button>
+                <button class="sub-tab" data-subtab="ai" onclick="switchSubTab('ai')">🤖 待 AI 处理</button>
+            </div>
+            
             <div class="filters">
                 <h3>🔍 筛选和搜索</h3>
                 <div class="filters-row">
@@ -453,21 +726,17 @@
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label>按 Assignee 筛选</label>
-                        <select id="filterAssignee" onchange="applyFilters()">
-                            <option value="all">全部 Assignee</option>
-                            <option value="AI">👤 AI</option>
-                            <option value="User">👤 User</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
                         <label>搜索任务</label>
                         <input type="text" id="searchQuery" placeholder="搜索任务标题或描述..." oninput="applyFilters()">
                     </div>
                 </div>
             </div>
             
-            <div class="add-task">
+            <div id="addTaskToggle" class="add-task-toggle">
+                <button class="btn" onclick="toggleAddTask()">➕ 添加新任务</button>
+            </div>
+            
+            <div class="add-task" id="addTaskSection" style="display: none;">
                 <h3>➕ 添加新任务</h3>
                 <div class="form-group">
                     <label>任务标题</label>
@@ -488,475 +757,155 @@
                 <div class="form-group">
                     <label>Assignee</label>
                     <select id="taskAssignee">
-                        <option value="AI">👤 AI</option>
-                        <option value="User" selected>👤 User</option>
+                        <option value="ai">👤 AI</option>
+                        <option value="user" selected>👤 User</option>
+                        <option value="user + ai">👥 User + AI</option>
                     </select>
                 </div>
-                <button class="btn" onclick="addTask()">添加任务</button>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn" onclick="addTask()">添加任务</button>
+                    <button class="btn-secondary" onclick="toggleAddTask()">取消</button>
+                </div>
             </div>
             
             <div id="taskList">
-                <div class="empty-state">
-                    <div class="empty-state-icon">📋</div>
-                    <h3>暂无任务</h3>
-                    <p>点击"加载示例任务"开始测试！</p>
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>正在加载任务...</p>
                 </div>
             </div>
         </div>
     </div>
     
+
+    
     <script>
         let tasks = [];
-        let currentTab = 'all';
+        let archiveTasks = [];
+        let currentTab = 'completed';
+        let currentSubTab = 'all';
+        let isLoading = false;
+        let isArchive = false;
+        let expandedTasks = new Set();
         
-        // 示例任务数据（增强版，包含更多字段用于开发验证）
-        const sampleTasks = [
-            {
-                id: 1,
-                title: '评估 trae-agent 的能力',
-                description: '对比 OpenClaw + 方舟代码模型，评估它改笔记代码的效果',
-                priority: 'high',
-                status: 'completed',
-                assignee: 'AI',
-                createdAt: '2026-02-17',
-                links: ['trae-agent/', 'Notes/snippets/code-reading-trae-agent.md'],
-                definitionOfDone: [
-                    '跑通 trae-agent client',
-                    '设计一些需求让 trae-agent 来改笔记代码',
-                    '评估它改的效果如何',
-                    '对比 OpenClaw + 方舟代码模型的效果'
-                ]
-            },
-            {
-                id: 2,
-                title: '设计并实现 trae-agent OpenClaw Skill',
-                description: '整合 trae-agent 到 CS-Notes 项目',
-                priority: 'high',
-                status: 'completed',
-                assignee: 'AI',
-                createdAt: '2026-02-17',
-                links: ['.trae/documents/trae-agent-评估报告.md', 'trae-agent/'],
-                definitionOfDone: [
-                    '创建 trae-agent OpenClaw Skill',
-                    'Skill 可以调用 trae-agent 执行复杂任务',
-                    'Skill 可以获取 trae-agent 的轨迹记录和执行结果',
-                    '综合 OpenClaw 和 trae-agent 的能力，一加一大于二'
-                ]
-            },
-            {
-                id: 3,
-                title: '落地 Todos Web Manager',
-                description: '提供手机可用的提交入口，提供任务列表页',
-                priority: 'high',
-                status: 'in-progress',
-                assignee: 'AI',
-                createdAt: '2026-02-17',
-                links: ['.trae/documents/INBOX.md', '.trae/documents/Todos-Web-Manager-设计方案.md'],
-                definitionOfDone: [
-                    '提供一个手机可用的提交入口，把任务写入 .trae/documents/INBOX.md 或 Pending',
-                    '提供一个列表页可查看 Pending/进行中/已完成，并支持标记完成与筛选',
-                    '每个任务支持 Plan 与执行产物回写（摘要/链接/diff/复现命令）'
-                ]
-            },
-            {
-                id: 4,
-                title: '实现 Todos Web Manager Phase 2',
-                description: '实现任务分类和筛选、搜索功能',
-                priority: 'high',
-                status: 'in-progress',
-                assignee: 'AI',
-                createdAt: '2026-02-18',
-                links: ['.trae/web-manager/index.html', '.trae/documents/Todos-Web-Manager-核心功能实现方案.md'],
-                definitionOfDone: [
-                    '实现任务分类和筛选',
-                    '实现搜索功能',
-                    '实现 Git 集成',
-                    '部署到火山引擎'
-                ]
-            },
-            {
-                id: 5,
-                title: '调研 Top Lean AI 榜单上所有公司',
-                description: '分类记录整理到 AI Agent 笔记中',
-                priority: 'high',
-                status: 'pending',
-                assignee: 'AI',
-                createdAt: '2026-02-18',
-                links: ['.trae/documents/Top-Lean-AI-榜单-2026-02.md', 'Notes/AI-Agent-Product&PE.md'],
-                definitionOfDone: [
-                    '调研 Top Lean AI 榜单上所有 45 家公司',
-                    '分类记录整理到 AI Agent 笔记中',
-                    '包含公司信息、类型、人均年收入、商业模式等'
-                ]
-            },
-            {
-                id: 6,
-                title: '写一篇关于 AI Agent 的文章',
-                description: '整理一下最近对 AI Agent 的思考',
-                priority: 'medium',
-                status: 'pending',
-                assignee: 'User',
-                createdAt: '2026-02-18',
-                links: [],
-                definitionOfDone: []
-            },
-            {
-                id: 7,
-                title: '整理一下学习笔记',
-                description: '把今天学的内容整理到笔记库中',
-                priority: 'low',
-                status: 'pending',
-                assignee: 'User',
-                createdAt: '2026-02-18',
-                links: [],
-                definitionOfDone: []
-            }
-        ];
-        
-        // 开发验证日志
-        function logDev(message, type = 'info') {
-            const devStatus = document.getElementById('devStatus');
-            const timestamp = new Date().toLocaleTimeString();
-            const line = document.createElement('div');
-            line.className = `dev-status-line ${type}`;
-            line.textContent = `[${timestamp}] ${message}`;
-            devStatus.appendChild(line);
-            devStatus.scrollTop = devStatus.scrollHeight;
-        }
-        
-        // 加载示例任务
-        function loadSampleTasks() {
-            logDev('开始加载示例任务...', 'info');
-            tasks = [...sampleTasks];
-            logDev(`✅ 成功加载 ${tasks.length} 个示例任务`, 'success');
-            renderTasks();
-        }
-        
-        // 加载 JSON 文件
-        function loadJSONFile(event) {
-            const file = event.target.files[0];
-            if (!file) {
-                return;
-            }
-            
-            logDev(`开始加载 JSON 文件: ${file.name}...`, 'info');
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    logDev('✅ JSON 文件解析成功', 'success');
-                    
-                    // 尝试从不同的字段名加载任务
-                    if (data.todos && Array.isArray(data.todos)) {
-                        tasks = data.todos.map(convertTodoFormat);
-                        logDev(`✅ 从 'todos' 字段加载 ${tasks.length} 个任务`, 'success');
-                    } else if (data.tasks && Array.isArray(data.tasks)) {
-                        tasks = data.tasks.map(convertTodoFormat);
-                        logDev(`✅ 从 'tasks' 字段加载 ${tasks.length} 个任务`, 'success');
-                    } else {
-                        logDev('❌ 未找到任务数据，请检查 JSON 文件格式', 'error');
-                        return;
-                    }
-                    
-                    renderTasks();
-                } catch (error) {
-                    logDev(`❌ JSON 解析失败: ${error.message}`, 'error');
-                }
-            };
-            reader.readAsText(file);
-        }
-        
-        // 转换 todo 格式（兼容不同的 JSON 格式）
-        function convertTodoFormat(todo) {
-            return {
-                id: todo.id || todo.task_id || `task-${Date.now()}`,
-                title: todo.title || todo.task_title || '未命名任务',
-                description: todo.description || todo.progress || '',
-                status: todo.status || (todo.completed ? 'completed' : 'pending'),
-                priority: (todo.priority || 'medium').toLowerCase(),
-                assignee: todo.assignee || todo.assignee_name || 'User',
-                links: todo.links || [],
-                definitionOfDone: todo.definition_of_done || todo.definitionOfDone || [],
-                progress: todo.progress || '',
-                startedAt: todo.started_at || todo.startedAt || '',
-                completedAt: todo.completed_at || todo.completedAt || '',
-                createdAt: todo.created_at || todo.createdAt || new Date().toISOString().split('T')[0]
-            };
-        }
-        
-        // 测试 Markdown 解析
-        function parseMarkdownTest() {
-            logDev('开始测试 Markdown 解析...', 'info');
-            
-            // 模拟 Markdown 解析
-            const testMarkdown = `* [ ] 测试任务 1
-  - Priority：High
-  - Assignee：AI
-  - Feedback Required：否
-* [x] 测试任务 2
-  - Priority：Medium
-  - Assignee：User
-  - Completed At：2026-02-19`;
-            
-            logDev('测试 Markdown 内容:', 'info');
-            logDev(testMarkdown, 'info');
-            
-            // 简单解析测试
-            const parsedTasks = [];
-            const lines = testMarkdown.split('\n');
-            let currentTask = null;
-            
-            for (let line of lines) {
-                if (line.startsWith('* [') || line.startsWith('- [')) {
-                    if (currentTask) {
-                        parsedTasks.push(currentTask);
-                    }
-                    const isCompleted = line.includes('[x]');
-                    const title = line.replace(/^(\*|-)\s+\[[ x]\]\s*/, '');
-                    currentTask = {
-                        id: parsedTasks.length + 1,
-                        title,
-                        status: isCompleted ? 'completed' : 'pending',
-                        priority: 'medium',
-                        assignee: 'User',
-                        createdAt: new Date().toISOString().split('T')[0]
-                    };
-                } else if (line.includes('Priority：')) {
-                    const priority = line.match(/Priority：(high|medium|low)/i);
-                    if (priority && currentTask) {
-                        currentTask.priority = priority[1].toLowerCase();
-                    }
-                } else if (line.includes('Assignee：')) {
-                    const assignee = line.match(/Assignee：(\w+)/i);
-                    if (assignee && currentTask) {
-                        currentTask.assignee = assignee[1];
-                    }
-                }
-            }
-            
-            if (currentTask) {
-                parsedTasks.push(currentTask);
-            }
-            
-            logDev(`✅ 成功解析 ${parsedTasks.length} 个任务`, 'success');
-            parsedTasks.forEach(task => {
-                logDev(`  - ${task.title} (${task.priority}, ${task.assignee})`, 'info');
-            });
-        }
-        
-        // 测试 Markdown 生成
-        function generateMarkdownTest() {
-            logDev('开始测试 Markdown 生成...', 'info');
-            
-            const testTask = {
-                title: '测试生成 Markdown',
-                description: '这是一个测试任务',
-                priority: 'high',
-                status: 'pending',
-                assignee: 'AI',
-                createdAt: '2026-02-19'
-            };
-            
-            let markdown = '';
-            
-            // 生成任务 Markdown
-            const statusBox = testTask.status === 'completed' ? '[x]' : '[ ]';
-            markdown += `* ${statusBox} ${testTask.title}\n`;
-            markdown += `  - Priority：${testTask.priority.charAt(0).toUpperCase() + testTask.priority.slice(1)}\n`;
-            markdown += `  - Assignee：${testTask.assignee}\n`;
-            markdown += `  - Feedback Required：否\n`;
-            markdown += `  - Definition of Done：\n`;
-            markdown += `    * 测试 Markdown 生成功能\n`;
-            markdown += `    * 验证格式正确\n`;
-            markdown += `  - Progress：\n`;
-            markdown += `  - Started At：${testTask.createdAt}\n`;
-            
-            logDev('生成的 Markdown:', 'info');
-            logDev(markdown, 'info');
-            logDev('✅ Markdown 生成测试完成', 'success');
-        }
-        
-        // 测试 Git 集成
-        function testGitIntegration() {
-            logDev('开始测试 Git 集成...', 'info');
-            logDev('📋 Git 集成功能列表:', 'info');
-            logDev('  - git status: 检查 git 状态', 'info');
-            logDev('  - git add: 添加文件到暂存区', 'info');
-            logDev('  - git commit: 提交更改', 'info');
-            logDev('  - git push: 推送到远程仓库', 'info');
-            logDev('  - git pull: 从远程仓库拉取', 'info');
-            logDev('⚠️ 注意：浏览器端无法直接执行 Git 命令', 'info');
-            logDev('💡 建议：使用后端服务（Node.js/Python）来执行 Git 命令', 'info');
-            logDev('✅ Git 集成测试完成', 'success');
-        }
-        
-        // 导出任务 JSON
-        function exportTasksJSON() {
-            logDev('开始导出任务 JSON...', 'info');
-            
-            const exportData = {
-                exportTime: new Date().toISOString(),
-                version: '1.0.0-enhanced',
-                tasks: tasks,
-                stats: {
-                    total: tasks.length,
-                    pending: tasks.filter(t => t.status === 'pending').length,
-                    inProgress: tasks.filter(t => t.status === 'in-progress').length,
-                    completed: tasks.filter(t => t.status === 'completed').length
-                }
-            };
-            
-            const jsonStr = JSON.stringify(exportData, null, 2);
-            logDev('导出的 JSON 数据:', 'info');
-            logDev(jsonStr.substring(0, 500) + (jsonStr.length > 500 ? '...' : ''), 'info');
-            
-            // 下载 JSON 文件
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `todos-export-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            logDev('✅ 任务 JSON 导出成功', 'success');
-        }
-        
-        // 验证任务数据
-        function validateTasks() {
-            logDev('开始验证任务数据...', 'info');
-            
-            let errors = 0;
-            let warnings = 0;
-            
-            tasks.forEach((task, index) => {
-                // 验证必需字段
-                if (!task.title) {
-                    logDev(`❌ 任务 ${index + 1}: 缺少 title 字段`, 'error');
-                    errors++;
-                }
-                if (!task.priority) {
-                    logDev(`⚠️ 任务 ${index + 1}: 缺少 priority 字段`, 'error');
-                    warnings++;
-                }
-                if (!task.status) {
-                    logDev(`⚠️ 任务 ${index + 1}: 缺少 status 字段`, 'error');
-                    warnings++;
-                }
-                if (!task.assignee) {
-                    logDev(`⚠️ 任务 ${index + 1}: 缺少 assignee 字段`, 'error');
-                    warnings++;
-                }
-                
-                // 验证字段值
-                if (task.priority && !['high', 'medium', 'low'].includes(task.priority)) {
-                    logDev(`❌ 任务 ${index + 1}: 无效的 priority 值: ${task.priority}`, 'error');
-                    errors++;
-                }
-                if (task.status && !['pending', 'in-progress', 'completed'].includes(task.status)) {
-                    logDev(`❌ 任务 ${index + 1}: 无效的 status 值: ${task.status}`, 'error');
-                    errors++;
-                }
-            });
-            
-            logDev(`✅ 验证完成: ${tasks.length} 个任务`, 'success');
-            logDev(`   - 错误: ${errors} 个`, errors > 0 ? 'error' : 'success');
-            logDev(`   - 警告: ${warnings} 个`, warnings > 0 ? 'error' : 'success');
-            
-            if (errors === 0 && warnings === 0) {
-                logDev('🎉 所有任务数据验证通过！', 'success');
-            }
-        }
-        
-        // 清空开发日志
-        function clearDevStatus() {
-            document.getElementById('devStatus').innerHTML = '<div class="dev-status-line info">👉 日志已清空</div>';
-        }
+        // API 基础路径
+        const API_BASE = '/api';
         
         // 初始化
         async function init() {
-            logDev('🎉 Todos Web Manager 增强版（开发验证）已启动', 'success');
-            logDev('📋 可用的开发验证功能:', 'info');
-            logDev('   - 加载示例任务', 'info');
-            logDev('   - 测试 Markdown 解析', 'info');
-            logDev('   - 测试 Markdown 生成', 'info');
-            logDev('   - 测试 Git 集成', 'info');
-            logDev('   - 导出任务 JSON', 'info');
-            logDev('   - 验证任务数据', 'info');
-            
-            // 自动加载仓库里的 todos.json
-            await loadTodosFromRepo();
+            await loadTasks();
         }
         
-        // 从仓库加载 todos.json
-        async function loadTodosFromRepo() {
-            logDev('📂 尝试从仓库加载 todos.json...', 'info');
+        // 加载任务
+        async function loadTasks() {
+            if (isLoading) return;
+            isLoading = true;
+            
+            updateStatus('🔄 正在加载任务...');
+            hideError();
             
             try {
-                // 尝试从不同的路径加载
-                const paths = [
-                    '../../.trae/todos/todos.json',
-                    '../.trae/todos/todos.json',
-                    '.trae/todos/todos.json',
-                    'todos.json'
-                ];
+                const endpoint = isArchive ? '/tasks/archive' : '/tasks';
+                const response = await fetch(`${API_BASE}${endpoint}`);
                 
-                let loaded = false;
-                for (const path of paths) {
-                    try {
-                        logDev(`🔍 尝试加载: ${path}`, 'info');
-                        const response = await fetch(path);
-                        if (response.ok) {
-                            const data = await response.json();
-                            
-                            // 尝试从不同的字段名加载任务
-                            if (data.todos && Array.isArray(data.todos)) {
-                                tasks = data.todos.map(convertTodoFormat);
-                                logDev(`✅ 成功从 'todos' 字段加载 ${tasks.length} 个任务`, 'success');
-                            } else if (data.tasks && Array.isArray(data.tasks)) {
-                                tasks = data.tasks.map(convertTodoFormat);
-                                logDev(`✅ 成功从 'tasks' 字段加载 ${tasks.length} 个任务`, 'success');
-                            } else {
-                                logDev('❌ 未找到任务数据，请检查 JSON 文件格式', 'error');
-                                return;
-                            }
-                            
-                            renderTasks();
-                            loaded = true;
-                            break;
-                        }
-                    } catch (error) {
-                        logDev(`⚠️ 加载失败: ${path} - ${error.message}`, 'warning');
-                        continue;
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (isArchive) {
+                        archiveTasks = data.tasks || [];
+                        updateStatus(`✅ 已加载 ${archiveTasks.length} 个归档任务`);
+                    } else {
+                        tasks = data.tasks || [];
+                        updateStatus(`✅ 已加载 ${tasks.length} 个任务`);
+                        updateStats();
                     }
+                    applyFilters();
+                } else {
+                    throw new Error(data.message || '加载失败');
                 }
-                
-                if (!loaded) {
-                    logDev('⚠️ 无法自动加载 todos.json，请使用"📂 加载 JSON 文件"按钮手动加载', 'warning');
-                }
-                
             } catch (error) {
-                logDev(`❌ 自动加载失败: ${error.message}`, 'error');
-                logDev('💡 请使用"📂 加载 JSON 文件"按钮手动加载', 'info');
+                console.error('加载任务失败:', error);
+                showError(`❌ 加载任务失败: ${error.message}<br><br>💡 请确保后端服务器正在运行 (python3 server.py)`);
+                updateStatus('❌ 加载失败');
+                renderEmptyState('加载失败', '请检查后端服务器是否正在运行');
+            } finally {
+                isLoading = false;
             }
         }
         
-        // 标签页切换
-        function switchTab(tab) {
+        // 更新统计数据
+        function updateStats() {
+            const completed = tasks.filter(t => t.status === 'completed').length;
+            const inProgress = tasks.filter(t => t.status === 'in-progress').length;
+            const pending = tasks.filter(t => t.status === 'pending').length;
+            const total = tasks.length;
+            
+            document.getElementById('statCompleted').textContent = completed;
+            document.getElementById('statInProgress').textContent = inProgress;
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statTotal').textContent = total;
+        }
+        
+        // 更新状态
+        function updateStatus(text) {
+            document.getElementById('statusText').textContent = text;
+        }
+        
+        // 显示错误
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.innerHTML = `<div class="error-message">${message}</div>`;
+            errorDiv.style.display = 'block';
+        }
+        
+        // 隐藏错误
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        // 切换标签
+        async function switchTab(tab) {
             currentTab = tab;
+            isArchive = tab === 'archive';
+            
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
             
-            // 开发验证标签页特殊处理
-            const devPanel = document.getElementById('devPanel');
-            if (tab === 'dev') {
-                devPanel.style.display = 'block';
+            // 显示/隐藏子标签页（仅待处理标签页显示）
+            const subTabs = document.getElementById('subTabs');
+            const addTaskToggle = document.getElementById('addTaskToggle');
+            const addTaskSection = document.getElementById('addTaskSection');
+            
+            if (tab === 'pending') {
+                subTabs.style.display = 'flex';
             } else {
-                devPanel.style.display = 'block'; // 始终显示开发面板
+                subTabs.style.display = 'none';
+                currentSubTab = 'all';
             }
             
-            renderTasks();
+            if (isArchive) {
+                addTaskToggle.style.display = 'none';
+                addTaskSection.style.display = 'none';
+            } else {
+                addTaskToggle.style.display = 'block';
+                addTaskSection.style.display = 'none';
+            }
+            
+            await loadTasks();
+        }
+        
+        // 切换子标签
+        function switchSubTab(subtab) {
+            currentSubTab = subtab;
+            
+            document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-subtab="${subtab}"]`).classList.add('active');
+            
+            applyFilters();
         }
         
         // 应用筛选
@@ -966,34 +915,36 @@
         
         // 获取筛选后的任务
         function getFilteredTasks() {
-            let filtered = [...tasks];
+            const currentTasks = isArchive ? archiveTasks : tasks;
+            let filtered = [...currentTasks];
             
             // 1. 按状态筛选（标签页）
-            if (currentTab !== 'all' && currentTab !== 'dev') {
+            if (!isArchive && currentTab !== 'all') {
                 filtered = filtered.filter(task => task.status === currentTab);
-            } else if (currentTab === 'dev') {
-                // 开发验证标签页显示所有任务
-                filtered = [...tasks];
             }
             
-            // 2. 按优先级筛选
+            // 2. 按子标签页筛选（仅待处理标签页）
+            if (currentTab === 'pending' && currentSubTab !== 'all') {
+                if (currentSubTab === 'user') {
+                    filtered = filtered.filter(task => task.assignee === 'user' || task.assignee === 'user + ai');
+                } else if (currentSubTab === 'ai') {
+                    filtered = filtered.filter(task => task.assignee === 'ai');
+                }
+            }
+            
+            // 3. 按优先级筛选
             const filterPriority = document.getElementById('filterPriority').value;
             if (filterPriority !== 'all') {
                 filtered = filtered.filter(task => task.priority === filterPriority);
-            }
-            
-            // 3. 按 Assignee 筛选
-            const filterAssignee = document.getElementById('filterAssignee').value;
-            if (filterAssignee !== 'all') {
-                filtered = filtered.filter(task => task.assignee === filterAssignee);
             }
             
             // 4. 按搜索关键词筛选
             const searchQuery = document.getElementById('searchQuery').value.toLowerCase().trim();
             if (searchQuery) {
                 filtered = filtered.filter(task => 
-                    task.title.toLowerCase().includes(searchQuery) || 
-                    task.description.toLowerCase().includes(searchQuery)
+                    (task.title && task.title.toLowerCase().includes(searchQuery)) || 
+                    (task.description && task.description.toLowerCase().includes(searchQuery)) ||
+                    (task.progress && task.progress.toLowerCase().includes(searchQuery))
                 );
             }
             
@@ -1006,27 +957,302 @@
             const taskList = document.getElementById('taskList');
             
             if (filteredTasks.length === 0) {
-                taskList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📋</div>
-                        <h3>暂无匹配任务</h3>
-                        <p>尝试调整筛选条件或搜索关键词！</p>
-                    </div>
-                `;
+                renderEmptyState(
+                    isArchive ? '暂无归档任务' : '暂无匹配任务',
+                    isArchive ? '没有找到归档的任务' : '尝试调整筛选条件或搜索关键词！'
+                );
                 return;
             }
             
             taskList.innerHTML = `
                 <ul class="task-list">
-                    ${filteredTasks.map(task => `
-                        <li class="task-item">
-                            <div class="task-header">
-                                <div class="task-title">${task.title}</div>
-                                <span class="task-priority priority-${task.priority}">
-                                    ${task.priority === 'high' ? '🔴 高' : task.priority === 'medium' ? '🟡 中' : '🟢 低'}
-                                </span>
+                    ${filteredTasks.map(task => renderTaskItem(task)).join('')}
+                </ul>
+            `;
+        }
+        
+        // 渲染单个任务
+        function renderTaskItem(task) {
+            const priorityClass = `priority-${task.priority}`;
+            const priorityText = task.priority === 'high' ? '🔴 高' : task.priority === 'medium' ? '🟡 中' : '🟢 低';
+            const taskId = task.id;
+            const isExpanded = expandedTasks.has(taskId);
+            
+            const description = task.description || task.progress || '';
+            const assignee = task.assignee || 'unknown';
+            
+            let actionsHtml = '';
+            if (!isArchive) {
+                if (task.status === 'completed') {
+                    actionsHtml = `
+                        <div class="review-section">
+                            <div class="review-input-group">
+                                <textarea id="review-comment-${taskId}" placeholder="输入 Review 意见（可选）..." class="review-input"></textarea>
                             </div>
-                            <div class="task-description">${task.description}</div>
-                            <div class="task-meta">
-                                <span>👤 ${task.assignee}</span>
-                                <span>
+                            <div class="task-actions">
+                                <button class="btn-danger" onclick="submitReviewInline('${taskId}', false)">❌ 不通过</button>
+                                <button class="btn-success" onclick="submitReviewInline('${taskId}', true)">✅ 通过</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    actionsHtml = `
+                        <div class="task-actions">
+                            ${task.status !== 'in-progress' && task.status !== 'completed' ? 
+                                `<button class="btn-warning" onclick="updateTaskStatus('${taskId}', 'in-progress')">🚀 开始</button>` : ''}
+                            ${task.status !== 'completed' ? 
+                                `<button class="btn-success" onclick="updateTaskStatus('${taskId}', 'completed')">✅ 完成</button>` : ''}
+                            ${task.status === 'in-progress' || task.status === 'completed'? 
+                                `<button class="btn-secondary" onclick="updateTaskStatus('${taskId}', 'pending')">⏸️ 重置</button>` : ''}
+                        </div>
+                    `;
+                }
+            }
+            
+            const metaItems = [];
+            metaItems.push(`<span>👤 ${assignee}</span>`);
+            if (task.created_at) {
+                const date = new Date(task.created_at).toLocaleDateString('zh-CN');
+                metaItems.push(`<span>📅 ${date}</span>`);
+            }
+            if (task.status === 'completed' && task.completed_at) {
+                const completedDate = new Date(task.completed_at).toLocaleDateString('zh-CN');
+                metaItems.push(`<span>✅ ${completedDate}</span>`);
+            }
+            
+            let reviewCommentHtml = '';
+            if (task.review_comment) {
+                reviewCommentHtml = `
+                    <div class="review-comment">
+                        <h4>💬 Review 意见</h4>
+                        <p>${escapeHtml(task.review_comment)}</p>
+                    </div>
+                `;
+            }
+            
+            let detailsHtml = '';
+            if (task.definition_of_done && task.definition_of_done.length > 0) {
+                detailsHtml += `
+                    <div class="task-details-section">
+                        <h4>🎯 Definition of Done</h4>
+                        <ul>
+                            ${task.definition_of_done.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (task.links && task.links.length > 0) {
+                detailsHtml += `
+                    <div class="task-details-section">
+                        <h4>🔗 相关链接</h4>
+                        <ul>
+                            ${task.links.map(link => `<li>${escapeHtml(link)}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (task.review_history && task.review_history.length > 0) {
+                detailsHtml += `
+                    <div class="task-details-section">
+                        <h4>📋 Review 历史</h4>
+                        <ul>
+                            ${task.review_history.map(review => `
+                                <li>
+                                    ${review.approved ? '✅ 通过' : '❌ 不通过'} - 
+                                    ${new Date(review.reviewed_at).toLocaleString('zh-CN')}
+                                    ${review.comment ? `: ${escapeHtml(review.comment)}` : ''}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            return `
+                <li class="task-item">
+                    <div class="task-header">
+                        <div class="task-title" onclick="toggleTaskDetails('${taskId}')">${escapeHtml(task.title)}</div>
+                        <span class="task-priority ${priorityClass}">${priorityText}</span>
+                    </div>
+                    ${reviewCommentHtml}
+                    ${description ? `<div class="task-description">${escapeHtml(description)}</div>` : ''}
+                    <div class="task-meta">${metaItems.join('')}</div>
+                    <div class="task-details ${isExpanded ? 'expanded' : ''}" id="details-${taskId}">
+                        ${detailsHtml}
+                    </div>
+                    ${actionsHtml}
+                </li>
+            `;
+        }
+        
+        // 切换任务详情展开/折叠
+        function toggleTaskDetails(taskId) {
+            if (expandedTasks.has(taskId)) {
+                expandedTasks.delete(taskId);
+            } else {
+                expandedTasks.add(taskId);
+            }
+            
+            const detailsEl = document.getElementById(`details-${taskId}`);
+            if (detailsEl) {
+                detailsEl.classList.toggle('expanded');
+            }
+        }
+        
+        // 渲染空状态
+        function renderEmptyState(title, message) {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+        
+        // HTML 转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // 切换添加任务表单显示/隐藏
+        function toggleAddTask() {
+            const addTaskSection = document.getElementById('addTaskSection');
+            if (addTaskSection.style.display === 'none') {
+                addTaskSection.style.display = 'block';
+            } else {
+                addTaskSection.style.display = 'none';
+            }
+        }
+        
+        // 添加任务
+        async function addTask() {
+            const title = document.getElementById('taskTitle').value.trim();
+            const description = document.getElementById('taskDescription').value.trim();
+            const priority = document.getElementById('taskPriority').value;
+            const assignee = document.getElementById('taskAssignee').value;
+            
+            if (!title) {
+                showError('❌ 请输入任务标题');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/tasks`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title,
+                        description,
+                        priority,
+                        assignee,
+                        status: 'pending',
+                        feedback_required: false
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 清空表单
+                    document.getElementById('taskTitle').value = '';
+                    document.getElementById('taskDescription').value = '';
+                    
+                    // 折叠表单
+                    toggleAddTask();
+                    
+                    // 重新加载任务
+                    await loadTasks();
+                    updateStatus('✅ 任务已添加');
+                } else {
+                    throw new Error(data.message || '添加失败');
+                }
+            } catch (error) {
+                console.error('添加任务失败:', error);
+                showError(`❌ 添加任务失败: ${error.message}`);
+            }
+        }
+        
+        // 更新任务状态
+        async function updateTaskStatus(taskId, newStatus) {
+            try {
+                const response = await fetch(`${API_BASE}/tasks/${encodeURIComponent(taskId)}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        status: newStatus
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    await loadTasks();
+                    updateStatus(`✅ 任务状态已更新为 ${newStatus}`);
+                } else {
+                    throw new Error(data.message || '更新失败');
+                }
+            } catch (error) {
+                console.error('更新任务状态失败:', error);
+                showError(`❌ 更新任务状态失败: ${error.message}`);
+            }
+        }
+        
+        // 提交 Review（内联模式）
+        async function submitReviewInline(taskId, approved) {
+            const commentEl = document.getElementById(`review-comment-${taskId}`);
+            const comment = commentEl ? commentEl.value.trim() : '';
+            
+            try {
+                const response = await fetch(`${API_BASE}/tasks/${encodeURIComponent(taskId)}/review`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        approved,
+                        comment
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    await loadTasks();
+                    updateStatus(`✅ ${data.message}`);
+                } else {
+                    throw new Error(data.message || 'Review 失败');
+                }
+            } catch (error) {
+                console.error('Review 失败:', error);
+                showError(`❌ Review 失败: ${error.message}`);
+            }
+        }
+        
+        // 页面加载时初始化
+        init();
+    </script>
+</body>
+</html>
