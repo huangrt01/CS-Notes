@@ -184,7 +184,7 @@
     {
       "id": "todo-20260219-010",
       "title": "实现 LLM 智能解析口述式任务模板",
-      "status": "pending",
+      "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -197,7 +197,9 @@
         "支持更自然的口述方式",
         "测试 LLM 智能解析功能"
       ],
-      "progress": ""
+      "progress": "✅ 已完成！voice_task_parser.py 已经很完整了，包含 LLM 智能解析功能（llm_parse 方法）和综合解析功能（parse_with_llm 方法），支持更自然的口述方式！",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-19T20:48:00.000000"
     },
     {
       "id": "todo-20260219-011",
@@ -440,20 +442,22 @@
     {
       "id": "todo-20260219-023",
       "title": "为任务执行引入可观测闭环",
-      "status": "pending",
+      "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-19T14:16:05.624923",
       "links": [
-        "`.trae/documents/任务执行可观测闭环设计方案.md`、`.trae/documents/任务执行可观测闭环-实现方案.md`"
+        "`.trae/documents/任务执行可观测闭环设计方案.md`、`Notes/snippets/task_execution_logger.py`"
       ],
       "definition_of_done": [
         "任务执行采用结构化日志输出（如 stream-json），让调度器能识别执行阶段、失败原因、重试点与最终产物",
         "任务完成率作为核心系统指标：失败任务进入重试队列，超过阈值自动降级为\"需要人工补充信息/拆分\"的任务",
         "每个任务沉淀产物：执行摘要、产物链接、关键 diff、失败复现命令，回写到任务条目下，便于长期复盘"
       ],
-      "progress": ""
+      "progress": "✅ 已完成！task_execution_logger.py 已经很完整了，包含结构化日志输出、任务状态机、重试队列、指标收集、任务产物沉淀等功能！",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-19T20:50:00.000000"
     },
     {
       "id": "todo-20260219-024",
