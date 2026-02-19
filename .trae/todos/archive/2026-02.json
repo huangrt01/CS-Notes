@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-19T14:16:05.629049",
+  "updated_at": "2026-02-20T00:36:27.780869",
   "todos": [
     {
       "id": "todo-20260219-001",
@@ -512,6 +512,31 @@
         "从手机将公网文章链接发到 Lark Bot 后，Bot 自动把内容同步进仓库 Inbox；Trae 可基于 Inbox 执行后续整理"
       ],
       "progress": ""
+    },
+    {
+      "id": "todo-20260219-005",
+      "title": "测试端到端完整流程",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "user",
+      "feedback_required": false,
+      "created_at": "2026-02-19T14:16:05.624200",
+      "definition_of_done": [
+        "Lark 消息 → INBOX.md → 方舟代码模型执行 → Git commit & push → Lark 通知完成",
+        "---",
+        "#### AI 需要做的任务（优先执行）",
+        "## 待处理 (Pending)",
+        "### AI 需要做的任务（优先执行）"
+      ],
+      "completed_at": "2026-02-20T00:36:20.621507",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-20T00:36:27.780149",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-20T00:36:27.780159"
     }
   ]
 }
