@@ -35,7 +35,7 @@ class SessionOptimizer:
                 session_start = datetime.fromisoformat(state["session_start_time"])
                 session_age = (datetime.now() - session_start).total_seconds()
                 
-                # 检查 2: 状态文件最后修改时间是否太久远（超过 1 小时）
+                # 检查 2: 状态文件最后修改时间是否太久远（超过 8 小时）
                 # 如果状态文件很久没有更新，说明可能是新 session
                 file_mtime = datetime.fromtimestamp(self.state_file.stat().st_mtime)
                 file_age = (datetime.now() - file_mtime).total_seconds()
@@ -43,7 +43,7 @@ class SessionOptimizer:
                 # 检查 3: 是否有明确的重置信号（通过 last_reset 字段）
                 # 如果 last_reset 存在且 session_start_time 早于 last_reset，说明需要重置
                 
-                # 智能判断：如果 session 超过 24 小时，或者状态文件超过 1 小时没有更新，
+                # 智能判断：如果 session 超过 24 小时，或者状态文件超过 8 小时没有更新，
                 # 或者用户明确执行了 reset 命令，就认为需要重置
                 need_reset = False
                 reset_reason = ""
@@ -51,7 +51,7 @@ class SessionOptimizer:
                 if session_age > 24 * 3600:
                     need_reset = True
                     reset_reason = f"Session 已运行 {session_age/3600:.1f} 小时（超过 24 小时）"
-                elif file_age > 3600:
+                elif file_age > 8 * 3600:
                     need_reset = True
                     reset_reason = f"状态文件已 {file_age/60:.1f} 分钟没有更新（可能是新 session）"
                 
