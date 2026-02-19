@@ -875,7 +875,7 @@
         }
         
         // 初始化
-        function init() {
+        async function init() {
             logDev('🎉 Todos Web Manager 增强版（开发验证）已启动', 'success');
             logDev('📋 可用的开发验证功能:', 'info');
             logDev('   - 加载示例任务', 'info');
@@ -884,6 +884,62 @@
             logDev('   - 测试 Git 集成', 'info');
             logDev('   - 导出任务 JSON', 'info');
             logDev('   - 验证任务数据', 'info');
+            
+            // 自动加载仓库里的 todos.json
+            await loadTodosFromRepo();
+        }
+        
+        // 从仓库加载 todos.json
+        async function loadTodosFromRepo() {
+            logDev('📂 尝试从仓库加载 todos.json...', 'info');
+            
+            try {
+                // 尝试从不同的路径加载
+                const paths = [
+                    '../../.trae/todos/todos.json',
+                    '../.trae/todos/todos.json',
+                    '.trae/todos/todos.json',
+                    'todos.json'
+                ];
+                
+                let loaded = false;
+                for (const path of paths) {
+                    try {
+                        logDev(`🔍 尝试加载: ${path}`, 'info');
+                        const response = await fetch(path);
+                        if (response.ok) {
+                            const data = await response.json();
+                            
+                            // 尝试从不同的字段名加载任务
+                            if (data.todos && Array.isArray(data.todos)) {
+                                tasks = data.todos.map(convertTodoFormat);
+                                logDev(`✅ 成功从 'todos' 字段加载 ${tasks.length} 个任务`, 'success');
+                            } else if (data.tasks && Array.isArray(data.tasks)) {
+                                tasks = data.tasks.map(convertTodoFormat);
+                                logDev(`✅ 成功从 'tasks' 字段加载 ${tasks.length} 个任务`, 'success');
+                            } else {
+                                logDev('❌ 未找到任务数据，请检查 JSON 文件格式', 'error');
+                                return;
+                            }
+                            
+                            renderTasks();
+                            loaded = true;
+                            break;
+                        }
+                    } catch (error) {
+                        logDev(`⚠️ 加载失败: ${path} - ${error.message}`, 'warning');
+                        continue;
+                    }
+                }
+                
+                if (!loaded) {
+                    logDev('⚠️ 无法自动加载 todos.json，请使用"📂 加载 JSON 文件"按钮手动加载', 'warning');
+                }
+                
+            } catch (error) {
+                logDev(`❌ 自动加载失败: ${error.message}`, 'error');
+                logDev('💡 请使用"📂 加载 JSON 文件"按钮手动加载', 'info');
+            }
         }
         
         // 标签页切换
