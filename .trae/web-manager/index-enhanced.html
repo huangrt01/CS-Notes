@@ -948,7 +948,64 @@ POST   /api/git/pull           - 从远程仓库拉取
                 );
             }
             
+            // 5. 排序
+            filtered = sortTasks(filtered, currentTab, isArchive);
+            
             return filtered;
+        }
+        
+        // 排序任务
+        function sortTasks(tasksArray, tab, isArchive) {
+            const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
+            const statusOrder = { 'completed': 0, 'in-progress': 1, 'pending': 2 };
+            
+            return [...tasksArray].sort((a, b) => {
+                if (isArchive) {
+                    // 归档：按 archived_at 从新到旧
+                    const aTime = a.archived_at ? new Date(a.archived_at).getTime() : 0;
+                    const bTime = b.archived_at ? new Date(b.archived_at).getTime() : 0;
+                    return bTime - aTime;
+                }
+                
+                if (tab === 'completed') {
+                    // 已完成（待 review）：按 completed_at 从新到旧
+                    const aTime = a.completed_at ? new Date(a.completed_at).getTime() : 0;
+                    const bTime = b.completed_at ? new Date(b.completed_at).getTime() : 0;
+                    return bTime - aTime;
+                } else if (tab === 'in-progress') {
+                    // 进行中：先按优先级，再按 started_at 从新到旧
+                    const aPriority = priorityOrder[a.priority] || 2;
+                    const bPriority = priorityOrder[b.priority] || 2;
+                    if (aPriority !== bPriority) {
+                        return aPriority - bPriority;
+                    }
+                    const aTime = a.started_at ? new Date(a.started_at).getTime() : 0;
+                    const bTime = b.started_at ? new Date(b.started_at).getTime() : 0;
+                    return bTime - aTime;
+                } else if (tab === 'pending') {
+                    // 待处理：先按优先级，再按 created_at 从新到旧
+                    const aPriority = priorityOrder[a.priority] || 2;
+                    const bPriority = priorityOrder[b.priority] || 2;
+                    if (aPriority !== bPriority) {
+                        return aPriority - bPriority;
+                    }
+                    const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+                    const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+                    return bTime - aTime;
+                } else {
+                    // 全部：先按状态优先级，再按时间从新到旧
+                    const aStatus = statusOrder[a.status] || 2;
+                    const bStatus = statusOrder[b.status] || 2;
+                    if (aStatus !== bStatus) {
+                        return aStatus - bStatus;
+                    }
+                    const aTime = a.completed_at || a.started_at || a.created_at;
+                    const bTime = b.completed_at || b.started_at || b.created_at;
+                    const aTs = aTime ? new Date(aTime).getTime() : 0;
+                    const bTs = bTime ? new Date(bTime).getTime() : 0;
+                    return bTs - aTs;
+                }
+            });
         }
         
         // 渲染任务列表
