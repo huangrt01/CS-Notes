@@ -1443,6 +1443,8 @@ https://zhuanlan.zhihu.com/p/631363482
 
 * MTP、speculative decoding，均属于半自回归的范畴
 
+> 【《流匹配与扩散模型|6.S184 Flow Matching and Diffusion Models》中英字幕（Claude-3.7-s）-哔哩哔哩】 https://b23.tv/AqSBNNa
+
 ### 和 Diffusion 结合
 
 #### Google 工作
