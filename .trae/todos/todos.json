@@ -571,13 +571,14 @@
     {
       "id": "todo-20260219-030",
       "title": "Playwright 模拟浏览器抓取知乎文章",
-      "status": "pending",
+      "status": "in-progress",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-19T16:00:00.000000",
       "links": [
-        "https://playwright.dev/"
+        "https://playwright.dev/",
+        "`Notes/snippets/playwright_simple.py`"
       ],
       "definition_of_done": [
         "调研 Playwright 的使用方法",
@@ -590,7 +591,8 @@
         "知乎 API 接口也返回 403 错误",
         "RSSHub 也返回 403 错误",
         "需要使用 Playwright 模拟浏览器来绕过反爬机制"
-      ]
+      ],
+      "progress": "🔨 已创建简单的 Playwright 网页抓取脚本（Notes/snippets/playwright_simple.py），下一步安装 Playwright 并测试抓取知乎文章"
     },
     {
       "id": "todo-20260219-031",
@@ -796,7 +798,7 @@
         "最好是通过触发一条 OpenClaw 消息来触发，而不是写一套调 API 的逻辑",
         "和 Todos Web Manager 融合也有类似的问题"
       ],
-      "progress": "🔨 已创建智能解析 Skill 的基础框架（skill.json、main.py、README.md），下一步集成 LLM 智能解析"
+      "progress": "🔨 已完善智能解析 Skill，添加了简单的智能解析逻辑（提取优先级、assignee、feedback_required 等），下一步测试验证"
     },
     {
       "id": "todo-20260219-040",

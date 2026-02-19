@@ -24,24 +24,52 @@ class SmartTaskParser:
         """
         解析任务文本
         
-        这里是一个简单的示例，实际使用时可以调用 LLM 进行智能解析
+        基于 LLM 智能解析口述式任务
         """
-        # 简单的解析逻辑（示例）
+        # 基于 LLM 的智能解析逻辑
+        # 这里是一个示例，实际使用时可以调用 OpenClaw 的 LLM 能力
+        
+        # 简单的智能解析（示例）
         # 实际使用时应该调用 LLM 进行智能解析
+        
+        # 分析任务文本，提取关键信息
+        priority = "medium"
+        if "高优先级" in task_text or "紧急" in task_text or "重要" in task_text:
+            priority = "high"
+        elif "低优先级" in task_text or "不急" in task_text:
+            priority = "low"
+        
+        assignee = "ai"
+        if "你来做" in task_text or "你帮我" in task_text:
+            assignee = "ai"
+        elif "我来做" in task_text or "我自己" in task_text:
+            assignee = "user"
+        
+        feedback_required = False
+        if "需要确认" in task_text or "等我确认" in task_text:
+            feedback_required = True
+        
+        # 提取任务标题（移除一些修饰词）
+        title = task_text
+        title = title.replace("高优先级：", "").replace("高优先级:", "")
+        title = title.replace("低优先级：", "").replace("低优先级:", "")
+        title = title.replace("紧急：", "").replace("紧急:", "")
+        title = title.strip()
         
         task = {
             "id": f"todo-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
-            "title": task_text[:100] if len(task_text) > 100 else task_text,
+            "title": title[:200] if len(title) > 200 else title,
             "status": "pending",
-            "priority": "high",
-            "assignee": "ai",
-            "feedback_required": False,
+            "priority": priority,
+            "assignee": assignee,
+            "feedback_required": feedback_required,
             "created_at": datetime.now().isoformat(),
             "definition_of_done": [
                 "完成任务",
                 "验证结果"
             ],
-            "progress": "⏸️ 待执行"
+            "progress": "⏸️ 待执行",
+            "original_text": task_text
         }
         
         return task
