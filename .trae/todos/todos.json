@@ -1024,6 +1024,143 @@
       "user_requirements": [
         "todos web manager支持review意见的语音转文字"
       ]
+    },
+    {
+      "id": "todo-20260219-047",
+      "title": "实现 todo 同步脚本：将 JSON 格式的 todo 同步到 Markdown 格式",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T08:08:06.000000",
+      "links": [
+        "`.trae/todos/todos.json`、`.trae/documents/todos管理系统.md`"
+      ],
+      "definition_of_done": [
+        "设计同步脚本的架构",
+        "实现 JSON → Markdown 的同步功能",
+        "实现 Markdown → JSON 的同步功能",
+        "测试同步脚本的正确性",
+        "输出同步脚本的使用文档"
+      ],
+      "background": "新增的 todos 要能被新的 web manager 下的存储形式感知到",
+      "user_requirements": [
+        "你是如何考虑新增的todos要能被新的web manager下的存储形式感知到的"
+      ]
+    },
+    {
+      "id": "todo-20260219-048",
+      "title": "设计并实现\"沉淀指令 v2.0\"的工作流程",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T08:08:06.000000",
+      "definition_of_done": [
+        "设计沉淀指令 v2.0 的结构化模板",
+        "添加沉淀时的 checklist",
+        "设计 todo 梳理流程",
+        "实现沉淀指令的自动化工具（可选）",
+        "输出沉淀指令 v2.0 的完整文档"
+      ],
+      "background": "用户希望基于之前的沉淀指令进一步 refine，让它更系统化、更可执行",
+      "user_requirements": [
+        "\"沉淀！ 回顾你最近的工作 帮我梳理todo 想想当前todos是否有值得增加、调整的\" 是否能基于这个进一步refine一下你的沉淀指令"
+      ]
+    },
+    {
+      "id": "todo-20260219-049",
+      "title": "精炼整理 orbitos 开源笔记库介绍文章",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T08:08:06.000000",
+      "links": [
+        "http://xhslink.com/o/9Iu2CO4g9Xz"
+      ],
+      "definition_of_done": [
+        "先在笔记库中广泛搜索，找到最合适的已有的笔记",
+        "找到最合适的 section，而不是随便找个地方就放",
+        "将内容整合到合适的 section 中，而不是创建新文件",
+        "附上来源链接作为引用，用 markdown 格式标注链接",
+        "尽量精简语言，精炼整理笔记",
+        "格式上：减少不必要的加粗、尽量对齐原文件的格式",
+        "引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接",
+        "限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息"
+      ],
+      "user_requirements": [
+        "这篇文章即是开源笔记库orbitos的介绍，你看看这种知识/笔记管理的内容适合放在整个笔记系统的什么位置"
+      ]
+    },
+    {
+      "id": "todo-20260219-050",
+      "title": "精炼整理知乎文章：关于 AI Agent 的内容",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T08:08:06.000000",
+      "links": [
+        "https://www.zhihu.com/question/1999487395494588876/answer/2000362433332660070?share_code=HGYNzglkEV8h&utm_psn=2000559952910099841"
+      ],
+      "dependencies": [
+        "Playwright 模拟浏览器抓取知乎文章"
+      ],
+      "definition_of_done": [
+        "先在笔记库中广泛搜索，找到最合适的已有的笔记",
+        "找到最合适的 section，而不是随便找个地方就放",
+        "将内容整合到合适的 section 中，而不是创建新文件",
+        "附上来源链接作为引用，用 markdown 格式标注链接",
+        "尽量精简语言，精炼整理笔记",
+        "格式上：减少不必要的加粗、尽量对齐原文件的格式",
+        "引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接",
+        "限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息"
+      ]
+    },
+    {
+      "id": "todo-20260219-051",
+      "title": "精炼整理小红书文章里的 paper：谷歌关于谱表示的研究",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T08:08:06.000000",
+      "links": [
+        "http://xhslink.com/o/9eEu7AzYcHN"
+      ],
+      "definition_of_done": [
+        "先在笔记库中广泛搜索，找到最合适的已有的笔记",
+        "找到最合适的 section，而不是随便找个地方就放",
+        "将内容整合到合适的 section 中，而不是创建新文件",
+        "附上来源链接作为引用，用 markdown 格式标注链接",
+        "尽量精简语言，精炼整理笔记",
+        "格式上：减少不必要的加粗、尽量对齐原文件的格式",
+        "引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接",
+        "限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息"
+      ]
+    },
+    {
+      "id": "todo-20260219-052",
+      "title": "精炼整理微信公众号文章",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T08:08:06.000000",
+      "links": [
+        "https://mp.weixin.qq.com/s/aXnARzxBImS6HzhbJMnhGw"
+      ],
+      "definition_of_done": [
+        "先在笔记库中广泛搜索，找到最合适的已有的笔记",
+        "找到最合适的 section，而不是随便找个地方就放",
+        "将内容整合到合适的 section 中，而不是创建新文件",
+        "附上来源链接作为引用，用 markdown 格式标注链接",
+        "尽量精简语言，精炼整理笔记",
+        "格式上：减少不必要的加粗、尽量对齐原文件的格式",
+        "引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接",
+        "限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息"
+      ]
     }
   ]
 }
