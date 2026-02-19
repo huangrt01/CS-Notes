@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-19T18:50:20.519643",
+  "updated_at": "2026-02-19T18:55:49.592205",
   "todos": [
     {
       "id": "todo-20260219-001",
@@ -749,9 +749,9 @@
     },
     {
       "id": "todo-20260219-038",
-      "title": "实现 LLM 优先的智能解析流程",
+      "title": "实现 LLM 优先的智能解析流程（可选，作为增强功能）",
       "status": "pending",
-      "priority": "high",
+      "priority": "medium",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-19T18:47:07.445357",
@@ -772,7 +772,7 @@
     },
     {
       "id": "todo-20260219-039",
-      "title": "实现 OpenClaw 消息触发的交互方式",
+      "title": "实现 OpenClaw 消息触发的交互方式（方案二）",
       "status": "pending",
       "priority": "high",
       "assignee": "ai",
@@ -789,13 +789,14 @@
         "测试验证 OpenClaw 消息触发的交互方式"
       ],
       "user_requirements": [
+        "用户倾向于方案二和三融合",
         "最好是通过触发一条 OpenClaw 消息来触发，而不是写一套调 API 的逻辑",
         "和 Todos Web Manager 融合也有类似的问题"
       ]
     },
     {
       "id": "todo-20260219-040",
-      "title": "实现与 Todos Web Manager 的融合",
+      "title": "实现与 Todos Web Manager 的融合（方案三）",
       "status": "pending",
       "priority": "high",
       "assignee": "ai",
@@ -814,6 +815,7 @@
         "测试验证与 Todos Web Manager 的融合"
       ],
       "user_requirements": [
+        "用户倾向于方案二和三融合",
         "和 Todos Web Manager 融合也有类似的问题"
       ]
     },
