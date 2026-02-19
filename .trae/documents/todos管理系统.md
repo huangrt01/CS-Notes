@@ -210,6 +210,22 @@ Lark 通知完成
 
 #### AI 需要做的任务（优先执行）
 
+* [ ] 整理《流匹配与扩散模型|6.S184 Flow Matching and Diffusion Models》视频笔记
+  - Priority：high
+  - Assignee：AI
+  - Feedback Required：否
+  - Definition of Done：
+    * 先在笔记库中广泛搜索，找到最合适的已有的笔记
+    * 找到最合适的 section，而不是随便找个地方就放
+    * 将内容整合到合适的 section 中，而不是创建新文件
+    * 附上来源链接作为引用，用 markdown 格式标注链接
+    * 尽量精简语言，精炼整理笔记
+    * 格式上：减少不必要的加粗、尽量对齐原文件的格式
+    * 引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接
+    * 限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息
+  - Links：https://b23.tv/AqSBNNa
+  - 用户反馈：【《流匹配与扩散模型|6.S184 Flow Matching and Diffusion Models》中英字幕（Claude-3.7-s）-哔哩哔哩】
+
 * [x] 思考并设计自主推进任务机制的优化方案（不局限于 heartbeat）
   - Priority：high
   - Assignee：AI
