@@ -16,8 +16,8 @@ from flask_cors import CORS
 
 # 配置路径
 REPO_ROOT = Path(__file__).parent.parent.parent
-TODOS_FILE = REPO_ROOT / ".trae/documents/todos管理系统.md"
-TODO_ARCHIVE_FILE = REPO_ROOT / ".trae/documents/TODO_ARCHIVE.md"
+TODOS_FILE = REPO_ROOT / ".trae/todos/todos.json"
+TODO_ARCHIVE_DIR = REPO_ROOT / ".trae/todos/archive"
 INBOX_FILE = REPO_ROOT / ".trae/documents/INBOX.md"
 WEB_MANAGER_DIR = Path(__file__).parent
 
@@ -95,242 +95,237 @@ def git_log():
 # 任务解析功能
 # ============================================
 
-def parse_todos_from_markdown(file_path):
-    """从 Markdown 文件解析任务"""
+def load_todos_from_json(file_path):
+    """从 JSON 文件加载任务"""
     if not file_path.exists():
-        return []
+        return {
+            "version": "1.0.0",
+            "updated_at": datetime.now().isoformat(),
+            "todos": []
+        }
     
-    content = file_path.read_text(encoding='utf-8')
-    tasks = []
-    current_task = None
-    
-    lines = content.split('\n')
-    for i, line in enumerate(lines):
-        # 匹配任务行
-        task_match = re.match(r'^(\*|-)\s+\[([ x])\]\s+(.*)$', line)
-        if task_match:
-            if current_task:
-                tasks.append(current_task)
-            
-            list_marker, status_marker, title = task_match.groups()
-            current_task = {
-                'id': len(tasks) + 1,
-                'title': title.strip(),
-                'status': 'completed' if status_marker == 'x' else 'pending',
-                'priority': 'medium',
-                'assignee': 'User',
-                'description': '',
-                'links': [],
-                'definitionOfDone': [],
-                'progress': '',
-                'createdAt': '',
-                'completedAt': '',
-                'startedAt': '',
-                'lineNumber': i + 1
-            }
-        elif current_task:
-            # 解析任务属性
-            priority_match = re.match(r'^\s*-\s*Priority[：:]\s*(high|medium|low)', line, re.I)
-            if priority_match:
-                current_task['priority'] = priority_match.group(1).lower()
-            
-            assignee_match = re.match(r'^\s*-\s*Assignee[：:]\s*(\w+)', line, re.I)
-            if assignee_match:
-                current_task['assignee'] = assignee_match.group(1)
-            
-            progress_match = re.match(r'^\s*-\s*Progress[：:]\s*(.*)', line, re.I)
-            if progress_match:
-                current_task['progress'] = progress_match.group(1).strip()
-            
-            created_match = re.match(r'^\s*-\s*Started\s+At[：:]\s*(.*)', line, re.I)
-            if created_match:
-                current_task['startedAt'] = created_match.group(1).strip()
-            
-            completed_match = re.match(r'^\s*-\s*Completed\s+At[：:]\s*(.*)', line, re.I)
-            if completed_match:
-                current_task['completedAt'] = completed_match.group(1).strip()
-            
-            # 解析链接
-            link_match = re.match(r'^\s*-\s*Links[：:]\s*(.*)', line, re.I)
-            if link_match:
-                links_str = link_match.group(1).strip()
-                links = re.findall(r'`([^`]+)`', links_str)
-                current_task['links'] = links
-            
-            # 解析 Definition of Done
-            dod_match = re.match(r'^\s*-\s*Definition\s+of\s+Done[：:]\s*', line, re.I)
-            if dod_match:
-                # 继续读取后续的列表项
-                j = i + 1
-                while j < len(lines):
-                    dod_line = lines[j]
-                    dod_item_match = re.match(r'^\s*\*\s*(.*)$', dod_line)
-                    if dod_item_match:
-                        current_task['definitionOfDone'].append(dod_item_match.group(1).strip())
-                        j += 1
-                    else:
-                        break
-    
-    if current_task:
-        tasks.append(current_task)
-    
-    return tasks
+    try:
+        content = file_path.read_text(encoding='utf-8')
+        return json.loads(content)
+    except Exception as e:
+        print(f"Error loading JSON file: {e}")
+        return {
+            "version": "1.0.0",
+            "updated_at": datetime.now().isoformat(),
+            "todos": []
+        }
+
+def save_todos_to_json(data, file_path):
+    """保存任务到 JSON 文件"""
+    try:
+        data["updated_at"] = datetime.now().isoformat()
+        content = json.dumps(data, ensure_ascii=False, indent=2)
+        file_path.write_text(content, encoding='utf-8')
+        return True
+    except Exception as e:
+        print(f"Error saving JSON file: {e}")
+        return False
 
 @app.route('/api/tasks', methods=['GET'])
 def get_tasks():
     """获取任务列表"""
-    tasks = parse_todos_from_markdown(TODOS_FILE)
+    data = load_todos_from_json(TODOS_FILE)
     return jsonify({
         "success": True,
-        "tasks": tasks,
-        "total": len(tasks)
+        "data": data,
+        "tasks": data.get("todos", []),
+        "total": len(data.get("todos", []))
     })
 
 @app.route('/api/tasks/archive', methods=['GET'])
 def get_archive_tasks():
     """获取归档任务"""
-    tasks = parse_todos_from_markdown(TODO_ARCHIVE_FILE)
+    # 读取所有归档文件
+    archive_tasks = []
+    if TODO_ARCHIVE_DIR.exists():
+        for archive_file in TODO_ARCHIVE_DIR.glob("*.json"):
+            data = load_todos_from_json(archive_file)
+            archive_tasks.extend(data.get("todos", []))
+    
     return jsonify({
         "success": True,
-        "tasks": tasks,
-        "total": len(tasks)
+        "tasks": archive_tasks,
+        "total": len(archive_tasks)
     })
 
 # ============================================
 # 任务管理功能
 # ============================================
 
-def generate_task_markdown(task):
-    """生成任务 Markdown"""
-    status_box = '[x]' if task.get('status') == 'completed' else '[ ]'
-    lines = []
+def generate_task_id():
+    """生成任务 ID"""
+    today = datetime.now().strftime('%Y%m%d')
+    data = load_todos_from_json(TODOS_FILE)
+    existing_ids = [t.get('id', '') for t in data.get('todos', [])]
     
-    # 任务标题
-    lines.append(f"* {status_box} {task['title']}")
+    # 找到今天最大的序号
+    max_seq = 0
+    for task_id in existing_ids:
+        if task_id.startswith(f'todo-{today}-'):
+            try:
+                seq = int(task_id.split('-')[-1])
+                max_seq = max(max_seq, seq)
+            except ValueError:
+                pass
     
-    # 优先级
-    priority = task.get('priority', 'medium')
-    lines.append(f"  - Priority：{priority.capitalize()}")
-    
-    # Assignee
-    assignee = task.get('assignee', 'User')
-    lines.append(f"  - Assignee：{assignee}")
-    
-    # Feedback Required
-    lines.append("  - Feedback Required：否")
-    
-    # Links
-    links = task.get('links', [])
-    if links:
-        links_str = '、'.join([f'`{link}`' for link in links])
-        lines.append(f"  - Links：{links_str}")
-    
-    # Definition of Done
-    dod = task.get('definitionOfDone', [])
-    if dod:
-        lines.append("  - Definition of Done：")
-        for item in dod:
-            lines.append(f"    * {item}")
-    
-    # Progress
-    progress = task.get('progress', '')
-    if progress:
-        lines.append(f"  - Progress：{progress}")
-    
-    # Started At
-    started_at = task.get('startedAt', '')
-    if started_at:
-        lines.append(f"  - Started At：{started_at}")
-    
-    # Completed At
-    completed_at = task.get('completedAt', '')
-    if completed_at:
-        lines.append(f"  - Completed At：{completed_at}")
-    
-    return '\n'.join(lines)
+    return f'todo-{today}-{max_seq + 1:03d}'
 
 @app.route('/api/tasks', methods=['POST'])
 def add_task():
     """添加新任务"""
     data = request.json
-    task = {
+    
+    # 创建新任务
+    new_task = {
+        'id': data.get('id', generate_task_id()),
         'title': data.get('title', ''),
-        'description': data.get('description', ''),
+        'status': data.get('status', 'pending'),
         'priority': data.get('priority', 'medium'),
-        'status': 'pending',
-        'assignee': data.get('assignee', 'User'),
+        'assignee': data.get('assignee', 'user'),
+        'feedback_required': data.get('feedback_required', False),
+        'created_at': data.get('created_at', datetime.now().isoformat()),
         'links': data.get('links', []),
-        'definitionOfDone': data.get('definitionOfDone', []),
-        'startedAt': datetime.now().strftime('%Y-%m-%d')
+        'definition_of_done': data.get('definition_of_done', []),
+        'progress': data.get('progress', ''),
+        'started_at': data.get('started_at', ''),
+        'completed_at': data.get('completed_at', '')
     }
     
-    # 生成 Markdown
-    task_markdown = generate_task_markdown(task)
+    # 加载现有数据
+    todos_data = load_todos_from_json(TODOS_FILE)
+    todos_data['todos'].append(new_task)
     
-    # 写入 INBOX.md
-    if INBOX_FILE.exists():
-        content = INBOX_FILE.read_text(encoding='utf-8')
-        content = task_markdown + '\n\n' + content
-        INBOX_FILE.write_text(content, encoding='utf-8')
+    # 保存
+    if save_todos_to_json(todos_data, TODOS_FILE):
+        return jsonify({
+            "success": True,
+            "message": "任务已添加",
+            "task": new_task
+        })
     else:
-        INBOX_FILE.write_text(task_markdown + '\n', encoding='utf-8')
-    
-    return jsonify({
-        "success": True,
-        "message": "任务已添加到 INBOX.md",
-        "task": task
-    })
+        return jsonify({
+            "success": False,
+            "message": "保存任务失败"
+        }), 500
 
-@app.route('/api/tasks/<int:task_id>/status', methods=['PUT'])
+@app.route('/api/tasks/<task_id>', methods=['PUT'])
+def update_task(task_id):
+    """更新任务"""
+    data = request.json
+    
+    # 加载现有数据
+    todos_data = load_todos_from_json(TODOS_FILE)
+    tasks = todos_data.get('todos', [])
+    
+    # 找到任务
+    task_found = False
+    for i, task in enumerate(tasks):
+        if task.get('id') == task_id:
+            # 更新任务
+            tasks[i].update(data)
+            task_found = True
+            break
+    
+    if not task_found:
+        return jsonify({
+            "success": False,
+            "message": f"任务 {task_id} 不存在"
+        }), 404
+    
+    # 保存
+    if save_todos_to_json(todos_data, TODOS_FILE):
+        return jsonify({
+            "success": True,
+            "message": f"任务 {task_id} 已更新"
+        })
+    else:
+        return jsonify({
+            "success": False,
+            "message": "保存任务失败"
+        }), 500
+
+@app.route('/api/tasks/<task_id>/status', methods=['PUT'])
 def update_task_status(task_id):
     """更新任务状态"""
     data = request.json
     new_status = data.get('status', 'pending')
     
-    # 这里简化处理，实际应该读取文件、找到任务、更新状态、写回文件
-    return jsonify({
-        "success": True,
-        "message": f"任务 {task_id} 状态已更新为 {new_status}"
-    })
+    # 加载现有数据
+    todos_data = load_todos_from_json(TODOS_FILE)
+    tasks = todos_data.get('todos', [])
+    
+    # 找到任务
+    task_found = False
+    for i, task in enumerate(tasks):
+        if task.get('id') == task_id:
+            tasks[i]['status'] = new_status
+            
+            # 如果完成，设置完成时间
+            if new_status == 'completed' and not tasks[i].get('completed_at'):
+                tasks[i]['completed_at'] = datetime.now().isoformat()
+            
+            # 如果开始，设置开始时间
+            if new_status == 'in-progress' and not tasks[i].get('started_at'):
+                tasks[i]['started_at'] = datetime.now().isoformat()
+            
+            task_found = True
+            break
+    
+    if not task_found:
+        return jsonify({
+            "success": False,
+            "message": f"任务 {task_id} 不存在"
+        }), 404
+    
+    # 保存
+    if save_todos_to_json(todos_data, TODOS_FILE):
+        return jsonify({
+            "success": True,
+            "message": f"任务 {task_id} 状态已更新为 {new_status}"
+        })
+    else:
+        return jsonify({
+            "success": False,
+            "message": "保存任务失败"
+        }), 500
+
+@app.route('/api/tasks/<task_id>', methods=['DELETE'])
+def delete_task(task_id):
+    """删除任务"""
+    # 加载现有数据
+    todos_data = load_todos_from_json(TODOS_FILE)
+    tasks = todos_data.get('todos', [])
+    
+    # 找到并删除任务
+    original_len = len(tasks)
+    todos_data['todos'] = [t for t in tasks if t.get('id') != task_id]
+    
+    if len(todos_data['todos']) == original_len:
+        return jsonify({
+            "success": False,
+            "message": f"任务 {task_id} 不存在"
+        }), 404
+    
+    # 保存
+    if save_todos_to_json(todos_data, TODOS_FILE):
+        return jsonify({
+            "success": True,
+            "message": f"任务 {task_id} 已删除"
+        })
+    else:
+        return jsonify({
+            "success": False,
+            "message": "保存任务失败"
+        }), 500
 
 # ============================================
 # 开发验证功能
 # ============================================
-
-@app.route('/api/dev/parse-test', methods=['POST'])
-def dev_parse_test():
-    """测试 Markdown 解析"""
-    data = request.json
-    markdown = data.get('markdown', '')
-    
-    # 临时写入文件
-    temp_file = REPO_ROOT / '.trae/documents/temp-test.md'
-    temp_file.write_text(markdown, encoding='utf-8')
-    
-    # 解析
-    tasks = parse_todos_from_markdown(temp_file)
-    
-    # 删除临时文件
-    temp_file.unlink(missing_ok=True)
-    
-    return jsonify({
-        "success": True,
-        "tasks": tasks,
-        "total": len(tasks)
-    })
-
-@app.route('/api/dev/generate-test', methods=['POST'])
-def dev_generate_test():
-    """测试 Markdown 生成"""
-    data = request.json
-    task = data.get('task', {})
-    
-    markdown = generate_task_markdown(task)
-    
-    return jsonify({
-        "success": True,
-        "markdown": markdown
-    })
 
 @app.route('/api/dev/validate', methods=['POST'])
 def dev_validate():
@@ -342,8 +337,14 @@ def dev_validate():
     warnings = []
     
     for i, task in enumerate(tasks):
+        if not task.get('id'):
+            errors.append(f"任务 {i+1}: 缺少 id 字段")
+        
         if not task.get('title'):
             errors.append(f"任务 {i+1}: 缺少 title 字段")
+        
+        if not task.get('status'):
+            errors.append(f"任务 {i+1}: 缺少 status 字段")
         
         priority = task.get('priority')
         if priority and priority not in ['high', 'medium', 'low']:
@@ -385,15 +386,18 @@ if __name__ == '__main__':
     print("=" * 60)
     print(f"仓库根目录: {REPO_ROOT}")
     print(f"任务文件: {TODOS_FILE}")
-    print(f"归档文件: {TODO_ARCHIVE_FILE}")
+    print(f"归档目录: {TODO_ARCHIVE_DIR}")
     print(f"INBOX 文件: {INBOX_FILE}")
     print("=" * 60)
     print("可用的 API:")
-    print("  - GET  /api/tasks          获取任务列表")
-    print("  - POST /api/tasks          添加新任务")
-    print("  - GET  /api/git/status      获取 Git 状态")
-    print("  - POST /api/git/commit      提交 Git 更改")
-    print("  - POST /api/git/push        推送到远程仓库")
+    print("  - GET    /api/tasks              获取任务列表")
+    print("  - POST   /api/tasks              添加新任务")
+    print("  - PUT    /api/tasks/<id>         更新任务")
+    print("  - DELETE /api/tasks/<id>         删除任务")
+    print("  - PUT    /api/tasks/<id>/status  更新任务状态")
+    print("  - GET    /api/git/status          获取 Git 状态")
+    print("  - POST   /api/git/commit          提交 Git 更改")
+    print("  - POST   /api/git/push            推送到远程仓库")
     print("=" * 60)
     print("启动服务器: http://localhost:5000")
     print("=" * 60)
