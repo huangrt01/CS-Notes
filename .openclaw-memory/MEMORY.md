@@ -305,3 +305,70 @@
 - **重要经验**：
   - 用户说"不用停止执行任务了"
   - 用户希望重新设计方案，减少 hard code 规则，更多依赖 LLM 的智能理解能力
+
+---
+
+## 2026-02-19 新增记忆
+
+### 19. E2E 落地思路：不是写了、实现了就算 done，而是要用起来、用好
+- **用户的核心观点**：
+  - "落地的定义是【成为了本仓库在各种交互方式下的默认setting，并体验和效果良好】，而不仅是有个设计文档和玩具代码即算落地"
+  - "尤其注意沉淀前面我希望你e2e落地的思路，并不是写了、实现了就算done，而是要用起来、用好"
+- **具体例子**：
+  - task_execution_logger.py：已经很完整了，但还需要成为本仓库在各种交互方式下的默认 setting
+  - voice_task_parser.py：已经很完整了，但还需要实际用起来
+  - Plan Generator、Hybrid Executor：已经验证过了，但还需要成为默认的任务执行链路
+- **下一步**：要想办法让这些工具真正用起来，而不只是写了代码
+
+### 20. ClawHub 发现与使用经验（2026-02-19）
+- **发现 ClawHub 命令行工具**：`clawhub`
+- **功能**：搜索、安装、更新、发布 agent skills
+- **常用命令**：
+  - `clawhub search <query>` - 搜索 skills
+  - `clawhub install <slug>` - 安装 skill
+  - `clawhub inspect <slug>` - 查看 skill 详情
+  - `clawhub explore` - 浏览最新更新的 skills
+- **找到的有用 skills**：
+  - playwright-scraper-skill：Playwright 网页抓取，反爬保护
+  - zhihu：知乎 AI Bot
+  - zhihu-hot-cn：知乎热榜监控
+  - browser-relay-xiaohongshu：通过 HTTP relay 控制用户本地 Chromium 浏览器
+- **todo-20260219-031 是长期探索项**：完成标准是成功运用10个新skill帮助解决用户的真实任务和问题瓶颈
+
+### 21. Whisper 模型重复下载问题解决（2026-02-19）
+- **问题**：whisper CLI 默认模型是 "turbo"，但我们只有 "large-v3-turbo.pt"
+- **根因**：whisper CLI 使用默认模型 "turbo" 时，会下载 `turbo.pt`，但我们只有 `large-v3-turbo.pt`
+- **解决方案**：创建符号链接 `turbo.pt -> large-v3-turbo.pt`
+- **结果**：现在 whisper 使用默认模型 "turbo" 时，就会直接使用已下载的 large-v3-turbo.pt，不会再重复下载了！
+
+### 22. Session-optimizer 检测条件优化（2026-02-19）
+- **问题**：session-optimizer 的检测条件有点 hack
+- **用户反馈**：把 1 小时的阈值改成 8 小时
+- **调整**：将状态文件更新阈值从 1 小时改成 8 小时
+- **更优雅的方案思考**：未来可以设计更优雅的新 session 检测机制
+
+---
+
+## 2026-02-20 新增记忆
+
+### 23. Todos Web Manager 重大优化 - Review 流程（2026-02-20）
+- **新的标签页顺序**：👀 已完成（待 review） → 🚀 进行中 → ⏸️ 待处理 → 📦 归档 → 📋 全部
+- **Review 流程**：
+  - **通过**: 任务自动归档，记录 Review 历史
+  - **不通过**: 任务回到 `in-progress`，附带 Review 意见，AI 可以看到并改善
+- **关键经验**：
+  - Review 流程让 AI 和用户的协作更加高效和可控
+  - 通过的任务自动归档，不通过的任务退回并附带意见
+  - 优先展示需要用户关注的内容
+  - 任务统计和详情展开提升用户体验
+
+### 24. todo-20260219-001 Review 意见与处理（2026-02-20）
+- **用户 Review 不通过意见**：没有想清楚 cs-notes-git-sync 的使用场景，如果限定在"增加todo"这一意图的场景，这个skill需要考虑怎么更好地优化落地，以及我怀疑效果不一定比不要这个skill直接让ai整理todo并增加要好，因此这个skill的核心要点是：增加todo时，能确保git会commit push上去，从而多端能同步todos。既然弄清楚了目的，那么希望你从最根本的目的出发思考这一task，如有必要，可cancel这一task
+- **AI 理解并同意**：
+  - 确实可以 cancel 这一 task
+  - 因为现在的工作流程已经满足了根本目的：AI 整理 todo 并添加到 `.trae/todos/todos.json`，然后使用 todo-push.sh 自动 commit 和 push 到 git，从而实现多端同步
+  - 这个工作流程更简单直接，不需要额外的 Skill
+
+### 25. 新增两个 todo（2026-02-20）
+- **todo-20260220-001**: 调研如何让 openclaw 记录（log）下来自己的一些关键命令行调用（比如安装依赖，比如git操作等）
+- **todo-20260220-002**: Todos Web Manager 支持 Review 意见的语音转文字
