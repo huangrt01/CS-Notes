@@ -466,9 +466,38 @@
             }
         ];
         
+        // Phase 4 新增：从 JSON 读取 todos
+        async function loadTasksFromJSON() {
+            try {
+                // 尝试从 JSON 文件读取 todos
+                const response = await fetch('../../.trae/todos/todos.json');
+                if (response.ok) {
+                    const data = await response.json();
+                    tasks = data.todos.map(todo => ({
+                        id: todo.id,
+                        title: todo.title,
+                        description: todo.progress || '',
+                        priority: todo.priority,
+                        status: todo.status,
+                        assignee: todo.assignee ? todo.assignee.charAt(0).toUpperCase() + todo.assignee.slice(1) : 'User',
+                        createdAt: todo.created_at.split('T')[0]
+                    }));
+                    renderTasks();
+                } else {
+                    // 如果读取失败，使用示例任务
+                    tasks = [...sampleTasks];
+                    renderTasks();
+                }
+            } catch (error) {
+                // 如果出错，使用示例任务
+                console.error('读取 JSON 失败，使用示例任务:', error);
+                tasks = [...sampleTasks];
+                renderTasks();
+            }
+        }
+
         function init() {
-            tasks = [...sampleTasks];
-            renderTasks();
+            loadTasksFromJSON();
         }
         
         function switchTab(tab) {
