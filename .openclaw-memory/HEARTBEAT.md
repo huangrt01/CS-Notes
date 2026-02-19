@@ -6,7 +6,7 @@
 
 ```
 # 在两次用户干预期间最多执行的任务数量（可配置，未来可以调高）
-MAX_TASKS_BETWEEN_INTERVENTIONS = 4
+MAX_TASKS_BETWEEN_INTERVENTIONS = 8
 
 # 最多并发的子 agent 数量
 MAX_CONCURRENT_SUBAGENTS = 5
