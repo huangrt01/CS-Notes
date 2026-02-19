@@ -1208,6 +1208,28 @@
       "user_requirements": [
         "你（openclaw）回复我的消息不及时，查看openclaw配置看能否优化（所有tui里的你的进展都实时发给我）"
       ]
+    },
+    {
+      "id": "todo-20260220-005",
+      "title": "Todo Web Manager 及其整套 todo 管理的异步体系可对各种 git 项目开发（不局限于 csnotes）生效",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T01:45:00.000000",
+      "links": [
+        "`.trae/web-manager/`、`.trae/todos/`"
+      ],
+      "definition_of_done": [
+        "分析当前 Todo Web Manager 及其整套 todo 管理的异步体系的架构",
+        "识别哪些部分是与 CS-Notes 项目强耦合的",
+        "设计解耦方案，使其可对各种 git 项目开发生效",
+        "实现解耦方案",
+        "测试验证"
+      ],
+      "user_requirements": [
+        "todo web manager及其整套todo管理的异步体系可对各种git项目开发（不局限于csnotes）生效"
+      ]
     }
   ]
 }
