@@ -843,6 +843,33 @@
         "整理出更明确的 Todo"
       ],
       "completed_at": "2026-02-19T18:50:20.519627"
+    },
+    {
+      "id": "todo-20260219-042",
+      "title": "修复 session-optimizer 的新 session 检测问题：用户执行 /reset 后 session 耗时还是不对",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T19:08:00.000000",
+      "links": [
+        "`Notes/snippets/session-optimizer.py`、`CS-Notes/.openclaw-session-optimizer.json`"
+      ],
+      "definition_of_done": [
+        "分析问题根因：session-optimizer 不知道什么时候有新的 session 开始",
+        "设计解决方案：每次检查时智能判断是否需要重置 session",
+        "实现自动检测新 session 的功能",
+        "测试验证：用户执行 /reset 后 session 耗时显示正确",
+        "更新文档"
+      ],
+      "background": [
+        "用户执行 /reset 后，session-optimizer 还是显示从 2026-02-17 开始的 session 耗时",
+        "状态文件中的 session_start_time 没有被更新",
+        "session-optimizer 只是被动地保存状态，它不知道什么时候有新的 session 开始"
+      ],
+      "progress": "✅ 已完成！修复了 session-optimizer 的新 session 检测问题，现在可以智能检测并自动重置 session 了",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-19T19:11:17.414912"
     }
   ]
 }

@@ -24,28 +24,92 @@ class SessionOptimizer:
         self.state = self.load_state()
     
     def load_state(self):
-        """加载状态"""
+        """加载状态，智能检测是否需要重置 session"""
         if self.state_file.exists():
             try:
                 with open(self.state_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+                    state = json.load(f)
+                
+                # 智能检测是否需要重置 session
+                # 检查 1: session 开始时间是否太久远（超过 24 小时）
+                session_start = datetime.fromisoformat(state["session_start_time"])
+                session_age = (datetime.now() - session_start).total_seconds()
+                
+                # 检查 2: 状态文件最后修改时间是否太久远（超过 1 小时）
+                # 如果状态文件很久没有更新，说明可能是新 session
+                file_mtime = datetime.fromtimestamp(self.state_file.stat().st_mtime)
+                file_age = (datetime.now() - file_mtime).total_seconds()
+                
+                # 检查 3: 是否有明确的重置信号（通过 last_reset 字段）
+                # 如果 last_reset 存在且 session_start_time 早于 last_reset，说明需要重置
+                
+                # 智能判断：如果 session 超过 24 小时，或者状态文件超过 1 小时没有更新，
+                # 或者用户明确执行了 reset 命令，就认为需要重置
+                need_reset = False
+                reset_reason = ""
+                
+                if session_age > 24 * 3600:
+                    need_reset = True
+                    reset_reason = f"Session 已运行 {session_age/3600:.1f} 小时（超过 24 小时）"
+                elif file_age > 3600:
+                    need_reset = True
+                    reset_reason = f"状态文件已 {file_age/60:.1f} 分钟没有更新（可能是新 session）"
+                
+                if need_reset:
+                    print(f"[提示] 检测到可能需要重置 session：{reset_reason}")
+                    print(f"[提示] 自动重置 session...")
+                    return self._reset_state(state)
+                
+                return state
             except Exception as e:
                 print(f"[警告] 加载状态失败: {e}")
         
         # 创建新状态
+        return self._create_new_state()
+    
+    def _create_new_state(self):
+        """创建新的状态"""
         new_state = {
             "session_start_time": datetime.now().isoformat(),
             "warnings_given": [],
             "last_reset": None,
             "history": [],
             "last_archive_count": 0,
-            "tasks_completed_in_session": 0
+            "tasks_completed_in_session": 0,
+            "last_check_time": datetime.now().isoformat()
         }
         
         # 初始化时记录当前的 archive 数量
         new_state["last_archive_count"] = self.count_archived_tasks()
         
         # 立即保存
+        try:
+            with open(self.state_file, 'w', encoding='utf-8') as f:
+                json.dump(new_state, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"[警告] 保存状态失败: {e}")
+        
+        return new_state
+    
+    def _reset_state(self, old_state):
+        """重置状态，保留历史记录"""
+        # 记录历史
+        if "history" not in old_state:
+            old_state["history"] = []
+        
+        old_state["history"].append({
+            "start_time": old_state["session_start_time"],
+            "end_time": datetime.now().isoformat(),
+            "warnings_given": old_state.get("warnings_given", []),
+            "tasks_completed": old_state.get("tasks_completed_in_session", 0)
+        })
+        
+        # 创建新状态，保留历史记录
+        new_state = self._create_new_state()
+        new_state["history"] = old_state["history"]
+        new_state["last_reset"] = datetime.now().isoformat()
+        
+        # 保存
         try:
             with open(self.state_file, 'w', encoding='utf-8') as f:
                 json.dump(new_state, f, ensure_ascii=False, indent=2)
@@ -91,6 +155,9 @@ class SessionOptimizer:
     
     def check_session(self):
         """检查 session 状态，返回是否需要切换"""
+        # 更新最后检查时间
+        self.state["last_check_time"] = datetime.now().isoformat()
+        
         session_age = (datetime.now() - datetime.fromisoformat(self.state["session_start_time"])).total_seconds()
         
         # 计算更友好的时间显示
@@ -153,7 +220,9 @@ class SessionOptimizer:
         # 记录警告
         if warnings:
             self.state["warnings_given"].extend(warnings)
-            self.save_state()
+        
+        # 保存状态（包含 last_check_time）
+        self.save_state()
         
         return need_reset
     
