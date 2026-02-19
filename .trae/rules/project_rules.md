@@ -117,3 +117,30 @@
 5. 实施路径
 6. 风险与挑战
 7. 总结与展望
+
+---
+
+## Todo 单一数据源设定（2026-02-19 更新）
+* **重要：从 2026-02-19 开始，以 JSON 为单一数据源！**
+* **唯一数据源**：
+  - ✅ `.trae/todos/todos.json` - 主任务文件
+  - ✅ `.trae/todos/archive/YYYY-MM.json` - 归档任务文件（按月份）
+* **不再维护的文件**：
+  - ❌ ~~`.trae/documents/todos管理系统.md`~~ - 仅保留设计和提示，不再维护实际 todo 列表
+  - ❌ ~~`.trae/documents/TODO_ARCHIVE.md`~~ - 仅保留提示，不再维护归档列表
+* **Web 可视化工具**：
+  - `.trae/web-manager/index-enhanced.html` - 增强版 Web 界面
+  - 支持通过 File API 加载 `.trae/todos/todos.json`
+  - 支持任务筛选、搜索、排序
+  - 支持导出任务 JSON
+* **可用工具**：
+  - `Notes/snippets/todo_migrator.py` - Markdown → JSON 迁移工具（已完成迁移）
+  - `.trae/web-manager/simple-server.py` - 简单 HTTP 服务器（无需 Flask）
+  - `.trae/web-manager/server.py` - Flask 后端（待修复 blinker 包冲突）
+* **JSON 数据结构**：
+  - 任务 ID 格式：`todo-YYYYMMDD-XXX`（例如：`todo-20260219-001`）
+  - 必需字段：`id`、`title`、`status`、`priority`、`assignee`、`feedback_required`、`created_at`
+  - 可选字段：`links`、`definition_of_done`、`progress`、`started_at`、`completed_at`
+* **备份文件**：
+  - `.trae/documents/todos管理系统.md.backup-2026-02-19`
+  - `.trae/documents/TODO_ARCHIVE.md.backup-2026-02-19`

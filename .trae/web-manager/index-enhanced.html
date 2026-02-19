@@ -424,8 +424,9 @@
                 <h3>🔧 开发验证工具</h3>
                 <div class="dev-row">
                     <button class="dev-btn" onclick="loadSampleTasks()">📥 加载示例任务</button>
+                    <button class="dev-btn dev-btn-success" onclick="document.getElementById('jsonFileInput').click()">📂 加载 JSON 文件</button>
+                    <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="loadJSONFile(event)">
                     <button class="dev-btn dev-btn-secondary" onclick="parseMarkdownTest()">📝 测试 Markdown 解析</button>
-                    <button class="dev-btn dev-btn-success" onclick="generateMarkdownTest()">📄 测试 Markdown 生成</button>
                     <button class="dev-btn dev-btn-danger" onclick="clearDevStatus()">🗑️ 清空日志</button>
                 </div>
                 <div class="dev-row">
@@ -629,6 +630,59 @@
             tasks = [...sampleTasks];
             logDev(`✅ 成功加载 ${tasks.length} 个示例任务`, 'success');
             renderTasks();
+        }
+        
+        // 加载 JSON 文件
+        function loadJSONFile(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+            
+            logDev(`开始加载 JSON 文件: ${file.name}...`, 'info');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    logDev('✅ JSON 文件解析成功', 'success');
+                    
+                    // 尝试从不同的字段名加载任务
+                    if (data.todos && Array.isArray(data.todos)) {
+                        tasks = data.todos.map(convertTodoFormat);
+                        logDev(`✅ 从 'todos' 字段加载 ${tasks.length} 个任务`, 'success');
+                    } else if (data.tasks && Array.isArray(data.tasks)) {
+                        tasks = data.tasks.map(convertTodoFormat);
+                        logDev(`✅ 从 'tasks' 字段加载 ${tasks.length} 个任务`, 'success');
+                    } else {
+                        logDev('❌ 未找到任务数据，请检查 JSON 文件格式', 'error');
+                        return;
+                    }
+                    
+                    renderTasks();
+                } catch (error) {
+                    logDev(`❌ JSON 解析失败: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        // 转换 todo 格式（兼容不同的 JSON 格式）
+        function convertTodoFormat(todo) {
+            return {
+                id: todo.id || todo.task_id || `task-${Date.now()}`,
+                title: todo.title || todo.task_title || '未命名任务',
+                description: todo.description || todo.progress || '',
+                status: todo.status || (todo.completed ? 'completed' : 'pending'),
+                priority: (todo.priority || 'medium').toLowerCase(),
+                assignee: todo.assignee || todo.assignee_name || 'User',
+                links: todo.links || [],
+                definitionOfDone: todo.definition_of_done || todo.definitionOfDone || [],
+                progress: todo.progress || '',
+                startedAt: todo.started_at || todo.startedAt || '',
+                completedAt: todo.completed_at || todo.completedAt || '',
+                createdAt: todo.created_at || todo.createdAt || new Date().toISOString().split('T')[0]
+            };
         }
         
         // 测试 Markdown 解析

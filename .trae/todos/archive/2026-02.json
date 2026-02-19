@@ -1,42 +1,171 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-19T08:38:43.773064",
+  "updated_at": "2026-02-19T14:16:05.629049",
   "todos": [
     {
       "id": "todo-20260219-001",
+      "title": "实现 Todos Web Manager 核心功能 + 开发验证能力增强",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T14:16:05.626102",
+      "links": [
+        "`.trae/documents/INBOX.md`、`.trae/documents/Todos-Web-Manager-核心功能实现方案.md`、`.trae/web-manager/index.html`、`.trae/web-manager/index-enhanced.html`、`.trae/web-manager/server.py`、`.trae/documents/Todos-Web-Manager-开发验证增强报告.md`"
+      ],
+      "definition_of_done": [
+        "显示任务列表",
+        "添加新任务",
+        "标记任务完成",
+        "任务分类和筛选",
+        "优先级设置",
+        "手机端快速提交任务",
+        "开发验证能力增强（Git 集成、Markdown 解析/生成测试、任务数据验证、JSON 导出）"
+      ],
+      "progress": "✅ 已完成！Todos Web Manager 开发验证能力增强完成！",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-19"
+    },
+    {
+      "id": "todo-20260219-002",
+      "title": "实现 Todos Web Manager Phase 2 + 开发验证能力增强",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T14:16:05.626209",
+      "links": [
+        "`.trae/web-manager/index.html`、`.trae/web-manager/index-enhanced.html`、`.trae/web-manager/server.py`、`.trae/documents/Todos-Web-Manager-核心功能实现方案.md`、`.trae/documents/Todos-Web-Manager-开发验证增强报告.md`"
+      ],
+      "definition_of_done": [
+        "实现任务分类和筛选",
+        "实现搜索功能",
+        "实现 Git 集成",
+        "部署到火山引擎",
+        "开发验证能力增强（Git 集成、Markdown 解析/生成测试、任务数据验证、JSON 导出）"
+      ],
+      "progress": "✅ 已完成！Todos Web Manager Phase 2 + 开发验证能力增强完成！",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-19"
+    },
+    {
+      "id": "todo-20260219-003",
+      "title": "测试 Plan Generator、Plan Executor、Task Executor",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T14:16:05.626308",
+      "links": [
+        "`.trae/openclaw-skills/plan-generator/`、`.trae/openclaw-skills/plan-executor/`、`.trae/openclaw-skills/hybrid-executor/`、`Notes/snippets/task_executor.py`、`.trae/documents/Plan-Generator-Hybrid-Executor-验证报告.md`"
+      ],
+      "definition_of_done": [
+        "测试 Plan Generator",
+        "测试 Plan Executor",
+        "测试 Task Executor",
+        "验证功能正常"
+      ],
+      "progress": "✅ 已完成！Plan Generator 和 Hybrid Executor 都验证通过，已创建验证报告",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-19"
+    },
+    {
+      "id": "todo-20260219-004",
+      "title": "端到端验证 Plan Generator + Hybrid Executor 完整流程",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T14:16:05.626376",
+      "links": [
+        "`.trae/openclaw-skills/plan-generator/`、`.trae/openclaw-skills/hybrid-executor/`、`.trae/documents/Plan-Mode-混合执行实现方案.md`、`.trae/documents/Plan-Generator-Hybrid-Executor-端到端验证报告.md`"
+      ],
+      "definition_of_done": [
+        "模拟用户发出一些命令或 task",
+        "执行这些 task，基于新的 plan 和 hybrid executor 的能力",
+        "走通端到端完整流程",
+        "输出完整的验证报告"
+      ],
+      "progress": "✅ 已完成！端到端验证成功！创建了 Python 脚本并验证运行正常",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-19"
+    },
+    {
+      "id": "todo-20260219-005",
+      "title": "思考并设计自主推进任务机制的优化方案（不局限于 heartbeat）",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T14:16:05.626442",
+      "links": [
+        "HEARTBEAT.md、MEMORY.md、`.trae/documents/自主推进任务机制优化方案.md`"
+      ],
+      "definition_of_done": [
+        "从两方面思考：1) 结合当前 heartbeat 机制本身怎么优化 2) 跳出这个局限性，思考怎么去优化",
+        "基于 OpenClaw 现有能力，考虑配合一些新的能力",
+        "输出完整的优化方案文档"
+      ],
+      "progress": "✅ 已完成！设计了完整的优化方案，包含 3 个方案和实施路线图",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-19"
+    },
+    {
+      "id": "todo-20260219-006",
+      "title": "调研 openclaw 的各种配置参数，独立分析/让我选择更适合我们场景的",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": true,
+      "created_at": "2026-02-19T14:16:05.626502",
+      "links": [
+        "`/root/.openclaw/openclaw.json`、OpenClaw 官方文档、`.trae/documents/OpenClaw-配置参数分析与推荐.md`"
+      ],
+      "definition_of_done": [
+        "调研 OpenClaw 的各种配置参数",
+        "独立分析各种配置参数的优缺点",
+        "推荐更适合我们场景的配置参数",
+        "让用户选择更适合的配置"
+      ],
+      "progress": "✅ 已完成！分析了所有配置参数，推荐保持当前配置，只做微小调整",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-19"
+    },
+    {
+      "id": "todo-20260219-007",
       "title": "验证 OpenClaw 可用 Skills 和编码能力",
       "status": "completed",
       "priority": "medium",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.770328"
+      "created_at": "2026-02-19T14:16:05.626585"
     },
     {
-      "id": "todo-20260219-002",
+      "id": "todo-20260219-008",
       "title": "配置火山引擎方舟 API",
       "status": "completed",
       "priority": "medium",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.770382"
+      "created_at": "2026-02-19T14:16:05.626626"
     },
     {
-      "id": "todo-20260219-003",
+      "id": "todo-20260219-009",
       "title": "通过 Lark 发送第一个编码任务",
       "status": "completed",
       "priority": "medium",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.770414"
+      "created_at": "2026-02-19T14:16:05.626657"
     },
     {
-      "id": "todo-20260219-004",
+      "id": "todo-20260219-010",
       "title": "基于 OpenClaw 实现 Top Lean AI 榜单每日监控与通知",
       "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.770461",
+      "created_at": "2026-02-19T14:16:05.626705",
       "completed_at": "2026-02-17",
       "links": [
         "Notes/AI-Agent-Product&amp;PE.md、top-lean-ai-monitor.py、.trae/documents/TopLeanAI-OpenClaw集成设计.md"
@@ -52,13 +181,13 @@
       ]
     },
     {
-      "id": "todo-20260219-005",
+      "id": "todo-20260219-011",
       "title": "探索如何让你能阅读微信公众号的文章",
       "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.770549",
+      "created_at": "2026-02-19T14:16:05.626784",
       "completed_at": "2026-02-17",
       "definition_of_done": [
         "研究微信公众号文章的反爬机制",
@@ -68,13 +197,13 @@
       "progress": "已完成 ✅"
     },
     {
-      "id": "todo-20260219-006",
+      "id": "todo-20260219-012",
       "title": "创建 speech-to-text 工具，用于处理音频附件",
       "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.770599",
+      "created_at": "2026-02-19T14:16:05.626834",
       "completed_at": "2026-02-17",
       "definition_of_done": [
         "研究可用的 speech-to-text 方案（Whisper API、本地 Whisper、云 API 等）",
@@ -84,13 +213,13 @@
       "progress": "已完成 ✅"
     },
     {
-      "id": "todo-20260219-007",
+      "id": "todo-20260219-013",
       "title": "火山引擎端：创建cs-notes-git-sync Skill",
       "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.770635",
+      "created_at": "2026-02-19T14:16:05.626869",
       "completed_at": "2026-02-17",
       "links": [
         "`.trae/documents/OpenClaw集成方案.md`、`.trae/openclaw-skills/cs-notes-git-sync/`"
@@ -104,13 +233,13 @@
       ]
     },
     {
-      "id": "todo-20260219-008",
+      "id": "todo-20260219-014",
       "title": "结合 OpenClaw 能力与 Lark 集成",
       "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.770687",
+      "created_at": "2026-02-19T14:16:05.626919",
       "completed_at": "2026-02-17",
       "links": [
         "`Notes/AI-Agent-Product&amp;PE.md`（OpenClaw深度调研）、`.trae/documents/todos管理系统.md`、`.trae/documents/OpenClaw集成方案.md`"
@@ -126,13 +255,13 @@
       ]
     },
     {
-      "id": "todo-20260219-009",
+      "id": "todo-20260219-015",
       "title": "设计实现 OpenClaw session 管理优化方案，避免 token 超限错误 + Token Usage 优化",
       "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.770740",
+      "created_at": "2026-02-19T14:16:05.626970",
       "completed_at": "2026-02-16",
       "links": [
         "https://www.answeroverflow.com/m/1469215145874948199、MEMORY.md、session-management-optimization.md",
@@ -213,13 +342,13 @@
       "started_at": "2026-02-16"
     },
     {
-      "id": "todo-20260219-010",
+      "id": "todo-20260219-016",
       "title": "设计实现 OpenClaw session 管理优化方案，避免 token 超限错误 + Token Usage 优化",
       "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.771628",
+      "created_at": "2026-02-19T14:16:05.627862",
       "started_at": "2026-02-17",
       "completed_at": "2026-02-17",
       "links": [
@@ -233,13 +362,13 @@
       "progress": ""
     },
     {
-      "id": "todo-20260219-011",
+      "id": "todo-20260219-017",
       "title": "探索如何让你能阅读微信公众号的文章",
       "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.771681",
+      "created_at": "2026-02-19T14:16:05.627917",
       "started_at": "2026-02-17",
       "completed_at": "2026-02-17",
       "links": [
@@ -252,13 +381,13 @@
       "progress": ""
     },
     {
-      "id": "todo-20260219-012",
+      "id": "todo-20260219-018",
       "title": "创建 speech-to-text 工具，用于处理音频附件",
       "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.771720",
+      "created_at": "2026-02-19T14:16:05.627960",
       "started_at": "2026-02-17",
       "completed_at": "2026-02-17",
       "links": [
@@ -271,13 +400,13 @@
       "progress": ""
     },
     {
-      "id": "todo-20260219-013",
+      "id": "todo-20260219-019",
       "title": "验证 cs-notes-git-sync Skill的能力",
       "status": "completed",
       "priority": "medium",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.771761",
+      "created_at": "2026-02-19T14:16:05.627999",
       "started_at": "2026-02-17",
       "completed_at": "2026-02-17",
       "links": [
@@ -291,13 +420,13 @@
       "progress": ""
     },
     {
-      "id": "todo-20260219-014",
+      "id": "todo-20260219-020",
       "title": "分析并整合 cs-notes-git-sync 和方舟代码模型",
       "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.771810",
+      "created_at": "2026-02-19T14:16:05.628048",
       "started_at": "2026-02-17",
       "completed_at": "2026-02-17",
       "links": [
@@ -310,13 +439,13 @@
       "progress": ""
     },
     {
-      "id": "todo-20260219-015",
+      "id": "todo-20260219-021",
       "title": "实现任务状态同步到Lark的通知机制",
       "status": "completed",
       "priority": "medium",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.771852",
+      "created_at": "2026-02-19T14:16:05.628093",
       "started_at": "2026-02-17",
       "completed_at": "2026-02-17",
       "links": [
@@ -330,13 +459,13 @@
       "progress": ""
     },
     {
-      "id": "todo-20260219-016",
+      "id": "todo-20260219-022",
       "title": "trae-agent 调研",
       "status": "completed",
       "priority": "low",
       "assignee": "ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.771892",
+      "created_at": "2026-02-19T14:16:05.628131",
       "links": [
         "https://github.com/bytedance/trae-agent"
       ],
@@ -348,13 +477,13 @@
       "progress": ""
     },
     {
-      "id": "todo-20260219-017",
+      "id": "todo-20260219-023",
       "title": "解决 OpenClaw Gateway device token mismatch 问题，恢复 cron 工具等 Gateway API 的使用",
       "status": "completed",
       "priority": "high",
       "assignee": "user",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.771937",
+      "created_at": "2026-02-19T14:16:05.628173",
       "started_at": "2026-02-17",
       "completed_at": "2026-02-17",
       "links": [
@@ -368,13 +497,13 @@
       "progress": ""
     },
     {
-      "id": "todo-20260219-018",
+      "id": "todo-20260219-024",
       "title": "接入 Lark Bot 自动写入 Inbox",
       "status": "completed",
       "priority": "high",
       "assignee": "user + ai",
       "feedback_required": false,
-      "created_at": "2026-02-19T08:38:43.771990",
+      "created_at": "2026-02-19T14:16:05.628230",
       "completed_at": "2026-02-17",
       "links": [
         "`.trae/documents/INBOX.md`、`.trae/openclaw-skills/cs-notes-git-sync/`"
