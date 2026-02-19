@@ -980,6 +980,50 @@
       "user_requirements": [
         "这是一个长期探索项，完成的标准是成功运用10个新skill帮助解决了用户的真实任务和问题瓶颈"
       ]
+    },
+    {
+      "id": "todo-20260220-001",
+      "title": "调研如何让 openclaw 记录（log）下来自己的一些关键命令行调用（比如安装依赖，比如git操作等）",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T00:50:00.000000",
+      "links": [
+        "OpenClaw 官方文档、`.trae/documents/`"
+      ],
+      "definition_of_done": [
+        "调研 OpenClaw 是否有相关的配置或能力",
+        "如果没有，思考如何自己实现一个简单的 log 机制",
+        "设计方案，记录关键命令行调用（安装依赖、git 操作等）",
+        "实现方案",
+        "测试验证"
+      ],
+      "user_requirements": [
+        "调研如何让openclaw记录（log）下来自己的一些关键命令行调用（比如安装依赖，比如git操作等）"
+      ]
+    },
+    {
+      "id": "todo-20260220-002",
+      "title": "Todos Web Manager 支持 Review 意见的语音转文字",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T00:50:00.000000",
+      "links": [
+        "`.trae/web-manager/index-enhanced.html`、`Notes/snippets/speech_to_text.py`"
+      ],
+      "definition_of_done": [
+        "在 Todos Web Manager 的 Review 意见输入框旁边添加语音输入按钮",
+        "支持使用浏览器 Web Speech API 或 Whisper 进行语音转文字",
+        "语音转文字的结果自动填充到 Review 意见输入框",
+        "用户可以编辑后再提交 Review",
+        "测试验证"
+      ],
+      "user_requirements": [
+        "todos web manager支持review意见的语音转文字"
+      ]
     }
   ]
 }
