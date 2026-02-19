@@ -567,6 +567,53 @@
         "测试所有 API 端点正常工作"
       ],
       "progress": "问题已记录，待修复"
+    },
+    {
+      "id": "todo-20260219-030",
+      "title": "Playwright 模拟浏览器抓取知乎文章",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T16:00:00.000000",
+      "links": [
+        "https://playwright.dev/"
+      ],
+      "definition_of_done": [
+        "调研 Playwright 的使用方法",
+        "实现 Playwright 模拟浏览器抓取知乎文章的功能",
+        "测试 Playwright 抓取知乎文章的效果",
+        "将抓取的内容整理到笔记库中"
+      ],
+      "background": [
+        "web_fetch 工具直接请求知乎网页返回 403 错误",
+        "知乎 API 接口也返回 403 错误",
+        "RSSHub 也返回 403 错误",
+        "需要使用 Playwright 模拟浏览器来绕过反爬机制"
+      ]
+    },
+    {
+      "id": "todo-20260219-031",
+      "title": "基于 ClawHub 增强能力，摸索完整的发掘 skill、增强能力的流程",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T16:00:00.000000",
+      "definition_of_done": [
+        "探索 ClawHub 相关能力",
+        "摸索如何基于 ClawHub 增强我的能力",
+        "能更好应对我们这整个场景的需求",
+        "帮助我成为更好的我",
+        "落地验证完整的发掘 skill、增强能力的流程"
+      ],
+      "user_requirements": [
+        "你现在可以使用 ClawHub 相关能力了",
+        "摸索一下基于 ClawHub 增强你的能力",
+        "能更好应对我们这整个场景的需求",
+        "帮助你成为更好的你",
+        "落地验证完整地发掘 skill、增强你的能力的流程"
+      ]
     }
   ]
 }
