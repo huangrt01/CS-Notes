@@ -1297,7 +1297,21 @@ POST   /api/git/pull           - 从远程仓库拉取
                 const data = await response.json();
                 
                 if (data.success) {
+                    // 如果当前在归档标签页，先切换到主任务标签页更新统计
+                    const wasArchive = isArchive;
+                    if (wasArchive) {
+                        isArchive = false;
+                    }
+                    
+                    // 重新加载任务和统计
                     await loadTasks();
+                    
+                    // 如果之前在归档标签页，重新加载归档数据
+                    if (wasArchive) {
+                        isArchive = true;
+                        await loadTasks();
+                    }
+                    
                     updateStatus(`✅ ${data.message}`);
                 } else {
                     throw new Error(data.message || 'Review 失败');
