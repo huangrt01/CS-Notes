@@ -1099,6 +1099,26 @@ TODO
 * [星野](https://www.xingyeai.com/)
 * [Replika](https://replika.ai)
 
+#### AI 生产力工具与笔记系统
+
+##### OrbitOS 开源笔记库
+
+> 来源：http://xhslink.com/o/9Iu2CO4g9Xz
+> 整理时间：2026-02-20
+
+OrbitOS 是一个开源的 AI 生产力笔记系统，主打 AI 辅助的笔记管理和知识整理功能。
+
+**核心特点：**
+- **AI 驱动**：集成 AI 能力，辅助笔记整理和知识管理
+- **开源**：项目开源，社区可参与贡献和定制
+- **Obsidian 集成**：与 Obsidian 等主流笔记工具配合使用
+- **生产力提升**：专注于提高科研和学习效率
+
+**标签**：#ai、#obsidian、#生产力提升、#高效生产力、#人类高质量科研工具
+
+**相关工具：**
+- [生成这篇文章的一键md文件转换小玩具，兼笔记管理](https://github.com/huangrt01/Markdown-Transformer-and-Uploader)
+
 #### 定制Agent
 
 * GPTs
