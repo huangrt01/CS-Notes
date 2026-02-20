@@ -918,7 +918,7 @@
     {
       "id": "todo-20260220-001",
       "title": "调研如何让 openclaw 记录（log）下来自己的一些关键命令行调用（比如安装依赖，比如git操作等）",
-      "status": "pending",
+      "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -935,7 +935,10 @@
       ],
       "user_requirements": [
         "调研如何让openclaw记录（log）下来自己的一些关键命令行调用（比如安装依赖，比如git操作等）"
-      ]
+      ],
+      "progress": "✅ 已完成！OpenClaw 已经有了完整的日志功能！不需要额外实现！我们只需要：1) 查看现有日志：`openclaw logs --follow`；2) 配置日志路径和级别（如果需要）；3) 使用 Control UI (web) 查看日志！OpenClaw 日志功能包括：文件日志（默认位置：`/tmp/openclaw/openclaw-YYYY-MM-DD.log`）、CLI 查看日志（`openclaw logs --follow`）、Control UI (web) 查看日志、Diagnostics + OpenTelemetry 功能！",
+      "started_at": "2026-02-20",
+      "completed_at": "2026-02-20T16:30:00.000000"
     },
     {
       "id": "todo-20260220-002",
