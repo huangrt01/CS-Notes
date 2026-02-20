@@ -1164,6 +1164,27 @@
       "user_requirements": [
         "todo web manager及其整套todo管理的异步体系可对各种git项目开发（不局限于csnotes）生效"
       ]
+    },
+    {
+      "id": "todo-20260220-006",
+      "title": "整理知乎专栏文章到笔记库中，注意和笔记中已有的 agent sandbox 完美讨论融合起来",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T09:15:00.000000",
+      "links": [
+        "https://zhuanlan.zhihu.com/p/1999938129465979624"
+      ],
+      "definition_of_done": [
+        "阅读知乎专栏文章",
+        "找到笔记中已有的 agent sandbox 完美讨论（gaoce 写的）",
+        "将文章内容整理到笔记中，补充更多角度和基础知识",
+        "与已有的讨论完美融合"
+      ],
+      "user_requirements": [
+        "注意和笔记中已有的 agent sandbox 完美讨论融合起来，那个讨论是 gaoce 写的，比这篇水平高，因此这篇更多是补充更多角度和基础知识"
+      ]
     }
   ]
 }
