@@ -25,6 +25,10 @@ ALLOWED_FOLDERS=(
     "创作/"
     ".openclaw-memory/"
     "memory/"
+)
+
+# Git add 白名单文件：仅允许仓库根目录下的这些文件
+ALLOWED_FILES=(
     "HEARTBEAT.md"
 )
 
@@ -71,7 +75,20 @@ is_file_allowed() {
         fi
     done
     
-    # 检查是否在白名单中
+    # 检查是否在白名单文件中（仓库根目录下的特定文件）
+    for allowed_file in "${ALLOWED_FILES[@]}"; do
+        if [[ "$file" == "$allowed_file" ]]; then
+            # 检查是否需要排除
+            for exclude in "${EXCLUDE_PATTERNS[@]}"; do
+                if [[ "$file" == *"$exclude"* ]]; then
+                    return 1
+                fi
+            done
+            return 0
+        fi
+    done
+    
+    # 检查是否在白名单文件夹中
     local in_allowed=0
     for allowed in "${ALLOWED_FOLDERS[@]}"; do
         if [[ "$file" == "$allowed"* ]]; then
