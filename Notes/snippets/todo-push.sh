@@ -18,13 +18,14 @@ DEFAULT_BRANCH="master"
 # OpenClaw 工作区路径（相对于 REPO_ROOT 的父目录）
 OPENCLAW_WORKSPACE="$(dirname "$REPO_ROOT")"
 
-# Git add 白名单：仅允许这些文件夹
+# Git add 白名单：仅允许这些文件夹和文件
 ALLOWED_FOLDERS=(
     "Notes/"
     ".trae/"
     "创作/"
     ".openclaw-memory/"
     "memory/"
+    "HEARTBEAT.md"
 )
 
 # Git add 黑名单：绝对禁止的文件夹
