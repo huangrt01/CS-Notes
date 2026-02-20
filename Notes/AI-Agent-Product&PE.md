@@ -1108,8 +1108,6 @@ TODO
 
 OrbitOS 是一个开源的 AI 生产力笔记系统，基于 Obsidian，主打 AI 辅助的笔记管理和知识整理功能。
 
-**链接：**
-- http://xhslink.com/o/9Iu2CO4g9Xz
 
 #### 定制Agent
 

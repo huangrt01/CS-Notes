@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-21T00:14:53.659086",
+  "updated_at": "2026-02-21T00:32:12.605051",
   "todos": [
     {
       "id": "todo-20260219-001",
@@ -1192,6 +1192,79 @@
         }
       ],
       "archived_at": "2026-02-21T00:14:53.658401"
+    },
+    {
+      "id": "todo-20260219-049",
+      "title": "精炼整理 orbitos 开源笔记库介绍文章",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T08:08:06.000000",
+      "links": [
+        "http://xhslink.com/o/9Iu2CO4g9Xz"
+      ],
+      "definition_of_done": [
+        "先在笔记库中广泛搜索，找到最合适的已有的笔记",
+        "找到最合适的 section，而不是随便找个地方就放",
+        "将内容整合到合适的 section 中，而不是创建新文件",
+        "附上来源链接作为引用，用 markdown 格式标注链接",
+        "尽量精简语言，精炼整理笔记",
+        "格式上：减少不必要的加粗、尽量对齐原文件的格式",
+        "引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接",
+        "限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息"
+      ],
+      "progress": "✅ 已完成！成功在 AI-Agent-Product&PE.md 中添加了新 subsection \"AI 生产力工具与笔记系统\"，专门介绍 OrbitOS 开源笔记库！",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-20T01:47:00.000000",
+      "user_requirements": [
+        "这篇文章即是开源笔记库orbitos的介绍，你看看这种知识/笔记管理的内容适合放在整个笔记系统的什么位置"
+      ],
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-21T00:26:33.148415",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-21T00:26:33.148428"
+    },
+    {
+      "id": "todo-20260220-007",
+      "title": "精炼整理微信公众号文章，似乎笔记库中已有mid training相关的章节，请整合",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T09:15:00.000000",
+      "links": [
+        "https://mp.weixin.qq.com/s/jUIR_5XUfZH1nMkjemqx_g"
+      ],
+      "definition_of_done": [
+        "使用 web_fetch 工具直接获取微信公众号文章内容",
+        "先在笔记库中广泛搜索，找到最合适的已有的笔记",
+        "找到最合适的 section，而不是随便找个地方就放",
+        "将内容整合到合适的 section 中，而不是创建新文件",
+        "附上来源链接作为引用，用 markdown 格式标注链接",
+        "尽量精简语言，精炼整理笔记",
+        "格式上：减少不必要的加粗、尽量对齐原文件的格式",
+        "引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接",
+        "限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息"
+      ],
+      "progress": "✅ 已完成！AI-Algorithms.md 中已经有关于 Mid-training 的 section，并且已经有了这篇微信公众号文章的链接，内容已经完整！",
+      "started_at": "2026-02-20",
+      "completed_at": "2026-02-20T11:10:00.000000",
+      "user_requirements": [
+        "这篇精炼整理笔记，似乎笔记库中已有mid training相关的章节，请整合"
+      ],
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-21T00:32:12.603217",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-21T00:32:12.603226"
     }
   ]
 }

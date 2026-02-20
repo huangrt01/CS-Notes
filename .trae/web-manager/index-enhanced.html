@@ -1127,6 +1127,75 @@ POST   /api/git/pull           - 从远程仓库拉取
                 `;
             }
             
+            // 执行指标
+            if (task.execution_metrics) {
+                const metrics = task.execution_metrics;
+                detailsHtml += `
+                    <div class="task-details-section">
+                        <h4>📊 执行指标</h4>
+                        <ul>
+                            ${metrics.started_at ? `<li>🚀 开始时间: ${new Date(metrics.started_at).toLocaleString('zh-CN')}</li>` : ''}
+                            ${metrics.completed_at ? `<li>✅ 完成时间: ${new Date(metrics.completed_at).toLocaleString('zh-CN')}</li>` : ''}
+                            ${metrics.execution_time_seconds > 0 ? `<li>⏱️ 执行时间: ${(metrics.execution_time_seconds / 60).toFixed(1)} 分钟</li>` : ''}
+                            ${metrics.retry_count > 0 ? `<li>🔄 重试次数: ${metrics.retry_count}</li>` : ''}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            // 执行日志
+            if (task.execution_log && task.execution_log.length > 0) {
+                const stageIcons = {
+                    'planning': '📝',
+                    'executing': '🔨',
+                    'verifying': '✅',
+                    'completed': '🎉',
+                    'failed': '❌'
+                };
+                detailsHtml += `
+                    <div class="task-details-section">
+                        <h4>📜 执行日志</h4>
+                        <ul>
+                            ${task.execution_log.map(log => `
+                                <li>
+                                    ${stageIcons[log.stage] || '📌'} 
+                                    ${new Date(log.timestamp).toLocaleTimeString('zh-CN')} - 
+                                    ${escapeHtml(log.message)}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            // 沉淀产物
+            if (task.artifacts) {
+                const artifacts = task.artifacts;
+                let artifactsHtml = '';
+                
+                if (artifacts.execution_summary) {
+                    artifactsHtml += `<p><strong>执行摘要:</strong> ${escapeHtml(artifacts.execution_summary)}</p>`;
+                }
+                
+                if (artifacts.product_links && artifacts.product_links.length > 0) {
+                    artifactsHtml += `
+                        <p><strong>产物链接:</strong></p>
+                        <ul>
+                            ${artifacts.product_links.map(link => `<li>${escapeHtml(link)}</li>`).join('')}
+                        </ul>
+                    `;
+                }
+                
+                if (artifactsHtml) {
+                    detailsHtml += `
+                        <div class="task-details-section">
+                            <h4>📦 沉淀产物</h4>
+                            ${artifactsHtml}
+                        </div>
+                    `;
+                }
+            }
+            
             return `
                 <li class="task-item">
                     <div class="task-header">
