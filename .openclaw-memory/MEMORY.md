@@ -387,3 +387,41 @@
 - **学到的经验**：
   - 无论 AI 正在执行什么任务，收到用户的新消息时必须立即回复，绝对不能让任务阻塞对话
   - 这是最高优先级的原则，高于任何后台任务
+
+### 28. 修正 orbitos 介绍的幻觉问题（2026-02-20）
+- **事件**：用户指出 orbitos 介绍里加入了不相关内容，立即修正，仅保留引用+基于 obsidian 的点
+- **经验沉淀**：笔记整理无幻觉原则：仅保留真实内容，不要加入不相关的信息
+- **相关 Commit**：https://github.com/huangrt01/CS-Notes/commit/019af92a3ef64364443a1b384080a37751ec5e4c
+
+### 29. 创建失败尝试记录文件（2026-02-20）
+- **事件**：用户要求遇到失败时在技术文档记录跑的命令和错误，创建了 `.trae/documents/失败尝试记录.md`
+- **经验沉淀**：失败尝试记录原则：遇到失败时在技术文档记录跑的命令和错误
+- **相关 Commit**：https://github.com/huangrt01/CS-Notes/commit/d560539
+
+### 30. 修复 todo-push 无法识别中文名的问题（2026-02-20）
+- **事件**：直接修复 todo-push 无法识别中文名的问题：1）添加 locale 设置（LANG/LC_ALL/LC_CTYPE=en_US.UTF-8）；2）改用 git status --porcelain 的输出来获取文件名，更可靠
+- **经验沉淀**：修复 todo-push 中文识别的优雅方式：1）添加 locale 设置；2）改用 git status --porcelain 的输出来获取文件名，更可靠
+- **相关 Commit**：https://github.com/huangrt01/CS-Notes/commit/a66a00fef5c42f69cba819e1695ce5cdc48102e2
+
+### 31. 对比 OpenClaw 和 Trae Agent 的能力（2026-02-20）
+- **事件**：以"整理微信公众号文章到 Mid Training 章节"为具体案例，公平对比 OpenClaw 和 Trae Agent 的能力
+- **重要发现**：
+  - Trae Agent（修复前）：工具使用不熟悉，生成了大量临时文件，没有实际修改文件，步骤冗余，Token 消耗大
+  - Trae Agent（修复后）：工具使用正常，但仍然生成了大量临时文件，仍然没有实际修改文件，步骤更简洁，Token 消耗降低
+  - OpenClaw：实际修改了文件，根据 project rules 更精炼合理地整合了内容，没有生成临时文件，步骤简洁高效，Token 消耗少
+- **相关 Commit**：https://github.com/huangrt01/CS-Notes/commit/4b4fd07db068c166e0560756219e5f9cf2bd91e9
+
+### 32. 修复 Trae Agent 的 bash tool（2026-02-20）
+- **事件**：调研为什么 Trae Agent 连 ls dir 这种基础指令都报错，并解决这个问题。发现问题根因：Trae Agent 运行 bash 命令时 PATH 环境变量没有正确设置！修改了 bash_tool.py 文件，确保 PATH 环境变量正确设置，包含常用目录（/usr/local/bin、/usr/bin、/bin、/root/.local/bin）
+- **修复效果**：修复后 Trae Agent 的步骤从 24 步降低到 18 步，Token 消耗从 536,451 降低到 341,646（降低了约 36%）
+- **相关 Commit**：https://github.com/huangrt01/CS-Notes/commit/8b443aa783a3368b76d6fb5df5a1dd69bb241b21
+
+### 33. 创建 OpenClaw vs Trae Agent 对比报告（2026-02-20）
+- **事件**：创建了一个报告，直观呈现 OpenClaw 和 Trae Agent 二者的产物实际区别！报告包含：执行统计、执行过程、执行结果、执行产物、直观对比表、产物实际区别、适用场景对比、结论
+- **报告文件**：`.trae/documents/OpenClaw-vs-Trae-Agent-对比报告.md`
+- **相关 Commit**：https://github.com/huangrt01/CS-Notes/commit/6691435
+
+### 34. 修复 todo-push.sh 中文件名解析的问题（2026-02-20）
+- **事件**：修复 todo-push.sh 中文件名解析的问题，从 `sed 's/^...//'` 改成 `awk '{print substr($0, 4)}'`，更可靠地提取文件名
+- **修复效果**：todo-push.sh 现在可以正确处理中文文件名了！
+- **相关 Commit**：https://github.com/huangrt01/CS-Notes/commit/eea18f67ab8a36bde907ba1553bb143bc769fd8e

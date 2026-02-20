@@ -24,6 +24,7 @@ ALLOWED_FOLDERS=(
     ".trae/"
     "创作/"
     ".openclaw-memory/"
+    "memory/"
 )
 
 # Git add 黑名单：绝对禁止的文件夹

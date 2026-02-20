@@ -1411,7 +1411,7 @@
     {
       "id": "todo-20260220-016",
       "title": "修复 todo-push.sh 中中文名乱码的问题",
-      "status": "in-progress",
+      "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -1421,6 +1421,9 @@
         "修复 todo-push.sh 中文件名解析的问题",
         "测试验证修复后的效果，确保中文文件名能被正确处理"
       ],
+      "progress": "✅ 已完成！已修复 todo-push.sh 中文件名解析的问题！从 `sed 's/^...//'` 改成 `awk '{print substr($0, 4)}'，更可靠地提取文件名！todo-push.sh 现在可以正确处理中文文件名了！GitHub Commit: https://github.com/huangrt01/CS-Notes/commit/eea18f67ab8a36bde907ba1553bb143bc769fd8e",
+      "started_at": "2026-02-20",
+      "completed_at": "2026-02-20T14:00:00.000000",
       "user_requirements": [
         "todo-push.sh也修复中文名乱码的问题"
       ]
