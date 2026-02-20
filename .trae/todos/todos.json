@@ -1233,6 +1233,49 @@
       "user_requirements": [
         "我发现你现在：1）有时不会自动push/pull了 请想办法改正，并反思沉淀"
       ]
+    },
+    {
+      "id": "todo-20260220-009",
+      "title": "在具备联网搜索能力后，去搜索并下载 \"Numerical Precision in Deep Learning: FP32, FP16, and BF16 for LLMs and CTR Systems\" 这篇 PDF 文件，然后整理笔记",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T09:30:00.000000",
+      "definition_of_done": [
+        "在具备联网搜索能力后，去搜索这篇 PDF 文件",
+        "下载这篇 PDF 文件",
+        "先在笔记库中广泛搜索，找到最合适的已有的笔记",
+        "找到最合适的 section，而不是随便找个地方就放",
+        "将内容整合到合适的 section 中，而不是创建新文件",
+        "附上来源链接作为引用，用 markdown 格式标注链接",
+        "尽量精简语言，精炼整理笔记",
+        "格式上：减少不必要的加粗、尽量对齐原文件的格式",
+        "引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接",
+        "限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息"
+      ],
+      "user_requirements": [
+        "在具备联网搜索能力后，去搜索并下载 \"Numerical Precision in Deep Learning: FP32, FP16, and BF16 for LLMs and CTR Systems\" 这篇 PDF 文件，然后整理笔记"
+      ]
+    },
+    {
+      "id": "todo-20260220-010",
+      "title": "节后解决 ECS 的 SSH 问题",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "user",
+      "feedback_required": false,
+      "created_at": "2026-02-20T09:30:00.000000",
+      "links": [
+        "OpenClaw Web Manager"
+      ],
+      "definition_of_done": [
+        "解决 ECS 的 SSH 登录问题",
+        "确保可以正常访问 ECS 服务器"
+      ],
+      "user_requirements": [
+        "节后解决 ECS 的 SSH 问题"
+      ]
     }
   ]
 }
