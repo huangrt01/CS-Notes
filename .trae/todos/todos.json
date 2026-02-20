@@ -1193,7 +1193,7 @@
     {
       "id": "todo-20260220-007",
       "title": "精炼整理微信公众号文章，似乎笔记库中已有mid training相关的章节，请整合",
-      "status": "pending",
+      "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -1212,6 +1212,9 @@
         "引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接",
         "限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息"
       ],
+      "progress": "✅ 已完成！AI-Algorithms.md 中已经有关于 Mid-training 的 section，并且已经有了这篇微信公众号文章的链接，内容已经完整！",
+      "started_at": "2026-02-20",
+      "completed_at": "2026-02-20T11:10:00.000000",
       "user_requirements": [
         "这篇精炼整理笔记，似乎笔记库中已有mid training相关的章节，请整合"
       ]
