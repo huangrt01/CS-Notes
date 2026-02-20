@@ -3,6 +3,11 @@
 # 严格控制 git add 范围，保护隐私
 # 集成 OpenClaw 记忆文件同步功能
 
+# 设置 locale，确保能正确处理中文文件名
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+
 # 配置
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LOG_DIR="$REPO_ROOT/.trae/logs"
@@ -190,30 +195,23 @@ main() {
     log "INFO" "步骤 2/3: 过滤允许的文件（仅 Notes/、.trae/、创作/）"
     local allowed_files=()
     
-    # 使用更可靠的方式获取文件名（支持中文）
-    # 先获取所有已修改的文件
-    while IFS= read -r file; do
-        if [ -n "$file" ]; then
-            if is_file_allowed "$file"; then
-                allowed_files+=("$file")
-                log "INFO" "  ✓ $file"
-            else
-                log "WARN" "  [跳过] $file"
+    # 使用 git status --porcelain 的输出来获取文件名，这样更可靠
+    # 解析 git status --porcelain 的输出，提取文件名
+    while IFS= read -r line; do
+        if [ -n "$line" ]; then
+            # 提取文件名（跳过前面的状态码）
+            # git status --porcelain 的输出格式："XY 文件名"，其中 XY 是状态码
+            local file=$(echo "$line" | sed 's/^...//')
+            if [ -n "$file" ]; then
+                if is_file_allowed "$file"; then
+                    allowed_files+=("$file")
+                    log "INFO" "  ✓ $file"
+                else
+                    log "WARN" "  [跳过] $file"
+                fi
             fi
         fi
-    done < <(git diff --name-only)
-    
-    # 再获取所有未跟踪的文件
-    while IFS= read -r file; do
-        if [ -n "$file" ]; then
-            if is_file_allowed "$file"; then
-                allowed_files+=("$file")
-                log "INFO" "  ✓ $file"
-            else
-                log "WARN" "  [跳过] $file"
-            fi
-        fi
-    done < <(git ls-files --others --exclude-standard)
+    done < <(git status --porcelain)
     
     # 去重
     local unique_allowed_files=()

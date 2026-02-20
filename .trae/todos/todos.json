@@ -1349,6 +1349,30 @@
       "user_requirements": [
         "\"沉淀！ 回顾你最近的工作 帮我梳理todo 想想当前todos是否有值得增加、调整的\" 是否能基于这个进一步refine一下你的沉淀指令"
       ]
+    },
+    {
+      "id": "todo-20260220-014",
+      "title": "直接修复 todo-push 无法识别中文名的问题，以优雅务实的方式",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T10:50:00.000000",
+      "links": [
+        "`Notes/snippets/todo-push.sh"
+      ],
+      "definition_of_done": [
+        "分析 todo-push.sh 无法识别中文名的问题根因",
+        "以优雅务实的方式修复这个问题",
+        "确保中文名的文件也能被正确识别和处理",
+        "测试验证修复后的效果"
+      ],
+      "user_requirements": [
+        "请你增加todo：直接修复todo-push无法识别中文名的问题，以优雅务实的方式"
+      ],
+      "progress": "✅ 已完成！修复了 todo-push.sh 无法识别中文名的问题！添加了 locale 设置（LANG=en_US.UTF-8、LC_ALL=en_US.UTF-8、LC_CTYPE=en_US.UTF-8），并使用 git status --porcelain 的输出来获取文件名，这样更可靠！",
+      "started_at": "2026-02-20",
+      "completed_at": "2026-02-20T11:00:00.000000"
     }
   ]
 }
