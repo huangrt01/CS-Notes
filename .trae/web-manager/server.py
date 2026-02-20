@@ -1,34 +1,7 @@
 #!/usr/bin/env python3
 """
-Todos Web Manager - 后端服务
+Todos Web Manager - 后端服务（开发验证专用）
 支持 Git 集成、文件读写、任务解析等功能
-
-=======================================================================
-使用说明
-=======================================================================
-
-1. 安装依赖（首次使用）：
-   cd /Users/bytedance/CS-Notes/.trae/web-manager
-   pip3 install flask flask-cors
-
-2. 启动后端服务器：
-   cd /Users/bytedance/CS-Notes/.trae/web-manager
-   python3 server.py
-
-3. 在浏览器中访问：
-   http://localhost:5000
-
-=======================================================================
-本次运行的有效指令记录：
-=======================================================================
-
-安装依赖：
-pip3 install flask flask-cors
-
-启动服务器：
-python3 server.py
-
-=======================================================================
 """
 
 import os
@@ -321,83 +294,6 @@ def update_task_status(task_id):
             "message": "保存任务失败"
         }), 500
 
-@app.route('/api/tasks/<task_id>/review', methods=['POST'])
-def review_task(task_id):
-    """Review 任务（通过或不通过）"""
-    data = request.json
-    approved = data.get('approved', False)
-    review_comment = data.get('comment', '')
-    
-    # 加载现有数据
-    todos_data = load_todos_from_json(TODOS_FILE)
-    tasks = todos_data.get('todos', [])
-    
-    # 找到任务
-    task_found = False
-    for i, task in enumerate(tasks):
-        if task.get('id') == task_id:
-            # 添加 review 记录
-            if 'review_history' not in tasks[i]:
-                tasks[i]['review_history'] = []
-            
-            review_record = {
-                'reviewed_at': datetime.now().isoformat(),
-                'approved': approved,
-                'comment': review_comment
-            }
-            tasks[i]['review_history'].append(review_record)
-            
-            if approved:
-                # 通过：归档任务
-                # 先从当前任务列表移除
-                task_to_archive = tasks.pop(i)
-                task_to_archive['archived_at'] = datetime.now().isoformat()
-                
-                # 保存到归档文件（按月份）
-                archive_month = datetime.now().strftime('%Y-%m')
-                archive_file = TODO_ARCHIVE_DIR / f"{archive_month}.json"
-                
-                archive_data = load_todos_from_json(archive_file)
-                archive_data['todos'].append(task_to_archive)
-                save_todos_to_json(archive_data, archive_file)
-                
-                message = f"任务 {task_id} 已通过 review 并归档"
-            else:
-                # 不通过：回到进行中，附带 review 意见
-                tasks[i]['status'] = 'in-progress'
-                tasks[i]['review_comment'] = review_comment
-                
-                # 把 Review 意见写入 progress，让 AI 能够理解
-                if review_comment:
-                    review_note = f"📝 Review 不通过意见：{review_comment}"
-                    if tasks[i].get('progress'):
-                        tasks[i]['progress'] = f"{tasks[i]['progress']}\n\n{review_note}"
-                    else:
-                        tasks[i]['progress'] = review_note
-                
-                message = f"任务 {task_id} 已退回，附带 review 意见"
-            
-            task_found = True
-            break
-    
-    if not task_found:
-        return jsonify({
-            "success": False,
-            "message": f"任务 {task_id} 不存在"
-        }), 404
-    
-    # 保存
-    if save_todos_to_json(todos_data, TODOS_FILE):
-        return jsonify({
-            "success": True,
-            "message": message
-        })
-    else:
-        return jsonify({
-            "success": False,
-            "message": "保存任务失败"
-        }), 500
-
 @app.route('/api/tasks/<task_id>', methods=['DELETE'])
 def delete_task(task_id):
     """删除任务"""
@@ -486,7 +382,7 @@ def static_files(path):
 
 if __name__ == '__main__':
     print("=" * 60)
-    print("Todos Web Manager - 后端服务")
+    print("Todos Web Manager - 后端服务（开发验证专用）")
     print("=" * 60)
     print(f"仓库根目录: {REPO_ROOT}")
     print(f"任务文件: {TODOS_FILE}")
@@ -494,17 +390,14 @@ if __name__ == '__main__':
     print(f"INBOX 文件: {INBOX_FILE}")
     print("=" * 60)
     print("可用的 API:")
-    print("  - GET    /api/tasks              - 获取任务列表")
-    print("  - POST   /api/tasks              - 添加新任务")
-    print("  - PUT    /api/tasks/<id>         - 更新任务")
-    print("  - DELETE /api/tasks/<id>         - 删除任务")
-    print("  - PUT    /api/tasks/<id>/status  - 更新任务状态")
-    print("  - POST   /api/tasks/<id>/review  - Review 任务（通过/不通过）")
-    print("  - GET    /api/tasks/archive      - 获取归档任务")
-    print("  - GET    /api/git/status          - 获取 Git 状态")
-    print("  - POST   /api/git/commit          - 提交 Git 更改")
-    print("  - POST   /api/git/push            - 推送到远程仓库")
-    print("  - POST   /api/git/pull            - 从远程仓库拉取")
+    print("  - GET    /api/tasks              获取任务列表")
+    print("  - POST   /api/tasks              添加新任务")
+    print("  - PUT    /api/tasks/<id>         更新任务")
+    print("  - DELETE /api/tasks/<id>         删除任务")
+    print("  - PUT    /api/tasks/<id>/status  更新任务状态")
+    print("  - GET    /api/git/status          获取 Git 状态")
+    print("  - POST   /api/git/commit          提交 Git 更改")
+    print("  - POST   /api/git/push            推送到远程仓库")
     print("=" * 60)
     print("启动服务器: http://localhost:5000")
     print("=" * 60)
