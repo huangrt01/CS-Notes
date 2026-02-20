@@ -1325,6 +1325,24 @@
       "user_requirements": [
         "以\"整理微信公众号文章到 Mid Training 章节\"为具体案例，公平对比你（OpenClaw）和trae agent的能力，注意执行时的初始状态需要是同一个commit"
       ]
+    },
+    {
+      "id": "todo-20260220-013",
+      "title": "基于\"沉淀！ 回顾你最近的工作 帮我梳理todo 想想当前todos是否有值得增加、调整的\" 进一步 refine 沉淀指令",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T09:30:00.000000",
+      "definition_of_done": [
+        "回顾最近的工作",
+        "梳理当前的 todos",
+        "思考是否有值得增加、调整的 todo",
+        "基于\"沉淀！ 回顾你最近的工作 帮我梳理todo 想想当前todos是否有值得增加、调整的\" 进一步 refine 沉淀指令"
+      ],
+      "user_requirements": [
+        "\"沉淀！ 回顾你最近的工作 帮我梳理todo 想想当前todos是否有值得增加、调整的\" 是否能基于这个进一步refine一下你的沉淀指令"
+      ]
     }
   ]
 }
