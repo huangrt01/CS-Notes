@@ -1379,6 +1379,28 @@
       "progress": "✅ 已完成！修复了 todo-push.sh 无法识别中文名的问题！添加了 locale 设置（LANG=en_US.UTF-8、LC_ALL=en_US.UTF-8、LC_CTYPE=en_US.UTF-8），并使用 git status --porcelain 的输出来获取文件名，这样更可靠！",
       "started_at": "2026-02-20",
       "completed_at": "2026-02-20T11:00:00.000000"
+    },
+    {
+      "id": "todo-20260220-015",
+      "title": "调研为什么 trae agent 连 ls dir 这种基础指令都报错，并解决这个问题",
+      "status": "pending",
+      "priority": "medium",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T12:05:00.000000",
+      "links": [
+        "`.trae/openclaw-skills/trae-agent/`、`/root/.openclaw/workspace/trae-agent/trajectories/trajectory_20260220_113136.json`"
+      ],
+      "definition_of_done": [
+        "查看 trae agent 的 trajectory 文件，分析为什么连 ls dir 这种基础指令都报错",
+        "调研 trae agent 的运行环境，看看是否缺少必要的工具",
+        "分析 trae agent 的 Skill 配置，看看是否有问题",
+        "解决 trae agent 无法运行基础指令的问题",
+        "测试验证修复后的效果"
+      ],
+      "user_requirements": [
+        "我估计trae agent有问题没跑通，因为连ls dir这种基础指令都报错，记个medium优先级todo吧，调研为啥这样并解决"
+      ]
     }
   ]
 }
