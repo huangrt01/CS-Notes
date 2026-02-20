@@ -540,6 +540,39 @@ val predictions: DataSet[LabeledVector] = pipeline.predict(testingData)
   * Int8 
   * PQ
 
+#### PI2I: A Personalized Item-Based Collaborative Filtering Retrieval Framework
+
+> 来源：https://mp.weixin.qq.com/s/aXnARzxBImS6HzhbJMnhGw（稳扎稳打学AI）
+>
+> **公司**：阿里
+> **思想**：挖掘样本方向：item to item + 召回
+> **AB 效果**：淘宝"猜你喜欢"，在线交易率 +1.05%
+
+* **问题定义**：一个 user，从点击 trigger item（这是确定的），对于一个 target item，建模概率 P(target item|user, trigger item)
+* **建模方法**：
+  * 先做用户行为序列建模获得一个兴趣向量
+  * 再与其它特征向量（user profile 表征、trigger item 表征、target item 表征和两者交叉特征表征）拼接成一个向量
+  * 经过一个 MLP 就能获得一个 scalar 概率值
+* **行为序列建模**：Multi-Head Target Attention (MHA)
+  * Q 是 trigger item 表征、target item 表征和两者交叉特征表征拼接的向量
+  * 紧接着一个 MLP 获得的向量
+* **损失函数**：Softmax 交叉熵
+* **负样本挖掘（本文亮点）**：
+  * **Hard 负样本**：从正触发的 target items 中随机采样（排除正样本本身）
+    * 为什么是"难负例"：与正样本相似（因为来自同一 trigger 的 target 池），迫使模型学习细微区别，提升鲁棒性
+  * **Easy 负样本**：从行为序列中非正触发的历史物品的相关的 target items 中采样
+    * 为什么是"易负例"：与正样本关联弱，提供对比，帮助模型快速区分明显无关物品
+  * **为什么不包含曝光未点击或随机物品**：在线推理时，用户点击 trigger item 后，使用用户行为序列中的所有物品作为触发（triggers），不会包含曝光未点击或随机物品。如果训练用曝光负（常见于全量排序阶段），会导致分布偏移，影响检索效果
+* **i2i 表构建**：
+  * 为每个物品 item（作为 trigger）计算所有与该物品有过共现关系的其他物品 j 的 s(i,j)
+  * 降序排序，取 Top-T 作为 target 列表，形成映射：trigger → [target1, ..., targetT]
+* **召回为什么用一个排序模型打分的解决方案**：在用户点击 trigger item 的时候，就异步调用本文方法并将结果缓存
+* **心得**：
+  * 负样本挖掘实现了训练和推理的一致，负样本挖掘是召回永恒的话题
+  * 通过行为序列元素找到 negatives 的做法很有创新性，传统做法都是在在同一个 request 里 item 挖掘负样本
+* **愚见**：
+  * 在 paper 里，将 i2i 的创建作为第一步，将召回方法作为第二步，可读性不好，因为 i2i 的创建是辅助性的，召回方法才是主体，应该以主体作为讲解核心，读者更容易理解
+
 ### 检索加速
 
 * 基于树

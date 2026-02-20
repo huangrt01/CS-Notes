@@ -1081,7 +1081,7 @@
     {
       "id": "todo-20260219-052",
       "title": "精炼整理微信公众号文章",
-      "status": "pending",
+      "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -1098,7 +1098,10 @@
         "格式上：减少不必要的加粗、尽量对齐原文件的格式",
         "引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接",
         "限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息"
-      ]
+      ],
+      "progress": "✅ 已完成！成功将这篇微信公众号文章的内容精炼整合到了 MLSys+RecSys.md 的\"召回\" section 中！添加了 PI2I: A Personalized Item-Based Collaborative Filtering Retrieval Framework（阿里）的介绍，包含问题定义、建模方法、行为序列建模、损失函数、负样本挖掘、i2i 表构建、AB 效果、心得等内容！",
+      "started_at": "2026-02-20",
+      "completed_at": "2026-02-20T14:30:00.000000"
     },
     {
       "id": "todo-20260220-003",
