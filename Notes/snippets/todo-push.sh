@@ -199,9 +199,10 @@ main() {
     # 解析 git status --porcelain 的输出，提取文件名
     while IFS= read -r line; do
         if [ -n "$line" ]; then
-            # 提取文件名（跳过前面的状态码）
-            # git status --porcelain 的输出格式："XY 文件名"，其中 XY 是状态码
-            local file=$(echo "$line" | sed 's/^...//')
+            # 提取文件名（跳过前面的状态码和空格）
+            # git status --porcelain 的输出格式："XY 文件名"，其中 XY 是状态码（2个字符）
+            # 用更可靠的方式：跳过前面的状态码和空格
+            local file=$(echo "$line" | awk '{print substr($0, 4)}')
             if [ -n "$file" ]; then
                 if is_file_allowed "$file"; then
                     allowed_files+=("$file")
