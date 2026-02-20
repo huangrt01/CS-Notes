@@ -235,6 +235,19 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 
 ---
 
+## 🎯 工作模式
+
+### 稳妥的工作模式
+
+遇到新todos时，永远遵循以下工作模式：
+
+1. **新加入todos**：把新todo加入todos管理系统中
+2. **继续执行手头进行中的任务**：不要中断当前正在执行的任务
+3. **综合todos决策新执行哪些任务**：在当前任务完成后，综合所有todos，决策新执行哪些任务
+4. **永远是稳妥的**：这个工作模式永远是稳妥的，避免混乱和中断
+
+---
+
 ## Make It Yours
 
 This is a starting point. Add your own conventions, style, and rules as you figure out what works.
