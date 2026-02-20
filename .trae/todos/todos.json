@@ -1276,6 +1276,55 @@
       "user_requirements": [
         "节后解决 ECS 的 SSH 问题"
       ]
+    },
+    {
+      "id": "todo-20260220-011",
+      "title": "创建整理美食笔记的skill",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T09:45:00.000000",
+      "links": [
+        "Gourmet.md"
+      ],
+      "dependencies": [
+        "联网搜索能力 ready"
+      ],
+      "definition_of_done": [
+        "创建一个整理美食笔记的 skill",
+        "具备品鉴菜单的能力",
+        "如有图片，请先确保理解图片内容",
+        "结合 Gourmet.md 中用户的美食品鉴经历",
+        "可联网搜索",
+        "保留并融合强调用户的感受（不要指出是笔记记的，而是隐性地强调）"
+      ],
+      "user_requirements": [
+        "创建整理美食笔记的skill"
+      ]
+    },
+    {
+      "id": "todo-20260220-012",
+      "title": "以\"整理微信公众号文章到 Mid Training 章节\"为具体案例，公平对比你（OpenClaw）和trae agent的能力，注意执行时的初始状态需要是同一个commit",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T09:45:00.000000",
+      "links": [
+        "`.trae/openclaw-skills/trae-agent/`、`.trae/rules/project_rules.md`"
+      ],
+      "definition_of_done": [
+        "以\"整理微信公众号文章到 Mid Training 章节\"为具体案例",
+        "公平对比你（OpenClaw）和 trae agent 的能力",
+        "注意执行时的初始状态需要是同一个 commit",
+        "记录对比结果",
+        "分析两者的优缺点",
+        "输出对比报告"
+      ],
+      "user_requirements": [
+        "以\"整理微信公众号文章到 Mid Training 章节\"为具体案例，公平对比你（OpenClaw）和trae agent的能力，注意执行时的初始状态需要是同一个commit"
+      ]
     }
   ]
 }
