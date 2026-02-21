@@ -1192,35 +1192,71 @@ One significant difference between RL and supervised visual tasks is that RL dep
 
 ##### 谱表示学习
 
+
 > 来源：http://xhslink.com/o/9eEu7AzYcHN（小红书）
 >
-> **arXiv**：2601.20154
-> **公司**：谷歌、佐治亚理工
+> **arXiv**：2601.20154 (Spectral Ghost in Representation Learning: from Component Analysis to Self-Supervised Learning)
+> **公司**：Google DeepMind、Georgia Tech、Harvard University、University of Alberta
+> **作者**：Bo Dai, Na Li, Dale Schuurmans
 
-**核心判断**：成功的表示学习方法，本质上都在学习"谱表示（Spectral Representation）"。
+**核心判断**：成功的表示学习方法，本质上都在学习"谱表示（Spectral Representation）"——所有这些算法都在提取样本对互信息的谱表示。
 
 * **充分表示的谱判据**：
   * 论文首次从条件分布算子的谱分解出发，严格定义了"充分表示"
   * 只要学到的表示能张成所有下游任务所需的谱子空间，就可以用轻量线性或简单非线性头完成任意预测任务，而无需回到原始数据
+  * 具体推导：
+    - 从预测任务开始，目标是估计 $E[y|x]$
+    - 对条件算子 $P(y|x)$ 做奇异值分解 (SVD)：$P(y|x) = \langle \phi(x), \mu(y) \rangle$
+    - 则最优线性解为：$E[y|x] = \langle \phi(x), \int y \mu(y) dy \rangle$
+    - 即只要有 $\phi(x)$，下游任务只需线性头即可完成
+
+* **从无标签数据中提取谱表示**：
+  * 关键洞察：可以仅从无标签数据的 $P(x'|x)$ 中提取完整的谱表示，不需要标签！
+  * 推导：
+    - 考虑 $P(x'|x) = P(x') \langle \psi(x'), A \psi(x) \rangle$（Bayes 规则）
+    - 进一步得到：$\frac{P(x, x')}{P(x) P(x')} = \langle \phi(x'), \phi(x) \rangle$（点互信息的谱分解）
+    - 这意味着可以通过优化 $\frac{P(x, x')}{P(x) P(x')}$ 与 $\langle \phi(x'), \phi(x) \rangle$ 的匹配来学习谱表示
 
 * **SSL 的统一解释**：
-  * SimCLR、BYOL、VICReg、Barlow Twins、MoCo、DINO 等方法，被统一解释为：在不同参数化与优化策略下，对同一谱分解目标的近似求解
+  * SimCLR、BYOL、VICReg、Barlow Twins、MoCo、DINO、SwAV、DeepCluster、Word2Vec、CLIP 等方法，被统一解释为：在不同参数化与优化策略下，对同一谱分解目标的近似求解
   * 对比 vs 非对比的差异，本质来自梯度估计是否有偏、是否依赖大 batch，而非目标本身
 
-* **三大谱表示范式**：
-  * **线性谱表示**：直接矩阵/算子分解（理论清晰，下游线性）
-  * **能量模型谱表示**：指数内积、对比学习、CLIP、Word2Vec
-  * **潜变量谱表示**：DeepCluster、SwAV、DINO、SeLa
-  * 进一步推广到非线性谱表示与多模态谱表示
+* **四大谱表示范式**：
+  1. **线性谱表示（Section 3）**：直接矩阵/算子分解（理论清晰，下游线性）
+     - Square Contrastive (HaoChen et al., 2021)：均方匹配归一化转移算子
+     - Barlow Twins (Zbontar et al., 2021)：线性投影谱表示
+     - VICReg (Bardes et al., 2021)：方差-不变性-协方差正则化
+     - BYOL (Grill et al., 2020) &amp; MINC (Guo et al., 2025)：幂迭代实现
+  2. **能量模型谱表示（Section 4）**：指数内积、对比学习、CLIP、Word2Vec
+     - SimCLR (Chen et al., 2020)：能量模型 + 排序 NCE
+     - Word2Vec (Mikolov et al., 2013)：能量模型 + 二元 NCE
+     - MoCo (He et al., 2020)：能量模型 + 幂迭代
+     - Diffusion Spectral Representation (Shribak et al., 2024)：扩散模型视角
+  3. **潜变量谱表示（Section 5）**：DeepCluster、SwAV、DINO、SeLa
+     - DeepCluster (Caron et al., 2018)：EM 算法 + 聚类
+     - SeLa (Asano et al., 2019)：变分 ELBO + 最优传输
+     - DINO (Caron et al., 2021) &amp; SwAV (Caron et al., 2020)：幂迭代 + 多视图
+  4. **进一步推广**：非线性谱表示（Section 6）与多模态谱表示（Section 7）
+     - SimSiam (Chen and He, 2021)：非线性不对称投影
+     - CLIP (Radford et al., 2021) &amp; SigLIP (Zhai et al., 2023)：多模态能量模型
 
 * **揭示哪些方法"理论上就不友好"**：
   * Barlow Twins、VICReg 虽然非对比，但目标函数的梯度估计天然有偏
   * 因此仍然依赖大 batch，本质问题不在是否 contrastive
   * 这为算法设计提供了明确的理论避坑指南
 
-* **历史统一**：
-  * 从 PCA、MDS、Isomap、CCA、Laplacian Embedding，到现代 SSL，本质都是在学习样本对的"谱结构"或"互信息算子"，只是数据规模、参数化和优化方式不同
+* **历史统一（Section 8）**：
+  * 从 PCA、MDS、Isomap、CCA、Laplacian Embedding、Locality Preserving Projections，到现代 SSL，本质都是在学习样本对的"谱结构"或"互信息算子"，只是数据规模、参数化和优化方式不同
+  * 例如：
+    - PCA：线性谱表示 + 线性核
+    - MDS：线性谱表示 + 欧氏距离核
+    - Isomap：线性谱表示 + 测地线距离核
+    - Laplacian Embedding：图拉普拉斯谱分解
 
+* **应用（Section 9）**：
+  * 回归与分类（Section 9.1）：谱表示足以线性表示 $E[y|x]$ 和后验概率
+  * 因果推断（Section 9.2）：工具变量回归、代理因果推断
+  * 控制与强化学习（Section 9.3）：MDP 值函数的线性表示、高效规划与探索
 ##### Feature Cluster
 
 ###### K-Means
