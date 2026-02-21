@@ -808,7 +808,7 @@
     {
       "id": "todo-20260219-048",
       "title": "设计并实现\"沉淀指令 v2.0\"的工作流程",
-      "status": "pending",
+      "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -823,7 +823,10 @@
       "background": "用户希望基于之前的沉淀指令进一步 refine，让它更系统化、更可执行",
       "user_requirements": [
         "\"沉淀！ 回顾你最近的工作 帮我梳理todo 想想当前todos是否有值得增加、调整的\" 是否能基于这个进一步refine一下你的沉淀指令"
-      ]
+      ],
+      "progress": "✅ 已完成！AGENTS.md 中已经有了\"快捷指令：沉淀v2.0\"，包含了回顾最近的工作、梳理当前todos、分析问题和经验、发散思考新todo等功能！",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-21T09:35:00.000000"
     },
     {
       "id": "todo-20260219-050",
@@ -1105,7 +1108,7 @@
     {
       "id": "todo-20260221-001",
       "title": "增加openclaw对pdf的理解能力，广泛联网调研，可先调研clawhub",
-      "status": "pending",
+      "status": "in-progress",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -1122,7 +1125,8 @@
       ],
       "user_requirements": [
         "增加openclaw对pdf的理解能力，广泛联网调研，可先调研clawhub"
-      ]
+      ],
+      "progress": "✅ 已完成部分！调研了 ClawHub 上的 PDF 解析 skill（pdf-extract、pdf-text-extractor、pymupdf-pdf-parser-clawdbot-skill），成功安装了 PyMuPDF 库，写了一个简单的 Python 脚本来解析 PDF（Notes/snippets/pdf_parser.py），成功解析了那篇论文的 PDF！"
     }
   ]
 }
