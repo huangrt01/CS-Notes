@@ -1224,9 +1224,10 @@
       ],
       "user_requirements": [
         "加todo并继续推进",
-        "plan review 能力落地以及融入 todos web manager"
+        "plan review 能力落地以及融入 todos web manager",
+        "错了 我指的是plan mode task产出的plan，要在前端review plan通过后 让你执行plan 这一整套前端流程"
       ],
-      "progress": "✅ 已添加 todo！现在开始调研如何先让plan可选开启，加todo时显示标注plan todo，才触发先plan再review plan再执行的流程！",
+      "progress": "✅ 已更新需求！用户指的是：plan mode task 产出的 plan，要在前端展示 plan，用户在前端 review plan（通过/不通过），如果通过，让 AI 执行 plan，这一整套前端流程！现在开始设计并实现这一整套前端流程！",
       "started_at": "2026-02-22"
     }
   ]

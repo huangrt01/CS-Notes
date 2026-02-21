@@ -1049,7 +1049,18 @@ POST   /api/git/pull           - 从远程仓库拉取
             
             let actionsHtml = '';
             if (!isArchive) {
-                if (task.status === 'completed') {
+                // 如果是 Plan Todo，显示 Plan 相关的操作
+                if (isPlanTodo) {
+                    actionsHtml = `
+                        <div class="task-actions">
+                            <button class="btn" onclick="viewPlan('${taskId}')">📋 查看 Plan</button>
+                            ${task.status !== 'in-progress' && task.status !== 'completed' ? 
+                                `<button class="btn-warning" onclick="updateTaskStatus('${taskId}', 'in-progress')">🚀 开始</button>` : ''}
+                            ${task.status !== 'completed' ? 
+                                `<button class="btn-success" onclick="updateTaskStatus('${taskId}', 'completed')">✅ 完成</button>` : ''}
+                        </div>
+                    `;
+                } else if (task.status === 'completed') {
                     actionsHtml = `
                         <div class="review-section">
                             <div class="review-input-group">
@@ -1486,6 +1497,13 @@ POST   /api/git/pull           - 从远程仓库拉取
                 console.error('Review 失败:', error);
                 showError(`❌ Review 失败: ${error.message}`);
             }
+        }
+        
+        // 查看 Plan
+        function viewPlan(taskId) {
+            alert('查看 Plan 功能正在开发中...\n\n任务 ID: ' + taskId);
+            // TODO: 实现查看 Plan 的功能
+            // TODO: 添加 Review Plan 的界面
         }
         
         // 页面加载时初始化
