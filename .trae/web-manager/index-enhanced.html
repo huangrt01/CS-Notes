@@ -1044,7 +1044,13 @@ POST   /api/git/pull           - 从远程仓库拉取
                     actionsHtml = `
                         <div class="review-section">
                             <div class="review-input-group">
-                                <textarea id="review-comment-${taskId}" placeholder="输入 Review 意见（可选）..." class="review-input"></textarea>
+                                <div style="display: flex; gap: 8px; align-items: flex-start;">
+                                    <textarea id="review-comment-${taskId}" placeholder="输入 Review 意见（可选）..." class="review-input" style="flex: 1;"></textarea>
+                                    <button class="btn-secondary" id="voice-btn-${taskId}" onclick="toggleVoiceInput('${taskId}')" title="语音输入" style="padding: 8px 12px; font-size: 18px;">🎤</button>
+                                </div>
+                                <div id="voice-status-${taskId}" style="margin-top: 8px; font-size: 12px; color: #666; display: none;">
+                                    🎙️ 正在听...
+                                </div>
                             </div>
                             <div class="task-actions">
                                 <button class="btn-danger" onclick="submitReviewInline('${taskId}', false)">❌ 不通过</button>
@@ -1340,6 +1346,83 @@ POST   /api/git/pull           - 从远程仓库拉取
                 console.error('更新任务状态失败:', error);
                 showError(`❌ 更新任务状态失败: ${error.message}`);
             }
+        }
+        
+        // 语音输入功能
+        let currentRecognition = null;
+        let currentVoiceTaskId = null;
+        
+        function toggleVoiceInput(taskId) {
+            const btn = document.getElementById(`voice-btn-${taskId}`);
+            const statusEl = document.getElementById(`voice-status-${taskId}`);
+            const textarea = document.getElementById(`review-comment-${taskId}`);
+            
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showError('❌ 您的浏览器不支持语音识别功能，请使用 Chrome/Edge 浏览器');
+                return;
+            }
+            
+            if (currentVoiceTaskId === taskId && currentRecognition) {
+                // 停止录音
+                currentRecognition.stop();
+                currentRecognition = null;
+                currentVoiceTaskId = null;
+                btn.textContent = '🎤';
+                btn.style.background = '';
+                statusEl.style.display = 'none';
+                return;
+            }
+            
+            // 如果有正在进行的录音，先停止
+            if (currentRecognition) {
+                currentRecognition.stop();
+            }
+            
+            // 开始新的录音
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            currentRecognition = new SpeechRecognition();
+            currentRecognition.continuous = true;
+            currentRecognition.interimResults = true;
+            currentRecognition.lang = 'zh-CN';
+            
+            currentRecognition.onstart = () => {
+                currentVoiceTaskId = taskId;
+                btn.textContent = '🔴';
+                btn.style.background = '#ef4444';
+                statusEl.style.display = 'block';
+            };
+            
+            currentRecognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                if (textarea) {
+                    textarea.value = transcript;
+                }
+            };
+            
+            currentRecognition.onerror = (event) => {
+                console.error('语音识别错误:', event.error);
+                currentRecognition = null;
+                currentVoiceTaskId = null;
+                btn.textContent = '🎤';
+                btn.style.background = '';
+                statusEl.style.display = 'none';
+                if (event.error !== 'no-speech') {
+                    showError(`❌ 语音识别失败: ${event.error}`);
+                }
+            };
+            
+            currentRecognition.onend = () => {
+                currentRecognition = null;
+                currentVoiceTaskId = null;
+                btn.textContent = '🎤';
+                btn.style.background = '';
+                statusEl.style.display = 'none';
+            };
+            
+            currentRecognition.start();
         }
         
         // 提交 Review（内联模式）

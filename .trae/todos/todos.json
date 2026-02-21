@@ -755,7 +755,7 @@
     {
       "id": "todo-20260220-002",
       "title": "Todos Web Manager 支持 Review 意见的语音转文字",
-      "status": "pending",
+      "status": "in-progress",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -772,7 +772,9 @@
       ],
       "user_requirements": [
         "todos web manager支持review意见的语音转文字"
-      ]
+      ],
+      "progress": "✅ 已完成部分！在 Todos Web Manager 的 Review 意见输入框旁边添加了语音输入按钮，使用浏览器 Web Speech API 进行语音转文字，语音转文字的结果自动填充到 Review 意见输入框！下一步需要测试验证！",
+      "started_at": "2026-02-21"
     },
     {
       "id": "todo-20260219-047",
