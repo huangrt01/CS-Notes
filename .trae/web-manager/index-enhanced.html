@@ -1281,6 +1281,7 @@ POST   /api/git/pull           - 从远程仓库拉取
             const description = document.getElementById('taskDescription').value.trim();
             const priority = document.getElementById('taskPriority').value;
             const assignee = document.getElementById('taskAssignee').value;
+            const isPlanTodo = document.getElementById('taskPlan').checked;
             
             if (!title) {
                 showError('❌ 请输入任务标题');
@@ -1299,7 +1300,8 @@ POST   /api/git/pull           - 从远程仓库拉取
                         priority,
                         assignee,
                         status: 'pending',
-                        feedback_required: false
+                        feedback_required: false,
+                        is_plan_todo: isPlanTodo
                     })
                 });
                 
