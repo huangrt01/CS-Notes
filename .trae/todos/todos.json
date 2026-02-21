@@ -1101,6 +1101,28 @@
       "user_requirements": [
         "创建整理美食笔记的skill"
       ]
+    },
+    {
+      "id": "todo-20260221-001",
+      "title": "增加openclaw对pdf的理解能力，广泛联网调研，可先调研clawhub",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-21T09:16:00.000000",
+      "links": [
+        "ClawHub、PDF解析工具"
+      ],
+      "definition_of_done": [
+        "调研 ClawHub 上是否有 PDF 解析的 skill",
+        "广泛调研其他 PDF 理解能力的方案",
+        "设计 OpenClaw 对 PDF 的理解能力方案",
+        "实现 PDF 理解能力",
+        "测试验证"
+      ],
+      "user_requirements": [
+        "增加openclaw对pdf的理解能力，广泛联网调研，可先调研clawhub"
+      ]
     }
   ]
 }
