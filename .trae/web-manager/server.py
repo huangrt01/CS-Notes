@@ -45,6 +45,7 @@ from flask_cors import CORS
 REPO_ROOT = Path(__file__).parent.parent.parent
 TODOS_FILE = REPO_ROOT / ".trae/todos/todos.json"
 TODO_ARCHIVE_DIR = REPO_ROOT / ".trae/todos/archive"
+PLANS_DIR = REPO_ROOT / ".trae/plans"
 INBOX_FILE = REPO_ROOT / ".trae/documents/INBOX.md"
 WEB_MANAGER_DIR = Path(__file__).parent
 
@@ -179,6 +180,135 @@ def get_archive_tasks():
         "tasks": archive_tasks,
         "total": len(archive_tasks)
     })
+
+# ============================================
+# Plan 管理功能
+# ============================================
+
+def load_plan_from_file(file_path):
+    """从 Markdown 文件加载 Plan（解析 YAML frontmatter）"""
+    if not file_path.exists():
+        return None
+    
+    try:
+        content = file_path.read_text(encoding='utf-8')
+        
+        # 解析 YAML frontmatter
+        frontmatter = {}
+        lines = content.split('\n')
+        if lines and lines[0] == '---':
+            # 找到第二个 ---
+            end_idx = None
+            for i in range(1, len(lines)):
+                if lines[i] == '---':
+                    end_idx = i
+                    break
+            
+            if end_idx:
+                # 解析 frontmatter
+                for line in lines[1:end_idx]:
+                    if ':' in line:
+                        key, value = line.split(':', 1)
+                        frontmatter[key.strip()] = value.strip()
+        
+        # 提取计划内容（frontmatter 之后的部分）
+        plan_content = '\n'.join(lines[end_idx+2:]) if end_idx else content
+        
+        return {
+            "id": frontmatter.get('id', ''),
+            "title": frontmatter.get('title', '').strip('"'),
+            "priority": frontmatter.get('priority', 'medium'),
+            "status": frontmatter.get('status', 'pending'),
+            "created_at": frontmatter.get('created_at', ''),
+            "updated_at": frontmatter.get('updated_at', ''),
+            "tags": frontmatter.get('tags', []),
+            "file_path": str(file_path),
+            "content": plan_content
+        }
+    except Exception as e:
+        print(f"Error loading plan file: {e}")
+        return None
+
+def load_all_plans():
+    """加载所有 Plan"""
+    plans = []
+    if PLANS_DIR.exists():
+        for plan_file in PLANS_DIR.glob("*.md"):
+            # 跳过设计方案文件
+            if plan_file.name.startswith("Plan-Mode-"):
+                continue
+            
+            plan = load_plan_from_file(plan_file)
+            if plan:
+                plans.append(plan)
+    
+    # 按创建时间倒序排列
+    plans.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    return plans
+
+@app.route('/api/plans', methods=['GET'])
+def get_plans():
+    """获取 Plan 列表"""
+    plans = load_all_plans()
+    return jsonify({
+        "success": True,
+        "plans": plans,
+        "total": len(plans)
+    })
+
+@app.route('/api/plans/<plan_id>/status', methods=['PUT'])
+def update_plan_status(plan_id):
+    """更新 Plan 状态（approve/reject）"""
+    data = request.json
+    new_status = data.get('status', 'pending')
+    comment = data.get('comment', '')
+    
+    # 找到对应的 plan 文件
+    plan_file = None
+    for f in PLANS_DIR.glob("*.md"):
+        plan = load_plan_from_file(f)
+        if plan and plan.get('id') == plan_id:
+            plan_file = f
+            break
+    
+    if not plan_file:
+        return jsonify({
+            "success": False,
+            "message": f"Plan {plan_id} 不存在"
+        }), 404
+    
+    # 更新 plan 文件
+    try:
+        content = plan_file.read_text(encoding='utf-8')
+        lines = content.split('\n')
+        
+        # 更新 frontmatter 中的 status
+        if lines and lines[0] == '---':
+            for i in range(1, len(lines)):
+                if lines[i] == '---':
+                    break
+                if lines[i].startswith('status:'):
+                    lines[i] = f"status: {new_status}"
+                if lines[i].startswith('updated_at:'):
+                    lines[i] = f"updated_at: '{datetime.now().isoformat()}'"
+        
+        # 添加 review 记录
+        if comment:
+            review_note = f"\n\n## Review 记录\n- {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {new_status}\n- 评论: {comment}\n"
+            lines.append(review_note)
+        
+        new_content = '\n'.join(lines)
+        plan_file.write_text(new_content, encoding='utf-8')
+        
+        return jsonify({
+            "success": True,
+            "message": f"Plan {plan_id} 状态已更新为 {new_status}"
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"更新 Plan 失败: {e}"
+        }), 500
 
 # ============================================
 # 任务管理功能
@@ -501,6 +631,8 @@ if __name__ == '__main__':
     print("  - PUT    /api/tasks/<id>/status  - 更新任务状态")
     print("  - POST   /api/tasks/<id>/review  - Review 任务（通过/不通过）")
     print("  - GET    /api/tasks/archive      - 获取归档任务")
+    print("  - GET    /api/plans               - 获取 Plan 列表")
+    print("  - PUT    /api/plans/<id>/status   - 更新 Plan 状态（approve/reject）")
     print("  - GET    /api/git/status          - 获取 Git 状态")
     print("  - POST   /api/git/commit          - 提交 Git 更改")
     print("  - POST   /api/git/push            - 推送到远程仓库")

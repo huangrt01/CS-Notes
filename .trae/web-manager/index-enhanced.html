@@ -676,6 +676,7 @@ POST   /api/git/pull           - 从远程仓库拉取
             <div class="tab active" data-tab="completed" onclick="switchTab('completed')">👀 已完成（待 review）</div>
             <div class="tab" data-tab="in-progress" onclick="switchTab('in-progress')">🚀 进行中</div>
             <div class="tab" data-tab="pending" onclick="switchTab('pending')">⏸️ 待处理</div>
+            <div class="tab" data-tab="plans" onclick="switchTab('plans')">📋 Plans</div>
             <div class="tab" data-tab="archive" onclick="switchTab('archive')">📦 归档</div>
             <div class="tab" data-tab="all" onclick="switchTab('all')">📋 全部</div>
         </div>
@@ -683,12 +684,12 @@ POST   /api/git/pull           - 从远程仓库拉取
         <div class="content">
             <div class="status-bar">
                 <div class="status-bar-text" id="statusText">🔄 正在加载任务...</div>
-                <button onclick="loadTasks()">🔄 刷新</button>
+                <button onclick="refreshContent()">🔄 刷新</button>
             </div>
             
             <div id="errorMessage" style="display: none;"></div>
             
-            <div class="stats-panel">
+            <div class="stats-panel" id="statsPanel">
                 <div class="stat-item">
                     <div class="stat-number" id="statCompleted">0</div>
                     <div class="stat-label">待 review</div>
@@ -713,7 +714,7 @@ POST   /api/git/pull           - 从远程仓库拉取
                 <button class="sub-tab" data-subtab="ai" onclick="switchSubTab('ai')">🤖 待 AI 处理</button>
             </div>
             
-            <div class="filters">
+            <div class="filters" id="filtersSection">
                 <h3>🔍 筛选和搜索</h3>
                 <div class="filters-row">
                     <div class="filter-group">
@@ -877,6 +878,7 @@ POST   /api/git/pull           - 从远程仓库拉取
         async function switchTab(tab) {
             currentTab = tab;
             isArchive = tab === 'archive';
+            isPlans = tab === 'plans';
             
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
@@ -885,6 +887,8 @@ POST   /api/git/pull           - 从远程仓库拉取
             const subTabs = document.getElementById('subTabs');
             const addTaskToggle = document.getElementById('addTaskToggle');
             const addTaskSection = document.getElementById('addTaskSection');
+            const filtersSection = document.getElementById('filtersSection');
+            const statsPanel = document.getElementById('statsPanel');
             
             if (tab === 'pending') {
                 subTabs.style.display = 'flex';
@@ -893,7 +897,7 @@ POST   /api/git/pull           - 从远程仓库拉取
                 currentSubTab = 'all';
             }
             
-            if (isArchive) {
+            if (isArchive || isPlans) {
                 addTaskToggle.style.display = 'none';
                 addTaskSection.style.display = 'none';
             } else {
@@ -901,7 +905,135 @@ POST   /api/git/pull           - 从远程仓库拉取
                 addTaskSection.style.display = 'none';
             }
             
-            await loadTasks();
+            if (isPlans) {
+                filtersSection.style.display = 'none';
+                statsPanel.style.display = 'none';
+                await loadPlans();
+            } else {
+                filtersSection.style.display = 'block';
+                statsPanel.style.display = 'grid';
+                await loadTasks();
+            }
+        }
+        
+        // 加载 Plans
+        let plans = [];
+        
+        async function loadPlans() {
+            try {
+                showStatus('🔄 正在加载 Plans...');
+                const response = await fetch('/api/plans');
+                const data = await response.json();
+                
+                if (data.success) {
+                    plans = data.plans || [];
+                    renderPlans();
+                    showStatus(`✅ 已加载 ${plans.length} 个 Plan`);
+                } else {
+                    showError('加载 Plans 失败');
+                }
+            } catch (error) {
+                showError('加载 Plans 失败: ' + error.message);
+            }
+        }
+        
+        // 渲染 Plans
+        function renderPlans() {
+            const taskList = document.getElementById('taskList');
+            
+            if (plans.length === 0) {
+                taskList.innerHTML = '<p style="text-align: center; color: #888; padding: 40px;">暂无 Plan</p>';
+                return;
+            }
+            
+            taskList.innerHTML = plans.map(plan => `
+                <div class="task-item">
+                    <div class="task-header">
+                        <div class="task-title" onclick="togglePlanDetails('${plan.id}')">
+                            ${plan.title}
+                        </div>
+                        <span class="task-priority priority-${plan.priority}">${plan.priority === 'high' ? '🔴 高' : plan.priority === 'medium' ? '🟡 中' : '🟢 低'}</span>
+                        <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: ${plan.status === 'pending' ? '#e0e7ff' : plan.status === 'approved' ? '#dcfce7' : '#fee2e2'}; color: ${plan.status === 'pending' ? '#3730a3' : plan.status === 'approved' ? '#166534' : '#991b1b'};">
+                            ${plan.status === 'pending' ? '⏸️ 待审核' : plan.status === 'approved' ? '✅ 已通过' : plan.status === 'rejected' ? '❌ 已拒绝' : plan.status}
+                        </span>
+                    </div>
+                    <div class="task-meta">
+                        <span>📅 创建时间: ${plan.created_at}</span>
+                        ${plan.updated_at ? `<span>🔄 更新时间: ${plan.updated_at}</span>` : ''}
+                    </div>
+                    <div class="task-details" id="plan-details-${plan.id}">
+                        <div class="task-details-section">
+                            <h4>Plan 内容</h4>
+                            <pre style="white-space: pre-wrap; background: #f7f7f7; padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.6;">${escapeHtml(plan.content)}</pre>
+                        </div>
+                        ${plan.status === 'pending' ? `
+                        <div class="task-details-section">
+                            <h4>审核 Plan</h4>
+                            <div class="form-group">
+                                <label>审核评论</label>
+                                <textarea id="plan-comment-${plan.id}" placeholder="输入审核评论（可选）"></textarea>
+                            </div>
+                            <div class="task-actions">
+                                <button class="btn-success" onclick="reviewPlan('${plan.id}', 'approved')">✅ 通过</button>
+                                <button class="btn-secondary" onclick="reviewPlan('${plan.id}', 'rejected')">❌ 拒绝</button>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 切换 Plan 详情展开/收起
+        function togglePlanDetails(planId) {
+            const details = document.getElementById(`plan-details-${planId}`);
+            details.classList.toggle('expanded');
+        }
+        
+        // 审核 Plan
+        async function reviewPlan(planId, status) {
+            const comment = document.getElementById(`plan-comment-${planId}`)?.value || '';
+            
+            try {
+                showStatus('🔄 正在审核 Plan...');
+                const response = await fetch(`/api/plans/${planId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        status: status,
+                        comment: comment
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('✅ Plan 审核成功');
+                    await loadPlans();
+                } else {
+                    showError('Plan 审核失败: ' + data.message);
+                }
+            } catch (error) {
+                showError('Plan 审核失败: ' + error.message);
+            }
+        }
+        
+        // 刷新内容
+        async function refreshContent() {
+            if (currentTab === 'plans') {
+                await loadPlans();
+            } else {
+                await loadTasks();
+            }
+        }
+        
+        // HTML 转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
         
         // 切换子标签
