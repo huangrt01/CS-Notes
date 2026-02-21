@@ -1122,6 +1122,29 @@
         "增加openclaw对pdf的理解能力，广泛联网调研，可先调研clawhub"
       ],
       "progress": "✅ 已完成部分！调研了 ClawHub 上的 PDF 解析 skill（pdf-extract、pdf-text-extractor、pymupdf-pdf-parser-clawdbot-skill），成功安装了 PyMuPDF 库，写了一个简单的 Python 脚本来解析 PDF（Notes/snippets/pdf_parser.py），成功解析了那篇论文的 PDF！"
+    },
+    {
+      "id": "todo-20260221-002",
+      "title": "语音转写强制用large turbo模型，查找large turbo模型的pt文件，确保自己可以load，用上面的音频文件做测试",
+      "status": "in-progress",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-21T12:18:00.000000",
+      "links": [
+        "Notes/snippets/speech_to_text.py"
+      ],
+      "definition_of_done": [
+        "查找 large turbo 模型的 pt 文件",
+        "确保自己可以 load large turbo 模型",
+        "用之前的音频文件做测试",
+        "验证转写结果"
+      ],
+      "user_requirements": [
+        "语音转写强制用large turbo模型，查找large turbo模型的pt文件 确保自己可以load 用上面的音频文件做测试"
+      ],
+      "progress": "✅ 已完成部分！找到了 large-v3-turbo.pt 文件在 /root/.cache/whisper/ 目录下，而且还有一个符号链接 turbo.pt -> large-v3-turbo.pt！正在用 large-v3-turbo 模型转写之前的音频文件！",
+      "started_at": "2026-02-21"
     }
   ]
 }
