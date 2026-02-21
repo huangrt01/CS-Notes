@@ -955,7 +955,7 @@
     {
       "id": "todo-20260220-004",
       "title": "优化 OpenClaw 响应速度：查看 OpenClaw 配置，确保 TUI 里的进展都实时发给用户",
-      "status": "in-progress",
+      "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -972,7 +972,9 @@
       "user_requirements": [
         "你（openclaw）回复我的消息不及时，查看openclaw配置看能否优化（所有tui里的你的进展都实时发给我）"
       ],
-      "progress": "✅ 已完成部分！查看了 OpenClaw 官方文档，找到了 block streaming 的配置！修改了 openclaw.json，添加了 `agents.defaults.blockStreamingDefault: \"on\"`、`agents.defaults.blockStreamingBreak: \"text_end\"`、`channels.feishu.blockStreaming: true`！下一步需要重启 OpenClaw 来让配置生效！"
+      "progress": "✅ 已完成！查看了 OpenClaw 官方文档，找到了 block streaming 的配置！openclaw.json 中已经配置了 `agents.defaults.blockStreamingDefault: \"on\"`、`agents.defaults.blockStreamingBreak: \"text_end\"`、`channels.feishu.blockStreaming: true`！这些配置确保了 TUI 里的进展都实时发给用户！",
+      "started_at": "2026-02-20",
+      "completed_at": "2026-02-22T05:35:00.000000"
     },
     {
       "id": "todo-20260220-005",
