@@ -1141,10 +1141,57 @@
         "验证转写结果"
       ],
       "user_requirements": [
-        "语音转写强制用large turbo模型，查找large turbo模型的pt文件 确保自己可以load 用上面的音频文件做测试"
+        "语音转写强制用large turbo模型，查找large turbo模型的pt文件 确保自己可以load 用上面的音频文件做测试",
+        "咋还在运行语音转写，kill掉重新试试，以及clawhub搜搜是否有相关skill",
+        "是否有介于large和small之间的medium model能下载"
       ],
-      "progress": "✅ 已完成部分！找到了 large-v3-turbo.pt 文件在 /root/.cache/whisper/ 目录下，而且还有一个符号链接 turbo.pt -> large-v3-turbo.pt！正在用 large-v3-turbo 模型转写之前的音频文件！",
+      "progress": "✅ 已完成部分！找到了 large-v3-turbo.pt 文件在 /root/.cache/whisper/ 目录下，而且还有一个符号链接 turbo.pt -> large-v3-turbo.pt！在 clawhub 上搜索到了很多 whisper 相关的 skill，评分最高的是 openai-whisper v1.0.0 (3.766)！现在正在下载 medium 模型！",
       "started_at": "2026-02-21"
+    },
+    {
+      "id": "todo-20260221-003",
+      "title": "利用https://github.com/xxtluuu/openclaw-sensevoice 来做语音转文字，里面的openclaw plugin方式",
+      "status": "in-progress",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-21T14:12:00.000000",
+      "links": [
+        "https://github.com/xxtluuu/openclaw-sensevoice"
+      ],
+      "definition_of_done": [
+        "查看 https://github.com/xxtluuu/openclaw-sensevoice 的代码和文档",
+        "理解 openclaw plugin 方式",
+        "利用 openclaw-sensevoice 来做语音转文字",
+        "测试验证"
+      ],
+      "user_requirements": [
+        "算了 加一个todo：利用https://github.com/xxtluuu/openclaw-sensevoice 来做语音转文字 里面的openclaw plugin方式"
+      ],
+      "progress": "✅ 已完成部分！查看了 https://github.com/xxtluuu/openclaw-sensevoice 的代码和文档！这个插件看起来很不错！特点：秒级响应、五语转写、极致轻量、Rust 原生、完全离线、一键安装！现在正在安装这个插件！",
+      "started_at": "2026-02-21"
+    },
+    {
+      "id": "todo-20260221-004",
+      "title": "探索使用memos优化你的记忆",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-21T23:11:00.000000",
+      "links": [
+        "https://www.usememos.com/"
+      ],
+      "definition_of_done": [
+        "了解 memos 是什么，以及它的核心功能",
+        "调研 memos 如何与 OpenClaw 结合",
+        "探索使用 memos 优化 OpenClaw 的记忆的方案",
+        "设计集成方案",
+        "测试验证"
+      ],
+      "user_requirements": [
+        "加一个todo：探索使用memos优化你的记忆"
+      ]
     }
   ]
 }
