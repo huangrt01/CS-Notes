@@ -1190,7 +1190,7 @@ One significant difference between RL and supervised visual tasks is that RL dep
 * 风险与缓解：MoCo 关注字典陈旧与分布漂移（用动量与滑窗刷新）；推荐侧关注流行度偏置与曝光偏置（用重采样、去重、时间衰减与加权）。
 * 共同点：均通过扩大负例集合、降低估计方差提高训练稳定性与效果，但 MoCo 更强调无监督密度比估计，推荐更强调与线上分布一致性与面向用户的难负例。
 
-###### 谱表示学习
+##### 谱表示学习
 
 > 来源：http://xhslink.com/o/9eEu7AzYcHN（小红书）
 >
