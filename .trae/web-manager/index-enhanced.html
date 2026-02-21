@@ -1041,6 +1041,9 @@ POST   /api/git/pull           - 从远程仓库拉取
             const taskId = task.id;
             const isExpanded = expandedTasks.has(taskId);
             
+            // 检查是否是 Plan Todo
+            const isPlanTodo = task.is_plan_todo || task.plan_required || false;
+            
             const description = task.description || task.progress || '';
             const assignee = task.assignee || 'unknown';
             
@@ -1080,6 +1083,9 @@ POST   /api/git/pull           - 从远程仓库拉取
             
             const metaItems = [];
             metaItems.push(`<span>👤 ${assignee}</span>`);
+            if (isPlanTodo) {
+                metaItems.push(`<span style="background: #6366f1; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px;">📋 Plan Todo</span>`);
+            }
             if (task.created_at) {
                 const date = new Date(task.created_at).toLocaleDateString('zh-CN');
                 metaItems.push(`<span>📅 ${date}</span>`);
