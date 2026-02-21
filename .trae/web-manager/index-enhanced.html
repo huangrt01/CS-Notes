@@ -762,6 +762,12 @@ POST   /api/git/pull           - 从远程仓库拉取
                         <option value="user + ai">👥 User + AI</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="taskPlan" style="width: auto;">
+                        📋 Plan Todo（先 plan 再 review 再执行）
+                    </label>
+                </div>
                 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                     <button class="btn" onclick="addTask()">添加任务</button>
                     <button class="btn-secondary" onclick="toggleAddTask()">取消</button>

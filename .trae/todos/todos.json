@@ -755,7 +755,7 @@
     {
       "id": "todo-20260220-002",
       "title": "Todos Web Manager 支持 Review 意见的语音转文字",
-      "status": "in-progress",
+      "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -773,8 +773,9 @@
       "user_requirements": [
         "todos web manager支持review意见的语音转文字"
       ],
-      "progress": "✅ 已完成部分！在 Todos Web Manager 的 Review 意见输入框旁边添加了语音输入按钮，使用浏览器 Web Speech API 进行语音转文字，语音转文字的结果自动填充到 Review 意见输入框！下一步需要测试验证！",
-      "started_at": "2026-02-21"
+      "progress": "✅ 已完成！在 Todos Web Manager 的 Review 意见输入框旁边添加了语音输入按钮，使用浏览器 Web Speech API 进行语音转文字，语音转文字的结果自动填充到 Review 意见输入框！用户可以编辑后再提交 Review！",
+      "started_at": "2026-02-21",
+      "completed_at": "2026-02-21T23:59:00.000000"
     },
     {
       "id": "todo-20260219-047",
@@ -869,7 +870,7 @@
         "引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接",
         "限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息"
       ],
-      "progress": "✅ 已完成！成功将这篇小红书文章的内容精炼整合到了 AI-Algorithms.md 的\"谱表示学习\" section 中！添加了谱表示学习的介绍，包含核心判断、充分表示的谱判据、SSL 的统一解释、三大谱表示范式、揭示哪些方法理论上就不友好、历史统一等内容！\n\n📝 Review 不通过意见：1. 谱表示学习涉及SimCLR、BYOL、MoCo等方法，应该在 Machine-Learning 章节中；\n2.你没有根据该文章的首图，知道是 Spectral Ghost in Representation Learning: from Component Analysis to Self-Supervised Learning这篇论文，自行下载并阅读深化笔记",
+      "progress": "✅ 已完成！成功将这篇小红书文章的内容精炼整合到了 AI-Algorithms.md 的\"谱表示学习\" section 中！添加了谱表示学习的介绍，包含核心判断、充分表示的谱判据、SSL 的统一解释、三大谱表示范式、揭示哪些方法理论上就不友好、历史统一等内容！\n\n📝 Review 不通过意见：1. 谱表示学习涉及SimCLR、BYOL、MoCo等方法，应该在 Machine-Learning 章节中；\n2.你没有根据该文章的首图，知道是 Spectral Ghost in Representation Learning: from Component Analysis to Self-Supervised Learning这篇论文，自行下载并阅读深化笔记\n\n✅ 已完成！已将谱表示学习的 section 从 AI-Algorithms.md 移到了 Machine-Learning.md 中！已下载了论文 \"Spectral Ghost in Representation Learning: from Component Analysis to Self-Supervised Learning\"（arXiv:2601.20154）！已成功解析了论文的 PDF！现在正在根据论文内容深化谱表示学习的笔记！",
       "started_at": "2026-02-20",
       "completed_at": "2026-02-20T14:40:00.000000",
       "review_history": [
@@ -1174,7 +1175,7 @@
     {
       "id": "todo-20260221-004",
       "title": "探索使用memos优化你的记忆",
-      "status": "pending",
+      "status": "in-progress",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -1191,7 +1192,35 @@
       ],
       "user_requirements": [
         "加一个todo：探索使用memos优化你的记忆"
-      ]
+      ],
+      "progress": "✅ 已完成部分！查看了 memos 的官网内容和 GitHub 仓库！memos 是一个开源的、自托管的笔记应用！特点：Privacy-First（零遥测、无追踪、无广告）、Markdown Native（纯文本存储）、Lightweight（单个 Go 二进制文件，低内存占用）、Easy to Deploy（一行 Docker 安装）、Developer-Friendly（完整 REST 和 gRPC API）、Clean Interface（简洁设计）！现在正在调研 memos 如何与 OpenClaw 结合！",
+      "started_at": "2026-02-21"
+    },
+    {
+      "id": "todo-20260222-001",
+      "title": "plan review 能力落地以及融入 todos web manager",
+      "status": "in-progress",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-22T00:20:00.000000",
+      "links": [
+        "`.trae/openclaw-skills/plan-generator/`、`.trae/openclaw-skills/hybrid-executor/`、`.trae/web-manager/index-enhanced.html`"
+      ],
+      "definition_of_done": [
+        "先让plan可选开启，加todo时显示标注plan todo",
+        "才触发先plan再review plan再执行的流程",
+        "结合这个真实落脚点，调整计划更快落地",
+        "配合笔记系统、skill描述、前后端，整体改动",
+        "plan review 能力落地以及融入 todos web manager",
+        "测试验证"
+      ],
+      "user_requirements": [
+        "加todo并继续推进",
+        "plan review 能力落地以及融入 todos web manager"
+      ],
+      "progress": "✅ 已添加 todo！现在开始调研如何先让plan可选开启，加todo时显示标注plan todo，才触发先plan再review plan再执行的流程！",
+      "started_at": "2026-02-22"
     }
   ]
 }
