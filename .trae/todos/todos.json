@@ -5,7 +5,7 @@
     {
       "id": "todo-20260223-003",
       "title": "本质化重构 Plan 机制 - Plan 应该与 Todo 绑定而不是独立状态",
-      "status": "in-progress",
+      "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -14,7 +14,8 @@
         "`.trae/web-manager/server.py`",
         "`.trae/web-manager/index-enhanced.html`",
         "`.trae/plans/`",
-        "`.trae/todos/todos.json`"
+        "`.trae/todos/todos.json`",
+        "`.trae/documents/Plan-机制本质化重构-Plan与Todo绑定.md`"
       ],
       "definition_of_done": [
         "分析当前 plans 作为独立状态的问题",
@@ -24,7 +25,9 @@
         "迁移现有的 plans，与对应的 todo 绑定（如果能匹配的话）",
         "更新统计面板和 UI，移除独立的 Plans 状态"
       ],
-      "progress": "💡 好的本质化思考！Plan 确实不应该成为一个单独的状态，而应该和某个 todo 绑定起来。当前问题：Plans 是独立的状态，和 Todo 没有明确的关联。改进方向：Plan 作为 Todo 的一个字段（plan_content、plan_status 等），前端展示 Todo 时可以展开查看 Plan。"
+      "progress": "✅ 已完成！Plan 机制本质化重构成功！\n\n核心变化：\n1. Plan 不再是独立的状态，而是 Todo 的一个字段（property）\n2. 一个 Todo 可以有 0 或 1 个 Plan，Plan 作为 Todo 的 `plan` 字段存在\n3. 前端展示：不再有独立的 Plans 标签页，Plan 直接在对应的 Todo 卡片中展示（点击展开）\n4. Todo 卡片标识：有 Plan 的 Todo 会显示「📋 有 Plan」标记\n\n数据模型：\n```json\n{\n  \"content\": \"Plan 的完整内容（Markdown）\",\n  \"status\": \"pending\",  // pending / approved / rejected\n  \"created_at\": \"...\",\n  \"review_comment\": \"审核评论（可选）\",\n  \"reviewed_at\": \"...\"\n}\n```\n\n已创建设计文档：`.trae/documents/Plan-机制本质化重构-Plan与Todo绑定.md`\n\n前端已更新：`.trae/web-manager/index-enhanced.html` 已更新，移除独立的 Plans 标签页，Plan 直接在 Todo 中展示！",
+      "started_at": "2026-02-23T01:20:00.000000",
+      "completed_at": "2026-02-23T01:57:00.000000"
     },
     {
       "id": "todo-20260223-002",
