@@ -1412,6 +1412,58 @@
       ],
       "progress": "⏸️ 待执行",
       "original_text": "高优先级：测试智能任务解析 Skill"
+    },
+    {
+      "id": "todo-20260223-001",
+      "title": "在整理笔记的SOP中，明确要求先使用markdown-toc skill查看文件结构",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-23T00:36:00.000000",
+      "definition_of_done": [
+        "查看 project_rules.md 中的笔记整理流程",
+        "在笔记整理流程中，明确要求先使用 markdown-toc skill 查看文件结构",
+        "找到最合适的 section 后再整合内容",
+        "确保整理笔记时不会放错位置"
+      ],
+      "progress": "⏸️ 待执行"
+    },
+    {
+      "id": "todo-20260223-002",
+      "title": "制定笔记整理时的小标题规范，要求减少小标题，让标题更具有归类、抽象的能力",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-23T00:36:00.000000",
+      "definition_of_done": [
+        "分析现有笔记整理的小标题问题",
+        "制定笔记整理时的小标题规范",
+        "要求减少小标题（一两个就够了）",
+        "要求标题更具有归类、抽象的能力",
+        "在 project_rules.md 中更新笔记整理规范"
+      ],
+      "progress": "⏸️ 待执行"
+    },
+    {
+      "id": "todo-20260223-003",
+      "title": "重新整理微信公众号文章《为什么你公司的内部创业大概率会死？》，确保放到正确的位置，并且减少小标题",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-23T00:36:00.000000",
+      "definition_of_done": [
+        "使用 markdown-toc skill 查看非技术知识.md 的目录结构",
+        "找到正确的 section（### 创业 & 企业）",
+        "重新整理文章内容，减少小标题",
+        "让标题更具有归类、抽象的能力",
+        "确保内容放到正确的位置"
+      ],
+      "progress": "✅ 已完成！已成功重新整理微信公众号文章《为什么你公司的内部创业大概率会死？》，确保放到正确的位置（### 创业 & 企业 section 下），并且减少了小标题！文章内容已精炼整理，减少了小标题，只保留了最核心的几个标题：核心结论、大企业内部孵化失败率、Agency Problem（代理人问题）、创始人困局：CEO下场也未必救得了、谁做对了：狙击手模式，拼多多与亚马逊、字节那套为什么很难学：你缺的不是机制，是航母、Conviction: Be right，a lot、结语：Conviction是反人性的能力！",
+      "started_at": "2026-02-23T00:36:00.000000",
+      "completed_at": "2026-02-23T00:55:00.000000"
     }
   ]
 }
