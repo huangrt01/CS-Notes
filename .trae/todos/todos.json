@@ -1,11 +1,11 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-22T18:23:54.183717",
+  "updated_at": "2026-02-22T18:30:00.426342",
   "todos": [
     {
       "id": "todo-20260222-006",
       "title": "装一个xiaohongshu-mcp，需要安装 mcporter 进行统一管理",
-      "status": "pending",
+      "status": "in-progress",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -16,7 +16,7 @@
         "安装 xiaohongshu-mcp",
         "测试 xiaohongshu-mcp 是否正常工作"
       ],
-      "progress": "⏸️ 待执行"
+      "progress": "✅ 已调研！mcporter 是一个 TypeScript runtime、CLI 和代码生成工具包，用于 Model Context Protocol (MCP)！GitHub 仓库：https://github.com/steipete/mcporter！xiaohongshu-mcp 也在 ClawHub 上找到了！下一步：安装 mcporter 和 xiaohongshu-mcp！"
     },
     {
       "id": "todo-20260222-005",
