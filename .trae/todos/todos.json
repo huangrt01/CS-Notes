@@ -1,7 +1,23 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-22T18:21:01.456497",
+  "updated_at": "2026-02-22T18:23:54.183717",
   "todos": [
+    {
+      "id": "todo-20260222-006",
+      "title": "装一个xiaohongshu-mcp，需要安装 mcporter 进行统一管理",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-22T18:23:54.183682",
+      "definition_of_done": [
+        "调研 mcporter 的安装和使用方法",
+        "安装 mcporter 进行统一管理",
+        "安装 xiaohongshu-mcp",
+        "测试 xiaohongshu-mcp 是否正常工作"
+      ],
+      "progress": "⏸️ 待执行"
+    },
     {
       "id": "todo-20260222-005",
       "title": "添加两个 OpenClaw Cron 任务：推进Todos（每30分钟）和沉淀v2.0（每24小时）",
