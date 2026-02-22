@@ -1,0 +1,16 @@
+
+{
+  "name": "markdown-toc",
+  "version": "0.1.0",
+  "description": "Markdown TOC - 提取 Markdown 文件的目录层级结构",
+  "author": "CS-Notes 项目",
+  "entry": "main.py",
+  "capabilities": ["filesystem"],
+  "commands": [
+    {
+      "name": "extract",
+      "description": "提取 Markdown 文件的目录",
+      "handler": "handle_extract"
+    }
+  ]
+}

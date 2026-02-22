@@ -1,11 +1,11 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-22T20:41:48.219885",
+  "updated_at": "2026-02-22T21:01:52.838870",
   "todos": [
     {
       "id": "todo-20260222-009",
       "title": "将 .trae/skills/markdown-toc 转化为 OpenClaw 的 skill 并使用",
-      "status": "in-progress",
+      "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -15,10 +15,11 @@
         "将其转化为 OpenClaw 的 skill 格式（放在 .trae/openclaw-skills/ 下）",
         "测试并使用该 skill"
       ],
-      "progress": "🔍 已发现 .trae/skills/markdown-toc 目录！下一步：检查该目录的内容，转化为 OpenClaw 的 skill 格式！",
+      "progress": "✅ 已完成！已成功将 .trae/skills/markdown-toc 转化为 OpenClaw 的 skill！创建了：.trae/openclaw-skills/markdown-toc/ 目录、skill.json、main.py！",
       "links": [
         ".trae/skills/markdown-toc/"
-      ]
+      ],
+      "completed_at": "2026-02-22T21:01:52.838848"
     },
     {
       "id": "todo-20260222-008",
