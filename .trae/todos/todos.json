@@ -511,7 +511,7 @@
         "帮助你成为更好的你",
         "**这是一个长期探索项，完成的标准是你成功运用10个新skill帮助解决了我的真实任务和问题瓶颈**"
       ],
-      "progress": "🔍 探索中：已发现 ClawHub 命令行工具（clawhub），找到了多个有用的 skill：playwright-scraper-skill（Playwright 网页抓取，反爬保护）、zhihu（知乎 AI Bot）、zhihu-hot-cn（知乎热榜监控）。现在可以基于 ClawHub 增强能力了！下一步：安装并使用这些 skills 来解决真实问题！"
+      "progress": "🔍 探索中：已发现 ClawHub 命令行工具（clawhub），找到了多个有用的 skill！\n\n✅ 已发现的 skills：\n1. playwright-scraper-skill（Playwright 网页抓取，反爬保护）\n2. zhihu（知乎 AI Bot）\n3. zhihu-hot-cn（知乎热榜监控）\n4. sergei-mikhailov-tg-channel-reader（读取和总结 Telegram 频道帖子）\n5. agent-memory-store（AI 代理的共享语义记忆存储）\n6. mcp-client（Model Context Protocol (MCP) 客户端）\n7. clawd-zero-trust（OpenClaw 部署的零信任安全加固）\n8. clawsync（将 OpenClaw 工作区备份和恢复到 Git）\n9. visual-studio-agent（使用选定的视觉风格生成 AI 图像/视频）\n\n现在可以基于 ClawHub 增强能力了！下一步：安装并使用这些 skills 来解决真实问题！"
     },
     {
       "id": "todo-20260219-032",
@@ -616,7 +616,7 @@
     {
       "id": "todo-20260219-039",
       "title": "实现 OpenClaw 消息触发的交互方式（方案二）",
-      "status": "in-progress",
+      "status": "completed",
       "priority": "high",
       "assignee": "ai",
       "feedback_required": false,
@@ -636,7 +636,9 @@
         "最好是通过触发一条 OpenClaw 消息来触发，而不是写一套调 API 的逻辑",
         "和 Todos Web Manager 融合也有类似的问题"
       ],
-      "progress": "✅ 已完成！已测试 smart-task-parser Skill！成功运行了智能任务解析，任务已写入 todos.json！示例：输入\"高优先级：测试智能任务解析 Skill\"，成功创建了 todo-20260222-143544！下一步可以在实际使用中验证！"
+      "progress": "✅ 已完成！已测试 smart-task-parser Skill！成功运行了智能任务解析，任务已写入 todos.json！示例：输入\"高优先级：测试智能任务解析 Skill\"，成功创建了 todo-20260222-143544！",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-22T21:48:00.000000"
     },
     {
       "id": "todo-20260219-040",
