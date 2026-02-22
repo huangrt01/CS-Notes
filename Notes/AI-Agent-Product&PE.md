@@ -1178,7 +1178,20 @@ Agent Skills 是可扩展 AI 助手能力的模块化技能包，补充特定领
 
 ##### 胡渊鸣 AI 编程实战
 
-参考文章：[胡渊鸣 | 我给 10 个 Claude Code 打工](https://mp.weixin.qq.com/s/9qPD3gXj3HLmrKC64Q6fbQ)
+参考文章：
+- [胡渊鸣 | 我给 10 个 Claude Code 打工](https://mp.weixin.qq.com/s/9qPD3gXj3HLmrKC64Q6fbQ)
+- [参加Claude Code一岁生日party的一些收获](http://xhslink.com/o/5N0siTsgJA0)（2026-02-22 整理）
+
+**Claude Code 一岁生日 party 收获**（来源：http://xhslink.com/o/5N0siTsgJA0）：
+- 创业者都说现在用了 Claude Code 之后团队人数明显比以前更少，很多不超过 10 个人
+- 大家现在都喜欢招 AI native 的人，如何定义一个 AI native 的人？是 tinkerer，喜欢折腾 side project，学习和适应能力强
+- Technical 和 non-technical 的人之间的边界正在变得模糊，更关键的是是否 AI-native
+- Hackathon 的获奖者很多都不是程序员，第一名是个律师，第三名是个医生
+- Claude Code 团队表示，他们没有想到这么多人会使用一个基于 Terminal 的产品，之前以为 terminal 早就会被淘汰了
+- Claude Code 一开始是 Boris 的一个 side project，完全没有想到会这么成功。让我想到 OpenClaw 的创始人 Peter 最近一个访谈里说的，主持人问"这么多人在做 agent，为什么你的成功了？"Peter 说"It's hard to compete against someone who's just there to have fun."
+- Boris 建议大家在使用的时候尽量都用最好的模型、开 maximum effort。虽然这样听起来更贵，但是实际情况是模型更大概率会用更少的轮次解决你的问题，最后算下来可能反倒是节省 token 的
+- 组织者让现场的观众举手示意自己在哪些环境里用 Claude Code，绝大部分人是在 Terminal 里用。有趣的是，在移动端用 Claude Code 的人数比在 IDE 里用的人数要更多
+- 给开发者/创业者的建议：去围绕模型 6 个月之后的能力做产品，而不是围绕模型今天的能力做产品。产品功能应该现在是"barely works"
 
 **作者背景**：
 - 胡渊鸣（Ethan Hu），清华姚班 2017 届，MIT 计算机图形学博士
