@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-22T11:39:23.911231",
+  "updated_at": "2026-02-22T12:02:41.075302",
   "todos": [
     {
       "id": "todo-20260219-002",
@@ -400,7 +400,7 @@
         "RSSHub 也返回 403 错误",
         "需要使用 Playwright 模拟浏览器来绕过反爬机制"
       ],
-      "progress": "✅ Playwright 安装成功！已创建虚拟环境 playwright-venv，安装了 Playwright 和 Chromium 浏览器！已测试 Playwright 抓取 https://example.com，成功！HTML 保存到 test-playwright.html！下一步可以尝试抓取知乎文章！"
+      "progress": "✅ Playwright 安装成功！已创建 Python 虚拟环境 playwright-venv，安装了 Playwright 和 Chromium 浏览器！已测试 Playwright 抓取 https://example.com，成功！尝试抓取知乎文章（https://zhuanlan.zhihu.com/p/671331267），但返回 403 错误（知乎限制访问）！已更新 Notes/snippets/playwright_simple.py 以支持等待特定选择器！下一步可以尝试抓取其他网站（比如博客、GitHub 等），或者使用其他反爬绕过方法！"
     },
     {
       "id": "todo-20260219-031",

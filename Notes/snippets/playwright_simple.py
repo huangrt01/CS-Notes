@@ -58,9 +58,17 @@ def scrape_with_playwright(url: str, headless: bool = True, wait_time: int = 500
             print(f"Accessing: {url}")
             page.goto(url, wait_until="networkidle", timeout=30000)
             
-            # 等待一段时间
-            print(f"Waiting {wait_time}ms...")
-            page.wait_for_timeout(wait_time)
+            # 等待特定元素出现
+            try:
+                # Try to wait for common content selectors
+                page.wait_for_selector(".RichContent-inner", timeout=30000)  # Zhihu
+            except:
+                try:
+                    page.wait_for_selector("#js_content", timeout=30000)  # WeChat
+                except:
+                    # Fall back to waiting for timeout
+                    print(f"Waiting {wait_time}ms...")
+                    page.wait_for_timeout(wait_time)
             
             # 获取标题
             result["title"] = page.title()
