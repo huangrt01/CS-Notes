@@ -2,7 +2,8 @@
 created_at: 2026-02-18 01:44:30.472915
 id: plan-20260218-be83ec8c
 priority: high
-status: pending_review
+status: pending
+updated_at: '2026-02-22T23:26:16.298130'
 tags: []
 title: 测试 Plan Generator 的能力，验证它能否正常生成 Plan
 updated_at: '2026-02-18T01:45:19.402682'

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-21T00:32:12.605051",
+  "updated_at": "2026-02-22T23:19:10.768916",
   "todos": [
     {
       "id": "todo-20260219-001",
@@ -1265,6 +1265,33 @@
         }
       ],
       "archived_at": "2026-02-21T00:32:12.603226"
+    },
+    {
+      "id": "todo-20260222-008",
+      "title": "精炼整理微信公众号文章《中厂：二流互联网公司之殇》到非技术知识.md",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-22T20:05:10.913598",
+      "definition_of_done": [
+        "精炼整理文章内容，重点关注：Peter Thiel 的十年 DCF、陌陌/她社区/映客后期/斗鱼陈少杰的失败例子、巨头的延长线、真正的长期主义",
+        "整合到非技术知识.md 的合适 section",
+        "精炼语言，贴近笔记整体风格"
+      ],
+      "progress": "✅ 已完成！已成功将内容精炼整合到非技术知识.md 的 \"### 创业 & 企业\" section！添加了：Peter Thiel 的十年 DCF、失败例子（陌陌、她社区、趣头条、映客后期、斗鱼陈少杰）、巨头的延长线、真正的长期主义、张一鸣造钟！",
+      "links": [
+        "https://mp.weixin.qq.com/s/4LQtw1FKfrxYidroyiHgyA"
+      ],
+      "completed_at": "2026-02-22T20:41:48.219869",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-22T23:19:10.767250",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-22T23:19:10.767256"
     }
   ]
 }
