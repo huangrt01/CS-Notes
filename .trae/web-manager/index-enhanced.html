@@ -1,9 +1,55 @@
+<!--
+=======================================================================
+CS-Notes Todos Web Manager - 使用说明
+=======================================================================
+
+启动后端 API 的步骤：
+
+1. 安装依赖（首次使用）：
+   cd /Users/bytedance/CS-Notes/.trae/web-manager
+   pip3 install flask flask-cors
+
+2. 启动后端服务器：
+   cd /Users/bytedance/CS-Notes/.trae/web-manager
+   python3 server.py
+
+3. 在浏览器中访问：
+   http://localhost:5000
+
+=======================================================================
+本次运行的有效指令记录：
+=======================================================================
+
+安装依赖：
+pip3 install flask flask-cors
+
+启动服务器：
+python3 server.py
+
+=======================================================================
+API 端点说明：
+=======================================================================
+
+GET    /api/tasks              - 获取任务列表
+POST   /api/tasks              - 添加新任务
+PUT    /api/tasks/<id>         - 更新任务
+DELETE /api/tasks/<id>         - 删除任务
+PUT    /api/tasks/<id>/status  - 更新任务状态
+POST   /api/tasks/<id>/review  - Review 任务（通过/不通过）
+GET    /api/tasks/archive      - 获取归档任务
+GET    /api/git/status         - 获取 Git 状态
+POST   /api/git/commit         - 提交 Git 更改
+POST   /api/git/push           - 推送到远程仓库
+POST   /api/git/pull           - 从远程仓库拉取
+
+=======================================================================
+-->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS-Notes Todos</title>
+    <title>CS-Notes Todos Web Manager</title>
     <style>
         * {
             margin: 0;
@@ -38,6 +84,11 @@
             font-size: 28px;
             font-weight: 700;
             margin-bottom: 8px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
         }
         
         .tabs {
@@ -162,6 +213,119 @@
             color: white;
         }
         
+        .filters {
+            background: #f7f7f7;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .filters h3 {
+            margin-bottom: 16px;
+            color: #333;
+        }
+        
+        .filters-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .add-task-toggle {
+            margin-bottom: 16px;
+        }
+        
+        .add-task {
+            background: #f7f7f7;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .add-task h3 {
+            margin-bottom: 16px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
         .task-list {
             list-style: none;
         }
@@ -185,6 +349,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
+            flex-wrap: wrap;
         }
         
         .task-title {
@@ -193,6 +358,7 @@
             color: #333;
             flex: 1;
             cursor: pointer;
+            min-width: 200px;
         }
         
         .task-title:hover {
@@ -263,12 +429,38 @@
             padding-left: 20px;
         }
         
+        .review-comment {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+        }
+        
+        .review-comment h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+        
+        .review-comment p {
+            font-size: 14px;
+            color: #856404;
+        }
+        
         .task-meta {
             display: flex;
             gap: 16px;
             font-size: 13px;
             color: #888;
             flex-wrap: wrap;
+        }
+        
+        .task-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         
         .task-actions {
@@ -278,23 +470,6 @@
             padding-top: 16px;
             border-top: 1px solid #e0e0e0;
             flex-wrap: wrap;
-        }
-        
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
         
         .btn-secondary {
@@ -327,6 +502,21 @@
             transform: translateY(-1px);
         }
         
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-warning:hover {
+            background: #d97706;
+        }
+        
         .btn-danger {
             background: #ef4444;
             color: white;
@@ -342,6 +532,35 @@
             background: #dc2626;
         }
         
+        .review-section {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border: 1px solid #e0e4ff;
+        }
+        
+        .review-input-group {
+            margin-bottom: 12px;
+        }
+        
+        .review-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .review-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -351,14 +570,6 @@
         .empty-state-icon {
             font-size: 64px;
             margin-bottom: 16px;
-        }
-        
-        .error-message {
-            background: #fee2e2;
-            color: #dc2626;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
         }
         
         .loading {
@@ -380,6 +591,42 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 22px;
+            }
+            
+            .content {
+                padding: 16px;
+            }
+            
+            .task-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .task-priority {
+                margin-left: 0;
+            }
+            
+            .filters-row {
+                flex-direction: column;
+            }
+            
+            .stats-panel {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
@@ -426,6 +673,67 @@
                 </div>
             </div>
             
+            <div class="filters" id="filtersSection">
+                <h3>🔍 筛选和搜索</h3>
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label>按优先级筛选</label>
+                        <select id="filterPriority" onchange="applyFilters()">
+                            <option value="all">全部优先级</option>
+                            <option value="high">🔴 高优先级</option>
+                            <option value="medium">🟡 中优先级</option>
+                            <option value="low">🟢 低优先级</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>搜索任务</label>
+                        <input type="text" id="searchQuery" placeholder="搜索任务标题或描述..." oninput="applyFilters()">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="addTaskToggle" class="add-task-toggle">
+                <button class="btn" onclick="toggleAddTask()">➕ 添加新任务</button>
+            </div>
+            
+            <div class="add-task" id="addTaskSection" style="display: none;">
+                <h3>➕ 添加新任务</h3>
+                <div class="form-group">
+                    <label>任务标题</label>
+                    <input type="text" id="taskTitle" placeholder="输入任务标题...">
+                </div>
+                <div class="form-group">
+                    <label>任务描述</label>
+                    <textarea id="taskDescription" placeholder="输入任务描述..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>优先级</label>
+                    <select id="taskPriority">
+                        <option value="high">🔴 高优先级</option>
+                        <option value="medium" selected>🟡 中优先级</option>
+                        <option value="low">🟢 低优先级</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Assignee</label>
+                    <select id="taskAssignee">
+                        <option value="ai">👤 AI</option>
+                        <option value="user" selected>👤 User</option>
+                        <option value="user + ai">👥 User + AI</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="taskPlan" style="width: auto;">
+                        📋 Plan Todo（先 plan 再 review 再执行）
+                    </label>
+                </div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn" onclick="addTask()">添加任务</button>
+                    <button class="btn-secondary" onclick="toggleAddTask()">取消</button>
+                </div>
+            </div>
+            
             <div class="sub-tabs" id="subTabs">
             </div>
             
@@ -445,6 +753,7 @@
         let currentMainTab = 'my-tasks';
         let currentSubTab = 'pending-plans';
         let isLoading = false;
+        let isArchive = false;
         let expandedTasks = new Set();
         
         const API_BASE = '/api';
@@ -454,18 +763,32 @@
         }
         
         async function loadTasks() {
+            if (isLoading) return;
+            isLoading = true;
+            
             updateStatus('🔄 正在加载任务...');
             hideError();
             
             try {
-                const response = await fetch(`${API_BASE}/tasks`);
+                const endpoint = isArchive ? '/tasks/archive' : '/tasks';
+                const response = await fetch(`${API_BASE}${endpoint}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.success) {
-                    tasks = data.tasks || [];
-                    updateStatus(`✅ 已加载 ${tasks.length} 个任务`);
-                    updateStats();
-                    renderContent();
+                    if (isArchive) {
+                        archiveTasks = data.tasks || [];
+                        updateStatus(`✅ 已加载 ${archiveTasks.length} 个归档任务`);
+                    } else {
+                        tasks = data.tasks || [];
+                        updateStatus(`✅ 已加载 ${tasks.length + plans.length} 个内容（${tasks.length} 个任务 + ${plans.length} 个 Plans）`);
+                        updateStats();
+                    }
+                    applyFilters();
                 } else {
                     throw new Error(data.message || '加载失败');
                 }
@@ -473,6 +796,9 @@
                 console.error('加载任务失败:', error);
                 showError(`❌ 加载任务失败: ${error.message}<br><br>💡 请确保后端服务器正在运行 (python3 server.py)`);
                 updateStatus('❌ 加载失败');
+                renderEmptyState('加载失败', '请检查后端服务器是否正在运行');
+            } finally {
+                isLoading = false;
             }
         }
         
@@ -484,6 +810,9 @@
                 if (data.success) {
                     plans = data.plans || [];
                     updateStats();
+                    if (tasks.length > 0) {
+                        updateStatus(`✅ 已加载 ${tasks.length + plans.length} 个内容（${tasks.length} 个任务 + ${plans.length} 个 Plans）`);
+                    }
                     renderContent();
                 }
             } catch (error) {
@@ -521,6 +850,7 @@
         
         function switchMainTab(tab) {
             currentMainTab = tab;
+            isArchive = false;
             
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
@@ -536,53 +866,160 @@
         
         function switchSubTab(subtab) {
             currentSubTab = subtab;
+            isArchive = subtab === 'archive';
             
             document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
             document.querySelector(`.sub-tab[data-subtab="${subtab}"]`).classList.add('active');
             
+            if (isArchive) {
+                loadTasks();
+            } else {
+                renderContent();
+            }
+        }
+        
+        function applyFilters() {
             renderContent();
+        }
+        
+        function getFilteredTasks(items, currentTab, currentSubTab) {
+            let filtered = [...items];
+            
+            const filterPriority = document.getElementById('filterPriority').value;
+            if (filterPriority !== 'all') {
+                filtered = filtered.filter(item => item.priority === filterPriority);
+            }
+            
+            const searchQuery = document.getElementById('searchQuery').value.toLowerCase().trim();
+            if (searchQuery) {
+                filtered = filtered.filter(item => 
+                    (item.title && item.title.toLowerCase().includes(searchQuery)) || 
+                    (item.description && item.description.toLowerCase().includes(searchQuery)) ||
+                    (item.progress && item.progress.toLowerCase().includes(searchQuery))
+                );
+            }
+            
+            filtered = sortItems(filtered, currentTab, currentSubTab, isArchive);
+            
+            return filtered;
+        }
+        
+        function sortItems(itemsArray, currentTab, currentSubTab, isArchive) {
+            const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
+            const statusOrder = { 'completed': 0, 'in-progress': 1, 'pending': 2 };
+            
+            return [...itemsArray].sort((a, b) => {
+                if (isArchive) {
+                    const aTime = a.archived_at ? new Date(a.archived_at).getTime() : 0;
+                    const bTime = b.archived_at ? new Date(b.archived_at).getTime() : 0;
+                    return bTime - aTime;
+                }
+                
+                if (currentSubTab === 'pending-review-tasks' || currentTab === 'my-tasks' && currentSubTab === 'pending-review-tasks') {
+                    const aTime = a.completed_at ? new Date(a.completed_at).getTime() : 0;
+                    const bTime = b.completed_at ? new Date(b.completed_at).getTime() : 0;
+                    return bTime - aTime;
+                } else if (currentSubTab === 'in-progress') {
+                    const aPriority = priorityOrder[a.priority] || 2;
+                    const bPriority = priorityOrder[b.priority] || 2;
+                    if (aPriority !== bPriority) {
+                        return aPriority - bPriority;
+                    }
+                    const aTime = a.started_at ? new Date(a.started_at).getTime() : 0;
+                    const bTime = b.started_at ? new Date(b.started_at).getTime() : 0;
+                    return bTime - aTime;
+                } else if (currentSubTab === 'pending') {
+                    const aPriority = priorityOrder[a.priority] || 2;
+                    const bPriority = priorityOrder[b.priority] || 2;
+                    if (aPriority !== bPriority) {
+                        return aPriority - bPriority;
+                    }
+                    const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+                    const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+                    return bTime - aTime;
+                } else if (currentSubTab.includes('plans')) {
+                    const aPriority = priorityOrder[a.priority] || 2;
+                    const bPriority = priorityOrder[b.priority] || 2;
+                    if (aPriority !== bPriority) {
+                        return aPriority - bPriority;
+                    }
+                    const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+                    const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+                    return bTime - aTime;
+                } else {
+                    const aStatus = statusOrder[a.status] || 2;
+                    const bStatus = statusOrder[b.status] || 2;
+                    if (aStatus !== bStatus) {
+                        return aStatus - bStatus;
+                    }
+                    const aTime = a.completed_at || a.started_at || a.created_at;
+                    const bTime = b.completed_at || b.started_at || b.created_at;
+                    const aTs = aTime ? new Date(aTime).getTime() : 0;
+                    const bTs = bTime ? new Date(bTime).getTime() : 0;
+                    return bTs - aTs;
+                }
+            });
         }
         
         function renderContent() {
             const subTabsContainer = document.getElementById('subTabs');
             const taskList = document.getElementById('taskList');
+            const addTaskToggle = document.getElementById('addTaskToggle');
+            const addTaskSection = document.getElementById('addTaskSection');
             
             let subTabsHtml = '';
+            let items = [];
+            let isPlans = false;
             
             if (currentMainTab === 'my-tasks') {
                 subTabsHtml = `
                     <button class="sub-tab ${currentSubTab === 'pending-plans' ? 'active' : ''}" data-subtab="pending-plans" onclick="switchSubTab('pending-plans')">📋 待审核 Plans</button>
                     <button class="sub-tab ${currentSubTab === 'pending-review-tasks' ? 'active' : ''}" data-subtab="pending-review-tasks" onclick="switchSubTab('pending-review-tasks')">👀 待审核 Tasks</button>
                 `;
+                
+                if (currentSubTab === 'pending-plans') {
+                    items = plans.filter(p => p.status === 'pending');
+                    isPlans = true;
+                } else if (currentSubTab === 'pending-review-tasks') {
+                    items = tasks.filter(t => t.status === 'completed');
+                }
+                
+                addTaskToggle.style.display = 'none';
+                addTaskSection.style.display = 'none';
             } else {
                 subTabsHtml = `
+                    <button class="sub-tab ${currentSubTab === 'all' ? 'active' : ''}" data-subtab="all" onclick="switchSubTab('all')">📋 全部</button>
                     <button class="sub-tab ${currentSubTab === 'in-progress' ? 'active' : ''}" data-subtab="in-progress" onclick="switchSubTab('in-progress')">🚀 进行中</button>
                     <button class="sub-tab ${currentSubTab === 'pending' ? 'active' : ''}" data-subtab="pending" onclick="switchSubTab('pending')">⏸️ 待处理</button>
                     <button class="sub-tab ${currentSubTab === 'reviewed-plans' ? 'active' : ''}" data-subtab="reviewed-plans" onclick="switchSubTab('reviewed-plans')">✅ 已审核 Plans</button>
                     <button class="sub-tab ${currentSubTab === 'archive' ? 'active' : ''}" data-subtab="archive" onclick="switchSubTab('archive')">📦 归档</button>
                 `;
+                
+                if (currentSubTab === 'all') {
+                    items = tasks;
+                    addTaskToggle.style.display = 'block';
+                } else if (currentSubTab === 'in-progress') {
+                    items = tasks.filter(t => t.status === 'in-progress');
+                    addTaskToggle.style.display = 'block';
+                } else if (currentSubTab === 'pending') {
+                    items = tasks.filter(t => t.status === 'pending');
+                    addTaskToggle.style.display = 'block';
+                } else if (currentSubTab === 'reviewed-plans') {
+                    items = plans.filter(p => p.status !== 'pending');
+                    isPlans = true;
+                    addTaskToggle.style.display = 'none';
+                } else if (currentSubTab === 'archive') {
+                    items = archiveTasks;
+                    addTaskToggle.style.display = 'none';
+                } else {
+                    addTaskToggle.style.display = 'block';
+                }
             }
             
             subTabsContainer.innerHTML = subTabsHtml;
             
-            let items = [];
-            
-            if (currentMainTab === 'my-tasks') {
-                if (currentSubTab === 'pending-plans') {
-                    items = plans.filter(p => p.status === 'pending');
-                } else if (currentSubTab === 'pending-review-tasks') {
-                    items = tasks.filter(t => t.status === 'completed');
-                }
-            } else {
-                if (currentSubTab === 'in-progress') {
-                    items = tasks.filter(t => t.status === 'in-progress');
-                } else if (currentSubTab === 'pending') {
-                    items = tasks.filter(t => t.status === 'pending');
-                } else if (currentSubTab === 'reviewed-plans') {
-                    items = plans.filter(p => p.status !== 'pending');
-                } else if (currentSubTab === 'archive') {
-                    items = archiveTasks;
-                }
+            if (currentSubTab !== 'archive' && !isPlans) {
+                items = getFilteredTasks(items, currentMainTab, currentSubTab);
             }
             
             if (items.length === 0) {
@@ -591,7 +1028,7 @@
             }
             
             let html = '';
-            if (currentSubTab.includes('plans')) {
+            if (isPlans) {
                 html = items.map(plan => renderPlanItem(plan)).join('');
             } else {
                 html = items.map(task => renderTaskItem(task)).join('');
@@ -626,9 +1063,13 @@
                         ${plan.status === 'pending' ? `
                         <div class="task-details-section">
                             <h4>审核 Plan</h4>
+                            <div class="form-group">
+                                <label>审核评论</label>
+                                <textarea id="plan-comment-${plan.id}" placeholder="输入审核评论（可选）"></textarea>
+                            </div>
                             <div class="task-actions">
                                 <button class="btn-success" onclick="reviewPlan('${plan.id}', 'approved')">✅ 通过</button>
-                                <button class="btn-danger" onclick="reviewPlan('${plan.id}', 'rejected')">❌ 拒绝</button>
+                                <button class="btn-secondary" onclick="reviewPlan('${plan.id}', 'rejected')">❌ 拒绝</button>
                             </div>
                         </div>
                         ` : ''}
@@ -638,54 +1079,194 @@
         }
         
         function renderTaskItem(task) {
-            const isExpanded = expandedTasks.has(task.id);
             const priorityClass = `priority-${task.priority}`;
             const priorityText = task.priority === 'high' ? '🔴 高' : task.priority === 'medium' ? '🟡 中' : '🟢 低';
+            const taskId = task.id;
+            const isExpanded = expandedTasks.has(taskId);
             
-            let statusBadge = '';
-            if (task.status === 'completed') {
-                statusBadge = '<span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #e0e7ff; color: #3730a3;">👀 待审核</span>';
-            } else if (task.status === 'in-progress') {
-                statusBadge = '<span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #fef3c7; color: #d97706;">🚀 进行中</span>';
-            } else if (task.status === 'pending') {
-                statusBadge = '<span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #dcfce7; color: #166534;">⏸️ 待处理</span>';
+            const isPlanTodo = task.is_plan_todo || task.plan_required || false;
+            const description = task.description || task.progress || '';
+            const assignee = task.assignee || 'unknown';
+            
+            let actionsHtml = '';
+            if (!isArchive) {
+                if (task.status === 'completed') {
+                    actionsHtml = `
+                        <div class="review-section">
+                            <div class="review-input-group">
+                                <div style="display: flex; gap: 8px; align-items: flex-start;">
+                                    <textarea id="review-comment-${taskId}" placeholder="输入 Review 意见（可选）..." class="review-input" style="flex: 1;"></textarea>
+                                    <button class="btn-secondary" id="voice-btn-${taskId}" onclick="toggleVoiceInput('${taskId}')" title="语音输入" style="padding: 8px 12px; font-size: 18px;">🎤</button>
+                                </div>
+                                <div id="voice-status-${taskId}" style="margin-top: 8px; font-size: 12px; color: #666; display: none;">
+                                    🎙️ 正在听...
+                                </div>
+                            </div>
+                            <div class="task-actions">
+                                ${isPlanTodo ? `<button class="btn" onclick="viewPlan('${taskId}')">📋 查看 Plan</button>` : ''}
+                                <button class="btn-danger" onclick="submitReviewInline('${taskId}', false)">❌ 不通过</button>
+                                <button class="btn-success" onclick="submitReviewInline('${taskId}', true)">✅ 通过</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    actionsHtml = `
+                        <div class="task-actions">
+                            ${isPlanTodo ? `<button class="btn" onclick="viewPlan('${taskId}')">📋 查看 Plan</button>` : ''}
+                            ${task.status !== 'in-progress' && task.status !== 'completed' ? 
+                                `<button class="btn-warning" onclick="updateTaskStatus('${taskId}', 'in-progress')">🚀 开始</button>` : ''}
+                            ${task.status !== 'completed' ? 
+                                `<button class="btn-success" onclick="updateTaskStatus('${taskId}', 'completed')">✅ 完成</button>` : ''}
+                            ${task.status === 'in-progress' || task.status === 'completed'? 
+                                `<button class="btn-secondary" onclick="updateTaskStatus('${taskId}', 'pending')">⏸️ 重置</button>` : ''}
+                        </div>
+                    `;
+                }
+            }
+            
+            const metaItems = [];
+            metaItems.push(`<span>👤 ${assignee}</span>`);
+            if (isPlanTodo) {
+                metaItems.push(`<span style="background: #6366f1; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px;">📋 Plan Todo</span>`);
+            }
+            if (task.created_at) {
+                const date = new Date(task.created_at).toLocaleDateString('zh-CN');
+                metaItems.push(`<span>📅 ${date}</span>`);
+            }
+            if (task.status === 'completed' && task.completed_at) {
+                const completedDate = new Date(task.completed_at).toLocaleDateString('zh-CN');
+                metaItems.push(`<span>✅ ${completedDate}</span>`);
+            }
+            
+            let reviewCommentHtml = '';
+            if (task.review_comment) {
+                reviewCommentHtml = `
+                    <div class="review-comment">
+                        <h4>💬 Review 意见</h4>
+                        <p>${escapeHtml(task.review_comment)}</p>
+                    </div>
+                `;
+            }
+            
+            let detailsHtml = '';
+            if (task.definition_of_done && task.definition_of_done.length > 0) {
+                detailsHtml += `
+                    <div class="task-details-section">
+                        <h4>🎯 Definition of Done</h4>
+                        <ul>
+                            ${task.definition_of_done.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (task.links && task.links.length > 0) {
+                detailsHtml += `
+                    <div class="task-details-section">
+                        <h4>🔗 相关链接</h4>
+                        <ul>
+                            ${task.links.map(link => `<li>${escapeHtml(link)}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (task.review_history && task.review_history.length > 0) {
+                detailsHtml += `
+                    <div class="task-details-section">
+                        <h4>📋 Review 历史</h4>
+                        <ul>
+                            ${task.review_history.map(review => `
+                                <li>
+                                    ${review.approved ? '✅ 通过' : '❌ 不通过'} - 
+                                    ${new Date(review.reviewed_at).toLocaleString('zh-CN')}
+                                    ${review.comment ? `: ${escapeHtml(review.comment)}` : ''}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (task.execution_metrics) {
+                const metrics = task.execution_metrics;
+                detailsHtml += `
+                    <div class="task-details-section">
+                        <h4>📊 执行指标</h4>
+                        <ul>
+                            ${metrics.started_at ? `<li>🚀 开始时间: ${new Date(metrics.started_at).toLocaleString('zh-CN')}</li>` : ''}
+                            ${metrics.completed_at ? `<li>✅ 完成时间: ${new Date(metrics.completed_at).toLocaleString('zh-CN')}</li>` : ''}
+                            ${metrics.execution_time_seconds > 0 ? `<li>⏱️ 执行时间: ${(metrics.execution_time_seconds / 60).toFixed(1)} 分钟</li>` : ''}
+                            ${metrics.retry_count > 0 ? `<li>🔄 重试次数: ${metrics.retry_count}</li>` : ''}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (task.execution_log && task.execution_log.length > 0) {
+                const stageIcons = {
+                    'planning': '📝',
+                    'executing': '🔨',
+                    'verifying': '✅',
+                    'completed': '🎉',
+                    'failed': '❌'
+                };
+                detailsHtml += `
+                    <div class="task-details-section">
+                        <h4>📜 执行日志</h4>
+                        <ul>
+                            ${task.execution_log.map(log => `
+                                <li>
+                                    ${stageIcons[log.stage] || '📌'} 
+                                    ${new Date(log.timestamp).toLocaleTimeString('zh-CN')} - 
+                                    ${escapeHtml(log.message)}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (task.artifacts) {
+                const artifacts = task.artifacts;
+                let artifactsHtml = '';
+                
+                if (artifacts.execution_summary) {
+                    artifactsHtml += `<p><strong>执行摘要:</strong> ${escapeHtml(artifacts.execution_summary)}</p>`;
+                }
+                
+                if (artifacts.product_links && artifacts.product_links.length > 0) {
+                    artifactsHtml += `
+                        <p><strong>产物链接:</strong></p>
+                        <ul>
+                            ${artifacts.product_links.map(link => `<li>${escapeHtml(link)}</li>`).join('')}
+                        </ul>
+                    `;
+                }
+                
+                if (artifactsHtml) {
+                    detailsHtml += `
+                        <div class="task-details-section">
+                            <h4>📦 沉淀产物</h4>
+                            ${artifactsHtml}
+                        </div>
+                    `;
+                }
             }
             
             return `
                 <li class="task-item">
                     <div class="task-header">
-                        <div class="task-title" onclick="toggleTaskDetails('${task.id}')">
-                            ${escapeHtml(task.title)}
-                        </div>
+                        <div class="task-title" onclick="toggleTaskDetails('${taskId}')">${escapeHtml(task.title)}</div>
                         <span class="task-priority ${priorityClass}">${priorityText}</span>
-                        ${statusBadge}
                     </div>
-                    ${task.description ? `<div class="task-description">${escapeHtml(task.description)}</div>` : ''}
-                    <div class="task-meta">
-                        <span>👤 ${task.assignee || 'unknown'}</span>
-                        ${task.created_at ? `<span>📅 ${new Date(task.created_at).toLocaleDateString('zh-CN')}</span>` : ''}
+                    ${reviewCommentHtml}
+                    ${description ? `<div class="task-description">${escapeHtml(description)}</div>` : ''}
+                    <div class="task-meta">${metaItems.join('')}</div>
+                    <div class="task-details ${isExpanded ? 'expanded' : ''}" id="details-${taskId}">
+                        ${detailsHtml}
                     </div>
-                    <div class="task-details ${isExpanded ? 'expanded' : ''}" id="details-${task.id}">
-                        ${task.progress ? `
-                        <div class="task-details-section">
-                            <h4>进度</h4>
-                            <p>${escapeHtml(task.progress)}</p>
-                        </div>
-                        ` : ''}
-                    </div>
-                    <div class="task-actions">
-                        ${task.status === 'completed' ? `
-                        <button class="btn-success" onclick="updateTaskStatus('${task.id}', 'in-progress')">✅ 通过</button>
-                        <button class="btn-danger" onclick="updateTaskStatus('${task.id}', 'in-progress')">❌ 退回</button>
-                        ` : ''}
-                        ${task.status === 'pending' ? `
-                        <button class="btn-secondary" onclick="updateTaskStatus('${task.id}', 'in-progress')">🚀 开始</button>
-                        ` : ''}
-                        ${task.status === 'in-progress' ? `
-                        <button class="btn-success" onclick="updateTaskStatus('${task.id}', 'completed')">✅ 完成</button>
-                        <button class="btn-secondary" onclick="updateTaskStatus('${task.id}', 'pending')">⏸️ 重置</button>
-                        ` : ''}
-                    </div>
+                    ${actionsHtml}
                 </li>
             `;
         }
@@ -703,31 +1284,226 @@
             }
         }
         
-        async function updateTaskStatus(taskId, status) {
+        function renderEmptyState(title, message) {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function toggleAddTask() {
+            const addTaskSection = document.getElementById('addTaskSection');
+            if (addTaskSection.style.display === 'none') {
+                addTaskSection.style.display = 'block';
+            } else {
+                addTaskSection.style.display = 'none';
+            }
+        }
+        
+        async function addTask() {
+            const title = document.getElementById('taskTitle').value.trim();
+            const description = document.getElementById('taskDescription').value.trim();
+            const priority = document.getElementById('taskPriority').value;
+            const assignee = document.getElementById('taskAssignee').value;
+            const isPlanTodo = document.getElementById('taskPlan').checked;
+            
+            if (!title) {
+                showError('❌ 请输入任务标题');
+                return;
+            }
+            
             try {
-                updateStatus('🔄 正在更新任务...');
-                const response = await fetch(`${API_BASE}/tasks/${taskId}/status`, {
-                    method: 'PUT',
+                const response = await fetch(`${API_BASE}/tasks`, {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ status: status })
+                    body: JSON.stringify({
+                        title,
+                        description,
+                        priority,
+                        assignee,
+                        status: 'pending',
+                        feedback_required: false,
+                        is_plan_todo: isPlanTodo
+                    })
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    updateStatus('✅ 任务更新成功');
+                    document.getElementById('taskTitle').value = '';
+                    document.getElementById('taskDescription').value = '';
+                    
+                    toggleAddTask();
+                    
                     await loadTasks();
+                    updateStatus('✅ 任务已添加');
                 } else {
-                    showError('任务更新失败: ' + data.message);
+                    throw new Error(data.message || '添加失败');
                 }
             } catch (error) {
-                showError('任务更新失败: ' + error.message);
+                console.error('添加任务失败:', error);
+                showError(`❌ 添加任务失败: ${error.message}`);
+            }
+        }
+        
+        async function updateTaskStatus(taskId, newStatus) {
+            try {
+                updateStatus('🔄 正在更新任务...');
+                const response = await fetch(`${API_BASE}/tasks/${encodeURIComponent(taskId)}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        status: newStatus
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    await loadTasks();
+                    updateStatus(`✅ 任务状态已更新为 ${newStatus}`);
+                } else {
+                    throw new Error(data.message || '更新失败');
+                }
+            } catch (error) {
+                console.error('更新任务状态失败:', error);
+                showError(`❌ 更新任务状态失败: ${error.message}`);
+            }
+        }
+        
+        let currentRecognition = null;
+        let currentVoiceTaskId = null;
+        
+        function toggleVoiceInput(taskId) {
+            const btn = document.getElementById(`voice-btn-${taskId}`);
+            const statusEl = document.getElementById(`voice-status-${taskId}`);
+            const textarea = document.getElementById(`review-comment-${taskId}`);
+            
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showError('❌ 您的浏览器不支持语音识别功能，请使用 Chrome/Edge 浏览器');
+                return;
+            }
+            
+            if (currentVoiceTaskId === taskId && currentRecognition) {
+                currentRecognition.stop();
+                currentRecognition = null;
+                currentVoiceTaskId = null;
+                btn.textContent = '🎤';
+                btn.style.background = '';
+                statusEl.style.display = 'none';
+                return;
+            }
+            
+            if (currentRecognition) {
+                currentRecognition.stop();
+            }
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            currentRecognition = new SpeechRecognition();
+            currentRecognition.continuous = true;
+            currentRecognition.interimResults = true;
+            currentRecognition.lang = 'zh-CN';
+            
+            currentRecognition.onstart = () => {
+                currentVoiceTaskId = taskId;
+                btn.textContent = '🔴';
+                btn.style.background = '#ef4444';
+                statusEl.style.display = 'block';
+            };
+            
+            currentRecognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                if (textarea) {
+                    textarea.value = transcript;
+                }
+            };
+            
+            currentRecognition.onerror = (event) => {
+                console.error('语音识别错误:', event.error);
+                currentRecognition = null;
+                currentVoiceTaskId = null;
+                btn.textContent = '🎤';
+                btn.style.background = '';
+                statusEl.style.display = 'none';
+                if (event.error !== 'no-speech') {
+                    showError(`❌ 语音识别失败: ${event.error}`);
+                }
+            };
+            
+            currentRecognition.onend = () => {
+                currentRecognition = null;
+                currentVoiceTaskId = null;
+                btn.textContent = '🎤';
+                btn.style.background = '';
+                statusEl.style.display = 'none';
+            };
+            
+            currentRecognition.start();
+        }
+        
+        async function submitReviewInline(taskId, approved) {
+            const commentEl = document.getElementById(`review-comment-${taskId}`);
+            const comment = commentEl ? commentEl.value.trim() : '';
+            
+            try {
+                const response = await fetch(`${API_BASE}/tasks/${encodeURIComponent(taskId)}/review`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        approved,
+                        comment
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    await loadTasks();
+                    updateStatus(`✅ ${data.message}`);
+                } else {
+                    throw new Error(data.message || 'Review 失败');
+                }
+            } catch (error) {
+                console.error('Review 失败:', error);
+                showError(`❌ Review 失败: ${error.message}`);
             }
         }
         
         async function reviewPlan(planId, status) {
+            const comment = document.getElementById(`plan-comment-${planId}`)?.value || '';
+            
             try {
                 updateStatus('🔄 正在审核 Plan...');
                 const response = await fetch(`/api/plans/${planId}/status`, {
@@ -735,7 +1511,10 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ status: status })
+                    body: JSON.stringify({
+                        status: status,
+                        comment: comment
+                    })
                 });
                 
                 const data = await response.json();
@@ -755,11 +1534,13 @@
             await Promise.all([loadTasks(), loadPlans()]);
         }
         
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        function viewPlan(taskId) {
+            const plan = plans.find(p => p.task_id === taskId);
+            if (plan) {
+                alert(`Plan 详情：\n\n${plan.content}`);
+            } else {
+                alert('未找到对应的 Plan，Plan ID: ' + taskId);
+            }
         }
         
         init();
