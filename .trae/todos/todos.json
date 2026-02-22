@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-21T00:44:52.474839",
+  "updated_at": "2026-02-22T09:22:35.585242",
   "todos": [
     {
       "id": "todo-20260219-002",
@@ -1218,6 +1218,48 @@
       "progress": "✅ 已完成！添加了 Plan review 功能到 Todos Web Manager！包含：新增 \"📋 Plans\" 标签页、新增 /api/plans 和 /api/plans/<id>/status API 端点、支持在前端展示 plan 内容、支持用户在前端 review plan（通过/不通过）并添加评论、更新 plan 文件的 frontmatter 和添加 review 记录！GitHub Commit: https://github.com/huangrt01/CS-Notes/commit/fedbd69f4a73924cb1d0b435c98e0498fa7059ad",
       "started_at": "2026-02-22",
       "completed_at": "2026-02-22T04:12:00.000000"
+    },
+    {
+      "id": "todo-20260222-002",
+      "title": "配置火山云 ECS 安全组，允许公网访问 5000 端口",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "user",
+      "feedback_required": false,
+      "created_at": "2026-02-22T09:22:35.585206",
+      "links": [
+        "https://www.volcengine.com/docs/6396/2198425?lang=zh#Lw6xz8ZI"
+      ],
+      "definition_of_done": [
+        "登录火山云 ECS 控制台",
+        "找到当前 ECS 实例的安全组",
+        "添加入站规则，允许 TCP 协议访问 5000 端口，来源为 0.0.0.0/0（或限制为你的手机 IP）",
+        "保存安全组规则"
+      ],
+      "user_requirements": [
+        "允许手机访问云端部署的 web manager"
+      ]
+    },
+    {
+      "id": "todo-20260222-003",
+      "title": "测试手机访问云端部署的 Todos Web Manager",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "user + ai",
+      "feedback_required": false,
+      "created_at": "2026-02-22T09:22:35.585237",
+      "links": [
+        "https://www.volcengine.com/docs/6396/2198425?lang=zh#Lw6xz8ZI"
+      ],
+      "definition_of_done": [
+        "获取 ECS 实例的公网 IP",
+        "在手机浏览器中访问 http://&lt;公网 IP&gt;:5000",
+        "测试 Todos Web Manager 的各项功能是否正常",
+        "验证所有 API 端点是否正常工作"
+      ],
+      "user_requirements": [
+        "允许手机访问云端部署的 web manager"
+      ]
     }
   ]
 }
