@@ -1,7 +1,25 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-22T20:05:10.913630",
+  "updated_at": "2026-02-22T20:13:58.888769",
   "todos": [
+    {
+      "id": "todo-20260222-009",
+      "title": "将 .trae/skills/markdown-toc 转化为 OpenClaw 的 skill 并使用",
+      "status": "in-progress",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-22T20:13:58.888739",
+      "definition_of_done": [
+        "检查 .trae/skills/markdown-toc 的内容",
+        "将其转化为 OpenClaw 的 skill 格式（放在 .trae/openclaw-skills/ 下）",
+        "测试并使用该 skill"
+      ],
+      "progress": "🔍 已发现 .trae/skills/markdown-toc 目录！下一步：检查该目录的内容，转化为 OpenClaw 的 skill 格式！",
+      "links": [
+        ".trae/skills/markdown-toc/"
+      ]
+    },
     {
       "id": "todo-20260222-008",
       "title": "精炼整理微信公众号文章《中厂：二流互联网公司之殇》到非技术知识.md",
