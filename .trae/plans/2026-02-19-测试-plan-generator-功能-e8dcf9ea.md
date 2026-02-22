@@ -2,11 +2,11 @@
 created_at: 2026-02-19 13:06:36.559337
 id: plan-20260219-e8dcf9ea
 priority: high
-status: pending
-updated_at: '2026-02-22T23:26:16.299304'
+status: approved
+updated_at: '2026-02-23T01:08:43.680151'
 tags: []
 title: 测试 Plan Generator 功能
-updated_at: '2026-02-19T13:06:52.345301'
+updated_at: '2026-02-23T01:08:43.680163'
 ---
 
 
