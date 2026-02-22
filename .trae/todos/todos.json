@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-22T09:22:35.585242",
+  "updated_at": "2026-02-22T09:24:33.514242",
   "todos": [
     {
       "id": "todo-20260219-002",
@@ -1259,6 +1259,29 @@
       ],
       "user_requirements": [
         "允许手机访问云端部署的 web manager"
+      ]
+    },
+    {
+      "id": "todo-20260222-004",
+      "title": "以某个复杂todo为例，实验plan能力的前后端+user干预全流程",
+      "status": "in-progress",
+      "priority": "high",
+      "assignee": "ai + user",
+      "feedback_required": false,
+      "created_at": "2026-02-22T09:24:33.514200",
+      "links": [
+        "`.trae/openclaw-skills/plan-generator/`、`.trae/plans/`、`.trae/web-manager/index-enhanced.html`"
+      ],
+      "definition_of_done": [
+        "选择一个合适的复杂 todo（比如 todo-20260219-030、todo-20260219-031 等）",
+        "使用 plan-generator Skill 生成该 todo 的 Plan",
+        "在 Todos Web Manager 的 Plans 标签页展示该 Plan",
+        "用户在前端 review 该 Plan（通过/不通过）",
+        "如果通过，使用 hybrid-executor Skill 执行该 Plan",
+        "记录完整流程，输出实验报告"
+      ],
+      "user_requirements": [
+        "加一个todo：以某个复杂todo为例，实验plan能力的前后端+user干预全流程"
       ]
     }
   ]
