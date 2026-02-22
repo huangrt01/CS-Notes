@@ -1045,8 +1045,6 @@ TODO
 
 
 
-### App
-
 #### 榜单
 
 * 2025/06 AI产品周榜 https://mp.weixin.qq.com/s/QYy1aEkUOkpD8FMeuvC2hQ
@@ -1114,193 +1112,6 @@ OrbitOS 是一个开源的 AI 生产力笔记系统，基于 Obsidian，主打 A
 * GPTs
 * 扣子
 * dify
-
-#### AI编程
-
-- [Cursor](https://www.cursor.com/)
-- [Windsurf](https://codeium.com/windsurf)
-- [InsCode](https://inscode.csdn.net/)
-- [marscode](https://www.marscode.cn/)
-- Copilot
-
-##### Agent Skills
-
-Agent Skills 是可扩展 AI 助手能力的模块化技能包，补充特定领域知识、标准化工作流与工具能力。参考：[研发场景十大热门 Skill 推荐](https://docs.trae.cn/ide/top-10-recommended-skills-for-development-scenarios)
-
-###### 前端设计
-
-- **名称**：frontend-design
-- **作者**：Anthropic
-- **地址**：https://github.com/anthropics/skills/tree/main/skills/frontend-design
-- **简介**：创建具有独特性和高设计品质的生产级别前端界面，注重排版、色彩、动效、空间布局等细节。
-
-###### 前端开发
-
-- **名称**：cache-components
-- **作者**：vercel
-- **地址**：https://github.com/vercel/next.js/tree/canary/.claude-plugin/plugins/cache-components/skills/cache-components
-- **简介**：集成 Next.js 的 Partial Prerendering (PPR) 和缓存组件最佳实践。
-
-###### 全栈开发
-
-- **名称**：fullstack-developer
-- **作者**：Shubhamsaboo
-- **地址**：https://github.com/Shubhamsaboo/awesome-llm-apps/tree/main/awesome_agent_skills/fullstack-developer
-- **简介**：精通现代 Web 开发技术的全栈专家，专注于 JavaScript/TypeScript、React (Next.js)、Node.js 等。
-
-###### 代码审查（通用）
-
-- **名称**：code-reviewer
-- **作者**：google-gemini
-- **地址**：https://github.com/google-gemini/gemini-cli/tree/main/.gemini/skills/code-reviewer
-- **简介**：引导 AI 开展专业全面的代码审查，支持审查本地代码改动和远程 PR，从正确性、可维护性、安全性等维度分析。
-
-###### CI/CD：PR 创建
-
-- **名称**：pr-creator
-- **作者**：google-gemini
-- **地址**：https://github.com/google-gemini/gemini-cli/tree/main/.gemini/skills/pr-creator
-- **简介**：引导并自动化创建高质量、符合规范的 PR，标准化工作流程。
-
-###### Linting 和格式错误修复
-
-- **名称**：fix
-- **作者**：facebook
-- **地址**：https://github.com/facebook/react/tree/main/.claude/skills/fix
-- **简介**：自动化修复代码格式并检查 linting 错误，确保代码符合项目规范。
-
-###### 查找 Skill
-
-- **名称**：find-skills
-- **作者**：vercel
-- **地址**：https://github.com/vercel-labs/skills/tree/main/skills/find-skills
-- **简介**：帮助发现并安装 Agent Skill，依托 skills CLI 从开放生态中搜索、安装与管理技能包。
-
-##### 胡渊鸣 AI 编程实战
-
-参考文章：
-- [胡渊鸣 | 我给 10 个 Claude Code 打工](https://mp.weixin.qq.com/s/9qPD3gXj3HLmrKC64Q6fbQ)
-- [参加Claude Code一岁生日party的一些收获](http://xhslink.com/o/5N0siTsgJA0)（2026-02-22 整理）
-
-**Claude Code 一岁生日 party 收获**（来源：http://xhslink.com/o/5N0siTsgJA0）：
-- 创业者都说现在用了 Claude Code 之后团队人数明显比以前更少，很多不超过 10 个人
-- 大家现在都喜欢招 AI native 的人，如何定义一个 AI native 的人？是 tinkerer，喜欢折腾 side project，学习和适应能力强
-- Technical 和 non-technical 的人之间的边界正在变得模糊，更关键的是是否 AI-native
-- Hackathon 的获奖者很多都不是程序员，第一名是个律师，第三名是个医生
-- Claude Code 团队表示，他们没有想到这么多人会使用一个基于 Terminal 的产品，之前以为 terminal 早就会被淘汰了
-- Claude Code 一开始是 Boris 的一个 side project，完全没有想到会这么成功。让我想到 OpenClaw 的创始人 Peter 最近一个访谈里说的，主持人问"这么多人在做 agent，为什么你的成功了？"Peter 说"It's hard to compete against someone who's just there to have fun."
-- Boris 建议大家在使用的时候尽量都用最好的模型、开 maximum effort。虽然这样听起来更贵，但是实际情况是模型更大概率会用更少的轮次解决你的问题，最后算下来可能反倒是节省 token 的
-- 组织者让现场的观众举手示意自己在哪些环境里用 Claude Code，绝大部分人是在 Terminal 里用。有趣的是，在移动端用 Claude Code 的人数比在 IDE 里用的人数要更多
-- 给开发者/创业者的建议：去围绕模型 6 个月之后的能力做产品，而不是围绕模型今天的能力做产品。产品功能应该现在是"barely works"
-
-**作者背景**：
-- 胡渊鸣（Ethan Hu），清华姚班 2017 届，MIT 计算机图形学博士
-- Taichi 编程语言创始人（28K GitHub stars，SIGGRAPH 最佳博士论文提名）
-- Meshy AI 创始人（全球 3D AI 领域市场份额第一，$30M ARR，月增长 30%）
-
-**提高 Agentic Coding 吞吐量的 10 个阶段**：
-
-1. **从 Cursor Agent 到 Claude Code**
-   - Cursor Agent 配合 4090 GPU，3 小时完成 GPU DSL 设计（100 倍产出提升）
-   - 切换到 Claude Code，通过 ssh 在 iPhone 上访问，实现 24 小时可派活
-
-2. **找个 Container**
-   - 使用 `--dangerously-skip-permissions` 减少权限询问，一次 prompt 可干 5 分钟
-   - 记得写自动备份功能
-
-3. **Ralph Loop，让 Claude Code 不停地干活**
-   - 从任务列表中每次拿一个活干，直到列表为空
-   - 写一个 Claude Code 启动器，每个活干完自动启动新的
-
-4. **用 Git worktree 实现并行化**
-   - 每个 worktree 里面开一个独立的 Claude Code
-   - 5 个 Claude Code 可实现 Git 上 1 分钟一个 commit
-
-5. **用好 CLAUDE.md 和 PROGRESS.md，让 AI 长记性**
-   - CLAUDE.md：不适合经常修改
-   - PROGRESS.md：让 AI 沉淀经验教训，同样错误下次不要再犯
-
-6. **干掉 ssh，直接把开发界面变成手机端网页**
-   - 写一个 Claude Code web manager
-   - 使用 `claude -p [prompt] --dangerously-skip-permissions` 做成非交互式组件
-
-7. **有效地用 Claude Code 编写管理 Claude Code 的程序**
-   - 使用 `--output-format stream-json --verbose` 让 manager 通过 json log 发现问题
-   - 给 AI 提供闭环环境，让它能写代码/运行/检查/调试
-   - 成功率从 20% 提升到 95%
-
-8. **自然语言编程**
-   - 给各个输入框加上语音识别 API
-   - 走在马路上都可以 vibe coding
-
-9. **给开发中心添加 Plan Mode**
-   - 封装 Claude Code 的 Plan mode
-   - 同时 kick off 大量 Plan 任务然后统一 review
-
-10. **坚持不去看除了 CLAUDE.md 以外的代码**
-    - 杜绝对 AI 的 micromanagement（微管理）
-    - Context, not control
-    - 研究：更好的提问，更清楚地描述需求
-    - 目标：如何给 AI 打工才能让 AI 工作效率更高
-
-**核心洞见**：
-- 软件开发成本趋近于零，标准化软件逐渐失去意义
-- 产品经理和软件工程师的工作会被重新定义
-- AI 比人更理性、直接，沟通效率更高
-- 管 AI 比管人更能提高领导力，反馈速度提升 100 倍
-
-#### Ralph Loop
-
-Ralph Loop 是让 AI 持续工作的循环机制。
-
-* 核心思想：
-  * 维护一个任务列表
-  * AI 从列表中逐个取出任务执行
-  * 任务完成后自动启动下一个
-  * 形成持续工作的闭环
-
-* 实现方式：
-  * 编写 AI 启动器脚本
-  * 管理任务队列
-  * 监控执行状态
-  * 自动重试失败任务
-
-#### AI 长记性
-
-让 AI 在多次交互中保持记忆和经验积累。
-
-* 记忆机制：
-  * **CLAUDE.md**：相对固定的上下文信息，不适合频繁修改
-  * **PROGRESS.md**：记录经验教训、错误总结，让 AI 避免重复犯错
-  * 对话历史：保持上下文连贯性
-
-* 实践要点：
-  * 及时记录关键决策和学习点
-  * 定期整理和优化记忆内容
-  * 在新任务开始前让 AI 回顾相关经验
-
-#### AI 沟通特点
-
-与 AI 沟通的特点和最佳实践。
-
-* AI 的优势：
-  * 理性、直接，没有情绪干扰
-  * 沟通效率高，不需要客套
-  * 可以处理大量信息
-  * 反馈速度快
-
-* 沟通技巧：
-  * 清晰、具体地描述需求
-  * 提供足够的上下文
-  * 明确目标和约束条件
-  * 接受 AI 的直接反馈方式
-
-* 如何恰当催促用户完成任务：
-  * 明确提醒：清晰告知用户当前待办事项和进度状态
-  * 提供支持：主动询问是否需要帮助解决障碍
-  * 降低门槛：把大任务拆解成可立即执行的小步骤
-  * 等待响应：不要过度打扰，给用户留出决策和行动空间
-  * 状态可视：及时更新任务状态，让用户清楚知道进度
 
 #### 拍照答题
 
@@ -3638,6 +3449,221 @@ for hat in queue:
 * 趋势：
   * [Atom Capital: 1000x 的超级码农--AI 编程的机会和未来](https://mp.weixin.qq.com/s/IE1P-USAJDlbPcssJltNnw)
 
+### 产品
+
+- [Cursor](https://www.cursor.com/)
+- [Windsurf](https://codeium.com/windsurf)
+- [InsCode](https://inscode.csdn.net/)
+- [marscode](https://www.marscode.cn/)
+- Copilot
+
+* * 
+
+
+
+### AI Coding 的使用技巧
+
+#### Agent Skills
+
+Agent Skills 是可扩展 AI 助手能力的模块化技能包，补充特定领域知识、标准化工作流与工具能力。参考：[研发场景十大热门 Skill 推荐](https://docs.trae.cn/ide/top-10-recommended-skills-for-development-scenarios)
+
+* 前端设计
+
+  - **名称**：frontend-design
+
+  - **作者**：Anthropic
+
+  - **地址**：https://github.com/anthropics/skills/tree/main/skills/frontend-design
+
+  - **简介**：创建具有独特性和高设计品质的生产级别前端界面，注重排版、色彩、动效、空间布局等细节。
+
+* 前端开发
+
+  - **名称**：cache-components
+
+  - **作者**：vercel
+
+  - **地址**：https://github.com/vercel/next.js/tree/canary/.claude-plugin/plugins/cache-components/skills/cache-components
+
+  - **简介**：集成 Next.js 的 Partial Prerendering (PPR) 和缓存组件最佳实践。
+
+* 全栈开发
+
+  - **名称**：fullstack-developer
+
+  - **作者**：Shubhamsaboo
+
+  - **地址**：https://github.com/Shubhamsaboo/awesome-llm-apps/tree/main/awesome_agent_skills/fullstack-developer
+
+  - **简介**：精通现代 Web 开发技术的全栈专家，专注于 JavaScript/TypeScript、React (Next.js)、Node.js 等。
+
+* 代码审查（通用）
+
+  - **名称**：code-reviewer
+
+  - **作者**：google-gemini
+
+  - **地址**：https://github.com/google-gemini/gemini-cli/tree/main/.gemini/skills/code-reviewer
+
+  - **简介**：引导 AI 开展专业全面的代码审查，支持审查本地代码改动和远程 PR，从正确性、可维护性、安全性等维度分析。
+
+* CI/CD：PR 创建
+
+  - **名称**：pr-creator
+
+  - **作者**：google-gemini
+
+  - **地址**：https://github.com/google-gemini/gemini-cli/tree/main/.gemini/skills/pr-creator
+
+  - **简介**：引导并自动化创建高质量、符合规范的 PR，标准化工作流程。
+
+* Linting 和格式错误修复
+
+  - **名称**：fix
+
+  - **作者**：facebook
+
+  - **地址**：https://github.com/facebook/react/tree/main/.claude/skills/fix
+
+  - **简介**：自动化修复代码格式并检查 linting 错误，确保代码符合项目规范。
+
+* 查找 Skill
+
+  - **名称**：find-skills
+
+  - **作者**：vercel
+
+  - **地址**：https://github.com/vercel-labs/skills/tree/main/skills/find-skills
+
+  - **简介**：帮助发现并安装 Agent Skill，依托 skills CLI 从开放生态中搜索、安装与管理技能包。
+
+#### 胡渊鸣 AI 编程实战
+
+参考文章：
+
+- [胡渊鸣 | 我给 10 个 Claude Code 打工](https://mp.weixin.qq.com/s/9qPD3gXj3HLmrKC64Q6fbQ)
+- [参加Claude Code一岁生日party的一些收获](http://xhslink.com/o/5N0siTsgJA0)（2026-02-22 整理）
+
+**Claude Code 一岁生日 party 收获**（来源：http://xhslink.com/o/5N0siTsgJA0）：
+
+- 创业者都说现在用了 Claude Code 之后团队人数明显比以前更少，很多不超过 10 个人
+- 大家现在都喜欢招 AI native 的人，如何定义一个 AI native 的人？是 tinkerer，喜欢折腾 side project，学习和适应能力强
+- Technical 和 non-technical 的人之间的边界正在变得模糊，更关键的是是否 AI-native
+- Hackathon 的获奖者很多都不是程序员，第一名是个律师，第三名是个医生
+- Claude Code 团队表示，他们没有想到这么多人会使用一个基于 Terminal 的产品，之前以为 terminal 早就会被淘汰了
+- Claude Code 一开始是 Boris 的一个 side project，完全没有想到会这么成功。让我想到 OpenClaw 的创始人 Peter 最近一个访谈里说的，主持人问"这么多人在做 agent，为什么你的成功了？"Peter 说"It's hard to compete against someone who's just there to have fun."
+- Boris 建议大家在使用的时候尽量都用最好的模型、开 maximum effort。虽然这样听起来更贵，但是实际情况是模型更大概率会用更少的轮次解决你的问题，最后算下来可能反倒是节省 token 的
+- 组织者让现场的观众举手示意自己在哪些环境里用 Claude Code，绝大部分人是在 Terminal 里用。有趣的是，在移动端用 Claude Code 的人数比在 IDE 里用的人数要更多
+- 给开发者/创业者的建议：去围绕模型 6 个月之后的能力做产品，而不是围绕模型今天的能力做产品。产品功能应该现在是"barely works"
+
+**作者背景**：
+
+- 胡渊鸣（Ethan Hu），清华姚班 2017 届，MIT 计算机图形学博士
+- Taichi 编程语言创始人（28K GitHub stars，SIGGRAPH 最佳博士论文提名）
+- Meshy AI 创始人（全球 3D AI 领域市场份额第一，$30M ARR，月增长 30%）
+
+**提高 Agentic Coding 吞吐量的 10 个阶段**：
+
+1. **从 Cursor Agent 到 Claude Code**
+   - Cursor Agent 配合 4090 GPU，3 小时完成 GPU DSL 设计（100 倍产出提升）
+   - 切换到 Claude Code，通过 ssh 在 iPhone 上访问，实现 24 小时可派活
+
+2. **找个 Container**
+   - 使用 `--dangerously-skip-permissions` 减少权限询问，一次 prompt 可干 5 分钟
+   - 记得写自动备份功能
+
+3. **Ralph Loop，让 Claude Code 不停地干活**
+   - 从任务列表中每次拿一个活干，直到列表为空
+   - 写一个 Claude Code 启动器，每个活干完自动启动新的
+
+4. **用 Git worktree 实现并行化**
+   - 每个 worktree 里面开一个独立的 Claude Code
+   - 5 个 Claude Code 可实现 Git 上 1 分钟一个 commit
+
+5. **用好 CLAUDE.md 和 PROGRESS.md，让 AI 长记性**
+   - CLAUDE.md：不适合经常修改
+   - PROGRESS.md：让 AI 沉淀经验教训，同样错误下次不要再犯
+
+6. **干掉 ssh，直接把开发界面变成手机端网页**
+   - 写一个 Claude Code web manager
+   - 使用 `claude -p [prompt] --dangerously-skip-permissions` 做成非交互式组件
+
+7. **有效地用 Claude Code 编写管理 Claude Code 的程序**
+   - 使用 `--output-format stream-json --verbose` 让 manager 通过 json log 发现问题
+   - 给 AI 提供闭环环境，让它能写代码/运行/检查/调试
+   - 成功率从 20% 提升到 95%
+
+8. **自然语言编程**
+   - 给各个输入框加上语音识别 API
+   - 走在马路上都可以 vibe coding
+
+9. **给开发中心添加 Plan Mode**
+   - 封装 Claude Code 的 Plan mode
+   - 同时 kick off 大量 Plan 任务然后统一 review
+
+10. **坚持不去看除了 CLAUDE.md 以外的代码**
+    - 杜绝对 AI 的 micromanagement（微管理）
+    - Context, not control
+    - 研究：更好的提问，更清楚地描述需求
+    - 目标：如何给 AI 打工才能让 AI 工作效率更高
+
+**核心洞见**：
+
+- 软件开发成本趋近于零，标准化软件逐渐失去意义
+- 产品经理和软件工程师的工作会被重新定义
+- AI 比人更理性、直接，沟通效率更高
+- 管 AI 比管人更能提高领导力，反馈速度提升 100 倍
+
+#### Ralph Loop
+
+Ralph Loop 是让 AI 持续工作的循环机制。
+
+* 核心思想：
+  * 维护一个任务列表
+  * AI 从列表中逐个取出任务执行
+  * 任务完成后自动启动下一个
+  * 形成持续工作的闭环
+
+* 实现方式：
+  * 编写 AI 启动器脚本
+  * 管理任务队列
+  * 监控执行状态
+  * 自动重试失败任务
+
+#### AI 沟通特点
+
+与 AI 沟通的特点和最佳实践。
+
+* AI 的优势：
+  * 理性、直接，没有情绪干扰
+  * 沟通效率高，不需要客套
+  * 可以处理大量信息
+  * 反馈速度快
+
+* 沟通技巧：
+  * 清晰、具体地描述需求
+  * 提供足够的上下文
+  * 明确目标和约束条件
+  * 接受 AI 的直接反馈方式
+
+* 如何恰当催促用户完成任务：
+  * 明确提醒：清晰告知用户当前待办事项和进度状态
+  * 提供支持：主动询问是否需要帮助解决障碍
+  * 降低门槛：把大任务拆解成可立即执行的小步骤
+  * 等待响应：不要过度打扰，给用户留出决策和行动空间
+  * 状态可视：及时更新任务状态，让用户清楚知道进度
+
+#### Claude Code 硬核指南
+
+> Todo
+
+https://www.xiaohongshu.com/explore/69086a080000000005001e09?app_platform=ios&app_version=8.86&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBV9m5rsWMZUsvRmaUopCNZSTk31ryR3K7h4M5ptuLpFk=&author_share=1&xhsshare=CopyLink&shareRedId=N0lEN0Y6Rk82NzUyOTgwNjc5OTg2NUpP&apptime=1762178692&share_id=29bf67b408a34a529dee9f5c6cfe76df
+
+* Skills自动激活系统：让Claude真正用上你写的技能文档
+* Dev Docs工作流：防止Claude失去上下文,忘记自己在干什么
+* PM2+Hooks零错误机制：不让任何TypeScript错误溜走
+* 专业化Agents军团：代码审查、调试、规划全自动化
+
 ### 检索的实现
 
 * Claude Code  的同学提到过，他们不会对代码库做 Embedding 或索引，而是直接提供工具，用工具来做代码搜索
@@ -3747,16 +3773,16 @@ for hat in queue:
   * ```
     # ~/.tabby/config.toml
     # Index three repositories' source code as additional context for code completion.
-
+  
     [[repositories]]
     name = "tabby"
     git_url = "https://github.com/TabbyML/tabby.git" # 远程的git项目，但是如果没有代理很容易失败
-
+  
     # git through ssh protocol.
     [[repositories]]
     name = "CTranslate2"
     git_url = "git@github.com:OpenNMT/CTranslate2.git"
-
+  
     # local directory is also supported!
     [[repositories]]
     name = "Dify"
@@ -3773,17 +3799,6 @@ for hat in queue:
 * [Code Llama](https://ai.meta.com/blog/code-llama-large-language-model-coding/) - Meta 出品，可能是开源中最强的 （7B、13B、34B、70B）
 * [DeepSeek-Coder](https://github.com/deepseek-ai/DeepSeek-Coder) - 深度探索公司出品（1B、5.7B、6.7B、33B）
 * [CodeGemma](https://huggingface.co/blog/codegemma) - Google 出品（2B、7B）
-
-### AI Coding 的使用技巧: Claude Code 硬核指南
-
-> Todo
-
-https://www.xiaohongshu.com/explore/69086a080000000005001e09?app_platform=ios&app_version=8.86&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBV9m5rsWMZUsvRmaUopCNZSTk31ryR3K7h4M5ptuLpFk=&author_share=1&xhsshare=CopyLink&shareRedId=N0lEN0Y6Rk82NzUyOTgwNjc5OTg2NUpP&apptime=1762178692&share_id=29bf67b408a34a529dee9f5c6cfe76df
-
-* Skills自动激活系统：让Claude真正用上你写的技能文档
-* Dev Docs工作流：防止Claude失去上下文,忘记自己在干什么
-* PM2+Hooks零错误机制：不让任何TypeScript错误溜走
-* 专业化Agents军团：代码审查、调试、规划全自动化
 
 
 
