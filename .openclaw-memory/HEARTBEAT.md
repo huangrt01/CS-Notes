@@ -107,35 +107,16 @@ HEARTBEAT_INTERVAL_MINUTES = 30
 **重要经验**：
 - 只要在 "#### AI 需要做的任务" section 下的任务，就算是 AI 要做的任务！不管有没有明确标注 "Assignee: AI"！
 
-## 5. 任务恢复机制（简化版！）
-
-**问题描述**：
-- 当正在执行一个任务时，如果收到新的消息、沉淀提醒、heartbeat 等，任务会被打断
-- 打断后，之前的任务无法完成，导致进度丢失
-- 这种情况频繁发生，影响工作效率
-
-**解决方案**：基于 OpenClaw 现有能力，不侵入内部代码，利用 todos.json 中的 progress 字段记录任务进度
+## 5. 任务恢复机制（精简版！）
 
 **触发条件**：每次心跳时检查
 
 **执行逻辑**：
-
-### 5.1 优先执行 `in-progress` 状态的 todo
-1. 每次执行任务前，先检查 todos.json
-2. 优先执行 status = "in-progress" 的 todo
-3. 从 progress 字段读取上次的进度，继续执行
-
-### 5.2 利用 OpenClaw 原生的并发机制
-1. openclaw.json 中已经配置了 `agents.defaults.maxConcurrent: 8`
-2. 还有 `subagents.maxConcurrent: 16`
-3. 利用 OpenClaw 原生的并发机制，不需要额外的复杂机制
-
-### 5.3 任务完成后，更新 status
-1. 任务完成后，将 status 从 "in-progress" 更新为 "completed"
-2. 更新 progress 字段，记录完成情况
+1. 优先执行 `in-progress` 状态的 todo
+2. 从 progress 字段读取上次的进度，继续执行
+3. 任务完成后，更新 status 为 "completed"
 
 **重要原则**：
 - 基于 OpenClaw 现有能力，不侵入内部代码
 - 利用 todos.json 中的 progress 字段记录任务进度
 - 优先执行 `in-progress` 状态的 todo
-- 利用 OpenClaw 原生的并发机制（maxConcurrent: 8）
