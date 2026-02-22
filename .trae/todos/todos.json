@@ -1,7 +1,23 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-22T17:06:22.047885",
+  "updated_at": "2026-02-22T17:17:01.229803",
   "todos": [
+    {
+      "id": "todo-20260222-005",
+      "title": "添加两个 OpenClaw Cron 任务：推进Todos（每30分钟）和沉淀v2.0（每24小时）",
+      "status": "completed",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-22T17:17:01.229777",
+      "definition_of_done": [
+        "添加 Cron 任务：推进Todos，每 30 分钟执行一次，触发 \"推进todo\" 系统事件",
+        "添加 Cron 任务：沉淀v2.0，每 24 小时执行一次，触发 \"沉淀\" 系统事件"
+      ],
+      "progress": "✅ 已完成！已添加两个 OpenClaw Cron 任务！1) 推进Todos：每 30 分钟执行一次，触发 \"推进todo\" 系统事件！2) 沉淀v2.0：每 24 小时执行一次，触发 \"沉淀\" 系统事件！已验证 Cron 任务列表！",
+      "started_at": "2026-02-22T17:17:01.229798",
+      "completed_at": "2026-02-22T17:17:01.229800"
+    },
     {
       "id": "todo-20260219-002",
       "title": "解决 OpenClaw Gateway device token mismatch 问题，恢复 cron 工具等 Gateway API 的使用",
