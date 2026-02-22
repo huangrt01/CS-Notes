@@ -96,6 +96,12 @@ Trae 是深度融合 AI 能力的 IDE，有 IDE 模式和 SOLO 模式两种开�
 > 官网：https://docs.trae.ai/ide/tutorial-mcp-figma?_lang=zh
 >
 > 公众号
+&gt;
+&gt; TRAE 友推荐 MCP，快快码住！（来源：http://xhslink.com/o/ErNKkiaabY）
+&gt; - [一R] MCP 推荐-Rednote
+&gt; - [二R] MCP 推荐- Feedback Enhanced
+&gt; - [三R] APM 使用与本地 MCP 集成方案
+
 
 
 
