@@ -931,7 +931,7 @@
       "title": "允许手机访问云端部署的 web manager",
       "status": "in-progress",
       "priority": "high",
-      "assignee": "ai + user",
+      "assignee": "user",
       "feedback_required": false,
       "created_at": "2026-02-20T01:15:00.000000",
       "links": [
