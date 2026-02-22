@@ -929,9 +929,9 @@
     {
       "id": "todo-20260220-003",
       "title": "允许手机访问云端部署的 web manager",
-      "status": "pending",
+      "status": "in-progress",
       "priority": "high",
-      "assignee": "ai",
+      "assignee": "ai + user",
       "feedback_required": false,
       "created_at": "2026-02-20T01:15:00.000000",
       "links": [
@@ -950,7 +950,8 @@
       "user_requirements": [
         "允许手机访问云端部署的web manager",
         "云端是火山云ecs，也许得参考 https://www.volcengine.com/docs/6396/2198425?lang=zh#Lw6xz8ZI 这里走通公网访问流程"
-      ]
+      ],
+      "progress": "✅ 已完成 Flask 安装！server.py 现在正在运行！运行地址：http://172.31.0.2:5000！下一步需要用户在火山云 ECS 控制台配置安全组，允许公网访问 5000 端口！"
     },
     {
       "id": "todo-20260220-004",
