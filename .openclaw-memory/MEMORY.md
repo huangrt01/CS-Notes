@@ -53,6 +53,21 @@
 
 ### 7. Todo 管理原则
 - **单一数据源**：以 `.trae/todos/todos.json` 为唯一数据源
+- **Plan 机制本质化重构**（2026-02-23 更新）：
+  - **核心原则**：Plan 不再是独立的状态，而是 Todo 的一个字段（property）
+  - **数据模型**：一个 Todo 可以有 0 或 1 个 Plan，Plan 作为 Todo 的 `plan` 字段存在
+  - **Plan 结构**：
+    ```json
+    {
+      "content": "Plan 的完整内容（Markdown）",
+      "status": "pending",  // pending / approved / rejected
+      "created_at": "...",
+      "review_comment": "审核评论（可选）",
+      "reviewed_at": "..."
+    }
+    ```
+  - **前端展示**：不再有独立的 Plans 标签页，Plan 直接在对应的 Todo 卡片中展示（点击展开）
+  - **Todo 卡片标识**：有 Plan 的 Todo 会显示「📋 有 Plan」标记
 - **任务归档前的用户确认流程**：在将 completed 任务从 todos.json 移动到 archive 之前，必须增加一次由用户进行 check/反馈的流程
 - **Todos 管理的正确流程**：
   1. AI 执行任务，完成编码/实现部分

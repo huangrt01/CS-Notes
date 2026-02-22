@@ -749,9 +749,8 @@ POST   /api/git/pull           - 从远程仓库拉取
     <script>
         let tasks = [];
         let archiveTasks = [];
-        let plans = [];
         let currentMainTab = 'my-tasks';
-        let currentSubTab = 'pending-plans';
+        let currentSubTab = 'pending';
         let isLoading = false;
         let isArchive = false;
         let expandedTasks = new Set();
@@ -759,7 +758,7 @@ POST   /api/git/pull           - 从远程仓库拉取
         const API_BASE = '/api';
         
         async function init() {
-            await Promise.all([loadTasks(), loadPlans()]);
+            await loadTasks();
         }
         
         async function loadTasks() {
@@ -785,7 +784,7 @@ POST   /api/git/pull           - 从远程仓库拉取
                         updateStatus(`✅ 已加载 ${archiveTasks.length} 个归档任务`);
                     } else {
                         tasks = data.tasks || [];
-                        updateStatus(`✅ 已加载 ${tasks.length + plans.length} 个内容（${tasks.length} 个任务 + ${plans.length} 个 Plans）`);
+                        updateStatus(`✅ 已加载 ${tasks.length} 个任务`);
                         updateStats();
                     }
                     applyFilters();
@@ -802,32 +801,14 @@ POST   /api/git/pull           - 从远程仓库拉取
             }
         }
         
-        async function loadPlans() {
-            try {
-                const response = await fetch('/api/plans');
-                const data = await response.json();
-                
-                if (data.success) {
-                    plans = data.plans || [];
-                    updateStats();
-                    if (tasks.length > 0) {
-                        updateStatus(`✅ 已加载 ${tasks.length + plans.length} 个内容（${tasks.length} 个任务 + ${plans.length} 个 Plans）`);
-                    }
-                    renderContent();
-                }
-            } catch (error) {
-                console.error('加载 Plans 失败:', error);
-            }
-        }
-        
         function updateStats() {
             const pendingReviewTasks = tasks.filter(t => t.status === 'completed').length;
             const inProgressTasks = tasks.filter(t => t.status === 'in-progress').length;
             const pendingTasks = tasks.filter(t => t.status === 'pending').length;
-            const pendingPlans = plans.filter(p => p.status === 'pending').length;
-            const total = tasks.length + plans.length;
+            const pendingPlanTodos = tasks.filter(t => t.plan && t.plan.status === 'pending').length;
+            const total = tasks.length;
             
-            document.getElementById('statPendingPlans').textContent = pendingPlans;
+            document.getElementById('statPendingPlans').textContent = pendingPlanTodos;
             document.getElementById('statPendingReviewTasks').textContent = pendingReviewTasks;
             document.getElementById('statInProgress').textContent = inProgressTasks;
             document.getElementById('statPending').textContent = pendingTasks;
@@ -858,7 +839,7 @@ POST   /api/git/pull           - 从远程仓库拉取
             if (tab === 'my-tasks') {
                 currentSubTab = 'pending-plans';
             } else {
-                currentSubTab = 'in-progress';
+                currentSubTab = 'all';
             }
             
             renderContent();
@@ -969,7 +950,6 @@ POST   /api/git/pull           - 从远程仓库拉取
             
             let subTabsHtml = '';
             let items = [];
-            let isPlans = false;
             
             if (currentMainTab === 'my-tasks') {
                 subTabsHtml = `
@@ -978,8 +958,7 @@ POST   /api/git/pull           - 从远程仓库拉取
                 `;
                 
                 if (currentSubTab === 'pending-plans') {
-                    items = plans.filter(p => p.status === 'pending');
-                    isPlans = true;
+                    items = tasks.filter(t => t.plan && t.plan.status === 'pending');
                 } else if (currentSubTab === 'pending-review-tasks') {
                     items = tasks.filter(t => t.status === 'completed');
                 }
@@ -991,7 +970,6 @@ POST   /api/git/pull           - 从远程仓库拉取
                     <button class="sub-tab ${currentSubTab === 'all' ? 'active' : ''}" data-subtab="all" onclick="switchSubTab('all')">📋 全部</button>
                     <button class="sub-tab ${currentSubTab === 'in-progress' ? 'active' : ''}" data-subtab="in-progress" onclick="switchSubTab('in-progress')">🚀 进行中</button>
                     <button class="sub-tab ${currentSubTab === 'pending' ? 'active' : ''}" data-subtab="pending" onclick="switchSubTab('pending')">⏸️ 待处理</button>
-                    <button class="sub-tab ${currentSubTab === 'reviewed-plans' ? 'active' : ''}" data-subtab="reviewed-plans" onclick="switchSubTab('reviewed-plans')">✅ 已审核 Plans</button>
                     <button class="sub-tab ${currentSubTab === 'archive' ? 'active' : ''}" data-subtab="archive" onclick="switchSubTab('archive')">📦 归档</button>
                 `;
                 
@@ -1004,10 +982,6 @@ POST   /api/git/pull           - 从远程仓库拉取
                 } else if (currentSubTab === 'pending') {
                     items = tasks.filter(t => t.status === 'pending');
                     addTaskToggle.style.display = 'block';
-                } else if (currentSubTab === 'reviewed-plans') {
-                    items = plans.filter(p => p.status !== 'pending');
-                    isPlans = true;
-                    addTaskToggle.style.display = 'none';
                 } else if (currentSubTab === 'archive') {
                     items = archiveTasks;
                     addTaskToggle.style.display = 'none';
@@ -1018,7 +992,7 @@ POST   /api/git/pull           - 从远程仓库拉取
             
             subTabsContainer.innerHTML = subTabsHtml;
             
-            if (currentSubTab !== 'archive' && !isPlans) {
+            if (currentSubTab !== 'archive') {
                 items = getFilteredTasks(items, currentMainTab, currentSubTab);
             }
             
@@ -1027,56 +1001,11 @@ POST   /api/git/pull           - 从远程仓库拉取
                 return;
             }
             
-            let html = '';
-            if (isPlans) {
-                html = items.map(plan => renderPlanItem(plan)).join('');
-            } else {
-                html = items.map(task => renderTaskItem(task)).join('');
-            }
-            
+            let html = items.map(task => renderTaskItem(task)).join('');
             taskList.innerHTML = `<ul class="task-list">${html}</ul>`;
         }
         
-        function renderPlanItem(plan) {
-            const isExpanded = expandedTasks.has(plan.id);
-            
-            return `
-                <li class="task-item">
-                    <div class="task-header">
-                        <div class="task-title" onclick="toggleTaskDetails('${plan.id}')">
-                            ${escapeHtml(plan.title)}
-                        </div>
-                        <span class="task-priority priority-${plan.priority}">${plan.priority === 'high' ? '🔴 高' : plan.priority === 'medium' ? '🟡 中' : '🟢 低'}</span>
-                        <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: ${plan.status === 'pending' ? '#e0e7ff' : '#dcfce7'}; color: ${plan.status === 'pending' ? '#3730a3' : '#166534'};">
-                            ${plan.status === 'pending' ? '⏸️ 待审核' : '✅ 已审核'}
-                        </span>
-                    </div>
-                    <div class="task-meta">
-                        <span>📅 创建时间: ${plan.created_at}</span>
-                        ${plan.updated_at ? `<span>🔄 更新时间: ${plan.updated_at}</span>` : ''}
-                    </div>
-                    <div class="task-details ${isExpanded ? 'expanded' : ''}" id="details-${plan.id}">
-                        <div class="task-details-section">
-                            <h4>Plan 内容</h4>
-                            <pre style="white-space: pre-wrap; background: #f7f7f7; padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.6;">${escapeHtml(plan.content)}</pre>
-                        </div>
-                        ${plan.status === 'pending' ? `
-                        <div class="task-details-section">
-                            <h4>审核 Plan</h4>
-                            <div class="form-group">
-                                <label>审核评论</label>
-                                <textarea id="plan-comment-${plan.id}" placeholder="输入审核评论（可选）"></textarea>
-                            </div>
-                            <div class="task-actions">
-                                <button class="btn-success" onclick="reviewPlan('${plan.id}', 'approved')">✅ 通过</button>
-                                <button class="btn-secondary" onclick="reviewPlan('${plan.id}', 'rejected')">❌ 拒绝</button>
-                            </div>
-                        </div>
-                        ` : ''}
-                    </div>
-                </li>
-            `;
-        }
+
         
         function renderTaskItem(task) {
             const priorityClass = `priority-${task.priority}`;
@@ -1103,7 +1032,6 @@ POST   /api/git/pull           - 从远程仓库拉取
                                 </div>
                             </div>
                             <div class="task-actions">
-                                ${isPlanTodo ? `<button class="btn" onclick="viewPlan('${taskId}')">📋 查看 Plan</button>` : ''}
                                 <button class="btn-danger" onclick="submitReviewInline('${taskId}', false)">❌ 不通过</button>
                                 <button class="btn-success" onclick="submitReviewInline('${taskId}', true)">✅ 通过</button>
                             </div>
@@ -1112,7 +1040,6 @@ POST   /api/git/pull           - 从远程仓库拉取
                 } else {
                     actionsHtml = `
                         <div class="task-actions">
-                            ${isPlanTodo ? `<button class="btn" onclick="viewPlan('${taskId}')">📋 查看 Plan</button>` : ''}
                             ${task.status !== 'in-progress' && task.status !== 'completed' ? 
                                 `<button class="btn-warning" onclick="updateTaskStatus('${taskId}', 'in-progress')">🚀 开始</button>` : ''}
                             ${task.status !== 'completed' ? 
@@ -1126,8 +1053,8 @@ POST   /api/git/pull           - 从远程仓库拉取
             
             const metaItems = [];
             metaItems.push(`<span>👤 ${assignee}</span>`);
-            if (isPlanTodo) {
-                metaItems.push(`<span style="background: #6366f1; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px;">📋 Plan Todo</span>`);
+            if (task.plan) {
+                metaItems.push(`<span style="background: #6366f1; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px;">📋 有 Plan</span>`);
             }
             if (task.created_at) {
                 const date = new Date(task.created_at).toLocaleDateString('zh-CN');
@@ -1149,6 +1076,21 @@ POST   /api/git/pull           - 从远程仓库拉取
             }
             
             let detailsHtml = '';
+            if (task.plan) {
+                detailsHtml += `
+                    <div class="task-details-section">
+                        <h4>📋 Plan</h4>
+                        <div style="background: #f0f4ff; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                            <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: ${task.plan.status === 'pending' ? '#e0e7ff' : '#dcfce7'}; color: ${task.plan.status === 'pending' ? '#3730a3' : '#166534'};">
+                                ${task.plan.status === 'pending' ? '⏸️ 待审核' : '✅ 已审核'}
+                            </span>
+                            ${task.plan.created_at ? `<span style="margin-left: 8px; font-size: 12px; color: #666;">📅 ${new Date(task.plan.created_at).toLocaleDateString('zh-CN')}</span>` : ''}
+                        </div>
+                        <pre style="white-space: pre-wrap; background: #f7f7f7; padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.6;">${escapeHtml(task.plan.content)}</pre>
+                    </div>
+                `;
+            }
+            
             if (task.definition_of_done && task.definition_of_done.length > 0) {
                 detailsHtml += `
                     <div class="task-details-section">
@@ -1501,46 +1443,8 @@ POST   /api/git/pull           - 从远程仓库拉取
             }
         }
         
-        async function reviewPlan(planId, status) {
-            const comment = document.getElementById(`plan-comment-${planId}`)?.value || '';
-            
-            try {
-                updateStatus('🔄 正在审核 Plan...');
-                const response = await fetch(`/api/plans/${planId}/status`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        status: status,
-                        comment: comment
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    updateStatus('✅ Plan 审核成功');
-                    await loadPlans();
-                } else {
-                    showError('Plan 审核失败: ' + data.message);
-                }
-            } catch (error) {
-                showError('Plan 审核失败: ' + error.message);
-            }
-        }
-        
         async function refreshContent() {
-            await Promise.all([loadTasks(), loadPlans()]);
-        }
-        
-        function viewPlan(taskId) {
-            const plan = plans.find(p => p.task_id === taskId);
-            if (plan) {
-                alert(`Plan 详情：\n\n${plan.content}`);
-            } else {
-                alert('未找到对应的 Plan，Plan ID: ' + taskId);
-            }
+            await loadTasks();
         }
         
         init();
