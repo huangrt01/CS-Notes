@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-23T01:36:14.758646",
+  "updated_at": "2026-02-23T03:20:47.152776",
   "todos": [
     {
       "id": "todo-20260223-003",
@@ -143,7 +143,7 @@
         "安装 xiaohongshu-mcp",
         "测试 xiaohongshu-mcp 是否正常工作"
       ],
-      "progress": "✅ 已调研！mcporter 是一个 TypeScript runtime、CLI 和代码生成工具包，用于 Model Context Protocol (MCP)！GitHub 仓库：https://github.com/steipete/mcporter！xiaohongshu-mcp 也在 ClawHub 上找到了！✅ mcporter 安装成功了！安装位置：/root/.openclaw/workspace/skills/mcporter！下一步：安装 xiaohongshu-mcp！"
+      "progress": "✅ 已调研！mcporter 是一个 TypeScript runtime、CLI 和代码生成工具包，用于 Model Context Protocol (MCP)！GitHub 仓库：https://github.com/steipete/mcporter！xiaohongshu-mcp 也在 ClawHub 上找到了！✅ mcporter 安装成功了！安装位置：/root/.openclaw/workspace/skills/mcporter！⚠️ xiaohongshu-mcp 被标记为 suspicious，需要使用 --force 来安装。这个 skill 是关于小红书自动化的，包含发布内容、搜索笔记、分析评论等功能。是否安装需要用户确认！"
     },
     {
       "id": "todo-20260222-005",
@@ -1518,6 +1518,21 @@
       "progress": "✅ 已完成！已成功重新整理微信公众号文章《为什么你公司的内部创业大概率会死？》，确保放到正确的位置（### 创业 & 企业 section 下），并且减少了小标题！文章内容已精炼整理，减少了小标题，只保留了最核心的几个标题：核心结论、大企业内部孵化失败率、Agency Problem（代理人问题）、创始人困局：CEO下场也未必救得了、谁做对了：狙击手模式，拼多多与亚马逊、字节那套为什么很难学：你缺的不是机制，是航母、Conviction: Be right，a lot、结语：Conviction是反人性的能力！",
       "started_at": "2026-02-23T00:36:00.000000",
       "completed_at": "2026-02-23T00:55:00.000000"
+    },
+    {
+      "id": "todo-20260223-032047",
+      "title": "阅读 YouTube 视频 https://youtu.be/8lF7HmQ_RgY?si=ab1RQoQ4VE60put",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-23T03:20:47.151820",
+      "definition_of_done": [
+        "完成任务",
+        "验证结果"
+      ],
+      "progress": "⏸️ 待执行",
+      "original_text": "高优先级：阅读 YouTube 视频 https://youtu.be/8lF7HmQ_RgY?si=ab1RQoQ4VE60put"
     }
   ]
 }
