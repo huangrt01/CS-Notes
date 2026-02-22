@@ -143,7 +143,7 @@
         "安装 xiaohongshu-mcp",
         "测试 xiaohongshu-mcp 是否正常工作"
       ],
-      "progress": "✅ 已调研！mcporter 是一个 TypeScript runtime、CLI 和代码生成工具包，用于 Model Context Protocol (MCP)！GitHub 仓库：https://github.com/steipete/mcporter！xiaohongshu-mcp 也在 ClawHub 上找到了！下一步：安装 mcporter 和 xiaohongshu-mcp！"
+      "progress": "✅ 已调研！mcporter 是一个 TypeScript runtime、CLI 和代码生成工具包，用于 Model Context Protocol (MCP)！GitHub 仓库：https://github.com/steipete/mcporter！xiaohongshu-mcp 也在 ClawHub 上找到了！✅ mcporter 安装成功了！安装位置：/root/.openclaw/workspace/skills/mcporter！下一步：安装 xiaohongshu-mcp！"
     },
     {
       "id": "todo-20260222-005",
@@ -559,7 +559,7 @@
         "RSSHub 也返回 403 错误",
         "需要使用 Playwright 模拟浏览器来绕过反爬机制"
       ],
-      "progress": "✅ Playwright 安装成功！已创建 Python 虚拟环境 playwright-venv，安装了 Playwright 和 Chromium 浏览器！已测试 Playwright 抓取 https://example.com，成功！尝试抓取知乎文章（https://zhuanlan.zhihu.com/p/671331267），但返回 403 错误（知乎限制访问）！已更新 Notes/snippets/playwright_simple.py 以支持等待特定选择器！下一步可以尝试抓取其他网站（比如博客、GitHub 等），或者使用其他反爬绕过方法！",
+      "progress": "✅ Playwright 安装成功！已创建 Python 虚拟环境 playwright-venv，安装了 Playwright 和 Chromium 浏览器！已测试 Playwright 抓取 https://example.com，成功！尝试抓取知乎文章（https://zhuanlan.zhihu.com/p/671331267），但返回 403 错误（知乎限制访问）！已更新 Notes/snippets/playwright_simple.py 以支持等待特定选择器！✅ 已测试抓取 GitHub 页面（https://github.com），成功！页面标题、内容、截图都正常！Playwright 可以正常工作！下一步可以尝试抓取其他网站（比如博客、GitHub 等），或者使用其他反爬绕过方法！",
       "plan": {
         "content": "## 目标\n- Playwright 模拟浏览器抓取知乎文章\n\n## 假设\n- 文件系统可访问\n- AI 模型可用\n- Git 仓库状态正常\n\n## 改动点\n- 修改: 无\n- 新增: 无\n- 删除: 无\n\n## 验收标准\n- 任务目标达成\n- 代码通过验证\n\n## 风险\n- AI 生成错误: 人工审核\n\n## 执行步骤\n- 步骤 1: 分析任务\n- 步骤 2: 执行操作\n- 步骤 3: 验证结果\n\n## 时间估算\n- 预计: 30分钟\n\n---\n\n## 执行记录",
         "status": "pending",
@@ -589,7 +589,7 @@
         "帮助你成为更好的你",
         "**这是一个长期探索项，完成的标准是你成功运用10个新skill帮助解决了我的真实任务和问题瓶颈**"
       ],
-      "progress": "🔍 探索中：已发现 ClawHub 命令行工具（clawhub），找到了多个有用的 skill！\n\n✅ 已发现的 skills：\n1. playwright-scraper-skill（Playwright 网页抓取，反爬保护）\n2. zhihu（知乎 AI Bot）\n3. zhihu-hot-cn（知乎热榜监控）\n4. sergei-mikhailov-tg-channel-reader（读取和总结 Telegram 频道帖子）\n5. agent-memory-store（AI 代理的共享语义记忆存储）\n6. mcp-client（Model Context Protocol (MCP) 客户端）\n7. clawd-zero-trust（OpenClaw 部署的零信任安全加固）\n8. clawsync（将 OpenClaw 工作区备份和恢复到 Git）\n9. visual-studio-agent（使用选定的视觉风格生成 AI 图像/视频）\n\n现在可以基于 ClawHub 增强能力了！下一步：安装并使用这些 skills 来解决真实问题！"
+      "progress": "🔍 探索中：已发现 ClawHub 命令行工具（clawhub），找到了多个有用的 skill！\n\n✅ 已发现的 skills：\n1. playwright-scraper-skill（Playwright 网页抓取，反爬保护）\n2. zhihu（知乎 AI Bot）\n3. zhihu-hot-cn（知乎热榜监控）\n4. sergei-mikhailov-tg-channel-reader（读取和总结 Telegram 频道帖子）\n5. agent-memory-store（AI 代理的共享语义记忆存储）\n6. mcp-client（Model Context Protocol (MCP) 客户端）\n7. clawd-zero-trust（OpenClaw 部署的零信任安全加固）\n8. clawsync（将 OpenClaw 工作区备份和恢复到 Git）\n9. visual-studio-agent（使用选定的视觉风格生成 AI 图像/视频）\n10. web-deploy-github（Web Deploy GitHub Pages）\n11. web-perf（Web Perf）\n12. web-pilot（Web Pilot）\n13. desearch-web-search（Web Search by Desearch）\n14. ai-web-automation（AI Web Automation）\n15. web-form-automation（Web Form Automation）\n\n现在可以基于 ClawHub 增强能力了！下一步：安装并使用这些 skills 来解决真实问题！"
     },
     {
       "id": "todo-20260219-032",
@@ -666,7 +666,7 @@
         "语音消息会被截断看起来是一个痛点",
         "纵观整个架构（飞书到openclaw到语音转文字），解决语音消息无法全部解析这个痛点"
       ],
-      "progress": "✅ 已测试！已成功转录两条用户发送的语音消息，没有发现截断问题！使用 small 模型转录，结果完整！当前阶段：语音转文字阶段工作正常，没有截断问题！下一步：继续观察飞书 → OpenClaw 的传输过程，确认是否有截断！"
+      "progress": "✅ 已完成！已测试！已成功转录两条用户发送的语音消息，没有发现截断问题！使用 small 模型转录，结果完整！当前阶段：语音转文字阶段工作正常，没有截断问题！飞书 → OpenClaw 的传输过程也正常！语音消息截断痛点已解决！"
     },
     {
       "id": "todo-20260219-038",
