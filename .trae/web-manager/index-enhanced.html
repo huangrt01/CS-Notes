@@ -1172,7 +1172,7 @@ POST   /api/git/pull           - 从远程仓库拉取
                 metaItems.push(`<span>✅ ${completedDate}</span>`);
             }
             if (task.commit_hash) {
-                metaItems.push(`<span style="background: #f3f4f6; color: #6b7280; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: monospace;">${task.commit_hash.substring(0, 7)}</span>`);
+                metaItems.push(`<span style="background: #f3f4f6; color: #6b7280; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: monospace; cursor: pointer;" onclick="viewCodeDiff('${task.commit_hash}')">${task.commit_hash.substring(0, 7)}</span>`);
             }
             
             let reviewCommentHtml = '';
@@ -1552,6 +1552,94 @@ POST   /api/git/pull           - 从远程仓库拉取
             } catch (error) {
                 console.error('Review 失败:', error);
                 showError(`❌ Review 失败: ${error.message}`);
+            }
+        }
+        
+        async function viewCodeDiff(commitHash) {
+            try {
+                updateStatus('🔄 正在获取代码差异...');
+                
+                const response = await fetch(`${API_BASE}/git/diff/${commitHash}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const diffContent = data.diff || '没有差异内容';
+                    
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: rgba(0, 0, 0, 0.5);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 9999;
+                    `;
+                    
+                    const modalContent = document.createElement('div');
+                    modalContent.style.cssText = `
+                        background: white;
+                        padding: 24px;
+                        border-radius: 12px;
+                        max-width: 90vw;
+                        max-height: 90vh;
+                        overflow: auto;
+                        position: relative;
+                    `;
+                    
+                    const closeBtn = document.createElement('button');
+                    closeBtn.textContent = '✕';
+                    closeBtn.style.cssText = `
+                        position: absolute;
+                        top: 12px;
+                        right: 12px;
+                        background: none;
+                        border: none;
+                        font-size: 24px;
+                        cursor: pointer;
+                        color: #666;
+                    `;
+                    closeBtn.onclick = () => modal.remove();
+                    
+                    const title = document.createElement('h3');
+                    title.textContent = `📝 Git Diff - ${commitHash.substring(0, 7)}`;
+                    title.style.cssText = 'margin: 0 0 16px 0;';
+                    
+                    const diffElement = document.createElement('pre');
+                    diffElement.textContent = diffContent;
+                    diffElement.style.cssText = `
+                        background: #f7f7f7;
+                        padding: 16px;
+                        border-radius: 8px;
+                        font-family: monospace;
+                        font-size: 13px;
+                        line-height: 1.6;
+                        white-space: pre-wrap;
+                        max-height: 70vh;
+                        overflow: auto;
+                    `;
+                    
+                    modalContent.appendChild(closeBtn);
+                    modalContent.appendChild(title);
+                    modalContent.appendChild(diffElement);
+                    modal.appendChild(modalContent);
+                    document.body.appendChild(modal);
+                    
+                    updateStatus('✅ 代码差异已加载');
+                } else {
+                    throw new Error(data.error || '获取代码差异失败');
+                }
+            } catch (error) {
+                console.error('获取代码差异失败:', error);
+                showError(`❌ 获取代码差异失败: ${error.message}`);
             }
         }
         

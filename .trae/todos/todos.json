@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-23T12:33:46.652137",
+  "updated_at": "2026-02-23T13:36:58.611710",
   "todos": [
     {
       "id": "todo-20260223-041802",
@@ -79,7 +79,7 @@
         "实现从git history中获取diff的能力",
         "测试验证code diff功能是否正常工作"
       ],
-      "progress": "✅ 已完成第一步！已成功添加 git diff API 端点到 server.py！\n✅ 已验证 git diff 命令可以正常工作！\n🔍 正在查看前端代码，分析 completed task 的展示区域！\n✅ 已找到 completed task 的展示区域，可以在这里添加 code diff 功能！\n✅ 已详细分析前端代码中 completed task 的展示区域！\n✅ 已按照用户要求修改：不需要在前端添加输入commit hash的UI！\n✅ 已修改server.py，在标记任务为completed时自动获取当前的commit hash！\n✅ 已修改前端，在任务卡片中展示commit hash！\n\n新增 API 端点：\n1. `/api/git/diff` - 获取两个 commit 之间的 diff，支持指定文件\n2. `/api/git/diff/<commit>` - 获取特定 commit 的 diff（使用 git show）\n\n已验证：\n- git diff 命令可以正常工作\n- git log 也可以正常工作，最近的 commit 是 7d126ca\n\n已完成的修改：\n1. ✅ 修改了server.py，添加了get_current_commit_hash()函数\n2. ✅ 修改了update_task_status()函数，在标记任务为completed时自动获取当前的commit hash！\n3. ✅ 修改了前端，在任务卡片中展示commit hash（只展示前7个字符）！\n\n用户需求确认：\n1. ✅ 不需要在前端添加输入commit hash的UI！\n2. ✅ 在标记任务为完成时，自动把当前的commit hash填入todos.json！\n3. ✅ 前端只要展示这些commit hash就行了！\n4. ✅ 固化规则，让自己在标记任务为完成时就自动填入commit hash！\n\n下一步：\n1. 测试验证自动填入commit hash的功能是否正常工作！\n2. 如果有commit hash，前端可以点击查看code diff！",
+      "progress": "✅ 已完成第一步！已成功添加 git diff API 端点到 server.py！\n✅ 已验证 git diff 命令可以正常工作！\n🔍 正在查看前端代码，分析 completed task 的展示区域！\n✅ 已找到 completed task 的展示区域，可以在这里添加 code diff 功能！\n✅ 已详细分析前端代码中 completed task 的展示区域！\n✅ 已按照用户要求修改：不需要在前端添加输入commit hash的UI！\n✅ 已修改server.py，在标记任务为completed时自动获取当前的commit hash！\n✅ 已修改前端，在任务卡片中展示commit hash！\n✅ 已添加viewCodeDiff函数，点击commit hash可以查看code diff！\n\n新增 API 端点：\n1. `/api/git/diff` - 获取两个 commit 之间的 diff，支持指定文件\n2. `/api/git/diff/<commit>` - 获取特定 commit 的 diff（使用 git show）\n\n已验证：\n- git diff 命令可以正常工作\n- git log 也可以正常工作，最近的 commit 是 7d126ca\n\n已完成的修改：\n1. ✅ 修改了server.py，添加了get_current_commit_hash()函数\n2. ✅ 修改了update_task_status()函数，在标记任务为completed时自动获取当前的commit hash！\n3. ✅ 修改了前端，在任务卡片中展示commit hash（只展示前7个字符）！\n4. ✅ 修改了前端，让commit hash变成可点击的！\n5. ✅ 添加了viewCodeDiff函数，点击commit hash可以查看code diff！\n\n用户需求确认：\n1. ✅ 不需要在前端添加输入commit hash的UI！\n2. ✅ 在标记任务为完成时，自动把当前的commit hash填入todos.json！\n3. ✅ 前端只要展示这些commit hash就行了！\n4. ✅ 固化规则，让自己在标记任务为完成时就自动填入commit hash！\n5. ✅ 如果有commit hash，前端可以点击查看code diff！\n\n下一步：\n1. 测试验证整个code diff功能是否正常工作！",
       "started_at": "2026-02-23T04:08:30.693357"
     },
     {
@@ -1553,6 +1553,61 @@
       ],
       "progress": "⏸️ 待执行",
       "original_text": "高优先级：调研公司内部的coding bash cli 工具"
+    },
+    {
+      "id": "todo-20260223-133658",
+      "title": "Enable block streaming so you get output in chunks instead of “all at the end” - 让消息返回更及时",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-23T13:36:58.611676",
+      "links": [
+        "https://www.answeroverflow.com/m/1469613669003300990",
+        "https://docs.openclaw.ai/concepts/streaming"
+      ],
+      "definition_of_done": [
+        "参考 Enable block streaming 文档",
+        "配置 OpenClaw 启用 block streaming",
+        "验证消息可以分块返回，而不是在最后一次性返回",
+        "确保非 Telegram channels (incl Discord) 也能正常工作"
+      ],
+      "progress": ""
+    },
+    {
+      "id": "todo-20260223-133658",
+      "title": "开启LLM的reasoning尝试，结合实际任务确认reasoning带来了收益",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-23T13:36:58.611691",
+      "definition_of_done": [
+        "开启LLM的reasoning功能",
+        "结合实际任务使用reasoning",
+        "确认reasoning带来了收益",
+        "记录reasoning的使用效果"
+      ],
+      "progress": ""
+    },
+    {
+      "id": "todo-20260223-133658",
+      "title": "结合调研结果，精炼整理 ai-agent 笔记中的 OpenClaw 笔记",
+      "status": "pending",
+      "priority": "high",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-23T13:36:58.611697",
+      "links": [
+        "`.trae/documents/OpenClaw-配置参数分析与推荐.md`",
+        "`Notes/AI-Agent-Product&PE.md`"
+      ],
+      "definition_of_done": [
+        "结合之前的调研结果",
+        "精炼整理 ai-agent 笔记中的 OpenClaw 笔记",
+        "确保笔记内容准确、精炼、有用"
+      ],
+      "progress": ""
     }
   ]
 }
