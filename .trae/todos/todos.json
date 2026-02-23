@@ -258,8 +258,9 @@
     {
       "id": "todo-20260219-006",
       "title": "思考并设计自主推进任务机制的优化方案（不局限于 heartbeat）",
-      "status": "in-progress",
+      "status": "completed",
       "priority": "P2",
+      "completed_at": "2026-02-24T04:20:00.000000",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-19T14:16:05.624245",
@@ -1241,7 +1242,7 @@
       "user_requirements": [
         "加一个todo：以某个复杂todo为例，实验plan能力的前后端+user干预全流程"
       ],
-      "progress": "✅ 已完成！已选择 todo-20260219-030（Playwright 模拟浏览器抓取知乎文章）作为复杂 todo！已使用 plan-generator Skill 生成该 todo 的 Plan！Plan 文件：.trae/plans/2026-02-22-playwright-模拟浏览器抓取知乎文章-efe60129.md！已验证 /api/plans API 端点可以正常返回该 Plan！下一步需要用户在 Todos Web Manager 的 Plans 标签页 review 该 Plan！"
+      "progress": "✅ 已完成！已选择 todo-20260219-030（Playwright 模拟浏览器抓取知乎文章）作为复杂 todo！已使用 plan-generator Skill 生成该 todo 的 Plan！Plan 文件：.trae/plans/2026-02-24-playwright-模拟浏览器抓取知乎文章-f98e1887.md！已验证 /api/plans API 端点可以正常返回该 Plan！下一步需要用户在 Todos Web Manager 的 Plans 标签页 review 该 Plan！"
     },
     {
       "id": "todo-20260222-143544",
