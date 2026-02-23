@@ -222,7 +222,8 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 7. **在两次用户干预之间最多执行 MAX_TASKS_BETWEEN_INTERVENTIONS（8）个任务**
 8. **只有需要用户做选择题的时候才找用户确认**
 9. **否则尽量自主推进一切事项**
-10. **希望：每个 todo 都到了不得不依赖用户做些什么或者做决策的阶段**
+10. **【强制】当推进todo时，每次回复用户，都有和todos相关的commit变更或者命令行参数调用**
+11. **希望：每个 todo 都到了不得不依赖用户做些什么或者做决策的阶段**
 
 **优先级排序规则**：
 - P0：最高优先级（笔记整理任务固定为P0）
