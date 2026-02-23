@@ -17,13 +17,15 @@
 
 ## Todo 驱动工作流
 * 当我说"新建任务 / 加一个 todo / 记一条待办"时：
-  - 默认把任务写入 `.trae/documents/todos管理系统.md` 的 Pending（或先写入 Inbox，再搬运到 Pending）
-  - 任务条目尽量结构化：优先级（high/medium/low）、链接（目标文件/外部链接）、可选截止时间
-* 当我说"根据 todos 执行 / 执行 todos / 清空待办"时：
-  - 先读取 `.trae/documents/todos管理系统.md`，确定当前 Pending/进行中任务
+  - 默认把任务写入 `.trae/todos/todos.json`（JSON 为单一数据源）
+  - 任务条目尽量结构化：优先级（P0-P9）、链接（目标文件/外部链接）、可选截止时间
+* 当我说"根据 todos 执行 / 执行 todos / 清空待办"、"纵观本仓库全局，推进todos"时：
+  - 先读取 `.trae/todos/todos.json`，确定当前 Pending/进行中任务
+  - 使用 priority-task-reader skill（`.trae/openclaw-skills/priority-task-reader/main.py --next`）找到下一个应该执行的任务
   - 选择最重要且可独立完成的一项开始执行，完成后立刻回写进度与产物链接，再继续下一项
   - 涉及复杂改动时，先给出 Plan（目标、假设、改动点、验收标准、风险），Plan 明确后再动手
-  - 执行中产生的经验教训沉淀到 `.trae/documents/PROGRESS.md
+  - 执行中产生的**核心经验教训必须精炼沉淀到本文件（project_rules.md）**中（确保 Trae 能读取到）
+  - 详细的经验教训记录可以同时沉淀到 `.trae/documents/PROGRESS.md` 作为补充
 * **【强制】开始推进 todo 前必须先标记为 in-progress**：避免多 session 同时执行同一个 task 造成冲突
   - **核心原则**：当决定开始推进某个 todo 时，第一时间先把它从 pending 改为 in-progress
   - **为什么重要**：如果有多个 session 在同时运行，不先标记的话可能导致两个 session 同时执行同一个任务
@@ -178,3 +180,19 @@
   - 支持 `--next` 显示下一个应该执行的任务
 * **相关文档**：
   - `.trae/documents/P0-P9-优先级体系设计方案.md` - 完整的优先级体系设计方案
+
+## 快捷指令
+### 快捷指令：迁移
+
+当用户说"迁移"、"打包"、"一键迁移"等类似指令时，AI应该：
+
+1. **运行迁移脚本**：执行 `.trae/web-manager/migrate.sh`
+2. **检查同步状态**：脚本会自动检查原始文件和模板的同步状态
+3. **如果有更新**：提示用户手动编辑模板文件（如果是通用更新）
+4. **自动构建**：确认后自动运行 build.sh 打包
+5. **完成迁移**：生成可迁移的压缩包
+
+**注意**：
+- 如果更新是 CS-Notes 特定的，不需要更新模板
+- 如果更新是通用的，需要手动编辑模板文件移除项目特定内容
+- 详细工作流请查看 `.trae/web-manager/WORKFLOW.md`

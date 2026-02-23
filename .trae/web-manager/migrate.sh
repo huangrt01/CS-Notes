@@ -1,6 +1,6 @@
 #!/bin/bash
 # Todo Web Manager - 一键迁移脚本
-# 自动检查同步状态，然后构建
+# 自动检查同步状态，智能同步模板，然后构建
 
 set -e
 
@@ -19,20 +19,55 @@ echo -e "${BLUE}Todo Web Manager - 一键迁移${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
-# 步骤 1：检查模板同步状态
-echo -e "${BLUE}[步骤 1/4]${NC} 检查模板同步状态..."
+# 定义需要同步的文件
+FILES=(
+    ".openclaw-memory/MEMORY.md|.trae/web-manager/templates/MEMORY-generic.md"
+    ".openclaw-memory/AGENTS.md|.trae/web-manager/templates/AGENTS-generic.md"
+    ".trae/rules/project_rules.md|.trae/web-manager/templates/project_rules-generic.md"
+)
+
+# 步骤 1：检查模板同步状态并智能同步
+echo -e "${BLUE}[步骤 1/4]${NC} 检查模板同步状态并智能同步..."
 cd "$SCRIPT_DIR"
-./sync-templates.sh
+
+NEEDS_UPDATE=()
+for pair in "${FILES[@]}"; do
+    IFS='|' read -r ORIGINAL TEMPLATE <<< "$pair"
+    
+    ORIGINAL_PATH="$PROJECT_ROOT/$ORIGINAL"
+    TEMPLATE_PATH="$PROJECT_ROOT/$TEMPLATE"
+    
+    echo -e "${BLUE}[处理]${NC} $(basename "$ORIGINAL")"
+    
+    if [ ! -f "$ORIGINAL_PATH" ]; then
+        echo -e "  ${RED}✗ 原始文件不存在: $ORIGINAL_PATH${NC}"
+        continue
+    fi
+    
+    if [ ! -f "$TEMPLATE_PATH" ]; then
+        echo -e "  ${RED}✗ 模板文件不存在: $TEMPLATE_PATH${NC}"
+        continue
+    fi
+    
+    # 使用 Python 智能同步工具
+    python3 "$SCRIPT_DIR/auto_sync.py" "$ORIGINAL_PATH" "$TEMPLATE_PATH"
+    echo ""
+done
+
 echo ""
 
-# 步骤 2：询问是否继续
+# 步骤 2：询问是否继续（除非传入 --yes 参数）
 echo -e "${BLUE}[步骤 2/4]${NC} 准备构建..."
-read -p "是否继续构建可迁移包？(y/n): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo ""
-    echo -e "${YELLOW}已取消构建。${NC}"
-    exit 0
+if [ "$1" == "--yes" ]; then
+    echo "自动确认构建..."
+else
+    read -p "是否继续构建可迁移包？(y/n): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo ""
+        echo -e "${YELLOW}已取消构建。${NC}"
+        exit 0
+    fi
 fi
 echo ""
 

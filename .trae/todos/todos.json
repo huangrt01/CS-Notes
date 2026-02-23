@@ -1,7 +1,36 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-23T14:36:54.036571",
+  "updated_at": "2026-02-23T15:00:00.000000",
   "todos": [
+    {
+      "id": "todo-20260223-001",
+      "title": "把todos web manager改造为独立的git仓库，CS-Notes以submodule的方式融入，且支持双向迁移和维护",
+      "status": "pending",
+      "priority": "P2",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-23T15:00:00.000000",
+      "links": [
+        "`/Users/bytedance/CS-Notes/.trae/documents/Todo-Web-Manager-解耦方案-迁移到任意新项目.md`",
+        "`.trae/web-manager/`"
+      ],
+      "definition_of_done": [
+        "进一步拓展Todo-Web-Manager解耦方案文档",
+        "设计独立git仓库的架构方案",
+        "设计CS-Notes以submodule方式融入的方案",
+        "设计双向迁移和维护的机制（CS-Notes新特性迁移到todo-web-manager，todo-web-manager更新同步到CS-Notes）",
+        "设计版本管理和兼容性策略",
+        "实现完整的迁移和维护流程",
+        "测试验证双向迁移功能"
+      ],
+      "user_requirements": [
+        "进一步拓展 Todo-Web-Manager 解耦方案文档",
+        "把 todos web manager 改造为独立的 git 仓库",
+        "CS-Notes 以 submodule 的方式融入 todo-web-manager",
+        "仍具备向 todo-web-manager 迁移新特性的能力",
+        "需要仔细思考如何双向迁移和维护能力"
+      ]
+    },
     {
       "id": "todo-20260223-043654",
       "title": "todos web manager支持多个项目的管理",

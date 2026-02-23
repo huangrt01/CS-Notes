@@ -10,7 +10,8 @@
   - 使用 priority-task-reader skill(`.trae/openclaw-skills/priority-task-reader/main.py --next`)找到下一个应该执行的任务
   - 选择最重要且可独立完成的一项开始执行,完成后立刻回写进度与产物链接,再继续下一项
   - 涉及复杂改动时,先给出 Plan(目标、假设、改动点、验收标准、风险),Plan 明确后再动手
-  - 执行中产生的经验教训沉淀到 `.trae/documents/PROGRESS.md`
+  - 执行中产生的**核心经验教训必须精炼沉淀到本文件（project_rules.md）**中（确保 Trae 能读取到）
+  - 详细的经验教训记录可以同时沉淀到 `.trae/documents/PROGRESS.md` 作为补充
 * **【强制】开始推进 todo 前必须先标记为 in-progress**:避免多 session 同时执行同一个 task 造成冲突
   - **核心原则**:当决定开始推进某个 todo 时,第一时间先把它从 pending 改为 in-progress
   - **为什么重要**:如果有多个 session 在同时运行,不先标记的话可能导致两个 session 同时执行同一个任务
