@@ -165,13 +165,57 @@ POST   /api/git/pull           - 从远程仓库拉取
             padding: 20px;
             border-radius: 12px;
             margin-bottom: 24px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .stat-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .stat-group-title {
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-row {
+            display: flex;
             gap: 16px;
+            flex-wrap: wrap;
         }
         
         .stat-item {
             text-align: center;
+            min-width: 80px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .stat-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .stat-item.priority-p0 {
+            background: rgba(239, 68, 68, 0.3);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+        
+        .stat-item.priority-p1 {
+            background: rgba(249, 115, 22, 0.3);
+            border: 1px solid rgba(249, 115, 22, 0.5);
+        }
+        
+        .stat-item.priority-p2 {
+            background: rgba(234, 179, 8, 0.3);
+            border: 1px solid rgba(234, 179, 8, 0.5);
         }
         
         .stat-number {
@@ -675,7 +719,7 @@ POST   /api/git/pull           - 从远程仓库拉取
             }
             
             .stats-panel {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
             }
         }
     </style>
@@ -701,25 +745,72 @@ POST   /api/git/pull           - 从远程仓库拉取
             <div id="errorMessage" style="display: none;"></div>
             
             <div class="stats-panel" id="statsPanel">
-                <div class="stat-item">
-                    <div class="stat-number" id="statPendingPlans">0</div>
-                    <div class="stat-label">待审核 Plans</div>
+                <div class="stat-group">
+                    <div class="stat-group-title">📋 流程状态</div>
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <div class="stat-number" id="statPendingPlans">0</div>
+                            <div class="stat-label">待审核 Plans</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="statPendingReviewTasks">0</div>
+                            <div class="stat-label">待审核 Tasks</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="statPendingReviewTasks">0</div>
-                    <div class="stat-label">待审核 Tasks</div>
+                
+                <div class="stat-group">
+                    <div class="stat-group-title">📊 任务状态</div>
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <div class="stat-number" id="statInProgress">0</div>
+                            <div class="stat-label">进行中</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="statPending">0</div>
+                            <div class="stat-label">待处理</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="statCompleted">0</div>
+                            <div class="stat-label">已完成</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="statInProgress">0</div>
-                    <div class="stat-label">我的进行中</div>
+                
+                <div class="stat-group">
+                    <div class="stat-group-title">🔥 优先级</div>
+                    <div class="stat-row">
+                        <div class="stat-item priority-p0">
+                            <div class="stat-number" id="statP0">0</div>
+                            <div class="stat-label">P0</div>
+                        </div>
+                        <div class="stat-item priority-p1">
+                            <div class="stat-number" id="statP1">0</div>
+                            <div class="stat-label">P1</div>
+                        </div>
+                        <div class="stat-item priority-p2">
+                            <div class="stat-number" id="statP2">0</div>
+                            <div class="stat-label">P2</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="statPending">0</div>
-                    <div class="stat-label">我的待处理</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="statTotal">0</div>
-                    <div class="stat-label">总计</div>
+                
+                <div class="stat-group">
+                    <div class="stat-group-title">👤 负责人</div>
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <div class="stat-number" id="statAi">0</div>
+                            <div class="stat-label">AI 任务</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="statUser">0</div>
+                            <div class="stat-label">User 任务</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="statTotal">0</div>
+                            <div class="stat-label">总计</div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -878,14 +969,26 @@ POST   /api/git/pull           - 从远程仓库拉取
         function updateStats() {
             const pendingPlanTodos = tasks.filter(t => t.plan && t.plan.status === 'pending').length;
             const pendingReviewTasks = tasks.filter(t => t.status === 'completed').length;
-            const myPending = tasks.filter(t => t.status === 'pending' && (t.assignee === 'user' || t.assignee === 'user + ai')).length;
-            const myInProgress = tasks.filter(t => t.status === 'in-progress' && (t.assignee === 'user' || t.assignee === 'user + ai')).length;
+            const inProgress = tasks.filter(t => t.status === 'in-progress').length;
+            const pending = tasks.filter(t => t.status === 'pending').length;
+            const completed = tasks.filter(t => t.status === 'completed').length;
+            const p0 = tasks.filter(t => t.priority === 'P0').length;
+            const p1 = tasks.filter(t => t.priority === 'P1').length;
+            const p2 = tasks.filter(t => t.priority === 'P2').length;
+            const aiTasks = tasks.filter(t => t.assignee === 'ai').length;
+            const userTasks = tasks.filter(t => t.assignee === 'user' || t.assignee === 'user + ai').length;
             const total = tasks.length;
             
             document.getElementById('statPendingPlans').textContent = pendingPlanTodos;
             document.getElementById('statPendingReviewTasks').textContent = pendingReviewTasks;
-            document.getElementById('statInProgress').textContent = myInProgress;
-            document.getElementById('statPending').textContent = myPending;
+            document.getElementById('statInProgress').textContent = inProgress;
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statCompleted').textContent = completed;
+            document.getElementById('statP0').textContent = p0;
+            document.getElementById('statP1').textContent = p1;
+            document.getElementById('statP2').textContent = p2;
+            document.getElementById('statAi').textContent = aiTasks;
+            document.getElementById('statUser').textContent = userTasks;
             document.getElementById('statTotal').textContent = total;
         }
         
@@ -974,11 +1077,11 @@ POST   /api/git/pull           - 从远程仓库拉取
                     return bTime - aTime;
                 }
                 
-                if (currentSubTab === 'pending-review-tasks' || currentTab === 'my-tasks' && currentSubTab === 'pending-review-tasks') {
+                if (currentSubTab === 'pending-review-tasks') {
                     const aTime = a.completed_at ? new Date(a.completed_at).getTime() : 0;
                     const bTime = b.completed_at ? new Date(b.completed_at).getTime() : 0;
                     return bTime - aTime;
-                } else if (currentSubTab === 'in-progress') {
+                } else if (currentSubTab === 'in-progress' || currentSubTab === 'my-in-progress') {
                     const aPriority = priorityOrder[a.priority] || 2;
                     const bPriority = priorityOrder[b.priority] || 2;
                     if (aPriority !== bPriority) {
@@ -986,8 +1089,8 @@ POST   /api/git/pull           - 从远程仓库拉取
                     }
                     const aTime = a.started_at ? new Date(a.started_at).getTime() : 0;
                     const bTime = b.started_at ? new Date(b.started_at).getTime() : 0;
-                    return bTime - aTime;
-                } else if (currentSubTab === 'pending') {
+                    return aTime - bTime;
+                } else if (currentSubTab === 'pending' || currentSubTab === 'my-pending') {
                     const aPriority = priorityOrder[a.priority] || 2;
                     const bPriority = priorityOrder[b.priority] || 2;
                     if (aPriority !== bPriority) {
@@ -995,7 +1098,7 @@ POST   /api/git/pull           - 从远程仓库拉取
                     }
                     const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
                     const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-                    return bTime - aTime;
+                    return aTime - bTime;
                 } else if (currentSubTab.includes('plans')) {
                     const aPriority = priorityOrder[a.priority] || 2;
                     const bPriority = priorityOrder[b.priority] || 2;
@@ -1004,18 +1107,23 @@ POST   /api/git/pull           - 从远程仓库拉取
                     }
                     const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
                     const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-                    return bTime - aTime;
+                    return aTime - bTime;
                 } else {
                     const aStatus = statusOrder[a.status] || 2;
                     const bStatus = statusOrder[b.status] || 2;
                     if (aStatus !== bStatus) {
                         return aStatus - bStatus;
                     }
+                    const aPriority = priorityOrder[a.priority] || 2;
+                    const bPriority = priorityOrder[b.priority] || 2;
+                    if (aPriority !== bPriority) {
+                        return aPriority - bPriority;
+                    }
                     const aTime = a.completed_at || a.started_at || a.created_at;
                     const bTime = b.completed_at || b.started_at || b.created_at;
                     const aTs = aTime ? new Date(aTime).getTime() : 0;
                     const bTs = bTime ? new Date(bTime).getTime() : 0;
-                    return bTs - aTs;
+                    return aTs - bTs;
                 }
             });
         }
@@ -1029,12 +1137,21 @@ POST   /api/git/pull           - 从远程仓库拉取
             let subTabsHtml = '';
             let items = [];
             
+            const pendingPlansCount = tasks.filter(t => t.plan && t.plan.status === 'pending').length;
+            const pendingReviewTasksCount = tasks.filter(t => t.status === 'completed').length;
+            const myPendingCount = tasks.filter(t => t.status === 'pending' && (t.assignee === 'user' || t.assignee === 'user + ai')).length;
+            const myInProgressCount = tasks.filter(t => t.status === 'in-progress' && (t.assignee === 'user' || t.assignee === 'user + ai')).length;
+            const allCount = tasks.length;
+            const aiInProgressCount = tasks.filter(t => t.status === 'in-progress').length;
+            const aiPendingCount = tasks.filter(t => t.status === 'pending').length;
+            const archiveCount = archiveTasks.length;
+            
             if (currentMainTab === 'my-tasks') {
                 subTabsHtml = `
-                    <button class="sub-tab ${currentSubTab === 'pending-plans' ? 'active' : ''}" data-subtab="pending-plans" onclick="switchSubTab('pending-plans')">📋 待审核 Plans</button>
-                    <button class="sub-tab ${currentSubTab === 'pending-review-tasks' ? 'active' : ''}" data-subtab="pending-review-tasks" onclick="switchSubTab('pending-review-tasks')">👀 待审核 Tasks</button>
-                    <button class="sub-tab ${currentSubTab === 'my-pending' ? 'active' : ''}" data-subtab="my-pending" onclick="switchSubTab('my-pending')">⏸️ 我的待处理</button>
-                    <button class="sub-tab ${currentSubTab === 'my-in-progress' ? 'active' : ''}" data-subtab="my-in-progress" onclick="switchSubTab('my-in-progress')">🚀 我的进行中</button>
+                    <button class="sub-tab ${currentSubTab === 'pending-plans' ? 'active' : ''}" data-subtab="pending-plans" onclick="switchSubTab('pending-plans')">📋 待审核 Plans (${pendingPlansCount})</button>
+                    <button class="sub-tab ${currentSubTab === 'pending-review-tasks' ? 'active' : ''}" data-subtab="pending-review-tasks" onclick="switchSubTab('pending-review-tasks')">👀 待审核 Tasks (${pendingReviewTasksCount})</button>
+                    <button class="sub-tab ${currentSubTab === 'my-pending' ? 'active' : ''}" data-subtab="my-pending" onclick="switchSubTab('my-pending')">⏸️ 我的待处理 (${myPendingCount})</button>
+                    <button class="sub-tab ${currentSubTab === 'my-in-progress' ? 'active' : ''}" data-subtab="my-in-progress" onclick="switchSubTab('my-in-progress')">🚀 我的进行中 (${myInProgressCount})</button>
                 `;
                 
                 if (currentSubTab === 'pending-plans') {
@@ -1055,10 +1172,10 @@ POST   /api/git/pull           - 从远程仓库拉取
                 }
             } else {
                 subTabsHtml = `
-                    <button class="sub-tab ${currentSubTab === 'all' ? 'active' : ''}" data-subtab="all" onclick="switchSubTab('all')">📋 全部</button>
-                    <button class="sub-tab ${currentSubTab === 'in-progress' ? 'active' : ''}" data-subtab="in-progress" onclick="switchSubTab('in-progress')">🚀 进行中</button>
-                    <button class="sub-tab ${currentSubTab === 'pending' ? 'active' : ''}" data-subtab="pending" onclick="switchSubTab('pending')">⏸️ 待处理</button>
-                    <button class="sub-tab ${currentSubTab === 'archive' ? 'active' : ''}" data-subtab="archive" onclick="switchSubTab('archive')">📦 归档</button>
+                    <button class="sub-tab ${currentSubTab === 'all' ? 'active' : ''}" data-subtab="all" onclick="switchSubTab('all')">📋 全部 (${allCount})</button>
+                    <button class="sub-tab ${currentSubTab === 'in-progress' ? 'active' : ''}" data-subtab="in-progress" onclick="switchSubTab('in-progress')">🚀 进行中 (${aiInProgressCount})</button>
+                    <button class="sub-tab ${currentSubTab === 'pending' ? 'active' : ''}" data-subtab="pending" onclick="switchSubTab('pending')">⏸️ 待处理 (${aiPendingCount})</button>
+                    <button class="sub-tab ${currentSubTab === 'archive' ? 'active' : ''}" data-subtab="archive" onclick="switchSubTab('archive')">📦 归档 (${archiveCount})</button>
                 `;
                 
                 if (currentSubTab === 'all') {

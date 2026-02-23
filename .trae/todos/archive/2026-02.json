@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-23T13:44:43.687702",
+  "updated_at": "2026-02-23T14:19:49.238006",
   "todos": [
     {
       "id": "todo-20260219-001",
@@ -1503,6 +1503,329 @@
         }
       ],
       "archived_at": "2026-02-23T13:44:43.686967"
+    },
+    {
+      "id": "todo-20260222-009",
+      "title": "将 .trae/skills/markdown-toc 转化为 OpenClaw 的 skill 并使用",
+      "status": "completed",
+      "priority": "P1",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-22T20:13:58.888739",
+      "definition_of_done": [
+        "检查 .trae/skills/markdown-toc 的内容",
+        "将其转化为 OpenClaw 的 skill 格式（放在 .trae/openclaw-skills/ 下）",
+        "测试并使用该 skill",
+        "保证在整理笔记时会调用 markdown-toc skill"
+      ],
+      "progress": "✅ 已完成！markdown-toc 的 OpenClaw skill 已经完整实现并可用！\n\n已完成的工作：\n1. ✅ markdown-toc skill 已存在（.trae/openclaw-skills/markdown-toc/）\n2. ✅ skill.json 配置完整，支持 extract 命令\n3. ✅ main.py 实现完整，支持提取 Markdown 目录\n4. ✅ 已更新 MEMORY.md，在笔记整理流程第一步明确要求先使用 markdown-toc skill 提取文件目录结构\n5. ✅ 已更新 MEMORY-generic.md 模板，包含同样的要求\n\n现在，无论是 Trae 还是 OpenClaw，在整理笔记时都会先调用 markdown-toc skill 来辅助！",
+      "links": [
+        ".trae/skills/markdown-toc/",
+        ".trae/openclaw-skills/markdown-toc/",
+        ".openclaw-memory/MEMORY.md"
+      ],
+      "completed_at": "2026-02-23T14:00:00.000000",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T13:56:37.819291",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-23T13:56:37.819300"
+    },
+    {
+      "id": "todo-20260219-039",
+      "title": "实现 OpenClaw 消息触发的交互方式（方案二）",
+      "status": "completed",
+      "priority": "P1",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T18:47:07.445375",
+      "links": [
+        "`.trae/documents/LLM-智能解析-重新设计方案.md`、`.trae/openclaw-skills/smart-task-parser/`"
+      ],
+      "definition_of_done": [
+        "创建智能解析 OpenClaw Skill",
+        "Skill 可以通过 OpenClaw 消息触发",
+        "Skill 可以解析任务并写入 todos.json",
+        "Skill 可以通过 OpenClaw 消息通知用户",
+        "测试验证 OpenClaw 消息触发的交互方式"
+      ],
+      "user_requirements": [
+        "用户倾向于方案二和三融合",
+        "最好是通过触发一条 OpenClaw 消息来触发，而不是写一套调 API 的逻辑",
+        "和 Todos Web Manager 融合也有类似的问题"
+      ],
+      "progress": "✅ 已完成！已测试 smart-task-parser Skill！成功运行了智能任务解析，任务已写入 todos.json！示例：输入\"高优先级：测试智能任务解析 Skill\"，成功创建了 todo-20260222-143544！",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-22T21:48:00.000000",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T13:58:20.653416",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-23T13:58:20.653422"
+    },
+    {
+      "id": "todo-20260222-001",
+      "title": "plan review 能力落地以及融入 todos web manager",
+      "status": "completed",
+      "priority": "P1",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-22T00:20:00.000000",
+      "links": [
+        "`.trae/openclaw-skills/plan-generator/`、`.trae/openclaw-skills/hybrid-executor/`、`.trae/web-manager/index-enhanced.html`"
+      ],
+      "definition_of_done": [
+        "先让plan可选开启，加todo时显示标注plan todo",
+        "才触发先plan再review plan再执行的流程",
+        "结合这个真实落脚点，调整计划更快落地",
+        "配合笔记系统、skill描述、前后端，整体改动",
+        "plan review 能力落地以及融入 todos web manager",
+        "测试验证"
+      ],
+      "user_requirements": [
+        "加todo并继续推进",
+        "plan review 能力落地以及融入 todos web manager",
+        "错了 我指的是plan mode task产出的plan，要在前端review plan通过后 让你执行plan 这一整套前端流程"
+      ],
+      "progress": "✅ 已完成！添加了 Plan review 功能到 Todos Web Manager！包含：新增 \"📋 Plans\" 标签页、新增 /api/plans 和 /api/plans/<id>/status API 端点、支持在前端展示 plan 内容、支持用户在前端 review plan（通过/不通过）并添加评论、更新 plan 文件的 frontmatter 和添加 review 记录！GitHub Commit: https://github.com/huangrt01/CS-Notes/commit/fedbd69f4a73924cb1d0b435c98e0498fa7059ad",
+      "started_at": "2026-02-22",
+      "completed_at": "2026-02-22T04:12:00.000000",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T13:58:25.532760",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-23T13:58:25.532766"
+    },
+    {
+      "id": "todo-20260221-002",
+      "title": "语音转写强制用large turbo模型，查找large turbo模型的pt文件，确保自己可以load，用上面的音频文件做测试",
+      "status": "completed",
+      "priority": "P3",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-21T12:18:00.000000",
+      "links": [
+        "Notes/snippets/speech_to_text.py"
+      ],
+      "definition_of_done": [
+        "查找 large turbo 模型的 pt 文件",
+        "确保自己可以 load large turbo 模型",
+        "用之前的音频文件做测试",
+        "验证转写结果"
+      ],
+      "user_requirements": [
+        "语音转写强制用large turbo模型，查找large turbo模型的pt文件 确保自己可以load 用上面的音频文件做测试",
+        "咋还在运行语音转写，kill掉重新试试，以及clawhub搜搜是否有相关skill",
+        "是否有介于large和small之间的medium model能下载",
+        "语音转文字那个，你既可以试试之前发你的新插件，也考虑实验不同规格的模型，对比转文字的时间，综合选出最合适的。比如我发现large turbo不适合作为默认模型，cpu计算模型forward阶段很慢"
+      ],
+      "progress": "✅ 已完成！测试了不同规格的模型，对比转文字的时间！结论：tiny 模型（73M，3秒）速度快但转写结果不太准确；small 模型（462M，6秒）速度中等，转写结果好一些；large-v3-turbo 模型（1.6G，很慢）速度慢，不适合作为默认模型。建议用 small 模型作为默认模型，平衡速度和准确性！",
+      "started_at": "2026-02-21",
+      "completed_at": "2026-02-22T00:15:00.000000",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T14:00:18.449937",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-23T14:00:18.449959"
+    },
+    {
+      "id": "todo-20260219-002",
+      "title": "解决 OpenClaw Gateway device token mismatch 问题，恢复 cron 工具等 Gateway API 的使用",
+      "status": "completed",
+      "priority": "P1",
+      "assignee": "user",
+      "feedback_required": false,
+      "created_at": "2026-02-19T14:16:05.624109",
+      "links": [
+        "`~/.openclaw/openclaw.json`、`~/.openclaw/devices/paired.json`、MEMORY.md"
+      ],
+      "definition_of_done": [
+        "执行 `openclaw gateway install --force`",
+        "执行 `openclaw gateway restart`",
+        "验证 `openclaw cron list` 等命令可以正常工作"
+      ],
+      "progress": "",
+      "started_at": "2026-02-17",
+      "completed_at": "2026-02-17",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T14:01:03.500571",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-23T14:01:03.500576"
+    },
+    {
+      "id": "todo-20260222-003",
+      "title": "测试手机访问云端部署的 Todos Web Manager",
+      "status": "completed",
+      "priority": "P3",
+      "assignee": "user + ai",
+      "feedback_required": false,
+      "created_at": "2026-02-22T09:22:35.585237",
+      "links": [
+        "https://www.volcengine.com/docs/6396/2198425?lang=zh#Lw6xz8ZI"
+      ],
+      "definition_of_done": [
+        "获取 ECS 实例的公网 IP",
+        "在手机浏览器中访问 http://&lt;公网 IP&gt;:5000",
+        "测试 Todos Web Manager 的各项功能是否正常",
+        "验证所有 API 端点是否正常工作"
+      ],
+      "user_requirements": [
+        "允许手机访问云端部署的 web manager"
+      ],
+      "completed_at": "2026-02-23T14:11:51.906547",
+      "commit_hash": "5972d4738bdbe95c8818acd073c3ca82f483eaff",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T14:14:09.953645",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-23T14:14:09.953660"
+    },
+    {
+      "id": "todo-20260220-003",
+      "title": "允许手机访问云端部署的 web manager",
+      "status": "completed",
+      "priority": "P3",
+      "assignee": "user",
+      "feedback_required": false,
+      "created_at": "2026-02-20T01:15:00.000000",
+      "links": [
+        "https://www.volcengine.com/docs/6396/2198425?lang=zh#Lw6xz8ZI"
+      ],
+      "dependencies": [
+        "修复 Flask 安装问题，修复 blinker 包冲突"
+      ],
+      "definition_of_done": [
+        "参考火山云 ECS 文档，走通公网访问流程",
+        "配置火山云 ECS 的安全组，允许公网访问",
+        "配置防火墙，允许 5000 端口（或其他端口）的入站访问",
+        "确保 Todos Web Manager 的后端服务可以从公网访问",
+        "测试手机是否可以访问云端部署的 Todos Web Manager"
+      ],
+      "user_requirements": [
+        "允许手机访问云端部署的web manager",
+        "云端是火山云ecs，也许得参考 https://www.volcengine.com/docs/6396/2198425?lang=zh#Lw6xz8ZI 这里走通公网访问流程"
+      ],
+      "progress": "✅ 已完成 Flask 安装！server.py 现在正在运行！运行地址：http://172.31.0.2:5000！下一步需要用户在火山云 ECS 控制台配置安全组，允许公网访问 5000 端口！",
+      "completed_at": "2026-02-23T14:13:51.524489",
+      "commit_hash": "5972d4738bdbe95c8818acd073c3ca82f483eaff",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T14:14:11.833737",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-23T14:14:11.833741"
+    },
+    {
+      "id": "todo-20260222-002",
+      "title": "配置火山云 ECS 安全组，允许公网访问 5000 端口",
+      "status": "completed",
+      "priority": "P3",
+      "assignee": "user",
+      "feedback_required": false,
+      "created_at": "2026-02-22T09:22:35.585206",
+      "links": [
+        "https://www.volcengine.com/docs/6396/2198425?lang=zh#Lw6xz8ZI"
+      ],
+      "definition_of_done": [
+        "登录火山云 ECS 控制台",
+        "找到当前 ECS 实例的安全组",
+        "添加入站规则，允许 TCP 协议访问 5000 端口，来源为 0.0.0.0/0（或限制为你的手机 IP）",
+        "保存安全组规则"
+      ],
+      "user_requirements": [
+        "允许手机访问云端部署的 web manager"
+      ],
+      "completed_at": "2026-02-23T14:10:23.992197",
+      "commit_hash": "5972d4738bdbe95c8818acd073c3ca82f483eaff",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T14:14:13.324425",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-23T14:14:13.324429"
+    },
+    {
+      "id": "todo-20260219-029",
+      "title": "修复 Flask 安装问题，修复 blinker 包冲突，使 server.py 可以正常启动",
+      "status": "completed",
+      "priority": "P1",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T14:18:36.706306",
+      "links": [
+        "`.trae/documents/Flask-安装问题-复现与修复方案.md",
+        "`.trae/web-manager/simple-server.py"
+      ],
+      "definition_of_done": [
+        "找到可靠的 Flask 安装方法",
+        "修复 blinker 包冲突问题",
+        "验证 server.py 可以正常启动",
+        "测试所有 API 端点正常工作"
+      ],
+      "progress": "✅ 已完成！使用 Python 虚拟环境（venv）安装 Flask 和 flask-cors，成功解决了 Flask 安装问题和 blinker 包冲突！server.py 现在可以正常启动！API 端点（/api/tasks、/api/plans 等）都测试正常！",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-22T04:10:00.000000",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T14:14:16.496295",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-23T14:14:16.496301"
+    },
+    {
+      "id": "todo-20260219-028",
+      "title": "测试完整的Lark → 火山引擎OpenClaw → Git → 本地Mac闭环流程",
+      "status": "completed",
+      "priority": "P2",
+      "assignee": "user + ai",
+      "feedback_required": true,
+      "created_at": "2026-02-19T14:16:05.625061",
+      "links": [
+        "`.trae/documents/OpenClaw集成方案.md`"
+      ],
+      "definition_of_done": [
+        "从Lark发送消息，火山引擎端可以接收并写入INBOX.md",
+        "火山引擎端可以自动commit & push到Git仓库",
+        "本地Mac端可以pull到最新代码，todo-sync.sh扫描新任务",
+        "本地Mac执行任务后commit & push，火山引擎端拉取更新并通过Lark通知用户",
+        "#### 其他待处理任务",
+        "## 已完成 (Completed)"
+      ],
+      "completed_at": "2026-02-23T14:19:42.632072",
+      "commit_hash": "5972d4738bdbe95c8818acd073c3ca82f483eaff",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T14:19:49.236514",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-23T14:19:49.236521"
     }
   ]
 }
