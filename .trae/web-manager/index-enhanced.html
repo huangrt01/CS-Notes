@@ -218,6 +218,41 @@ POST   /api/git/pull           - 从远程仓库拉取
             border: 1px solid rgba(234, 179, 8, 0.5);
         }
         
+        .stat-item.priority-p3 {
+            background: rgba(202, 138, 4, 0.3);
+            border: 1px solid rgba(202, 138, 4, 0.5);
+        }
+        
+        .stat-item.priority-p4 {
+            background: rgba(22, 163, 74, 0.3);
+            border: 1px solid rgba(22, 163, 74, 0.5);
+        }
+        
+        .stat-item.priority-p5 {
+            background: rgba(5, 150, 105, 0.3);
+            border: 1px solid rgba(5, 150, 105, 0.5);
+        }
+        
+        .stat-item.priority-p6 {
+            background: rgba(8, 145, 178, 0.3);
+            border: 1px solid rgba(8, 145, 178, 0.5);
+        }
+        
+        .stat-item.priority-p7 {
+            background: rgba(79, 70, 229, 0.3);
+            border: 1px solid rgba(79, 70, 229, 0.5);
+        }
+        
+        .stat-item.priority-p8 {
+            background: rgba(124, 58, 237, 0.3);
+            border: 1px solid rgba(124, 58, 237, 0.5);
+        }
+        
+        .stat-item.priority-p9 {
+            background: rgba(107, 114, 128, 0.3);
+            border: 1px solid rgba(107, 114, 128, 0.5);
+        }
+        
         .stat-number {
             font-size: 32px;
             font-weight: 700;
@@ -722,7 +757,33 @@ POST   /api/git/pull           - 从远程仓库拉取
                 grid-template-columns: repeat(3, 1fr);
             }
         }
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .chart-card h4 {
+            margin: 0 0 16px 0;
+            color: #1f2937;
+            font-size: 16px;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
     </style>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -786,6 +847,34 @@ POST   /api/git/pull           - 从远程仓库拉取
                         <div class="stat-item priority-p2">
                             <div class="stat-number" id="statP2">0</div>
                             <div class="stat-label">P2</div>
+                        </div>
+                        <div class="stat-item priority-p3">
+                            <div class="stat-number" id="statP3">0</div>
+                            <div class="stat-label">P3</div>
+                        </div>
+                        <div class="stat-item priority-p4">
+                            <div class="stat-number" id="statP4">0</div>
+                            <div class="stat-label">P4</div>
+                        </div>
+                        <div class="stat-item priority-p5">
+                            <div class="stat-number" id="statP5">0</div>
+                            <div class="stat-label">P5</div>
+                        </div>
+                        <div class="stat-item priority-p6">
+                            <div class="stat-number" id="statP6">0</div>
+                            <div class="stat-label">P6</div>
+                        </div>
+                        <div class="stat-item priority-p7">
+                            <div class="stat-number" id="statP7">0</div>
+                            <div class="stat-label">P7</div>
+                        </div>
+                        <div class="stat-item priority-p8">
+                            <div class="stat-number" id="statP8">0</div>
+                            <div class="stat-label">P8</div>
+                        </div>
+                        <div class="stat-item priority-p9">
+                            <div class="stat-number" id="statP9">0</div>
+                            <div class="stat-label">P9</div>
                         </div>
                     </div>
                 </div>
@@ -988,6 +1077,13 @@ POST   /api/git/pull           - 从远程仓库拉取
             const p0 = tasks.filter(t => t.priority === 'P0').length;
             const p1 = tasks.filter(t => t.priority === 'P1').length;
             const p2 = tasks.filter(t => t.priority === 'P2').length;
+            const p3 = tasks.filter(t => t.priority === 'P3').length;
+            const p4 = tasks.filter(t => t.priority === 'P4').length;
+            const p5 = tasks.filter(t => t.priority === 'P5').length;
+            const p6 = tasks.filter(t => t.priority === 'P6').length;
+            const p7 = tasks.filter(t => t.priority === 'P7').length;
+            const p8 = tasks.filter(t => t.priority === 'P8').length;
+            const p9 = tasks.filter(t => t.priority === 'P9').length;
             const aiTasks = tasks.filter(t => t.assignee === 'ai').length;
             const userTasks = tasks.filter(t => t.assignee === 'user' || t.assignee === 'user + ai').length;
             const total = tasks.length + archiveTasks.length;
@@ -1000,6 +1096,13 @@ POST   /api/git/pull           - 从远程仓库拉取
             document.getElementById('statP0').textContent = p0;
             document.getElementById('statP1').textContent = p1;
             document.getElementById('statP2').textContent = p2;
+            document.getElementById('statP3').textContent = p3;
+            document.getElementById('statP4').textContent = p4;
+            document.getElementById('statP5').textContent = p5;
+            document.getElementById('statP6').textContent = p6;
+            document.getElementById('statP7').textContent = p7;
+            document.getElementById('statP8').textContent = p8;
+            document.getElementById('statP9').textContent = p9;
             document.getElementById('statAi').textContent = aiTasks;
             document.getElementById('statUser').textContent = userTasks;
             document.getElementById('statTotal').textContent = total;
@@ -1232,19 +1335,23 @@ POST   /api/git/pull           - 从远程仓库拉取
             taskList.innerHTML = `<ul class="task-list">${html}</ul>`;
         }
         
+        let executionCharts = {};
+        
         async function loadExecutionLogs() {
             const taskList = document.getElementById('taskList');
             
             try {
                 updateStatus('🔄 正在加载执行日志...');
                 
-                const [metricsResponse, logsResponse] = await Promise.all([
+                const [metricsResponse, logsResponse, timeSeriesResponse] = await Promise.all([
                     fetch(`${API_BASE}/execution-metrics`),
-                    fetch(`${API_BASE}/execution-logs`)
+                    fetch(`${API_BASE}/execution-logs`),
+                    fetch(`${API_BASE}/execution-time-series`)
                 ]);
                 
                 const metricsData = await metricsResponse.json();
                 const logsData = await logsResponse.json();
+                const timeSeriesData = await timeSeriesResponse.json();
                 
                 let html = '';
                 
@@ -1265,8 +1372,16 @@ POST   /api/git/pull           - 从远程仓库拉取
                                     <div style="font-size: 12px; opacity: 0.9;">已完成</div>
                                 </div>
                                 <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 700;">${metrics.failed_tasks || 0}</div>
+                                    <div style="font-size: 12px; opacity: 0.9;">失败</div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 8px; text-align: center;">
                                     <div style="font-size: 24px; font-weight: 700;">${metrics.completion_rate || 0}%</div>
                                     <div style="font-size: 12px; opacity: 0.9;">完成率</div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 700;">${metrics.failure_rate || 0}%</div>
+                                    <div style="font-size: 12px; opacity: 0.9;">失败率</div>
                                 </div>
                                 <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 8px; text-align: center;">
                                     <div style="font-size: 24px; font-weight: 700;">${metrics.avg_execution_time_minutes || 0}m</div>
@@ -1284,6 +1399,74 @@ POST   /api/git/pull           - 从远程仓库拉取
                         </div>
                     `;
                 }
+                
+                html += '<div class="charts-container">';
+                
+                if (timeSeriesData.success && timeSeriesData.chart_data && timeSeriesData.chart_data.length > 0) {
+                    html += `
+                        <div class="chart-card">
+                            <h4>📈 任务执行时间趋势</h4>
+                            <div class="chart-wrapper">
+                                <canvas id="executionTimeChart"></canvas>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (timeSeriesData.success && timeSeriesData.daily_data && timeSeriesData.daily_data.length > 0) {
+                    html += `
+                        <div class="chart-card">
+                            <h4>📊 每日任务完成量</h4>
+                            <div class="chart-wrapper">
+                                <canvas id="dailyTasksChart"></canvas>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (timeSeriesData.success && timeSeriesData.chart_data && timeSeriesData.chart_data.length > 0) {
+                    html += `
+                        <div class="chart-card">
+                            <h4>📈 累计完成任务</h4>
+                            <div class="chart-wrapper">
+                                <canvas id="cumulativeTasksChart"></canvas>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (timeSeriesData.success && timeSeriesData.daily_data && timeSeriesData.daily_data.length > 0) {
+                    html += `
+                        <div class="chart-card">
+                            <h4>📉 每日平均执行时间</h4>
+                            <div class="chart-wrapper">
+                                <canvas id="dailyAvgTimeChart"></canvas>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (timeSeriesData.success && timeSeriesData.agent_data && timeSeriesData.agent_data.length > 1) {
+                    html += `
+                        <div class="chart-card">
+                            <h4>🤖 Agent 执行时间对比</h4>
+                            <div class="chart-wrapper">
+                                <canvas id="agentExecutionTimeChart"></canvas>
+                            </div>
+                        </div>
+                    `;
+                    
+                    html += `
+                        <div class="chart-card">
+                            <h4>📊 Agent 任务量对比</h4>
+                            <div class="chart-wrapper">
+                                <canvas id="agentTaskCountChart"></canvas>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
                 
                 if (logsData.success && logsData.logs && logsData.logs.length > 0) {
                     html += `
@@ -1325,6 +1508,11 @@ POST   /api/git/pull           - 从远程仓库拉取
                 }
                 
                 taskList.innerHTML = html;
+                
+                if (timeSeriesData.success) {
+                    renderCharts(timeSeriesData);
+                }
+                
                 updateStatus('✅ 执行日志已加载');
             } catch (error) {
                 console.error('加载执行日志失败:', error);
@@ -1336,6 +1524,313 @@ POST   /api/git/pull           - 从远程仓库拉取
                     </div>
                 `;
                 showError(`❌ 加载执行日志失败: ${error.message}`);
+            }
+        }
+        
+        function renderCharts(timeSeriesData) {
+            Object.values(executionCharts).forEach(chart => {
+                if (chart) chart.destroy();
+            });
+            executionCharts = {};
+            
+            const chartData = timeSeriesData.chart_data || [];
+            const dailyData = timeSeriesData.daily_data || [];
+            
+            if (chartData.length > 0) {
+                const execTimeCtx = document.getElementById('executionTimeChart');
+                if (execTimeCtx) {
+                    executionCharts.executionTime = new Chart(execTimeCtx, {
+                        type: 'line',
+                        data: {
+                            labels: chartData.map((d, i) => `${d.date} #${i+1}`),
+                            datasets: [{
+                                label: '执行时间 (分钟)',
+                                data: chartData.map(d => d.execution_time_minutes),
+                                borderColor: 'rgb(59, 130, 246)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 3,
+                                pointHoverRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const taskId = chartData[context.dataIndex].task_id;
+                                            return [
+                                                `执行时间: ${context.raw} 分钟`,
+                                                `任务: ${taskId}`
+                                            ];
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: { display: true, text: '分钟' }
+                                },
+                                x: {
+                                    title: { display: true, text: '任务顺序' },
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45,
+                                        autoSkip: true,
+                                        maxTicksLimit: 15,
+                                        callback: function(value, index) {
+                                            const label = this.getLabelForValue(index);
+                                            if (index % Math.ceil(chartData.length / 10) === 0 || index === chartData.length - 1) {
+                                                return label;
+                                            }
+                                            return '';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            if (dailyData.length > 0) {
+                const dailyCtx = document.getElementById('dailyTasksChart');
+                if (dailyCtx) {
+                    executionCharts.dailyTasks = new Chart(dailyCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: dailyData.map(d => d.date),
+                            datasets: [{
+                                label: '每日任务数',
+                                data: dailyData.map(d => d.task_count),
+                                backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                                borderColor: 'rgb(16, 185, 129)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: { display: true, text: '任务数' }
+                                },
+                                x: {
+                                    title: { display: true, text: '日期' },
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            if (dailyData.length > 0) {
+                const cumulativeCtx = document.getElementById('cumulativeTasksChart');
+                if (cumulativeCtx) {
+                    let cumulativeCount = 0;
+                    const dailyCumulative = dailyData.map(d => {
+                        cumulativeCount += d.task_count;
+                        return {
+                            date: d.date,
+                            cumulative: cumulativeCount
+                        };
+                    });
+                    
+                    executionCharts.cumulativeTasks = new Chart(cumulativeCtx, {
+                        type: 'line',
+                        data: {
+                            labels: dailyCumulative.map(d => d.date),
+                            datasets: [{
+                                label: '累计完成任务',
+                                data: dailyCumulative.map(d => d.cumulative),
+                                borderColor: 'rgb(139, 92, 246)',
+                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: { display: true, text: '累计数' }
+                                },
+                                x: {
+                                    title: { display: true, text: '日期' },
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            if (dailyData.length > 0) {
+                const dailyAvgCtx = document.getElementById('dailyAvgTimeChart');
+                if (dailyAvgCtx) {
+                    executionCharts.dailyAvgTime = new Chart(dailyAvgCtx, {
+                        type: 'line',
+                        data: {
+                            labels: dailyData.map(d => d.date),
+                            datasets: [{
+                                label: '平均执行时间 (分钟)',
+                                data: dailyData.map(d => d.avg_execution_minutes),
+                                borderColor: 'rgb(245, 158, 11)',
+                                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: { display: true, text: '分钟' }
+                                },
+                                x: {
+                                    title: { display: true, text: '日期' },
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            if (timeSeriesData.agent_data && timeSeriesData.agent_data.length > 1) {
+                const agentExecCtx = document.getElementById('agentExecutionTimeChart');
+                if (agentExecCtx) {
+                    const agentColors = {
+                        'trae': 'rgb(59, 130, 246)',
+                        'openclaw': 'rgb(139, 92, 246)',
+                        'unknown': 'rgb(107, 114, 128)'
+                    };
+                    
+                    executionCharts.agentExecutionTime = new Chart(agentExecCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: timeSeriesData.agent_data.map(d => d.agent),
+                            datasets: [
+                                {
+                                    label: '平均执行时间 (分钟)',
+                                    data: timeSeriesData.agent_data.map(d => d.avg_execution_minutes),
+                                    backgroundColor: timeSeriesData.agent_data.map(d => agentColors[d.agent] || 'rgb(107, 114, 128)'),
+                                    borderColor: timeSeriesData.agent_data.map(d => agentColors[d.agent] || 'rgb(107, 114, 128)'),
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const data = timeSeriesData.agent_data[context.dataIndex];
+                                            return [
+                                                `平均: ${data.avg_execution_minutes} 分钟`,
+                                                `最大: ${data.max_execution_minutes} 分钟`,
+                                                `最小: ${data.min_execution_minutes} 分钟`
+                                            ];
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: { display: true, text: '分钟' }
+                                },
+                                x: {
+                                    title: { display: true, text: 'Agent' }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                const agentCountCtx = document.getElementById('agentTaskCountChart');
+                if (agentCountCtx) {
+                    const agentColors = {
+                        'trae': 'rgb(59, 130, 246)',
+                        'openclaw': 'rgb(139, 92, 246)',
+                        'unknown': 'rgb(107, 114, 128)'
+                    };
+                    
+                    executionCharts.agentTaskCount = new Chart(agentCountCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: timeSeriesData.agent_data.map(d => d.agent),
+                            datasets: [
+                                {
+                                    label: '完成任务数',
+                                    data: timeSeriesData.agent_data.map(d => d.task_count),
+                                    backgroundColor: timeSeriesData.agent_data.map(d => agentColors[d.agent] || 'rgb(107, 114, 128)'),
+                                    borderColor: timeSeriesData.agent_data.map(d => agentColors[d.agent] || 'rgb(107, 114, 128)'),
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const data = timeSeriesData.agent_data[context.dataIndex];
+                                            return [
+                                                `任务数: ${data.task_count}`,
+                                                `总执行时间: ${data.total_execution_minutes} 分钟`
+                                            ];
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: { display: true, text: '任务数' }
+                                },
+                                x: {
+                                    title: { display: true, text: 'Agent' }
+                                }
+                            }
+                        }
+                    });
+                }
             }
         }
         
@@ -1436,7 +1931,7 @@ POST   /api/git/pull           - 从远程仓库拉取
                 metaItems.push(`<span>✅ ${completedDate}</span>`);
             }
             if (task.commit_hash) {
-                metaItems.push(`<span style="background: #f3f4f6; color: #6b7280; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: monospace; cursor: pointer;" onclick="viewCodeDiff('${task.commit_hash}')">${task.commit_hash.substring(0, 7)}</span>`);
+                metaItems.push(`<span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-family: monospace; cursor: pointer; font-weight: 600; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);" onclick="viewCodeDiff('${task.commit_hash}')">${task.commit_hash.substring(0, 7)}</span>`);
             }
             
             let reviewCommentHtml = '';
@@ -1573,7 +2068,10 @@ POST   /api/git/pull           - 从远程仓库拉取
             return `
                 <li class="task-item">
                     <div class="task-header">
-                        <div class="task-title" onclick="toggleTaskDetails('${taskId}')">${escapeHtml(task.title)}</div>
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 200px;">
+                            <span style="background: #f3f4f6; color: #6b7280; padding: 2px 8px; border-radius: 4px; font-weight: 500; font-size: 11px; flex-shrink: 0; font-family: monospace;">${taskId}</span>
+                            <div class="task-title" onclick="toggleTaskDetails('${taskId}')" style="margin: 0;">${escapeHtml(task.title)}</div>
+                        </div>
                         <span class="task-priority ${priorityClass}">${priorityText}</span>
                     </div>
                     ${reviewCommentHtml}
@@ -1926,6 +2424,37 @@ POST   /api/git/pull           - 从远程仓库拉取
             }
         }
         
+        function formatDiff(diffText) {
+            const lines = diffText.split('\n');
+            let html = '';
+            let inDiff = false;
+            
+            for (let line of lines) {
+                if (line.startsWith('diff --git')) {
+                    inDiff = true;
+                    html += `<div style="padding: 12px; background: #f0f4ff; border-radius: 8px; margin-bottom: 8px; font-weight: 600; color: #3730a3;">📁 ${escapeHtml(line)}</div>`;
+                } else if (line.startsWith('index ')) {
+                    html += `<div style="padding: 8px 12px; background: #f9fafb; color: #6b7280; font-size: 12px; font-family: monospace;">${escapeHtml(line)}</div>`;
+                } else if (line.startsWith('--- ')) {
+                    html += `<div style="padding: 8px 12px; background: #fef2f2; color: #dc2626; font-weight: 500; font-family: monospace;">--- ${escapeHtml(line.substring(4))}</div>`;
+                } else if (line.startsWith('+++ ')) {
+                    html += `<div style="padding: 8px 12px; background: #f0fdf4; color: #16a34a; font-weight: 500; font-family: monospace;">+++ ${escapeHtml(line.substring(4))}</div>`;
+                } else if (line.startsWith('@@')) {
+                    html += `<div style="padding: 8px 12px; background: #fef9c3; color: #854d0e; font-family: monospace; font-weight: 500;">${escapeHtml(line)}</div>`;
+                } else if (line.startsWith('+')) {
+                    html += `<div style="padding: 4px 12px; background: #dcfce7; color: #166534; font-family: monospace; border-left: 4px solid #22c55e;">${escapeHtml(line)}</div>`;
+                } else if (line.startsWith('-')) {
+                    html += `<div style="padding: 4px 12px; background: #fee2e2; color: #991b1b; font-family: monospace; border-left: 4px solid #ef4444;">${escapeHtml(line)}</div>`;
+                } else if (line.startsWith(' ')) {
+                    html += `<div style="padding: 4px 12px; background: #f9fafb; color: #374151; font-family: monospace;">${escapeHtml(line)}</div>`;
+                } else {
+                    html += `<div style="padding: 4px 12px; color: #6b7280; font-family: monospace;">${escapeHtml(line)}</div>`;
+                }
+            }
+            
+            return html;
+        }
+
         async function viewCodeDiff(commitHash) {
             try {
                 updateStatus('🔄 正在获取代码差异...');
@@ -1948,59 +2477,102 @@ POST   /api/git/pull           - 从远程仓库拉取
                         left: 0;
                         right: 0;
                         bottom: 0;
-                        background: rgba(0, 0, 0, 0.5);
+                        background: rgba(0, 0, 0, 0.6);
                         display: flex;
                         justify-content: center;
                         align-items: center;
                         z-index: 9999;
+                        padding: 20px;
                     `;
+                    modal.onclick = (e) => {
+                        if (e.target === modal) modal.remove();
+                    };
                     
                     const modalContent = document.createElement('div');
                     modalContent.style.cssText = `
                         background: white;
                         padding: 24px;
-                        border-radius: 12px;
-                        max-width: 90vw;
+                        border-radius: 16px;
+                        max-width: 1200px;
+                        width: 100%;
                         max-height: 90vh;
-                        overflow: auto;
+                        overflow: hidden;
                         position: relative;
+                        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
                     `;
+                    modalContent.onclick = (e) => e.stopPropagation();
                     
                     const closeBtn = document.createElement('button');
                     closeBtn.textContent = '✕';
                     closeBtn.style.cssText = `
                         position: absolute;
-                        top: 12px;
-                        right: 12px;
-                        background: none;
+                        top: 16px;
+                        right: 16px;
+                        background: #f3f4f6;
                         border: none;
-                        font-size: 24px;
+                        font-size: 20px;
                         cursor: pointer;
-                        color: #666;
+                        color: #6b7280;
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transition: all 0.2s;
                     `;
+                    closeBtn.onmouseenter = () => {
+                        closeBtn.style.background = '#ef4444';
+                        closeBtn.style.color = 'white';
+                    };
+                    closeBtn.onmouseleave = () => {
+                        closeBtn.style.background = '#f3f4f6';
+                        closeBtn.style.color = '#6b7280';
+                    };
                     closeBtn.onclick = () => modal.remove();
                     
-                    const title = document.createElement('h3');
-                    title.textContent = `📝 Git Diff - ${commitHash.substring(0, 7)}`;
-                    title.style.cssText = 'margin: 0 0 16px 0;';
-                    
-                    const diffElement = document.createElement('pre');
-                    diffElement.textContent = diffContent;
-                    diffElement.style.cssText = `
-                        background: #f7f7f7;
-                        padding: 16px;
-                        border-radius: 8px;
-                        font-family: monospace;
-                        font-size: 13px;
-                        line-height: 1.6;
-                        white-space: pre-wrap;
-                        max-height: 70vh;
-                        overflow: auto;
+                    const header = document.createElement('div');
+                    header.style.cssText = `
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        margin-bottom: 20px;
+                        padding-bottom: 16px;
+                        border-bottom: 1px solid #e5e7eb;
                     `;
                     
+                    const icon = document.createElement('div');
+                    icon.textContent = '📝';
+                    icon.style.cssText = 'font-size: 28px;';
+                    
+                    const titleSection = document.createElement('div');
+                    const title = document.createElement('h2');
+                    title.textContent = `Git Diff - ${commitHash.substring(0, 7)}`;
+                    title.style.cssText = 'margin: 0; font-size: 20px; font-weight: 700; color: #1f2937;';
+                    
+                    const subtitle = document.createElement('p');
+                    subtitle.style.cssText = 'margin: 4px 0 0 0; font-size: 13px; color: #6b7280;';
+                    subtitle.textContent = '点击背景或 × 关闭';
+                    
+                    titleSection.appendChild(title);
+                    titleSection.appendChild(subtitle);
+                    header.appendChild(icon);
+                    header.appendChild(titleSection);
+                    
+                    const diffContainer = document.createElement('div');
+                    diffContainer.style.cssText = `
+                        max-height: calc(90vh - 140px);
+                        overflow: auto;
+                        border-radius: 12px;
+                        background: #fafafa;
+                        border: 1px solid #e5e7eb;
+                    `;
+                    
+                    diffContainer.innerHTML = formatDiff(diffContent);
+                    
                     modalContent.appendChild(closeBtn);
-                    modalContent.appendChild(title);
-                    modalContent.appendChild(diffElement);
+                    modalContent.appendChild(header);
+                    modalContent.appendChild(diffContainer);
                     modal.appendChild(modalContent);
                     document.body.appendChild(modal);
                     
