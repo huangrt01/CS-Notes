@@ -747,33 +747,27 @@ POST   /api/git/pull           - 从远程仓库拉取
             
             <div class="stats-panel" id="statsPanel">
                 <div class="stat-group">
-                    <div class="stat-group-title">📋 流程状态</div>
+                    <div class="stat-group-title">🔄 完整流程</div>
                     <div class="stat-row">
                         <div class="stat-item">
                             <div class="stat-number" id="statPendingPlans">0</div>
                             <div class="stat-label">待审核 Plans</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-number" id="statPendingReviewTasks">0</div>
-                            <div class="stat-label">待审核 Tasks</div>
+                            <div class="stat-number" id="statPending">0</div>
+                            <div class="stat-label">待处理</div>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="stat-group">
-                    <div class="stat-group-title">📊 任务状态</div>
-                    <div class="stat-row">
                         <div class="stat-item">
                             <div class="stat-number" id="statInProgress">0</div>
                             <div class="stat-label">进行中</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-number" id="statPending">0</div>
-                            <div class="stat-label">待处理</div>
+                            <div class="stat-number" id="statPendingReview">0</div>
+                            <div class="stat-label">已完成(待审核)</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-number" id="statCompleted">0</div>
-                            <div class="stat-label">已完成</div>
+                            <div class="stat-number" id="statArchived">0</div>
+                            <div class="stat-label">彻底完成(归档)</div>
                         </div>
                     </div>
                 </div>
@@ -935,28 +929,46 @@ POST   /api/git/pull           - 从远程仓库拉取
             hideError();
             
             try {
-                const endpoint = isArchive ? '/tasks/archive' : '/tasks';
-                const response = await fetch(`${API_BASE}${endpoint}`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    if (isArchive) {
+                if (isArchive) {
+                    const response = await fetch(`${API_BASE}/tasks/archive`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (data.success) {
                         archiveTasks = data.tasks || [];
                         updateStatus(`✅ 已加载 ${archiveTasks.length} 个归档任务`);
                     } else {
-                        tasks = data.tasks || [];
-                        updateStatus(`✅ 已加载 ${tasks.length} 个任务`);
-                        updateStats();
+                        throw new Error(data.message || '加载失败');
                     }
-                    applyFilters();
                 } else {
-                    throw new Error(data.message || '加载失败');
+                    const [tasksResponse, archiveResponse] = await Promise.all([
+                        fetch(`${API_BASE}/tasks`),
+                        fetch(`${API_BASE}/tasks/archive`)
+                    ]);
+                    
+                    if (!tasksResponse.ok) {
+                        throw new Error(`HTTP error! status: ${tasksResponse.status}`);
+                    }
+                    
+                    const tasksData = await tasksResponse.json();
+                    if (tasksData.success) {
+                        tasks = tasksData.tasks || [];
+                    } else {
+                        throw new Error(tasksData.message || '加载失败');
+                    }
+                    
+                    if (archiveResponse.ok) {
+                        const archiveData = await archiveResponse.json();
+                        if (archiveData.success) {
+                            archiveTasks = archiveData.tasks || [];
+                        }
+                    }
+                    
+                    updateStatus(`✅ 已加载 ${tasks.length} 个任务和 ${archiveTasks.length} 个归档任务`);
+                    updateStats();
                 }
+                applyFilters();
             } catch (error) {
                 console.error('加载任务失败:', error);
                 showError(`❌ 加载任务失败: ${error.message}<br><br>💡 请确保后端服务器正在运行 (python3 server.py)`);
@@ -969,22 +981,22 @@ POST   /api/git/pull           - 从远程仓库拉取
         
         function updateStats() {
             const pendingPlanTodos = tasks.filter(t => t.plan && t.plan.status === 'pending').length;
-            const pendingReviewTasks = tasks.filter(t => t.status === 'completed').length;
-            const inProgress = tasks.filter(t => t.status === 'in-progress').length;
             const pending = tasks.filter(t => t.status === 'pending').length;
-            const completed = tasks.filter(t => t.status === 'completed').length;
+            const inProgress = tasks.filter(t => t.status === 'in-progress').length;
+            const pendingReview = tasks.filter(t => t.status === 'completed').length;
+            const archived = archiveTasks.length;
             const p0 = tasks.filter(t => t.priority === 'P0').length;
             const p1 = tasks.filter(t => t.priority === 'P1').length;
             const p2 = tasks.filter(t => t.priority === 'P2').length;
             const aiTasks = tasks.filter(t => t.assignee === 'ai').length;
             const userTasks = tasks.filter(t => t.assignee === 'user' || t.assignee === 'user + ai').length;
-            const total = tasks.length;
+            const total = tasks.length + archiveTasks.length;
             
             document.getElementById('statPendingPlans').textContent = pendingPlanTodos;
-            document.getElementById('statPendingReviewTasks').textContent = pendingReviewTasks;
-            document.getElementById('statInProgress').textContent = inProgress;
             document.getElementById('statPending').textContent = pending;
-            document.getElementById('statCompleted').textContent = completed;
+            document.getElementById('statInProgress').textContent = inProgress;
+            document.getElementById('statPendingReview').textContent = pendingReview;
+            document.getElementById('statArchived').textContent = archived;
             document.getElementById('statP0').textContent = p0;
             document.getElementById('statP1').textContent = p1;
             document.getElementById('statP2').textContent = p2;
@@ -1927,7 +1939,7 @@ POST   /api/git/pull           - 从远程仓库拉取
                 const data = await response.json();
                 
                 if (data.success) {
-                    const diffContent = data.diff || '没有差异内容';
+                    const diffContent = data.stdout || '没有差异内容';
                     
                     const modal = document.createElement('div');
                     modal.style.cssText = `

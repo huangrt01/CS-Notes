@@ -49,7 +49,7 @@ for pair in "${FILES[@]}"; do
         continue
     fi
     
-    # 使用 Python 智能同步工具
+    # 使用 Python 智能同步工具（自动应用变更）
     python3 "$SCRIPT_DIR/auto_sync.py" "$ORIGINAL_PATH" "$TEMPLATE_PATH"
     echo ""
 done
@@ -61,13 +61,7 @@ echo -e "${BLUE}[步骤 2/4]${NC} 准备构建..."
 if [ "$1" == "--yes" ]; then
     echo "自动确认构建..."
 else
-    read -p "是否继续构建可迁移包？(y/n): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo ""
-        echo -e "${YELLOW}已取消构建。${NC}"
-        exit 0
-    fi
+    echo "自动确认构建..."
 fi
 echo ""
 

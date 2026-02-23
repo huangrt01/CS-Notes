@@ -109,10 +109,15 @@ class PriorityTaskReader:
         print(f"{'=' * 80}")
     
     def get_next_tasks(self, tasks: list, count: int = 1) -> list:
-        """获取下一个应该执行的任务（支持获取多个）"""
+        """获取下一个应该执行的任务（支持获取多个）
+        
+        自主推进时只返回 pending 状态的任务，避免多 session 冲突
+        """
         next_tasks = []
         for task in tasks:
-            if task.get("assignee") == "ai" and not task.get("feedback_required"):
+            if (task.get("assignee") == "ai" and 
+                not task.get("feedback_required") and 
+                task.get("status") == "pending"):
                 next_tasks.append(task)
                 if len(next_tasks) >= count:
                     break
