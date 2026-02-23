@@ -274,7 +274,7 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 5. **完成迁移**：生成可迁移的压缩包
 
 **注意**：
-- 如果更新是 CS-Notes 特定的，不需要更新模板
+- 如果更新是项目特定的，不需要更新模板
 - 如果更新是通用的，需要手动编辑模板文件移除项目特定内容
 - 详细工作流请查看 `.trae/web-manager/WORKFLOW.md`
 

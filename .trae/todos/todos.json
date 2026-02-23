@@ -980,7 +980,7 @@
     {
       "id": "todo-20260220-005",
       "title": "思考如何迁移该仓库的todo web manager的能力到任意新项目的仓库中（也许需要相关能力和agents.md稍微抽象和精炼一点？",
-      "status": "in-progress",
+      "status": "completed",
       "priority": "P1",
       "assignee": "ai",
       "feedback_required": false,
@@ -1002,8 +1002,8 @@
         "也许需要相关能力和agents.md稍微抽象和精炼一点"
       ],
       "started_at": "2026-02-23T04:46:45.977668",
-      "progress": "✅ 已完成！根据 Review 反馈完善 Todo Web Manager 解耦方案！\n\n已完成的工作（基于 Review 反馈）：\n1. ✅ 已添加「知识与经验耦合」分析章节\n2. ✅ 已扩充最佳实践内容（从 3 类到 9 类）：\n   - Todo 管理最佳实践\n   - Plan 机制最佳实践\n   - AI 协作最佳实践\n   - 笔记整理最佳实践（基于 MEMORY.md）\n   - Git 操作 SOP（基于 MEMORY.md）\n   - 安全意识最佳实践（基于 SOUL.md 和 MEMORY.md）\n   - 快捷指令和工作模式（基于 AGENTS.md）\n   - 任务交付原则（基于 MEMORY.md）\n   - 错误反思与改进原则（基于 MEMORY.md）\n3. ✅ 已更新目录结构，加入 .openclaw-memory/ 目录\n4. ✅ 已完善迁移步骤，新增「步骤4：复制 OpenClaw 记忆体系」\n5. ✅ 已更新总结部分，加入 OpenClaw 记忆体系迁移相关内容\n\n文档现在完整包含：\n- 技术解耦（路径、项目名称等）\n- 知识与经验通用化（规则文档分层、最佳实践库）\n- OpenClaw 记忆体系迁移（AGENTS.md、SOUL.md、MEMORY.md 等）\n\n🎉 已根据 Review 反馈完善文档！",
-      "completed_at": "2026-02-23T08:36:10.473695",
+      "progress": "✅ 已完成！已成功通用化三个模板文件！\n\n已完成的工作：\n1. ✅ 优化 project_rules-generic.md：\n   - 移除笔记库特定的内容整理原则\n   - 通用化 Git 操作 SOP（移除 Notes/snippets/todo-push.sh 等特定工具）\n   - 通用化目录与落盘约定（移除 Notes/、创作/、公司项目/等特定目录）\n   - 移除个人文风规范、公司项目创作等笔记库特定内容\n   - 保留通用的 Todo 管理、AI 助手工作流等内容\n\n2. ✅ 优化 AGENTS-generic.md：\n   - 移除 \"CS-Notes 特定\" 的引用\n   - 改为通用的 \"项目特定\"\n\n3. ✅ 优化 MEMORY-generic.md：\n   - 移除 \"markdown-toc skill\" 等笔记库特定工具\n   - 通用化内容整理流程\n   - 保留通用的最佳实践、Todo 管理原则等\n\n三个通用模板现在可以适用于任意新项目（笔记、开源、闭源）！",
+      "completed_at": "2026-02-23T14:50:00.000000",
       "review_history": [
         {
           "reviewed_at": "2026-02-23T12:19:06.680852",
