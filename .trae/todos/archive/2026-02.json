@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-23T14:23:20.675296",
+  "updated_at": "2026-02-23T16:33:10.718772",
   "todos": [
     {
       "id": "todo-20260219-001",
@@ -1857,6 +1857,119 @@
         }
       ],
       "archived_at": "2026-02-23T14:23:20.672436"
+    },
+    {
+      "id": "todo-20260219-050",
+      "title": "精炼整理知乎文章：关于 AI Agent 的内容",
+      "status": "completed",
+      "priority": "P0",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T08:08:06.000000",
+      "started_at": "2026-02-23T14:40:00.000000",
+      "completed_at": "2026-02-23T14:45:00.000000",
+      "commit_hash": "f75f626f3445ce7fdc9f84de2f515830d33e6339",
+      "links": [
+        "https://www.zhihu.com/question/1999487395494588876/answer/2000362433332660070?share_code=HGYNzglkEV8h&utm_psn=2000559952910099841"
+      ],
+      "definition_of_done": [
+        "使用 web_fetch 工具直接获取知乎文章内容",
+        "先在笔记库中广泛搜索，找到最合适的已有的笔记",
+        "找到最合适的 section，而不是随便找个地方就放",
+        "将内容整合到合适的 section 中，而不是创建新文件",
+        "附上来源链接作为引用，用 markdown 格式标注链接",
+        "尽量精简语言，精炼整理笔记",
+        "格式上：减少不必要的加粗、尽量对齐原文件的格式",
+        "引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接",
+        "限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息"
+      ],
+      "user_requirements": [
+        "整理笔记的todo不依赖联网搜索ready，原因你直接web fetch即可！"
+      ],
+      "progress": "✅ 已完成！成功将这篇知乎文章的内容精炼整合到了 Notes/AI-Agent-Product&PE.md 的\"头部 AI 产品与公司\" section 下！添加了关于 Kimi K2.5 大模型幕后的内容，包含：Big Model Smell 的含义、统一的视觉-视频 Encoder 设计（N+1 思路）、Post-training 的多模态融合、Vision RL 的神奇发现等！",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T16:10:38.968644",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-23T16:10:38.968651"
+    },
+    {
+      "id": "todo-20260220-005",
+      "title": "思考如何迁移该仓库的todo web manager的能力到任意新项目的仓库中（也许需要相关能力和agents.md稍微抽象和精炼一点？",
+      "status": "completed",
+      "priority": "P1",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T01:45:00.000000",
+      "links": [
+        "`.trae/web-manager/`、`.trae/todos/`"
+      ],
+      "definition_of_done": [
+        "分析当前 Todo Web Manager 及其整套 todo 管理的异步体系的架构",
+        "识别哪些部分是与 CS-Notes 项目强耦合的",
+        "思考如何迁移到任意新项目的仓库中",
+        "考虑相关能力和 AGENTS.md 稍微抽象和精炼一点",
+        "设计解耦方案，使其可对各种 git 项目开发生效",
+        "实现解耦方案",
+        "测试验证"
+      ],
+      "user_requirements": [
+        "思考如何迁移该仓库的todo web manager的能力到任意新项目的仓库中",
+        "也许需要相关能力和agents.md稍微抽象和精炼一点"
+      ],
+      "started_at": "2026-02-23T04:46:45.977668",
+      "progress": "✅ 已完成！已成功通用化三个模板文件！\n\n已完成的工作：\n1. ✅ 优化 project_rules-generic.md：\n   - 移除笔记库特定的内容整理原则\n   - 通用化 Git 操作 SOP（移除 Notes/snippets/todo-push.sh 等特定工具）\n   - 通用化目录与落盘约定（移除 Notes/、创作/、公司项目/等特定目录）\n   - 移除个人文风规范、公司项目创作等笔记库特定内容\n   - 保留通用的 Todo 管理、AI 助手工作流等内容\n\n2. ✅ 优化 AGENTS-generic.md：\n   - 移除 \"CS-Notes 特定\" 的引用\n   - 改为通用的 \"项目特定\"\n\n3. ✅ 优化 MEMORY-generic.md：\n   - 移除 \"markdown-toc skill\" 等笔记库特定工具\n   - 通用化内容整理流程\n   - 保留通用的最佳实践、Todo 管理原则等\n\n三个通用模板现在可以适用于任意新项目（笔记、开源、闭源）！",
+      "completed_at": "2026-02-23T14:50:00.000000",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T12:19:06.680852",
+          "approved": false,
+          "comment": "不止要基本能力的迁移，还需要todos管理系统中，各种规则文档/记忆经验，能够比较通用apply到任意一个新开发项目，这也许需要你（的LLM接口）思考如何将规则和记忆经验，进一步通用化"
+        },
+        {
+          "reviewed_at": "2026-02-23T16:28:43.229572",
+          "approved": true,
+          "comment": "最新的【Todo Web Manager 解耦方案 - 迁移到任意新项目】已落地"
+        }
+      ],
+      "review_comment": "不止要基本能力的迁移，还需要todos管理系统中，各种规则文档/记忆经验，能够比较通用apply到任意一个新开发项目，这也许需要你（的LLM接口）思考如何将规则和记忆经验，进一步通用化",
+      "archived_at": "2026-02-23T16:28:43.229587"
+    },
+    {
+      "id": "todo-20260220-002",
+      "title": "Todos Web Manager 支持 Review 意见的语音转文字",
+      "status": "completed",
+      "priority": "P1",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-20T00:50:00.000000",
+      "links": [
+        "`.trae/web-manager/index-enhanced.html`、`Notes/snippets/speech_to_text.py`"
+      ],
+      "definition_of_done": [
+        "在 Todos Web Manager 的 Review 意见输入框旁边添加语音输入按钮",
+        "支持使用浏览器 Web Speech API 或 Whisper 进行语音转文字",
+        "语音转文字的结果自动填充到 Review 意见输入框",
+        "用户可以编辑后再提交 Review",
+        "测试验证"
+      ],
+      "user_requirements": [
+        "todos web manager支持review意见的语音转文字"
+      ],
+      "progress": "✅ 已完成！在 Todos Web Manager 的 Review 意见输入框旁边添加了语音输入按钮，使用浏览器 Web Speech API 进行语音转文字，语音转文字的结果自动填充到 Review 意见输入框！用户可以编辑后再提交 Review！",
+      "started_at": "2026-02-21",
+      "completed_at": "2026-02-21T23:59:00.000000",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T16:33:10.717422",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-23T16:33:10.717431"
     }
   ]
 }
