@@ -793,6 +793,10 @@ POST   /api/git/pull           - 从远程仓库拉取
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Git Commit Hash（可选）</label>
+                    <input type="text" id="taskCommitHash" placeholder="输入 Git Commit Hash...">
+                </div>
+                <div class="form-group">
                     <label style="display: flex; align-items: center; gap: 8px;">
                         <input type="checkbox" id="taskPlan" style="width: auto;">
                         📋 Plan Todo（先 plan 再 review 再执行）
@@ -1153,6 +1157,9 @@ POST   /api/git/pull           - 从远程仓库拉取
                 const completedDate = new Date(task.completed_at).toLocaleDateString('zh-CN');
                 metaItems.push(`<span>✅ ${completedDate}</span>`);
             }
+            if (task.commit_hash) {
+                metaItems.push(`<span style="background: #f3f4f6; color: #6b7280; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: monospace;">${task.commit_hash.substring(0, 7)}</span>`);
+            }
             
             let reviewCommentHtml = '';
             if (task.review_comment) {
@@ -1348,6 +1355,7 @@ POST   /api/git/pull           - 从远程仓库拉取
             const priority = document.getElementById('taskPriority').value;
             const assignee = document.getElementById('taskAssignee').value;
             const isPlanTodo = document.getElementById('taskPlan').checked;
+            const commitHash = document.getElementById('taskCommitHash').value.trim();
             
             if (!title) {
                 showError('❌ 请输入任务标题');
@@ -1367,7 +1375,8 @@ POST   /api/git/pull           - 从远程仓库拉取
                         assignee,
                         status: 'pending',
                         feedback_required: false,
-                        is_plan_todo: isPlanTodo
+                        is_plan_todo: isPlanTodo,
+                        commit_hash: commitHash
                     })
                 });
                 

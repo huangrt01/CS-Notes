@@ -405,7 +405,8 @@ def add_task():
         'definition_of_done': data.get('definition_of_done', []),
         'progress': data.get('progress', ''),
         'started_at': data.get('started_at', ''),
-        'completed_at': data.get('completed_at', '')
+        'completed_at': data.get('completed_at', ''),
+        'commit_hash': data.get('commit_hash', '')
     }
     
     # 加载现有数据
@@ -477,9 +478,13 @@ def update_task_status(task_id):
         if task.get('id') == task_id:
             tasks[i]['status'] = new_status
             
-            # 如果完成，设置完成时间
+            # 如果完成，设置完成时间和commit hash
             if new_status == 'completed' and not tasks[i].get('completed_at'):
                 tasks[i]['completed_at'] = datetime.now().isoformat()
+                # 自动获取当前的git commit hash
+                commit_result = run_git_command(['git', 'rev-parse', 'HEAD'])
+                if commit_result.get('success'):
+                    tasks[i]['commit_hash'] = commit_result.get('stdout', '').strip()
             
             # 如果开始，设置开始时间
             if new_status == 'in-progress' and not tasks[i].get('started_at'):
