@@ -120,3 +120,21 @@ HEARTBEAT_INTERVAL_MINUTES = 30
 - 基于 OpenClaw 现有能力，不侵入内部代码
 - 利用 todos.json 中的 progress 字段记录任务进度
 - 优先执行 `in-progress` 状态的 todo
+
+## 6. 检查 Todos Web Manager server.py 是否启动（新增！）
+
+**触发条件**：每次心跳时检查
+
+**执行逻辑**：
+1. 检查 `server.py` 是否正在运行
+2. 如果没有运行，提醒用户并启动它
+3. 记录检查结果
+
+**检查命令**：
+- `ps aux | grep -i server.py` - 检查 server.py 是否运行
+- `cd /root/.openclaw/workspace/CS-Notes/.trae/web-manager && python3 server.py` - 启动 server.py
+
+**重要原则**：
+- 确保 Todos Web Manager 始终可用
+- 如果 server.py 停止了，自动启动它
+- 在后台模式运行，不阻塞会话
