@@ -734,6 +734,7 @@ POST   /api/git/pull           - 从远程仓库拉取
         <div class="tabs">
             <div class="tab active" data-tab="my-tasks" onclick="switchMainTab('my-tasks')">👤 我的待办</div>
             <div class="tab ai-tab" data-tab="ai-workflow" onclick="switchMainTab('ai-workflow')">🤖 AI 工作流</div>
+            <div class="tab" data-tab="execution-logs" onclick="switchMainTab('execution-logs')" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">📊 执行日志</div>
         </div>
         
         <div class="content">
@@ -1128,7 +1129,7 @@ POST   /api/git/pull           - 从远程仓库拉取
             });
         }
         
-        function renderContent() {
+        async function renderContent() {
             const subTabsContainer = document.getElementById('subTabs');
             const taskList = document.getElementById('taskList');
             const addTaskToggle = document.getElementById('addTaskToggle');
@@ -1136,6 +1137,15 @@ POST   /api/git/pull           - 从远程仓库拉取
             
             let subTabsHtml = '';
             let items = [];
+            
+            if (currentMainTab === 'execution-logs') {
+                addTaskToggle.style.display = 'none';
+                addTaskSection.style.display = 'none';
+                subTabsContainer.innerHTML = '';
+                
+                await loadExecutionLogs();
+                return;
+            }
             
             const pendingPlansCount = tasks.filter(t => t.plan && t.plan.status === 'pending').length;
             const pendingReviewTasksCount = tasks.filter(t => t.status === 'completed').length;
@@ -1210,6 +1220,113 @@ POST   /api/git/pull           - 从远程仓库拉取
             taskList.innerHTML = `<ul class="task-list">${html}</ul>`;
         }
         
+        async function loadExecutionLogs() {
+            const taskList = document.getElementById('taskList');
+            
+            try {
+                updateStatus('🔄 正在加载执行日志...');
+                
+                const [metricsResponse, logsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/execution-metrics`),
+                    fetch(`${API_BASE}/execution-logs`)
+                ]);
+                
+                const metricsData = await metricsResponse.json();
+                const logsData = await logsResponse.json();
+                
+                let html = '';
+                
+                if (metricsData.success) {
+                    const metrics = metricsData.metrics;
+                    const alerts = metricsData.alerts;
+                    
+                    html += `
+                        <div style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+                            <h3 style="margin: 0 0 16px 0; font-size: 20px;">📊 执行指标</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+                                <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 700;">${metrics.total_tasks || 0}</div>
+                                    <div style="font-size: 12px; opacity: 0.9;">总任务数</div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 700;">${metrics.completed_tasks || 0}</div>
+                                    <div style="font-size: 12px; opacity: 0.9;">已完成</div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 700;">${metrics.completion_rate || 0}%</div>
+                                    <div style="font-size: 12px; opacity: 0.9;">完成率</div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 700;">${metrics.avg_execution_time_minutes || 0}m</div>
+                                    <div style="font-size: 12px; opacity: 0.9;">平均执行时间</div>
+                                </div>
+                            </div>
+                            ${alerts && alerts.length > 0 ? `
+                                <div style="margin-top: 16px; padding: 12px; background: rgba(239, 68, 68, 0.3); border-radius: 8px;">
+                                    <div style="font-weight: 600; margin-bottom: 8px;">⚠️ 告警</div>
+                                    <ul style="margin: 0; padding-left: 20px;">
+                                        ${alerts.map(a => `<li>${a}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                if (logsData.success && logsData.logs && logsData.logs.length > 0) {
+                    html += `
+                        <h3 style="margin: 0 0 16px 0; font-size: 18px; color: #1f2937;">📝 执行日志 (${logsData.total} 条)</h3>
+                        <div style="background: #f9fafb; border-radius: 8px; padding: 16px; max-height: 500px; overflow-y: auto;">
+                            ${logsData.logs.slice().reverse().map(log => {
+                                const levelColors = {
+                                    'DEBUG': '#6b7280',
+                                    'INFO': '#3b82f6',
+                                    'WARN': '#f59e0b',
+                                    'ERROR': '#ef4444',
+                                    'SUCCESS': '#10b981'
+                                };
+                                const color = levelColors[log.level] || '#6b7280';
+                                return `
+                                    <div style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                                        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px;">
+                                            <span style="color: ${color}; font-weight: 600; font-size: 12px;">[${log.level}]</span>
+                                            <span style="color: #6b7280; font-size: 12px;">${log.task_id}</span>
+                                            <span style="color: #9ca3af; font-size: 12px;">${new Date(log.timestamp).toLocaleString()}</span>
+                                        </div>
+                                        <div style="color: #1f2937; font-size: 14px;">${log.message}</div>
+                                        ${log.details && Object.keys(log.details).length > 0 ? `
+                                            <pre style="margin: 8px 0 0 0; padding: 8px; background: #f3f4f6; border-radius: 4px; font-size: 12px; overflow-x: auto;">${JSON.stringify(log.details, null, 2)}</pre>
+                                        ` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📝</div>
+                            <h3>暂无执行日志</h3>
+                            <p style="color: #6b7280;">任务执行后会在这里显示日志</p>
+                        </div>
+                    `;
+                }
+                
+                taskList.innerHTML = html;
+                updateStatus('✅ 执行日志已加载');
+            } catch (error) {
+                console.error('加载执行日志失败:', error);
+                taskList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <h3>加载失败</h3>
+                        <p style="color: #6b7280;">${error.message}</p>
+                    </div>
+                `;
+                showError(`❌ 加载执行日志失败: ${error.message}`);
+            }
+        }
+        
 
         
         function renderTaskItem(task) {
@@ -1243,7 +1360,25 @@ POST   /api/git/pull           - 从远程仓库拉取
             
             let actionsHtml = '';
             if (!isArchive) {
-                if (task.status === 'completed') {
+                if (task.plan && task.plan.status === 'pending') {
+                    actionsHtml = `
+                        <div class="review-section">
+                            <div class="review-input-group">
+                                <div style="display: flex; gap: 8px; align-items: flex-start;">
+                                    <textarea id="plan-review-comment-${taskId}" placeholder="输入 Plan Review 意见（可选）..." class="review-input" style="flex: 1;"></textarea>
+                                    <button class="btn-secondary" id="plan-voice-btn-${taskId}" onclick="togglePlanVoiceInput('${taskId}')" title="语音输入" style="padding: 8px 12px; font-size: 18px;">🎤</button>
+                                </div>
+                                <div id="plan-voice-status-${taskId}" style="margin-top: 8px; font-size: 12px; color: #666; display: none;">
+                                    🎙️ 正在听...
+                                </div>
+                            </div>
+                            <div class="task-actions">
+                                <button class="btn-danger" onclick="submitPlanReview('${taskId}', false)">❌ 不通过 Plan</button>
+                                <button class="btn-success" onclick="submitPlanReview('${taskId}', true)">✅ 通过 Plan</button>
+                            </div>
+                        </div>
+                    `;
+                } else if (task.status === 'completed') {
                     actionsHtml = `
                         <div class="review-section">
                             <div class="review-input-group">
@@ -1636,6 +1771,113 @@ POST   /api/git/pull           - 从远程仓库拉取
             };
             
             currentRecognition.start();
+        }
+        
+        let currentPlanRecognition = null;
+        let currentPlanVoiceTaskId = null;
+        
+        function togglePlanVoiceInput(taskId) {
+            const btn = document.getElementById(`plan-voice-btn-${taskId}`);
+            const statusEl = document.getElementById(`plan-voice-status-${taskId}`);
+            const textarea = document.getElementById(`plan-review-comment-${taskId}`);
+            
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showError('❌ 您的浏览器不支持语音识别功能，请使用 Chrome/Edge 浏览器');
+                return;
+            }
+            
+            if (currentPlanVoiceTaskId === taskId && currentPlanRecognition) {
+                currentPlanRecognition.stop();
+                currentPlanRecognition = null;
+                currentPlanVoiceTaskId = null;
+                btn.textContent = '🎤';
+                btn.style.background = '';
+                statusEl.style.display = 'none';
+                return;
+            }
+            
+            if (currentPlanRecognition) {
+                currentPlanRecognition.stop();
+            }
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            currentPlanRecognition = new SpeechRecognition();
+            currentPlanRecognition.continuous = true;
+            currentPlanRecognition.interimResults = true;
+            currentPlanRecognition.lang = 'zh-CN';
+            
+            currentPlanRecognition.onstart = () => {
+                currentPlanVoiceTaskId = taskId;
+                btn.textContent = '🔴';
+                btn.style.background = '#ef4444';
+                statusEl.style.display = 'block';
+            };
+            
+            currentPlanRecognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                if (textarea) {
+                    textarea.value = transcript;
+                }
+            };
+            
+            currentPlanRecognition.onerror = (event) => {
+                console.error('语音识别错误:', event.error);
+                currentPlanRecognition = null;
+                currentPlanVoiceTaskId = null;
+                btn.textContent = '🎤';
+                btn.style.background = '';
+                statusEl.style.display = 'none';
+                if (event.error !== 'no-speech') {
+                    showError(`❌ 语音识别失败: ${event.error}`);
+                }
+            };
+            
+            currentPlanRecognition.onend = () => {
+                currentPlanRecognition = null;
+                currentPlanVoiceTaskId = null;
+                btn.textContent = '🎤';
+                btn.style.background = '';
+                statusEl.style.display = 'none';
+            };
+            
+            currentPlanRecognition.start();
+        }
+        
+        async function submitPlanReview(taskId, approved) {
+            const commentEl = document.getElementById(`plan-review-comment-${taskId}`);
+            const comment = commentEl ? commentEl.value.trim() : '';
+            
+            try {
+                const response = await fetch(`${API_BASE}/tasks/${encodeURIComponent(taskId)}/plan-review`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        approved,
+                        comment
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    await loadTasks();
+                    updateStatus(`✅ ${data.message}`);
+                } else {
+                    throw new Error(data.message || 'Plan Review 失败');
+                }
+            } catch (error) {
+                console.error('Plan Review 失败:', error);
+                showError(`❌ Plan Review 失败: ${error.message}`);
+            }
         }
         
         async function submitReviewInline(taskId, approved) {

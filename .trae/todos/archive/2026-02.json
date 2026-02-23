@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-23T14:19:49.238006",
+  "updated_at": "2026-02-23T14:23:20.675296",
   "todos": [
     {
       "id": "todo-20260219-001",
@@ -1826,6 +1826,37 @@
         }
       ],
       "archived_at": "2026-02-23T14:19:49.236521"
+    },
+    {
+      "id": "todo-20260219-048",
+      "title": "设计并实现\"沉淀指令 v2.0\"的工作流程",
+      "status": "completed",
+      "priority": "P0",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-19T08:08:06.000000",
+      "definition_of_done": [
+        "设计沉淀指令 v2.0 的结构化模板",
+        "添加沉淀时的 checklist",
+        "设计 todo 梳理流程",
+        "实现沉淀指令的自动化工具（可选）",
+        "输出沉淀指令 v2.0 的完整文档"
+      ],
+      "background": "用户希望基于之前的沉淀指令进一步 refine，让它更系统化、更可执行",
+      "user_requirements": [
+        "\"沉淀！ 回顾你最近的工作 帮我梳理todo 想想当前todos是否有值得增加、调整的\" 是否能基于这个进一步refine一下你的沉淀指令"
+      ],
+      "progress": "✅ 已完成！AGENTS.md 中已经有了\"快捷指令：沉淀v2.0\"，包含了回顾最近的工作、梳理当前todos、分析问题和经验、发散思考新todo等功能！",
+      "started_at": "2026-02-19",
+      "completed_at": "2026-02-21T09:35:00.000000",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-23T14:23:20.672415",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-23T14:23:20.672436"
     }
   ]
 }

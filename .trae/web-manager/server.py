@@ -41,6 +41,21 @@ from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
+# 添加 snippets 目录到 sys.path，以便导入 task_execution_logger
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "Notes" / "snippets"))
+
+try:
+    from task_execution_logger import (
+        TaskExecutionLogger,
+        TaskStage,
+        LogLevel,
+        TaskArtifact,
+        create_logger
+    )
+    TASK_LOGGER_AVAILABLE = True
+except ImportError:
+    TASK_LOGGER_AVAILABLE = False
+
 # ============================================
 # 配置文件加载
 # ============================================
@@ -86,6 +101,16 @@ WEB_MANAGER_DIR = Path(__file__).parent
 
 app = Flask(__name__, static_folder='.')
 CORS(app)
+
+# 初始化任务执行日志系统
+task_logger = None
+if TASK_LOGGER_AVAILABLE:
+    try:
+        task_logger = create_logger(REPO_ROOT)
+        print("✅ 任务执行日志系统已初始化")
+    except Exception as e:
+        print(f"⚠️ 任务执行日志系统初始化失败: {e}")
+        task_logger = None
 
 # ============================================
 # Git 集成功能
@@ -409,6 +434,18 @@ def add_task():
         'commit_hash': data.get('commit_hash', '')
     }
     
+    # 记录任务创建日志
+    if TASK_LOGGER_AVAILABLE and task_logger:
+        try:
+            task_logger.log_info(
+                new_task['id'],
+                TaskStage.PENDING,
+                "任务已创建",
+                {"title": new_task['title'], "priority": new_task['priority']}
+            )
+        except Exception as e:
+            print(f"⚠️ 记录任务创建日志失败: {e}")
+    
     # 加载现有数据
     todos_data = load_todos_from_json(TODOS_FILE)
     todos_data['todos'].append(new_task)
@@ -476,15 +513,42 @@ def update_task_status(task_id):
     task_found = False
     for i, task in enumerate(tasks):
         if task.get('id') == task_id:
+            old_status = tasks[i].get('status')
             tasks[i]['status'] = new_status
             
-            # 如果完成，设置完成时间和commit hash
-            if new_status == 'completed' and not tasks[i].get('completed_at'):
-                tasks[i]['completed_at'] = datetime.now().isoformat()
-                # 自动获取当前的git commit hash
-                commit_result = run_git_command(['git', 'rev-parse', 'HEAD'])
-                if commit_result.get('success'):
-                    tasks[i]['commit_hash'] = commit_result.get('stdout', '').strip()
+            # 记录任务状态变更日志
+            if TASK_LOGGER_AVAILABLE and task_logger:
+                try:
+                    if new_status == 'in-progress' and old_status != 'in-progress':
+                        task_logger.start_task(task_id)
+                        task_logger.log_info(
+                            task_id,
+                            TaskStage.PLANNING,
+                            "任务开始执行",
+                            {"old_status": old_status}
+                        )
+                    elif new_status == 'completed' and old_status != 'completed':
+                        tasks[i]['completed_at'] = datetime.now().isoformat()
+                        # 自动获取当前的git commit hash
+                        commit_result = run_git_command(['git', 'rev-parse', 'HEAD'])
+                        if commit_result.get('success'):
+                            tasks[i]['commit_hash'] = commit_result.get('stdout', '').strip()
+                        task_logger.complete_task(task_id)
+                        task_logger.log_success(
+                            task_id,
+                            TaskStage.COMPLETED,
+                            "任务完成",
+                            {"commit_hash": tasks[i].get('commit_hash', '')}
+                        )
+                    elif new_status == 'pending' and old_status != 'pending':
+                        task_logger.log_info(
+                            task_id,
+                            TaskStage.PENDING,
+                            "任务回到待办",
+                            {"old_status": old_status}
+                        )
+                except Exception as e:
+                    print(f"⚠️ 记录任务状态变更日志失败: {e}")
             
             # 如果开始，设置开始时间
             if new_status == 'in-progress' and not tasks[i].get('started_at'):
@@ -504,6 +568,78 @@ def update_task_status(task_id):
         return jsonify({
             "success": True,
             "message": f"任务 {task_id} 状态已更新为 {new_status}"
+        })
+    else:
+        return jsonify({
+            "success": False,
+            "message": "保存任务失败"
+        }), 500
+
+@app.route('/api/tasks/<task_id>/plan-review', methods=['POST'])
+def review_plan(task_id):
+    """Review Plan（通过或不通过）"""
+    data = request.json
+    approved = data.get('approved', False)
+    review_comment = data.get('comment', '')
+    
+    # 加载现有数据
+    todos_data = load_todos_from_json(TODOS_FILE)
+    tasks = todos_data.get('todos', [])
+    
+    # 找到任务
+    task_found = False
+    for i, task in enumerate(tasks):
+        if task.get('id') == task_id:
+            if 'plan' not in tasks[i]:
+                return jsonify({
+                    "success": False,
+                    "message": f"任务 {task_id} 没有 Plan"
+                }), 400
+            
+            # 添加 Plan review 记录
+            if 'plan_review_history' not in tasks[i]:
+                tasks[i]['plan_review_history'] = []
+            
+            review_record = {
+                'reviewed_at': datetime.now().isoformat(),
+                'approved': approved,
+                'comment': review_comment
+            }
+            tasks[i]['plan_review_history'].append(review_record)
+            
+            if approved:
+                # 通过：更新 Plan 状态为 approved
+                tasks[i]['plan']['status'] = 'approved'
+                message = f"Plan 已通过审核"
+            else:
+                # 不通过：更新 Plan 状态为 rejected，附带 review 意见
+                tasks[i]['plan']['status'] = 'rejected'
+                tasks[i]['plan_review_comment'] = review_comment
+                
+                # 把 Review 意见写入 progress
+                if review_comment:
+                    review_note = f"📝 Plan Review 不通过意见：{review_comment}"
+                    if tasks[i].get('progress'):
+                        tasks[i]['progress'] = f"{tasks[i]['progress']}\n\n{review_note}"
+                    else:
+                        tasks[i]['progress'] = review_note
+                
+                message = f"Plan 已退回，附带 review 意见"
+            
+            task_found = True
+            break
+    
+    if not task_found:
+        return jsonify({
+            "success": False,
+            "message": f"任务 {task_id} 不存在"
+        }), 404
+    
+    # 保存
+    if save_todos_to_json(todos_data, TODOS_FILE):
+        return jsonify({
+            "success": True,
+            "message": message
         })
     else:
         return jsonify({
@@ -655,6 +791,106 @@ def dev_validate():
         "errors": errors,
         "warnings": warnings,
         "total": len(tasks)
+    })
+
+# ============================================
+# 任务执行日志 API
+# ============================================
+
+@app.route('/api/execution-logs', methods=['GET'])
+def get_execution_logs():
+    """获取任务执行日志"""
+    if not TASK_LOGGER_AVAILABLE or not task_logger:
+        return jsonify({
+            "success": False,
+            "message": "任务执行日志系统不可用"
+        }), 503
+    
+    # 读取今天的日志文件
+    logs = []
+    try:
+        if task_logger.log_file.exists():
+            with open(task_logger.log_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        logs.append(json.loads(line))
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"读取日志失败: {e}"
+        }), 500
+    
+    return jsonify({
+        "success": True,
+        "logs": logs,
+        "total": len(logs)
+    })
+
+@app.route('/api/execution-metrics', methods=['GET'])
+def get_execution_metrics():
+    """获取任务执行指标"""
+    if not TASK_LOGGER_AVAILABLE or not task_logger:
+        return jsonify({
+            "success": False,
+            "message": "任务执行日志系统不可用"
+        }), 503
+    
+    try:
+        metrics = task_logger.get_overall_metrics()
+        alerts = task_logger.check_alerts()
+        return jsonify({
+            "success": True,
+            "metrics": metrics,
+            "alerts": alerts
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"获取指标失败: {e}"
+        }), 500
+
+@app.route('/api/execution-logs/<task_id>', methods=['GET'])
+def get_task_execution_logs(task_id):
+    """获取特定任务的执行日志"""
+    if not TASK_LOGGER_AVAILABLE or not task_logger:
+        return jsonify({
+            "success": False,
+            "message": "任务执行日志系统不可用"
+        }), 503
+    
+    logs = []
+    try:
+        if task_logger.log_file.exists():
+            with open(task_logger.log_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        log_entry = json.loads(line)
+                        if log_entry.get('task_id') == task_id:
+                            logs.append(log_entry)
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"读取日志失败: {e}"
+        }), 500
+    
+    # 尝试加载任务产物
+    artifact = None
+    try:
+        artifact_data = task_logger.load_artifact(task_id)
+        if artifact_data:
+            from dataclasses import asdict
+            artifact = asdict(artifact_data)
+    except:
+        pass
+    
+    return jsonify({
+        "success": True,
+        "task_id": task_id,
+        "logs": logs,
+        "artifact": artifact,
+        "total": len(logs)
     })
 
 # ============================================

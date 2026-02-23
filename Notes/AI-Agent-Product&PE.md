@@ -881,11 +881,83 @@ openclaw pairing approve feishu XXXXXXXX
    - 一键部署到 ECS
    - 预置 Coding Plan API 集成
 
-##### 多 Agent 路由
+##### 多 Agent 路由（Multi Agents）
 
-- Workspaces：不同工作区隔离
-- Per-agent sessions：每个 Agent 独立会话
-- 可将不同渠道/任务路由给不同 Agent 处理
+> 来源：https://docs.openclaw.ai/zh-CN/concepts/multi-agent、https://docs.openclaw.ai/zh-CN/concepts/agent-workspace
+> 整理时间：2026-02-23
+
+**核心概念：什么是"一个智能体"？**
+
+一个 Agent 是完全独立作用域的"大脑"，拥有专属的：
+- **独立工作区（Workspace）**：存储项目文件、AGENTS.md/SOUL.md 人设规则、本地笔记、工具配置等
+- **独立状态目录（AgentDir）**：认证配置文件、模型注册表、每智能体专属配置，位于 `~/.openclaw/agents/<agentId>/agent`
+- **独立会话存储**：聊天历史、路由状态完全隔离，位于 `~/.openclaw/agents/<agentId>/sessions`
+
+**如何实现"多个 Workspace 同时开发多个项目"？**
+
+Gateway 网关可以同时托管多个智能体，每个智能体绑定一个独立的工作区，实现：
+- 项目隔离：不同项目的代码、文件、人设规则完全分开
+- 并行处理：多个智能体可以同时响应不同请求
+- 灵活配置：每个智能体可以使用不同的模型、工具集、权限策略
+
+**快速配置步骤：**
+
+```bash
+# 创建名为 "project-a" 的智能体，自动绑定工作区
+openclaw agents add project-a --workspace ~/.openclaw/workspace-project-a
+
+# 查看所有智能体及其绑定
+openclaw agents list --bindings
+```
+
+**配置示例（openclaw.json）：**
+
+```json
+{
+  "agents": {
+    "list": [
+      {
+        "id": "project-a",
+        "default": true,
+        "workspace": "~/.openclaw/workspace-project-a",
+        "model": "ark/doubao-seed-2-0-code-preview-260215"
+      },
+      {
+        "id": "project-b",
+        "workspace": "~/.openclaw/workspace-project-b",
+        "model": "anthropic/claude-opus-4-5"
+      }
+    ]
+  },
+  "bindings": [
+    { "agentId": "project-a", "match": { "channel": "whatsapp", "peer": { "kind": "dm" } } },
+    { "agentId": "project-b", "match": { "channel": "telegram" } }
+  ]
+}
+```
+
+**关键特性：**
+
+1. **完全隔离性**
+   - 工作区、会话、认证完全分离
+   - 每个智能体有独立的 `auth-profiles.json`
+
+2. **灵活的工具与权限配置**
+   - 每智能体独立 Skills：工作区 `skills/` 文件夹，仅对该智能体可用
+   - 共享 Skills：`~/.openclaw/skills`，所有智能体都能调用
+   - 每智能体沙箱与工具限制
+
+3. **路由规则**
+   - 按渠道路由：WhatsApp 处理日常，Telegram 处理深度工作
+   - 按账户路由：个人 vs 工作账户
+   - 按对话对象路由：特定私信/群组路由到特定智能体
+
+**路由优先级（最具体优先）：**
+1. peer 匹配（精确私信/群组/频道 id）
+2. guildId（Discord）/ teamId（Slack）
+3. 渠道的 accountId 匹配
+4. 渠道级匹配（accountId: "*"）
+5. 回退到默认智能体
 
 ##### 对本项目的深度启发
 
