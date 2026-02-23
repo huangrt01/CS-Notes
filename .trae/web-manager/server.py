@@ -41,12 +41,47 @@ from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
+# ============================================
+# 配置文件加载
+# ============================================
+
+CONFIG_FILE = Path(__file__).parent / "config.json"
+
+def load_config():
+    """加载配置文件"""
+    if CONFIG_FILE.exists():
+        try:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading config file: {e}")
+            return get_default_config()
+    return get_default_config()
+
+def get_default_config():
+    """获取默认配置"""
+    return {
+        "project": {
+            "name": "Project",
+            "title": "Todos Web Manager"
+        },
+        "paths": {
+            "repo_root": "../..",
+            "todos_file": ".trae/todos/todos.json",
+            "todo_archive_dir": ".trae/todos/archive",
+            "plans_dir": ".trae/plans",
+            "inbox_file": ".trae/documents/INBOX.md"
+        }
+    }
+
+config = load_config()
+
 # 配置路径
 REPO_ROOT = Path(__file__).parent.parent.parent
-TODOS_FILE = REPO_ROOT / ".trae/todos/todos.json"
-TODO_ARCHIVE_DIR = REPO_ROOT / ".trae/todos/archive"
-PLANS_DIR = REPO_ROOT / ".trae/plans"
-INBOX_FILE = REPO_ROOT / ".trae/documents/INBOX.md"
+TODOS_FILE = REPO_ROOT / config['paths']['todos_file']
+TODO_ARCHIVE_DIR = REPO_ROOT / config['paths']['todo_archive_dir']
+PLANS_DIR = REPO_ROOT / config['paths']['plans_dir']
+INBOX_FILE = REPO_ROOT / config['paths']['inbox_file']
 WEB_MANAGER_DIR = Path(__file__).parent
 
 app = Flask(__name__, static_folder='.')
@@ -117,6 +152,26 @@ def git_log():
     """获取 Git 日志"""
     limit = request.args.get('limit', 10)
     result = run_git_command(['git', 'log', f'-{limit}', '--oneline'])
+    return jsonify(result)
+
+@app.route('/api/git/diff', methods=['GET'])
+def git_diff():
+    """获取 Git diff"""
+    commit = request.args.get('commit', 'HEAD~1')
+    commit2 = request.args.get('commit2', 'HEAD')
+    file = request.args.get('file', None)
+    
+    cmd = ['git', 'diff', commit, commit2]
+    if file:
+        cmd.append(file)
+    
+    result = run_git_command(cmd)
+    return jsonify(result)
+
+@app.route('/api/git/diff/<commit>', methods=['GET'])
+def git_diff_commit(commit):
+    """获取特定 commit 的 diff"""
+    result = run_git_command(['git', 'show', commit])
     return jsonify(result)
 
 # ============================================
@@ -581,7 +636,8 @@ def dev_validate():
             errors.append(f"任务 {i+1}: 缺少 status 字段")
         
         priority = task.get('priority')
-        if priority and priority not in ['high', 'medium', 'low']:
+        valid_priorities = ['high', 'medium', 'low'] + [f'P{i}' for i in range(10)]
+        if priority and priority not in valid_priorities:
             errors.append(f"任务 {i+1}: 无效的 priority 值: {priority}")
         
         status = task.get('status')
@@ -594,6 +650,18 @@ def dev_validate():
         "errors": errors,
         "warnings": warnings,
         "total": len(tasks)
+    })
+
+# ============================================
+# 配置 API
+# ============================================
+
+@app.route('/api/config', methods=['GET'])
+def get_config():
+    """获取配置"""
+    return jsonify({
+        "success": True,
+        "config": config
     })
 
 # ============================================

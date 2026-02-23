@@ -388,6 +388,56 @@ POST   /api/git/pull           - 从远程仓库拉取
             color: #16a34a;
         }
         
+        .priority-P0 {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .priority-P1 {
+            background: #fed7aa;
+            color: #ea580c;
+        }
+        
+        .priority-P2 {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .priority-P3 {
+            background: #fef9c3;
+            color: #ca8a04;
+        }
+        
+        .priority-P4 {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .priority-P5 {
+            background: #d1fae5;
+            color: #059669;
+        }
+        
+        .priority-P6 {
+            background: #cffafe;
+            color: #0891b2;
+        }
+        
+        .priority-P7 {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+        
+        .priority-P8 {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+        
+        .priority-P9 {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
         .task-description {
             color: #666;
             margin-bottom: 12px;
@@ -683,6 +733,16 @@ POST   /api/git/pull           - 从远程仓库拉取
                             <option value="high">🔴 高优先级</option>
                             <option value="medium">🟡 中优先级</option>
                             <option value="low">🟢 低优先级</option>
+                            <option value="P0">🔴 P0 (最高)</option>
+                            <option value="P1">🟠 P1 (非常高)</option>
+                            <option value="P2">🟡 P2 (高)</option>
+                            <option value="P3">🟢 P3 (中高)</option>
+                            <option value="P4">🔵 P4 (中)</option>
+                            <option value="P5">🟣 P5 (中低)</option>
+                            <option value="P6">⚪ P6 (低)</option>
+                            <option value="P7">⚫ P7 (很低)</option>
+                            <option value="P8">🟤 P8 (极低)</option>
+                            <option value="P9">⚪ P9 (最低)</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -712,6 +772,16 @@ POST   /api/git/pull           - 从远程仓库拉取
                         <option value="high">🔴 高优先级</option>
                         <option value="medium" selected>🟡 中优先级</option>
                         <option value="low">🟢 低优先级</option>
+                        <option value="P0">🔴 P0 (最高)</option>
+                        <option value="P1">🟠 P1 (非常高)</option>
+                        <option value="P2">🟡 P2 (高)</option>
+                        <option value="P3">🟢 P3 (中高)</option>
+                        <option value="P4">🔵 P4 (中)</option>
+                        <option value="P5">🟣 P5 (中低)</option>
+                        <option value="P6">⚪ P6 (低)</option>
+                        <option value="P7">⚫ P7 (很低)</option>
+                        <option value="P8">🟤 P8 (极低)</option>
+                        <option value="P9">⚪ P9 (最低)</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1009,8 +1079,27 @@ POST   /api/git/pull           - 从远程仓库拉取
         
         function renderTaskItem(task) {
             const priorityClass = `priority-${task.priority}`;
-            const priorityText = task.priority === 'high' ? '🔴 高' : task.priority === 'medium' ? '🟡 中' : '🟢 低';
+            const priorityText = getPriorityText(task.priority);
             const taskId = task.id;
+            
+            function getPriorityText(priority) {
+                const priorityMap = {
+                    'high': '🔴 高',
+                    'medium': '🟡 中',
+                    'low': '🟢 低',
+                    'P0': '🔴 P0',
+                    'P1': '🟠 P1',
+                    'P2': '🟡 P2',
+                    'P3': '🟢 P3',
+                    'P4': '🔵 P4',
+                    'P5': '🟣 P5',
+                    'P6': '⚪ P6',
+                    'P7': '⚫ P7',
+                    'P8': '🟤 P8',
+                    'P9': '⚪ P9'
+                };
+                return priorityMap[priority] || priority;
+            }
             const isExpanded = expandedTasks.has(taskId);
             
             const isPlanTodo = task.is_plan_todo || task.plan_required || false;

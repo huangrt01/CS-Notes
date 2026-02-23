@@ -1,0 +1,18 @@
+{
+  "project": {
+    "name": "CS-Notes",
+    "title": "Todos Web Manager"
+  },
+  "paths": {
+    "repo_root": "../..",
+    "todos_file": ".trae/todos/todos.json",
+    "todo_archive_dir": ".trae/todos/archive",
+    "plans_dir": ".trae/plans",
+    "inbox_file": ".trae/documents/INBOX.md"
+  },
+  "priority": {
+    "enabled": true,
+    "system": "P0-P9",
+    "default": "P4"
+  }
+}
