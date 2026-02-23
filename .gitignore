@@ -14,3 +14,7 @@ tmp*
 .openclaw-session-optimizer.json
 .top-lean-ai-state.json
 .openclaw-background-state.json
+# Todo Web Manager build 产物
+.trae/web-manager/todos-web-manager-package/
+.trae/web-manager/*.tar.gz
+.trae/web-manager/*.zip

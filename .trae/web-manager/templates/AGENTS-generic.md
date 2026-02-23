@@ -177,7 +177,7 @@ You are free to edit `HEARTBEAT.md` with a short checklist or reminders. Keep it
 - Important email arrived
 - Calendar event coming up (&lt;2h)
 - Something interesting you found
-- It's been >8h since you said anything
+- It's been &gt;8h since you said anything
 
 **When to stay quiet (HEARTBEAT_OK):**
 
@@ -225,7 +225,7 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 10. **希望：每个 todo 都到了不得不依赖用户做些什么或者做决策的阶段**
 
 **优先级排序规则**：
-- P0：最高优先级（笔记整理任务固定为P0）
+- P0：最高优先级
 - P1：非常高优先级
 - P2：高优先级
 - P3：中高优先级
@@ -269,14 +269,11 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 
 1. **运行迁移脚本**：执行 `.trae/web-manager/migrate.sh`
 2. **检查同步状态**：脚本会自动检查原始文件和模板的同步状态
-3. **如果有更新**：提示用户手动编辑模板文件（如果是通用更新）
+3. **如果有更新**：提示用户手动编辑模板文件
 4. **自动构建**：确认后自动运行 build.sh 打包
 5. **完成迁移**：生成可迁移的压缩包
 
-**注意**：
-- 如果更新是 CS-Notes 特定的，不需要更新模板
-- 如果更新是通用的，需要手动编辑模板文件移除项目特定内容
-- 详细工作流请查看 `.trae/web-manager/WORKFLOW.md`
+*这是通用化模板，请根据新项目需求进行定制*
 
 ---
 
@@ -308,3 +305,5 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 ## Make It Yours
 
 This is a starting point. Add your own conventions, style, and rules as you figure out what works.
+
+*这是通用化模板，请根据新项目需求进行定制*
