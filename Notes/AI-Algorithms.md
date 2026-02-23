@@ -2853,6 +2853,35 @@ Q-Former 通过两阶段训练实现图文对齐，每个阶段使用不同的�
 * GPT-4o
   * GPT 4o本质上是要探索不同模态相互融合的大一统模型应该怎么做的问题，对于提升大模型的智力水平估计帮助不大
 
+* Kimi K2.5
+  * **Reference**: https://www.zhihu.com/question/1999487395494588876/answer/2000362433332660070?share_code=HGYNzglkEV8h&utm_psn=2000559952910099841
+  * **统一的视觉-视频 Encoder 设计（N+1 思路）**
+    * **架构选择**：SigLIP NaViT（内部名 MoonViT），设计思路是做真正的 unified encoder
+    * **核心原则**：image 和 video 必须共享同一个 encoder，参数完全共享
+    * **为什么需要 3D encoder**：有些 motion 和细微的时序变化（快速手势、瞬间表情转换），如果只抽 2D 帧，后面靠 LLM 去"脑补"时序信息，到模型里已经看不清了
+    * **为什么要共享 encoder**：
+      - 如果 image 和 video 用两套独立 encoder，要么伤害 image 本身能力，要么 video 学不到真东西
+      - embedding 会打架：图片里能认出"特朗普"，到视频里可能就"变傻"了
+      - image pretrain 学到的所有知识（物体识别、空间关系、世界知识）在 video 场景下都能完整保留
+      - video 只需要额外学习时序和动态这部分独特的能力
+  * **Post-training 的多模态融合——同样的 N+1 思路**
+    * **前提**：base model 首先 vision 能力很强，同时 K2 Thinking（纯文本模型）的 thinking 和 tooluse 能力也很强
+    * **核心思路**：vision 能不能直接继承 text 的 thinking 和 tooluse pattern？
+    * **实现方案**：用极小的、没有 vision 输入的冷启动数据（zero-vision cold-start）去激活这种能力，让 vision 直接对齐到 text 的 thinking 和 tooluse pattern 上
+    * **好处**：
+      - 模型不仅能看懂图，还能保持灵活的 reasoning toolcall 能力
+      - 不需要训练 &lt;VideoCut&gt; &lt;Crop&gt; &lt;Rotate&gt; 这种特别的 tool，直接用 IPython tool 就行
+      - 能激活神奇的走迷宫能力
+  * **Vision RL**
+    * 做了非常 holistic 的 vision-centric RL，分涨了很多
+    * 连 agentic 的 trajectory 都变好了
+    * 随着 grounding training set accuracy 的提升，模型在 IPython 里天然就 crop 得越来越准
+  * **最神奇的发现：Vision RL 能让模型"长知识"**
+    * 本来以为 vision RL 更多是教模型提取信息（怎么用 image 里的信息避免模型不看图瞎说）
+    * 但 RL 完一测发现，文本知识涨了！
+    * 原因：vision 用的是 text 教出来的 thinking pattern，没"分脑"，就"泛化"了
+    * 后来整个 post-train vision-text joint RL 的环节通常都是一半甚至更多的 vision 数据配比
+
 ### Data Prepare
 
 ![image-20241207212813240](./AI-Algorithms/image-20241207212813240.png)

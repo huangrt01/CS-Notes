@@ -24,6 +24,15 @@
   - 选择最重要且可独立完成的一项开始执行，完成后立刻回写进度与产物链接，再继续下一项
   - 涉及复杂改动时，先给出 Plan（目标、假设、改动点、验收标准、风险），Plan 明确后再动手
   - 执行中产生的经验教训沉淀到 `.trae/documents/PROGRESS.md
+* **【强制】开始推进 todo 前必须先标记为 in-progress**：避免多 session 同时执行同一个 task 造成冲突
+  - **核心原则**：当决定开始推进某个 todo 时，第一时间先把它从 pending 改为 in-progress
+  - **为什么重要**：如果有多个 session 在同时运行，不先标记的话可能导致两个 session 同时执行同一个任务
+  - **标准流程**：
+    1. 使用 priority-task-reader 找到下一个应该执行的任务
+    2. 立即编辑 todos.json，把该任务的 status 从 pending 改为 in-progress
+    3. 添加 started_at 时间戳
+    4. 然后才开始实际执行任务
+  - **新建 session 规则**：新建的 session 不要执行 status 为 in-progress 的任务，只执行 pending 状态的任务
 
 ## AI 助手工作流
 * **用户消息优先原则**：无论 AI 正在执行什么任务，收到用户的新消息时必须**立即回复**，不能让任务阻塞对话
