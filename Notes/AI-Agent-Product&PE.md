@@ -3948,6 +3948,8 @@ https://www.xiaohongshu.com/explore/69086a080000000005001e09?app_platform=ios&ap
 
 通过异步多任务方式开发，多个 agent 可以同时工作，大大提升整体效率。
 
+
+
 **关键要点：**
 - 使用 Codex 等产品的异步工作模式，单个任务工作时间更长，减少人的 context switch
 - 任务完成质量更高，大大减少后续沟通和修改
@@ -4173,16 +4175,16 @@ backlog/tasks 本身也可以考虑用一个文件夹的形式放在项目库里
   * ```
     # ~/.tabby/config.toml
     # Index three repositories' source code as additional context for code completion.
-  
+    
     [[repositories]]
     name = "tabby"
     git_url = "https://github.com/TabbyML/tabby.git" # 远程的git项目，但是如果没有代理很容易失败
-  
+    
     # git through ssh protocol.
     [[repositories]]
     name = "CTranslate2"
     git_url = "git@github.com:OpenNMT/CTranslate2.git"
-  
+    
     # local directory is also supported!
     [[repositories]]
     name = "Dify"
@@ -5796,5 +5798,4 @@ finetuning分类
 ---
 
 自大模型热潮以来，每个春节似乎都有意外发生：23 年是 ChatGPT，24 年是 Sora，25 年是 DeepSeek-R1，26 年春节，会是什么？
-
 

@@ -238,11 +238,47 @@ def save_todos_to_json(data, file_path):
 def get_tasks():
     """获取任务列表"""
     data = load_todos_from_json(TODOS_FILE)
+    todos = data.get("todos", [])
+    
+    # 加载所有独立 Plan 文件
+    independent_plans = load_all_plans()
+    
+    # 建立关联：将独立 Plan 文件与 Todo 条目关联
+    for todo in todos:
+        todo_id = todo.get("id")
+        # 查找对应的独立 Plan 文件
+        for plan in independent_plans:
+            # 通过标题匹配或 todo_id 匹配
+            plan_todo_id = plan.get("todo_id")
+            if plan_todo_id == todo_id:
+                todo["plan_file"] = plan["file_path"]
+                if "plan" not in todo:
+                    todo["plan"] = {
+                        "content": plan["content"],
+                        "status": plan["status"],
+                        "created_at": plan["created_at"],
+                        "updated_at": plan["updated_at"]
+                    }
+                break
+            # 如果没有 todo_id，尝试通过标题匹配
+            if not plan_todo_id and plan.get("title") and todo.get("title"):
+                if plan["title"] in todo["title"] or todo["title"] in plan["title"]:
+                    todo["plan_file"] = plan["file_path"]
+                    if "plan" not in todo:
+                        todo["plan"] = {
+                            "content": plan["content"],
+                            "status": plan["status"],
+                            "created_at": plan["created_at"],
+                            "updated_at": plan["updated_at"]
+                        }
+                    break
+    
     return jsonify({
         "success": True,
         "data": data,
-        "tasks": data.get("todos", []),
-        "total": len(data.get("todos", []))
+        "tasks": todos,
+        "independent_plans": independent_plans,
+        "total": len(todos)
     })
 
 @app.route('/api/tasks/archive', methods=['GET'])

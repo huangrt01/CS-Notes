@@ -40,7 +40,7 @@ echo -e "${GREEN}✓ 输出目录已创建${NC}"
 echo ""
 
 # ============ 步骤 1: 复制 .trae/web-manager/ ============
-echo -e "${YELLOW}[2/8] 复制 Web Manager 核心文件...${NC}"
+echo -e "${YELLOW}[2/10] 复制 Web Manager 核心文件...${NC}"
 mkdir -p "$OUTPUT_DIR/.trae/web-manager"
 cp "$WEB_MANAGER_DIR/server.py" "$OUTPUT_DIR/.trae/web-manager/"
 cp "$WEB_MANAGER_DIR/index-enhanced.html" "$OUTPUT_DIR/.trae/web-manager/"
@@ -51,7 +51,7 @@ echo -e "${GREEN}✓ Web Manager 核心文件已复制${NC}"
 echo ""
 
 # ============ 步骤 2: 复制 .trae/todos/ ============
-echo -e "${YELLOW}[3/8] 复制 Todos 数据目录结构...${NC}"
+echo -e "${YELLOW}[3/10] 复制 Todos 数据目录结构...${NC}"
 mkdir -p "$OUTPUT_DIR/.trae/todos/archive"
 # 不复制实际的 todos.json 和归档数据，只创建空目录结构
 touch "$OUTPUT_DIR/.trae/todos/.gitkeep"
@@ -60,7 +60,7 @@ echo -e "${GREEN}✓ Todos 数据目录结构已创建${NC}"
 echo ""
 
 # ============ 步骤 3: 复制 .trae/documents/ ============
-echo -e "${YELLOW}[4/8] 复制 Documents 目录结构...${NC}"
+echo -e "${YELLOW}[4/10] 复制 Documents 目录结构...${NC}"
 mkdir -p "$OUTPUT_DIR/.trae/documents"
 # 创建 INBOX.md 模板
 cat > "$OUTPUT_DIR/.trae/documents/INBOX.md" << 'EOF'
@@ -73,7 +73,7 @@ echo -e "${GREEN}✓ Documents 目录结构已创建${NC}"
 echo ""
 
 # ============ 步骤 4: 复制 .trae/rules/ ============
-echo -e "${YELLOW}[5/8] 复制 Rules 目录...${NC}"
+echo -e "${YELLOW}[5/10] 复制 Rules 目录...${NC}"
 mkdir -p "$OUTPUT_DIR/.trae/rules/core"
 mkdir -p "$OUTPUT_DIR/.trae/rules/templates"
 mkdir -p "$OUTPUT_DIR/.trae/rules/project"
@@ -94,8 +94,64 @@ fi
 echo -e "${GREEN}✓ Rules 目录结构已创建${NC}"
 echo ""
 
-# ============ 步骤 5: 复制 .openclaw-memory/ ============
-echo -e "${YELLOW}[6/8] 复制 OpenClaw 记忆体系...${NC}"
+# ============ 步骤 5: 复制 .trae/skills/ ============
+echo -e "${YELLOW}[6/10] 复制 Trae Skills...${NC}"
+mkdir -p "$OUTPUT_DIR/.trae/skills"
+
+# 复制通用 Skills
+GENERIC_SKILLS=(
+    "markdown-toc"
+    "code-reviewer"
+    "find-skills"
+    "fix"
+    "pr-creator"
+)
+
+for skill in "${GENERIC_SKILLS[@]}"; do
+    if [ -d "$PROJECT_ROOT/.trae/skills/$skill" ]; then
+        cp -r "$PROJECT_ROOT/.trae/skills/$skill" "$OUTPUT_DIR/.trae/skills/"
+        echo -e "${GREEN}✓ 已复制通用技能: $skill${NC}"
+    fi
+done
+
+echo -e "${GREEN}✓ Trae Skills 已复制${NC}"
+echo ""
+
+# ============ 步骤 6: 复制 .trae/openclaw-skills/ ============
+echo -e "${YELLOW}[7/10] 复制 OpenClaw Skills...${NC}"
+mkdir -p "$OUTPUT_DIR/.trae/openclaw-skills"
+
+# 复制通用和部分通用 Skills
+OPENCLAW_GENERIC_SKILLS=(
+    "markdown-toc"
+    "plan-generator"
+    "priority-task-reader"
+    "smart-task-parser"
+)
+
+for skill in "${OPENCLAW_GENERIC_SKILLS[@]}"; do
+    if [ -d "$PROJECT_ROOT/.trae/openclaw-skills/$skill" ]; then
+        cp -r "$PROJECT_ROOT/.trae/openclaw-skills/$skill" "$OUTPUT_DIR/.trae/openclaw-skills/"
+        echo -e "${GREEN}✓ 已复制通用技能: $skill${NC}"
+    fi
+done
+
+# 复制 OpenClaw Skills 文档
+if [ -f "$PROJECT_ROOT/.trae/openclaw-skills/README.md" ]; then
+    cp "$PROJECT_ROOT/.trae/openclaw-skills/README.md" "$OUTPUT_DIR/.trae/openclaw-skills/"
+fi
+if [ -f "$PROJECT_ROOT/.trae/openclaw-skills/DEPLOYMENT_GUIDE.md" ]; then
+    cp "$PROJECT_ROOT/.trae/openclaw-skills/DEPLOYMENT_GUIDE.md" "$OUTPUT_DIR/.trae/openclaw-skills/"
+fi
+if [ -f "$PROJECT_ROOT/.trae/openclaw-skills/OPENCLAW_BOT_GUIDE.md" ]; then
+    cp "$PROJECT_ROOT/.trae/openclaw-skills/OPENCLAW_BOT_GUIDE.md" "$OUTPUT_DIR/.trae/openclaw-skills/"
+fi
+
+echo -e "${GREEN}✓ OpenClaw Skills 已复制${NC}"
+echo ""
+
+# ============ 步骤 7: 复制 .openclaw-memory/ ============
+echo -e "${YELLOW}[8/10] 复制 OpenClaw 记忆体系...${NC}"
 mkdir -p "$OUTPUT_DIR/.openclaw-memory/memory"
 
 # 优先使用通用化模板
@@ -156,8 +212,8 @@ touch "$OUTPUT_DIR/.openclaw-memory/memory/.gitkeep"
 echo -e "${GREEN}✓ OpenClaw 记忆体系已复制${NC}"
 echo ""
 
-# ============ 步骤 6: 创建 README ============
-echo -e "${YELLOW}[7/8] 创建 README 文档...${NC}"
+# ============ 步骤 8: 创建 README ============
+echo -e "${YELLOW}[9/10] 创建 README 文档...${NC}"
 cat > "$OUTPUT_DIR/README.md" << 'EOF'
 # Todo Web Manager - 可迁移包
 
@@ -211,9 +267,29 @@ python server.py
 │   ├── todos/              # Todo 数据
 │   ├── documents/          # 文档
 │   ├── rules/              # 规则
+│   ├── skills/             # Trae Skills（通用）
+│   ├── openclaw-skills/    # OpenClaw Skills（通用）
 │   └── web-manager/        # Web Manager
 └── .openclaw-memory/      # OpenClaw 记忆体系
 ```
+
+## 包含的 Skills
+
+### Trae Skills（可直接使用）
+- `markdown-toc`: 生成 Markdown 目录
+- `code-reviewer`: 代码审查
+- `find-skills`: 发现并安装 Agent Skill
+- `fix`: 代码格式和 linting 修复
+- `pr-creator`: PR 创建助手
+
+### OpenClaw Skills（可直接使用）
+- `markdown-toc`: 生成 Markdown 目录
+- `plan-generator`: 自动生成任务执行计划
+- `priority-task-reader`: 按优先级读取任务
+- `smart-task-parser`: 智能任务解析
+
+### 项目特定 Skills（需要定制）
+- 参考解耦方案文档，创建项目特定的技能模板
 
 ## 特性
 
@@ -223,6 +299,7 @@ python server.py
 - ✅ P0-P9 优先级体系支持
 - ✅ Plan 机制本质化重构
 - ✅ 规则分层架构（核心/模板/项目）
+- ✅ 包含通用 Skills（markdown-toc, plan-generator 等）
 
 ## 更新
 
@@ -232,8 +309,8 @@ EOF
 echo -e "${GREEN}✓ README 文档已创建${NC}"
 echo ""
 
-# ============ 步骤 7: 创建压缩包 ============
-echo -e "${YELLOW}[8/8] 创建压缩包...${NC}"
+# ============ 步骤 9: 创建压缩包 ============
+echo -e "${YELLOW}[10/10] 创建压缩包...${NC}"
 cd "$OUTPUT_DIR/.."
 PACKAGE_NAME="todos-web-manager-$(date +%Y%m%d-%H%M%S).tar.gz"
 tar -czf "$PACKAGE_NAME" -C "$OUTPUT_DIR" .

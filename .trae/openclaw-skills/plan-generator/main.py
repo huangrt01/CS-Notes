@@ -270,26 +270,28 @@ class PlanGenerator:
         }
         return plan
     
-    def write_plan_to_file(self, plan: dict) -> Path:
+    def write_plan_to_file(self, plan: dict, todo_id: str = None) -> Path:
         """将 Plan 写入单独的文件"""
         slugified_title = re.sub(r'[^\w\-]+', '-', plan['title'].lower()).strip('-')
         filename = f"{datetime.now().strftime('%Y-%m-%d')}-{slugified_title}-{plan['id'].split('-')[-1]}.md"
         file_path = self.plans_dir / filename
         
-        plan_markdown = self._format_plan_as_markdown(plan)
+        plan_markdown = self._format_plan_as_markdown(plan, todo_id)
         
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(plan_markdown)
         
         return file_path
     
-    def _format_plan_as_markdown(self, plan: dict) -> str:
+    def _format_plan_as_markdown(self, plan: dict, todo_id: str = None) -> str:
         """将 Plan 格式化为 Markdown（带 YAML frontmatter）"""
         lines = []
         
         # YAML frontmatter
         lines.append("---")
         lines.append(f"id: {plan['id']}")
+        if todo_id:
+            lines.append(f"todo_id: {todo_id}")
         lines.append(f'title: "{plan["title"]}"')
         lines.append(f"priority: {plan['priority']}")
         lines.append(f"status: {plan['status']}")
@@ -299,62 +301,74 @@ class PlanGenerator:
         lines.append("---")
         lines.append("")
         
-        # Plan 内容
-        lines.append("## 目标")
-        lines.append(f"- {plan['goal']}")
+        # Plan 内容 - 按照设计方案优化
+        lines.append("## 📋 背景与动机")
+        lines.append(f"- 任务目标: {plan['goal']}")
         lines.append("")
         
         # 任务分析
         if "task_analysis" in plan:
-            lines.append("## 任务分析")
+            lines.append("## 💡 核心洞察")
             lines.append(f"- 任务类型: {', '.join(plan['task_analysis']['task_types'])}")
             if plan['task_analysis']['domains']:
                 lines.append(f"- 涉及领域: {', '.join(plan['task_analysis']['domains'])}")
             lines.append(f"- 复杂度: {plan['task_analysis']['complexity']}")
             lines.append("")
         
-        lines.append("## 假设")
-        for assumption in plan['assumptions']:
-            lines.append(f"- {assumption}")
+        lines.append("## 🎯 任务拆解")
+        for i, step in enumerate(plan['steps'], 1):
+            clean_step = re.sub(r'^\d+\.\s*', '', step)
+            lines.append(f"- 步骤 {i}: {clean_step}")
         lines.append("")
-        lines.append("## 改动点")
-        lines.append(f"- 修改: {', '.join(plan['changes']['modify']) or '无'}")
-        lines.append(f"- 新增: {', '.join(plan['changes']['add']) or '无'}")
-        lines.append(f"- 删除: {', '.join(plan['changes']['delete']) or '无'}")
-        lines.append("")
-        lines.append("## 验收标准")
+        
+        lines.append("## 🔨 具体执行步骤")
+        for i, step in enumerate(plan['steps'], 1):
+            clean_step = re.sub(r'^\d+\.\s*', '', step)
+            lines.append(f"### 步骤 {i}")
+            lines.append(f"- 做什么: {clean_step}")
+            lines.append(f"- 怎么做: 按照步骤要求执行")
+            lines.append(f"- 产出: 任务阶段性成果")
+            lines.append(f"- 验收标准: 步骤完成")
+            lines.append("")
+        
+        lines.append("## ✅ 验收标准")
         for criteria in plan['acceptance_criteria']:
             lines.append(f"- {criteria}")
         lines.append("")
-        lines.append("## 风险")
+        
+        lines.append("## ⚠️ 风险与挑战")
         for risk in plan['risks']:
-            lines.append(f"- {risk['risk']}: {risk['mitigation']}")
+            lines.append(f"- {risk['risk']}，应对: {risk['mitigation']}")
         lines.append("")
-        lines.append("## 执行步骤")
-        for step in plan['steps']:
-            lines.append(f"- {step}")
+        
+        lines.append("## 📚 相关资源")
+        lines.append(f"- 文件: 待补充")
+        lines.append(f"- 链接: 待补充")
+        lines.append(f"- 笔记: 待补充")
         lines.append("")
-        lines.append("## 时间估算")
+        
+        lines.append("## ⏱️ 时间估算")
         lines.append(f"- 预计: {plan['time_estimate']}")
         lines.append("")
         lines.append("---")
         lines.append("")
-        lines.append("## 执行记录")
+        lines.append("## 📝 执行记录")
         
         return "\n".join(lines)
 
 def handle_generate():
     """处理生成 Plan 命令"""
     if len(sys.argv) < 3:
-        print("Usage: python main.py generate <task_description> [priority]")
+        print("Usage: python main.py generate <task_description> [priority] [todo_id]")
         return json.dumps({"success": False, "error": "Missing task description"})
     
     task_description = sys.argv[2]
     priority = sys.argv[3] if len(sys.argv) > 3 else "medium"
+    todo_id = sys.argv[4] if len(sys.argv) > 4 else None
     
     generator = PlanGenerator()
     plan = generator.generate_plan(task_description, priority)
-    file_path = generator.write_plan_to_file(plan)
+    file_path = generator.write_plan_to_file(plan, todo_id)
     
     return json.dumps({
         "success": True,

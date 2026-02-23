@@ -998,6 +998,7 @@ POST   /api/git/pull           - 从远程仓库拉取
     <script>
         let tasks = [];
         let archiveTasks = [];
+        let independentPlans = [];
         let currentMainTab = 'my-tasks';
         let currentSubTab = 'pending';
         let isLoading = false;
@@ -1043,6 +1044,7 @@ POST   /api/git/pull           - 从远程仓库拉取
                     const tasksData = await tasksResponse.json();
                     if (tasksData.success) {
                         tasks = tasksData.tasks || [];
+                        independentPlans = tasksData.independent_plans || [];
                     } else {
                         throw new Error(tasksData.message || '加载失败');
                     }
@@ -1262,7 +1264,10 @@ POST   /api/git/pull           - 从远程仓库拉取
                 return;
             }
             
-            const pendingPlansCount = tasks.filter(t => t.plan && t.plan.status === 'pending').length;
+            const todoInlinePlans = tasks.filter(t => t.plan && t.plan.status === 'pending');
+            const independentPendingPlans = independentPlans.filter(p => p.status === 'pending');
+            
+            const pendingPlansCount = todoInlinePlans.length + independentPendingPlans.length;
             const pendingReviewTasksCount = tasks.filter(t => t.status === 'completed').length;
             const myPendingCount = tasks.filter(t => t.status === 'pending' && (t.assignee === 'user' || t.assignee === 'user + ai')).length;
             const myInProgressCount = tasks.filter(t => t.status === 'in-progress' && (t.assignee === 'user' || t.assignee === 'user + ai')).length;
@@ -1280,7 +1285,38 @@ POST   /api/git/pull           - 从远程仓库拉取
                 `;
                 
                 if (currentSubTab === 'pending-plans') {
-                    items = tasks.filter(t => t.plan && t.plan.status === 'pending');
+                    items = [];
+                    
+                    todoInlinePlans.forEach(todo => {
+                        items.push({
+                            ...todo,
+                            _type: 'todo-inline-plan',
+                            _planSource: 'Todo 内联'
+                        });
+                    });
+                    
+                    independentPendingPlans.forEach(plan => {
+                        items.push({
+                            id: plan.id,
+                            title: plan.title,
+                            priority: plan.priority,
+                            status: 'pending',
+                            assignee: 'ai',
+                            feedback_required: false,
+                            created_at: plan.created_at,
+                            plan: {
+                                content: plan.content,
+                                status: plan.status,
+                                created_at: plan.created_at,
+                                updated_at: plan.updated_at
+                            },
+                            plan_file: plan.file_path,
+                            _type: 'independent-plan',
+                            _planSource: '独立文件',
+                            definition_of_done: [],
+                            links: []
+                        });
+                    });
                 } else if (currentSubTab === 'pending-review-tasks') {
                     items = tasks.filter(t => t.status === 'completed');
                 } else if (currentSubTab === 'my-pending') {
@@ -1919,7 +1955,10 @@ POST   /api/git/pull           - 从远程仓库拉取
             
             const metaItems = [];
             metaItems.push(`<span>👤 ${assignee}</span>`);
-            if (task.plan) {
+            if (task._planSource) {
+                const planSourceColor = task._planSource === '独立文件' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)';
+                metaItems.push(`<span style="background: ${planSourceColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px;">📋 ${task._planSource}</span>`);
+            } else if (task.plan) {
                 metaItems.push(`<span style="background: #6366f1; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px;">📋 有 Plan</span>`);
             }
             if (task.created_at) {
