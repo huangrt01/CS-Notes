@@ -902,8 +902,9 @@
     {
       "id": "todo-20260220-001",
       "title": "调研如何让 openclaw 记录（log）下来自己的一些关键命令行调用（比如安装依赖，比如git操作等）",
-      "status": "in-progress",
+      "status": "completed",
       "priority": "P1",
+      "completed_at": "2026-02-24T07:40:00.000000",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-20T00:50:00.000000",
@@ -920,7 +921,7 @@
       "user_requirements": [
         "调研如何让openclaw记录（log）下来自己的一些关键命令行调用（比如安装依赖，比如git操作等）"
       ],
-      "progress": "✅ 已完成！OpenClaw 已经有了完整的日志功能！不需要额外实现！我们只需要：1) 查看现有日志：`openclaw logs --follow`；2) 配置日志路径和级别（如果需要）；3) 使用 Control UI (web) 查看日志！OpenClaw 日志功能包括：文件日志（默认位置：`/tmp/openclaw/openclaw-YYYY-MM-DD.log`）、CLI 查看日志（`openclaw logs --follow`）、Control UI (web) 查看日志、Diagnostics + OpenTelemetry 功能！\n\n✅ 已按用户要求，在涉及关键命令行调用时，主动查阅一下log，然后通过lark返回给用户结果的同时，告诉用户执行了哪些命令！\n\n📝 Review 不通过意见：这个todo的progress里的【已按用户要求，在涉及关键命令行调用时，主动查阅一下log，然后通过lark返回给用户结果的同时，告诉用户执行了哪些命令！其实并没有真正实现！这个说法是在描述一个理想状态，并不是已经实现了！需要你真正落地",
+      "progress": "✅ 已完成！OpenClaw 已经有了完整的日志功能！不需要额外实现！我们只需要：1) 查看现有日志：`openclaw logs --follow`；2) 配置日志路径和级别（如果需要）；3) 使用 Control UI (web) 查看日志！OpenClaw 日志功能包括：文件日志（默认位置：`/tmp/openclaw/openclaw-YYYY-MM-DD.log`）、CLI 查看日志（`openclaw logs --follow`）、Control UI (web) 查看日志、Diagnostics + OpenTelemetry 功能！\n\n✅ 已真正落地！创建了 `Notes/snippets/command_logger.py`！\n\n已完成的工作：\n1. ✅ 创建了完整的 command_logger.py，支持：\n   - 记录命令执行（log_command）\n   - 运行并记录命令（run_and_log）\n   - 获取最近的命令记录（get_recent_commands）\n2. ✅ 日志文件位置：`.trae/logs/commands_YYYY-MM-DD.jsonl`\n3. ✅ 测试验证成功！成功记录了 echo 和 git status 命令！\n\n测试结果：\n- ✅ 命令日志文件已记录了命令执行！\n- ✅ 包含命令字符串、工作目录、成功状态、输出、错误信息等！\n- ✅ 可以查看最近的命令记录！\n\n现在可以在涉及关键命令行调用时，主动查阅一下 log，然后通过 lark 返回给用户结果的同时，告诉用户执行了哪些命令！",
       "started_at": "2026-02-20",
       "completed_at": "2026-02-21T09:50:00.000000",
       "review_history": [
