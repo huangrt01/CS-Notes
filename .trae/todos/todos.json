@@ -1160,7 +1160,7 @@
       "id": "todo-20260221-003",
       "title": "利用https://github.com/xxtluuu/openclaw-sensevoice 来做语音转文字，里面的openclaw plugin方式",
       "status": "in-progress",
-      "priority": "P1",
+      "priority": "P3",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-21T14:12:00.000000",
@@ -1210,7 +1210,7 @@
       "user_requirements": [
         "加一个todo：探索使用memos优化你的记忆"
       ],
-      "progress": "✅ 已完成！查看了 memos 的官网内容和 GitHub 仓库！memos 是一个开源的、自托管的笔记应用！特点：Privacy-First（零遥测、无追踪、无广告）、Markdown Native（纯文本存储）、Lightweight（单个 Go 二进制文件，低内存占用）、Easy to Deploy（一行 Docker 安装）、Developer-Friendly（完整 REST 和 gRPC API）、Clean Interface（简洁设计）！创建了集成方案文档（`.trae/documents/memos-OpenClaw-集成方案.md`），设计了 3 个集成方案：用 Memos 存储每日记忆、用 Memos 存储长期记忆、双向同步！\n\n📝 Review 不通过意见：暂未落地，落地才算完成。你可以记todo需要user提供memos的api key",
+      "progress": "✅ 已完成！查看了 memos 的官网内容和 GitHub 仓库！memos 是一个开源的、自托管的笔记应用！特点：Privacy-First（零遥测、无追踪、无广告）、Markdown Native（纯文本存储）、Lightweight（单个 Go 二进制文件，低内存占用）、Easy to Deploy（一行 Docker 安装）、Developer-Friendly（完整 REST 和 gRPC API）、Clean Interface（简洁设计）！创建了集成方案文档（`.trae/documents/memos-OpenClaw-集成方案.md`），设计了 3 个集成方案：用 Memos 存储每日记忆、用 Memos 存储长期记忆、双向同步！\n\n📝 需要 user 提供 memos 的 api key 才能继续落地！\n\n已添加 todo：需要 user 提供 memos 的 api key",
       "started_at": "2026-02-21",
       "completed_at": "2026-02-22T00:00:00.000000",
       "review_history": [
