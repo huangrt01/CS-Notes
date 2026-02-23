@@ -10,9 +10,32 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 
+# 添加 snippets 目录到 sys.path，以便导入 task_execution_logger
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "Notes" / "snippets"))
+
+try:
+    from task_execution_logger import (
+        TaskExecutionLogger,
+        TaskStage,
+        LogLevel,
+        TaskArtifact,
+        create_logger
+    )
+    TASK_LOGGER_AVAILABLE = True
+except ImportError:
+    TASK_LOGGER_AVAILABLE = False
+
 # 配置路径
 REPO_ROOT = Path("/root/.openclaw/workspace/CS-Notes")
 PLANS_DIR = REPO_ROOT / ".trae/plans"
+
+# 初始化任务日志系统
+task_logger = None
+if TASK_LOGGER_AVAILABLE:
+    try:
+        task_logger = create_logger(REPO_ROOT)
+    except Exception as e:
+        print(f"⚠️ 初始化任务日志系统失败: {e}")
 
 class HybridExecutor:
     def __init__(self):
@@ -159,29 +182,83 @@ class HybridExecutor:
 
 def handle_execute():
     """处理混合执行命令"""
+    task_id = f"hybrid-executor-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    agent = "openclaw"
+    
+    # 记录任务开始
+    if TASK_LOGGER_AVAILABLE and task_logger:
+        try:
+            task_logger.start_task(task_id, agent=agent)
+            task_logger.log_info(
+                task_id,
+                TaskStage.PLANNING,
+                "开始执行 Plan",
+                {},
+                agent=agent
+            )
+        except Exception as e:
+            print(f"⚠️ 记录任务日志失败: {e}")
+    
     if len(sys.argv) < 3:
+        error_msg = "Missing plan id or title"
+        if TASK_LOGGER_AVAILABLE and task_logger:
+            try:
+                task_logger.fail_task(task_id, error_msg)
+            except Exception as e:
+                print(f"⚠️ 记录任务失败日志失败: {e}")
         print("Usage: python main.py execute <plan_id_or_title>")
-        return json.dumps({"success": False, "error": "Missing plan id or title"})
+        return json.dumps({"success": False, "error": error_msg})
     
     plan_id_or_title = sys.argv[2]
     
-    executor = HybridExecutor()
-    result = executor.execute_plan(plan_id_or_title)
-    
-    # 移除不能序列化的 datetime 对象
-    def remove_datetime(obj):
-        if isinstance(obj, dict):
-            return {k: remove_datetime(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [remove_datetime(v) for v in obj]
-        elif isinstance(obj, datetime):
-            return obj.isoformat()
-        else:
-            return obj
-    
-    result_serializable = remove_datetime(result)
-    
-    return json.dumps(result_serializable, ensure_ascii=False)
+    try:
+        if TASK_LOGGER_AVAILABLE and task_logger:
+            task_logger.log_info(
+                task_id,
+                TaskStage.EXECUTING,
+                "执行 Plan",
+                {"plan_id_or_title": plan_id_or_title},
+                agent=agent
+            )
+        
+        executor = HybridExecutor()
+        result = executor.execute_plan(plan_id_or_title)
+        
+        if TASK_LOGGER_AVAILABLE and task_logger:
+            if result.get("success"):
+                task_logger.log_success(
+                    task_id,
+                    TaskStage.COMPLETED,
+                    "Plan 执行成功",
+                    {"mode": result.get("mode")},
+                    agent=agent
+                )
+                task_logger.complete_task(task_id, agent=agent)
+            else:
+                task_logger.fail_task(task_id, result.get("error", "Unknown error"))
+        
+        # 移除不能序列化的 datetime 对象
+        def remove_datetime(obj):
+            if isinstance(obj, dict):
+                return {k: remove_datetime(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [remove_datetime(v) for v in obj]
+            elif isinstance(obj, datetime):
+                return obj.isoformat()
+            else:
+                return obj
+        
+        result_serializable = remove_datetime(result)
+        
+        return json.dumps(result_serializable, ensure_ascii=False)
+    except Exception as e:
+        error_msg = f"{type(e).__name__}: {e}"
+        if TASK_LOGGER_AVAILABLE and task_logger:
+            try:
+                task_logger.fail_task(task_id, error_msg)
+            except Exception as log_e:
+                print(f"⚠️ 记录任务失败日志失败: {log_e}")
+        return json.dumps({"success": False, "error": error_msg})
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "execute":

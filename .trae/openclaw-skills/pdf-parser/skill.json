@@ -1,0 +1,28 @@
+{
+  "name": "pdf-parser",
+  "version": "1.0.0",
+  "description": "PDF Parser Skill - 使用 PyMuPDF 解析 PDF 文件，支持解析为 Markdown、JSON、提取图片和表格",
+  "author": "OpenClaw",
+  "main": "main.py",
+  "commands": [
+    {
+      "name": "parse",
+      "description": "解析 PDF 文件",
+      "usage": "python main.py parse <pdf_path> [--format md|json|both] [--images] [--tables] [--lang en] [--outroot ./pdf-output]",
+      "example": "python main.py parse ./document.pdf --format both --images"
+    }
+  ],
+  "dependencies": [
+    "PyMuPDF"
+  ],
+  "tags": [
+    "pdf",
+    "parser",
+    "markdown",
+    "json",
+    "images",
+    "tables"
+  ],
+  "created_at": "2026-02-23",
+  "updated_at": "2026-02-23"
+}

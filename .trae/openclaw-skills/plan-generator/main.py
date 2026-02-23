@@ -12,6 +12,21 @@ import re
 from pathlib import Path
 from datetime import datetime
 
+# 添加 snippets 目录到 sys.path，以便导入 task_execution_logger
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "Notes" / "snippets"))
+
+try:
+    from task_execution_logger import (
+        TaskExecutionLogger,
+        TaskStage,
+        LogLevel,
+        TaskArtifact,
+        create_logger
+    )
+    TASK_LOGGER_AVAILABLE = True
+except ImportError:
+    TASK_LOGGER_AVAILABLE = False
+
 # 配置路径 - 支持多路径检测
 REPO_ROOT_CANDIDATES = [
     Path("/root/.openclaw/workspace/CS-Notes"),
@@ -29,6 +44,14 @@ if REPO_ROOT is None:
     REPO_ROOT = Path.cwd()
 
 PLANS_DIR = REPO_ROOT / ".trae/plans"
+
+# 初始化任务日志系统
+task_logger = None
+if TASK_LOGGER_AVAILABLE:
+    try:
+        task_logger = create_logger(REPO_ROOT)
+    except Exception as e:
+        print(f"⚠️ 初始化任务日志系统失败: {e}")
 
 class PlanGenerator:
     def __init__(self):
@@ -358,24 +381,76 @@ class PlanGenerator:
 
 def handle_generate():
     """处理生成 Plan 命令"""
+    task_id = f"plan-generator-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    agent = "openclaw"
+    
+    # 记录任务开始
+    if TASK_LOGGER_AVAILABLE and task_logger:
+        try:
+            task_logger.start_task(task_id, agent=agent)
+            task_logger.log_info(
+                task_id,
+                TaskStage.PLANNING,
+                "开始生成 Plan",
+                {},
+                agent=agent
+            )
+        except Exception as e:
+            print(f"⚠️ 记录任务日志失败: {e}")
+    
     if len(sys.argv) < 3:
+        error_msg = "Missing task description"
+        if TASK_LOGGER_AVAILABLE and task_logger:
+            try:
+                task_logger.fail_task(task_id, error_msg)
+            except Exception as e:
+                print(f"⚠️ 记录任务失败日志失败: {e}")
         print("Usage: python main.py generate <task_description> [priority] [todo_id]")
-        return json.dumps({"success": False, "error": "Missing task description"})
+        return json.dumps({"success": False, "error": error_msg})
     
     task_description = sys.argv[2]
     priority = sys.argv[3] if len(sys.argv) > 3 else "medium"
     todo_id = sys.argv[4] if len(sys.argv) > 4 else None
     
-    generator = PlanGenerator()
-    plan = generator.generate_plan(task_description, priority)
-    file_path = generator.write_plan_to_file(plan, todo_id)
-    
-    return json.dumps({
-        "success": True,
-        "plan": plan,
-        "file_path": str(file_path),
-        "message": f"Plan 已生成并写入 {file_path}"
-    })
+    try:
+        generator = PlanGenerator()
+        
+        if TASK_LOGGER_AVAILABLE and task_logger:
+            task_logger.log_info(
+                task_id,
+                TaskStage.EXECUTING,
+                "分析任务并生成 Plan",
+                {"task_description": task_description[:100], "priority": priority},
+                agent=agent
+            )
+        
+        plan = generator.generate_plan(task_description, priority)
+        file_path = generator.write_plan_to_file(plan, todo_id)
+        
+        if TASK_LOGGER_AVAILABLE and task_logger:
+            task_logger.log_info(
+                task_id,
+                TaskStage.VERIFYING,
+                "Plan 生成成功",
+                {"file_path": str(file_path), "plan_id": plan["id"]},
+                agent=agent
+            )
+            task_logger.complete_task(task_id, agent=agent)
+        
+        return json.dumps({
+            "success": True,
+            "plan": plan,
+            "file_path": str(file_path),
+            "message": f"Plan 已生成并写入 {file_path}"
+        })
+    except Exception as e:
+        error_msg = f"{type(e).__name__}: {e}"
+        if TASK_LOGGER_AVAILABLE and task_logger:
+            try:
+                task_logger.fail_task(task_id, error_msg)
+            except Exception as log_e:
+                print(f"⚠️ 记录任务失败日志失败: {log_e}")
+        return json.dumps({"success": False, "error": error_msg})
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "generate":

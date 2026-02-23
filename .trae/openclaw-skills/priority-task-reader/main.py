@@ -190,9 +190,20 @@ def main():
     
     # 使用默认配置
     if not config:
+        # 自动检测当前工作目录
+        current_dir = Path.cwd()
+        # 检查是否在 CS-Notes 目录中
+        if (current_dir / ".trae" / "todos" / "todos.json").exists():
+            workspace = current_dir
+        elif (current_dir / "CS-Notes" / ".trae" / "todos" / "todos.json").exists():
+            workspace = current_dir / "CS-Notes"
+        else:
+            # 尝试使用标准路径
+            workspace = Path("/root/.openclaw/workspace/CS-Notes")
+        
         config = {
-            "todos_json_path": "/Users/bytedance/CS-Notes/.trae/todos/todos.json",
-            "workspace": "/Users/bytedance/CS-Notes"
+            "todos_json_path": str(workspace / ".trae" / "todos" / "todos.json"),
+            "workspace": str(workspace)
         }
     
     # 创建读取器并运行
