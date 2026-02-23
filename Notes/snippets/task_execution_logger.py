@@ -60,6 +60,7 @@ class LogEntry:
     level: str
     stage: str
     message: str
+    agent: str = "unknown"
     details: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -67,6 +68,7 @@ class LogEntry:
 class TaskMetrics:
     """任务指标"""
     task_id: str
+    agent: str = "unknown"
     started_at: Optional[str] = None
     completed_at: Optional[str] = None
     execution_time_seconds: float = 0.0
@@ -125,7 +127,8 @@ class TaskExecutionLogger:
             f.write(log_line + "\n")
     
     def log(self, task_id: str, level: LogLevel, stage: TaskStage, 
-            message: str, details: Optional[Dict[str, Any]] = None):
+            message: str, details: Optional[Dict[str, Any]] = None,
+            agent: str = "unknown"):
         """记录日志"""
         entry = LogEntry(
             task_id=task_id,
@@ -133,34 +136,40 @@ class TaskExecutionLogger:
             level=level.value,
             stage=stage.value,
             message=message,
+            agent=agent,
             details=details or {}
         )
         self._log(entry)
     
     def log_debug(self, task_id: str, stage: TaskStage, message: str, 
-                  details: Optional[Dict[str, Any]] = None):
+                  details: Optional[Dict[str, Any]] = None,
+                  agent: str = "unknown"):
         """记录调试日志"""
-        self.log(task_id, LogLevel.DEBUG, stage, message, details)
+        self.log(task_id, LogLevel.DEBUG, stage, message, details, agent)
     
     def log_info(self, task_id: str, stage: TaskStage, message: str, 
-                 details: Optional[Dict[str, Any]] = None):
+                 details: Optional[Dict[str, Any]] = None,
+                 agent: str = "unknown"):
         """记录信息日志"""
-        self.log(task_id, LogLevel.INFO, stage, message, details)
+        self.log(task_id, LogLevel.INFO, stage, message, details, agent)
     
     def log_warn(self, task_id: str, stage: TaskStage, message: str, 
-                 details: Optional[Dict[str, Any]] = None):
+                 details: Optional[Dict[str, Any]] = None,
+                 agent: str = "unknown"):
         """记录警告日志"""
-        self.log(task_id, LogLevel.WARN, stage, message, details)
+        self.log(task_id, LogLevel.WARN, stage, message, details, agent)
     
     def log_error(self, task_id: str, stage: TaskStage, message: str, 
-                  details: Optional[Dict[str, Any]] = None):
+                  details: Optional[Dict[str, Any]] = None,
+                  agent: str = "unknown"):
         """记录错误日志"""
-        self.log(task_id, LogLevel.ERROR, stage, message, details)
+        self.log(task_id, LogLevel.ERROR, stage, message, details, agent)
     
     def log_success(self, task_id: str, stage: TaskStage, message: str, 
-                   details: Optional[Dict[str, Any]] = None):
+                   details: Optional[Dict[str, Any]] = None,
+                   agent: str = "unknown"):
         """记录成功日志"""
-        self.log(task_id, LogLevel.SUCCESS, stage, message, details)
+        self.log(task_id, LogLevel.SUCCESS, stage, message, details, agent)
     
     # ============================================
     # 任务指标管理
@@ -183,22 +192,25 @@ class TaskExecutionLogger:
         with open(self.metrics_file, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     
-    def start_task(self, task_id: str):
+    def start_task(self, task_id: str, agent: str = "unknown"):
         """开始任务"""
         if task_id not in self.metrics:
-            self.metrics[task_id] = TaskMetrics(task_id=task_id)
+            self.metrics[task_id] = TaskMetrics(task_id=task_id, agent=agent)
+        else:
+            self.metrics[task_id].agent = agent
         
         metrics = self.metrics[task_id]
         metrics.started_at = datetime.now().isoformat()
         metrics.status = TaskStatus.IN_PROGRESS.value
         self._save_metrics()
         
-        self.log_info(task_id, TaskStage.PLANNING, "任务开始执行")
+        self.log_info(task_id, TaskStage.PLANNING, "任务开始执行", agent=agent)
     
-    def complete_task(self, task_id: str):
+    def complete_task(self, task_id: str, agent: str = "unknown"):
         """完成任务"""
         if task_id in self.metrics:
             metrics = self.metrics[task_id]
+            metrics.agent = agent
             metrics.completed_at = datetime.now().isoformat()
             metrics.status = TaskStatus.COMPLETED.value
             
@@ -209,7 +221,7 @@ class TaskExecutionLogger:
             
             self._save_metrics()
         
-        self.log_success(task_id, TaskStage.COMPLETED, "任务完成")
+        self.log_success(task_id, TaskStage.COMPLETED, "任务完成", agent=agent)
     
     def fail_task(self, task_id: str, error_message: str):
         """任务失败"""
@@ -334,6 +346,33 @@ class TaskExecutionLogger:
         retry_count = sum(m.retry_count for m in self.metrics.values())
         retry_rate = (retry_count / total_tasks * 100) if total_tasks > 0 else 0
         
+        # 按 Agent 分组统计
+        agent_metrics = {}
+        for task_id, metrics in self.metrics.items():
+            agent = metrics.agent or 'unknown'
+            if agent not in agent_metrics:
+                agent_metrics[agent] = {
+                    'total_tasks': 0,
+                    'completed_tasks': 0,
+                    'failed_tasks': 0,
+                    'execution_times': []
+                }
+            
+            agent_metrics[agent]['total_tasks'] += 1
+            if metrics.status == TaskStatus.COMPLETED.value:
+                agent_metrics[agent]['completed_tasks'] += 1
+            if metrics.status == TaskStatus.FAILED.value:
+                agent_metrics[agent]['failed_tasks'] += 1
+            if metrics.execution_time_seconds > 0:
+                agent_metrics[agent]['execution_times'].append(metrics.execution_time_seconds)
+        
+        # 计算每个 agent 的详细指标
+        for agent in agent_metrics:
+            am = agent_metrics[agent]
+            am['completion_rate'] = round((am['completed_tasks'] / am['total_tasks'] * 100) if am['total_tasks'] > 0 else 0, 2)
+            am['avg_execution_time_seconds'] = round((sum(am['execution_times']) / len(am['execution_times']) if am['execution_times'] else 0), 2)
+            am['avg_execution_time_minutes'] = round(am['avg_execution_time_seconds'] / 60, 2)
+        
         return {
             "total_tasks": total_tasks,
             "completed_tasks": completed_tasks,
@@ -343,7 +382,8 @@ class TaskExecutionLogger:
             "failure_rate": round(failure_rate, 2),
             "retry_rate": round(retry_rate, 2),
             "avg_execution_time_seconds": round(avg_execution_time, 2),
-            "avg_execution_time_minutes": round(avg_execution_time / 60, 2)
+            "avg_execution_time_minutes": round(avg_execution_time / 60, 2),
+            "agent_metrics": agent_metrics
         }
     
     # ============================================

@@ -519,13 +519,15 @@ def update_task_status(task_id):
             # 记录任务状态变更日志
             if TASK_LOGGER_AVAILABLE and task_logger:
                 try:
+                    agent = 'trae'  # 默认使用 trae
                     if new_status == 'in-progress' and old_status != 'in-progress':
-                        task_logger.start_task(task_id)
+                        task_logger.start_task(task_id, agent=agent)
                         task_logger.log_info(
                             task_id,
                             TaskStage.PLANNING,
                             "任务开始执行",
-                            {"old_status": old_status}
+                            {"old_status": old_status},
+                            agent=agent
                         )
                     elif new_status == 'completed' and old_status != 'completed':
                         tasks[i]['completed_at'] = datetime.now().isoformat()
@@ -533,19 +535,21 @@ def update_task_status(task_id):
                         commit_result = run_git_command(['git', 'rev-parse', 'HEAD'])
                         if commit_result.get('success'):
                             tasks[i]['commit_hash'] = commit_result.get('stdout', '').strip()
-                        task_logger.complete_task(task_id)
+                        task_logger.complete_task(task_id, agent=agent)
                         task_logger.log_success(
                             task_id,
                             TaskStage.COMPLETED,
                             "任务完成",
-                            {"commit_hash": tasks[i].get('commit_hash', '')}
+                            {"commit_hash": tasks[i].get('commit_hash', '')},
+                            agent=agent
                         )
                     elif new_status == 'pending' and old_status != 'pending':
                         task_logger.log_info(
                             task_id,
                             TaskStage.PENDING,
                             "任务回到待办",
-                            {"old_status": old_status}
+                            {"old_status": old_status},
+                            agent=agent
                         )
                 except Exception as e:
                     print(f"⚠️ 记录任务状态变更日志失败: {e}")
@@ -892,6 +896,141 @@ def get_task_execution_logs(task_id):
         "artifact": artifact,
         "total": len(logs)
     })
+
+
+@app.route('/api/execution-time-series', methods=['GET'])
+def get_execution_time_series():
+    """获取执行时间序列数据（用于图表）"""
+    if not TASK_LOGGER_AVAILABLE or not task_logger:
+        return jsonify({
+            "success": False,
+            "message": "任务执行日志系统不可用"
+        }), 503
+    
+    try:
+        # 获取所有历史日志文件
+        time_series_data = []
+        completed_tasks = []
+        
+        for log_file in task_logger.logs_dir.glob("task_execution_*.jsonl"):
+            try:
+                with open(log_file, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            log_entry = json.loads(line)
+                            time_series_data.append(log_entry)
+            except Exception as e:
+                print(f"Error reading {log_file}: {e}", file=sys.stderr)
+        
+        # 从 metrics 中获取已完成任务
+        for task_id, metrics in task_logger.metrics.items():
+            if (metrics.status == 'completed' and 
+                metrics.started_at and 
+                metrics.completed_at):
+                completed_tasks.append({
+                    'task_id': task_id,
+                    'agent': metrics.agent or 'unknown',
+                    'started_at': metrics.started_at,
+                    'completed_at': metrics.completed_at,
+                    'execution_time_seconds': metrics.execution_time_seconds,
+                    'execution_time_minutes': round(metrics.execution_time_seconds / 60, 2)
+                })
+        
+        # 按时间排序
+        completed_tasks.sort(key=lambda x: x['started_at'])
+        
+        # 生成时间序列数据点
+        chart_data = []
+        cumulative_tasks = 0
+        for task in completed_tasks:
+            cumulative_tasks += 1
+            chart_data.append({
+                'date': task['started_at'][:10],
+                'timestamp': task['started_at'],
+                'task_id': task['task_id'],
+                'agent': task['agent'],
+                'execution_time_minutes': task['execution_time_minutes'],
+                'execution_time_seconds': task['execution_time_seconds'],
+                'cumulative_tasks': cumulative_tasks
+            })
+        
+        # 按日期聚合
+        daily_aggregates = {}
+        for task in completed_tasks:
+            date = task['started_at'][:10]
+            if date not in daily_aggregates:
+                daily_aggregates[date] = {
+                    'date': date,
+                    'task_count': 0,
+                    'total_execution_minutes': 0,
+                    'avg_execution_minutes': 0,
+                    'max_execution_minutes': 0,
+                    'min_execution_minutes': float('inf')
+                }
+            
+            daily_aggregates[date]['task_count'] += 1
+            daily_aggregates[date]['total_execution_minutes'] += task['execution_time_minutes']
+            daily_aggregates[date]['max_execution_minutes'] = max(
+                daily_aggregates[date]['max_execution_minutes'],
+                task['execution_time_minutes']
+            )
+            daily_aggregates[date]['min_execution_minutes'] = min(
+                daily_aggregates[date]['min_execution_minutes'],
+                task['execution_time_minutes']
+            )
+        
+        # 计算每日平均值
+        for date, agg in daily_aggregates.items():
+            agg['avg_execution_minutes'] = round(
+                agg['total_execution_minutes'] / agg['task_count'],
+                2
+            )
+        
+        daily_data = sorted(daily_aggregates.values(), key=lambda x: x['date'])
+        
+        # 按 Agent 聚合
+        agent_aggregates = {}
+        for task in completed_tasks:
+            agent = task['agent']
+            if agent not in agent_aggregates:
+                agent_aggregates[agent] = {
+                    'agent': agent,
+                    'task_count': 0,
+                    'total_execution_minutes': 0,
+                    'avg_execution_minutes': 0,
+                    'execution_times': []
+                }
+            
+            agent_aggregates[agent]['task_count'] += 1
+            agent_aggregates[agent]['total_execution_minutes'] += task['execution_time_minutes']
+            agent_aggregates[agent]['execution_times'].append(task['execution_time_minutes'])
+        
+        # 计算每个 Agent 的平均值
+        for agent, agg in agent_aggregates.items():
+            agg['avg_execution_minutes'] = round(
+                agg['total_execution_minutes'] / agg['task_count'] if agg['task_count'] > 0 else 0,
+                2
+            )
+            if agg['execution_times']:
+                agg['max_execution_minutes'] = max(agg['execution_times'])
+                agg['min_execution_minutes'] = min(agg['execution_times'])
+            del agg['execution_times']
+        
+        agent_data = list(agent_aggregates.values())
+        
+        return jsonify({
+            "success": True,
+            "chart_data": chart_data,
+            "daily_data": daily_data,
+            "agent_data": agent_data,
+            "completed_tasks_count": len(completed_tasks)
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"获取时间序列数据失败: {e}"
+        }), 500
 
 # ============================================
 # 配置 API
