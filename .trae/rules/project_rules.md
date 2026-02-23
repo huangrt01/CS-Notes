@@ -32,6 +32,26 @@
   - priority-task-reader 保证只返回 pending 状态的任务
   - 拿到任务后第一时间标记为 in-progress
   - 新建 session 不会再次选择这个任务
+* **【强制】任务执行可观测闭环**：
+  - **所有任务执行必须使用 task_execution_logger**（`Notes/snippets/task_execution_logger.py`）
+  - 开始任务前：调用 `logger.start_task(task_id)`
+  - 执行中：记录关键步骤日志（`logger.log_info`、`logger.log_debug` 等）
+  - 完成任务：调用 `logger.complete_task(task_id)`
+  - 失败任务：调用 `logger.fail_task(task_id, error_message)`
+  - 沉淀产物：使用 `logger.save_artifact()` 保存执行摘要、产物链接等
+  - 这确保【执行日志】标签页和【执行指标】真正有数据
+  - 让 Trae 和 OpenClaw 都真正用起来这个系统
+* **Trae 与 OpenClaw 协同工作机制**：
+  - **Trae**：主要用于直接与用户交互的会话，处理复杂的任务规划和执行
+  - **OpenClaw**：独立的 AI 助手系统，有自己的记忆（`.openclaw-memory/`）和规则（`.openclaw-memory/AGENTS.md`），主要用于自主推进 todo
+  - **共享资源**：两者共享同一个工作空间，包括 todos.json、task_execution_logger 等
+  - **统一数据源**：都使用 `.trae/todos/todos.json` 作为任务数据源
+  - **统一日志系统**：都使用 `Notes/snippets/task_execution_logger.py` 记录执行日志和指标
+  - **避免冲突**：priority-task-reader 保证只返回 pending 状态的任务，拿到任务后第一时间标记为 in-progress
+* **OpenClaw 的核心价值**：
+  - 可以在后台自主推进任务，不阻塞用户与 Trae 的交互
+  - 有自己的心跳机制，可以定期检查和推进任务
+  - 有自己的快捷指令（如"推进todo"、"沉淀"等）
 
 ## AI 助手工作流
 * **用户消息优先原则**：无论 AI 正在执行什么任务，收到用户的新消息时必须**立即回复**，不能让任务阻塞对话

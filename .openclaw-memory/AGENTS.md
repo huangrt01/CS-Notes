@@ -303,6 +303,18 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 4. **小步快跑**：把大任务拆成多个小阶段，每个阶段都有明确的产出
 5. **快速迭代**：优先实现可用的最小版本，后续再逐步完善
 
+### 【强制】任务执行可观测闭环
+
+**所有任务执行必须使用 task_execution_logger**（`Notes/snippets/task_execution_logger.py`）：
+
+1. **开始任务前**：调用 `logger.start_task(task_id)`
+2. **执行中**：记录关键步骤日志（`logger.log_info`、`logger.log_debug` 等）
+3. **完成任务**：调用 `logger.complete_task(task_id)`
+4. **失败任务**：调用 `logger.fail_task(task_id, error_message)`
+5. **沉淀产物**：使用 `logger.save_artifact()` 保存执行摘要、产物链接等
+
+这确保【执行日志】标签页和【执行指标】真正有数据，让 Trae 和 OpenClaw 都真正用起来这个系统。
+
 ---
 
 ## Make It Yours
