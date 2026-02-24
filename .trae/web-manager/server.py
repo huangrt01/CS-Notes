@@ -217,11 +217,9 @@ def load_todos_from_json(file_path):
         return json.loads(content)
     except Exception as e:
         print(f"Error loading JSON file: {e}")
-        return {
-            "version": "1.0.0",
-            "updated_at": datetime.now().isoformat(),
-            "todos": []
-        }
+        # ⚠️ 重要：不要返回空的todos列表！这会导致todos.json被清空！
+        # 直接抛出异常，让调用者处理
+        raise
 
 def save_todos_to_json(data, file_path):
     """保存任务到 JSON 文件"""
