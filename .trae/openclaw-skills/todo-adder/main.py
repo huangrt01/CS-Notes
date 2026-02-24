@@ -76,9 +76,6 @@ def main():
     priority = sys.argv[2] if len(sys.argv) > 2 else "P2"
     assignee = sys.argv[3] if len(sys.argv) > 3 else "ai"
     
-    # 收集links（第4个参数及之后的都是links）
-    links = sys.argv[4:] if len(sys.argv) > 4 else []
-    
     todo_data = {
         "title": title,
         "status": "pending",
@@ -86,13 +83,9 @@ def main():
         "assignee": assignee,
         "feedback_required": False,
         "created_at": datetime.now().isoformat(),
-        "links": links,
+        "links": [],
         "definition_of_done": [],
-        "user_requirements": [title],
-        "progress": "",
-        "started_at": "",
-        "completed_at": "",
-        "commit_hash": ""
+        "progress": ""
     }
     
     print(f"\n📋 创建todo:")
