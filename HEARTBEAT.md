@@ -12,18 +12,11 @@ HEARTBEAT_INTERVAL_MINUTES = 60  # 调整为 1 小时一次
 
 ## 整体思考
 
-### Heartbeat 任务简化
-
-**用户反馈**：
-- health check 可以精简一点点
-- 不用一定要推进 todo
-- 调整为一小时一次
-- 只需分析跟列举当前的 todos 的一些重要性之类的
+### Heartbeat 任务
 
 **调整后的 Heartbeat 任务**：
 1. **Session 状态检查**：检查 session 状态，提醒切换
 2. **Todo 状态分析**：分析当前 todos 的重要性，列举给用户
-3. **不主动推进 todo**：只分析和列举，不主动执行
 
 ---
 
@@ -58,8 +51,4 @@ HEARTBEAT_INTERVAL_MINUTES = 60  # 调整为 1 小时一次
    - 🔥 高优先级 in-progress 的 AI 任务
    - ⏸️ 待执行的高优先级 AI 任务
    - ✅ 最近完成的任务
-
-**重要经验**：
-- 只分析和列举，不主动执行 todo
-- 让用户了解当前 todo 状态
 
