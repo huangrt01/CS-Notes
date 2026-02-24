@@ -13,12 +13,17 @@ LOG_DIR="$REPO_ROOT/.trae/logs"
 LOG_FILE="$LOG_DIR/todo-push-commit-$(date +%Y%m%d).log"
 DEFAULT_BRANCH="master"
 
-# Git add 白名单：仅允许这四个文件夹
+# Git add 白名单：仅允许这些文件夹和文件
 ALLOWED_FOLDERS=(
     "Notes/"
     ".trae/"
     "创作/"
     ".openclaw-memory/"
+)
+
+# Git add 白名单文件：仅允许仓库根目录下的这些文件
+ALLOWED_FILES=(
+    "HEARTBEAT.md"
 )
 
 # Git add 黑名单：绝对禁止的文件夹
@@ -63,7 +68,20 @@ is_file_allowed() {
         fi
     done
     
-    # 检查是否在白名单中
+    # 检查是否在白名单文件中（仓库根目录下的特定文件）
+    for allowed_file in "${ALLOWED_FILES[@]}"; do
+        if [[ "$file" == "$allowed_file" ]]; then
+            # 检查是否需要排除
+            for exclude in "${EXCLUDE_PATTERNS[@]}"; do
+                if [[ "$file" == *"$exclude"* ]]; then
+                    return 1
+                fi
+            done
+            return 0
+        fi
+    done
+    
+    # 检查是否在白名单文件夹中
     local in_allowed=0
     for allowed in "${ALLOWED_FOLDERS[@]}"; do
         if [[ "$file" == "$allowed"* ]]; then
