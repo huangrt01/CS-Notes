@@ -3,6 +3,97 @@
   "updated_at": "2026-02-23T17:05:37.839445",
   "todos": [
     {
+      "id": "todo-20260224-005",
+      "title": "精炼整理Everything Claude Code仓库内容",
+      "status": "completed",
+      "priority": "P2",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-24T20:00:00.000000",
+      "started_at": "2026-02-24T20:05:00.000000",
+      "completed_at": "2026-02-24T20:20:00.000000",
+      "links": [
+        "https://github.com/affaan-m/everything-claude-code"
+      ],
+      "definition_of_done": [
+        "git clone仓库",
+        "阅读仓库内容（README.md、README.zh-CN.md、the-shortform-guide.md等）",
+        "先使用markdown-toc skill查看文件结构，找到最合适的已有的笔记",
+        "在笔记库中广泛搜索，找到最合适的已有的笔记（AI-Agent-Product&PE.md）",
+        "找到最合适的section（Claude Code 硬核指南），而不是随便找个地方就放",
+        "将内容整合到合适的section中，而不是创建新文件",
+        "附上来源链接作为引用，用markdown格式标注链接",
+        "尽量精简语言，精炼整理笔记",
+        "格式上：减少不必要的加粗、尽量对齐原文件的格式"
+      ],
+      "user_requirements": [
+        "精炼整理 https://github.com/affaan-m/everything-claude-code",
+        "请git clone仓库，阅读仓库，基于对仓库的阅读帮我精炼整理笔记到笔记库的合适位置"
+      ],
+      "progress": "✅ 已完成！成功将everything-claude-code仓库的内容精炼整理到了AI-Agent-Product&PE.md的\"Claude Code 硬核指南\"section中！\n\n已完成的工作：\n1. ✅ git clone了everything-claude-code仓库（50K+ stars，Anthropic Hackathon Winner）\n2. ✅ 阅读了README.md、README.zh-CN.md、the-shortform-guide.md\n3. ✅ 先使用了markdown-toc skill查看AI-Agent-Product&PE.md的结构\n4. ✅ 找到了最合适的section：\"## AI编程\" -> \"### Claude Code 硬核指南\"\n5. ✅ 将内容整合到了合适的section中，没有创建新文件\n6. ✅ 附上了来源链接作为引用\n7. ✅ 尽量精简语言，精炼整理笔记\n\n整理的内容包括：\n- 核心概览（50K+ stars、6K+ forks等）\n- 五大核心组件：Skills和Commands、Hooks、Subagents、Rules和Memory、MCPs\n- 六大核心主题：Token优化、内存持久化、持续学习、验证循环、并行化、子代理编排\n- Claude Code的设计理念\n\nGitHub Commit：\n- https://github.com/huangrt01/CS-Notes/commit/2b556b11f4c2f9940a4479b9dea25291993a0e36"
+    },
+    {
+      "id": "todo-20260224-004",
+      "title": "旧版本的todo-manager skill：要么删掉，要么兼容最新的todo web manager的架构设计和体系，调研并做出最优决策并执行",
+      "status": "completed",
+      "priority": "P2",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-24T11:55:00.000000",
+      "started_at": "2026-02-24T20:00:00.000000",
+      "completed_at": "2026-02-24T20:15:00.000000",
+      "links": [
+        "`Notes/snippets/todo-manager.py`",
+        "`.trae/web-manager/`",
+        "`.trae/todos/todos.json`"
+      ],
+      "definition_of_done": [
+        "调研旧版本的todo-manager skill的功能和现状",
+        "调研最新的todo web manager的架构设计和体系",
+        "对比分析两者的差异",
+        "做出最优决策：要么删掉旧版本，要么兼容最新架构",
+        "执行决策"
+      ],
+      "user_requirements": [
+        "增加一个todo：旧版本的todo-manager skill，要么删掉，要么兼容最新的todo web managet的架构设计和体系，调研并做出最优决策并执行"
+      ],
+      "progress": "✅ 已完成！成功删除了旧版本的todo-manager.py！\n\n已完成的工作：\n1. ✅ 调研了旧版本的todo-manager.py的功能和现状：它是一个从INBOX.md搬运任务到todos管理系统.md的工具，使用的是旧的Markdown格式的todo系统\n2. ✅ 调研了最新的todo web manager的架构设计和体系：使用Todos Web Manager，使用todos.json作为数据源，有完整的Web界面来添加、编辑、管理todo\n3. ✅ 对比分析了两者的差异\n4. ✅ 做出了最优决策：删掉旧版本（因为我们已经有了更先进的Todos Web Manager系统）\n5. ✅ 执行了决策：删除了todo-manager.py并提交到GitHub\n\nGitHub Commit：\n- https://github.com/huangrt01/CS-Notes/commit/630e31c543e51331a9a7a8c3651f0d092a333e1"
+    },
+    {
+      "id": "todo-20260224-003",
+      "title": "精炼整理Meta最新研究paper：让AI真正读懂你的心",
+      "status": "pending",
+      "priority": "P0",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-24T11:45:00.000000",
+      "links": [
+        "http://xhslink.com/o/6la6P9x5WsL"
+      ],
+      "definition_of_done": [
+        "等联网搜索具备之后，联网搜索找到对应的arxiv论文",
+        "下载并阅读完整的arxiv论文",
+        "先使用markdown-toc skill查看文件结构，找到最合适的已有的笔记",
+        "先在笔记库中广泛搜索，找到最合适的已有的笔记（ai-applied-algorithm.md）",
+        "找到最合适的 section，而不是随便找个地方就放",
+        "将内容整合到合适的 section 中，而不是创建新文件",
+        "附上来源链接作为引用，用 markdown 格式标注链接",
+        "尽量精简语言，精炼整理笔记",
+        "格式上：减少不必要的加粗、尽量对齐原文件的格式",
+        "引用原则：所有从外部材料（文章、网页、视频等）整理的内容，必须在相关章节开头或内容旁边附上来源链接作为引用，用 markdown 格式标注链接",
+        "限制：请不要删除原笔记中的内容，只允许进行整合，不能丢失信息"
+      ],
+      "user_requirements": [
+        "精炼整理这篇paper，感觉属于ai-applied-algorithm.md",
+        "不行，你得读完整paper，光读文章不行，你等联网搜索具备之后再整理它吧",
+        "请结合笔记库整理paper的风格整理"
+      ],
+      "progress": "⏸️ 待执行，等联网搜索具备之后再读完整paper并整理",
+      "dependencies": [
+        "联网搜索能力 ready"
+      ]
+    },
+    {
       "id": "todo-20260224-002",
       "title": "确保每次/new或/reset都会自动重置session-optimizer",
       "status": "completed",
