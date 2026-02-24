@@ -1,0 +1,8 @@
+{
+  "name": "todo-adder",
+  "version": "1.0.0",
+  "description": "使用Todos Web Manager的API来添加todo，避免直接编辑todos.json导致的语法错误",
+  "author": "OpenClaw",
+  "entry": "main.py",
+  "tags": ["todo", "todos", "web-manager", "api"]
+}
