@@ -3813,12 +3813,68 @@ Ralph Loop 是让 AI 持续工作的循环机制。
 
 #### Claude Code 硬核指南
 
-> Todo
+> 来源：https://github.com/affaan-m/everything-claude-code（Anthropic Hackathon Winner）
+> 小红书文章：https://www.xiaohongshu.com/explore/69086a080000000005001e09
 
-https://www.xiaohongshu.com/explore/69086a080000000005001e09?app_platform=ios&app_version=8.86&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBV9m5rsWMZUsvRmaUopCNZSTk31ryR3K7h4M5ptuLpFk=&author_share=1&xhsshare=CopyLink&shareRedId=N0lEN0Y6Rk82NzUyOTgwNjc5OTg2NUpP&apptime=1762178692&share_id=29bf67b408a34a529dee9f5c6cfe76df
+**核心概览**
 
+* **50K+ stars** | **6K+ forks** | **30 contributors** | **6 languages supported**
+* 生产级代理、技能、钩子、命令、规则和MCP配置，经过10+个月构建真实产品的密集日常使用而演化
+
+**核心组件**
+
+1. **Skills 和 Commands**
+   * Skills：`~/.claude/skills/` - 更广泛的工作流定义
+   * Commands：`~/.claude/commands/` - 快速可执行的提示（通过斜杠命令执行）
+   * 示例：`/refactor-clean`（清理死代码）、`/tdd`、`/e2e`、`/test-coverage`
+
+2. **Hooks（触发式自动化）**
+   * 基于特定事件触发的自动化
+   * **Hook类型：**
+     - PreToolUse：工具执行前（验证、提醒）
+     - PostToolUse：工具完成后（格式化、反馈循环）
+     - UserPromptSubmit：发送消息时
+     - Stop：Claude完成响应时
+     - PreCompact：上下文压缩前
+     - Notification：权限请求
+   * 示例：长时间运行命令前的tmux提醒
+
+3. **Subagents（子代理）**
+   * 主Claude可以委派任务给有限范围的子代理
+   * 可以在后台或前台运行，为主代理释放上下文
+   * 示例：planner.md（功能实现规划）、architect.md（系统设计决策）、tdd-guide.md（测试驱动开发）、code-reviewer.md（质量/安全审查）
+
+4. **Rules 和 Memory**
+   * `.rules` 文件夹包含Claude应始终遵循的最佳实践
+   * 两种方式：
+     - 单个CLAUDE.md：所有内容在一个文件中（用户或项目级别）
+     - Rules文件夹：按关注点分组的模块化.md文件
+   * 示例：security.md（无硬编码密钥、验证输入）、coding-style.md（不变性、文件组织）、testing.md（TDD工作流、80%覆盖率）
+
+5. **MCPs（模型上下文协议）**
+   * 直接连接Claude到外部服务
+   * 不是API的替代品 - 而是围绕它们的提示驱动包装器
+   * **关键：上下文窗口管理**
+     - 对MCPs要挑剔
+     - 在用户配置中保留所有MCPs，但**禁用所有未使用的**
+     - 经验法则：配置中有20-30个MCPs，但保持启用的少于10个/活动工具少于80个
+
+**六大核心主题**
+
+| 主题 | 内容 |
+|-------|------|
+| Token优化 | 模型选择、系统提示精简、后台进程 |
+| 内存持久化 | 自动跨会话保存/加载上下文的钩子 |
+| 持续学习 | 从会话中自动提取模式到可重用的技能 |
+| 验证循环 | 检查点 vs 持续评估、评分器类型、pass@k指标 |
+| 并行化 | Git worktrees、级联方法、何时扩展实例 |
+| 子代理编排 | 上下文问题、迭代检索模式 |
+
+**Claude Code的设计理念**
+
+* Claude Code的同学提到过，他们不会对代码库做Embedding或索引，而是直接提供工具，用工具来做代码搜索
 * Skills自动激活系统：让Claude真正用上你写的技能文档
-* Dev Docs工作流：防止Claude失去上下文,忘记自己在干什么
+* Dev Docs工作流：防止Claude失去上下文，忘记自己在干什么
 * PM2+Hooks零错误机制：不让任何TypeScript错误溜走
 * 专业化Agents军团：代码审查、调试、规划全自动化
 
