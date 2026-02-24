@@ -85,7 +85,11 @@ def main():
         "created_at": datetime.now().isoformat(),
         "links": [],
         "definition_of_done": [],
-        "progress": ""
+        "user_requirements": [title],
+        "progress": "",
+        "started_at": "",
+        "completed_at": "",
+        "commit_hash": ""
     }
     
     print(f"\n📋 创建todo:")
