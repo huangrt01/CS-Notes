@@ -75,6 +75,10 @@
   - **.gitignore 配置**：确保 `**/公司项目/**` 在 .gitignore 中（已有配置）
   - **公司项目/ 目录规则**：该目录下的所有内容永远不要 git add 到公开仓库
   - 每次进行 git commit 并 push 后，必须在回复中包含对应的 GitHub commit 链接
+  - **【强制】每次push代码之前，必须阅读commit的diff，确保其变更符合预期！**：
+    - 在运行 todo-push.sh 生成变更摘要后，必须仔细阅读 git-diff-summary-*.md 文件
+    - 确认变更符合预期后，才能继续运行 todo-push-commit.sh
+    - 绝对不允许在不阅读diff的情况下就commit和push！
 
 ## 目录与落盘约定
 * `.trae/`：Trae 运行所需的规则、上下文文档、技能配置，服务"自动化执行"
