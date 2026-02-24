@@ -188,6 +188,17 @@
         *   **Stage 2: 粗略评分**: 使用解压后的近似向量计算 MaxSim，进一步过滤。
         *   **Stage 3: 精细重排**: 对极少数顶层候选文档，加载原始高精度向量进行最终打分。
 
+*   **LightRetriever (ICLR 2026)**:
+    *   **核心思想**: doc侧用完整LLM，query侧做了精简，实现轻量级的双塔检索。
+    *   **Dense检索 (Dense Retrieval)**:
+        1.  **Query侧**: query的每个token分别和prompt的tokens拼一起，得到n个token序列，各自过LLM，再avg pooling得到query向量去检索。
+        2.  **Serving优化**: serving的时候可以把prompt x 词表过完LLM的emb缓存起来，直接查表。
+    *   **Sparse检索 (Sparse Retrieval)**:
+        1.  **Query侧**: 没有prompt了，将query的每个token直接映射成词频。
+        2.  **Doc侧**: doc过完llm后的emb也映射到词表大小，然后去做对比学习。
+        3.  **Serving优化**: serving时建的是倒排索引，即key是词，value是一个doc的list，按词频之类的倒排，query也直接用词频向量表示，query每个词去查倒排对应的doc list，再merge起来。
+    *   **来源**: [LightRetriever: A LLM-based Text Retrieval Architecture with Extremely Faster Query Inference](https://arxiv.org/abs/2505.12260)
+
 ### 难点
 
 #### 企业内部数据混乱
