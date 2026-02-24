@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-25T05:35:49.630747",
+  "updated_at": "2026-02-25T07:15:07.008446",
   "todos": [
     {
       "id": "todo-20260224-005",
@@ -1561,6 +1561,90 @@
       "started_at": "2026-02-25T03:05:00.000000",
       "completed_at": "2026-02-25T03:20:00.000000",
       "commit_hash": ""
+    },
+    {
+      "id": "todo-20260225-005",
+      "title": "把 speech_to_text.py 做成一个 skill",
+      "status": "in-progress",
+      "priority": "P2",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-25T07:06:00.000000",
+      "started_at": "2026-02-25T07:06:00.000000",
+      "links": [
+        "Notes/snippets/speech_to_text.py",
+        ".trae/openclaw-skills/openai-whisper/"
+      ],
+      "definition_of_done": [
+        "创建 openai-whisper skill 的 SKILL.md",
+        "创建 openai-whisper skill 的 main.py",
+        "创建 openai-whisper skill 的 skill.json",
+        "集成 task_execution_logger",
+        "测试验证 skill 可以正常工作"
+      ],
+      "user_requirements": [
+        "语音输入增强优化这个方向集成 Whisper 我们已经做了呀",
+        "你可以看一下 snippets 里面有一个 speech to text 的脚本",
+        "但是呢你可以是不是把那个做成一个 skill"
+      ],
+      "progress": "✅ 已完成！已创建 openai-whisper skill！包含 SKILL.md、main.py、skill.json！已集成 task_execution_logger！"
+    },
+    {
+      "id": "todo-20260225-006",
+      "title": "调研 Todos Web Manager 的当前实现，提出更具体的改进方向",
+      "status": "in-progress",
+      "priority": "P3",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-25T07:10:00.000000",
+      "started_at": "2026-02-25T07:10:00.000000",
+      "links": [
+        ".trae/web-manager/server.py",
+        ".trae/web-manager/index-enhanced.html"
+      ],
+      "definition_of_done": [
+        "调研 Todos Web Manager 的当前实现（server.py 和 index-enhanced.html）",
+        "分析当前的用户体验痛点",
+        "提出更具体的改进方向",
+        "创建改进方案文档"
+      ],
+      "user_requirements": [
+        "P3优化Todos Web Manager的用户体验是可以加的",
+        "但可以更具体一点",
+        "你可以先调研一下当前的实现",
+        "然后有一些更具体的改进方向"
+      ],
+      "progress": "⏸️ 开始调研 Todos Web Manager 的当前实现..."
+    },
+    {
+      "id": "todo-20260225-007",
+      "title": "考虑如何将重要文档和最佳实践沉淀到 MEMORY.md 里，用索引的形式",
+      "status": "in-progress",
+      "priority": "P3",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-25T07:15:00.000000",
+      "started_at": "2026-02-25T07:15:00.000000",
+      "links": [
+        "MEMORY.md",
+        ".trae/documents/"
+      ],
+      "definition_of_done": [
+        "分析当前 MEMORY.md 的结构",
+        "考虑如何将重要文档和最佳实践沉淀到 MEMORY.md 里",
+        "考虑用索引的形式（比如一些路径指向之类的）",
+        "根据最佳实践来制定方案",
+        "创建方案文档"
+      ],
+      "user_requirements": [
+        "像这种情形是不是应该沉淀到MEMORY.md里",
+        "就是沉淀在MEMORY.md里的话",
+        "然后用索引的形式可能",
+        "比如说一些路径指向之类的",
+        "我也不清楚啊",
+        "今天根据最佳实践来做"
+      ],
+      "progress": "⏸️ 开始考虑如何将重要文档和最佳实践沉淀到 MEMORY.md 里..."
     }
   ]
 }
