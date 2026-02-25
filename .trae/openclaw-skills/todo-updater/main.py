@@ -44,12 +44,16 @@ def update_task_via_api(task_id, update_data):
         return False
 
 
-def update_task_status_via_api(task_id, new_status, progress=None):
+def update_task_status_via_api(task_id, new_status, progress=None, commit_hash_before=None, commit_hash_after=None):
     """通过Todos Web Manager的API更新任务状态"""
     try:
         data = {"status": new_status}
         if progress:
             data["progress"] = progress
+        if commit_hash_before:
+            data["commit_hash_before"] = commit_hash_before
+        if commit_hash_after:
+            data["commit_hash_after"] = commit_hash_after
         
         response = requests.put(
             f"{WEB_MANAGER_URL}/api/tasks/{task_id}/status",
@@ -86,10 +90,11 @@ def main():
     # 检查参数
     if len(sys.argv) < 3:
         print("\n使用方法:")
-        print("  python3 main.py <task_id> <new_status> [progress]")
+        print("  python3 main.py <task_id> <new_status> [progress] [commit_hash_before] [commit_hash_after]")
         print("\n示例:")
         print("  python3 main.py todo-20260225-008 completed \"✅ 已完成！\"")
         print("  python3 main.py todo-20260225-008 in-progress")
+        print("  python3 main.py todo-20260225-008 completed \"✅ 已完成！\" <commit_hash_before> <commit_hash_after>")
         print("\n或者从stdin读取JSON:")
         print("  cat update.json | python3 main.py <task_id>")
         return
@@ -109,14 +114,20 @@ def main():
     task_id = sys.argv[1]
     new_status = sys.argv[2]
     progress = sys.argv[3] if len(sys.argv) > 3 else None
+    commit_hash_before = sys.argv[4] if len(sys.argv) > 4 else None
+    commit_hash_after = sys.argv[5] if len(sys.argv) > 5 else None
     
     print(f"\n📋 更新todo状态:")
     print(f"   ID: {task_id}")
     print(f"   新状态: {new_status}")
     if progress:
         print(f"   进度: {progress[:100]}...")
+    if commit_hash_before:
+        print(f"   Commit Hash Before: {commit_hash_before}")
+    if commit_hash_after:
+        print(f"   Commit Hash After: {commit_hash_after}")
     
-    update_task_status_via_api(task_id, new_status, progress)
+    update_task_status_via_api(task_id, new_status, progress, commit_hash_before, commit_hash_after)
 
 
 if __name__ == "__main__":
