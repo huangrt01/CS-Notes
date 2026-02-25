@@ -115,7 +115,7 @@ HEARTBEAT_INTERVAL_MINUTES = 30
 **触发条件**：每次心跳时检查
 
 **执行逻辑**：
-1. 运行 `python3 session-optimizer.py check` 检查 session 状态
+1. 使用 session-optimizer skill 检查 session 状态
 2. 如果发现需要切换 session，提醒用户
 3. 记录检查结果到状态文件
 
