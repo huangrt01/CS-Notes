@@ -1,7 +1,48 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-25T21:04:30.577927",
+  "updated_at": "2026-02-25T21:56:04.098920",
   "todos": [
+    {
+      "id": "todo-20260225-015",
+      "title": "将https://github.com/bytedance/agentkit-samples中的skills加入到本仓库的skills中（注意要一个个检查并去掉重复的）",
+      "status": "pending",
+      "priority": "P2",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-25T21:56:04.098898",
+      "links": [
+        "https://github.com/bytedance/agentkit-samples"
+      ],
+      "definition_of_done": [
+        "访问https://github.com/bytedance/agentkit-samples，查看其中的skills",
+        "将这些skills加入到本仓库的skills中",
+        "注意要一个个检查并去掉重复的skills",
+        "确保skills的完整性和可用性"
+      ],
+      "user_requirements": [
+        "加一个todo：将https://github.com/bytedance/agentkit-samples中的skills加入到本仓库的skills中（注意要一个个检查并去掉重复的）"
+      ],
+      "progress": "⏸️ 待执行"
+    },
+    {
+      "id": "todo-20260225-016",
+      "title": "配置gh并配置github的搜索能力",
+      "status": "pending",
+      "priority": "P2",
+      "assignee": "user",
+      "feedback_required": false,
+      "created_at": "2026-02-25T21:56:04.098916",
+      "links": [],
+      "definition_of_done": [
+        "配置gh CLI工具",
+        "配置github的搜索能力",
+        "测试github搜索能力是否正常工作"
+      ],
+      "user_requirements": [
+        "加一个assign给user的todo：配置gh并配置github的搜索能力"
+      ],
+      "progress": "⏸️ 待执行"
+    },
     {
       "id": "todo-20260225-014",
       "title": "创建todo-updater skill，使用web api接口来更新todo状态",
