@@ -79,6 +79,10 @@
     - 在运行 todo-push.sh 生成变更摘要后，必须仔细阅读 git-diff-summary-*.md 文件
     - 确认变更符合预期后，才能继续运行 todo-push-commit.sh
     - 绝对不允许在不阅读diff的情况下就commit和push！
+  - **【强制】禁止 AI 自动进行 --force 的 git 操作**：
+    - 绝对禁止 `git push --force`、`git push -f`、`git rebase --force` 等任何 --force 操作
+    - 如果遇到需要强制操作的情况，必须先询问用户，由用户手动执行
+    - 任何 --force 操作都可能导致数据丢失，风险极高
 
 ## 目录与落盘约定
 * `.trae/`：Trae 运行所需的规则、上下文文档、技能配置，服务"自动化执行"

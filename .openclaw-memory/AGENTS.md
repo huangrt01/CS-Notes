@@ -341,6 +341,12 @@ git merge --abort              # 取消 merge
 Notes/snippets/git-sync.sh auto # 智能脚本
 ```
 
+### 【强制】禁止 --force 操作
+
+- **绝对禁止**：`git push --force`、`git push -f`、`git rebase --force` 等任何 --force 操作
+- 如果遇到需要强制操作的情况，必须先询问用户，由用户手动执行
+- 任何 --force 操作都可能导致数据丢失，风险极高
+
 ---
 
 ## Make It Yours
