@@ -691,6 +691,10 @@ POST   /api/git/pull           - 从远程仓库拉取
             font-family: inherit;
             resize: vertical;
             min-height: 60px;
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
         }
         
         .review-input:focus {
@@ -1137,6 +1141,18 @@ POST   /api/git/pull           - 从远程仓库拉取
         
         async function init() {
             await loadTasks();
+            setupKeyboardShortcuts();
+        }
+        
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+                    const activeElement = document.activeElement;
+                    if (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT') {
+                        activeElement.select();
+                    }
+                }
+            });
         }
         
         async function loadTasks() {
