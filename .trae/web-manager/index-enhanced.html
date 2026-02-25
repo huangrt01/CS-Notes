@@ -787,10 +787,83 @@ POST   /api/git/pull           - 从远程仓库拉取
         }
         
         .chart-wrapper {
-            position: relative;
-            height: 300px;
+                position: relative;
+                height: 300px;
+            }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
-    </style>
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .modal h3 {
+            margin-bottom: 16px;
+            color: #333;
+        }
+        
+        .modal .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .modal label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .modal textarea,
+        .modal input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        .modal textarea:focus,
+        .modal input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .modal textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+        </style>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -799,6 +872,50 @@ POST   /api/git/pull           - 从远程仓库拉取
         <div class="header">
             <h1>📝 CS-Notes Todos</h1>
             <p>任务管理系统</p>
+        </div>
+        
+        <!-- 更新进度模态对话框 -->
+        <div class="modal-overlay" id="updateProgressModal">
+            <div class="modal">
+                <h3>📝 更新进度</h3>
+                <div class="form-group">
+                    <label>当前进度</label>
+                    <textarea id="updateProgressContent" placeholder="记录当前进展..."></textarea>
+                </div>
+                <div class="form-group" style="display: flex; gap: 8px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="appendProgress" checked>
+                        追加到现有进度
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeUpdateProgressModal()">取消</button>
+                    <button class="btn-warning" onclick="submitUpdateProgress()">📝 更新进度</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 完成任务模态对话框 -->
+        <div class="modal-overlay" id="completeTaskModal">
+            <div class="modal">
+                <h3>✅ 标记任务完成</h3>
+                <div class="form-group">
+                    <label>执行结论（Progress）</label>
+                    <textarea id="completeProgress" placeholder="描述你做了什么、取得了什么成果、遇到了什么问题等..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>完成总结（可选）</label>
+                    <textarea id="completeSummary" placeholder="简短的完成总结..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>产物链接（可选，用逗号分隔）</label>
+                    <input type="text" id="completeLinks" placeholder="例如：Notes/xxx.md, .trae/documents/yyy.md">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeCompleteModal()">取消</button>
+                    <button class="btn-success" onclick="submitCompleteTask()">✅ 确认完成</button>
+                </div>
+            </div>
         </div>
         
         <div class="tabs">
@@ -1013,6 +1130,8 @@ POST   /api/git/pull           - 从远程仓库拉取
         let isLoading = false;
         let isArchive = false;
         let expandedTasks = new Set();
+        let currentTaskToComplete = null;
+        let currentTaskToUpdateProgress = null;
         
         const API_BASE = '/api';
         
@@ -1954,7 +2073,9 @@ POST   /api/git/pull           - 从远程仓库拉取
                             ${task.status !== 'in-progress' && task.status !== 'completed' ? 
                                 `<button class="btn-warning" onclick="updateTaskStatus('${taskId}', 'in-progress')">🚀 开始</button>` : ''}
                             ${task.status !== 'completed' ? 
-                                `<button class="btn-success" onclick="updateTaskStatus('${taskId}', 'completed')">✅ 完成</button>` : ''}
+                                `<button class="btn-secondary" onclick="openUpdateProgressModal('${taskId}')">📝 更新进度</button>` : ''}
+                            ${task.status !== 'completed' ? 
+                                `<button class="btn-success" onclick="openCompleteModal('${taskId}')">✅ 完成</button>` : ''}
                             ${task.status === 'in-progress' || task.status === 'completed'? 
                                 `<button class="btn-secondary" onclick="updateTaskStatus('${taskId}', 'pending')">⏸️ 重置</button>` : ''}
                         </div>
@@ -2227,17 +2348,133 @@ POST   /api/git/pull           - 从远程仓库拉取
             }
         }
         
-        async function updateTaskStatus(taskId, newStatus) {
+        function openUpdateProgressModal(taskId) {
+            currentTaskToUpdateProgress = taskId;
+            const modal = document.getElementById('updateProgressModal');
+            
+            // 预填充当前的 progress
+            const task = tasks.find(t => t.id === taskId);
+            if (task && task.progress) {
+                document.getElementById('updateProgressContent').value = '';
+            } else {
+                document.getElementById('updateProgressContent').value = '';
+            }
+            document.getElementById('appendProgress').checked = true;
+            
+            modal.classList.add('active');
+        }
+        
+        function closeUpdateProgressModal() {
+            currentTaskToUpdateProgress = null;
+            document.getElementById('updateProgressModal').classList.remove('active');
+        }
+        
+        async function submitUpdateProgress() {
+            if (!currentTaskToUpdateProgress) return;
+            
+            const newProgress = document.getElementById('updateProgressContent').value.trim();
+            const shouldAppend = document.getElementById('appendProgress').checked;
+            
+            if (!newProgress) {
+                showError('请输入进度内容');
+                return;
+            }
+            
+            // 获取当前任务
+            const task = tasks.find(t => t.id === currentTaskToUpdateProgress);
+            let finalProgress = newProgress;
+            
+            if (shouldAppend && task && task.progress) {
+                // 追加到现有进度
+                finalProgress = task.progress + '\n\n' + newProgress;
+            }
+            
             try {
-                updateStatus('🔄 正在更新任务...');
-                const response = await fetch(`${API_BASE}/tasks/${encodeURIComponent(taskId)}/status`, {
+                updateStatus('🔄 正在更新进度...');
+                const response = await fetch(`${API_BASE}/tasks/${encodeURIComponent(currentTaskToUpdateProgress)}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        status: newStatus
+                        progress: finalProgress
                     })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    await loadTasks();
+                    updateStatus('✅ 进度已更新');
+                    closeUpdateProgressModal();
+                } else {
+                    throw new Error(data.message || '更新失败');
+                }
+            } catch (error) {
+                console.error('更新进度失败:', error);
+                showError(`❌ 更新进度失败: ${error.message}`);
+            }
+        }
+        
+        function openCompleteModal(taskId) {
+            currentTaskToComplete = taskId;
+            const modal = document.getElementById('completeTaskModal');
+            
+            // 预填充当前的 progress
+            const task = tasks.find(t => t.id === taskId);
+            if (task && task.progress) {
+                document.getElementById('completeProgress').value = task.progress;
+            } else {
+                document.getElementById('completeProgress').value = '';
+            }
+            document.getElementById('completeSummary').value = '';
+            document.getElementById('completeLinks').value = '';
+            
+            modal.classList.add('active');
+        }
+        
+        function closeCompleteModal() {
+            currentTaskToComplete = null;
+            document.getElementById('completeTaskModal').classList.remove('active');
+        }
+        
+        async function submitCompleteTask() {
+            if (!currentTaskToComplete) return;
+            
+            const progress = document.getElementById('completeProgress').value.trim();
+            const completionSummary = document.getElementById('completeSummary').value.trim();
+            const linksInput = document.getElementById('completeLinks').value.trim();
+            
+            const productLinks = linksInput ? linksInput.split(',').map(link => link.trim()).filter(link => link) : [];
+            
+            const artifacts = productLinks.length > 0 ? { product_links: productLinks } : null;
+            
+            await updateTaskStatus(currentTaskToComplete, 'completed', progress, completionSummary, artifacts);
+            closeCompleteModal();
+        }
+        
+        async function updateTaskStatus(taskId, newStatus, progress = null, completionSummary = null, artifacts = null) {
+            try {
+                updateStatus('🔄 正在更新任务...');
+                
+                const body = {
+                    status: newStatus
+                };
+                
+                if (progress) body.progress = progress;
+                if (completionSummary) body.completion_summary = completionSummary;
+                if (artifacts) body.artifacts = artifacts;
+                
+                const response = await fetch(`${API_BASE}/tasks/${encodeURIComponent(taskId)}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
                 });
                 
                 if (!response.ok) {

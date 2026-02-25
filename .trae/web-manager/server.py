@@ -289,6 +289,12 @@ def get_archive_tasks():
             data = load_todos_from_json(archive_file)
             archive_tasks.extend(data.get("todos", []))
     
+    # 按归档时间倒序排列（最近的排前面）
+    archive_tasks.sort(
+        key=lambda x: x.get('archived_at', x.get('completed_at', x.get('created_at', ''))),
+        reverse=True
+    )
+    
     return jsonify({
         "success": True,
         "tasks": archive_tasks,
@@ -538,6 +544,9 @@ def update_task_status(task_id):
     """更新任务状态"""
     data = request.json
     new_status = data.get('status', 'pending')
+    progress = data.get('progress', None)
+    completion_summary = data.get('completion_summary', None)
+    artifacts = data.get('artifacts', None)
     
     # 加载现有数据
     todos_data = load_todos_from_json(TODOS_FILE)
@@ -549,6 +558,18 @@ def update_task_status(task_id):
         if task.get('id') == task_id:
             old_status = tasks[i].get('status')
             tasks[i]['status'] = new_status
+            
+            # 更新执行结论（progress 字段）
+            if progress:
+                tasks[i]['progress'] = progress
+            
+            # 更新完成总结（completion_summary 字段）
+            if completion_summary:
+                tasks[i]['completion_summary'] = completion_summary
+            
+            # 更新产物（artifacts 字段）
+            if artifacts:
+                tasks[i]['artifacts'] = artifacts
             
             # 记录任务状态变更日志
             if TASK_LOGGER_AVAILABLE and task_logger:
