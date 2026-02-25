@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-26T04:39:25.721495",
+  "updated_at": "2026-02-26T06:07:18.832359",
   "todos": [
     {
       "id": "todo-20260225-021",
@@ -1681,17 +1681,19 @@
     {
       "id": "todo-20260225-022",
       "title": "一进入 todo web manager，即进入\"待审核tasks\"的页面",
-      "status": "pending",
+      "status": "completed",
       "priority": "P2",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-25T23:42:33.539140",
       "links": [],
       "definition_of_done": [],
-      "progress": "",
+      "progress": "--progress",
       "started_at": "",
-      "completed_at": "",
-      "commit_hash": ""
+      "completed_at": "2026-02-26T06:07:18.830491",
+      "commit_hash": "d66ed2d96513e540c90f63332d84fadaec85bff3",
+      "commit_hash_before": "✅ 已完成！已修改 Todos Web Manager 的代码，让它默认显示\"待审核tasks\"的页面！\\n\\n修改内容：\\n- 修改了 switchMainTab 函数，让它在 \"my-tasks\" tab 时，默认显示 \"pending-review-tasks\" 子 tab，而不是 \"my-pending\"\\n\\n这样，一进入 todo web manager，就会默认显示\"待审核tasks\"的页面！",
+      "commit_hash_after": "--commit-hash"
     },
     {
       "id": "todo-20260226-001",

@@ -1130,7 +1130,7 @@ POST   /api/git/pull           - 从远程仓库拉取
         let archiveTasks = [];
         let independentPlans = [];
         let currentMainTab = 'my-tasks';
-        let currentSubTab = 'pending';
+        let currentSubTab = 'pending-review-tasks';
         let isLoading = false;
         let isArchive = false;
         let expandedTasks = new Set();
@@ -1276,7 +1276,7 @@ POST   /api/git/pull           - 从远程仓库拉取
             document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
             
             if (tab === 'my-tasks') {
-                currentSubTab = 'my-pending';
+                currentSubTab = 'pending-review-tasks';
             } else {
                 currentSubTab = 'all';
             }
