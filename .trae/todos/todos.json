@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-25T18:36:01.083936",
+  "updated_at": "2026-02-25T18:46:13.267372",
   "todos": [
     {
       "id": "todo-20260225-014",
@@ -1590,7 +1590,7 @@
     {
       "id": "todo-20260225-005",
       "title": "把 speech_to_text.py 做成一个 skill",
-      "status": "in-progress",
+      "status": "completed",
       "priority": "P2",
       "assignee": "ai",
       "feedback_required": false,
@@ -1612,7 +1612,8 @@
         "你可以看一下 snippets 里面有一个 speech to text 的脚本",
         "但是呢你可以是不是把那个做成一个 skill"
       ],
-      "progress": "✅ 已完成！已创建 openai-whisper skill！包含 SKILL.md、main.py、skill.json！已集成 task_execution_logger！"
+      "progress": "✅ 已完成！openai-whisper skill 已经存在，而且已经集成了speech_to_text.py和task_execution_logger！\n\n已确认的内容：\n1. ✅ openai-whisper skill 的 SKILL.md 已经存在\n2. ✅ openai-whisper skill 的 main.py 已经存在，而且已经集成了speech_to_text.py\n3. ✅ openai-whisper skill 的 skill.json 已经存在\n4. ✅ openai-whisper skill 已经集成了task_execution_logger\n5. ✅ openai-whisper skill 已经可以正常工作！\n\n所以这个todo其实已经完成了！",
+      "completed_at": "2026-02-25T18:46:13.267329"
     },
     {
       "id": "todo-20260225-006",
