@@ -322,102 +322,23 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 
 ---
 
-## 🎯 Git 冲突处理工作流
+## 🎯 Git 冲突处理
 
-### Git 同步基本原则
+### 核心原则
 
-当遇到 Git 同步问题时（本地有 commit + 远端有 commit），按以下优先级处理：
+遇到 Git 同步问题（本地有 commit + 远端有 commit）时：
 
-### 1. 简单情况：首选 `git pull --rebase`
+1. **首选方案（90% 情况有效）：** `git pull --rebase`
+2. **如果失败：** `git rebase --abort`，然后用 `Notes/snippets/git-sync.sh auto`
+3. **再失败：** 手动解决或询问用户
 
-**大多数情况下有效！** 对于 CS-Notes 这种个人项目，`git pull --rebase` 通常是最简单、最有效的解决方案：
-
-```bash
-git pull --rebase
-```
-
-**为什么有效：**
-- 将本地 commit 放到远端 commit 之上
-- 保持提交历史线性、整洁
-- 适合个人开发或团队协作中没有同时修改同一文件的情况
-
-**如果 `git pull --rebase` 成功：**
-- 继续执行后续操作（push 等）
-
-**如果 `git pull --rebase` 失败（有冲突）：**
-- 运行 `git rebase --abort` 取消 rebase
-- 转向更复杂的处理方案
-
-### 2. 复杂情况：使用智能脚本
-
-如果 `git pull --rebase` 失败，使用 `Notes/snippets/git-sync.sh` 脚本：
+### 快捷指令
 
 ```bash
-# 自动策略（推荐）
-Notes/snippets/git-sync.sh auto
-
-# 或者指定策略
-Notes/snippets/git-sync.sh rebase   # 仅尝试 rebase
-Notes/snippets/git-sync.sh merge    # 使用 merge
-Notes/snippets/git-sync.sh stash    # 暂存本地更改
-Notes/snippets/git-sync.sh ask      # 查看帮助
-```
-
-### 3. Git 同步场景判断
-
-运行 git-sync 脚本前，先判断状态：
-
-| 场景 | 本地未提交 | 本地有 commit | 远端有 commit | 推荐操作 |
-|------|-----------|--------------|--------------|---------|
-| 1 | ❌ | ❌ | ❌ | 无需操作 |
-| 2 | ✅ | ❌ | ❌ | 先提交或 stash |
-| 3 | ❌ | ✅ | ❌ | 直接 push |
-| 4 | ❌ | ❌ | ✅ | 直接 pull |
-| 5 | ❌ | ✅ | ✅ | git pull --rebase → git-sync.sh |
-| 6 | ✅ | ✅ | ✅ | 先处理未提交更改 → 同上 |
-
-### 4. 遇到冲突时的处理流程
-
-1. **首先尝试：** `git pull --rebase`
-2. **如果失败：** `git rebase --abort`
-3. **然后尝试：** `Notes/snippets/git-sync.sh auto`
-4. **如果还是失败：** 检查冲突文件，考虑手动解决或询问用户
-
-### 5. 手动解决冲突的步骤
-
-如果所有自动化方案都失败：
-
-1. 识别冲突文件：`git status` 或 `git ls-files -u`
-2. 打开冲突文件，查找 `<<<<<<<`、`=======`、`>>>>>>>` 标记
-3. 手动编辑解决冲突
-4. `git add <冲突文件>`
-5. 如果是 rebase 过程中：`git rebase --continue`
-6. 如果是 merge 过程中：`git commit`
-7. 最后 push
-
-### 6. 快捷指令参考
-
-```bash
-# 快速检查状态
-git status
-
-# 检查是否有未 push 的 commit
-git log origin/master..HEAD --oneline
-
-# 检查是否有未 pull 的 commit
-git fetch && git log HEAD..origin/master --oneline
-
-# 取消 rebase
-git rebase --abort
-
-# 取消 merge
-git merge --abort
-
-# 查看 stash 列表
-git stash list
-
-# 恢复最新的 stash
-git stash pop
+git pull --rebase              # 首选
+git rebase --abort             # 取消 rebase
+git merge --abort              # 取消 merge
+Notes/snippets/git-sync.sh auto # 智能脚本
 ```
 
 ---
