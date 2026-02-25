@@ -564,6 +564,35 @@ OpenClaw 支持三种类型的技能：
 
 技能安装位置: `~/.openclaw/workspace/skills/<skill>/`
 
+##### 百度千帆官方 OpenClaw Skills
+
+> 参考来源：[如何在OpenClaw调用官方工具 - 百度千帆·大模型服务及Agent开发平台](https://cloud.baidu.com/doc/qianfan/s/Mmlda41a2)
+
+百度智能云千帆平台已将百度百科、百度搜索、百度学术检索、深度研究、智能PPT生成及视频AI笔记等能力转为 Skills 上架 ClawHub，可便捷的在 OpenClaw 中使用。
+
+**千帆官方 Skills 列表**：
+
+| Skill slug | Skill name | Skill 地址 | Skill描述 |
+|-----------|------------|------------|-----------|
+| baidu-baike-search | baidu baike search | [ClawHub](https://clawhub.ai/ide-rea/baidu-baike-data) | 百度百科千万级词条库，支持人物、事物、事件、地理、概念等全品类检索，返回结构化词条信息。为你的 Agent 提供权威中文知识底座，适用于智能问答、知识增强、内容创作等场景。 |
+| ai-ppt-generator | AI PPT generator | [ClawHub](https://clawhub.ai/ide-rea/ai-ppt-generator) | 指令智能PPT生成，通过提出的问题或者观点，一键生成一个PPT文件 |
+| baidu-scholar-search-skill | baidu scholar search | [ClawHub](https://clawhub.ai/ide-rea/baidu-scholar-search-skill) | 百度学术千万级论文索引库，支持按关键词、作者、期刊精准检索中英文学术论文，快速获取摘要、引用及全文链接 |
+| ai-notes-ofvideo | AI Notes of the Video | [ClawHub](https://clawhub.ai/ide-rea/ai-notes-ofvideo) | 基于百度文库视频解析能力，自动提取视频核心内容并生成结构化AI笔记，支持会议录屏、在线课程、直播回放等场景，几分钟看完一小时视频。 |
+| ai-picture-book | Ai Picture Book | [ClawHub](https://clawhub.ai/ide-rea/ai-picture-book) | 输入故事主题或剧情大纲，自动生成配图绘本，支持静态图文与动态视频两种模式 |
+| baidu-search | Baidu Search | [ClawHub](https://clawhub.ai/ide-rea/baidu-search) | 百度实时搜索引擎，支持网页、资讯、视频、图片等全类型内容检索，为 Agent 提供时效性最强的中文互联网信息源，确保回答始终基于最新事实。 |
+| deepresearch-conversation | A Conversation of deepresearch | [ClawHub](https://clawhub.ai/ide-rea/deepresearch-conversation) | 针对复杂话题发起多轮深度对话，逐步引导用户厘清需求、拆解问题，最终生成一份结构化研究报告。适用于行业分析、竞品调研、选题论证等需要深度思考的场景。 |
+
+**Skills 安装步骤**：
+1. 安装 ClawHub 工具：`npm i -g clawhub` 或 `pnpm add -g clawhub`
+2. 用 GitHub 账号登录 ClawHub：`clawhub login`
+3. 搜索 ClawHub 仓库已经存在的 Skills ，并安装：`clawhub search "baidu-search"` + `clawhub install baidu-search`
+4. 配置 Skills：在 `~/.openclaw/openclaw.json` 配置文件中修改 Skills 的配置，启用 skill 并配置 API key
+5. 完成配置后重启 openclaw gateway：`pnpm openclaw gateway restart`
+
+**Skills 安装目录**：
+- 全局 Skills 存放目录：`~/.openclaw/skills/`
+- 当前工作空间下的 Skills：`~/.openclaw/workspace/skills/`
+
 ##### Seedance Video Generation Skill
 
 * **Link**: [ClawHub](https://clawhub.ai/JackyCSer/seedance-video-generation)
