@@ -119,6 +119,19 @@
 
 ---
 
+### 11. Todo 添加工具使用原则
+- **必须使用 todo-adder skill 来添加 todo**，而不是直接编辑 todos.json
+- **直接编辑 todos.json 的风险**：容易导致 JSON 语法错误，不符合最佳实践
+- **todo-adder skill 的使用方法**：
+  - `python3 main.py <title> [priority] [assignee]`
+  - 或者从 stdin 读取 JSON：`cat todo.json | python3 main.py`
+- **如果 todo-adder skill 失败时的备用方案**：
+  - 确保 Todos Web Manager 的 server.py 正在后台运行
+  - 如果 server.py 没有运行，先启动它：`cd .trae/web-manager && python3 server.py`
+  - 如果还是失败，可以用更小心的方式直接编辑 todos.json，但要确保 JSON 语法正确
+
+---
+
 ## 📁 CS-Notes 笔记库结构
 - **`.trae/documents/`** - 文档文件夹（INBOX.md、todos管理系统.md、PROGRESS.md 等）
 - **`.trae/openclaw-skills/`** - OpenClaw 技能（cs-notes-git-sync、cs-notes-todo-sync、todo-pull.sh、todo-push.sh）
@@ -133,4 +146,4 @@
 
 ---
 
-*最后更新：2026-02-22*
+*最后更新：2026-02-25*
