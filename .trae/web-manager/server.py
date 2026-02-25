@@ -865,20 +865,26 @@ def get_execution_logs():
             "message": "任务执行日志系统不可用"
         }), 503
     
-    # 读取今天的日志文件
+    # 读取所有历史日志文件
     logs = []
     try:
-        if task_logger.log_file.exists():
-            with open(task_logger.log_file, 'r', encoding='utf-8') as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        logs.append(json.loads(line))
+        for log_file in task_logger.logs_dir.glob("task_execution_*.jsonl"):
+            try:
+                with open(log_file, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            logs.append(json.loads(line))
+            except Exception as e:
+                print(f"Error reading {log_file}: {e}", file=sys.stderr)
     except Exception as e:
         return jsonify({
             "success": False,
             "message": f"读取日志失败: {e}"
         }), 500
+    
+    # 按时间倒序排列（最新的在前面）
+    logs.sort(key=lambda x: x['timestamp'], reverse=True)
     
     return jsonify({
         "success": True,
@@ -920,14 +926,17 @@ def get_task_execution_logs(task_id):
     
     logs = []
     try:
-        if task_logger.log_file.exists():
-            with open(task_logger.log_file, 'r', encoding='utf-8') as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        log_entry = json.loads(line)
-                        if log_entry.get('task_id') == task_id:
-                            logs.append(log_entry)
+        for log_file in task_logger.logs_dir.glob("task_execution_*.jsonl"):
+            try:
+                with open(log_file, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            log_entry = json.loads(line)
+                            if log_entry.get('task_id') == task_id:
+                                logs.append(log_entry)
+            except Exception as e:
+                print(f"Error reading {log_file}: {e}", file=sys.stderr)
     except Exception as e:
         return jsonify({
             "success": False,
