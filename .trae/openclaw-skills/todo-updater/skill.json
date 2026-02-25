@@ -1,0 +1,9 @@
+{
+  "name": "todo-updater",
+  "version": "1.0.0",
+  "description": "使用Todos Web Manager的API来更新todo状态，避免直接编辑todos.json导致的语法错误",
+  "author": "OpenClaw",
+  "main": "main.py",
+  "keywords": ["todo", "update", "status", "todos web manager"],
+  "dependencies": ["requests"]
+}

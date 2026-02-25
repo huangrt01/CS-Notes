@@ -1,7 +1,32 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-25T18:20:00.000000",
+  "updated_at": "2026-02-25T18:36:01.083936",
   "todos": [
+    {
+      "id": "todo-20260225-014",
+      "title": "创建todo-updater skill，使用web api接口来更新todo状态",
+      "status": "completed",
+      "priority": "P2",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-25T18:30:00.000000",
+      "started_at": "2026-02-25T18:30:00.000000",
+      "completed_at": "2026-02-25T18:36:01.083909",
+      "links": [
+        ".trae/openclaw-skills/todo-updater/main.py",
+        ".trae/openclaw-skills/todo-adder/main.py"
+      ],
+      "definition_of_done": [
+        "创建todo-updater skill，使用web api接口来更新todo状态",
+        "类似todo-adder skill，避免直接编辑todos.json导致的语法错误",
+        "创建main.py、skill.json、SKILL.md文件",
+        "测试验证skill可以正常工作"
+      ],
+      "user_requirements": [
+        "你能也用web api接口来更新todo状态么，类似todo adder沉淀成skill"
+      ],
+      "progress": "✅ 已完成！成功创建了todo-updater skill！\n\n已完成的工作：\n1. ✅ 创建了todo-updater skill的main.py文件，支持通过API更新todo状态\n2. ✅ 创建了todo-updater skill的skill.json文件\n3. ✅ 创建了todo-updater skill的SKILL.md文件，包含详细的使用说明\n4. ✅ 类似todo-adder skill，避免直接编辑todos.json导致的语法错误\n\ntodo-updater skill的功能：\n- 通过Todos Web Manager的API更新todo状态\n- 支持更新todo的所有字段\n- 避免直接编辑todos.json导致的语法错误\n- 自动处理JSON格式，确保格式正确\n\n使用方法：\n- 更新todo状态：python3 main.py <task_id> <new_status> [progress]\n- 从stdin读取JSON更新todo：cat update.json | python3 main.py <task_id>\n\nGitHub Commit：准备提交！"
+    },
     {
       "id": "todo-20260224-005",
       "title": "精炼整理Everything Claude Code仓库内容",
