@@ -547,6 +547,8 @@ def update_task_status(task_id):
     progress = data.get('progress', None)
     completion_summary = data.get('completion_summary', None)
     artifacts = data.get('artifacts', None)
+    commit_hash_before = data.get('commit_hash_before', None)
+    commit_hash_after = data.get('commit_hash_after', None)
     
     # 加载现有数据
     todos_data = load_todos_from_json(TODOS_FILE)
@@ -570,6 +572,12 @@ def update_task_status(task_id):
             # 更新产物（artifacts 字段）
             if artifacts:
                 tasks[i]['artifacts'] = artifacts
+            
+            # 更新 commit hash 字段（用于展示 diff）
+            if commit_hash_before:
+                tasks[i]['commit_hash_before'] = commit_hash_before
+            if commit_hash_after:
+                tasks[i]['commit_hash_after'] = commit_hash_after
             
             # 记录任务状态变更日志
             if TASK_LOGGER_AVAILABLE and task_logger:

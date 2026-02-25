@@ -2099,7 +2099,9 @@ POST   /api/git/pull           - 从远程仓库拉取
                 const completedDate = new Date(task.completed_at).toLocaleDateString('zh-CN');
                 metaItems.push(`<span>✅ ${completedDate}</span>`);
             }
-            if (task.commit_hash) {
+            if (task.commit_hash_before && task.commit_hash_after) {
+                metaItems.push(`<span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-family: monospace; cursor: pointer; font-weight: 600; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);" onclick="viewCodeDiffRange('${task.commit_hash_before}', '${task.commit_hash_after}')">${task.commit_hash_before.substring(0, 7)}...${task.commit_hash_after.substring(0, 7)}</span>`);
+            } else if (task.commit_hash) {
                 metaItems.push(`<span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-family: monospace; cursor: pointer; font-weight: 600; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);" onclick="viewCodeDiff('${task.commit_hash}')">${task.commit_hash.substring(0, 7)}</span>`);
             }
             
@@ -2753,6 +2755,144 @@ POST   /api/git/pull           - 从远程仓库拉取
             }
             
             return html;
+        }
+
+        async function viewCodeDiffRange(commitHashBefore, commitHashAfter) {
+            try {
+                updateStatus('🔄 正在获取代码差异...');
+                
+                const response = await fetch(`${API_BASE}/git/diff?commit=${commitHashBefore}&commit2=${commitHashAfter}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const diffContent = data.stdout || '没有差异内容';
+                    
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: rgba(0, 0, 0, 0.6);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 9999;
+                        padding: 20px;
+                    `;
+                    modal.onclick = (e) => {
+                        if (e.target === modal) modal.remove();
+                    };
+                    
+                    const modalContent = document.createElement('div');
+                    modalContent.style.cssText = `
+                        background: white;
+                        padding: 24px;
+                        border-radius: 16px;
+                        max-width: 1200px;
+                        width: 100%;
+                        max-height: 90vh;
+                        overflow: hidden;
+                        position: relative;
+                        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                    `;
+                    modalContent.onclick = (e) => e.stopPropagation();
+                    
+                    const closeBtn = document.createElement('button');
+                    closeBtn.textContent = '✕';
+                    closeBtn.style.cssText = `
+                        position: absolute;
+                        top: 16px;
+                        right: 16px;
+                        background: #f3f4f6;
+                        border: none;
+                        font-size: 20px;
+                        cursor: pointer;
+                        color: #6b7280;
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transition: all 0.2s;
+                    `;
+                    closeBtn.onmouseenter = () => {
+                        closeBtn.style.background = '#ef4444';
+                        closeBtn.style.color = 'white';
+                    };
+                    closeBtn.onmouseleave = () => {
+                        closeBtn.style.background = '#f3f4f6';
+                        closeBtn.style.color = '#6b7280';
+                    };
+                    closeBtn.onclick = () => modal.remove();
+                    
+                    const header = document.createElement('div');
+                    header.style.cssText = `
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        margin-bottom: 20px;
+                        padding-bottom: 16px;
+                        border-bottom: 1px solid #e5e7eb;
+                    `;
+                    
+                    const icon = document.createElement('div');
+                    icon.textContent = '📝';
+                    icon.style.cssText = 'font-size: 28px;';
+                    
+                    const titleSection = document.createElement('div');
+                    const title = document.createElement('h2');
+                    title.textContent = `Git Diff - ${commitHashBefore.substring(0, 7)} → ${commitHashAfter.substring(0, 7)}`;
+                    title.style.cssText = 'margin: 0; font-size: 20px; font-weight: 700; color: #1f2937;';
+                    
+                    const subtitle = document.createElement('p');
+                    subtitle.style.cssText = 'margin: 4px 0 0 0; font-size: 13px; color: #6b7280;';
+                    subtitle.textContent = '点击背景或 × 关闭';
+                    
+                    titleSection.appendChild(title);
+                    titleSection.appendChild(subtitle);
+                    
+                    header.appendChild(icon);
+                    header.appendChild(titleSection);
+                    
+                    const diffContainer = document.createElement('div');
+                    diffContainer.style.cssText = `
+                        background: #1f2937;
+                        color: #e5e7eb;
+                        padding: 16px;
+                        border-radius: 8px;
+                        font-family: 'Courier New', monospace;
+                        font-size: 13px;
+                        line-height: 1.6;
+                        overflow: auto;
+                        max-height: 60vh;
+                        white-space: pre-wrap;
+                        word-wrap: break-word;
+                    `;
+                    diffContainer.innerHTML = formatDiff(diffContent);
+                    
+                    modalContent.appendChild(closeBtn);
+                    modalContent.appendChild(header);
+                    modalContent.appendChild(diffContainer);
+                    
+                    modal.appendChild(modalContent);
+                    document.body.appendChild(modal);
+                    
+                    updateStatus('✅ 代码差异已加载');
+                } else {
+                    throw new Error(data.message || '获取代码差异失败');
+                }
+            } catch (error) {
+                console.error('Error viewing code diff:', error);
+                updateStatus('❌ 获取代码差异失败: ' + error.message);
+            }
         }
 
         async function viewCodeDiff(commitHash) {
