@@ -144,6 +144,39 @@
 - **`公司项目/`** - 保密项目（永远不 git add）
 - **`Notes/snippets/`** - 脚本和小工具（包括 todo-pull.sh 和 todo-push.sh）
 
+### 12. Python 虚拟环境使用原则
+- **经验**：在 Debian/Ubuntu 系统上，使用 Python 虚拟环境（venv）可以很好地解决包冲突问题（比如 blinker 包冲突）
+- **步骤**：
+  1. 创建虚拟环境：`python3 -m venv venv`
+  2. 激活虚拟环境：`source venv/bin/activate`
+  3. 安装依赖：`pip install <package-name>`
+
+### 13. Playwright 使用经验
+- **经验**：使用 Playwright 进行网页抓取时，建议：
+  1. 创建单独的 Python 虚拟环境（避免与其他项目的依赖冲突）
+  2. 安装 Playwright 和 Chromium 浏览器：`pip install playwright && playwright install chromium`
+  3. 使用真实的 User-Agent（模拟真实浏览器）
+  4. 支持无头模式（headless）和有头模式（便于调试）
+
+### 14. Git 冲突解决最佳实践
+- **经验**：
+  1. 先仔细检查冲突的具体内容
+  2. 尽量融合双方的改动
+  3. 实在冲突的地方才以用户的版本为准
+  4. commit 前仔细检查改动！
+- **错误案例**：使用 `git checkout --theirs` 直接覆盖，导致回滚了用户的重要改动
+
+### 15. OpenClaw 日志功能
+- **重要发现**：OpenClaw 已经有了完整的日志功能，不需要额外实现
+- **文件日志**：默认位置是 `/tmp/openclaw/openclaw-YYYY-MM-DD.log`，格式是 JSON lines（JSONL）
+- **CLI 查看日志**：`openclaw logs --follow`
+- **Control UI (web) 查看日志**
+- **Diagnostics + OpenTelemetry 功能**
+
+### 16. OpenClaw vs Trae Agent 对比总结
+- **OpenClaw 更适合**：笔记整理和知识管理、需要遵循特定项目规则的任务、需要实际修改文件的任务、需要简洁高效执行的任务、需要 Git 操作的任务、安全意识强的任务
+- **Trae Agent 更适合**：需要完整轨迹记录的任务、需要多工具生态的任务、需要多 LLM 支持的任务、需要代码改稿的任务、需要探索性任务（不确定结果的任务）
+
 ---
 
 *最后更新：2026-02-25*
