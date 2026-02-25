@@ -42,8 +42,26 @@ class PriorityTaskReader:
             print(f"Error loading todos.json: {e}")
             return None
     
+    def get_latest_review_time(self, task: dict) -> str:
+        """获取任务的最新 review 时间"""
+        # 检查 review_history
+        if "review_history" in task and task["review_history"]:
+            return task["review_history"][-1].get("reviewed_at", "")
+        # 检查 plan_review_history
+        if "plan_review_history" in task and task["plan_review_history"]:
+            return task["plan_review_history"][-1].get("reviewed_at", "")
+        # 如果没有 review，返回空字符串
+        return ""
+    
     def filter_and_sort_tasks(self, todos_data: dict) -> list:
-        """过滤并排序任务"""
+        """过滤并排序任务
+        
+        优先级排序规则：
+        1. 有最新 review 意见的 in-progress 任务（最高优先级）
+        2. 其他 in-progress 任务
+        3. 按 P0-P9 优先级排序
+        4. 最后按创建时间排序
+        """
         if not todos_data or "todos" not in todos_data:
             return []
         
@@ -55,10 +73,20 @@ class PriorityTaskReader:
             if task.get("status") in ["in-progress", "pending"]
         ]
         
-        # 按优先级排序
+        # 排序键：
+        # 1. 是否是 in-progress 且有最新 review（0 表示是，1 表示否）
+        # 2. 最新 review 时间（倒序，最新的在前）- 对于有 review 的 in-progress 任务，这是最重要的
+        # 3. 优先级分数（P0-P9）
+        # 4. 是否是 in-progress（0 表示是，1 表示否）
+        # 5. 创建时间
         sorted_tasks = sorted(
             target_tasks,
             key=lambda task: (
+                # 最高优先级：in-progress 且有最新 review 意见
+                0 if (task.get("status") == "in-progress" and self.get_latest_review_time(task)) else 1,
+                # 最新 review 时间倒序（使用负数，因为 sorted 默认是升序）
+                # 对于时间字符串，我们用反向排序
+                -float(self.get_latest_review_time(task).replace("-", "").replace(":", "").replace("T", "").replace(".", "")) if self.get_latest_review_time(task) else float("inf"),
                 self.get_priority_score(task.get("priority", "low")),
                 0 if task.get("status") == "in-progress" else 1,
                 task.get("created_at", "")
