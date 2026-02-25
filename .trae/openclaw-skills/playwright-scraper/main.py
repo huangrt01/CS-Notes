@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-简单的 Playwright 网页抓取脚本
+Playwright Scraper Skill - 使用 Playwright 进行网页抓取
 基于 Playwright 的网页抓取，用于测试抓取知乎等网站
 """
 

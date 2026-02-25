@@ -1,0 +1,13 @@
+{
+  "name": "playwright-scraper",
+  "version": "1.0.0",
+  "description": "使用 Playwright 进行网页抓取的 skill，支持模拟浏览器访问网页",
+  "author": "OpenClaw",
+  "skills": [
+    {
+      "name": "playwright-scraper",
+      "description": "使用 Playwright 进行网页抓取",
+      "entry": "main.py"
+    }
+  ]
+}
