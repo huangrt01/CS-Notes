@@ -598,6 +598,16 @@ def update_task_status(task_id):
                         commit_result = run_git_command(['git', 'rev-parse', 'HEAD'])
                         if commit_result.get('success'):
                             tasks[i]['commit_hash'] = commit_result.get('stdout', '').strip()
+                        # 自动获取变更的文件列表
+                        if old_status == 'in-progress' and tasks[i].get('started_at'):
+                            # 获取从 started_at 到现在的变更文件列表
+                            # 先获取 started_at 对应的 commit hash（如果有）
+                            # 或者直接获取最近的变更文件列表
+                            diff_result = run_git_command(['git', 'diff', '--name-only', 'HEAD~1', 'HEAD'])
+                            if diff_result.get('success'):
+                                changed_files = diff_result.get('stdout', '').strip().split('\n')
+                                changed_files = [f for f in changed_files if f]  # 过滤空行
+                                tasks[i]['changed_files'] = changed_files
                         task_logger.complete_task(task_id, agent=agent)
                         task_logger.log_success(
                             task_id,
