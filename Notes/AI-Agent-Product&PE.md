@@ -2236,17 +2236,6 @@ Assistant：
 
 ## AI Search
 
-### Skills AI 搜索
-
-> 参考来源：[YouWare Skills AI Search](https://labs.youware.com/youskill)
-
-* **定位**：AI驱动的技能搜索平台，帮助用户发现和使用合适的AI Skills
-* **核心价值**：
-  - **智能推荐**：基于用户需求，智能推荐最合适的Skills
-  - **语义理解**：理解用户意图，而不仅仅是关键词匹配
-  - **分类整理**：将Skills按功能、领域、难度等维度分类
-  - **使用示例**：提供具体的使用示例和最佳实践
-
 ### 产品逻辑
 
 #### Intro
@@ -2408,6 +2397,17 @@ Assistant：
 https://hornet.dev/
 
 ### 产品
+
+#### Skills AI 搜索
+
+> 参考来源：[YouWare Skills AI Search](https://labs.youware.com/youskill)
+
+* **定位**：AI驱动的技能搜索平台，帮助用户发现和使用合适的AI Skills
+* **核心价值**：
+  - **智能推荐**：基于用户需求，智能推荐最合适的Skills
+  - **语义理解**：理解用户意图，而不仅仅是关键词匹配
+  - **分类整理**：将Skills按功能、领域、难度等维度分类
+  - **使用示例**：提供具体的使用示例和最佳实践
 
 * [深度｜AI+电商搜索大盘点，又一个资本集中下注的细分赛道](https://mp.weixin.qq.com/s/zaczcDifgT-9Gt5q-R7azQ)
   * VantageDiscovery
@@ -5370,21 +5370,6 @@ https://agently.cn/guides/workflow/index.html
 
 
 ## Potpourri
-
-### 日历ICS的概念
-
-* **定义**：ICS（iCalendar）是一种通用的日历数据交换格式，用于在不同的日历应用之间共享日历信息
-* **文件扩展名**：`.ics`
-* **核心特性**：
-  - **跨平台兼容**：支持Google Calendar、Apple Calendar、Microsoft Outlook等主流日历应用
-  - **事件信息**：包含事件标题、时间、地点、描述、提醒等完整信息
-  - **重复规则**：支持重复事件（每天、每周、每月、每年等）
-  - **时区支持**：自动处理时区转换
-* **常见用途**：
-  - 共享会议邀请
-  - 订阅公共日历（节假日、体育赛事等）
-  - 导出/导入日历数据
-  - AI助手自动创建日历事件
 
 ### Llya访谈系列
 
