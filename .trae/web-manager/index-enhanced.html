@@ -2131,6 +2131,22 @@ POST   /api/git/pull           - 从远程仓库拉取
                 `;
             }
             
+            let changedFilesHtml = '';
+            if (task.changed_files && task.changed_files.length > 0) {
+                changedFilesHtml = `
+                    <div style="margin-top: 12px;">
+                        <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #374151;">📁 变更文件</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${task.changed_files.map(file => {
+                                // 生成 Typora 跳转链接
+                                const typoraLink = \`typora://\${file.replace(/ /g, '%20')}\`;
+                                return \`<a href="\${typoraLink}" style="background: #f3f4f6; color: #374151; padding: 4px 12px; border-radius: 4px; font-size: 12px; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">\${file}</a>\`;
+                            }).join('')}
+                        </div>
+                    </div>
+                \`;
+            }
+            
             let detailsHtml = '';
             if (task.plan) {
                 detailsHtml += `
@@ -2262,6 +2278,7 @@ POST   /api/git/pull           - 从远程仓库拉取
                         <span class="task-priority ${priorityClass}">${priorityText}</span>
                     </div>
                     ${reviewCommentHtml}
+                    ${changedFilesHtml}
                     ${description ? `<div class="task-description">${escapeHtml(description)}</div>` : ''}
                     <div class="task-meta">${metaItems.join('')}</div>
                     <div class="task-details ${isExpanded ? 'expanded' : ''}" id="details-${taskId}">
