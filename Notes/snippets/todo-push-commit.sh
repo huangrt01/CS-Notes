@@ -158,12 +158,17 @@ main() {
         fi
     done < <(git ls-files --others --exclude-standard -z)
     
-    # 去重
+    # 去重（兼容旧版本 Bash，不使用关联数组）
     local unique_allowed_files=()
-    declare -A seen
     for file in "${allowed_files[@]}"; do
-        if [ -z "${seen["$file"]}" ]; then
-            seen["$file"]=1
+        local found=0
+        for unique_file in "${unique_allowed_files[@]}"; do
+            if [ "$file" == "$unique_file" ]; then
+                found=1
+                break
+            fi
+        done
+        if [ $found -eq 0 ]; then
             unique_allowed_files+=("$file")
         fi
     done
