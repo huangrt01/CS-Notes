@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-25T22:08:00.027513",
+  "updated_at": "2026-02-25T22:58:56.431936",
   "todos": [
     {
       "id": "todo-20260219-001",
@@ -2129,6 +2129,69 @@
         }
       ],
       "archived_at": "2026-02-25T22:08:00.026180"
+    },
+    {
+      "id": "todo-20260225-019",
+      "title": "将heartbeat的周期调整为30min",
+      "status": "completed",
+      "priority": "P3",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-25T22:26:09.789336",
+      "links": [
+        "HEARTBEAT.md"
+      ],
+      "definition_of_done": [
+        "查看HEARTBEAT.md中当前的heartbeat周期配置",
+        "将heartbeat的周期调整为30min",
+        "验证修改是否生效"
+      ],
+      "user_requirements": [
+        "将heartbeat的周期调整为30min"
+      ],
+      "progress": "✅ 已完成！HEARTBEAT.md中HEARTBEAT_INTERVAL_MINUTES已经是30了！\n\n已确认：\n1. ✅ HEARTBEAT.md中HEARTBEAT_INTERVAL_MINUTES已经是30了\n2. ✅ heartbeat的周期已经是30分钟了\n\n所以这个todo其实已经完成了！",
+      "started_at": "2026-02-25T22:38:55.202297",
+      "completed_at": "2026-02-25T22:38:55.202315",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-25T22:58:51.076047",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-25T22:58:51.076052"
+    },
+    {
+      "id": "todo-20260225-020",
+      "title": "每次commit push之前，需要review一下commit，看是否符合预期（比如有没有删掉本不该删掉的内容），将这条沉淀为重要经验",
+      "status": "completed",
+      "priority": "P1",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-25T22:26:09.789357",
+      "links": [
+        "MEMORY.md"
+      ],
+      "definition_of_done": [
+        "回忆并思考：每次commit push之前，需要review一下commit，看是否符合预期",
+        "重点关注：有没有删掉本不该删掉的内容",
+        "将这条沉淀为重要经验到MEMORY.md中",
+        "确保未来每次commit push之前都遵循这个原则"
+      ],
+      "user_requirements": [
+        "你每次commit push之前，需要review一下commit，看是否符合预期（比如有没有删掉本不该删掉的内容），将这条沉淀为你的重要经验"
+      ],
+      "progress": "✅ 已完成！成功将这条重要经验沉淀到MEMORY.md中！\n\n已完成的工作：\n1. ✅ 在MEMORY.md中添加了第11条原则：Git Commit Push 之前的 Review 原则\n2. ✅ 明确了重要原则：每次commit push之前，必须review一下commit，看是否符合预期\n3. ✅ 明确了重点检查项：有没有删掉本不该删掉的内容、有没有不该提交的文件被提交了、有没有敏感内容被提交了、commit message是否清晰准确\n4. ✅ 明确了Review流程：先运行git status检查状态、运行git diff查看变更内容、确认变更符合预期后再commit和push\n5. ✅ 明确了为什么重要：避免不小心删除重要内容、避免提交不该提交的文件、确保commit的质量和可追溯性\n\n这条经验已经沉淀到MEMORY.md中，未来每次commit push之前都会遵循这个原则！",
+      "started_at": "2026-02-25T22:32:01.920921",
+      "completed_at": "2026-02-25T22:32:01.920939",
+      "review_history": [
+        {
+          "reviewed_at": "2026-02-25T22:58:56.430810",
+          "approved": true,
+          "comment": ""
+        }
+      ],
+      "archived_at": "2026-02-25T22:58:56.430816"
     }
   ]
 }
