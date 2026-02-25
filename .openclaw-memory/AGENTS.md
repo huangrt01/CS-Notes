@@ -347,6 +347,12 @@ Notes/snippets/git-sync.sh auto # 智能脚本
 - 如果遇到需要强制操作的情况，必须先询问用户，由用户手动执行
 - 任何 --force 操作都可能导致数据丢失，风险极高
 
+### 【强制】完成todo后立刻push
+
+- **完成todo后立刻push**：完成todo后，立即运行 todo-push.sh 进行 commit 和 push
+- **将commit链接发送给用户**：每次进行 git commit 并 push 后，必须在回复中包含对应的 GitHub commit 链接
+- **不要等待用户问才push**：要主动 push，不要等到用户问才 push
+
 ---
 
 ## Make It Yours
