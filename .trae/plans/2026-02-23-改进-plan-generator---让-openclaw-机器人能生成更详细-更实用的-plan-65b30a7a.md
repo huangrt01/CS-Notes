@@ -2,9 +2,9 @@
 id: plan-20260223-65b30a7a
 title: "改进 Plan Generator - 让 OpenClaw 机器人能生成更详细、更实用的 Plan"
 priority: P2
-status: pending
+status: approved
 created_at: 2026-02-23T17:13:11.275438
-updated_at: 2026-02-23T17:13:11.275440
+updated_at: '2026-02-25T20:46:58.205535'
 tags: ['优化改进', 'Plan Generator', '复杂度:中等']
 ---
 

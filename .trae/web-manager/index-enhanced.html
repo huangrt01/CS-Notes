@@ -599,6 +599,15 @@ POST   /api/git/pull           - 从远程仓库拉取
             padding-top: 16px;
             border-top: 1px solid #e0e0e0;
             flex-wrap: wrap;
+            position: relative;
+            z-index: 100;
+        }
+        
+        .task-actions button {
+            pointer-events: auto;
+            cursor: pointer;
+            position: relative;
+            z-index: 101;
         }
         
         .btn-secondary {
@@ -2400,16 +2409,31 @@ POST   /api/git/pull           - 从远程仓库拉取
             const comment = commentEl ? commentEl.value.trim() : '';
             
             try {
-                const response = await fetch(`${API_BASE}/tasks/${encodeURIComponent(taskId)}/plan-review`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        approved,
-                        comment
-                    })
-                });
+                let response;
+                if (taskId.startsWith('plan-')) {
+                    const newStatus = approved ? 'approved' : 'rejected';
+                    response = await fetch(`${API_BASE}/plans/${encodeURIComponent(taskId)}/status`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            status: newStatus,
+                            comment
+                        })
+                    });
+                } else {
+                    response = await fetch(`${API_BASE}/tasks/${encodeURIComponent(taskId)}/plan-review`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            approved,
+                            comment
+                        })
+                    });
+                }
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
