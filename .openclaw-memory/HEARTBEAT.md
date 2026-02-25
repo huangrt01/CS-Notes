@@ -38,12 +38,37 @@ HEARTBEAT_INTERVAL_MINUTES = 30
 5. **重要：只要用户和我说话就算一次交互，就可以清零计数！**
 6. **Heartbeat 时，把自己想象成永动机，高中低优先级的任务均尽力自主触发推进！**
 
+---
+
+# Add tasks below when you want the agent to check or do something periodically.
 
 ## 心跳任务
 
-### 1. 检查 todo manager 并执行任务（自发性）
+## 1. 检查 Todos Web Manager server.py 是否启动
 
 **触发条件**：每次心跳时检查
+
+**执行逻辑**：
+1. 检查 `server.py` 是否正在运行
+2. 如果没有运行，提醒用户并启动它
+3. 记录检查结果
+
+**检查命令**：
+- `ps aux | grep -i server.py` - 检查 server.py 是否运行
+- `cd /root/.openclaw/workspace/CS-Notes/.trae/web-manager && python3 server.py` - 启动 server.py
+
+**重要原则**：
+- 确保 Todos Web Manager 始终可用
+- 如果 server.py 停止了，自动启动它
+- 在后台模式运行，不阻塞会话
+
+## 2. Todo 状态分析与管理
+
+**触发条件**：每次心跳时检查
+
+### 任务执行限制逻辑
+
+**重要原则**：在两次用户干预之间，最多执行 `MAX_TASKS_BETWEEN_INTERVENTIONS` 个任务
 
 **执行逻辑**：
 1. 检查上次用户干预的时间
@@ -51,27 +76,41 @@ HEARTBEAT_INTERVAL_MINUTES = 30
 3. 如果已执行数量 < MAX_TASKS_BETWEEN_INTERVENTIONS：
    - 从 todo manager 中取新任务
    - 优先执行 Assignee: AI 的任务
-   - 优先执行 Priority: high 的任务
-   - 跳过 Feedback Required: 是 的任务
+   - 优先执行高优先级（P0-P2）的任务
+   - 跳过 Feedback Required: true 的任务
    - 使用子 agent 执行任务
 4. 如果已执行数量 >= MAX_TASKS_BETWEEN_INTERVENTIONS：
    - 等待下次用户干预
-   - 用户干预后重置计数
+   - 用户干预后重置计数（重要：只要用户和我说话就算一次交互）
 
-### 2. 闭环自我迭代（新增！）
+### Todo 状态分析
+
+**执行逻辑**：
+1. 读取 todo manager（`.trae/todos/todos.json`）
+2. 分析当前 todos 状态和优先级
+3. 向用户报告任务状态
+
+**报告内容**：
+- 🔥 高优先级 in-progress 的 AI 任务
+- ⏸️ 待执行的高优先级 AI 任务
+- ✅ 最近完成的任务
+
+### 闭环自我迭代
 
 **触发条件**：在执行任务过程中
 
 **执行逻辑**：
 1. 如果发现对齐最终目标的新 todos
-2. 自动添加到 todo manager 中
+2. 使用 todo-adder skill 自动添加到 todo manager
 3. 形成闭环自我迭代：执行 → 发现新任务 → 添加新任务 → 继续执行
 
----
+**重要工具**：
+- 使用 `todo-adder` skill 添加任务：`python3 .trae/openclaw-skills/todo-adder/main.py <title> <priority> <assignee>`
+- 确保 Todos Web Manager server.py 正在运行
 
-# Add tasks below when you want the agent to check something periodically.
 
-## 3. Session 状态检查（新增！）
+
+## 3. Session 状态检查
 
 **触发条件**：每次心跳时检查
 
@@ -89,25 +128,9 @@ HEARTBEAT_INTERVAL_MINUTES = 30
 - 使用 OpenClaw 内置的心跳机制
 - 推荐使用 OpenClaw 内置的 `/reset` 命令切换 session
 
-## 4. Todo 状态检查（新增！）
 
-**触发条件**：每次心跳时检查
 
-**执行逻辑**：
-1. 读取 todo manager（`.trae/documents/todos管理系统.md`）
-2. 识别所有在 "#### AI 需要做的任务" section 下的任务（**不管有没有明确标注 Assignee: AI**）
-3. 识别所有明确标注 "Assignee: AI" 的任务
-4. 向用户报告有哪些 todo 可考虑做
-
-**报告内容**：
-- ✅ 已完成的 AI 任务
-- ⏸️ 待执行的 AI 任务
-- 🤔 可以考虑让 AI 执行的任务
-
-**重要经验**：
-- 只要在 "#### AI 需要做的任务" section 下的任务，就算是 AI 要做的任务！不管有没有明确标注 "Assignee: AI"！
-
-## 5. 任务恢复机制（精简版！）
+## 5. 任务恢复机制
 
 **触发条件**：每次心跳时检查
 
@@ -120,21 +143,3 @@ HEARTBEAT_INTERVAL_MINUTES = 30
 - 基于 OpenClaw 现有能力，不侵入内部代码
 - 利用 todos.json 中的 progress 字段记录任务进度
 - 优先执行 `in-progress` 状态的 todo
-
-## 6. 检查 Todos Web Manager server.py 是否启动（新增！）
-
-**触发条件**：每次心跳时检查
-
-**执行逻辑**：
-1. 检查 `server.py` 是否正在运行
-2. 如果没有运行，提醒用户并启动它
-3. 记录检查结果
-
-**检查命令**：
-- `ps aux | grep -i server.py` - 检查 server.py 是否运行
-- `cd /root/.openclaw/workspace/CS-Notes/.trae/web-manager && python3 server.py` - 启动 server.py
-
-**重要原则**：
-- 确保 Todos Web Manager 始终可用
-- 如果 server.py 停止了，自动启动它
-- 在后台模式运行，不阻塞会话
