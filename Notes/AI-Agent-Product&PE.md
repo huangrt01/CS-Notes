@@ -311,6 +311,104 @@
 - AI搜索领域的标杆公司
 - Top Lean AI榜单中AI Search分类的代表企业
 
+> 来源：Top Lean AI榜单
+
+---
+
+##### 完整榜单详实整理（46家公司）
+
+> 完整整理文档：`.trae/documents/Top-Lean-AI榜单完整整理.md`
+
+**榜单概况：**
+- **公司总数：** 46家
+- **数据来源：** Henry Shi 维护的 "Top Lean AI" 榜单
+- **核心洞察：** AI 时代的创业公司不再比拼人数，而是比拼人均创造价值的能力
+
+**按人均创收排名 Top 10：**
+
+1. **Telegram** - $33,333,333/人
+   - 消息应用，迪拜，30人，年营收$10亿
+   - 估值$300亿，人均估值$10亿
+
+2. **Midjourney** - $12,500,000/人
+   - 图像生成，旧金山，40人，年营收$5亿
+   - 估值$100亿，人均估值$2.5亿
+
+3. **SurgeAI** - $9,090,909/人
+   - AI训练数据，旧金山，110人，年营收$10亿
+
+4. **Anysphere (Cursor)** - $5,000,000/人
+   - AI代码编辑器，旧金山，20人，年营收$1亿
+   - 估值$26亿，人均估值$1.3亿
+
+5. **OpenArt** - $3,500,000/人
+   - AI图像和视频，旧金山，20人，年营收$7000万
+
+6. **Base44** - $3,500,000/人
+   - AI代码生成，特拉维夫，1人，年营收$350万
+   - 估值$8000万，人均估值$8000万
+
+7. **Cal AI** - $3,000,000/人
+   - AI卡路里追踪，纽约，4人，年营收$1200万
+
+8. **Mercor** - $2,500,000/人
+   - 人才市场+数据标注，旧金山，30人，年营收$7500万
+   - 估值$20亿，人均估值$6667万
+
+9. **Chai Research** - $2,500,000/人
+   - 社交AI平台，帕洛阿尔托，12人，年营收$3000万
+   - 估值$4.5亿，人均估值$3750万
+
+10. **Fal.ai** - $2,375,000/人
+    - 生成媒体平台，旧金山，40人，年营收$9500万
+
+**按业务领域分类：**
+
+**1. AI 代码编辑器 / 代码生成（5家）**
+- Anysphere (Cursor)、Base44、Stackblitz (Bolt.new)、Lovable
+
+**2. AI 语音 / 文本转语音（4家）**
+- Eleven Labs、Retell AI、OpenAudio、Vapi
+
+**3. AI 视频生成（5家）**
+- Fal.ai、Higgsfield、Arcads、AKOOL
+
+**4. AI 图像生成（3家）**
+- Midjourney、OpenArt、Creati
+
+**5. AI 搜索 / Agent（3家）**
+- Perplexity、Genspark、Telegram（消息应用）
+
+**6. AI 内容创作 / 演示（3家）**
+- Gamma、Stan、Icon
+
+**7. AI 教育 / 学习（3家）**
+- Solvely.ai、Praktika.ai、BoldVoice
+
+**8. AI 营销 / 广告（3家）**
+- Markable AI、Conversion、GrowthX
+
+**9. AI 客户支持 / 工具（3家）**
+- Chatbase、Jenni.ai、FyxerAI
+
+**10. AI 法律 / 健康 / 金融（3家）**
+- Develop Health、Haven、Pump.co
+
+**11. AI 游戏 / 自动化 / 其他（4家）**
+- Latitude、SubMagic、Gumloop、Jobright
+
+**按地区分类：**
+- **美国：** 37家（旧金山最多，纽约第二多）
+- **欧洲：** 6家（巴黎3家，斯德哥尔摩、特拉维夫、伦敦各1家）
+- **其他：** 3家（迪拜、温哥华、远程）
+
+**核心洞察：**
+1. **人均创收才是硬道理** - Top 10人均创收都超过$200万，最高的Telegram达到$3333万/人
+2. **AI 原生公司的特点** - 小团队、高产出、聚焦垂直场景、技术驱动、全球化视野
+3. **中国背景公司表现突出** - Manus（蝴蝶效应）被Meta以20亿美元收购、Genspark、OpenArt、PixVerse、Lovart、HeyGen等
+
+> 完整详细数据请参考：`.trae/documents/Top-Lean-AI榜单完整整理.md`
+
 ---
 
 **榜单分类：
