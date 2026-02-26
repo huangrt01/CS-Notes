@@ -603,7 +603,8 @@ def update_task_status(task_id):
                             # 获取从 started_at 到现在的变更文件列表
                             # 先获取 started_at 对应的 commit hash（如果有）
                             # 或者直接获取最近的变更文件列表
-                            diff_result = run_git_command(['git', 'diff', '--name-only', 'HEAD~1', 'HEAD'])
+                            # 使用 -c core.quotepath=false 防止中文文件名被转义
+                            diff_result = run_git_command(['git', '-c', 'core.quotepath=false', 'diff', '--name-only', 'HEAD~1', 'HEAD'])
                             if diff_result.get('success'):
                                 changed_files = diff_result.get('stdout', '').strip().split('\n')
                                 changed_files = [f for f in changed_files if f]  # 过滤空行
@@ -1133,7 +1134,18 @@ def get_config():
 @app.route('/')
 def index():
     """主页 - 重定向到增强版"""
-    return send_from_directory('.', 'index-enhanced.html')
+    # 强制禁用缓存，每次读取最新文件
+    from flask import make_response
+    try:
+        with open(os.path.join(os.path.dirname(__file__), 'index-enhanced.html'), 'r', encoding='utf-8') as f:
+            content = f.read()
+        response = make_response(content)
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+    except Exception as e:
+        return f"Error loading index file: {e}", 500
 
 @app.route('/<path:path>')
 def static_files(path):
