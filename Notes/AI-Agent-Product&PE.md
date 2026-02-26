@@ -202,6 +202,117 @@
 
 > 来源：Henry Shi 维护的 "Top Lean AI" 榜单，收录人均创收超 100 万美元的 AI 公司。核心洞察：AI 时代的创业公司不再比拼人数，而是比拼人均创造价值的能力。
 
+##### 代表性公司深度调研
+
+###### HeyGen - AI 视频生成领域的领军者
+
+**公司简介：**
+- 创立时间：2023年
+- 总部：美国/中国（曾在旧金山和深圳设有团队）
+- 国内主体：诗云科技（已在2023年12月申请注销）
+- 年营收：已突破 5,000 万美元
+
+**核心产品与功能：**
+1. **AI Video Generator** - 从文本、图片或音频创建完整的AI视频
+   - Text to Video：从脚本创建完整AI视频，支持1080p或4K画质
+   - Photo to Video：将静态图片转换为动态视频，支持AI唇形同步
+   - Product Ads：产品广告生成，支持TikTok、Instagram、Amazon内容
+   - UGC ads：创建病毒式反应视频和真实UGC内容
+
+2. **AI Avatar Generator** - 生成逼真的AI数字人
+   - Photo Avatar：从单张静态图片生成动态视频
+   - Public Avatar：选择现成的高质量AI数字人
+   - Digital Twin：拍摄短视频生成高度逼真的数字克隆
+
+3. **AI Translator** - AI视频翻译
+   - 支持175+语言和方言
+   - 自然的唇形同步和字幕
+   - 语音克隆技术，保持声音一致性
+
+4. **AI Studio** - 基于文本的视频编辑器
+   - 像写文档一样创建和编辑AI视频
+   - 人类优先的叙事体验
+   - 速度、质量和真实性之间无需妥协
+
+**技术特点：**
+- 集成世界最强大的AI模型：Sora、Veo、Kling（视频生成）、Flux（图像生成）、ElevenLabs（语音生成）
+- 企业级安全和管理员控制
+- 符合GDPR、SOC 2 TYPE II、CCPA、AI ACT、DPF等全球安全和合规标准
+
+**客户案例：**
+- Miro：视频制作速度提升10倍，视频创作量提升5倍
+- 被100,000+团队使用
+
+> 来源：https://www.heygen.com/
+
+---
+
+###### Manus（蝴蝶效应）- 被Meta收购的通用Agent新星
+
+**公司简介：**
+- 创立时间：未知
+- 总部：新加坡（2025年6月从中国迁至新加坡）
+- 收购时间：2025年底
+- 收购方：Meta
+- 收购金额：超过20亿美元
+- 现状：2026年1月，中国商务部表示将会同有关部门对该项收购进行合规性审查
+
+**核心产品与功能：**
+1. **Create slides** - 创建演示文稿
+2. **Build website** - 构建网站
+3. **Develop apps** - 开发应用
+4. **AI design** - AI设计工具
+5. **AI slides** - AI幻灯片工具（Nano Banana Pro Slides）
+6. **Manus browser operator** - 浏览器操作器
+7. **Wide Research** - 广泛研究功能
+8. **Mail Manus** - 邮件功能
+9. **Slack integration** - Slack集成
+
+**技术特点：**
+- Less structure, more intelligence（更少结构，更多智能）
+- Web app、桌面应用、移动应用多端支持
+- API开放平台
+
+**发展历程：**
+1. 2025年6月：将总部从中国迁至新加坡
+2. 2025年底：官宣被Meta以20亿美元收购
+3. 2026年1月：中国商务部表示将会同有关部门对该项收购进行合规性审查
+
+> 来源：https://manus.im/
+
+---
+
+###### PixVerse - AI视频生成领域的重要玩家
+
+**公司简介：**
+- 创立时间：未知
+- 总部：中国
+- 2025年总收入：超4000万美元
+- 领域：视频生成
+
+**公司愿景：**
+- Frontier AI Research and Products that Redefine the Future of Video Intelligence（重新定义视频智能未来的前沿AI研究和产品）
+- The next generation AI creative studio for everyone（面向所有人的下一代AI创意工作室）
+- Shape your stories, share your magic, explore the unknown（塑造你的故事，分享你的魔力，探索未知）
+
+> 来源：https://pixverse.ai/
+
+---
+
+###### Perplexity - AI搜索领域的标杆
+
+**公司简介：**
+- 创立时间：未知
+- 总部：美国
+- ARR：5000万+
+- 领域：AI搜索
+
+**行业地位：**
+- AI搜索领域的标杆公司
+- Top Lean AI榜单中AI Search分类的代表企业
+
+---
+
 **榜单分类：
 
 **AI Search（AI 搜索）**
