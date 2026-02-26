@@ -64,7 +64,8 @@ Capture what matters. Decisions, context, things to remember. Skip the secrets u
   - `TOOLS.md` -> `CS-Notes/.openclaw-memory/TOOLS.md`
   - `HEARTBEAT.md` -> `CS-Notes/.openclaw-memory/HEARTBEAT.md`
   - `IDENTITY.md`, `SOUL.md`, `USER.md`
-  - `memory/` directory
+  - `memory/` directory -> `CS-Notes/.openclaw-memory/memory/`
+  - `skills/` directory -> `CS-Notes/.trae/openclaw-skills/`
 - **Before writing to these files**: Check if it is a symlink (`ls -l`). If it is, write to the *target* file or just write to the path (most editors follow symlinks), but **DO NOT delete and recreate the file** which breaks the link.
 - **If you see a regular file where a symlink should be**: Stop and fix it using `Notes/snippets/restore_openclaw_links.sh`.
 - **Never `rm` these files** unless you intend to destroy the link.

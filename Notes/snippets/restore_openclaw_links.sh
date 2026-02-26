@@ -5,34 +5,37 @@
 # or ensure CS-Notes is in the current directory.
 
 WORKSPACE_DIR="$HOME/.openclaw/workspace"
-SOURCE_DIR="CS-Notes/.openclaw-memory"
+CS_NOTES_DIR="CS-Notes"
 
-# List of files/directories that should be symlinks
-FILES_TO_LINK=(
-    "AGENTS.md"
-    "HEARTBEAT.md"
-    "IDENTITY.md"
-    "MEMORY.md"
-    "SOUL.md"
-    "TOOLS.md"
-    "USER.md"
-    "memory"
+# Mappings of LinkName -> SourcePath (relative to CS-Notes)
+# Use space as separator, format: "LinkName:SourcePath"
+MAPPINGS=(
+    "AGENTS.md:.openclaw-memory/AGENTS.md"
+    "HEARTBEAT.md:.openclaw-memory/HEARTBEAT.md"
+    "IDENTITY.md:.openclaw-memory/IDENTITY.md"
+    "MEMORY.md:.openclaw-memory/MEMORY.md"
+    "SOUL.md:.openclaw-memory/SOUL.md"
+    "TOOLS.md:.openclaw-memory/TOOLS.md"
+    "USER.md:.openclaw-memory/USER.md"
+    "memory:.openclaw-memory/memory"
+    "skills:.trae/openclaw-skills"
 )
 
 echo "Starting OpenClaw symlink restoration..."
 echo "Workspace: $WORKSPACE_DIR"
-echo "Source: $SOURCE_DIR"
 
 cd "$WORKSPACE_DIR" || { echo "Error: Cannot change to workspace directory $WORKSPACE_DIR"; exit 1; }
 
-if [ ! -d "CS-Notes" ]; then
-    echo "Error: CS-Notes directory not found in $WORKSPACE_DIR."
+if [ ! -d "$CS_NOTES_DIR" ]; then
+    echo "Error: $CS_NOTES_DIR directory not found in $WORKSPACE_DIR."
     echo "Please ensure you have cloned the repo or are in the right directory."
     exit 1
 fi
 
-for item in "${FILES_TO_LINK[@]}"; do
-    target="$SOURCE_DIR/$item"
+for mapping in "${MAPPINGS[@]}"; do
+    link_name="${mapping%%:*}"
+    source_path="${mapping#*:}"
+    target="$CS_NOTES_DIR/$source_path"
     
     # Check if the source file actually exists in CS-Notes
     if [ ! -e "$target" ]; then
@@ -41,31 +44,29 @@ for item in "${FILES_TO_LINK[@]}"; do
     fi
 
     # Check if the destination exists
-    if [ -e "$item" ]; then
+    if [ -e "$link_name" ]; then
         # Check if it is already a symlink
-        if [ -L "$item" ]; then
-            current_link=$(readlink "$item")
+        if [ -L "$link_name" ]; then
+            current_link=$(readlink "$link_name")
             if [ "$current_link" == "$target" ]; then
-                echo "[OK] $item is already correctly linked."
+                echo "[OK] $link_name is already correctly linked."
                 continue
             else
-                echo "[FIX] $item is a symlink but points to '$current_link'. Relinking..."
-                rm "$item"
+                echo "[FIX] $link_name is a symlink but points to '$current_link'. Relinking..."
+                rm "$link_name"
             fi
         else
-            echo "[FIX] $item is a regular file/directory. Deleting and linking..."
-            # Back up just in case, or just delete as requested
-            # mv "$item" "${item}.bak" 
-            rm -rf "$item"
+            echo "[FIX] $link_name is a regular file/directory. Deleting and linking..."
+            rm -rf "$link_name"
         fi
     else
-        echo "[NEW] $item does not exist. Creating link..."
+        echo "[NEW] $link_name does not exist. Creating link..."
     fi
 
     # Create the symlink
-    ln -s "$target" "$item"
-    echo "     -> Linked $item to $target"
+    ln -s "$target" "$link_name"
+    echo "     -> Linked $link_name to $target"
 done
 
 echo "Restoration complete."
-ls -laH "${FILES_TO_LINK[@]}"
+ls -laH
