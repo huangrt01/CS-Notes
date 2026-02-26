@@ -53,6 +53,22 @@ Capture what matters. Decisions, context, things to remember. Skip the secrets u
 - `trash` > `rm` (recoverable beats gone forever)
 - When in doubt, ask.
 
+## 🔗 Workspace Integrity & Symlinks
+
+**CRITICAL: DO NOT OVERWRITE SYMLINKS!**
+
+- The workspace (`~/.openclaw/workspace/`) contains critical symlinks pointing to the git repository (`CS-Notes/`).
+- **Files that MUST be symlinks**:
+  - `MEMORY.md` -> `CS-Notes/.openclaw-memory/MEMORY.md`
+  - `AGENTS.md` -> `CS-Notes/.openclaw-memory/AGENTS.md`
+  - `TOOLS.md` -> `CS-Notes/.openclaw-memory/TOOLS.md`
+  - `HEARTBEAT.md` -> `CS-Notes/.openclaw-memory/HEARTBEAT.md`
+  - `IDENTITY.md`, `SOUL.md`, `USER.md`
+  - `memory/` directory
+- **Before writing to these files**: Check if it is a symlink (`ls -l`). If it is, write to the *target* file or just write to the path (most editors follow symlinks), but **DO NOT delete and recreate the file** which breaks the link.
+- **If you see a regular file where a symlink should be**: Stop and fix it using `Notes/snippets/restore_openclaw_links.sh`.
+- **Never `rm` these files** unless you intend to destroy the link.
+
 ## External vs Internal
 
 **Safe to do freely:**
