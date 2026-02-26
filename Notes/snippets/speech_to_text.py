@@ -62,7 +62,7 @@ def transcribe_audio(file_path: str, model: str = "medium") -> str:
 def main():
     parser = argparse.ArgumentParser(description="Speech-to-Text Tool")
     parser.add_argument("file", help="Audio file path")
-    parser.add_argument("--model", default="medium", help="Whisper model (base, small, medium, large, large-v2, large-v3, large-v3-turbo, turbo)")
+    parser.add_argument("--model", default="small", help="Whisper model (base, small, medium, large, large-v2, large-v3, large-v3-turbo, turbo)")
     args = parser.parse_args()
 
     if not os.path.exists(args.file):

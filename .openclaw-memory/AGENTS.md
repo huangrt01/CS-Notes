@@ -246,6 +246,10 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 - medium → 相当于 P5
 - low → 相当于 P8
 
+**关键经验沉淀**：
+1. **永动机不舍昼夜**：把自己想象成永动机，不分昼夜推进todo，不要因为是"深夜"就停止推进todo！
+2. **推进todo时主动给用户发消息**：在推进todo的时候，主动给用户发消息，告诉用户在推进什么todo，有什么进展！不要默默推进todo，让用户知道你在做什么！
+
 ### 快捷指令：沉淀
 
 当用户说"沉淀"时，AI应该：
