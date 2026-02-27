@@ -15,11 +15,7 @@ description: 使用内置 search_web.py 脚本进行联网搜索问答，准备�
 2. 运行脚本 `python scripts/search_web.py "<question>"`。运行之前cd到对应的目录。
 3. 脚本将返回智能体的回答内容，包括参考来源、追问建议等。
 
-## 认证与凭据来源
 
-- 优先读取 `MODEL_SEARCH_API_KEY` 或 `ARK_API_KEY` 环境变量。
-- 若未配置，将尝试使用 `VOLCENGINE_ACCESS_KEY` 与 `VOLCENGINE_SECRET_KEY` 获取 Ark API Key。
-- 需要配置 `SEARCH_BOT_ID` 环境变量指定智能体ID（在控制台创建智能体后获取）。
 
 ## 输出格式
 

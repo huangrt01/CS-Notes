@@ -19,11 +19,7 @@ description: 使用火山引擎 Ask-Echo 融合信息搜索 API 进行 web 搜�
 2. 运行脚本 `python scripts/ask_echo.py "<query>"`。
 3. 脚本将返回搜索结果。
 
-## 认证与凭据
 
-需要配置以下环境变量：
-
-- `VOLCENGINE_ASK_ECHO` - 火山引擎 Ask-Echo API Key（从控制台获取）
 
 ## 输出格式
 
