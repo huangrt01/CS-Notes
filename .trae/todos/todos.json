@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-27T08:08:53.796941",
+  "updated_at": "2026-02-27T08:13:38.103429",
   "todos": [
     {
       "id": "todo-20260226-005",
@@ -1087,7 +1087,7 @@
     {
       "id": "todo-20260219-047",
       "title": "实现 todo 同步脚本：将 JSON 格式的 todo 同步到 Markdown 格式",
-      "status": "in-progress",
+      "status": "pending",
       "priority": "P4",
       "assignee": "ai",
       "feedback_required": false,
@@ -1106,7 +1106,7 @@
       "user_requirements": [
         "你是如何考虑新增的todos要能被新的web manager下的存储形式感知到的"
       ],
-      "progress": "🚀 开始推进！实现 todo 同步脚本：将 JSON 格式的 todo 同步到 Markdown 格式！",
+      "progress": "⏸️ 用户说这个任务不用做，暂时停止推进。",
       "started_at": "2026-02-27T05:03:47.194414"
     },
     {
