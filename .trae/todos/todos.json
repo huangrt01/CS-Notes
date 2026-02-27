@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-27T08:13:38.103429",
+  "updated_at": "2026-02-27T08:27:33.491833",
   "todos": [
     {
       "id": "todo-20260226-005",
@@ -1734,23 +1734,6 @@
       ],
       "progress": "🚀 永动机继续工作！帮我安装 https://cloud.baidu.com/doc/qianfan/s/Mmlda41a2 中的部分skills！",
       "started_at": "2026-02-27T04:07:17.469698"
-    },
-    {
-      "id": "todo-20260225-022",
-      "title": "一进入 todo web manager，即进入\"待审核tasks\"的页面",
-      "status": "completed",
-      "priority": "P2",
-      "assignee": "ai",
-      "feedback_required": false,
-      "created_at": "2026-02-25T23:42:33.539140",
-      "links": [],
-      "definition_of_done": [],
-      "progress": "--progress",
-      "started_at": "",
-      "completed_at": "2026-02-26T06:07:18.830491",
-      "commit_hash": "d66ed2d96513e540c90f63332d84fadaec85bff3",
-      "commit_hash_before": "",
-      "commit_hash_after": ""
     },
     {
       "id": "todo-20260226-001",

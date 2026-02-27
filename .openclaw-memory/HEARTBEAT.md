@@ -17,18 +17,6 @@ HEARTBEAT_INTERVAL_MINUTES = 30
 
 ## 整体思考
 
-### 问题：依赖 heartbeat 来触发自主推进
-
-**问题分析：**
-- 目前比较依赖 heartbeat 来触发自主推进
-- 如果 heartbeat 间隔太长，可能会错过一些需要及时推进的任务
-- 如果 heartbeat 间隔太短，可能会导致不必要的检查和资源浪费
-
-**解决方案：**
-1. **调整 heartbeat 间隔为30分钟**：平衡及时性和资源消耗
-2. **在用户干预之间自主推进任务**：不等待 heartbeat，在用户两次干预之间主动推进任务
-3. **闭环自我迭代**：在执行任务过程中，如果发现对齐最终目标的新 todos，自动添加到 todo manager 中
-
 ### 自主推进原则
 
 1. **只有需要用户做选择题的时候才找用户确认**
@@ -130,7 +118,7 @@ HEARTBEAT_INTERVAL_MINUTES = 30
 
 
 
-## 5. 任务恢复机制
+## 5. 任务恢复和推动机制
 
 **触发条件**：每次心跳时检查
 
@@ -143,3 +131,4 @@ HEARTBEAT_INTERVAL_MINUTES = 30
 - 基于 OpenClaw 现有能力，不侵入内部代码
 - 利用 todos.json 中的 progress 字段记录任务进度
 - 优先执行 `in-progress` 状态的 todo
+- 其次执行合适的 `pending` 状态的 todo
