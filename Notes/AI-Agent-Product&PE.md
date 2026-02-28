@@ -1020,6 +1020,43 @@ OpenClaw 支持三种类型的技能：
 - 图生视频（多张参考图）: "我给你发了四张照片，分别是春夏秋冬。请帮我使用 SeeDance Skill 帮我生成一个视频，体验出春夏秋冬的变化，并且非常适合在抖音上发布"
 - 古诗场景: "生成一个15s左右的视频，内容是一首古诗：枯藤老树昏鸦，小桥流水人家，古道西风瘦马。夕阳西下，断肠人在天涯"
 
+##### Skills.sh: AI 智能体的标准化技能库
+
+> 参考来源：[Vercel发布Skills.sh:为AI智能体打造标准化技能库](https://m.sohu.com/a/985432908_122004016/)、[Skills.sh每小时新增550+技能，AI代理的npm时代正在到来](https://view.inews.qq.com/k/20260128A02DPZ00?no-redirect=1)、[AI 智能体界的 npm 来了!Vercel 推出 Skills.sh，欲统一智能体指令集](https://www.163.com/dy/article/KLB2O9V30511D3QS.html)
+
+Vercel 最近推出的开源项目 Skills.sh，旨在为 AI 智能体（Agents）提供一套"标准动作库"，使其能够通过命令行执行各种可复用的操作，也就是所谓的"技能"。此项目的核心理念是将智能体的"推理"与"执行"过程分离，让智能体能够调用一系列预定义的命令，而不是随意生成复杂的 shell 逻辑。
+
+**核心特点**：
+
+* **轻量级运行时环境**：允许智能体调用以 shell 脚本实现的多种技能
+* **简单契约协议**：每项技能都遵循简单的契约协议，明确定义了输入、输出和执行行为
+* **开放生态系统**：开发者可以在这里定义、分享并运行一个个独立的指令，供智能体在工作流中随时调用
+* **快速增长**：Skills.sh 平台现在每小时新增超过 550 个技能，这个增长速度让人想起当年 npm 生态的爆发期
+
+**Skills 市场介绍**：
+
+> 参考来源：[Skills 生态介绍](https://juejin.cn/post/7599966546560303104)、[61,000+ Skills:AI Agent 的"App Store"已经出现](https://blog.51cto.com/u_17632368/14485798)
+
+Skills（技能）是可重用的指令集，用于扩展 AI 编程助手的能力。它们以 SKILL.md 文件的形式定义，包含 YAML frontmatter 元数据和 Markdown 格式的指令内容。
+
+Skills 让 AI 助手能够执行专业化任务，例如：
+* 从 Git 历史中提取信息
+* 代码审查和 PR 自动化
+* 文档生成和整理
+* 数据处理和分析
+
+**SkillsMP: Agent Skills 技能商店**：
+
+> 参考来源：[SkillsMP官网 - Agent Skills 技能商店， 12 万+ AI 编程技能Skills](https://www.tudingai.com/sites/3695.html)
+
+SkillsMP 是一个面向 AI 编程助手的「Agent Skills 技能市场/聚合平台」：把散落在 GitHub 上的海量 skills（以 SKILL.md 为核心的开放标准能力包）集中起来，提供更好用的搜索、分类、质量指标与安装指引，帮助你更快把"别人打磨好的工作流/提示词/脚本模板"装进 Claude Code、OpenAI Codex CLI，甚至 ChatGPT 等工具。
+
+**使用方式**：
+
+* 运行 `npx skills@latest` 即可开始体验
+* 通过 ClawHub 或 SkillsMP 搜索和安装技能
+* 将技能集成到 AI 编程助手的工作流中
+
 #### 记忆系统设计
 
 OpenClaw 的记忆系统是其核心亮点之一：
