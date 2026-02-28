@@ -747,6 +747,20 @@ https://docs.nvidia.com/deeplearning/performance/index.html
   * the value range for FP16 is approximately [-2¹⁵, 2¹⁵]=[-32768, 32768]
   * ![image-20250627185839062](./MLSys+RecSys/image-20250627185839062.png)
 
+* **主流数值精度格式总览** [cnDBA.cn](https://www.cndba.cn/dave/article/131782)
+  * 格式：全称、位宽、符号/指数/尾数、动态范围、精度、主要用途
+  * FP32：IEEE 754单精度浮点
+  * FP16：IEEE 754半精度浮点
+  * BF16：Brain Float 16
+  * TF32：Tensor Float 32
+  * FP8：8位浮点
+  * INT8：8位整数
+
+* **混合精度训练** [CSDN博客](https://blog.csdn.net/qq_32907491/article/details/146959774)
+  * 训练场景优先考虑FP32或BF16
+  * 推理场景可选择FP16/BF16或INT8量化
+  * 针对训练和推理不同场景，提供精度选择策略
+
 * 精度范围：
   * ![image-20250331122231657](./MLSys+RecSys/image-20250331122231657.png)
 
