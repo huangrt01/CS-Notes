@@ -722,6 +722,10 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 
 * ![image-20250404210744334](./MLSys+RecSys/image-20250404210744334.png)
 
+* **在大模型（Large Language Models, LLMs）的训练与推理过程中，数值精度格式（Numerical Precision Format）是影响性能、显存、速度和模型质量的核心因素之一** [cnDBA.cn](https://www.cndba.cn/dave/article/131782)
+  * 随着模型规模从数十亿到数千亿参数，高效利用硬件资源变得至关重要
+  * 以下是目前在大模型领域最常见、最实用的数值精度格式详解，涵盖其原理、优缺点及典型应用场景
+
 * FP64: 8个字节, 1位符号, 11位指数, 52位小数，**有效位数为16位**. 常用于科学计算, 例如: 计算化学, 分子建模, 流体动力学
 
 * FP32: 4个字节, 1位符号, 8位指数, 23位小数，**有效位数为7位**. 常用于多媒体和图形处理计算、深度学习、人工智能等领域
