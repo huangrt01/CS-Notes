@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-02-27T18:23:54.358771",
+  "updated_at": "2026-02-28T12:19:54.473738",
   "todos": [
     {
       "id": "todo-20260226-005",
@@ -1245,9 +1245,9 @@
     {
       "id": "todo-20260220-009",
       "title": "在具备联网搜索能力后，去搜索并下载 \"Numerical Precision in Deep Learning: FP32, FP16, and BF16 for LLMs and CTR Systems\" 这篇 PDF 文件，然后整理笔记",
-      "status": "in-progress",
+      "status": "pending",
       "priority": "P3",
-      "assignee": "ai",
+      "assignee": "user",
       "feedback_required": false,
       "created_at": "2026-02-20T09:30:00.000000",
       "definition_of_done": [
@@ -1265,8 +1265,8 @@
       "user_requirements": [
         "在具备联网搜索能力后，去搜索并下载 \"Numerical Precision in Deep Learning: FP32, FP16, and BF16 for LLMs and CTR Systems\" 这篇 PDF 文件，然后整理笔记"
       ],
-      "progress": "🚀 永动机继续工作！在具备联网搜索能力后，去搜索并下载 \"Numerical Precision in Deep Learning: FP32, FP16, and BF16 for LLMs and CTR Systems\" 这篇 PDF 文件，然后整理笔记！\\n\\n已完成的工作：\\n1. ✅ 已具备联网搜索能力！\\n2. ✅ 已删除 ask-echo 和 web-search skill 对 api key 的需求描述\\n3. ✅ 已成功使用 ask-echo skill 进行联网搜索！\\n4. ✅ 已成功使用 ask-echo skill 搜索了数值精度的相关内容！\\n5. ✅ 搜索结果非常丰富，包含了很多关于FP32、FP16、BF16的文章！\\n6. ✅ 已发现笔记库中已经有很多关于数值精度的内容了！\\n7. ✅ 特别是在`Notes/MLSys+RecSys.md`文件中，已经有了很多关于FP32、FP16、BF16的详细内容！\\n8. ✅ 已查看了`Notes/MLSys+RecSys.md`的目录结构，找到了最合适的section！\\n9. ✅ 已成功将新搜索到的内容整合到了`Notes/MLSys+RecSys.md`文件中！\\n10. ✅ 已添加了关于\"在大模型（Large Language Models, LLMs）的训练与推理过程中，数值精度格式（Numerical Precision Format）是影响性能、显存、速度和模型质量的核心因素之一\"的内容！\\n11. ✅ 已添加了关于\"主流数值精度格式总览\"的内容！\\n12. ✅ 已添加了关于\"混合精度训练\"的内容！\\n13. ✅ 已添加了关于\"针对训练和推理不同场景，提供精度选择策略\"的内容！\\n14. ✅ 已附上了来源链接作为引用！\\n\\n搜索到的相关内容：\\n- 大模型训练与推理中 常见的 数值精度格式 说明 [cnDBA.cn](https://www.cndba.cn/dave/article/131782)\\n- LLM大模型之精度问题(FP16，FP32，BF16)详解与实践 [CSDN博客](https://blog.csdn.net/qq_32907491/article/details/146959774)\\n- 大模型数值精度完全指南:从FP32到FP8，一篇搞定所有精度格式(建议收藏) [CSDN博客](https://blog.csdn.net/youmaob/article/details/156905255)\\n- BF16 和FP16 ，FP32区别以及转换方法 [CSDN博客](https://blog.csdn.net/CHNIM/article/details/14619778)\\n- 一文彻底理解AI大模型系列之:FP32、FP16、TF32、BF16、混合精度 [CSDN博客](https://blog.csdn.net/2401_85325726/article/details/147756992)\\n\\nGitHub Commits：\\n- https://github.com/huangrt01/CS-Notes/commit/b8dff38\\n- https://github.com/huangrt01/CS-Notes/commit/6a8b618\\n- https://github.com/huangrt01/CS-Notes/commit/5ff9703",
-      "started_at": "2026-02-27T17:44:02.465373"
+      "progress": "⏸️ 待执行。用户希望我下载到这篇论文的原文，根据论文来整理。如果我搜不到就不要整理乱七八糟的内容了。将这个todo设为user让用户去帮我下载。",
+      "started_at": ""
     },
     {
       "id": "todo-20260220-010",
@@ -1888,6 +1888,36 @@
       "changed_files": [
         ".trae/documents/Top-Lean-AI公司深度调研.md"
       ]
+    },
+    {
+      "id": "todo-20260228-001",
+      "title": "精炼整理skills.sh到agent产品笔记",
+      "status": "pending",
+      "priority": "P2",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-28T12:19:02.818306",
+      "links": [],
+      "definition_of_done": [],
+      "progress": "",
+      "started_at": "",
+      "completed_at": "",
+      "commit_hash": ""
+    },
+    {
+      "id": "todo-20260228-002",
+      "title": "接入skills.sh作为技能商店",
+      "status": "pending",
+      "priority": "P2",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-02-28T12:19:54.469497",
+      "links": [],
+      "definition_of_done": [],
+      "progress": "",
+      "started_at": "",
+      "completed_at": "",
+      "commit_hash": ""
     }
   ]
 }
