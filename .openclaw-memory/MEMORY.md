@@ -193,6 +193,52 @@
 - **永动机不舍昼夜**：把自己想象成永动机，不分昼夜推进todo，不要因为是"深夜"就停止推进todo！
 - **推进todo时主动给用户发消息**：在推进todo的时候，主动给用户发消息，告诉用户在推进什么todo，有什么进展！不要默默推进todo，让用户知道你在做什么！
 
+### 17. ClawHub Skills 实际使用经验
+- **已成功使用的 skills（8 个）**：
+  1. ✅ pdf-parser skill - PDF 解析器，支持解析为 Markdown、JSON、提取图片和表格
+  2. ✅ markdown-toc skill - 提取 Markdown 文件的目录层级结构
+  3. ✅ voice_task_parser.py - 口述式任务模板解析器（支持自然语言口述任务，自动解析为结构化 todo 格式）
+  4. ✅ smart-task-parser - 智能任务解析器（基于 LLM 智能解析口述式任务，写入 todos.json）
+  5. ✅ find-skills - 帮助用户发现和安装 agent skills
+  6. ✅ todo-updater - 使用 Todos Web Manager 的 API 来更新 todo 状态
+  7. ✅ plan-generator - 使用 Plan Generator 生成 Plan
+  8. ✅ agent-browser - 使用 agent-browser 进行网页自动化
+- **skill 使用原则**：优先使用已有的 skill 解决问题，而不是重新造轮子
+
+### 18. 永动机模式的最佳实践
+- **MAX_TASKS_BETWEEN_INTERVENTIONS 限制**：每次用户干预后，计数清零，继续推进 8 个任务
+- **任务推进目标**：让每个 todo 都到了不得不依赖用户做些什么或者做决策的阶段
+- **任务推进原则**：
+  - 小步快跑：把大任务拆成多个小阶段，每个阶段都有明确的产出
+  - 快速迭代：优先实现可用的最小版本，后续再逐步完善
+  - 不要只是把任务的状态从 pending 改成 in-progress，要真正推进任务，做一些实质工作
+
+### 19. Top Lean AI 榜单调研的最佳实践
+- **每家公司的调研重点**：技术壁垒分析 + 商业变现逻辑分析
+- **调研方法**：使用 ask-echo skill 联网搜索每家公司的信息
+- **进度管理**：持续推进，直到完成全部 46 家公司的调研（当前进度：26/46）
+- **文档位置**：`.trae/documents/Top-Lean-AI公司深度调研.md`
+
+### 20. Todos Web Manager 维护经验
+- **确保 server.py 一直在后台运行**：这是 todo-adder skill 和 todo-updater skill 正常工作的前提
+- **进程检查方法**：使用 `ps aux | grep server.py` 检查进程状态
+- **后台启动方法**：`cd .trae/web-manager && python3 server.py &`
+
+### 21. 重要文档和最佳实践沉淀
+- **重要文档位置**：`.trae/documents/` 目录存放所有重要文档
+- **已发现的重要文档清单**：
+  1. agent-browser-适用场合分析.md
+  2. Claude-Code接入方案调研.md
+  3. OpenClaw配置优化与最佳实践.md
+  4. OpenClaw集成方案.md
+  5. Todo-Web-Manager-解耦方案-迁移到任意新项目.md
+  6. Top-Lean-AI榜单完整整理.md
+  7. Top-Lean-AI公司深度调研.md
+  8. 任务执行可观测闭环-实现方案.md
+  9. 整体仓库架构设计-决策反馈与Plan能力融合.md
+  10. 自主推进任务机制优化方案.md
+- **沉淀原则**：将重要文档和最佳实践沉淀到 MEMORY.md 里，用索引的形式
+
 ---
 
-*最后更新：2026-02-26*
+*最后更新：2026-02-28*
