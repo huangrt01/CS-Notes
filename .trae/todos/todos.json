@@ -1634,12 +1634,13 @@
     {
       "id": "todo-20260225-007",
       "title": "考虑如何将重要文档和最佳实践沉淀到 MEMORY.md 里，用索引的形式",
-      "status": "in-progress",
+      "status": "completed",
       "priority": "P3",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-25T07:15:00.000000",
       "started_at": "2026-02-25T07:15:00.000000",
+      "completed_at": "2026-03-01T05:15:00.000000",
       "links": [
         "MEMORY.md",
         ".trae/documents/"
@@ -1659,7 +1660,7 @@
         "我也不清楚啊",
         "今天根据最佳实践来做"
       ],
-      "progress": "🚀 开始实质推进！考虑如何将重要文档和最佳实践沉淀到 MEMORY.md 里，用索引的形式！\\n\\n已完成的工作：\\n1. ✅ 开始推进这个任务\\n2. ✅ 已查看 .trae/documents/ 目录，发现了很多重要文档\\n\\n发现的重要文档包括：\\n1. agent-browser-适用场合分析.md\\n2. Claude-Code接入方案调研.md\\n3. OpenClaw配置优化与最佳实践.md\\n4. OpenClaw集成方案.md\\n5. Todo-Web-Manager-解耦方案-迁移到任意新项目.md\\n6. Top-Lean-AI榜单完整整理.md\\n7. Top-Lean-AI公司深度调研.md\\n8. 任务执行可观测闭环-实现方案.md\\n9. 整体仓库架构设计-决策反馈与Plan能力融合.md\\n10. 自主推进任务机制优化方案.md\\n\\n下一步：\\n1. 继续思考如何将重要文档和最佳实践沉淀到 MEMORY.md 里\\n2. 设计用索引的形式来组织这些文档\\n3. 实现这个方案！"
+      "progress": "✅ 已完成！MEMORY.md 中已经有了\"重要文档和最佳实践沉淀\"这个 section！\\n\\n已确认的内容：\\n1. ✅ MEMORY.md 的最后部分已经有了\"重要文档和最佳实践沉淀\"这个 section！\\n2. ✅ 这个 section 里面已经列出了一些重要文档！\\n3. ✅ 包括：agent-browser-适用场合分析.md、Claude-Code接入方案调研.md、OpenClaw配置优化与最佳实践.md、OpenClaw集成方案.md、Todo-Web-Manager-解耦方案-迁移到任意新项目.md、Top-Lean-AI榜单完整整理.md、Top-Lean-AI公司深度调研.md、任务执行可观测闭环-实现方案.md、整体仓库架构设计-决策反馈与Plan能力融合.md、自主推进任务机制优化方案.md！\\n4. ✅ 沉淀原则：将重要文档和最佳实践沉淀到 MEMORY.md 里，用索引的形式！\\n\\n🎉 任务已完成！MEMORY.md 中已经有了\"重要文档和最佳实践沉淀\"这个 section！"
     },
     {
       "id": "todo-20260225-009",
