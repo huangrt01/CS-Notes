@@ -785,6 +785,11 @@ https://docs.nvidia.com/deeplearning/performance/index.html
 >
 > [Seed] INT v.s. FP: A Comprehensive Study of Fine-Grained Low-bit Quantization Formats https://arxiv.org/abs/2510.25602
 
+* **针对训练和推理不同场景，提供精度选择策略** [CSDN博客](https://blog.csdn.net/youmaob/article/details/156905255)
+  * 训练场景优先考虑FP32或BF16
+  * 推理场景可选择FP16/BF16或INT8量化
+  * 针对训练和推理不同场景，提供精度选择策略
+
 * 相对来说，INT8量化更适合于权重，FP8-E4量化更适合于大多数层的激活值，具体需要根据数值分布来定 
 * ![img_v3_02o8_a6b6845d-8878-462f-aae9-594f6ae23f0g](./MLSys+RecSys/img_v3_02o8_a6b6845d-8878-462f-aae9-594f6ae23f0g.png)
 * ![img_v3_02o8_b7b2fbf0-3e73-4d6f-a8ae-f5fdbe1e374g](./MLSys+RecSys/img_v3_02o8_b7b2fbf0-3e73-4d6f-a8ae-f5fdbe1e374g.png)
