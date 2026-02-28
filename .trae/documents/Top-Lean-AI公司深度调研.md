@@ -1481,6 +1481,95 @@
 
 ---
 
+### 15. Markable AI - 排名第17
+
+**基本信息:**
+- **排名:** 17
+- **描述:** AI Creator Marketing
+- **位置:** Seattle
+- **年营收:** $40,000,000（4000万美元）
+- **员工数:** 25人
+- **人均创收:** $1,600,000
+- **是否盈利:** Yes
+- **总融资:** $17,000,000（1700万美元，一说数百万美金的战略融资 + 累计融资一千七百万美金）
+- **成立时间:** 2023年
+- **最后更新:** （搜索结果中未明确提及）
+
+**公司背景:**
+- **创始人团队:**
+  - （搜索结果中未明确提及创始人姓名）
+- **创立故事:**
+  - 2023年成立
+  - Markable.AI是一家AI驱动女性消费领域效果广告服务提供商
+  - 将AI图像和视频内容识别及搜索技术应用于长短视频和图片投放
+  - 公司研发的图像识别技术，可识别照片和视频中的时尚产品
+  - markable.ai成功完成数百万美金的战略融资，并累计融资一千七百万美金
+  - 非凡资本担任独家财务顾问
+- **团队规模:** 25人
+
+**产品与服务:**
+- **核心产品:**
+  - **Your Personal Creator AI Copilot API** - Your Personal Creator AI Copilot API
+  - **为创作者和品牌提供个性化AI助手服务** - 为创作者和品牌提供个性化AI助手服务
+  - **自动化直接消息（Auto DM）设置** - 自动化直接消息（Auto DM）设置
+  - **社交媒体广告基金** - 社交媒体广告基金
+  - **创作者资源支持** - 创作者资源支持
+  - **Markable Creator Collective** - Markable Creator Collective，实现超过10亿美元的联盟销售每年
+- **技术壁垒:**
+  - **AI图像和视频内容识别及搜索技术** - 将AI图像和视频内容识别及搜索技术应用于长短视频和图片投放
+  - **图像识别技术** - 公司研发的图像识别技术，可识别照片和视频中的时尚产品
+  - **生成精确的和视觉上相似的产品推荐列表** - 观众可以在观看电视节目、电影和其他数字媒体时点击或悬停在他们看到的产品上，而Markable将生成精确的和视觉上相似的产品推荐列表，供用户选择购买
+  - **AI技术帮助创作者和品牌提高社交媒体影响力和营销效率** - 公司旨在通过AI技术帮助创作者和品牌提高社交媒体影响力和营销效率
+- **用户数据:**
+  - **Markable Creator Collective实现超过10亿美元的联盟销售每年** - Markable Creator Collective，实现超过10亿美元的联盟销售每年
+  - **1000+ top creators** - 1000+ top creators
+  - **Top 1% Creators use markable.ai** - Top 1% Creators use markable.ai
+  - **Increase your earnings 6x and save 2+ hours each day** - Increase your earnings 6x and save 2+ hours each day
+- **融资历程:**
+  - **战略融资** - markable.ai成功完成数百万美金的战略融资
+  - **累计融资一千七百万美金** - 并累计融资一千七百万美金
+  - **非凡资本担任独家财务顾问** - 非凡资本担任独家财务顾问
+
+**商业模式:**
+- **收入来源:**
+  - **为创作者和品牌提供个性化AI助手服务** - 为创作者和品牌提供个性化AI助手服务
+  - **自动化直接消息（Auto DM）设置** - 自动化直接消息（Auto DM）设置
+  - **社交媒体广告基金** - 社交媒体广告基金
+  - **创作者资源支持** - 创作者资源支持
+  - **联盟销售** - Markable Creator Collective，实现超过10亿美元的联盟销售每年
+- **商业变现逻辑:**
+  - **Markable Creator Collective实现超过10亿美元的联盟销售每年** - Markable Creator Collective，实现超过10亿美元的联盟销售每年
+  - **Increase your earnings 6x and save 2+ hours each day** - Increase your earnings 6x and save 2+ hours each day
+  - **AI技术帮助创作者和品牌提高社交媒体影响力和营销效率** - 公司旨在通过AI技术帮助创作者和品牌提高社交媒体影响力和营销效率
+
+**市场地位:**
+- Markable.AI获数百万美金投资
+- Markable AI - For the World's Top 1% Creators
+- 1000+ top creators
+- Top 1% Creators use markable.ai
+- Markable Creator Collective实现超过10亿美元的联盟销售每年
+
+**技术壁垒分析:**
+1. **AI图像和视频内容识别及搜索技术** - 将AI图像和视频内容识别及搜索技术应用于长短视频和图片投放
+2. **图像识别技术** - 公司研发的图像识别技术，可识别照片和视频中的时尚产品
+3. **生成精确的和视觉上相似的产品推荐列表** - 观众可以在观看电视节目、电影和其他数字媒体时点击或悬停在他们看到的产品上，而Markable将生成精确的和视觉上相似的产品推荐列表，供用户选择购买
+4. **AI技术帮助创作者和品牌提高社交媒体影响力和营销效率** - 公司旨在通过AI技术帮助创作者和品牌提高社交媒体影响力和营销效率
+
+**商业变现逻辑分析:**
+1. **Markable Creator Collective实现超过10亿美元的联盟销售每年** - Markable Creator Collective，实现超过10亿美元的联盟销售每年
+2. **Increase your earnings 6x and save 2+ hours each day** - Increase your earnings 6x and save 2+ hours each day
+3. **AI技术帮助创作者和品牌提高社交媒体影响力和营销效率** - 公司旨在通过AI技术帮助创作者和品牌提高社交媒体影响力和营销效率
+
+**来源:**
+- 幂简集成
+- App Store
+- 腾讯网
+- Markable AI
+- LinkedIn
+- 经管之家
+
+---
+
 ### 22. Photoroom - 排名第26
 
 **基本信息:**
