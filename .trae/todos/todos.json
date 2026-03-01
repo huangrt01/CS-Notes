@@ -290,6 +290,7 @@
         "实现项目切换功能",
         "测试验证多个项目管理功能"
       ],
+      "progress": "🚀 永动机继续工作！todos web manager支持多个项目的管理！\\n\\n已完成的工作：\\n1. ✅ 开始推进这个任务\\n2. ✅ 已查看相关文档！\\n\\n下一步：\\n1. 在前端最上面某个地方灵活切换项目\\n2. 考虑利用openclaw的multi agents能力\\n3. 支持CS-Notes、开源仓库、公司内gitlab闭源项目等不同类型项目\\n4. 设计项目切换的用户体验\\n5. 实现项目切换功能\\n6. 测试验证多个项目管理功能！\\n\\n🚀 永动机继续推进中...",
       "user_requirements": [
         "todos web manager支持多个项目的管理，比如（CS-Notes是一个项目，某个开源仓库的开发可以是一个项目，某个公司内gitlab闭源项目也是一个项目）",
         "考虑：1）在前端最上面某个地方灵活切换项目；2）也许得考虑利用openclaw的multi agents能力，参考 `/Users/bytedance/CS-Notes/Notes/AI-Agent-Product&PE.md` 的##### 多 Agent 路由（Multi Agents）"
