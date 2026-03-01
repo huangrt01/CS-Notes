@@ -1,0 +1,11 @@
+{
+  "name": "gourmet-organizer",
+  "version": "1.0.0",
+  "description": "整理美食笔记，品鉴菜单，结合用户的美食品鉴经历",
+  "author": "OpenClaw",
+  "license": "MIT",
+  "dependencies": [],
+  "main": "main.py",
+  "keywords": ["gourmet", "food", "notes", "organizer"],
+  "categories": ["productivity", "notes"]
+}
