@@ -67,7 +67,7 @@ class PDFParserSkill:
         self.repo_root = REPO_ROOT
     
     def parse_pdf(self, pdf_path: str, output_format: str = "md", 
-                 extract_images: bool = False, extract_tables: bool = False,
+                 should_extract_images: bool = False, should_extract_tables: bool = False,
                  lang: str = "en", outroot: str = "./pdf-output") -> dict:
         """
         解析 PDF 文件
@@ -124,7 +124,7 @@ class PDFParserSkill:
                     result["json_file"] = str(json_file)
                 
                 # 提取图片
-                if extract_images:
+                if should_extract_images:
                     img_dir = outdir / "images"
                     img_dir.mkdir(exist_ok=True)
                     img_count = extract_images(doc, img_dir)
@@ -132,7 +132,7 @@ class PDFParserSkill:
                     result["image_count"] = img_count
                 
                 # 提取表格
-                if extract_tables:
+                if should_extract_tables:
                     tables = extract_tables_basic(doc)
                     tables_file = outdir / "tables.json"
                     tables_file.write_text(json.dumps(tables, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -206,8 +206,8 @@ def handle_parse():
         result = skill.parse_pdf(
             args.pdf,
             output_format=args.format,
-            extract_images=args.images,
-            extract_tables=args.tables,
+            should_extract_images=args.images,
+            should_extract_tables=args.tables,
             lang=args.lang,
             outroot=args.outroot
         )
