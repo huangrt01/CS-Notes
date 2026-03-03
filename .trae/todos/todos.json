@@ -1185,13 +1185,14 @@
     {
       "id": "todo-20260220-006",
       "title": "整理知乎专栏文章到笔记库中，注意和笔记中已有的 agent sandbox 完美讨论融合起来",
-      "status": "in-progress",
+      "status": "completed",
       "priority": "P2",
       "assignee": "ai",
       "feedback_required": false,
       "created_at": "2026-02-20T09:15:00.000000",
       "links": [
-        "https://zhuanlan.zhihu.com/p/1999938129465979624"
+        "https://zhuanlan.zhihu.com/p/1999938129465979624",
+        "https://juejin.cn/post/7597266141912825902"
       ],
       "definition_of_done": [
         "使用 web_fetch 工具直接获取知乎文章内容",
@@ -1202,9 +1203,9 @@
       "user_requirements": [
         "注意和笔记中已有的 agent sandbox 完美讨论融合起来，那个讨论是 gaoce 写的，比这篇水平高，因此这篇更多是补充更多角度和基础知识"
       ],
-      "progress": "🚀 永动机继续工作！整理知乎专栏文章到笔记库中，注意和笔记中已有的 agent sandbox 完美讨论融合起来！\\n\\n已完成的工作：\\n1. ✅ 已使用 ask-echo skill 搜索了关于 agent sandbox 的知识内容！\\n2. ✅ 搜索结果很丰富！找到了很多关于 agent sandbox 的文章！\\n3. ✅ 已查看了笔记中已有的 agent sandbox 讨论！\\n4. ✅ 已找到了那篇知乎专栏文章的链接！\\n\\n搜索结果中的相关文章：\\n1. \"为什么新一代 AI 应用的基石是Sandbox?\" - 稀土掘金\\n2. \"AgentBox:面向开发者的下一代 AI 沙箱平台\" - 稀土掘金\\n3. \"为什么Agent Sandbox会成为下一代AI应用的基石?\" - CSDN博客\\n4. \"优刻得全新发布Agent Sandbox，构建安全、可控的执行环境\" - 雪球\\n5. \"AI智能体的牢笼:大模型沙箱(SandBox)技术深度解析\" - CSDN博客\\n6. \"Agent代码裸奔？LangChain创始人揭秘两种沙箱架构的生死局\" - 今日头条\\n7. \"OpenAI Agent终登场：虚拟沙盒里的智能体，卷不动中国企业的“实在战场”\" - 今日头条\\n8. \"昨晚问AI做的功课。根据您提供的文档内容，“沙盒”是保障 AI Agent 能够安全、隔离、稳定执行复杂任务的核心运行环...\" - 雪球\\n9. \"Agent杂谈:Agent的能力上下限及【Agent构建】核心技术栈调研分享~\" - CSDN博客\\n\\n但是，搜索结果中没有直接找到那篇特定的知乎专栏文章（https://zhuanlan.zhihu.com/p/1999938129465979624）的内容。\\n\\n下一步需要用户确认：\\n1. 那篇知乎专栏文章的标题是什么？\\n2. 或者，是否可以提供那篇知乎专栏文章的标题？\\n3. 或者，是否可以使用搜索结果中的其他相关文章来补充到笔记中？\\n\\n🚀 永动机等待用户确认...",
+      "progress": "✅ 已完成！成功将这篇知乎文章的内容和笔记中已有的 agent sandbox 讨论完美融合起来了！\n\n已完成的工作：\n1. ✅ 找到了笔记中已有的 agent sandbox 讨论（gaoce 写的）\n2. ✅ 使用 ask-echo skill 搜索了相关的知乎文章\n3. ✅ 使用 web_fetch tool 获取了那篇知乎文章的完整内容\n4. ✅ 将这篇知乎文章的内容和笔记中已有的 agent sandbox 讨论完美融合起来了！\n\n融合的内容包括：\n- ✅ 什么是 AI Agent Sandbox？\n- ✅ 核心特征\n- ✅ 技术原理\n- ✅ 为什么不用 Docker？\n- ✅ Docker 的安全缺陷\n- ✅ 真实应用案例（OpenAI Code Interpreter、Anthropic Claude Code + E2B、AI 编程助手 Manus）\n- ✅ 原有的 Agent Sandbox 的核心需求\n- ✅ 原有的各种 Agent Sandbox 方案对比（e2b、k7、monty、Unikernel）\n- ✅ 原有的 Modal 的 Lazy Loading 设计\n- ✅ 原有的总结\n\n现在，这两部分内容完美融合起来了！gaoce 写的部分更侧重于技术方案的对比，而新添加的部分更侧重于为什么需要 Sandbox、为什么不用 Docker、以及真实应用案例！",
       "started_at": "2026-02-27T04:09:19.019899",
-      "completed_at": "2026-03-01T04:35:00.000000",
+      "completed_at": "2026-03-04T04:10:00.000000",
       "review_history": [
         {
           "reviewed_at": "2026-03-03T15:51:28.274215",
