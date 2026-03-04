@@ -319,4 +319,28 @@
 
 ---
 
-*最后更新：2026-03-03*
+### 29. 使用 playwright 阅读公众号文章的经验（2026-03-05 新增）
+- **背景**：微信公众号文章有反爬虫机制，很多普通的方法无法获取完整内容
+- **尝试过的方法**：
+  1. ❌ link-reader skill：缺少 veadk 模块
+  2. ❌ web_fetch：只获取到文章的头部
+  3. ❌ browser：没有找到支持的浏览器
+  4. ❌ ask-echo：没有搜索结果
+  5. ✅ **playwright-scraper skill**：成功获取到完整内容！
+- **playwright-scraper skill 的使用方法**：
+  1. 检查 Playwright 是否安装：`playwright --version`
+  2. 如果没有安装，先安装 Playwright：`pip install playwright && playwright install chromium`
+  3. 使用 playwright-scraper skill 抓取网页：`python3 skills/playwright-scraper/main.py <url>`
+  4. 保存的文件位置：`/tmp/wechat-article.html`（HTML）、`/tmp/wechat-article.json`（JSON）
+- **提取文章内容的方法**：
+  1. 从 HTML 文件中提取 `#js_content` 元素
+  2. 如果 BeautifulSoup 没有安装，可以用正则表达式来提取
+  3. 清理 HTML 标签，获取纯文本内容
+- **最佳实践**：
+  - 对于微信公众号文章，**优先使用 playwright-scraper skill**
+  - 抓取成功后，保存 HTML 和 JSON 文件，便于后续处理
+  - 提取内容时，注意清理 HTML 标签，获取纯文本内容
+
+---
+
+*最后更新：2026-03-05*
