@@ -1571,6 +1571,164 @@ openclaw agents list --bindings
    - 本项目的 todo-sync.sh 是本地脚本，可考虑类似 Gateway 的架构
    - 支持远程触发执行，手机提交后自动在电脑端处理
 
+##### 管理 OpenClaw 军团的要点和技巧
+
+> 来源：创作/02.23 OpenClaw 体验与思考：从 Backlog 管理到 Proactive Agent.md
+> 整理时间：2026-03-05
+
+**背景与体验**：
+- **10天体验**：和父母外出旅游期间，路上和 OpenClaw 交互，做了一个 Trivial 的 Backlog 管理玩具项目
+- **381个commit**：平均每天约 40.1 个 commit，干杂活效率大幅提升
+- **9亿Token消耗**：有 prefix cache，实际成本约 1760 元，改用 Coding Plan Pro 后每月约 200 元
+- **20+ Skills集成**：复利效应，技能生态系统让 Agent 能力持续扩展
+
+**观点先行：OpenClaw 的产品定位**
+
+**OpenClaw 不算一个非常"成熟"、"完美"的产品**：
+- **磨合成本高**：名义上开箱即用，但真正发挥效能严重依赖 Prompt Engineering 和记忆构建，用户需要与其进行较长时间的磨合
+- **基础能力待建**：内置 Skills 较少，关键的基础能力（如联网搜索、语音转文字、PDF Parser）需要用户自行建设
+- **Token 消耗大**：很容易消耗上亿 Token，个人用户不愿承受最强能力模型（如 Seed-Code 2.0）的开销，因此 KIMI 模型排在 OpenClaw 的 token 消耗榜首位
+- **纯粹的能力差距**：在纯粹的代码执行任务上，目前仍不如 Claude Code 或 Trae IDE 等最强产品
+
+**但 OpenClaw 是少数做到了"出圈"、用户数爆发式自增长的 AI Agent 产品**：
+- **核心在于它赶上了模型能力的拐点**，并初次具备了完整的"五感与心智"：
+  - **眼**：多模态交互能力
+  - **耳/口**：各类 IM + Web Manager
+  - **脑**：LLM 的推理规划能力
+  - **手**：增强的 Tool/Skill 调用能力
+  - **心**：Heartbeat/Cron 设计，赋予了产品自主性，使其初步具备了 Proactive Agent 的雏形
+- **这种"能对话、后台自主干活的机器人"在大众视角里是有趣且具有突破性的**
+- **当下模型的综合能力 & Token 价格达到某个拐点**，让大量基于记忆或 Prompt Engineering 的个性化 Agent 能力达标，从而让 OpenClaw "可用"
+- **这也印证了一些资深产品专家"产品应瞄着数月或半年后的模型能力进行建设"的论断**
+
+**有趣和能力突破，是 AI 应用出圈、达成自增长的关键**：
+- Claude Code 相比 TRAE 做了更激进的 bash cli 能力，进而有更大的影响力
+- OpenClaw 在自主性、完备性、易用性方面做出了突破，"能对话、后台自主干活的机器人"在大众视角里是有趣的
+
+**OpenClaw 的火热，标志着「Agent 代理/代替 人与企业 消耗 Token」初见端倪**：
+- 02.23 Agent 时代的 Viking AI 推荐 —— OpenClaw 赋能出圈新机会 探讨如何让 AI 推荐标品被 Agent 自主调用，增加推荐 Token 的消耗
+
+**基于 Backlog 的 Proactive Agent 模式**
+
+**模式的核心价值**：
+
+1. **沙箱自主能力（Sandbox Autonomy）**
+   - **Heartbeat 自驱动**：利用心跳机制，Proactive Agent 在后台周期性检查任务状态并推进 TODO
+   - **不阻塞交互**：不需要人工实时干预，Agent 在用户睡觉时自主推进 TODO
+   - **闭环自我迭代**：执行任务 → 发现新任务 → 添加新任务 → 继续执行
+
+2. **全渠道接入（Omni-channel）**
+   - 支持各种 IM（Lark/Telegram/Slack 等），让用户可以在自己习惯的渠道与 Agent 交互，降低使用门槛
+   - 支持 TODOs Web Manager 管理，电脑/手机网页端也可操纵 Agent
+
+3. **统一渠道管理技术和非技术、干活和学习的 TODOs**
+
+**TODO 的生命周期**：
+- 生成 -> 审核 Plan -> Pending -> In Progress <-> Completed (待审核) -> Archived
+
+**人与 AI 的交互**：
+- 多端异步递交 TODOs
+- Review 完成的 tasks
+- 给出评审意见
+- 评审不通过会打回重做
+
+**AI 和 TODOs 的交互**：
+- 执行 tasks 的优先级
+- HEARTBEAT 推动任务执行
+  - 优先级：review 打回的任务 > In-Progress 任务 > Pending 任务，且考虑任务优先级
+
+**人和 TODOs 的交互**：
+- 依赖人的待办，单独处理和提醒
+
+**个性化 Agent 讨论：OpenClaw 实现个性化 Agent，本质是基于 PE 和 Workflow**
+
+**个性化 Agent 强依赖人类经验的沉淀**：
+
+1. **单一数据源与 Todo 管理**
+   - **单一数据源**：以 `.trae/todos/todos.json` 为唯一数据源
+   - **Plan 机制本质化重构**：Plan 不再是独立的状态，而是 Todo 的一个字段（property）
+   - **任务归档前的用户确认流程**：在将 completed 任务从 todos.json 移动到 archive 之前，必须增加一次由用户进行 check/反馈的流程
+   - **Todos 管理的正确流程**：
+     1. AI 执行任务，完成编码/实现部分
+     2. 到了需要用户验证/确认的阶段时，自动归类到 "User 需要做的任务" section
+     3. 明确标注 Assignee: User，并且提醒用户去做
+     4. 等待用户完成后，再标记为完成
+
+2. **Git 操作 SOP 与安全防线**
+   - 必须使用 `Notes/snippets/todo-push.sh` 和 `Notes/snippets/todo-pull.sh` 作为标准 git 操作流程，不能直接用 git 命令
+   - todo-push.sh 白名单机制：仅允许 `Notes/`、`.trae/`、`创作/` 三个文件夹
+   - todo-push.sh 黑名单机制：绝对禁止 `公司项目/` 文件夹
+   - 验证步骤：每次 commit 前，先执行 `git status` 检查，或直接运行 `todo-push.sh`
+   - .gitignore 配置：确保 `/公司项目/` 在 .gitignore 中
+   - 公司项目/ 目录规则：该目录下的所有内容永远不要 git add 到公开仓库
+   - Git Push/Pull 工作流程：完成任务 → 运行 todo-push.sh → 生成 commit message → 运行 todo-push-commit.sh
+   - Commit 链接：每次进行 git commit 并 push 后，必须在回复中包含对应的 GitHub commit 链接
+
+3. **用户交互与 Proactive Agent**
+   - **用户消息优先原则**：无论 AI 正在执行什么任务，收到用户的新消息时必须立即回复，绝对不能让任务阻塞对话
+   - **长时间任务后台化**：对于耗时操作，必须使用后台模式（background: true）运行
+   - **进度报告要求**：主动、定期（每 10 分钟）检查任务进度，向用户报告，包含百分比、预估剩余时间
+   - **Intervention 定义**：只要用户和 AI 说话就算一次交互，每次交互后计数清零，在两次交互之间主动推进任务
+   - **自主推进原则**：只有需要用户做选择题的时候才找用户确认，否则尽量自主推进一切事项
+
+4. **任务交付与 E2E 落地**
+   - **E2E 落地思路**：不是写了、实现了就算 done，而是要用起来、用好
+   - **落地的定义**：成为了本仓库在各种交互方式下的默认 setting，并体验和效果良好，而不仅是有个设计文档和玩具代码即算落地
+   - **任务交付要更侧重于更 solid 的端到端验证**，不仅仅是完成任务，更要进行 thorough 的端到端验证
+
+5. **错误反思与持续改进**
+   - **失败尝试记录原则**：遇到失败时在技术文档记录跑的命令和错误
+   - **及时沉淀经验**：避免重复犯错
+   - **小步快跑**：把大任务拆成多个小阶段，每个阶段都有明确的产出
+   - **快速迭代**：优先实现可用的最小版本，后续再逐步完善
+
+6. **磨合与个性化**
+   - **Daily notes**：`memory/YYYY-MM-DD.md` (create `memory/` if needed) — raw logs of what happened
+   - **Long-term**：`MEMORY.md` — your curated memories, like a human's long-term memory
+   - **Review and update MEMORY.md**：Periodically (every few days), use a heartbeat to identify significant events, lessons, or insights worth keeping long-term, update `MEMORY.md` with distilled learnings, and remove outdated info.
+
+**拓展：融合到任意开发项目**
+
+**未来的核心目标是将 OpenClaw 的能力和项目解耦**，使其不仅作为独立的 Agent 存在，更能作为通用的"开发伴侣"插件，无缝融入任意开发项目（如 内部代码开发、开源代码开发 项目），从单纯的"任务执行器"进化为懂业务、有记忆的"AI 结对编程伴侣"。
+
+**能力1：能力/记忆的"迁移"能力**
+
+**快捷指令：迁移**
+
+当用户说"迁移"、"打包"、"一键迁移"等类似指令时，AI应该：
+
+1. **运行迁移脚本**：执行 `.trae/web-manager/migrate.sh`
+2. **检查同步状态**：脚本会自动检查原始文件和模板的同步状态
+3. **如果有更新**：智能判断 Diff 中的"通用能力"更新，将通用能力更新 apply，放弃仅适用于本项目的更新
+4. **自动构建**：确认后自动运行 build.sh 打包
+5. **完成迁移**：生成可迁移的压缩包
+
+**注意**：
+- 如果更新是通用的，需要手动编辑模板文件移除项目特定内容
+- 详细工作流请查看 `.trae/web-manager/WORKFLOW.md`
+
+**能力2：深度集成 Trae CLI/CLAUDE Code**
+
+**期望**：可拓展为"个人工作、学习、生活的统一多端控制台"
+
+**个性化 Agent 的未来路径：通用 + 个性化**
+
+Agent 未来的发展在向两个方向的同时演进：
+
+1. **方向一：通用能力原子化 + 个性化系统**
+   - 通用能力被拆分为原子组件，每个人根据需求组装自己的 Agent
+   - 优点：高度灵活，深度定制
+   - 缺点：创造价值仍有不低的门槛
+   - OpenClaw 的位置：目前更符合这一方向，通过高磨合成本换取高个性化价值
+
+2. **方向二：通用系统 + 内置个性化能力**
+   - 一套通用的强大系统，内置极强的自适应个性化能力，服务所有人
+   - 优点：开箱即用，门槛低
+   - 缺点：反馈信号不易获取（Coding Agent / 创作类产品更易获取反馈信号）
+   - 趋势：可能是大模型厂商（如 Claude/OpenAI）最终追求的终局
+
+**无论走向何方，OpenClaw 的出圈都标志着一个转折点**：我们正在从"使用工具"的时代，迈向"管理 Agent"的时代。
+
 ### 产品逻辑
 
 #### 产品逻辑
