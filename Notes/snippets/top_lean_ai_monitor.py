@@ -247,8 +247,19 @@ class TopLeanAIMonitor:
 def main():
     """命令行入口（保留用于调试）"""
     import sys
+    from pathlib import Path
     
-    monitor = TopLeanAIMonitor()
+    # 自动检测工作目录：向上查找包含 .top-lean-ai-state.json 的目录
+    script_dir = Path(__file__).resolve().parent
+    workspace_path = script_dir.parent  # 默认从 CS-Notes 目录开始
+    
+    # 向上查找状态文件
+    for parent in [script_dir, script_dir.parent, script_dir.parent.parent]:
+        if (parent / ".top-lean-ai-state.json").exists():
+            workspace_path = parent
+            break
+    
+    monitor = TopLeanAIMonitor(workspace_path)
     
     if len(sys.argv) > 1:
         command = sys.argv[1]
