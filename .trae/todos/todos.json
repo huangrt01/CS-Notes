@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-03-06T08:32:33.530986",
+  "updated_at": "2026-03-06T09:08:27.499807",
   "todos": [
     {
       "id": "todo-20260226-005",
@@ -599,7 +599,7 @@
     {
       "id": "todo-20260219-025",
       "title": "给任务系统添加 Plan Mode 与批量 Review",
-      "status": "in-progress",
+      "status": "--progress",
       "priority": "P4",
       "assignee": "ai",
       "feedback_required": false,
@@ -613,7 +613,7 @@
         "Plan 与执行拆分成两类条目：Plan 条目更强调意图与验收；执行条目更强调产物与可追溯性",
         "支持混合执行方式：当遇到复杂任务时，先生成 Plan，然后先自动执行，再用 AI 自动生成的方式"
       ],
-      "progress": "🚀 永动机继续工作！给任务系统添加 Plan Mode 与批量 Review！\n\n已完成的工作：\n1. ✅ 再次查看了相关文档！\n\n思考与分析：\n这个任务的目标是给任务系统添加 Plan Mode 与批量 Review。但是，从当前的使用场景来看，我们已经实现了 Plan 机制本质化重构：Plan 不再是独立的状态，而是 Todo 的一个字段。\n\n而且，我们已经实现了 Plan 的 review 流程：Plan 的 status 可以是 pending / approved / rejected。\n\n下一步需要用户确认：\n1. 是否真的需要给任务系统添加 Plan Mode 与批量 Review？\n2. 还是说当前的 Plan 机制已经足够了？\n\n🚀 永动机等待用户确认...",
+      "progress": "🚀 永动机继续工作！给任务系统添加 Plan Mode 与批量 Review！\\n\\n已完成的工作：\\n1. ✅ 已尝试查看相关文档，但是 Plan-Mode-与批量-Review-设计方案.md 和 Plan-Mode-混合执行实现方案.md 都不存在！\\n\\n思考与分析：\\n这个任务的目标是给任务系统添加 Plan Mode 与批量 Review。但是，从当前的使用场景来看，我们已经实现了 Plan 机制本质化重构：Plan 不再是独立的状态，而是 Todo 的一个字段。\\n\\n而且，我们已经实现了 Plan 的 review 流程：Plan 的 status 可以是 pending / approved / rejected。\\n\\n下一步需要用户确认：\\n1. 是否真的需要给任务系统添加 Plan Mode 与批量 Review？\\n2. 还是说当前的 Plan 机制已经足够了？\\n\\n🚀 永动机等待用户确认...",
       "started_at": "2026-02-27T05:04:27.869068"
     },
     {
