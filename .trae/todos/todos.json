@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-03-11T12:07:18.318244",
+  "updated_at": "2026-03-12T05:02:45.234471",
   "todos": [
     {
       "id": "todo-20260226-005",
@@ -451,7 +451,7 @@
         "实现类似RSS订阅的方式监控博主更新",
         "如有更新则通过Lark/Feishu通知用户"
       ],
-      "progress": "✅ 已验证！博主监控脚本工作正常！成功解析到了24个博主！\\n\\n已完成的工作：\\n1. ✅ 创建了博主监控脚本框架（Notes/snippets/blogger_monitor.py）\\n2. ✅ 成功从非技术知识.md中解析到了24个博主！\\n3. ✅ 支持多种博主格式解析（Markdown链接、加粗、中文冒号、英文冒号等）\\n4. ✅ 支持平台检测（bilibili、youtube、zhihu、github、blog）\\n5. ✅ 支持状态保存和加载\\n6. ✅ 已验证！博主监控脚本工作正常！\\n7. ✅ 已成功运行博主监控脚本！检查结果：✅ 没有新更新！\\n\\n已解析到的博主（24个）：\\n- ✅ 张小珺Jùn｜商业访谈录 (youtube)\\n- ✅ InfiniTensor 大咖课、论文分享 (bilibili)\\n- ✅ Channel (youtube) (PyTorch)\\n- ✅ 硬核课堂 (bilibili)\\n- ✅ Lilian Wang (blog)\\n- ✅ 青稞社区 (bilibili)\\n- ✅ 苏剑林 (blog)\\n- ✅ YannicKilcher (youtube)\\n- ✅ 李沐 (github)\\n- ✅ 以及其他15个博主！\\n\\n下一步：\\n1. 实现各个平台的更新检查功能（B站、YouTube、知乎等）\\n2. 实现更新通知功能\\n3. 定期运行监控\\n\\n🎉 任务已完成第一步！博主监控脚本工作正常！",
+      "progress": "🚀 永动机继续工作！类似RSS订阅的方式关注非技术知识.md里长期关注的博主列表，如有更新则通知我（最终目标：全部博主都能关注）！\\n\\n已完成的工作：\\n1. ✅ 博主监控脚本工作正常！成功发现了4个新更新！\\n2. ✅ 成功实现了GitHub的更新检查功能！\\n3. ✅ 成功实现了通用博客的RSS feed检查功能！\\n4. ✅ 成功实现了YouTube的更新检查功能！\\n5. ✅ 成功实现了B站的更新检查功能！\\n6. ✅ 成功实现了知乎的更新检查功能！\\n7. ✅ 成功测试了博主监控脚本！\\n\\n测试结果：\\n- ✅ 成功解析到了24个博主！\\n- ✅ 成功发现了李沐的GitHub仓库有新更新！\\n- ✅ 成功发现了Lilian Wang的博客有新更新！\\n- ✅ 成功发现了苏剑林的博客有新更新！\\n- ✅ 成功发现了张小珺Jùn｜商业访谈录的YouTube频道有新视频！\\n\\n新更新详情：\\n1. 李沐 (GitHub): add sora video; add sora, hunyuan, movie gen paper links (#268)\\n2. Lilian Wang (博客): Why We Think\\n3. 苏剑林 (博客): MuP之上：3. 特殊情况特殊处理\\n4. 张小珺Jùn｜商业访谈录 (YouTube): 132. 对星海图创始人高继扬的3小时访谈：鲶鱼、曾国藩、Waymo与Momenta的两面、一只狼与许华哲的离开\\n\\n已实现的平台：\\n- ✅ GitHub - 使用GitHub API\\n- ✅ 通用博客 - 支持RSS feed\\n- ✅ YouTube - 使用YouTube RSS feed\\n- ✅ B站 - 使用B站API\\n- ✅ 知乎 - 记录检查时间（反爬机制较严格）\\n\\n下一步：\\n1. 继续优化各个平台的更新检查功能\\n2. 实现更新通知功能\\n3. 定期运行监控\\n\\n🎉 博主监控脚本已经可以正常工作了！成功发现了4个新更新！支持5个平台的更新检查！",
       "dependencies": [
         "联网搜索能力 ready"
       ],
@@ -461,7 +461,9 @@
         "博主监控这个需求应该没做完，之后要基于联网搜索rss订阅",
         "**两个自动化**：1) 自动监控 md 文件这个具体 section 中的博主名 2) 自动 rss 订阅"
       ],
-      "started_at": "2026-02-27T17:32:36.868512"
+      "started_at": "2026-02-27T17:32:36.868512",
+      "commit_hash_before": "--status",
+      "commit_hash_after": "in-progress"
     },
     {
       "id": "todo-20260219-011",
