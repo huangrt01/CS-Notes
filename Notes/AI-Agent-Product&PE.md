@@ -1024,6 +1024,87 @@ Agent sandbox 的设计有很多不同的方案，每种方案都有自己的优
       - **操作**: 可查询（poll）、获取日志（log）、终止（kill）后台任务
       - **工具**: `process` 工具，支持 `list/poll/log/write/kill` 等操作
 
+#### 定时任务管理 (Cron)
+
+OpenClaw 提供完整的定时任务管理功能，通过 Gateway 调度器实现自动化任务执行。
+
+**核心命令**:
+- `openclaw cron list`: 列出所有 cron job
+- `openclaw cron add`: 添加 cron job
+- `openclaw cron rm`: 移除 cron job
+- `openclaw cron edit`: 编辑 cron job
+- `openclaw cron enable/disable`: 启用/禁用 cron job
+- `openclaw cron run`: 立即运行 cron job（调试）
+- `openclaw cron runs`: 查看 cron 运行历史
+- `openclaw cron status`: 查看 cron 调度器状态
+
+**常用参数**:
+- `--name <name>`: 任务名称
+- `--description <text>`: 任务描述
+- `--cron <expr>`: cron 表达式（5字段或6字段带秒）
+- `--system-event <text>`: 系统事件 payload（主会话）
+- `--message <text>`: Agent 消息 payload
+- `--agent <id>`: Agent ID
+- `--every <duration>`: 每隔一段时间运行（如 `10m`、`1h`）
+- `--at <when>`: 运行一次（ISO时间或+duration，如 `20m`）
+- `--tz <iana>`: cron 表达式的时区
+- `--announce`: 向聊天宣布摘要（subagent风格）
+- `--session <target>`: 会话目标（main|isolated）
+
+**使用示例**:
+
+1. **每小时推进todo**:
+```bash
+openclaw cron add --name "推进todo" --description "每小时推进todo" --cron "0 * * * *" --system-event "推进todo"
+```
+
+2. **每天晚上6点监控博主**:
+```bash
+openclaw cron add --name "博主监控" --description "每天晚上6点监控博主更新" --cron "0 18 * * *" --system-event "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK."
+```
+
+3. **每隔10分钟运行一次**:
+```bash
+openclaw cron add --name "定期检查" --description "每隔10分钟检查" --every "10m" --system-event "检查状态"
+```
+
+4. **20分钟后运行一次**:
+```bash
+openclaw cron add --name "一次性任务" --description "20分钟后运行" --at "+20m" --message "执行这个任务"
+```
+
+**迁移经验沉淀**:
+> 来源：2026年3月27日 OpenClaw Cron 使用经验
+
+1. **授权问题解决**:
+   - 问题：首次使用 `openclaw cron` 时遇到 "gateway closed (1008): unauthorized" 错误
+   - 解决：运行 `openclaw gateway install --force` + `openclaw gateway restart`
+   - 注意：如果此方法失败，可以先使用系统 crontab 作为临时方案
+
+2. **系统 crontab vs OpenClaw cron**:
+   - **系统 crontab**: 简单、稳定、不依赖 OpenClaw gateway，但需要手动管理，通知需要通过其他方式
+   - **OpenClaw cron**: 集成度高，可以直接通过 OpenClaw 发送通知，但需要解决授权问题
+   - **推荐**: 优先使用 OpenClaw cron，因为集成度更高
+
+3. **从系统 crontab 迁移到 OpenClaw cron**:
+   - 步骤1：验证 OpenClaw cron 是否可用（解决授权问题）
+   - 步骤2：使用 `openclaw cron add` 创建对应的 OpenClaw cron job
+   - 步骤3：从系统 crontab 中移除旧任务（`(crontab -l | grep -v "要移除的任务") | crontab -`）
+   - 步骤4：使用 `openclaw cron list` 验证新任务已创建
+
+4. **Cron 表达式语法**:
+   - 标准5字段：`分 时 日 月 周`
+   - 示例：
+     - `0 * * * *`: 每小时整点
+     - `0 18 * * *`: 每天18:00
+     - `*/10 * * * *`: 每10分钟
+   - 时区：使用 `--tz` 参数指定时区（如 `Asia/Shanghai`）
+
+5. **Payload 类型**:
+   - `--system-event`: 发送系统事件到主会话（适合心跳检查、状态检查）
+   - `--message`: 发送 Agent 消息（适合需要 Agent 执行具体任务）
+   - 选择：如果只是触发检查流程，用 `--system-event`；如果需要 Agent 做具体事情，用 `--message`
+
 #### 架构设计
 
 ```
