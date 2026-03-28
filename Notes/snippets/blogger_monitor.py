@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """
 博主监控脚本 - 监控非技术知识.md里长期关注的博主更新
@@ -14,7 +15,7 @@ from typing import Dict, List, Optional, Any
 class BloggerMonitor:
     """博主监控器"""
     
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path=None):
         self.workspace = Path("/root/.openclaw/workspace/CS-Notes")
         self.notes_file = self.workspace / "Notes" / "非技术知识.md"
         self.state_file = self.workspace / ".trae" / "logs" / "blogger_monitor_state.json"
@@ -32,7 +33,7 @@ class BloggerMonitor:
             "blog": self._check_blog,
         }
     
-    def _load_state(self) -> Dict[str, Any]:
+    def _load_state(self):
         """加载状态"""
         if self.state_file.exists():
             with open(self.state_file, "r", encoding="utf-8") as f:
@@ -47,7 +48,7 @@ class BloggerMonitor:
         with open(self.state_file, "w", encoding="utf-8") as f:
             json.dump(self.state, f, ensure_ascii=False, indent=2)
     
-    def parse_bloggers_from_notes(self) -> List[Dict[str, str]]:
+    def parse_bloggers_from_notes(self):
         """从非技术知识.md中解析博主列表"""
         bloggers = []
         
@@ -123,7 +124,7 @@ class BloggerMonitor:
         
         return bloggers
     
-    def _detect_platform(self, url: str) -> str:
+    def _detect_platform(self, url):
         """检测平台类型"""
         if "bilibili.com" in url:
             return "bilibili"
@@ -136,7 +137,7 @@ class BloggerMonitor:
         else:
             return "blog"
     
-    def _check_bilibili(self, blogger: Dict[str, str]) -> Optional[Dict[str, Any]]:
+    def _check_bilibili(self, blogger):
         """检查B站更新"""
         import re
         from urllib.request import urlopen
@@ -480,6 +481,48 @@ class BloggerMonitor:
         
         return updates
     
+    def test_get_latest(self) -> List[Dict[str, Any]]:
+        """测试模式：获取所有博主的最新文章（不检查状态）"""
+        latest_articles = []
+        bloggers = self.parse_bloggers_from_notes()
+        
+        print(f"\n🧪 ================ 测试模式开始 ================")
+        print(f"🧪 获取 {len(bloggers)} 个博主的最新文章...")
+        print(f"🧪 ===============================================\n")
+        
+        for blogger in bloggers:
+            platform = blogger["platform"]
+            name = blogger["name"]
+            
+            if platform in self.platforms:
+                print(f"📝 [{platform}] 检查 {name}...")
+                print(f"   链接: {blogger['url']}")
+                
+                # 临时清除该博主的状态，强制获取最新
+                state_key = f"{platform}_{blogger['url']}"
+                if state_key in self.state["bloggers"]:
+                    del self.state["bloggers"][state_key]
+                
+                update = self.platforms[platform](blogger)
+                if update:
+                    latest_articles.append(update)
+                    print(f"   ✅ 找到最新文章:")
+                    print(f"      标题: {update['title']}")
+                    print(f"      链接: {update['url']}")
+                    if update.get('date'):
+                        print(f"      日期: {update['date']}")
+                else:
+                    print(f"   ⚠️  没有获取到文章（可能需要更复杂的反爬处理）")
+                
+                print()
+        
+        print(f"\n🧪 ================ 测试模式结束 ================")
+        print(f"🧪 总计: {len(latest_articles)} 个博主有可获取的最新文章")
+        print(f"🧪 ===============================================\n")
+        
+        # 不保存状态，保持重置状态
+        return latest_articles
+    
     def get_status(self) -> Dict[str, Any]:
         """获取监控状态"""
         bloggers = self.parse_bloggers_from_notes()
@@ -499,6 +542,7 @@ def main():
     parser.add_argument("--check", action="store_true", help="检查更新")
     parser.add_argument("--status", action="store_true", help="查看状态")
     parser.add_argument("--list", action="store_true", help="列出所有博主")
+    parser.add_argument("--test", action="store_true", help="测试模式：获取所有博主的最新文章")
     
     args = parser.parse_args()
     
@@ -526,9 +570,18 @@ def main():
         print("📋 博主列表")
         for blogger in bloggers:
             print(f"  - {blogger['name']} ({blogger['platform']}): {blogger['url']}")
+    elif args.test:
+        latest = monitor.test_get_latest()
+        if latest:
+            print(f"\n📋 最新文章汇总:")
+            for i, article in enumerate(latest, 1):
+                print(f"\n{i}. {article['blogger']} ({article['platform']})")
+                print(f"   标题: {article['title']}")
+                print(f"   链接: {article['url']}")
     else:
         parser.print_help()
 
 
 if __name__ == "__main__":
     main()
+
