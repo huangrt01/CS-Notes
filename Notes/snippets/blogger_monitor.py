@@ -25,6 +25,15 @@ class BloggerMonitorImproved:
         # 博主状态
         self.state = self._load_state()
         
+        # 手动添加的 RSS feed 链接映射
+        self.manual_rss_feeds = {
+            "马可奥勒留": "https://juejin.cn/rss/user/1955412097653256",
+            "tigerhood": "https://www.thetigerhood.com/feed",
+            "FAI Seminar": "https://www.fai-seminar.ac.cn/feed.xml",
+            "火山引擎 V-Moment": "https://www.volcengine.com/feed",
+            "李新野": "https://sinyalee.com/blog/feed",
+        }
+        
         # 支持的平台
         self.platforms = {
             "bilibili": self._check_bilibili,
@@ -176,7 +185,63 @@ class BloggerMonitorImproved:
             print(f"📝 [blog] 检查 {name}...")
             print(f"   链接: {url}")
             
-            # 第一步：使用 rss-agent-discovery 发现 RSS feeds
+            # 第一步：检查是否有手动添加的 RSS feed 链接
+            if name in self.manual_rss_feeds:
+                manual_feed_url = self.manual_rss_feeds[name]
+                print(f"   🎯 使用手动添加的 RSS feed: {manual_feed_url}")
+                
+                # 尝试使用手动添加的 RSS feed
+                try:
+                    with urlopen(manual_feed_url, timeout=10) as response:
+                        content = response.read().decode("utf-8", errors="ignore")
+                        
+                        # 简单解析RSS/Atom feed
+                        # 查找最新的条目
+                        title_match = re.search(
+                            r'<item[^>]*>.*?<title>([^<]+)</title>.*?<link>([^<]+)</link>.*?<pubDate>([^<]+)</pubDate>.*?</item>',
+                            content,
+                            re.DOTALL | re.IGNORECASE
+                        )
+                        
+                        if not title_match:
+                            # 尝试Atom格式
+                            title_match = re.search(
+                                r'<entry[^>]*>.*?<title>([^<]+)</title>.*?<link[^>]*href="([^"]+)"[^>]*>.*?<updated>([^<]+)</updated>.*?</entry>',
+                                content,
+                                re.DOTALL | re.IGNORECASE
+                            )
+                        
+                        if title_match:
+                            latest_title = title_match.group(1).strip()
+                            latest_url = title_match.group(2).strip()
+                            latest_date = title_match.group(3).strip()
+                            
+                            # 检查是否有新更新
+                            state_key = f"blog_{url}"
+                            last_title = self.state["bloggers"].get(state_key, {}).get("last_title")
+                            
+                            if last_title != latest_title:
+                                # 有新更新
+                                self.state["bloggers"][state_key] = {
+                                    "last_title": latest_title,
+                                    "last_checked": datetime.datetime.now().isoformat()
+                                }
+                                
+                                return {
+                                    "blogger": name,
+                                    "platform": "blog",
+                                    "title": latest_title[:100],
+                                    "url": latest_url if latest_url.startswith("http") else urljoin(url, latest_url),
+                                    "date": latest_date
+                                }
+                            else:
+                                print(f"   ✅ 没有新更新")
+                                return None
+                except Exception as e:
+                    print(f"   ⚠️  手动 RSS feed 检查失败: {e}")
+                    # 继续尝试其他方法
+            
+            # 第二步：使用 rss-agent-discovery 发现 RSS feeds
             feeds = self._discover_rss_feeds(url)
             
             if feeds:
