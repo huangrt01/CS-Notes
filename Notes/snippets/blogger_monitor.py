@@ -161,7 +161,8 @@ class BloggerMonitor:
                     feed_url = f"https://api.bilibili.com/x/space/article?mid={uid}"
                     
                     try:
-                        with urlopen(feed_url, timeout=10) as response:
+                        print(f"  检查 {name} (bilibili)...")
+                        with urlopen(feed_url, timeout=5) as response:
                             content = response.read().decode("utf-8", errors="ignore")
                             
                             # 简单解析JSON
@@ -242,7 +243,8 @@ class BloggerMonitor:
             else:
                 return None
             
-            with urlopen(feed_url, timeout=10) as response:
+            print(f"  检查 {name} (youtube)...")
+            with urlopen(feed_url, timeout=5) as response:
                 content = response.read().decode("utf-8", errors="ignore")
                 
                 # 解析YouTube RSS feed
@@ -329,7 +331,8 @@ class BloggerMonitor:
             # 使用GitHub API获取最新的commit
             api_url = f"https://api.github.com/repos/{owner}/{repo}/commits?per_page=1"
             
-            with urlopen(api_url, timeout=10) as response:
+            print(f"  检查 {name} (github)...")
+            with urlopen(api_url, timeout=5) as response:
                 data = json.loads(response.read().decode())
                 
                 if data and len(data) > 0:
@@ -384,7 +387,8 @@ class BloggerMonitor:
             
             # 也可以尝试从首页查找RSS链接
             try:
-                with urlopen(url, timeout=10) as response:
+                print(f"  检查 {name} (blog) - 查找RSS feed...")
+                with urlopen(url, timeout=5) as response:
                     html = response.read().decode("utf-8", errors="ignore")
                     
                     # 查找RSS链接
@@ -405,7 +409,8 @@ class BloggerMonitor:
             # 尝试每个feed URL
             for feed_url in feed_urls:
                 try:
-                    with urlopen(feed_url, timeout=10) as response:
+                    print(f"  检查 {name} (blog) - 检查RSS feed...")
+                    with urlopen(feed_url, timeout=5) as response:
                         content = response.read().decode("utf-8", errors="ignore")
                         
                         # 简单解析RSS/Atom feed
