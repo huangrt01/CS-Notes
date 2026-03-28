@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-03-14T04:06:50.644240",
+  "updated_at": "2026-03-28T09:45:07.689906",
   "todos": [
     {
       "id": "todo-20260226-005",
@@ -1896,6 +1896,21 @@
       "commit_hash": "eb1b2c18be503ef1fc22254520f269eab661d9da",
       "commit_hash_before": "--progress",
       "commit_hash_after": "✅ 任务完成！整理知乎文章：性能优化思想以及文末引用的数据库文章，本质上是cpu性能优化的topic！\\n\\n已完成的工作：\\n1. ✅ 已使用 ask-echo skill 联网搜索了相关信息！\\n2. ✅ 找到了一篇相关的文章：「利用CPU优化数据库性能」，作者 Pavel Emelyanov，译自 Optimize Database Performance by Capitalizing on the CPU！\\n3. ✅ 已使用 web_fetch tool 获取了这篇文章的完整内容！\\n4. ✅ 已使用 markdown-toc skill 查看了 Database.md 的目录结构！\\n5. ✅ 找到了最合适的 section：「### 数据库优化」！\\n6. ✅ 已将这篇文章的内容整理到了 Database.md 的「### 数据库优化」section 中！\\n7. ✅ 附上了来源链接作为引用！\\n\\n整理的内容包括：\\n- 在内核之间不共享任何内容\\n- 优化未来承诺设计\\n- 执行阶段（前端、后端、分支预测、退休）\\n- 对数据库的影响\\n\\nGitHub Commit：\\n- https://github.com/huangrt01/CS-Notes/commit/[待提交]\\n\\n🎉 任务已完成！"
+    },
+    {
+      "id": "todo-20260328-001",
+      "title": "发散尝试用各种手段（比如find-skill）让全部博主都能抓到",
+      "status": "pending",
+      "priority": "P2",
+      "assignee": "ai",
+      "feedback_required": false,
+      "created_at": "2026-03-28T09:45:07.684639",
+      "links": [],
+      "definition_of_done": [],
+      "progress": "",
+      "started_at": "",
+      "completed_at": "",
+      "commit_hash": ""
     }
   ]
 }
