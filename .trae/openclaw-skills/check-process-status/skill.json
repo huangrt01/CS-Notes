@@ -1,0 +1,17 @@
+
+{
+  "name": "check-process-status",
+  "version": "0.1.0",
+  "description": "检查进程运行状态，包括日志时间、当前时间对比和业务逻辑验证",
+  "author": "CS-Notes 项目",
+  "entry": "main.py",
+  "capabilities": ["filesystem", "process"],
+  "commands": [
+    {
+      "name": "check",
+      "description": "检查进程运行状态",
+      "handler": "handle_check"
+    }
+  ]
+}
+

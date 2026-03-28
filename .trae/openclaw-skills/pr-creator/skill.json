@@ -1,0 +1,17 @@
+
+{
+  "name": "pr-creator",
+  "version": "0.1.0",
+  "description": "创建高质量、符合规范的 Pull Request",
+  "author": "google-gemini",
+  "entry": "main.py",
+  "capabilities": ["filesystem", "git"],
+  "commands": [
+    {
+      "name": "create",
+      "description": "创建 PR",
+      "handler": "handle_create"
+    }
+  ]
+}
+

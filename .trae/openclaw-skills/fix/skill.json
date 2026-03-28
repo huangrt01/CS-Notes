@@ -1,0 +1,17 @@
+
+{
+  "name": "fix",
+  "version": "0.1.0",
+  "description": "修复代码格式并检查 linting 错误",
+  "author": "facebook",
+  "entry": "main.py",
+  "capabilities": ["filesystem"],
+  "commands": [
+    {
+      "name": "fix",
+      "description": "修复代码格式问题",
+      "handler": "handle_fix"
+    }
+  ]
+}
+

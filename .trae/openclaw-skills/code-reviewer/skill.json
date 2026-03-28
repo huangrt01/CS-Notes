@@ -1,0 +1,17 @@
+
+{
+  "name": "code-reviewer",
+  "version": "0.1.0",
+  "description": "代码审查 Skill - 审查本地代码改动或远程 PR",
+  "author": "google-gemini",
+  "entry": "main.py",
+  "capabilities": ["filesystem", "git"],
+  "commands": [
+    {
+      "name": "review",
+      "description": "审查代码",
+      "handler": "handle_review"
+    }
+  ]
+}
+
