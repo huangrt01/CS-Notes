@@ -1,19 +1,20 @@
-
 #!/usr/bin/env python3
 """
-博主监控脚本 - 监控非技术知识.md里长期关注的博主更新
+博主监控脚本 - 改进版
+结合 web-scraping skill 和 rss-agent-discovery skill
 """
 
 import os
 import json
 import re
 import datetime
+import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 
-class BloggerMonitor:
-    """博主监控器"""
+class BloggerMonitorImproved:
+    """改进版博主监控器"""
     
     def __init__(self, config_path=None):
         self.workspace = Path("/root/.openclaw/workspace/CS-Notes")
@@ -30,7 +31,7 @@ class BloggerMonitor:
             "youtube": self._check_youtube,
             "zhihu": self._check_zhihu,
             "github": self._check_github,
-            "blog": self._check_blog,
+            "blog": self._check_blog_improved,  # 改进版
         }
     
     def _load_state(self):
@@ -137,6 +138,195 @@ class BloggerMonitor:
         else:
             return "blog"
     
+    def _discover_rss_feeds(self, url):
+        """使用 rss-agent-discovery 发现 RSS feeds"""
+        try:
+            print(f"  🔍 使用 rss-agent-discovery 发现 RSS feeds...")
+            result = subprocess.run(
+                ['npx', '-y', 'rss-agent-discovery', url],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            
+            if result.returncode == 0:
+                data = json.loads(result.stdout)
+                if data.get('success') and data.get('results'):
+                    feeds = data['results'][0].get('feeds', [])
+                    if feeds:
+                        print(f"    ✅ 发现 {len(feeds)} 个 RSS feeds!")
+                        for feed in feeds:
+                            print(f"      - {feed['type']}: {feed['url']}")
+                        return feeds
+            return None
+        except Exception as e:
+            print(f"    ⚠️  rss-agent-discovery 失败: {e}")
+            return None
+    
+    def _check_blog_improved(self, blogger: Dict[str, str]) -> Optional[Dict[str, Any]]:
+        """改进版检查博客更新 - 结合 rss-agent-discovery"""
+        import re
+        from urllib.request import urlopen
+        from urllib.parse import urljoin
+        
+        try:
+            url = blogger["url"]
+            name = blogger["name"]
+            
+            print(f"📝 [blog] 检查 {name}...")
+            print(f"   链接: {url}")
+            
+            # 第一步：使用 rss-agent-discovery 发现 RSS feeds
+            feeds = self._discover_rss_feeds(url)
+            
+            if feeds:
+                # 尝试每个发现的 feed
+                for feed in feeds:
+                    feed_url = feed['url']
+                    feed_type = feed['type']
+                    print(f"    📡 尝试 {feed_type} feed: {feed_url}")
+                    
+                    try:
+                        with urlopen(feed_url, timeout=10) as response:
+                            content = response.read().decode("utf-8", errors="ignore")
+                            
+                            # 简单解析RSS/Atom feed
+                            # 查找最新的条目
+                            title_match = re.search(
+                                r'<item[^>]*>.*?<title>([^<]+)</title>.*?<link>([^<]+)</link>.*?<pubDate>([^<]+)</pubDate>.*?</item>',
+                                content,
+                                re.DOTALL | re.IGNORECASE
+                            )
+                            
+                            if not title_match:
+                                # 尝试Atom格式
+                                title_match = re.search(
+                                    r'<entry[^>]*>.*?<title>([^<]+)</title>.*?<link[^>]*href="([^"]+)"[^>]*>.*?<updated>([^<]+)</updated>.*?</entry>',
+                                    content,
+                                    re.DOTALL | re.IGNORECASE
+                                )
+                            
+                            if title_match:
+                                latest_title = title_match.group(1).strip()
+                                latest_url = title_match.group(2).strip()
+                                latest_date = title_match.group(3).strip()
+                                
+                                # 检查是否有新更新
+                                state_key = f"blog_{url}"
+                                last_title = self.state["bloggers"].get(state_key, {}).get("last_title")
+                                
+                                if last_title != latest_title:
+                                    # 有新更新
+                                    self.state["bloggers"][state_key] = {
+                                        "last_title": latest_title,
+                                        "last_checked": datetime.datetime.now().isoformat()
+                                    }
+                                    
+                                    return {
+                                        "blogger": name,
+                                        "platform": "blog",
+                                        "title": latest_title[:100],
+                                        "url": latest_url if latest_url.startswith("http") else urljoin(url, latest_url),
+                                        "date": latest_date
+                                    }
+                                else:
+                                    print(f"    ✅ 没有新更新")
+                                    return None
+                    except Exception as e:
+                        print(f"    ⚠️  feed 检查失败: {e}")
+                        continue
+            
+            # 第二步：如果没有发现 RSS feeds，或者 RSS feeds 检查失败，尝试原有的方法
+            print(f"    ⚠️  没有发现可用的 RSS feeds，尝试原有的方法...")
+            
+            # 先尝试查找RSS feed
+            feed_urls = [
+                url.rstrip("/") + "/feed",
+                url.rstrip("/") + "/rss",
+                url.rstrip("/") + "/rss.xml",
+                url.rstrip("/") + "/feed.xml",
+                url.rstrip("/") + "/index.xml",
+                url.rstrip("/") + "/atom.xml",
+            ]
+            
+            # 也可以尝试从首页查找RSS链接
+            try:
+                print(f"    🔍 从首页查找RSS链接...")
+                with urlopen(url, timeout=5) as response:
+                    html = response.read().decode("utf-8", errors="ignore")
+                    
+                    # 查找RSS链接
+                    rss_links = re.findall(
+                        r'<link[^>]*type=["\']application/(?:rss|atom)\+xml["\'][^>]*href=["\']([^"\']+)["\']',
+                        html,
+                        re.IGNORECASE
+                    )
+                    
+                    if rss_links:
+                        for link in rss_links:
+                            feed_url = urljoin(url, link)
+                            if feed_url not in feed_urls:
+                                feed_urls.insert(0, feed_url)
+            except Exception:
+                pass
+            
+            # 尝试每个feed URL
+            for feed_url in feed_urls:
+                try:
+                    print(f"    🔍 检查RSS feed: {feed_url}")
+                    with urlopen(feed_url, timeout=5) as response:
+                        content = response.read().decode("utf-8", errors="ignore")
+                        
+                        # 简单解析RSS/Atom feed
+                        # 查找最新的条目
+                        title_match = re.search(
+                            r'<item[^>]*>.*?<title>([^<]+)</title>.*?<link>([^<]+)</link>.*?<pubDate>([^<]+)</pubDate>.*?</item>',
+                            content,
+                            re.DOTALL | re.IGNORECASE
+                        )
+                        
+                        if not title_match:
+                            # 尝试Atom格式
+                            title_match = re.search(
+                                r'<entry[^>]*>.*?<title>([^<]+)</title>.*?<link[^>]*href="([^"]+)"[^>]*>.*?<updated>([^<]+)</updated>.*?</entry>',
+                                content,
+                                re.DOTALL | re.IGNORECASE
+                            )
+                        
+                        if title_match:
+                            latest_title = title_match.group(1).strip()
+                            latest_url = title_match.group(2).strip()
+                            latest_date = title_match.group(3).strip()
+                            
+                            # 检查是否有新更新
+                            state_key = f"blog_{url}"
+                            last_title = self.state["bloggers"].get(state_key, {}).get("last_title")
+                            
+                            if last_title != latest_title:
+                                # 有新更新
+                                self.state["bloggers"][state_key] = {
+                                    "last_title": latest_title,
+                                    "last_checked": datetime.datetime.now().isoformat()
+                                }
+                                
+                                return {
+                                    "blogger": name,
+                                    "platform": "blog",
+                                    "title": latest_title[:100],
+                                    "url": latest_url if latest_url.startswith("http") else urljoin(url, latest_url),
+                                    "date": latest_date
+                                }
+                            else:
+                                print(f"    ✅ 没有新更新")
+                                return None
+                except Exception:
+                    continue
+            
+            return None
+        except Exception as e:
+            print(f"⚠️ 检查博客更新失败: {name} - {e}")
+            return None
+    
     def _check_bilibili(self, blogger):
         """检查B站更新"""
         import re
@@ -148,9 +338,6 @@ class BloggerMonitor:
             name = blogger["name"]
             
             # 从URL中提取信息
-            # 格式: https://space.bilibili.com/3546813525134159/upload/video
-            # 或者: https://www.bilibili.com/video/BV11m421M7N4
-            
             parsed = urlparse(url)
             path_parts = parsed.path.strip("/").split("/")
             
@@ -217,9 +404,6 @@ class BloggerMonitor:
             name = blogger["name"]
             
             # 从URL中提取channel ID或用户名
-            # 格式: https://www.youtube.com/@PyTorch/videos
-            # 或者: https://www.youtube.com/playlist?list=PLwAchVoh-4zNSI5UlKEkKCL5r_jJyrFeO
-            
             channel_id = None
             playlist_id = None
             
@@ -245,42 +429,46 @@ class BloggerMonitor:
                 return None
             
             print(f"  检查 {name} (youtube)...")
-            with urlopen(feed_url, timeout=5) as response:
-                content = response.read().decode("utf-8", errors="ignore")
-                
-                # 解析YouTube RSS feed
-                # 查找最新的视频
-                entry_match = re.search(
-                    r'<entry[^>]*>.*?<title>([^<]+)</title>.*?<link[^>]*href=["\']([^"\']+)["\'].*?<published>([^<]+)</published>.*?</entry>',
-                    content,
-                    re.DOTALL | re.IGNORECASE
-                )
-                
-                if entry_match:
-                    latest_title = entry_match.group(1).strip()
-                    latest_url = entry_match.group(2).strip()
-                    latest_date = entry_match.group(3).strip()
+            try:
+                with urlopen(feed_url, timeout=5) as response:
+                    content = response.read().decode("utf-8", errors="ignore")
                     
-                    # 检查是否有新更新
-                    state_key = f"youtube_{playlist_id or channel_id}"
-                    last_title = self.state["bloggers"].get(state_key, {}).get("last_title")
+                    # 解析YouTube RSS feed
+                    # 查找最新的视频
+                    entry_match = re.search(
+                        r'<entry[^>]*>.*?<title>([^<]+)</title>.*?<link[^>]*href=["\']([^"\']+)["\'].*?<published>([^<]+)</published>.*?</entry>',
+                        content,
+                        re.DOTALL | re.IGNORECASE
+                    )
                     
-                    if last_title != latest_title:
-                        # 有新更新
-                        self.state["bloggers"][state_key] = {
-                            "last_title": latest_title,
-                            "last_checked": datetime.datetime.now().isoformat()
-                        }
+                    if entry_match:
+                        latest_title = entry_match.group(1).strip()
+                        latest_url = entry_match.group(2).strip()
+                        latest_date = entry_match.group(3).strip()
                         
-                        return {
-                            "blogger": name,
-                            "platform": "youtube",
-                            "title": latest_title[:100],
-                            "url": latest_url,
-                            "date": latest_date
-                        }
-            
-            return None
+                        # 检查是否有新更新
+                        state_key = f"youtube_{playlist_id or channel_id}"
+                        last_title = self.state["bloggers"].get(state_key, {}).get("last_title")
+                        
+                        if last_title != latest_title:
+                            # 有新更新
+                            self.state["bloggers"][state_key] = {
+                                "last_title": latest_title,
+                                "last_checked": datetime.datetime.now().isoformat()
+                            }
+                            
+                            return {
+                                "blogger": name,
+                                "platform": "youtube",
+                                "title": latest_title[:100],
+                                "url": latest_url,
+                                "date": latest_date
+                            }
+                
+                return None
+            except Exception as e:
+                print(f"⚠️ 检查YouTube更新失败: {name} - {e}")
+                return None
         except Exception as e:
             print(f"⚠️ 检查YouTube更新失败: {name} - {e}")
             return None
@@ -321,7 +509,6 @@ class BloggerMonitor:
             name = blogger["name"]
             
             # 从URL中提取owner和repo
-            # 格式: https://github.com/mli/paper-reading
             parts = url.rstrip("/").split("/")
             if len(parts) < 2:
                 return None
@@ -366,103 +553,6 @@ class BloggerMonitor:
             print(f"⚠️ 检查GitHub更新失败: {name} - {e}")
             return None
     
-    def _check_blog(self, blogger: Dict[str, str]) -> Optional[Dict[str, Any]]:
-        """检查博客更新（通用）"""
-        import re
-        from urllib.request import urlopen
-        from urllib.parse import urljoin
-        
-        try:
-            url = blogger["url"]
-            name = blogger["name"]
-            
-            # 先尝试查找RSS feed
-            feed_urls = [
-                url.rstrip("/") + "/feed",
-                url.rstrip("/") + "/rss",
-                url.rstrip("/") + "/rss.xml",
-                url.rstrip("/") + "/feed.xml",
-                url.rstrip("/") + "/index.xml",
-                url.rstrip("/") + "/atom.xml",
-            ]
-            
-            # 也可以尝试从首页查找RSS链接
-            try:
-                print(f"  检查 {name} (blog) - 查找RSS feed...")
-                with urlopen(url, timeout=5) as response:
-                    html = response.read().decode("utf-8", errors="ignore")
-                    
-                    # 查找RSS链接
-                    rss_links = re.findall(
-                        r'<link[^>]*type=["\']application/(?:rss|atom)\+xml["\'][^>]*href=["\']([^"\']+)["\']',
-                        html,
-                        re.IGNORECASE
-                    )
-                    
-                    if rss_links:
-                        for link in rss_links:
-                            feed_url = urljoin(url, link)
-                            if feed_url not in feed_urls:
-                                feed_urls.insert(0, feed_url)
-            except Exception:
-                pass
-            
-            # 尝试每个feed URL
-            for feed_url in feed_urls:
-                try:
-                    print(f"  检查 {name} (blog) - 检查RSS feed...")
-                    with urlopen(feed_url, timeout=5) as response:
-                        content = response.read().decode("utf-8", errors="ignore")
-                        
-                        # 简单解析RSS/Atom feed
-                        # 查找最新的条目
-                        title_match = re.search(
-                            r'<item[^>]*>.*?<title>([^<]+)</title>.*?<link>([^<]+)</link>.*?<pubDate>([^<]+)</pubDate>.*?</item>',
-                            content,
-                            re.DOTALL | re.IGNORECASE
-                        )
-                        
-                        if not title_match:
-                            # 尝试Atom格式
-                            title_match = re.search(
-                                r'<entry[^>]*>.*?<title>([^<]+)</title>.*?<link[^>]*href=["\']([^"\']+)["\'].*?<updated>([^<]+)</updated>.*?</entry>',
-                                content,
-                                re.DOTALL | re.IGNORECASE
-                            )
-                        
-                        if title_match:
-                            latest_title = title_match.group(1).strip()
-                            latest_url = title_match.group(2).strip()
-                            latest_date = title_match.group(3).strip()
-                            
-                            # 检查是否有新更新
-                            state_key = f"blog_{url}"
-                            last_title = self.state["bloggers"].get(state_key, {}).get("last_title")
-                            
-                            if last_title != latest_title:
-                                # 有新更新
-                                self.state["bloggers"][state_key] = {
-                                    "last_title": latest_title,
-                                    "last_checked": datetime.datetime.now().isoformat()
-                                }
-                                
-                                return {
-                                    "blogger": name,
-                                    "platform": "blog",
-                                    "title": latest_title[:100],
-                                    "url": latest_url if latest_url.startswith("http") else urljoin(url, latest_url),
-                                    "date": latest_date
-                                }
-                    
-                    break  # 找到一个feed就停止尝试
-                except Exception:
-                    continue
-            
-            return None
-        except Exception as e:
-            print(f"⚠️ 检查博客更新失败: {name} - {e}")
-            return None
-    
     def check_updates(self) -> List[Dict[str, Any]]:
         """检查所有博主的更新"""
         updates = []
@@ -486,9 +576,9 @@ class BloggerMonitor:
         latest_articles = []
         bloggers = self.parse_bloggers_from_notes()
         
-        print(f"\n🧪 ================ 测试模式开始 ================")
+        print(f"\n🧪 ================ 测试模式开始（改进版） ================")
         print(f"🧪 获取 {len(bloggers)} 个博主的最新文章...")
-        print(f"🧪 ===============================================\n")
+        print(f"🧪 =====================================================\n")
         
         for blogger in bloggers:
             platform = blogger["platform"]
@@ -516,9 +606,9 @@ class BloggerMonitor:
                 
                 print()
         
-        print(f"\n🧪 ================ 测试模式结束 ================")
+        print(f"\n🧪 ================ 测试模式结束（改进版） ================")
         print(f"🧪 总计: {len(latest_articles)} 个博主有可获取的最新文章")
-        print(f"🧪 ===============================================\n")
+        print(f"🧪 =====================================================\n")
         
         # 不保存状态，保持重置状态
         return latest_articles
@@ -538,15 +628,16 @@ def main():
     """主函数"""
     import argparse
     
-    parser = argparse.ArgumentParser(description="博主监控脚本")
+    parser = argparse.ArgumentParser(description="改进版博主监控脚本")
     parser.add_argument("--check", action="store_true", help="检查更新")
     parser.add_argument("--status", action="store_true", help="查看状态")
     parser.add_argument("--list", action="store_true", help="列出所有博主")
     parser.add_argument("--test", action="store_true", help="测试模式：获取所有博主的最新文章")
+    parser.add_argument("--improved", action="store_true", help="使用改进版（默认）")
     
     args = parser.parse_args()
     
-    monitor = BloggerMonitor()
+    monitor = BloggerMonitorImproved()
     
     if args.check:
         print("🔍 检查博主更新...")
@@ -563,7 +654,7 @@ def main():
         print(f"  最后检查: {status['last_check']}")
         print(f"  博主总数: {status['total_bloggers']}")
         print(f"  博主列表:")
-        for blogger in status["bloggers"]:
+        for blogger in status['bloggers']:
             print(f"    - {blogger['name']} ({blogger['platform']}): {blogger['url']}")
     elif args.list:
         bloggers = monitor.parse_bloggers_from_notes()
@@ -584,4 +675,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
