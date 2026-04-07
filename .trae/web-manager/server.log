@@ -1,0 +1,37 @@
+✅ 任务执行日志系统已初始化
+============================================================
+Todos Web Manager - 后端服务
+============================================================
+仓库根目录: /root/.openclaw/workspace/CS-Notes
+任务文件: /root/.openclaw/workspace/CS-Notes/.trae/todos/todos.json
+归档目录: /root/.openclaw/workspace/CS-Notes/.trae/todos/archive
+INBOX 文件: /root/.openclaw/workspace/CS-Notes/.trae/documents/INBOX.md
+============================================================
+可用的 API:
+  - GET    /api/tasks              - 获取任务列表
+  - POST   /api/tasks              - 添加新任务
+  - PUT    /api/tasks/<id>         - 更新任务
+  - DELETE /api/tasks/<id>         - 删除任务
+  - PUT    /api/tasks/<id>/status  - 更新任务状态
+  - POST   /api/tasks/<id>/review  - Review 任务（通过/不通过）
+  - GET    /api/tasks/archive      - 获取归档任务
+  - GET    /api/plans               - 获取 Plan 列表
+  - PUT    /api/plans/<id>/status   - 更新 Plan 状态（approve/reject）
+  - GET    /api/git/status          - 获取 Git 状态
+  - POST   /api/git/commit          - 提交 Git 更改
+  - POST   /api/git/push            - 推送到远程仓库
+  - POST   /api/git/pull            - 从远程仓库拉取
+============================================================
+启动服务器: http://localhost:5000
+============================================================
+ * Serving Flask app 'server'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.16.28.128:5000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 140-747-854
+127.0.0.1 - - [07/Apr/2026 15:02:56] "POST /api/tasks HTTP/1.1" 200 -
