@@ -671,7 +671,34 @@ API网关灰度发布最佳实践: *https://static-aliyun-doc.oss-cn-hangzhou.al
 
 #### 对象存储TOS
 
-* [使用 Rclone 访问 TOS](https://www.volcengine.com/docs/6349/81434)
+##### tosutil
+
+> [tosutil 概述](https://www.volcengine.com/docs/6349/148775)
+
+火山引擎 TOS 官方命令行工具，用于本地与 TOS 之间的批量数据处理（上云、下载、自动化脚本集成）。
+
+| 类型 | 命令 | 描述 |
+|------|------|------|
+| 常用 | `ls` | 列举桶/对象/分片上传任务 |
+| | `mkdir` | 创建文件夹 |
+| | `du` | 计算桶内对象和分片大小与数量 |
+| | `mb` | 创建新桶 |
+| | `cp` | 上传/下载/复制对象 |
+| | `setmeta` | 设置对象元数据 |
+| | `stat` | 查询桶或对象属性 |
+| | `rm` | 删除桶/对象/分片上传任务 |
+| | `share` | 创建对象授权码，通过授权码列举或下载 |
+| | `set-acl` | 设置桶或对象的预定义访问策略 |
+| | `mount` | 将存储桶挂载为本地文件系统目录 |
+| 辅助 | `config` | 查看/更新配置文件 |
+| | `probe` | 测试上传及下载速率 |
+| | `netdig` | 一键式网络诊断（仅 Linux/macOS） |
+| | `hash` | 计算文件哈希值 |
+| | `fcp` | 复制本地文件或文件夹 |
+| | `clear` | 删除断点记录文件，执行云端清理 |
+| | `ping` / `connect` / `traceroute` / `curl` | 网络诊断与 HTTP 请求 |
+
+##### Rclone 访问 TOS
   * [rclone官网](https://rclone.org/docs/)
     * copy
       * `--s3-no-head-object`

@@ -10,6 +10,15 @@
 
 ## 基础运算
 
+### 空集的极值与单位元
+
+* 对空集做 reduce_max 返回 -∞，reduce_min 返回 +∞，这不是随意约定，而是**幺半群（Monoid）单位元**的必然结果
+* 数学原理：max 在扩展实数域 $$\overline{\mathbb{R}} = \mathbb{R} \cup \{-\infty, +\infty\}$$ 上构成交换幺半群 $$(\overline{\mathbb{R}}, \max, -\infty)$$，其中 -∞ 是单位元；min 则是 $$(\overline{\mathbb{R}}, \min, +\infty)$$
+* 单位元必须满足：$$\max(a, -\infty) = a$$，$$\min(a, +\infty) = a$$，对空集做 reduce 等价于无元素的累积运算，结果只能是单位元
+* 同理：空集求和 = 0（加法单位元），空集求积 = 1（乘法单位元）
+* 推广：$$\sup \emptyset = -\infty$$，$$\inf \emptyset = +\infty$$（扩展实数域上的上确界/下确界）
+* 参考：[Empty set - Wikipedia](https://en.wikipedia.org/wiki/Empty_set#Extended_real_numbers)
+
 ### 进制
 
 * 关于10进制有效数字位数可用下面这个公式来估算：

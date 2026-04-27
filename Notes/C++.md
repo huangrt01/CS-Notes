@@ -2779,6 +2779,16 @@ getopt函数处理参数，用法参照[tsh.c](https://github.com/huangrt01/CSAP
 
 ##### 基本数据类型
 
+* 空张量的 reduce 行为（TF/PyTorch）：reduce_max 返回 -inf，reduce_min 返回 +inf
+  * 本质是幺半群单位元：max 的单位元是 -∞，min 的单位元是 +∞，空集 reduce 只能返回单位元
+  * 同理：空集 sum = 0，空集 prod = 1
+  * 工程意义：filter 后可能得到空 tensor，若未处理 reduce 结果会导致下游 NaN（如除以 -inf）
+  * 详见 [Mathematics.md - 空集的极值与单位元](./Mathematics.md#基础运算)
+* IEEE 754 浮点数 NaN 传播规则：$$0 \times \infty = \text{NaN}$$
+  * 设计动机：0 表示"零值或未初始化"，∞ 表示"溢出或无界"，两者语义矛盾——无法确定结果是 0 还是 ∞，因此标记为 NaN（不确定）
+  * NaN 传播：任何与 NaN 的算术运算结果仍为 NaN，确保异常信号不被静默吞掉
+  * 其他产生 NaN 的典型场景：$$\infty - \infty$$、$$0 / 0$$、$$\sqrt{-1}$$
+
 ```c
 "/usr/include/stdint.h"
 /* Types for `void *' pointers.  */

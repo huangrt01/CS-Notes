@@ -464,21 +464,28 @@ g.V().has("id", C.id).has("type", C.type)
 
 ### Hive
 
-* hadoop 生态下的OLAP引擎，将 SQL 查询翻译为 map reduce 任务，特点是稳定，成功率高，但是查询速度慢
+Hadoop 生态下的 OLAP 引擎，将 SQL 查询翻译为 MapReduce 任务，特点是稳定、成功率高，但查询速度慢。
 
-* API v.s. mysql
+#### 常用指令
 
-  * `percentile(a, array(0.5,0.9,0.99))` 求分位数（mysql没有这个函数）
-  * [Hive Aggregate Functions](http://hadooptutorial.info/hive-aggregate-functions/)
+```sql
+-- 数据库与表管理
+use database_name;              -- 切换数据库
+show tables;                    -- 查看当前数据库所有表
+desc formatted table_name;      -- 查看表结构（详细格式）
+set hive.cli.print.header=true; -- 设置显示表头
 
-* 用 Spark 做 mysql to Hive 的同步
+-- 数据查询
+select * from table_name where ds='20260408' limit 10;  -- 分区查询
+```
 
-  * ```
-    spark.mysql.remain_delete = true
-    ```
+#### 与 MySQL 的差异
 
-* 细节
-  * p_date和p_hour是hive分区字段
+- **特有函数**：`percentile(col, array(0.5, 0.9, 0.99))` 求分位数（MySQL 无此函数）
+- **分区机制**：`p_date` 和 `p_hour` 是常用分区字段；分区查询时分区字段必须出现在 WHERE 子句中，否则全表扫描
+- **数据同步**：用 Spark 做 MySQL to Hive 同步，配置 `spark.mysql.remain_delete = true`
+
+参考：[Hive Aggregate Functions](http://hadooptutorial.info/hive-aggregate-functions/)
 
 ### MongoDB
 
@@ -561,6 +568,11 @@ g.V().has("id", C.id).has("type", C.type)
     *   **结构**：`{ "_id": ..., "schema_version": "2.0", "new_field": ... }`
     *   **优势**：应用层可根据版本号加载不同的 Decoder 处理逻辑，支持平滑升级和后台 Lazy Migration，无需停机全量洗数据。
 
+#### PyMongo 代码示例
+
+- 基础操作（CRUD / 索引 / 地理空间 / 时序集合 / 聚合）：`Notes/snippets/db-mongodb-basic.py`
+- 聚合管道进阶（TF-IDF / 分布式分片 / 时序查询）：`Notes/snippets/db-mongodb-aggregation.py`
+
 #### 使用
 
 ##### 场景
@@ -573,6 +585,26 @@ g.V().has("id", C.id).has("type", C.type)
 ##### CRUD
 
 ![image-20251218210806574](./Database/image-20251218210806574.png)
+
+##### Shell 查询语法
+
+```javascript
+// 正则匹配：/pattern/ 等价于 $regex，也等价于 SQL LIKE '%...%'
+db.getCollection('my_collection')  // 集合名含特殊字符(-,.)时必须用此方式
+  .find({_id: /106643920/})
+  .limit(200)
+db.my_collection.find({_id: {$regex: '106643920'}}).limit(200)  // 等价写法
+
+// 查最近写入的 N 条：按 _id 倒序（ObjectId 内含时间戳，可利用默认索引）
+db.my_collection.find().sort({_id: -1}).limit(10)
+// 若有时间字段也可按时间倒序，但需确认该字段有索引
+db.my_collection.find().sort({timestamp: -1}).limit(10)
+
+// 计数
+db.my_collection.estimatedDocumentCount()  // 快速估算，基于元数据，毫秒级
+db.my_collection.countDocuments({})        // 精确计数，遍历统计，大集合较慢
+db.my_collection.countDocuments({status: 'A'})  // 支持条件
+```
 
 #### 备份与恢复
 
