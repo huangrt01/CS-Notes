@@ -1,213 +1,143 @@
 # AGENTS.md
 
-This file is for Codex CLI/App working inside this repository. It complements rather than replaces `.trae/rules/project_rules.md` and `.openclaw-memory/AGENTS.md`.
+本文件适用于 Codex CLI/App 在本仓库内工作，补充而不替代 `.trae/rules/project_rules.md` 与 `.openclaw-memory/AGENTS.md`。
 
-## 1. What this repository really is
+## 1. 仓库定位
 
-`CS-Notes` is not just a notes repo. It is a combined system for:
+`CS-Notes` 是一个复合工作系统，不只是笔记仓库：
 
-- evergreen knowledge management (`Notes/`)
-- writing and opinionated output (`创作/`)
-- confidential work-in-progress for company topics (`公司项目/`)
-- task management and execution control plane (`.trae/todos/`, `.trae/web-manager/`)
-- agent / workflow / skill experimentation (`.trae/openclaw-skills/`, `Notes/snippets/`, `.openclaw-memory/`)
+- `Notes/`：长期知识管理
+- `创作/`：写作与观点表达
+- `公司项目/`：公司相关 WIP，默认视为私密内容
+- `.trae/`：todo、规则、web 管理、执行控制面
+- `.openclaw-memory/`、`.trae/openclaw-skills/`、`Notes/snippets/`、`.codex/`：agent / workflow / skill 实验区
 
-When you work here, optimize for the whole system instead of treating files as isolated documents.
+工作时优先优化整个系统，而不是把文件当成彼此孤立的文档。
 
-## 2. The user's likely goals and working style
+## 2. 默认原则
 
-Assume the user usually wants one or more of the following:
+1. 先回答问题，再把结果落到最合适的位置。
+2. 能自主推进就推进；只有在用户决策或手动操作不可替代时才停下。
+3. 优先做真实改动，少做临时文件、演示性产物或伪完成。
+4. 尊重现有结构与文风，尤其是 `Notes/`、`创作/`、`公司项目/`。
+5. 重要结论尽量附上来源链接、文件路径或具体产物，保证可追溯。
+6. 如果在“快速回复”和“可持续落盘”之间犹豫，优先后者。
+7. 笔记整理类任务默认直接执行；高复杂度的代码/端到端任务可以先给简短 plan 供 review，或只问一两个关键问题。
 
-1. **Answer the question, then land the result in the right place.**
-   They do not just want a chat answer; they often want the result integrated into the repo.
-2. **Push tasks forward autonomously.**
-   Only stop when a real user decision or manual user-side action is required.
-3. **End-to-end usefulness over toy completion.**
-   "Implemented" is not enough; the result should be actually usable in this repo's workflow.
-4. **Real edits, not theater.**
-   Avoid generating piles of temp files or pseudo-work. Prefer directly improving the real target files.
-5. **Preserve the user's voice and structure.**
-   Especially in notes and writing, fit the existing style instead of imposing generic AI prose.
-6. **Strong traceability.**
-   Important conclusions should be attributable to source links, file paths, or concrete artifacts.
+## 3. Shell 与上下文
 
-## 3. Session bootstrap for Codex
+### Shell 策略
 
-### Shell environment
-
-Before the first real shell command in a session, use:
+默认使用独立命令，保留并发能力：
 
 ```bash
 zsh -lc 'source ~/.zshrc; <command>'
 ```
 
-This repository already persists that preference in:
+仓库已有 `.codex/environments/environment.toml` 配置 `script = "source ~/.zshrc"`，手动执行时也保持一致。
 
-- `.codex/environments/environment.toml`
+只有一串命令明确依赖共享 shell 状态、且反复加载 `~/.zshrc` 成本明显时，才使用：
 
-which currently contains:
+```bash
+/Users/bytedance/CS-Notes/Notes/snippets/codex-persistent-shell.sh
+```
 
-- `script = "source ~/.zshrc"`
+使用规则：
 
-Still, if you invoke shell commands manually, preserve this convention.
+- 该脚本会在单个 TTY session 内只加载一次 `~/.zshrc`
+- 适用于共享 cwd、env、alias、shell function、virtualenv / conda / nvm 状态
+- 不要把 persistent shell 当全局默认，否则会削弱并发并增加状态污染风险
 
-### Minimal context loading
+### 最小上下文
 
-Do not read the whole repo blindly. Start with the smallest relevant context.
+不要先通读整个仓库。按需加载：
 
-- Always useful:
-  - `README.md`
-  - `.trae/rules/project_rules.md`
-  - `.trae/documents/PROJECT_CONTEXT.md`
-- If the task is about workflow / memory / agent behavior:
-  - `.openclaw-memory/MEMORY.md`
-  - `.openclaw-memory/AGENTS.md`
-  - recent files under `.openclaw-memory/memory/` and `memory/`
-- If the task is about todos / execution:
-  - `.trae/todos/todos.json`
-  - relevant skills under `.trae/openclaw-skills/`
-  - `.trae/web-manager/WORKFLOW.md` when migration / packaging / template sync is involved
-- If the task is about writing:
-  - read 2-3 representative pieces under `创作/`
-- If the task is about note integration:
-  - search broadly in `Notes/` first, then inspect candidate files' structure before editing
+- 常规必读：`README.md`、`.trae/rules/project_rules.md`、`.trae/documents/PROJECT_CONTEXT.md`
+- workflow / memory：`.openclaw-memory/MEMORY.md`、`.openclaw-memory/AGENTS.md`、相关 memory 文件
+- todo / 执行：`.trae/todos/todos.json`、相关 skill、`.trae/web-manager/WORKFLOW.md`
+- 写作：先读 `创作/` 下 2-3 篇代表文章
+- 笔记整合：先在 `Notes/` 广搜，再检查候选文件结构
 
-## 4. Task playbooks
+## 4. 工作流
 
-### A. Note curation / knowledge integration
+### A. 笔记整合
 
-This is a primary use case of the repo.
+1. 先在 `Notes/` 中广搜最佳落点。
+2. 修改 Markdown 前先看结构，优先用 `Notes/snippets/markdown_toc.py`。
+3. 优先插入现有 section；确实没有合适位置再新增小节。
+4. 语言尽量压缩，不为“更整洁”而删除用户原内容。
+5. 外部材料必须附来源链接。
+6. 一份材料跨多个主题时，拆分落到多个位置，不强塞进一个文件。
 
-Follow this order:
+### B. 写作与公司项目
 
-1. Search broadly for the best existing destination in `Notes/`.
-2. Before editing a Markdown target, inspect its structure first.
-   - Prefer the existing `markdown-toc` skill or `Notes/snippets/markdown_toc.py`.
-3. Insert into the most appropriate existing section whenever possible.
-4. Create a new subsection only if there is truly no good fit.
-5. Keep the wording compact.
-6. Add source links for externally derived material.
-7. Do not delete existing user content just to make the structure cleaner.
-8. If one source spans multiple themes, split it across multiple files/sections rather than forcing it into one place.
+- 文风要求：平实、凝练、有立场、结构清晰、重分析与比较，避免 AI 套话。
+- 做较大写作前，先读 `创作/` 下 2-3 篇文章对齐语气。
+- 涉及 `公司项目/` 时，先读 `公司项目/01-公司项目创作pipeline.md`，并按该 pipeline 执行。
 
-Additional intent split:
+### C. Todo 驱动执行
 
-- **Article / paper / post**: usually refine and integrate the knowledge.
-- **Video / course / collected material**: often better treated as reference collection, quote block, or source pointer inside the right section.
+- 单一数据源：`.trae/todos/todos.json`
+- 新增 todo：优先使用 `todo-adder`
+- 执行 todo：优先走 `priority-task-reader`
+- 真正开工前，先把任务改成 `in-progress` 并写入 `started_at`
+- 推进任务必须带来真实产物，不要只改状态文本
+- 明确区分：AI 可独立完成的任务 vs 必须等待用户动作的任务
 
-### B. Writing / essay drafting
+### D. Tooling / agent / web-manager
 
-Another primary use case is producing high-signal writing in `创作/` and sometimes `公司项目/`.
+重点目录：`.trae/openclaw-skills/`、`.trae/web-manager/`、`.trae/web-manager/templates/`、`.openclaw-memory/`、`Notes/snippets/`、`.codex/`
 
-Required style tendencies:
+处理这些目录时：
 
-- plain, condensed, not over-decorated
-- opinionated, not blandly neutral
-- structured and analytical
-- good at comparison and abstraction
-- minimal AI fluff, no forced enthusiasm, no emoji spam unless the file already clearly wants it
+1. 保持 Codex、Trae、OpenClaw 的互通性。
+2. 优先改善默认工作路径，而不是只做 demo。
+3. 涉及模板、迁移、打包时，检查模板和脚本是否需要同步更新。
+4. 注意区分“项目定制改动”与“通用模板改动”，避免写错层级。
 
-Before substantial writing edits, read a few representative pieces in `创作/` and align with that voice.
+## 5. Git、安全与边界
 
-If the task touches `公司项目/`, first read:
+### 禁止外泄
 
-- `公司项目/01-公司项目创作pipeline.md`
+绝不提交或暴露：
 
-and follow that pipeline strictly.
+- `公司项目/` 下任何内容
+- 密钥、token、密码、AK/SK、私有链接
+- 环境文件或其他敏感配置
 
-### C. Todo-driven execution
+### Git 工作流
 
-This repo has a real task operating system. Respect it.
-
-Core rules:
-
-- Single source of truth: `.trae/todos/todos.json`
-- When adding a todo, prefer the `todo-adder` skill instead of hand-editing JSON.
-- When executing todos, prefer the `priority-task-reader` flow.
-- Before starting a pending todo for real work, mark it `in-progress` and add `started_at`.
-- Distinguish clearly between:
-  - tasks AI can finish alone
-  - tasks blocked on explicit user action or decision
-
-The user's deeper preference is: push each task as far as possible until the next real dependency on them is clear.
-
-Do not "advance" a todo by only changing status text. Advance it with actual work.
-
-### D. Tooling / agent system / web manager work
-
-A large part of this repo is an agent-workflow laboratory.
-
-High-value directories:
-
-- `.trae/openclaw-skills/`
-- `.trae/web-manager/`
-- `.trae/web-manager/templates/`
-- `.openclaw-memory/`
-- `Notes/snippets/`
-- `.codex/`
-
-When editing these areas:
-
-1. Preserve interoperability across Codex, Trae, and OpenClaw.
-2. Favor changes that improve the default working path, not just a demo path.
-3. If a feature is also packaged / migrated elsewhere, check whether templates or build scripts must be updated too.
-4. Keep an eye on whether a project-specific change is accidentally being written into a generic template, or vice versa.
-
-## 5. Git, safety, and boundaries
-
-### Never leak or publish the wrong things
-
-Absolutely avoid committing or exposing:
-
-- anything under `公司项目/` to the public repo
-- secrets, tokens, passwords, AK/SK, private URLs that should not be public
-- accidental environment files
-
-`.gitignore` and helper scripts already encode part of this policy; still verify manually.
-
-### Preferred repo Git workflow
-
-When the user asks for pull / push / sync behavior, prefer the repo's standard scripts:
+优先使用：
 
 - `Notes/snippets/todo-pull.sh`
 - `Notes/snippets/todo-push.sh`
 - `Notes/snippets/todo-push-commit.sh`
 
-Before any commit/push:
+commit / push 前必须：
 
-1. inspect `git status`
-2. inspect `git diff`
-3. if using `todo-push.sh`, read the generated `git-diff-summary-*.md`
-4. confirm no forbidden files are included
-5. confirm no meaningful user content was accidentally deleted
+1. 看 `git status`
+2. 看 `git diff`
+3. 如果使用 `todo-push.sh`，还要看 `git-diff-summary-*.md`
+4. 确认没有带上禁推文件
+5. 确认没有误删有价值的用户内容
 
-Never use force push or similarly destructive Git operations unless the user explicitly asks.
+禁止使用 force push 或其他高风险破坏性 git 操作，除非用户明确要求。
 
-### Symlink awareness
+### Symlink 注意事项
 
-Files under `.openclaw-memory/` may be symlink targets for another workspace setup. Modify them in place; do not delete-and-recreate them casually.
+`.openclaw-memory/` 下文件可能是其他工作区的 symlink 目标。修改时原地编辑，不要轻易删除重建。
 
-## 6. Communication style inside Codex
+## 6. 沟通风格与完成标准
 
-Default to Chinese unless the user asks otherwise.
+- 默认中文，直接、简洁、少废话。
+- 简单任务简答，复杂任务给清晰进展和关键决策。
+- 卡住时说明具体 blocker，以及下一步需要用户做的不可替代动作。
+- 尽量给出明确文件路径、产物路径和结论。
 
-Preferred interaction style:
+一个好的结果通常应满足：
 
-- direct, competent, low-filler
-- concise for simple tasks, thorough for complex ones
-- report real progress on long tasks
-- when blocked, explain the exact blocker and the next irreversible user action needed
-- mention concrete file paths and concrete outputs
-
-## 7. What good work looks like in this repo
-
-A strong result in this repository usually has these properties:
-
-- placed in the right file, not just any file
-- aligned with existing structure and style
-- connected to source links or artifacts
-- useful in the actual workflow, not just theoretically correct
-- safe to commit
-- easy for the user or another agent to continue from
-
-If you are unsure between a quick local answer and a durable repo improvement, bias toward the durable repo improvement when it matches the user's request.
+- 放在正确文件，而不是随便找个地方
+- 与现有结构和文风一致
+- 有来源或路径支撑，可追溯
+- 真正能接入当前工作流
+- 安全、可继续、可提交

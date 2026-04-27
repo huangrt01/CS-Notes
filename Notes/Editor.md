@@ -52,6 +52,27 @@
 * option + space: 唤起豆包
 * shift + option + A: 截图
 
+### Codex
+
+* @ 引用文件
+* `codex -i`
+* `/skills`
+
+#### Codex App 快捷键
+
+> 来源：[Commands - Codex app](https://developers.openai.com/codex/app/commands)
+
+* `Cmd + J`：切换 Terminal / Shell
+* `Cmd + Shift + P` 或 `Cmd + K`：打开命令面板
+* `Cmd + B`：切换侧边栏
+* `Cmd + Option + B`：切换 Diff 面板
+* `Cmd + N`（或 `Cmd + Shift + O`）：新建线程
+* `Cmd + F`：当前线程内查找
+* `Cmd + Shift + [` / `Cmd + Shift + ]`：上一个 / 下一个线程
+* `Cmd + [` / `Cmd + ]`：后退 / 前进
+* `Ctrl + L`：清空 Terminal
+* `shift + tab`: plan mode
+
 ### Trae
 
 Trae 是深度融合 AI 能力的 IDE，有 IDE 模式和 SOLO 模式两种开发模式。
@@ -799,4 +820,3 @@ CheckOptions:
 * command + /  切换编辑模式
 * shift + command + L 打开边栏
 * control + command + 1/2/3 切换边栏类型
-
