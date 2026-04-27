@@ -1,0 +1,7 @@
+interface:
+  display_name: "Gourmet Organizer"
+  short_description: "Organize tasting menus and visit notes into the right gourmet note"
+  default_prompt: "Use $gourmet-organizer to merge a restaurant menu, photo, and tasting notes into the right section of Notes/Gourmet.md."
+
+policy:
+  allow_implicit_invocation: true

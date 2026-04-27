@@ -1,0 +1,7 @@
+interface:
+  display_name: "GitHub GH CLI"
+  short_description: "Inspect GitHub pull requests, issues, and CI runs with gh"
+  default_prompt: "Use $github-gh-cli to inspect a GitHub repository with gh and summarize the relevant PR, issue, or CI state."
+
+policy:
+  allow_implicit_invocation: true

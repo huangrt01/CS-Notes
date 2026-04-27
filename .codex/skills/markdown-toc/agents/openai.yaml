@@ -1,0 +1,7 @@
+interface:
+  display_name: "Markdown TOC"
+  short_description: "Extract Markdown heading trees with line numbers before editing"
+  default_prompt: "Use $markdown-toc to inspect a Markdown file structure and find the best section for a new edit."
+
+policy:
+  allow_implicit_invocation: true
