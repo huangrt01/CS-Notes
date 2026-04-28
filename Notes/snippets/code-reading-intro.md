@@ -183,6 +183,10 @@
   - Planning、Execution 双循环的设计
   - 统一基于function calling的实现
 
+- MLE-bench
+  - https://github.com/openai/mle-bench
+  - OpenAI 基于 75 个 Kaggle 竞赛构建的 ML Agent 评测 benchmark
+
 
 ### GPU
 

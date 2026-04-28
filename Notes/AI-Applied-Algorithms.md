@@ -982,6 +982,12 @@ https://hazyresearch.stanford.edu/blog/2025-06-08-cartridges
   * 上下文的管理有多种模式可以轻松传递
   * 10行代码构建出多智能体系统
 
+* **Internet of Agents (IoA)** ([arxiv](https://arxiv.org/abs/2407.07061), ICLR 2025)：清华 NLP & 面壁智能。提出 agent integration protocol + 即时通信架构 + 动态组队与会话流控制。多 Agent 协作不能只靠"多开几个 agent"，真正关键的是协议、路由、编组与会话控制。
+
+* **Agent Data Protocol (ADP)** ([arxiv](https://arxiv.org/abs/2510.24702), ICLR 2026 Oral)：CMU / OSU。提出轻量 interlingua，用 Pydantic schema 统一动作（API / Code / Message）与观察（Text / Web），将 13 个已有数据集转换到 ADP，兼容 OpenHands、SWE-Agent、AgentLab。Protocol 标准化本身是 agent 工程的重要基础设施。
+
+* **mini-SWE-agent** ([GitHub](https://github.com/SWE-agent/mini-SWE-agent))：SWE-bench/SWE-agent 团队。核心 ~310 行 Python，SWE-bench verified 74%+。极简架构：唯一工具=bash、无状态执行（`subprocess.run`）、线性消息历史、Protocol 替代继承、策略编码在 prompt 而非代码。核心洞察——当 LLM 足够强时，agent 框架应做减法而非加法，复杂度与性能甚至可能负相关。详见 [AI-Agent-Product&PE.md - 极简 Agent 架构](./AI-Agent-Product&PE.md)
+
 ![agent-overview](./AI-Applied-Algorithms/agent-overview.png)
 
 - [LangGraph](https://langchain-ai.github.io/langgraph/) from LangChain;
@@ -1261,6 +1267,34 @@ Thought:{agent_scratchpad}
   * 如果你手头有个非常具体的任务，而且你觉得这个任务和你已知的模型训练数据差别很大，你自己试了很多次，换了各种提示语，效果就是不理想——比如说，**某个特别专业的基因测序任务，或者其他对模型来说完全是“圈外”（out of distribution）的知识，模型压根不知道从何下手——那我觉得，这时候就值得考虑试试强化学习微调。**
   * 如果某个任务对你的核心业务流程来说至关重要，性能提升个 10%、15% 就能决定生死存亡，那或许也应该尝试 RFT。
 
+### Agent 评估与安全
+
+#### GAIA: A Benchmark for General AI Assistants ([arxiv](https://arxiv.org/abs/2311.12983), NeurIPS 2023)
+
+Meta / HuggingFace / AutoGPT 等。466 个真实世界问题，要求推理、多模态处理、网页浏览和工具使用。问题对人类简单（92% 准确率），但对 AI 极难（GPT-4 + plugins 仅 15%）。按难度分 3 级：Level 1（基本工具）、Level 2（多步推理 + 工具链）、Level 3（复杂长程任务，需要自主规划与多工具协同）。
+
+**Level 3 SOTA 演进**（2025-2026）：
+
+| 排名 | 方法 | Level 3 | 综合 | 架构特点 |
+|------|------|---------|------|---------|
+| 1 | **Lemon Agent**（联想） | 87.76% | 91.36% | AgentCortex 框架（Planner-Executor-Memory），层级自适应调度，orchestrator-workers 架构 ([arxiv](https://arxiv.org/abs/2602.07092)) |
+| 2 | **Spine Swarm** | 61.5% | - | 三层多 Agent 架构（orchestrator → persona agents → tool agents），依赖感知并行调度 |
+| 3 | **Writer Action Agent** | 61% | - | 企业级 Agent，基于 writer-palmyra 模型 |
+| - | Manus | 57.7% | 73.9% | 通用 Agent，多工具协同 |
+| - | OpenAI Deep Research | 47.6% | 74.3% | 强化微调 + 浏览工具 |
+
+关键洞察：GAIA Level 3 是当前 Agent 综合能力的试金石。从 GPT-4 的 15% 到 Lemon 的 87.76%，核心突破不在单模型能力，而在多 Agent 编排、自适应调度和 memory 管理。
+
+#### MLE-bench: Evaluating Machine Learning Agents on Machine Learning Engineering ([arxiv](https://arxiv.org/abs/2410.07095), ICLR 2025)
+
+OpenAI。基于 75 个 Kaggle 竞赛构建 benchmark，覆盖数据准备、训练、实验、调参与提交等真实 ML 工程环节，提供 human baseline（Kaggle 公开排行榜）。最佳配置（o1-preview + AIDE scaffold）仅获得约 8.7% 的 Kaggle 奖牌率。Agent 评测应贴近真实工程闭环，benchmark 不应只看单轮答案而应看长期任务完成度。
+
+#### RedTeamCUA: Realistic Adversarial Testing of Computer-Use Agents ([arxiv](https://arxiv.org/abs/2505.21936), ICLR 2026)
+
+OSU NLP Group。构建 hybrid sandbox（OSWorld VM + Docker 化 WebArena/TheAgentCompany），提出 Decoupled Eval：将 agent 直接放到注入点附近，避免导航能力不足掩盖真实风险。RTC-Bench 含 864 个测试用例。结果：Claude 3.7 Sonnet CUA 的 ASR 达 42.9%，最安全的 Operator 仍有 7.6% ASR。
+
+关键洞察：不能因为 agent 没走到注入点就误判其"更安全"，能力与安全必须分离评估。benchmark 应显式拆分导航失败、工具失败、推理失败、安全失败。
+
 ### Coding Agent
 
 #### codeact: Executable Code Actions Elicit Better LLM Agents
@@ -1364,7 +1398,6 @@ Thought:{agent_scratchpad}
   * ![image-20251003225501225](./AI-Applied-Algorithms/image-20251003225501225.png)
 
 
-
 https://github.com/OpenBMB/XAgent
 
 ![image-20251003224631051](./AI-Applied-Algorithms/image-20251003224631051.png)
@@ -1384,11 +1417,50 @@ https://github.com/OpenBMB/XAgent
 * 请求用户干预，寻求实时反馈
   * ![image-20251003225342911](./AI-Applied-Algorithms/image-20251003225342911.png)
 
+#### Lemon Agent: GAIA SOTA #1 ([arxiv](https://arxiv.org/abs/2602.07092), [GitHub](https://github.com/Open-Lemon/LemonAgent))
+
+联想。GAIA 综合得分 91.36%，Level 3 得分 87.76%（当前 SOTA）。提出 AgentCortex 框架，形式化 Planner-Executor-Memory 范式，核心创新：
+
+- **层级自适应调度**：orchestrator 层评估任务复杂度，简单任务路由到单个 worker（减少开销），复杂任务 fan-out 到多个专家 worker 并行执行；worker 层内部也有自适应调度
+- **统一上下文与 memory 视图**：多 worker 共享统一 memory，避免信息孤岛
+- **高并发 DAG 执行引擎**：配置驱动，支持不同规模和拓扑的 agent swarm 快速组装
+- **兼容多种多 Agent 设计模式**：cooperative、hierarchical、tool-hub-centric
+
+#### Spine Swarm: GAIA SOTA #2
+
+三层多 Agent 架构：orchestrator → persona agents → tool agents。依赖感知并行调度，persona agents 按任务角色动态组队，tool agents 负责具体工具调用。GAIA Level 3 得分 61.5%。
+
 #### UltraRAG
 
 ![image-20251003223605348](./AI-Applied-Algorithms/image-20251003223605348.png)
 
+#### Computer Use Agent
+
+##### OSCAR: Operating System Control via State-Aware Reasoning and Re-Planning ([arxiv](https://arxiv.org/abs/2410.18963), ICLR 2025)
+
+将 agent 操作建模为状态机，基于 screen observation 做 state-aware reasoning，在执行过程中根据环境变化进行 task-driven re-planning。GAIA benchmark Level 3 成功率 13.5%（接近此前 SOTA 的两倍），OSWorld 和 AndroidWorld 上同样超越其他方法。
+
+关键洞察：长程执行的关键不只是 tool calling，而是持续状态判断。checkpoint / watchdog / recover 应按状态驱动设计而非按步骤计数。
+
+##### ScaleCUA: Scaling Open-Source Computer Use Agents with Cross-Platform Data ([arxiv](https://arxiv.org/abs/2508.09123), ICLR 2026)
+
+上海 AI Lab。构建覆盖 Windows、macOS、Linux、Android、iOS、Web 的跨平台数据，grounding data 结合自动 pipeline + 模型标注 + 人工校验，trajectory data 由人工操作采集并补注释。发布不同参数规模模型。
+
+关键洞察：跨平台真实数据是 CUA 的关键基础设施，但 screenshot-based scaling 仍暴露 temporal continuity 与 continuous control 的上限。
+
 ### Agent + Workflow
+
+#### AFlow: Automating Agentic Workflow Generation ([arxiv](https://arxiv.org/abs/2410.10762), ICLR 2025)
+
+MetaGPT 团队（港科大广州 + DeepWisdom）。核心贡献：将 workflow 优化重构为搜索问题——workflow 表达为代码化工作流图（LLM 调用节点 + 边），用 MCTS 在此空间中搜索最优 workflow。引入 Operator 概念（Review、Vote、Generate 等预定义节点组合）简化搜索空间。6 个 benchmark 上平均提升 5.7%，小模型以 4.55% 的 GPT-4o 推理成本在特定任务上超越 GPT-4o。
+
+关键洞察：workflow 不只是 prompt engineering，workflow 可以被搜索、比较与自动优化。第一版就应把 workflow 显式化而非埋进 prompt。
+
+#### AgentFlow: In-the-Flow Agentic System Optimization ([arxiv](https://arxiv.org/abs/2510.05592), ICLR 2026)
+
+Stanford / TAMU / UCSD。将系统拆为 planner、executor、verifier、generator 四模块，通过 evolving memory 协调多轮交互。仅训练 planner（Qwen2.5-7B-Instruct），提出 Flow-GRPO：把最终 outcome reward 广播到每一步 planner 决策，将多轮优化转化为一系列单轮策略更新。10 个 benchmark 上验证系统级 in-the-flow RL 明显优于只替换更强 planner。
+
+关键洞察：瓶颈不只是"planner 强不强"，而是 planner 是否在系统回路里被训练。优化对象应是整个 system 而非单模型。
 
 #### ICE：智能体赋能工作流优化
 
@@ -1447,6 +1519,26 @@ https://github.com/OpenBMB/XAgent
     * AutoGLM 请求 ADB 权限本身也带来了巨大的攻击面（自动获得大量敏感权限）。
 
 ## Context-Engineering、记忆与个性化
+
+#### MemAgent: Reshaping Long-Context LLM with Multi-Conv RL-based Memory Agent ([arxiv](https://arxiv.org/abs/2507.02259), ICLR 2026)
+
+字节 Seed + 清华 AIR。引入固定长度 memory panel，chunk-by-chunk 读入文档，通过 overwrite strategy 更新 memory。用 Multi-Conv RL（扩展 DAPO 算法）训练 memory update 策略。8K 上下文训练的模型在 3.5M token 任务上性能损失 <5%，512K RULER 测试准确率 95%+。复杂度从 $$O(N^2)$$ 降为 $$O(N)$$。
+
+核心洞察：长上下文的本质不是更大窗口，而是"读、记、忘"的 memory policy。session memory 不能只是 append-only transcript，应支持压缩、重写、保留与遗忘。
+
+**Memory Update 作为 RL 训练对象的技术细节：**
+
+* **自回归分解中的隐变量建模**：标准 AR 模型 $$p(\mathbf{x}_{1:N}) = \prod p(x_n | \mathbf{x}_{1:n-1})$$ 假设所有历史 token 在 context 中，导致 $$O(n^2)$$。MemAgent 引入固定长度 latent memory $$\mathbf{m}^{1:K-1}$$，将输入分成 K 个 chunk，分解为 read path + write path：
+
+$$p(\mathbf{x}_{1:N}) = \sum_{\mathbf{m}^{1:K-1}} \prod_{k=1}^{K} \underbrace{p(\mathbf{c}^k \mid \mathbf{m}^{k-1})}_{\text{read}} \cdot \underbrace{p(\mathbf{m}^k \mid \mathbf{c}^k, \mathbf{m}^{k-1})}_{\text{write}}$$
+
+本质是把 Transformer 变成状态大小用户可控的 RNN，每步 compute 为 $$O(C+M)$$，总复杂度 $$O(N)$$
+
+* **为什么 RL 不可替代**：Memory 在 token space（离散、人类可读），不在 feature space（连续）。Overwrite 是离散生成行为，梯度无法回传。RL 通过最终答案正确性作为 reward，直接奖励"好 memory"——bridge 了 explicit supervision（答案）和 implicit structure（好 memory）之间的 gap。实验验证：无 RL 的 memory 机制随长度增加仍显著退化，RL 训练后近乎无损外推
+
+* **Multi-Conv DAPO 算法**：MemAgent 一次推理产生多个 context-independent 对话（每个 chunk 一轮），标准 GRPO/DAPO 只处理单对话。核心设计：(1) 每个对话作为独立优化目标，不能简单 attention mask 拼接；(2) Reward 只来自最终对话（含答案），但 advantage 均匀传播到所有对话：$$\hat{A}_{i,j,t} = r_i - \text{mean}(\{R_i\}_{i=1}^G)$$；(3) Loss 维度从 (group, token) 扩展为 (group, conversation, token)，用 DAPO 的非对称 clip $$(1-\varepsilon_{low}, 1+\varepsilon_{high})$$
+
+* **Reward**：rule-based verifier（RLVR recipe）。QA 任务用等价性检查，多值任务用召回率
 
 > TODO 上下文工程Intro https://mp.weixin.qq.com/s/3t4PjpZcMVU1wCO0ThUs2A
 >
@@ -2594,6 +2686,10 @@ Query扩展：根据粒度的不同分为Term粒度和Query粒度两种
 * 检索dense：用[SEP]相连
 
 ### NL2Sql
+
+#### Spider 2.0: Evaluating Language Models on Real-World Enterprise Text-to-SQL Workflows ([arxiv](https://arxiv.org/abs/2411.07763), ICLR 2025 Oral)
+
+632 个真实企业 text-to-SQL workflow 任务，数据库来自 BigQuery、Snowflake 等真实系统，涉及超大 schema（3000+ 列）、多 SQL 方言、metadata 搜索和项目级上下文。不只是写 SQL，还要求理解 metadata、文档和项目上下文。企业真实任务天然是 workflow 任务而非单轮问答。
 
 #### Literature Review
 

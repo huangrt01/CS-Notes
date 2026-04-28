@@ -590,6 +590,8 @@ print(f"Prompt的token数量为: {token_count}")
 
 ![image-20251005174802221](./LLM-MLSys/image-20251005174802221.png)
 
+**Agent-based 方案**：MemAgent（ICLR 2026，字节 Seed + 清华 AIR）引入固定长度 memory panel + overwrite strategy，用 Multi-Conv RL 训练 memory update 策略，8K 上下文训练模型在 3.5M token 任务上性能损失 <5%，复杂度从 $$O(N^2)$$ 降为 $$O(N)$$。核心洞察：长上下文的本质不是更大窗口，而是"读、记、忘"的 memory policy。详见 [AI-Applied-Algorithms.md - Context-Engineering](./AI-Applied-Algorithms.md)
+
 ### Linear/Sparse Attention 工程
 
 #### Intro
@@ -1915,6 +1917,8 @@ MTP ~ [**Zen5的2-Ahead Branch Predictor**](https://chipsandcheese.com/p/zen-5s-
   - 投机解码（Speculative Decoding）
 
 ![image-20251105175253591](./LLM-MLSys/image-20251105175253591.png)
+
+**Workflow 级优化**：AFlow（ICLR 2025）将 workflow 优化重构为搜索问题，用 MCTS 自动搜索最优 workflow；AgentFlow（ICLR 2026）提出 Flow-GRPO，在系统回路中训练 planner，将最终 outcome reward 广播到每步决策。详见 [AI-Applied-Algorithms.md - Agent + Workflow](./AI-Applied-Algorithms.md)
 
 
 
