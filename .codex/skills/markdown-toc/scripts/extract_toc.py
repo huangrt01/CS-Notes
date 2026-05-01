@@ -28,8 +28,7 @@ def render_toc(headings: Iterable[Heading]) -> str:
     for level, title, lineno in headings:
         indent = "  " * (level - 1)
         rows.append(f"{indent}{'#' * level} {title} (line {lineno})")
-    return "
-".join(rows)
+    return "\n".join(rows)
 
 
 def main() -> int:

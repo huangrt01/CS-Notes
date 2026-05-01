@@ -58,6 +58,14 @@ zsh -lc 'source ~/.zshrc; <command>'
 - 写作：先读 `创作/` 下 2-3 篇代表文章
 - 笔记整合：先在 `Notes/` 广搜，再检查候选文件结构
 
+### Markdown 文件打开
+
+当需要在本机为用户打开 Markdown 文件时，默认使用 Typora：
+
+```bash
+open -a Typora <file.md>
+```
+
 ## 4. 工作流
 
 ### A. 笔记整合

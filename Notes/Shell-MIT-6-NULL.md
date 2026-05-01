@@ -678,6 +678,36 @@ WantedBy=multi-user.target
 
 
 
+##### **Daemons** - macOS launchd / LaunchAgent
+
+参考：[Apple Creating Launch Daemons and Agents](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html)、[Apple Terminal: script management with launchd](https://support.apple.com/en-ca/guide/terminal/apdc6c1077b-5d5d-4d35-9c19-60f2397b2369/mac)、[launchd.info](https://www.launchd.info/?lang=en)
+
+macOS 上长期运行服务优先用 `launchd`，而不是手写 `nohup ... &`。常见分层：
+
+* `~/Library/LaunchAgents/*.plist`：当前用户登录后运行，适合个人自动化、IM bridge、本地 agent。
+* `/Library/LaunchAgents/*.plist`：所有用户登录后可运行，由管理员安装。
+* `/Library/LaunchDaemons/*.plist`：系统启动后以 root 或指定用户运行，不依赖图形登录。
+
+`LaunchAgent` 的核心是 plist：`ProgramArguments` 指向真实命令，`WorkingDirectory` 固定工作目录，`StandardOutPath` / `StandardErrorPath` 落日志，`RunAtLoad=true` 表示加载后立即启动，`KeepAlive` 表示退出后由 `launchd` 拉起。
+
+```shell
+# 注册 / 启动当前用户 agent
+launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.example.agent.plist
+launchctl kickstart -k "gui/$(id -u)/com.example.agent"
+
+# 查看 / 停止
+launchctl print "gui/$(id -u)/com.example.agent"
+launchctl bootout "gui/$(id -u)/com.example.agent"
+```
+
+维护经验：
+
+* 不要依赖交互 shell 环境，plist 里显式写 `PATH`、`HOME`、必要环境变量。
+* plist 如果写入 token / secret，权限至少收紧到 `chmod 600`。
+* `RunAtLoad=true` 解决“登录后自动启动”，`KeepAlive` 解决“异常退出后自动拉起”；两者不是一回事。
+* Mac 可以锁屏或熄屏，但系统睡眠后长连接会断；常驻 agent 需要在电源设置里阻止自动睡眠，或用 Amphetamine / `caffeinate` 保持唤醒。
+* 修改 plist 后通常需要 `bootout` 再 `bootstrap`，只改文件不一定会让已加载的 job 生效。
+
 ##### **FUSE**
 
 [FUSE](https://en.wikipedia.org/wiki/Filesystem_in_Userspace) (Filesystem in User Space)
@@ -1234,4 +1264,3 @@ rm ~/.zcompdump*
 rm ~/.zplug/zcompdump*
 exec zsh
 ```
-

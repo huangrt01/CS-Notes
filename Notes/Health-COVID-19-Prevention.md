@@ -718,6 +718,21 @@
 
 
 
+### 长期健康监测
+
+#### 血压
+
+> 参考：[CDC - Measuring Your Blood Pressure](https://www.cdc.gov/high-blood-pressure/measure/)、[American Heart Association - Home Blood Pressure Monitoring](https://www.heart.org/en/health-topics/high-blood-pressure/understanding-blood-pressure-readings/monitoring-your-blood-pressure-at-home)、[American Stroke Association - High Blood Pressure and Stroke](https://www.stroke.org/en/about-stroke/stroke-risk-factors/high-blood-pressure-and-stroke)
+
+防高血压、脑出血/卒中风险，一个简单但重要的细节是**多测血压，知道自己的数字**。高血压常常没有明显症状，偶尔一次体检正常不等于长期正常；家庭血压记录能更早发现趋势，也能帮助医生判断生活方式或药物控制是否有效。
+
+要点：
+
+* 家里备一个合适袖带的上臂式电子血压计，定期测并记录时间、数值和当时状态。
+* 测量前安静坐几分钟，避免刚运动、咖啡因、吸烟、情绪激动后立刻测；测量时手臂支撑在心脏高度。
+* 单次读数异常不等于确诊，但反复偏高、明显升高或伴随头痛、胸痛、神经症状等，应及时就医。
+* 多测血压不是治疗本身，它的价值是把“沉默风险”变成可观察的数据。
+
 ### 体检
 
 40岁后挽救或能够延长生命最显著的体检项目排名：

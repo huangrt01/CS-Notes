@@ -1426,6 +1426,14 @@ https://github.com/OpenBMB/XAgent
 - **高并发 DAG 执行引擎**：配置驱动，支持不同规模和拓扑的 agent swarm 快速组装
 - **兼容多种多 Agent 设计模式**：cooperative、hierarchical、tool-hub-centric
 
+补充工程化判断（2026-04-29，来源：arXiv:2602.07092v1 + 仓库现实检查）：
+
+- **仓库现状**：当前公开仓库基本只有 README，代码仍在 internal review，现阶段只能做 structural reproduction
+- **真实系统形态**：不是"多 agent 自由聊天"，而是明确的 orchestrator-worker 两层结构。宏观调度（orchestrator 判断单 worker vs 多 expert workers）+ 微观调度（worker 内部决定顺序/并行工具调用）
+- **三层 progressive compression**：tool 结果截断 + metadata logging → round-level summarization → cross-round retroactive compression
+- **SES-Memory**：从 execution traces 中提炼可复用 skill snippets，即使任务失败也可抽取有价值 memory；有 recall threshold、dedup / skip writeback 等质量控制
+- **工程边界**：Lemon 的 memory 更适合视为**行为参考层**（回答"memory 如何参与协作与调度"），而非最终 storage substrate
+
 #### Spine Swarm: GAIA SOTA #2
 
 三层多 Agent 架构：orchestrator → persona agents → tool agents。依赖感知并行调度，persona agents 按任务角色动态组队，tool agents 负责具体工具调用。GAIA Level 3 得分 61.5%。
@@ -1522,23 +1530,17 @@ Stanford / TAMU / UCSD。将系统拆为 planner、executor、verifier、generat
 
 #### MemAgent: Reshaping Long-Context LLM with Multi-Conv RL-based Memory Agent ([arxiv](https://arxiv.org/abs/2507.02259), ICLR 2026)
 
-字节 Seed + 清华 AIR。引入固定长度 memory panel，chunk-by-chunk 读入文档，通过 overwrite strategy 更新 memory。用 Multi-Conv RL（扩展 DAPO 算法）训练 memory update 策略。8K 上下文训练的模型在 3.5M token 任务上性能损失 <5%，512K RULER 测试准确率 95%+。复杂度从 $$O(N^2)$$ 降为 $$O(N)$$。
+字节 Seed + 清华 AIR。核心洞察：长上下文的本质不是更大窗口，而是"读、记、忘"的 memory policy——session memory 不能只是 append-only transcript，应支持压缩、重写、保留与遗忘。
 
-核心洞察：长上下文的本质不是更大窗口，而是"读、记、忘"的 memory policy。session memory 不能只是 append-only transcript，应支持压缩、重写、保留与遗忘。
+**Workflow**：将长文档切为 K 个 chunk（每段 ≤C tokens），模型每步只看 `(当前 chunk + 固定长度 memory)`，处理完后 overwrite memory，全部 chunk 读完后基于最终 memory 生成答案。Memory 长度固定为 M，因此每步计算量 $$O(C+M)$$，总复杂度 $$O(N)$$。8K 上下文训练的模型在 3.5M token QA 上性能损失 <5%，512K RULER 准确率 95%+。
 
-**Memory Update 作为 RL 训练对象的技术细节：**
-
-* **自回归分解中的隐变量建模**：标准 AR 模型 $$p(\mathbf{x}_{1:N}) = \prod p(x_n | \mathbf{x}_{1:n-1})$$ 假设所有历史 token 在 context 中，导致 $$O(n^2)$$。MemAgent 引入固定长度 latent memory $$\mathbf{m}^{1:K-1}$$，将输入分成 K 个 chunk，分解为 read path + write path：
+**建模：自回归分解 + 隐变量 memory**。标准 AR 模型 $$p(\mathbf{x}_{1:N}) = \prod p(x_n | \mathbf{x}_{1:n-1})$$ 假设全部历史在 context 中，导致 $$O(n^2)$$。MemAgent 引入固定长度 latent memory $$\mathbf{m}^{1:K-1}$$，将联合似然分解为 read path + write path：
 
 $$p(\mathbf{x}_{1:N}) = \sum_{\mathbf{m}^{1:K-1}} \prod_{k=1}^{K} \underbrace{p(\mathbf{c}^k \mid \mathbf{m}^{k-1})}_{\text{read}} \cdot \underbrace{p(\mathbf{m}^k \mid \mathbf{c}^k, \mathbf{m}^{k-1})}_{\text{write}}$$
 
-本质是把 Transformer 变成状态大小用户可控的 RNN，每步 compute 为 $$O(C+M)$$，总复杂度 $$O(N)$$
+本质是把 Transformer 变成状态大小用户可控的 RNN。Memory 在 token space（离散、人类可读），而非 feature space（连续、隐式），因此 overwrite 是离散生成行为，梯度无法回传——**RL 不可替代**。RL 通过最终答案正确性作为 reward，直接奖励"好 memory"，bridge 了 explicit supervision（答案）和 implicit structure（好 memory）的 gap。消融实验证实：无 RL 的 memory 机制随长度仍退化，RL 后近乎无损外推。
 
-* **为什么 RL 不可替代**：Memory 在 token space（离散、人类可读），不在 feature space（连续）。Overwrite 是离散生成行为，梯度无法回传。RL 通过最终答案正确性作为 reward，直接奖励"好 memory"——bridge 了 explicit supervision（答案）和 implicit structure（好 memory）之间的 gap。实验验证：无 RL 的 memory 机制随长度增加仍显著退化，RL 训练后近乎无损外推
-
-* **Multi-Conv DAPO 算法**：MemAgent 一次推理产生多个 context-independent 对话（每个 chunk 一轮），标准 GRPO/DAPO 只处理单对话。核心设计：(1) 每个对话作为独立优化目标，不能简单 attention mask 拼接；(2) Reward 只来自最终对话（含答案），但 advantage 均匀传播到所有对话：$$\hat{A}_{i,j,t} = r_i - \text{mean}(\{R_i\}_{i=1}^G)$$；(3) Loss 维度从 (group, token) 扩展为 (group, conversation, token)，用 DAPO 的非对称 clip $$(1-\varepsilon_{low}, 1+\varepsilon_{high})$$
-
-* **Reward**：rule-based verifier（RLVR recipe）。QA 任务用等价性检查，多值任务用召回率
+**训练：Multi-Conv DAPO**。一次推理产生多个 context-independent 对话（每个 chunk 一轮），标准 GRPO/DAPO 只处理单对话。核心设计：(1) 每个对话作为独立优化目标，不能简单 attention mask 拼接；(2) Reward 只来自最终对话（含答案），但 advantage 均匀传播到所有对话：$$\hat{A}_{i,j,t} = r_i - \text{mean}(\{R_i\}_{i=1}^G)$$；(3) Loss 维度从 (group, token) 扩展为 (group, conversation, token)，用 DAPO 非对称 clip。Reward 为 rule-based verifier（RLVR recipe），QA 用等价性检查，多值任务用召回率
 
 > TODO 上下文工程Intro https://mp.weixin.qq.com/s/3t4PjpZcMVU1wCO0ThUs2A
 >

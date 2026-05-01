@@ -3,4 +3,4 @@ version = 1
 name = "CS-Notes"
 
 [setup]
-script = "source ~/.zshrc"
+script = ""
