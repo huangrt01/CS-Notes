@@ -1,6 +1,6 @@
 ---
 name: research-material-scout
-description: Use when the user asks Codex to research, find learning materials, process "素材：" links, "请你读" / "精读" a material, build a material radar, or use SenSight-like broad information retrieval for career learning and Agent infra tracking. Do not use the career/Agent-infra routing bias for user-directed `整理笔记` into a named note.
+description: Use when the user asks Codex to research, find learning materials, process "素材：" links, "请你读" / "精读" a material, build a material radar, or use multi-source information retrieval for career learning and Agent infra tracking. Do not use the career/Agent-infra routing bias for user-directed `整理笔记` into a named note.
 ---
 
 # Research Material Scout
@@ -68,17 +68,14 @@ Use social media, 微信公众号, 小红书, X/Twitter, 微博, and aggregators
 
 When extracting mechanisms from a repo, quickstart, prompt, or code file, include file-level links in the user-facing answer and persisted notes/archive. For GitHub sources, prefer commit-pinned permalinks and record the commit read; avoid writing only a repo name or bare filename when a concrete source file drove the claim.
 
-Use SenSight as the primary broad-recall backend when it is available:
+Choose currently callable tools by the question and source type:
 
-- recent AI/Agent/RL/serving dynamics,
-- social-platform opinions,
-- author/researcher recent posts,
-- link reading across 微信公众号 / 小红书 / X / 微博,
-- keyword monitoring.
+- Use web search for broad recall, alternate terminology, and recent developments.
+- Use platform search or authenticated source readers for social opinions and author posts; inspect the original posts and links.
+- Use paper lanes, GitHub, official docs, release notes, and engineering blogs for technical evidence.
+- Use existing local readers for specific URLs, RSS, or transcripts when they add coverage.
 
-Codex remains responsible for verification, ranking, summarization, and local persistence.
-
-Use ordinary web search, platform-specific readers, and Agent-Reach-like local tools as fallback or source-level readers, not as the primary discovery layer.
+Codex remains responsible for verification, ranking, summarization, and local persistence. No specific aggregator is a prerequisite. A publicly listed skill or downloadable client does not establish that its backend is publicly usable; verify service access and dependencies before adopting one. Continue through available sources when an optional tool is absent, and report only coverage gaps that affect the answer.
 
 ### Implementation-First Catalogs
 
@@ -184,7 +181,7 @@ Combine these with non-paper lanes:
 - GitHub repos, release notes, project pages, Papers with Code-style project pages when available;
 - official product or framework docs;
 - implementation-first catalogs for agent infra;
-- SenSight / social / aggregators as broad recall, never as final fact sources.
+- Social platforms and aggregators as broad recall, never as final fact sources.
 
 Operational rule:
 
@@ -208,51 +205,10 @@ Repeat `--query` for intent-query expansion. Narrow `--sources` to topic-fit lan
 Use a dual-track exploration flow for real paper-heavy work:
 
 1. Run the script for structured paper-lane recall and per-lane evidence.
-2. In parallel, run Codex's existing web / SenSight / GitHub / official-doc search for project pages, repos, social/aggregator leads, implementation evidence, and missed terminology.
+2. In parallel, run Codex's existing web / platform / GitHub / official-doc search for project pages, repos, social/aggregator leads, implementation evidence, and missed terminology.
 3. Merge the two result sets before ranking. Treat script-only hits as candidates to verify, and web-only hits as leads to trace back to primary papers / code / docs.
 
 The script is only a recall layer; it complements rather than replaces the older exploration stack.
-
-## SenSight Backend
-
-Discover callable SenSight tools or the current project's private `.local/sensight-skill-source/sensight` directory. Do not assume a previous machine's absolute path or installed version. If the source exists, read its SKILL.md and actual command help before invoking it. Do not execute placeholder installers.
-
-When SenSight is absent or unavailable, record that limitation and continue with web search plus an authenticated platform reader and primary-source verification. Optional discovery tooling should not block already authorized research. If its authentication is essential, follow its current authorization flow; never treat an auth response as source content.
-
-### Useful Actions
-
-Use these actions as retrieval, not as final authority:
-
-| Need | SenSight action |
-| --- | --- |
-| AI industry deep dive / high-quality articles | `retrieve_summarize` |
-| Latest AI papers | `daily_paper` |
-| Latest AI/company technical blogs | `daily_blog` |
-| Weekly model releases | `weekly_model` |
-| Model reputation / user sentiment | `model_sentiment` |
-| Hot events, general news, trend search | `search_events` |
-| Platform hot lists | `get_event_board` |
-| Social semantic search across X/小红书/微博/公众号 | `social_search` |
-| Recent posts from a specific author/account | `search_author_posts` |
-
-Examples:
-
-```bash
-python3 scripts/sensight.py retrieve_summarize \
-  --query "Agent infra 最新进展" \
-  --enhance_query "最近一周 Agent infra、OpenClaw、Claude Code、agent memory、long-running coding agent 的高质量技术动态" \
-  --size 20 \
-  --result_form article_summary
-
-python3 scripts/sensight.py social_search \
-  --query "GPT 5.4 评价" \
-  --platforms 1 2 3 4 \
-  --size 20
-
-python3 scripts/sensight.py search_author_posts \
-  --platform 1 \
-  --author_name "Anthropic"
-```
 
 ## Authenticated Social Link Reading
 
@@ -262,7 +218,7 @@ Capture relevant author, date, post URL, primary-source links, read scope, and t
 
 ## Agent-Reach Complement
 
-Agent-Reach (`https://github.com/Panniantong/Agent-Reach`) is useful as a complementary local scaffolding layer, especially when SenSight is unavailable, too aggregated, or lacks a channel.
+Agent-Reach (`https://github.com/Panniantong/Agent-Reach`) is an optional local scaffolding layer for source-level coverage. Check its installed capabilities before relying on it.
 
 Use it as a design reference or optional install, not the default primary source.
 
@@ -276,20 +232,7 @@ What it adds:
 - Reddit / Twitter / 小红书 / 抖音 / LinkedIn via separate upstream CLIs or MCP tools,
 - `agent-reach doctor` style capability diagnostics.
 
-When it helps more than SenSight:
-
-- Need to inspect a specific URL/video/repo/thread, not just discover candidates.
-- Need an open-source, auditable local route.
-- Need video subtitles, RSS feeds, GitHub issues/PRs, or Reddit threads.
-- SenSight auth is unavailable or results are too summarized.
-
-When SenSight should stay primary:
-
-- Broad topic discovery.
-- Recent social sentiment.
-- Cross-platform opinion summaries.
-- AI papers/blogs/model-release radar.
-- Low-maintenance material scouting.
+Use it when an installed reader adds needed coverage for a specific URL, video, repo, or thread, or when search results are too summarized to verify. Prefer an existing native reader when it already covers the source.
 
 Do not install Agent-Reach automatically unless the user asks. It may install many dependencies and configure cookies/proxies. If installed, keep secrets/cookies local and never commit them.
 
@@ -369,11 +312,7 @@ When proactively finding materials:
 
 Before reporting that a research task is done:
 
-1. Verify the retrieval backend state:
-   - paper-source lanes checked, skipped as not relevant, or unavailable;
-   - SenSight result received, or
-   - SenSight auth-blocked and fallback source path used, or
-   - SenSight not relevant for this specific URL/material.
+1. Verify actual source coverage: which relevant lanes were read, returned no useful results, or could not be accessed. State read scope and unresolved evidence gaps; do not repeatedly probe or report an unconfigured optional service.
 2. Check at least two source types for active research whenever possible, such as paper + repo, official docs + social discussion, or product page + engineering blog.
 3. For every S/A candidate, include:
    - original URL,

@@ -183,25 +183,25 @@ Context 已改变，否则不动。ranking apply / readback / projection / audit
 
 1. 先判断意图和输出面：`整理笔记` 写长期笔记；`素材` 入候选库；`调研` 围绕当前职业主线找高价值材料；`请你读 / 精读` 先读后给机制摘要和读法建议。不要把这四类混成同一条 Agent infra 管线。
 2. 优先使用已有专用读取能力：微信公众号、小红书、飞书文档、GitHub、arXiv、官方文档等；读不到就明确标为待读，不假装读过。
-3. 对近期动态、社媒评价、热点追踪、作者动态这类广域召回需求，SenSight 优先作为主召回层；Codex 负责二次验证、去噪、分档和落盘。
-4. Agent-Reach 这类本地互联网工具脚手架作为补位：适合读具体 URL、视频字幕、GitHub、RSS、Reddit 等 source-level 内容；不替代 SenSight 的跨平台聚合与质量筛选。
+3. 对近期动态、社媒评价、热点追踪、作者动态这类广域召回需求，使用当前可调用的网页搜索、平台搜索与专用读取器，多源召回后由 Codex 验真、去噪、分档和落盘。
+4. Agent-Reach 这类本地互联网工具脚手架可作为可选补位：适合读具体 URL、视频字幕、GitHub、RSS、Reddit 等 source-level 内容；按当前实际安装和调用能力选用，不作为调研前置依赖。
 5. 召回后必须追一手来源：论文、官方文档、代码仓库、release note、原始访谈或产品页优先；社媒和公众号只作为线索或二级解读。
 6. 入库先检查 managed authority：本仓库默认写受管 catalog 与 immutable managed-native content backing，并生成 intake receipt；随后基于当前 Decision Context 生成并应用 ranking settlement，验证 membership / readback / projection / audit。只有未启用 Material Lifecycle 的其他项目才回退到其旧候选库。
 7. 对用户最重要的固定方向：Agent infra / OpenClaw / ArkClaw / Agent Harness / OpenViking / agent memory / RL infra / verl / Ray / vLLM / SGLang / RecSys+LLM。
 
-**SenSight 调研执行流**
+**多源调研执行流**
 
-- SenSight 的定位是“广域雷达”，不是事实来源；它负责发现近期动态、社媒线索和跨平台讨论，最终事实必须回到 arXiv、GitHub、官方文档、release note、作者原文或一手访谈核验。
+- 按任务选择来源与已验证可用的工具，不绑定特定聚合服务。搜索与社媒用于发现线索，最终事实回到 arXiv、GitHub、官方文档、release note、作者原文或一手访谈核验。
 - 主动调研默认三段式：
-  1. 召回：`social_search` 看社媒和近期讨论，`retrieve_summarize` 看 AI 技术长文聚合，`daily_paper` / `daily_blog` 若为空不算失败，`search_events` 更适合热点追踪而不是精确技术材料。
+  1. 召回：网页搜索扩展关键词与近期动态；社媒问题用平台搜索或已授权浏览器读取原帖；论文用 arXiv / OpenReview / 官方会议入口，工程问题用 GitHub / 官方文档。记录实际检查的来源与读取范围，空结果不等于工具失败。
   2. 验真：对高价值线索追一手来源；找不到一手来源的社媒观点只能作为 B 档、Unread 或线索，不写成确定事实。
   3. 价值输出：每个候选写清楚 S/A/B、原始链接、读取状态、为什么对当前 70/20/10 路线有价值、能转成哪个 artifact / schema / TODO；同时说明哪些材料不该现在读。
-- 一次 `调研：` 完成标准：说明 SenSight 或降级路径状态，至少检查两个不同来源类型，给出新增候选或“不入库”的理由；若产生候选，确认 managed authority 已包含该 stable material ref 且 receipt/readback 成功。
+- 一次 `调研：` 完成标准：说明实际来源覆盖及影响结论的缺口，至少检查两个不同来源类型，给出新增候选或“不入库”的理由；若产生候选，确认 managed authority 已包含该 stable material ref 且 receipt/readback 成功。
 - 调研结果优先更新阅读顺序和行动优先级，而不是只把材料追加到文件尾。
 
 **自验证要求**
 
-- 每次 `调研：` 完成前，检查至少两个不同来源类型；如果 SenSight 不可用，明确记录降级路径。
+- 每次 `调研：` 完成前，检查至少两个不同来源类型；必要来源读不到时说明替代路径与未核验部分。不反复探测未配置的可选服务，也不把缺少聚合器当作调研阻塞。
 - 每个高价值候选必须有原始链接、读取状态、来源类型和一句“为什么值得你看/为什么只需我摘要”的判断。
 - 社媒/公众号观点不能直接当事实，涉及技术事实时必须追论文、代码、官方文档、release note 或一手访谈。
 - 完成前确认新增条目已进入当前 managed authority；不得以旧 Markdown 中出现一段文本代替受管入库。
