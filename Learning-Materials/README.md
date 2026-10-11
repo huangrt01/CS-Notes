@@ -18,6 +18,16 @@ S 表示优先亲读，A 表示先读摘要、按需追原文，B 表示背景�
 
 ## 阅读与维护
 
+队列同时考虑近期可验证产物、长期研究价值与基础能力，不只按新鲜度或工程紧急程度排序。Top30 是选读入口，不是三十项并行任务；需要补哪个概念，先用推导、故障反例或小实验检查，再决定阅读深度。
+
+| 学习线 | 入口与读法 | 最小产物 |
+| --- | --- | --- |
+| 系统基本功 | [分布式系统 × LoopX 讲义](./distributed-systems-for-loopx/补课讲义.md) → [练习](./distributed-systems-for-loopx/练习与讨论.md) → [Recovery Lab](./distributed-systems-for-loopx/recovery_lab.py)；先状态机、事务、幂等与 fencing，再日志、共识和恢复 | 预测故障结果，解释修复所依赖的条件 |
+| 概率与序贯决策 | [Bandit Algorithms](https://tor-lattimore.com/downloads/book/book.pdf) 选读 §5.3、§7.1、§33.1–33.2，按需补 §3.3；能完成推导则跳读 | 写清目标、观察、预算、停止与最终选择；辨认独立、平稳等假设 |
+| 持续学习与联合演化 | 按队列选读 Harness-Zero、Fast Weight Attention、HGM、EvoTrainer；先机制、假设、关键对照，再源码 | 画出更新对象、反馈与采用路径，提出一个可推翻假设的对照 |
+
+已有 [RL 笔记](../Notes/Reinforcement-Learning.md)可用于定位 MDP/POMDP、信用分配与离策略评估概念。实现目录和重复综述可以由助手先整理；亲读重点放在决定问题如何定义、证据如何成立的部分。已读材料继续作为参考时标明回看目的，不重新列为首读任务。
+
 从仓库根目录运行实验：
 
 ```bash
