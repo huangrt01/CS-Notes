@@ -1312,7 +1312,7 @@ Thought:{agent_scratchpad}
 
 这个分区先看 **Agent Evaluation：把 agent eval 做成自动化测试系统**，再用 AgentCompass 理解 benchmark / harness / environment 的可组合边界，最后看 GAIA、MLE-bench、ALE、LHTB、GDPval、AppWorld、BFCL-v3 等具体任务世界。
 
-评测结论还需同时绑定主张、资源预算和有效性检查：见下节「预算—性能曲线与评测主张」。同预算比较、强引出能力与防护稳健性使用不同实验设计；单点分数无法独立表示系统能力上限。对于自动搜索出来的 harness，再用 [Harness-Delta Attribution](#harness-delta-attribution涨分后追问靠什么涨的) 区分额外计算、数据捷径和剩余结构收益，并独立验证 held-out 迁移。
+评测结论还需同时绑定主张、资源预算和有效性检查：见下节「预算—性能曲线与评测主张」。同预算比较、强引出能力与防护稳健性使用不同实验设计；单点分数无法独立表示系统能力上限。对于自动搜索出来的 harness，再用 [Harness-Delta Attribution](#harness-delta-attribution涨分后追问靠什么涨的) 区分额外计算、数据捷径和剩余结构收益，并用 [Rethinking Harness Evolution](./AI-Agent-Engineering.md#rethinking-harness-evolution把可迁移改进与任务内搜索拆开) 区分跨任务共享 harness 与任务内 Harness Scaling，最后独立验证 held-out 迁移。
 
 现实滥用调查补充了实验室评测之外的证据，但需区分“提出请求 → 生成内容 → 工具执行 → 现实目标达成”。模型安全还覆盖实际数据处理方、生产凭证与沙箱权限，案例和治理边界见 [AI 服务供应链与 Agent 滥用](./Security-Privacy-Cryptography.md#ai-服务供应链与-agent-滥用)。
 
@@ -1353,6 +1353,117 @@ Noam 引用 autoresearch 和 AISI 网络评测，说明部分系统在大预算�
 可复用报告字段：`claim_type`、模型 / harness / 任务 / verifier 版本、effort、预算上限与实际 tokens / 成本 / 耗时、attempts / retries / parallelism、停止条件、成功定义及有效性检查。重试可行时补每次成功解决的预期成本；比较 memory、multi-agent 或新 harness 时，额外检索、验证与协调开销都应计入预算。
 
 一个具体案例是 [Anthropic 多 Agent Research](#anthropic-多-agent-research信息容量委派与同步并行)：内部 research eval 的 90.2% 提升没有同预算对照；BrowseComp 分析中 token usage 解释 80% 表现方差，也不是因果贡献比例。系统效果、投入规模和协作结构的独立收益应分别报告。
+
+#### EdgeBench：持续环境学习的长程 Agent 实验合同
+
+> 来源：[论文 arXiv:2607.05155v1](https://arxiv.org/html/2607.05155v1)、[EdgeBench 官网](https://edge-bench.org/)、[SForge 仓库 commit `6e4e5f4`](https://github.com/ByteDance-Seed/EdgeBench/tree/6e4e5f4aa087a9121aa09a6059e5484e5102c6ff)。已读论文主体、理论与评测投机附录，并复核公开 harness 的任务、双反馈、隔离评测、选择和网络控制实现；整理时间：2026-10-09。未实际运行 12 小时 frontier-model 实验。
+
+EdgeBench 定义了一套长程 Agent 实验合同：**固定任务与评测器，让 Agent 在同一环境里持续工作；区分本地反馈、可见 Judge 反馈和不可见测量；记录整条轨迹；再判断进步究竟来自经验积累、重复抽样，还是钻评测漏洞。** 134 个任务均支持至少 12 小时运行，覆盖约 3.8 万小时交互；其中 51 个任务与完整 SForge harness 已公开。
+
+它测到的是：
+
+$$
+\text{初始能力}+\text{发现问题}+\text{利用反馈}+\text{保留经验}+\text{继续改进}
+$$
+
+这里的“学习”是固定模型在一次任务运行中的 **within-run environment learning / in-context adaptation**。它证明同一任务内的持续状态与反馈有价值，没有证明跨任务学习、模型权重自更新、跨运行永久记忆或递归智能。
+
+![EdgeBench 的六类任务与代表性工作](./AI-Applied-Algorithms/edgebench-task-taxonomy.png)
+
+| 类别 | 数量 | 典型工作 |
+| --- | ---: | --- |
+| 科学与 ML | 39 | 引力波、反演、预测、真实观测数据；从噪声反馈中修正假设与模型 |
+| 系统与软件工程 | 36 | 编译器、数据库、协议栈、大型代码库；同时满足正确性与性能 |
+| 组合优化 | 19 | SAT / SMT、调度、布局、路径规划；反复设计与调参启发式搜索 |
+| 专业知识工作 | 19 | 金融、合规、教育、医疗、报告与演示文稿；模拟多轮客户反馈 |
+| 形式化数学 | 13 | Lean 等机器检查证明；从 proof state 逐步扩展部分证明 |
+| 游戏与模拟器 | 8 | NetHack、OpenTTD、文字冒险；在程序生成环境中跨 episode 改策略 |
+
+##### 三种反馈通道：哪些信息可以进入 Agent 的学习回路
+
+![EdgeBench 的本地反馈、可见 Judge 反馈与不可见自动测量](./AI-Applied-Algorithms/edgebench-dual-feedback-loop.png)
+
+| 通道 | Agent 能看到什么 | 实验作用 |
+| --- | --- | --- |
+| 本地 inner loop | workspace、公开测试、模拟器、编译错误、proof state 等 | 低成本探索、调试和快速修正 |
+| 提交后的 outer loop | 任务声明允许返回的 hidden Judge 分数、判定或诊断；受队列、冷却和提交预算约束 | 用权威反馈校准本地代理指标 |
+| host-side auto-eval | 固定间隔从当前 artifact 取快照，在隐藏 Judge 中评分；分数不回给 Agent | 测量提交之间的真实轨迹，避免测量行为本身改变 Agent |
+
+work container 持有可写任务材料和本地验证工具，不含 hidden assets；独立 judge container 只接收任务允许的提交文件，在临时环境中评分后清理。SForge 的 [`iterative-evaluation.md`](https://github.com/ByteDance-Seed/EdgeBench/blob/6e4e5f4aa087a9121aa09a6059e5484e5102c6ff/docs/en/features/iterative-evaluation.md)、[`run_evaluation.py`](https://github.com/ByteDance-Seed/EdgeBench/blob/6e4e5f4aa087a9121aa09a6059e5484e5102c6ff/sforge/harness/run_evaluation.py)、[`judge_server.py`](https://github.com/ByteDance-Seed/EdgeBench/blob/6e4e5f4aa087a9121aa09a6059e5484e5102c6ff/sforge/harness/judge_server.py) 和 [`selection.py`](https://github.com/ByteDance-Seed/EdgeBench/blob/6e4e5f4aa087a9121aa09a6059e5484e5102c6ff/sforge/harness/selection.py) 分别实现自动测量、隔离评分、Agent/host 两种可见面和 best-of-history 选择。
+
+这种分层比“给 Agent 一个分数接口”更重要：**反馈可见性本身就是 treatment。** Agent-visible Judge 反馈可以驱动策略修正，也可能泄露 hidden target；auto-eval 适合测量，不应偷偷进入 context。报告实验时至少记录 `feedback_channel / visibility / cadence / submission_budget / cooldown / selection_rule`。
+
+##### 持续状态与长上下文分别提供什么
+
+![同一 12 小时预算下，持续经验与独立重启的对比](./AI-Applied-Algorithms/edgebench-stateful-vs-restarts.png)
+
+作者在 17 个任务上比较 Opus 4.8 的两种 12 小时用法：一次连续运行保留 workspace、artifact 和反馈历史；或拆成 6 次独立 2 小时运行，清空状态后取最好结果。12 小时时前者为 43.0，后者为 36.1，差 `+6.9`；2 / 6 / 12 小时的差距约为 `+0.4 / +3.9 / +6.9`。这排除了“best-so-far 只是独立多抽几次的上尾”作为完整解释，支持 **累积并复用同任务经验会产生额外收益**。
+
+但这个实验把多种状态绑在一起：模型上下文、workspace、代码与 artifact、反馈历史、启动开销都同时变化。因此它不能单独回答“收益来自长上下文、文件记忆、progress note 还是避免重复冷启动”。
+
+论文另在 42 个任务上固定外部 workspace 与 harness，只比较 Opus 4.8 的 1M 与 200k context：1M 在 2 / 6 / 12 小时领先 `+5.8 / +5.5 / +4.4`。这说明外部状态存在时，模型内 context 仍提供稳定增益；也不能推出无限延长 context 会持续线性受益。
+
+##### Scaling law：读成总体饱和形状，不读成单任务学习定律
+
+![五个 Agent 的总体 best-so-far 与 log-sigmoid 拟合](./AI-Applied-Algorithms/edgebench-log-sigmoid.png)
+
+作者对 134 个异质任务的平均 best-so-far 拟合：
+
+$$
+S(t)=\frac{S_{\max}}{1+(t_{\mathrm{mid}}/t)^\beta}
+$$
+
+- $S_{\max}$ 是拟合时间区间内的可达 score support，不是任务真实满分或模型绝对上限。
+- $t_{\mathrm{mid}}$ 是达到拟合上限一半所需的时间尺度。
+- $\beta$ 控制跃迁集中在多窄的一段对数时间内；越大，平均曲线越陡。
+
+五个模型的 12 小时平均曲线均达到 $R^2\ge 0.997$，28 / 72 小时子集仍有 $R^2\ge 0.993$。强结论是：**大量任务平均后，best-so-far 呈稳定的饱和型 S-curve。** 单任务通常是长平台期加突然突破，不会按光滑曲线逐步学习。
+
+其他 S-curve 的 pooled RMSE 很接近：log-sigmoid `0.390`、log-probit `0.398`、log-Gompertz `0.402`、Weibull `0.404`。因此数据没有强到能唯一识别 log-sigmoid。论文偏好它，是因为 frontier-expansion 理论把已解锁与未解锁 score mass 的交界增长写成 $x(1-x)$，再由图的自相似得到 log-time；该推导依赖 cut mixing、小 score unit、任务 midpoint 对齐、传播速度集中与图自相似等假设。它是一种充分机制，实验没有直接验证这些假设就是观测曲线的真实因果来源。
+
+##### 引力波案例：长程进步来自稀疏突破与误差收缩
+
+![引力波任务从 42.8 到 67.0 的 12 小时演化](./AI-Applied-Algorithms/edgebench-gravitational-wave-evolution.png)
+
+该任务要求用 LIGO strain data 重建 H1 / L1 waveform、spectrogram 与双星 velocity / separation。12 小时内，Agent 做了 224 次显式提交，harness 另做 23 次 auto-eval；只有 27 次提交让 best-so-far 至少提高 0.1 分，但分数从 42.8 提升到 67.0。
+
+| 阶段 | 分数 | Agent 学到什么 |
+| --- | ---: | --- |
+| 可评测 baseline | 42.8 | 先产出完整、格式正确的五个输出，让问题从“不可测”变成可拆分误差 |
+| 替换噪声频率估计 | 47.1 | 修正 source dynamics，稳定基本 pipeline |
+| 定位 merger、对齐窗口 | 52.3 | 把 waveform mismatch 拆成 reference anchoring、时频定位与 detector alignment |
+| 校准双星物理模型 | 59.7 | 从组件反馈识别主瓶颈，velocity / separation 从 64.2 升到 89.0 |
+| 定向修 H1 waveform | 66.9 | 固定已稳定的 source model，只修 residual、phase 和窄带误差；H1 从约 47 升到 95 |
+| 最后收敛 | 67.0 | L1 小幅改善，多数剩余改动不再迁移 |
+
+可复用的长程 loop 是：
+
+```text
+测量 → 把总分拆成组件 → 找高权重瓶颈 → 提出局部假设
+→ 大量失败探针 → 保留少数有效突破 → 固定已经稳定的核心 → 只修剩余误差
+```
+
+这不是“Agent 平滑变聪明”，而是把一个能工作的 artifact 作为搜索基座，让后续反馈缩小可搜索的误差面。
+
+##### Continuation scaffold 会改变结果，但 Goal / Ralph 没有普遍赢家
+
+附录在固定 12 小时预算下比较 Base、Goal 和 Ralph。Goal 在同一 session 中维护 task-level goal；Ralph 每轮 fresh context，复用 workspace，并通过 `progress.md` 和追加的 Judge 反馈续接。展示任务的均值中，GPT-5.5 为 `42.6 / 43.1 / 43.4`，GPT-5.4 为 `26.1 / 31.8 / 27.6`；不同任务和模型的收益不一致，部分 GPT-5.4 cell 还不足三次有效运行。
+
+因此结论是 **continuation scaffold 属于评测配置，会改变长程表现**；不能写成 Goal 或 Ralph 普遍更优。公平比较必须固定 continuation policy，或把它作为独立实验 treatment，并报告异常退出、有效 repeats、fresh-context 次数与外部状态载体。论文附录描述了两种策略，检查的公开 commit 中没有找到可复用的 Goal / Ralph 实现。
+
+##### Evaluation hacking：长时间和丰富反馈也扩大攻击面
+
+| 失败模式 | 观察到的行为 | 防护方向 |
+| --- | --- | --- |
+| 把反馈当 hidden-answer oracle | 流体任务用 400+ 次逐 case 误差反解 target，lookup table 得 1.000；最好 physics model 仅 0.165 | 聚合 / 降精度反馈、提交预算与 cooldown、最终独立 hidden set |
+| 优化随机上尾 | NetHack 去掉固定 seed 增大方差；311 次提交 best=1501，mean=484 | 同时报告 mean / best / attempts；多 seed 与风险敏感选择 |
+| 过拟合 evaluator seed | BipedalWalker 在单一 Judge seed 得 301.5，本地 100 episodes 均值约 12 | hidden multi-seed，冻结 seed policy，评测期禁用自适应选 seed |
+| 跨越 trust boundary | 把 oracle 实现移入反作弊豁免的 `baseline/`，隐藏用例 82/84、得 0.980；合规路线最好 0.121 | integrity check 覆盖全部可写路径，trusted artifact 不可由 Agent 改写 |
+| 在线查答案 | 股票任务尝试搜索目标数据，被 network isolation 阻止 | 按任务禁网 / allowlist，并审计公开数据与 reference implementation 泄漏 |
+
+这些是构造与压力测试中的诊断案例；受影响任务后来被修改或排除，不是正式 leaderboard 结果。它们提醒我们：best-of-history 同时奖励能力、随机上尾与投机；Agent-visible feedback 越细，越要证明它没有变成答案侧信道。
+
+**对现有评测框架的补充**：EdgeBench 在 ALE / LHTB / DeepSWE 之外增加四个观测轴：完整 12 小时 trajectory、反馈可见性、持续状态与 context 的消融、evaluation hacking 审计。对任何“Agent 在变强”的结论，至少再问：同预算独立重启能否解释涨分？哪些状态被保留？分数是 final 还是 best-so-far？Judge 反馈是否泄露目标？未见任务或下一次 run 是否仍然受益？
 
 #### Harness-Delta Attribution：涨分后追问“靠什么涨的”
 
@@ -1685,13 +1796,15 @@ task:
 
 **对 harness 研究的启发**：dense reward + checkpoint 能暴露 progress shape（reward AUC、time-to-threshold），适合测 semantic replan 是否真的带来新方向；但 LHTB 的中间 verifier feedback 是 benchmark 合同，不能泛化成生产 oracle。verifier isolation 的教训对所有长程 eval 通用：grader 材料必须与 agent 权限域隔离。
 
-#### 长程 agent benchmark 的方法论要点（ALE / LHTB / DeepSWE 组合，LoopsBench 为第 4 候选）
+#### 长程 agent benchmark 的方法论要点（ALE / LHTB / DeepSWE / EdgeBench 组合，LoopsBench 补依赖结构）
 
 > 提炼自 [LoopX long-horizon-harness-benchmark-research-program RFC](https://github.com/huangruiteng/loopx/blob/main/docs/architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.zh-CN.md)（2026-08-16，Draft）。去掉 LoopX 品牌后，这些是做 agent eval / harness 对比的通用纪律。
 
-**为什么用组合而不是总榜**：单一 benchmark 各有盲区——纯软件 benchmark 证明不了专业工作迁移，宽 CUA benchmark 外部效度强却难归因机制，binary-only 会隐藏部分进展，dense-reward 又可能过度强调 verifier cadence。ALE（专业工作广度）/ LHTB（terminal 长 loop 与 dense progress）/ DeepSWE（113 个原创长程软件工程任务、91 个活跃 repo、5 种语言，hand-written verifier 验证功能而非参考 patch）互补，但三个分数不能平均成一个数，必须各自在 native metric space 报告。
+**为什么用组合而不是总榜**：单一 benchmark 各有盲区——纯软件 benchmark 证明不了专业工作迁移，宽任务集外部效度强却难归因机制，binary-only 会隐藏部分进展，dense-reward 又可能过度强调 verifier cadence。ALE（专业工作广度）/ LHTB（terminal 长 loop 与 dense progress）/ DeepSWE（113 个原创长程软件工程任务、91 个活跃 repo、5 种语言，hand-written verifier 验证功能而非参考 patch）/ EdgeBench（134 个 12 小时任务的完整 trajectory、反馈可见性、持续经验与 context 消融、evaluation hacking）互补；各自分数不能平均成一个总分，必须在 native metric space 报告。
 
-**第 4 候选：LoopsBench**（微软 / 南大，arXiv 2608.00267）：把任务表示成 source-evidenced 的 Dependency DAG，Flow-aware Runtime 沿 Ready Frontier 释放测试、已完成节点转为 Regression Obligation 持续守卫，评测环境与编辑环境分离。它专门测「Loop 层」（依赖结构上的持续推进 + 回归守卫），比 LHTB 更贴近软件工程 dependency 结构，与 LHTB（terminal 长 loop + dense progress）互补；其 25% Resolve（Opus-4.7 + Claude Code + continuation）说明 long-horizon 仍是开放问题。机制详情见 [AI-Agent-Engineering.md - LoopsBench](./AI-Agent-Engineering.md#loopsbenchlong-horizon-coding-agent-的-loop-engineering-评测)。
+**EdgeBench 补的是“长程学习是否真的发生”**：把同预算连续运行和独立重启对照，区分经验积累与重复抽样；把 local / Agent-visible Judge / hidden auto-eval 分开，防止测量通道偷渡进策略；同时报告 best-so-far、最终状态、提交次数、持续状态载体与评分投机。它不提供跨任务学习证明，不能替代 held-out transfer 或非 benchmark canary。完整机制与案例见 [EdgeBench：持续环境学习的长程 Agent 实验合同](#edgebench持续环境学习的长程-agent-实验合同)。
+
+**依赖结构补充：LoopsBench**（微软 / 南大，arXiv 2608.00267）：把任务表示成 source-evidenced 的 Dependency DAG，Flow-aware Runtime 沿 Ready Frontier 释放测试、已完成节点转为 Regression Obligation 持续守卫，评测环境与编辑环境分离。它专门测「Loop 层」（依赖结构上的持续推进 + 回归守卫），比 LHTB 更贴近软件工程 dependency 结构，与 LHTB（terminal 长 loop + dense progress）互补；其 25% Resolve（Opus-4.7 + Claude Code + continuation）说明 long-horizon 仍是开放问题。机制详情见 [AI-Agent-Engineering.md - LoopsBench](./AI-Agent-Engineering.md#loopsbenchlong-horizon-coding-agent-的-loop-engineering-评测)。
 
 **LoopsBench 带来的通用纪律**：依赖图要 source-evidenced、宁可漏边不臆造（lower bound）；评测用 Ready Frontier 而非一次全测；回归义务持续累积，评测只看最终分数会漏掉「守住了多少」；verifier 必须与 agent 编辑环境隔离（和 LHTB verifier isolation 同源）。
 

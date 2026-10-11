@@ -134,6 +134,7 @@ Operational defaults:
 
 - `请你读` = read first, then answer with Keshav pass 1 plus targeted pass 2 on decision-relevant sections; escalate selected parts to pass 3 only when the material is high-value.
 - `精读` = same output schema, but default to pass 2 plus selective pass 3: virtually reimplement the method, challenge assumptions, and produce artifact deltas.
+- Explain high-value material in layers: global position -> object and interface model -> end-to-end control flow -> one source-backed worked case -> evidence and limits. For iterative, evolutionary, training, search, controller, or state-machine systems, reconstruct at least one real longitudinal trace; follow the detailed contract in `references/paper-reading-protocol.md`.
 - For paper radars or collections, first triage all visible papers with pass 1, then deep-read only the highest-leverage subset.
 - Always state what was actually read: HTML, TeX source, PDF, repo paths, figures/tables, appendix, code, or only metadata.
 
@@ -357,7 +358,7 @@ For `请你读` / `精读`, Codex should read first and then provide a mechanism
 4. 原材料内容卡: for each paper/tool/standard/repo in the bundle, explain its standalone purpose, core abstraction, important fields/APIs, common usage, and limits.
 5. Claim map: main claims, evidence, confidence, and what would make each claim false.
 6. 精要内容和核心设计: problem, boundary, input/output, data/interface format, workflow, metrics, baselines, main results, limitations, and key figure/table/code path.
-7. 核心机制: 3-6 numbered mechanisms, each with "what the author does/proves" and "how the user should interpret it".
+7. 核心机制和 worked trace: 3-6 numbered mechanisms, each with "what the author does/proves" and "how the user should interpret it". When the source has an iterative process, add one real trace from baseline through observation, candidate diff, evaluation, acceptance/rejection, inheritance, and later outcome. Show concrete before/after fields or policies and distinguish changed from unchanged components.
 8. 对用户 artifact 的改造建议: schema, feedback signal, benchmark variant, TODO, steering, or interview/deep-dive line; discuss proposals without implementing changes during reading.
 9. 用户本人还需要读什么: mandatory reader map with concrete original sections, figures, tables, code paths, and a decision for each: `must-read`, `optional`, or `skippable`. Do not only say "读摘要即可"; name the exact parts that justify that decision.
 10. 边读边核验的问题: 3-6 sharp checks, especially leakage, counterfactual reliability, metric validity, transferability to Agent Harness / TAU2.

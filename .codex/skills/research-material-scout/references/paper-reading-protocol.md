@@ -35,6 +35,7 @@ No reliable dedicated generated skill was found for the exact combination of S. 
 - Because personal-reading recommendations are intentionally conservative, the user-facing digest must be richer when the conclusion is `Codex-summary-enough`: include enough mechanism detail, field/schema detail, key evidence, transfer mapping, and risk boundaries that the user can make progress without opening the original. The digest should compensate for the user not doing a first-pass read; do not stop at the reading recommendation plus a few artifact deltas.
 - For tool/standard/framework bundles, start with a **background primer** before claim maps: what problem this family solves, what the user would observe without it, what each component owns in the end-to-end workflow, and why the bundle matters for Agent Harness / OpenViking now. Do not assume the user already knows the observability/eval/runtime ecosystem.
 - Keep a **two-focus balance**: first explain the material on its own terms, then map it to the user's current project. The material summary should not collapse into Agent Harness-specific schema too early. For bundles, each component needs a concrete standalone explanation: what it is, what it records/does, what abstractions it introduces, what it does not cover, and one simple example.
+- Use **progressive depth** for system and method explanations: begin with the system's purpose and boundary, then name its mutable objects and interfaces, then show the end-to-end loop, and finally walk one real source-backed case at field / policy / diff level. A component inventory is context, not a substitute for explaining how state changes over time.
 
 `精读:<material>`:
 
@@ -115,6 +116,22 @@ Pass 3 - Virtual Reimplementation:
 - For high-value `精读`, run a small internal review pass from three perspectives: methodologist, domain/practitioner, and Devil's Advocate.
 - Convert the paper into a reusable artifact delta: schema fields, feedback signal, eval variant, TODO, benchmark row, or interview argument.
 
+### Longitudinal Worked-Case Contract
+
+Apply this contract when the source contains evolution, optimization, training, search, reflection, controller reconciliation, workflow retries, lifecycle transitions, or any other repeated state update. It is mandatory for a high-value source when the repository or paper publishes enough trace data.
+
+Reconstruct at least one real lineage from source artifacts rather than inventing a toy example:
+
+1. **Initial state:** name the baseline object and show the relevant mutable fields. State which fields remain fixed so the reader can distinguish mutation from surrounding infrastructure.
+2. **Observation:** show the concrete failures, trajectories, gradients, metrics, or events available to the updater. Explain what information it cannot see.
+3. **Candidate generation:** show the stated hypothesis and the exact target fields. Include compact before/after excerpts for important policies, prompts, parameters, code paths, or state fields.
+4. **Evaluation and gate:** give the relevant split, metric deltas, hard conditions, and rejection reason. Separate scalar fitness from non-negotiable constraints.
+5. **Inheritance:** identify which candidate becomes the next parent and what state the next iteration actually receives.
+6. **Later iterations and dead ends:** show at least one rejected, invalid, or non-improving candidate when available. Explain whether the system kept improving, saturated, oscillated, or merely searched around the same state.
+7. **Attribution boundary:** distinguish the author's label for the change from all bundled changes that may explain the result. Do not attribute a gain to one policy when the accepted patch changed several load-bearing fields.
+
+For several mutable policies, provide a compact evolution matrix: baseline value or behavior, candidate change, accepted state, metric effect, and confidence in attribution. If a field never changed, say so; unchanged fields are part of the causal boundary. If full proposal bodies or trajectories are unavailable, state the evidence gap instead of filling it with a plausible story.
+
 ## AI Research Reading Lens
 
 For AI / ML / Agent papers, always extract these if present:
@@ -179,12 +196,13 @@ For `请你读` / `精读`, produce this shape unless the user asks for a differ
 4. Source-content mini-cards: for every material in a bundle, explain what it is, key concepts/fields/APIs, common usage, and limitations before project-specific interpretation.
 5. Claim map: 2-5 main claims with evidence, confidence, and scope.
 6. Mechanism-first summary: problem -> core design -> why it works -> where it breaks.
-7. AI research checklist: paper type, data, model/system, objective, eval, baselines, limitations.
-8. Proposed artifact delta for the user: concrete schema / benchmark / TODO / note / interview point, explained in the conversation without writing notes or implementing changes.
-9. Reader map: exact sections, figures, tables, appendix, source files, repo paths marked `user-must-read`, `Codex-summary-enough`, `optional`, or `skippable`, with a one-line incremental-value reason for every `user-must-read`.
-10. Sharp verification questions: 3-6 questions to ask while reading or implementing.
+7. Worked case and evolution trace: for iterative sources, reconstruct at least one source-backed lineage with observation, candidate before/after, evaluation gate, accepted inheritance, rejected alternatives, and attribution limits. Include a policy/field evolution matrix when several mutable components exist.
+8. AI research checklist: paper type, data, model/system, objective, eval, baselines, limitations.
+9. Proposed artifact delta for the user: concrete schema / benchmark / TODO / note / interview point, explained in the conversation without writing notes or implementing changes.
+10. Reader map: exact sections, figures, tables, appendix, source files, repo paths marked `user-must-read`, `Codex-summary-enough`, `optional`, or `skippable`, with a one-line incremental-value reason for every `user-must-read`.
+11. Sharp verification questions: 3-6 questions to ask while reading or implementing.
 
-If the answer is short, keep all ten ideas but compress them. Never omit the reader map for high-value material, but it is valid for the reader map to say `no personal read needed` when Codex's summary already captures the actionable value.
+If the answer is short, keep all eleven ideas but compress them. Never omit the reader map for high-value material, but it is valid for the reader map to say `no personal read needed` when Codex's summary already captures the actionable value.
 
 Depth tradeoff rule:
 

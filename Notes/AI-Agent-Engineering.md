@@ -12,7 +12,7 @@
 | Sandbox / 远程执行控制面：环境生命周期与预热、unshare 嵌套、Crabbox、Arbor、ego lite、Tutti、WakeLoop | 本文件 [Agent Sandbox 与运行环境](#agent-sandbox-与运行环境) |
 | Codex Sub-agent 源码专项：能力与 prompt 生效、上下文 fork、InputQueue、结果路由、容量与恢复、跨独立任务通信 | [Codex-Subagent.md](./Codex-Subagent.md)（完整调研、源码片段与机制图） |
 | Multi-Agent 必要性与并发协议：能力差异、强单 Agent baseline、Held Draft、版本校验、协议选型与冲突回放 | [必要性与证据边界](./AI-Applied-Algorithms.md#多-agent-的必要性先证明收益来源再选择协作协议)、[长推理窗口与提交协议](#multi-agent-并发控制长推理窗口与提交协议) |
-| Harness 涨分归因与执行反馈：同预算基线、数据捷径、验证集反馈、action block 静默丢弃 | [Harness-Delta Attribution](./AI-Applied-Algorithms.md#harness-delta-attribution涨分后追问靠什么涨的)、[工具执行的语义反馈](#工具执行的语义反馈让模型知道实际执行了什么) |
+| Harness 涨分归因与执行反馈：同预算基线、持续状态与反馈可见性、任务内搜索与跨任务迁移、变化规则的发现/复用/失效、旧能力回归、数据捷径、冻结评测器、held-out 继承门禁、action block 静默丢弃 | [EdgeBench](./AI-Applied-Algorithms.md#edgebench持续环境学习的长程-agent-实验合同)、[ServeLearnBench](#servelearnbench从服务评分中发现复用与淘汰经验)、[Rethinking Harness Evolution](#rethinking-harness-evolution把可迁移改进与任务内搜索拆开)、[Harness-Delta Attribution](./AI-Applied-Algorithms.md#harness-delta-attribution涨分后追问靠什么涨的)、[RSI-Gym](#rsi-gym冻结评测器下的-harness-自我改进实验合同)、[工具执行的语义反馈](#工具执行的语义反馈让模型知道实际执行了什么) |
 | Muse：执行隔离、独立行动授权、工作流脚本与恢复条件 | [Secure VM / Sentinel](#muse-secure-vm-与-sentinel独立行动授权边界)、[Muse Code Workflows](#muse-code-workflows脚本编排与有条件恢复)；[Grok Bot / Muse 产品比较](./AI-Agent-Product&PE.md#agent-tobtoc-产品) |
 | Lorca：个人多设备 Agent，Device / Runner 分工、加密中继与执行权限 | [配对与信任边界](#lorca设备配对加密中继与执行权限)；[产品形态与发布状态](./AI-Agent-Product&PE.md#lorca本地运行手机操控的个人-agent-工作台) |
 | MCP、Skill、Function Calling、Assistants API 的开发用法；CLI 与 MCP 的选型；工具调用 ID 与结果关联 | 暂留 [AI-Agent-Product&PE.md](./AI-Agent-Product&PE.md#mcp)；[CLI 已经好用，为什么还需要 MCP](./AI-Agent-Product&PE.md#cli-已经好用为什么还需要-mcp)；[tool_use_id / tool_call_id / call_id 对照](./AI-Agent-Product&PE.md#工具调用-id-与结果关联)（协议 / API 工程边界，待后续决定是否迁入） |
@@ -431,6 +431,8 @@ Lorca 把**跨端通信、实际执行和动作审批**分开：Mac UI 连接本
 多 agent runtime 还需分开四个面：**创建归属、消息投递、工作启动、结果验收**。父子树不等于通信图或工作 DAG；身份已注册、runtime 已加载、turn 正在执行也不是同一状态。Codex V2 的具体例子见 [Codex Sub-agent：控制域、消息与恢复](#codex-sub-agent控制域消息与恢复)。
 
 **Session 隔离也不决定协作拓扑。**同一树内的独立 Session 通过 AgentControl 与收件 Session 的 mailbox 通信；独立任务之间还可以通过宿主任务工具和 App-server 注入工具级输入。两者在目标 agent loop 汇合，但寻址、缓冲、启动与结果返回合同不同。完整分层与代码链见 [Codex Sub-agent 架构调研](./Codex-Subagent.md)。
+
+**异步任务接口要区分受理、执行与交付。**主对话收到 `accepted` 后可以继续响应，后台任务完成后仍需确认结果交付；停止当前回复也不等于取消后台任务。状态查询、取消与补充输入应有明确的目标和确认语义，不能只从聊天文本推断任务状态。公开实现见 [Qwen Audio Agent 的 Work 与交付状态机](#语音-agent-runtime把-conversation-presence-与-durable-work-解耦)。
 
 #### 主流 Agent-Loop 实现调研：多模态能力
 
@@ -1066,6 +1068,51 @@ Goal 状态 → Effect 请求 → 权限 / Quota 解释
 
 这比论文先更新状态、再执行动作的算法更明确地表达了提交边界，但仍须验证失败、超时、重复执行与回执落盘中断；不能据此宣称实现已经更可靠。通用 schema + 垂域扩展解决的是表达能力，`resume_when` 解决的是已知条件下的恢复调度，目标对齐的动态 state 解决的是当前决策：三者都不能替代原始证据保留、迟到信息召回与历史审计。机制、图 1、表 5 和适用条件见 [SKILL.state](./AI-Applied-Algorithms.md#skillstate以结构化执行状态替代追加历史)。
 
+**与 CH / Prime 的关系（2026-10）**：三者都把跨轮信息留在模型之外。按 [ServeLearnBench 的实验实现](#servelearnbench从服务评分中发现复用与淘汰经验)，CH 的行动与 Refiner 分层更接近 LoopX 的外置控制面；Prime 更接近自行维护文件、技能和代码的执行 runtime。LoopX 持有目标、任务、权限、证据与恢复状态，不能等同于自动学习器：Reward Memory 区分召回、采用与实际效用，效用投影只提出复核/衰减建议，不自动删除记忆或授予行动权限。能力代码改进走有边界的任务、验证与版本化启用。来源：[控制面架构](https://github.com/loopx-project/loopx/blob/271a3d98c601d86363159711b5672cdd6be2171d/docs/development/control-plane-course/02-goal-control-plane-architecture.md)、[经验消费](https://github.com/loopx-project/loopx/blob/271a3d98c601d86363159711b5672cdd6be2171d/docs/reference/reward-memory-decision-consumption.md)、[效用投影](https://github.com/loopx-project/loopx/blob/271a3d98c601d86363159711b5672cdd6be2171d/docs/reference/protocols/reward-memory-utility-projection-v0.md)。
+
+#### EdgeBench / SForge：长程评测的状态、反馈与测量平面
+
+> 论文机制、数据与边界见 [AI-Applied-Algorithms.md 的 EdgeBench 主笔记](./AI-Applied-Algorithms.md#edgebench持续环境学习的长程-agent-实验合同)。这里仅保留对 harness / runtime 的工程映射。来源：[SForge commit `6e4e5f4`](https://github.com/ByteDance-Seed/EdgeBench/tree/6e4e5f4aa087a9121aa09a6059e5484e5102c6ff)。
+
+SForge 最值得复用的不是“跑满 12 小时”，而是把同一 workspace 上的三类平面分开：
+
+```text
+Agent execution plane
+  session / workspace / local tools / explicit submissions
+                |
+                v
+Judge feedback plane
+  isolated evaluator / submission queue / cooldown / visible result
+                |
+                v
+Host measurement plane
+  periodic artifact snapshot / hidden auto-eval / trajectory ledger
+```
+
+- **状态载体显式化**：context、workspace、artifact、feedback history、progress file、goal state 分别记录。连续运行胜过 restart 时，才能继续做逐层消融，不能把总收益直接归给“memory”。
+- **反馈与测量分权**：显式提交结果可以回给 Agent；host auto-eval 只写 measurement ledger。两者共用 Judge，也不能共用可见性。
+- **Judge 环境短命且独立**：只复制 `submit_paths` 允许的 artifact，评估完成后清理；hidden tests、seed 和评分资产不挂进 Agent workspace。
+- **选择规则是一等配置**：best-of-history 适合研究发现过的最好状态，也会放大随机上尾和评测投机；交付语义还应保留 final artifact、best artifact、selection reason 与 attempts。
+- **continuation policy 是 treatment**：同 session Goal、fresh-context Ralph、异常退出 auto-resume 会改变结果，必须进入 run identity，而不是当透明运行细节。
+
+对 LoopX benchmark contract 可直接增加：
+
+```yaml
+state_channels:
+  model_context: {limit_tokens:, compaction_policy:}
+  workspace: {snapshot_ref:, continuity:}
+  progress_artifact: {path:, writer:}
+feedback_channels:
+  - {kind: local, visible_to_agent: true, cadence: on_demand}
+  - {kind: judge_submission, visible_to_agent: true, budget:, cooldown:}
+  - {kind: host_auto_eval, visible_to_agent: false, cadence:}
+continuation_policy: {mode: same_session_goal | fresh_context_file | base, revision:}
+selection_policy: {primary: final | best_so_far, report_both: true}
+integrity_audit: {network:, writable_trust_paths:, hidden_seed_policy:, exploit_findings:}
+```
+
+这组字段能把“同一个模型跑得更久”改写成可复核实验：保留了什么、Agent 看到了什么、谁做测量、怎样续跑、最后挑了哪个 artifact。只有在同预算 restart baseline、反馈侧信道审计和 final/best 双报告都成立后，才能把长程涨分归为持续经验收益。
+
 #### LoopX 长程 Benchmark 研究计划（RFC v0）
 
 > 来源：[long-horizon-harness-benchmark-research-program-v0](https://github.com/huangruiteng/loopx/blob/main/docs/architecture/rfcs/long-horizon-harness-benchmark-research-program-v0.zh-CN.md)（2026-08-16，Draft，源码基线 e8d40542f）。通用方法论（claim ladder、四 arm、integrity、measurement）已沉淀到 [AI-Applied-Algorithms.md](./AI-Applied-Algorithms.md) 的「长程 agent benchmark 的方法论要点」。
@@ -1085,6 +1132,181 @@ Goal 状态 → Effect 请求 → 权限 / Quota 解释
 **非目标**：不做通用 long-horizon 总榜；不替换 native harness / grader / submission rule；不把 Todo / evidence / control call 数量当能力；不用 task-specific prompt 优化 benchmark；不把 hidden task / trajectory / verifier feedback 喂训练；benchmark run 不能自动 install capability 或改生产默认；实验改变 harness 时不得主张 model capability。
 
 **协作目标**：做“行为规范的 benchmark participant”——保留原生 task 与 verifier 语义、adapter 可独立测试、对 versioned trace / checkpoint / result field 达成一致而非解析 prose log、贡献通用 runner / conformance fix 给 upstream、发布 null result 与 harness tax，而不是 fork 出每个 benchmark 的 LoopX edition。
+
+#### ServeLearnBench：从服务评分中发现、复用与淘汰经验
+
+> 来源：[论文 v1](https://arxiv.org/html/2610.07792v1)、[B.2 方法适配](https://arxiv.org/html/2610.07792v1#A2.SS2)、[B.3 评测协议](https://arxiv.org/html/2610.07792v1#A2.SS3)、[Table 2](https://arxiv.org/html/2610.07792v1#S4.T2)、[公开实现](https://github.com/Infini-AI-Lab/ServeLearnBench/tree/57aa919b5ae71d60c38a7ed559262447406f1e8b)。
+
+把“积累经验”拆成三种可测能力：**发现未知规则、把成功经验迁移到后续任务、在规则失效后停止使用旧经验**。Serving 指持续处理不同客户的业务请求；文档未更新而实际规则变化时，Agent 要从自己的任务轨迹与评分反馈中推断规则，避免把一次失败泛化成普遍限制。
+
+| 环境 | Agent 做什么 | 隐藏知识 |
+| --- | --- | --- |
+| Retail | 取消订单、退换货、修改订单 | 商品、付款方式、地区对应的操作限制 |
+| Banking | 审核交易、额度调整、转账 | 金额阈值、每日上限、新收款人限制 |
+| Pitch | 根据商品事实写 40–80 词推销文案 | 当前客户的偏好与反感 |
+
+每个环境有 L1–L3，从发现规则到规则组合、范围变化、撤销与重新启用；共 **9 个场景、53 个窗口、4,508 个 serving 与 3,210 个 test 任务**。
+
+![ServeLearnBench：每个环境窗口先服务学习，再冻结状态独立测试](./AI-Agent-Engineering/servelearnbench-protocol.png)
+
+*原论文 Figure 2：米色 serving 提供反馈，蓝色 test 仅用于测量；C6 展示规则撤销后重新生效。*
+
+**协议**：每个窗口先处理 serving，根据自身轨迹和标量评分更新持久状态；再冻结状态，每个 test 都从该状态独立运行，丢弃探针内变化，test 轨迹与评分不进入学习、反思或候选选择。两侧是同一组生效规则下的不同实例，因此测的是规则向新任务实例的迁移。学习器拿不到隐藏规则、正确动作或评测解释；部分方法的调度器仍可利用窗口分段。
+
+| 任务类别（与 serving/test 划分独立） | 检查什么 |
+| --- | --- |
+| Hidden-Dependent | 能否从历史经验推断隐藏规则 |
+| Fully Specified | 可见信息已经足够时，学习是否干扰原本可做对的行为 |
+
+**真实规则变化**：Retail L1 的 `D1_gift_card_cancel` 从允许取消，在服务位置 80 变为禁止，360 又恢复允许；底层取消 API 始终可执行。位置 4 / 89 / 360 的三个真实任务中，本地 evaluator 回放“取消”得分为 100 / 0 / 100，“拒绝”则为 0 / 100 / 0。工具成功不等于业务正确；旧经验也可能变成错误来源。这是确定性评分回放，不是模型学习轨迹。[规则时间线](https://github.com/Infini-AI-Lab/ServeLearnBench/blob/57aa919b5ae71d60c38a7ed559262447406f1e8b/servelearnbench/domains/retail/l1/rules.py#L32)
+
+| 方法 | 持久状态 | 怎样更新 |
+| --- | --- | --- |
+| RAG | 自己的完整轨迹与得分 | 每 12 个任务加入案例库；BM25 检索最相似的 8 条 |
+| Mem0 | 提取的记忆 | 任务中可写；每个 serving 后增加带评分的记忆处理回合 |
+| SkillOpt | skill 文档 | 每 12 个任务分成前 6 个训练、后 6 个选择；重跑已服务任务筛选候选 |
+| CH（Continual Harness） | prompt、memory、skill、subagent | 独立 Refiner 周期性接收轨迹和评分；acting agent 不看事后分数 |
+| Prime | memory、skill、prompt 文件与历史 | 每任务开新会话；评分后学习一轮，可修改持久文件，不再操作业务环境 |
+
+**完整模型组：GLM-5.3 Flash，Table 2 的 held-out test。**H 按九个场景等权平均，包含 Pitch 连续评分；F 按六个 Retail/Banking 场景等权平均。Blind 不积累服务历史；Oracle 直接获知当前规则，是参考而非数学上界。
+
+| 方法 | Hidden 平均分 ↑ | Fully Specified 准确率 ↑ |
+| --- | ---: | ---: |
+| Blind | 14.6 | 96.7% |
+| Oracle | 93.1 | 98.5% |
+| RAG | 38.2 | 91.1% |
+| Mem0 | 38.4 | 92.7% |
+| SkillOpt | 35.4 | 85.1% |
+| CH | 49.7 | 82.8% |
+| Prime | 61.1 | 95.2% |
+
+**成功轨迹进了记忆库，不代表下一次就能稳定复用。**首次成功后五个相关任务的平均正确率约为 Prime 78%、CH 76%、SkillOpt 68%、Mem0 41%、RAG 38%；这个指标以已经出现首次成功为条件。新规则收益还要与未变化任务表现、规则撤销后的恢复速度一起看。[Figure 8](https://arxiv.org/html/2610.07792v1#S5.F8)、[D.2 学会与放弃同一规则](https://arxiv.org/html/2610.07792v1#A4.SS2)
+
+比较边界：五种方法的运行时、更新频率、重放权限与学习预算不一致；Prime 包含代码解释器/shell，成绩差异不能单独归因于记忆算法。每个实验单元只有一次运行；即时准确的 serving 评分也比真实业务反馈理想化。外置状态的工程分工见 [LoopX 与 CH / Prime 的关系](#loopx长程-agent-的本地控制面)。
+
+#### Rethinking Harness Evolution：把可迁移改进与任务内搜索拆开
+
+> 来源：[论文 v4](https://arxiv.org/html/2607.12227v4)、[公开代码 commit `62df2b9`](https://github.com/rethinking-harness-evolution/code/tree/62df2b9624ff32ca61b8accce7fb4a0fd8cbc8a8)。下列数据为论文报告，未独立复现；公开代码主要覆盖 Terminal-Bench。
+
+Harness 修改后涨分，可能来自两种收益：**多花计算做任务内搜索**，或**学到能迁移到未见任务的 harness**。要区分它们，必须给相同反馈、匹配预算的普通搜索基线；跨任务主张另需 held-out 验证。
+
+![四种方法：预算花在哪里、harness 是否跨任务复用](./AI-Agent-Engineering/rethinking-harness-evolution-four-methods.png)
+
+| 方法 | 更新对象与预算分配 |
+| --- | --- |
+| Parallel Sampling | 固定 harness，独立跑 K 条轨迹，探索宽度 |
+| Sequential Refinement | 固定 harness，利用此前轨迹与反馈继续修解，探索深度 |
+| Harness Evolution | 在一批任务上修改共享 harness，目标是迁移到未见任务 |
+| Harness Scaling | 只为当前任务修改 harness，属于 task-specific test-time scaling |
+
+**主要证据**：
+
+| 实验 | 基线与结果 | 能支持什么 |
+| --- | --- | --- |
+| Terminal-Bench，无 unit test，三模型平均 pass@1 | 初始 68.2；Parallel 72.3；Sequential 69.3；Evolution 67.4；Scaling 71.8 | 修改 harness 没有稳定超过普通搜索 |
+| Terminal-Bench，有 unit test，三模型平均 pass@1 / pass@5 | 初始 67.6 / —；Parallel 82.0 / 82.0；Sequential 76.9 / 87.1；Evolution 69.7 / 79.0；Scaling 75.5 / 85.6 | 多次尝试与测试反馈带来收益，仍未显示演化的额外优势 |
+| 45 train / 10 val / 34 held-out test | 初始与演化后的平均均为 63.2 | 未显示稳定的跨任务迁移 |
+| ARC-AGI-3，RHAE：固定 VISTA* → memory-only → full harness | 完整配置与基线见下图 | 任务内演化 memory 有收益，扩展 skills / tools / hooks 后进一步提高 |
+| EdgeBench 五游戏，固定 harness → Scaling | Opus 48.3 → 54.7；GPT 45.9 → 49.8 | 同 12 小时内任务内适配平均有收益，部分游戏回退 |
+
+预算与口径：Terminal-Bench 主实验匹配 K=5 的 rollout 预算，未计 harness 编辑成本；ARC-AGI-3 限 2,000 次环境动作，不等于等 tokens / 成本；EdgeBench 比较固定 vendor harness 的 Sequential Refinement，编辑耗时计入 12 小时预算，每格两次运行，报告 native Judge 下的 best-so-far。论文附录的 pass@1 是 rollout 成功率均值，不能统一解释为“最后一次答案”；其 Parallel 表格还包含 oracle 选择口径。
+
+**Terminal-Bench 的判断**：“改 harness 后涨分”成立，不足以证明“改 harness 是这笔预算的更好用途”。**跨任务迁移：本实验没有证明稳定收益。**
+
+**ARC-AGI-3：从保存经验到演化工具**
+
+![ARC-AGI-3：原生 CLI、VISTA*、memory-only 与 full harness 的 RHAE 对照](./AI-Agent-Engineering/rethinking-harness-evolution-arc-baselines.png)
+
+> 依据论文 v4 的 ARC-AGI-3 结果整理的配置对照图。Full harness 同时开放 skills、tools、hooks，整体增益不能全部单独归因给工具。
+
+**真实轨迹 `tr87`**：GPT 的 memory-only VISTA 把 5×5 字形误读成 7×7，1,415 动作只过 1/6。保存记忆可能反复保存错误的字形理解；写一个像素提取和旋转匹配工具，则能改变 Agent 获取、处理证据的能力。
+
+**工具怎样演化**：先通过 `write_tool` 编写 `components / glyph_masks`，精确提取 5×5 像素；进入第二关后增加 `match_symbols / level2_status`，比较旋转与镜像的八种变换，输出每个槽位是否匹配；后续关卡继续扩展解析与检测工具，并将匹配规则写入 skill。整场共 52 次 `write_tool` 调用、17 个不同工具、158 次 `run_tool`，第二关用 32 动作通过，最终 256 动作过 6/6。这里的“演化”是**在任务中编写、修改并反复复用可执行工具**，模型权重保持固定。
+
+长程游戏的正结果主要支持 **单任务内 Harness Scaling**；是否能冻结这些修改并迁移到新任务，仍需要另一组实验。
+
+#### RSI-Gym：冻结评测器下的 Harness 自我改进实验合同
+
+> 来源：[仓库与 README](https://github.com/rmax-ai/rsi-gym/tree/50ce4005dad1a0ed8c2b50209522f454d7dc2f0d)、[SPEC](https://github.com/rmax-ai/rsi-gym/blob/50ce4005dad1a0ed8c2b50209522f454d7dc2f0d/SPEC.md)、[`models.py`](https://github.com/rmax-ai/rsi-gym/blob/50ce4005dad1a0ed8c2b50209522f454d7dc2f0d/src/rsi_gym/models.py)、[`archive.json`](https://github.com/rmax-ai/rsi-gym/blob/50ce4005dad1a0ed8c2b50209522f454d7dc2f0d/docs/example-run/headline-01/archive.json)、[`meta-demo-01`](https://github.com/rmax-ai/rsi-gym/tree/50ce4005dad1a0ed8c2b50209522f454d7dc2f0d/docs/example-run/meta-demo-01)。读取 commit `50ce400`（v0.1.0）；本地复核 `119 passed, 1 skipped`，整理时间：2026-10-09。
+
+**定位**：RSI-Gym 研究的不是模型权重自我训练，而是 **LLM 能否从开发集失败中修改自己的声明式 harness，并把收益迁移到未见任务**。它用实验合同区分三种容易混淆的“进步”：保存上一次答案、针对公开题目过拟合、从失败中提取可迁移策略。核心贡献也不是支付调查任务，而是把 harness 自我改进变成可复现、可审计、允许负结果的实验。
+
+**实验边界先于演化算法**：
+
+| 可变面 | 冻结面 |
+| --- | --- |
+| `AgentGenome` 的 system prompt、planning / memory / verification policy 与 skills | 基础模型、工具注册表、任务 ground truth、评测器、fitness、acceptance rules、runner、hidden set |
+| 可选 meta 模式中的 `ImproverGenome` 三段文本 | meta 模式仍不能改 evaluator、engine 或继承规则 |
+
+Agent 只能调用五个只读 mock tools 访问静态支付世界，不能写文件、运行 shell 或访问网络。Evaluator 依据机器 ground truth 做确定性评分，不使用 LLM judge。Improver 只能看到当前 genome、development 聚合指标与失败样本的可观察轨迹摘要、历史 mutation 及其成败；看不到 hidden，也拿不到逐题 validation ground truth。所有无效、被拒和被接受的尝试都进入 archive，避免只展示成功谱系。
+
+```text
+Environment（生成并按 split 隔离支付、事件、客户、事故和知识库）
+  → AgentGenome + 固定 LLM（只读工具调查）
+  → Immutable Evaluator（机器 ground truth + 确定性违规检测）
+  → Improver（读取 development 失败，提出最小 GenomePatch）
+  → Evolution Engine（validation 验收；搜索结束后才跑 hidden）
+```
+
+**被进化的对象是结构化策略，不是任意 prompt blob**：
+
+```python
+AgentGenome(
+    system_prompt,
+    planning_policy,       # 如何安排工具调用与调查步骤
+    skills,                # 按失败类型组织的声明式操作规程
+    memory_policy,         # 调查期间保留哪些状态
+    verification_policy,   # 提交前检查什么
+)
+
+ImproverGenome(
+    diagnosis_prompt,             # 如何读失败、聚类并找系统性根因
+    mutation_strategy,            # 如何设计小而可证伪的改动
+    candidate_selection_policy,   # 多个假设之间如何取舍，仅是建议
+)
+```
+
+运行时，[`agent/genome.py`](https://github.com/rmax-ai/rsi-gym/blob/50ce4005dad1a0ed8c2b50209522f454d7dc2f0d/src/rsi_gym/agent/genome.py) 把基础 `system_prompt` 与四个带标题的 section 拼成最终 system prompt：`Planning policy → Memory policy → Verification policy → Skills`。所以“演化”实际发生在模型每轮都会读取的操作制度中；`GenomePatch` 只能替换这些组件或增删 skill，必须通过字段、命名和长度校验，并保存 unified diff。
+
+**一代演化的提交协议**：先让当前 champion 跑 development，用细粒度失败证据做 diagnosis；Improver 将失败聚类，给出一个可证伪假设和一个 coherent patch；每个 candidate 单独在 validation 上执行。只有通过硬门禁的版本才有继承资格，随后才在合格候选中按 fitness 选 champion。hidden 在所有 mutation 决策结束后，仅比较 A0 与最终 champion。
+
+三道 acceptance gate 必须同时通过：
+
+1. candidate success 至少比 parent 高 `minimum_improvement=0.05`；
+2. policy violation rate 不得增加；
+3. validation 中样本数至少为 `3` 的 failure family，success 回退不得超过 `0.5`。
+
+Fitness 用于合格候选间排序，不能覆盖门禁。代码中的成本项均已归一化：
+
+$$
+F=1.0S+0.25E-2.0P
+-0.01\frac{\bar C_{tool}}{C_{tool,max}}
+-0.01\frac{\bar C_{token}}{C_{token,max}}
+-0.02C_{genome}
+$$
+
+其中 $S$ 是 success rate，$E$ 是 evidence F1，$P$ 是 policy violation rate；$C_{genome}$ 是 system prompt 与 skill body 相对容量上限的比例。planning / memory / verification policy 的长度没有进入当前 complexity penalty，这也是解释 fitness 时要保留的实现细节。
+
+![RSI-Gym headline 演化轨迹](./AI-Applied-Algorithms/rsi-gym-evolution-trace.png)
+
+> 图为依据官方 `headline-01/archive.json`、generation 1 proposal / decision 派生的 Codex 示意图；指标来自 validation split，`n=20`。A1、A4 是保留的失败 mutation，不在最终 A0 → A2 继承链上。
+
+**A0 → A2 到底学到了什么**：A0 已能判断 root cause，但会改写、拼接或虚构 evidence token，也会把 root cause 映射到错误 action。A1 在 system prompt 和 verification policy 中强化“逐字复制已检索证据”，evidence F1 从 `0.241` 升到 `0.509`、unsupported claim rate 从 `0.95` 降到 `0.55`；但 success 仍为 `0.85`，没有越过 `+0.05` 门槛，因此被拒。A2 同时增加 `evidence_citation`、`root_cause_action_mapping` 两类 skill，并把验证写成四步 procedure：
+
+1. 先检查 root cause 是否与全部已见事件一致；
+2. evidence 必须包含直接确定 root cause 的 decisive event；
+3. 每个 token 必须逐字来自本次工具结果，找不到就删除；
+4. 按 canonical mapping 检查 root cause 与 recommended action。
+
+A2 的 validation success 从 `0.85` 升到 `1.00`，hidden 也从 `0.85` 升到 `1.00`，因此被继承。这里能观察到 transfer，但不能把收益精确归因给某一条规则：A2 同时修改了两个 skill 和 verification policy，属于组合 mutation。
+
+**拒绝记录比成功记录更能说明实验合同**：A4 在 A2 上继续收紧 canonical token 粒度和最小证据集，validation evidence F1 达到 `0.99`、unsupported claim rate 降到 `0.05`、fitness 达到 `1.237`，都优于 A2；但 success 已是 `1.00`，无法再增加 `0.05`，所以仍被拒。它证明 fitness 没有偷越门禁，也暴露出当前合同的取舍：主指标饱和后，次级证据质量的明显改善无法继承。面向真实系统时，应按 claim 类型设计分阶段 gate 或 Pareto 门禁，不能机械照搬 success-only inheritance。
+
+**Meta Improver 也没有被包装成成功**：可选 meta loop 允许修改 `diagnosis_prompt / mutation_strategy / candidate_selection_policy`，然后用相同预算的 inner evolution 比较单位 generation 的 fitness gain。示例的四个 Improver 变体均未超过 incumbent 的 `+0.01` epsilon，全部不晋升；inner agent 能改善，不等于“改进者自身”已经形成稳定的递归智能。
+
+**证据边界**：headline 只是单一模型 `deepseek-flash`、单一 seed `42`、每个 split `20` 个任务、`repeats=1` 的合成支付环境；success 的 20/20 Wilson 95% 区间仍约为 `[0.839, 1.000]`。meta demo 更只有每个 split `6` 个任务。它证明了“在这份冻结合同下，一次声明式 harness mutation 能迁移”，没有证明跨模型、跨 seed、跨领域的稳定 RSI，更没有证明超越基础模型能力上限。项目自己也把多 seed、bootstrap CI 和 reflection-only baseline 留作后续。
+
+**对 LoopX benchmark 的直接借鉴**：把 capability evolution 记录成 `parent_id + mutable_components + diagnosis_ref + patch/diff_ref + dev_evidence_ref + validation_metrics + gate_results + hidden_scope`，并让 accepted / rejected / invalid attempt 使用同一账本。Evaluator、dataset digest、model config、预算和 acceptance profile 必须版本化冻结；development 负责诊断，validation 决定继承，hidden 只支持最终 claim。RSI-Gym 最值得迁移的不是支付 prompt，而是这条提交边界：**失败证据可以驱动 proposal，但只有 held-out 结果可以改变 champion；所有未继承 mutation 仍是可复核实验数据。**
 
 #### LoopsBench：long-horizon Coding Agent 的 Loop Engineering 评测
 
