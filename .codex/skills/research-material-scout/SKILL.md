@@ -23,7 +23,7 @@ For decision-driven X discovery or benchmark reading recommendations, read [the 
 
 This skill is the CS-Notes source-discovery and exact-reading adapter. It owns
 source recall, primary-source verification, reader maps, domain scoring, and
-the private CS-Notes landing decision.
+the CS-Notes public/private landing decision.
 
 When the connected project or goal explicitly activates Material Lifecycle, use the
 project-local managed `loopx-material` skill for generic store inventory, candidate/archive
@@ -37,10 +37,24 @@ For CS-Notes, a managed authority pointer under
 archive Markdown files are immutable legacy content backing. Never append a
 candidate, archive an item, or edit the old Top30 in those files. Use the
 project-local `loopx-material` workflow and the private managed intake adapter.
-An explicit `素材：` request authorizes candidate intake plus a ranking
-settlement in the same user workflow. Keep intake and ranking as separate
+An explicit `素材：` request authorizes candidate intake, a ranking
+settlement, and reviewed public-field export for verified public sources
+in the same user workflow. Keep intake and ranking as separate
 receipts and, when ranking changes, separate authority revisions so CAS,
 preview, rollback, and audit remain independent.
+
+For verified public sources, finish version-bound field review and public queue
+prepare/apply/check in that workflow; do not wait for another request to publish
+the local queue. Keep original content, private annotations and audit evidence
+local. Internal or uncertain sources remain private. A public-looking domain
+alone is insufficient evidence, and public export never bypasses digest or
+owner-gate checks.
+
+Before recommending a first read or refreshing after Git pull, reconcile explicit
+owner read-completion evidence and verified remotely merged completion records
+with the managed authority. Archive completed material through the source owner;
+retain original sources/backing. If retained as a read reference, label the revisit
+purpose and keep it in backlog. Assistant `read_scope` is not owner completion.
 
 Every intake must end with one explicit disposition: `top_window`,
 `ranked_backlog`, or `no_change`. Determine high value from exact-read evidence,
@@ -289,6 +303,7 @@ The note-writing rules below apply to `整理笔记 / 读完`. During `请你读
    - B: useful background, tool lead, or product observation.
    - Unread: not read; never pretend.
 5. If Material Lifecycle is active, write exact-read evidence and staged content, then use the active project source adapter documented in `.local/material-lifecycle/README.md` to intake one candidate or revise its existing stable ref. Verify an intake adds exactly one record, or a revision preserves identity, lifecycle and membership, then create the separate Decision Context-backed ranking revision in the same workflow. Verify the disposition, ranked membership when required, authority readback, readable projection, audit receipt, and rollback path before reporting completion.
+6. For verified public sources, review the public fields against the current authority, body digest and complete record digest; apply and read back the public projection in the same workflow. Check both public and private partitions. Report an unresolved review/export failure instead of treating private intake alone as completion.
 
 ## Active Research Workflow
 

@@ -137,7 +137,10 @@ open -a Typora <file.md>
 **公开与私有队列**：`Learning-Materials/` 保存当前外部材料的审查后公开副本，
 内部材料、私人批注、待确认来源及历史归档维持本地。受管 catalog 仍是唯一
 生命周期与排序 authority；公开 Markdown 不是第二套可写队列。字段审查必须绑定
-稳定 material ref、正文与完整 record digest；新记录、正文变化和重新激活的归档记录默认留私有侧。
+稳定 material ref、正文与完整 record digest；新记录、正文变化和重新激活的归档记录在审查前留私有侧。
+经核验的公开来源默认在同一素材工作流内完成字段审查并导出公开队列，不等用户另说“公开”。
+`素材：` 已授权这一步；公开卡片只保留可分享的书目、真实读取范围和脱敏判断，完整正文与证据留本地。
+内部材料、私人批注及来源未确认的内容继续留私有侧，不凭 URL 域名判定公开。
 内部入口发现的公开论文只能公开经核验的论文书目，不能带出内部入口或讨论。
 更新 catalog 后通过项目本地 `material_queues.py prepare/apply/check` 刷新两队列，
 同时核对公开字段审查、完整分区、连续排名和读回；命令位置与回滚见本地 adapter README。
@@ -159,7 +162,7 @@ owner-gated apply 与 rollback 统一遵循项目级受管的 `loopx-material` s
 backing / rollback source。任何线程都不得直接向旧文件追加材料、修改生命周期或
 编辑其中的旧 Top30；新素材必须走 exact-read evidence -> managed candidate
 intake -> authority CAS/readback/receipt -> Decision Context-backed ranking
-settlement。`素材：`授权 candidate intake 与同一工作流内的排序结算；两者仍使用
+settlement。`素材：`授权 candidate intake、同一工作流内的排序结算及经核验公开来源的字段审查与导出；intake 与 ranking 仍使用
 独立 receipt，发生排序变化时使用独立 authority revision，以保留 CAS、预览、回滚
 和审计边界。
 
@@ -170,6 +173,11 @@ settlement。`素材：`授权 candidate intake 与同一工作流内的排序�
 被替换条目下沉 ranked backlog，不得丢失；受保护锚点除非用户明确要求或 Decision
 Context 已改变，否则不动。ranking apply / readback / projection / audit 未闭环前，
 不得把高价值素材 intake 报告为完成。
+
+推荐首读或同步队列前，核对用户已读声明、受管 lifecycle 及远端已合入的完成记录。
+用户确认读完的材料按受管流程归档并保留来源/backing；若明确保留为已读参考，标明复习目标并放入 backlog。
+Codex 的 `read_scope` 只描述助手读取范围，不能据此推断用户读完。Git pull 后须将已核验的远端完成状态
+对账到本地 authority，再刷新投影，不能用旧 catalog 把已读材料重新放回待阅读队列。
 
 **指令约定**
 

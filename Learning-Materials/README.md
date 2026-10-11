@@ -34,6 +34,8 @@ python3 -m unittest discover -s note-system/materials/tests -p 'test_material_qu
 
 `catalog.json` 是公开副本的渲染输入，`QUEUE.md` 和 `CANDIDATES.md` 是生成文件。维护者新增、归档或调序时，先更新受管 catalog，再审查公开字段并刷新投影；不能只手改生成表格。未经审查的新记录、正文版本变化或材料重新激活，默认保留在私有侧，不能继承旧版本的公开许可。
 
+经核验的公开素材默认在当次工作流完成字段审查并进入公开队列。用户已读材料经受管流程归档后移出当前排名；明确保留的已读参考注明复习用途并放入 backlog。助手的读取范围不代表用户已经读完。
+
 分区、预览、版本检查、恢复与测试的通用代码也在仓库中，见[素材体系维护](../note-system/materials/README.md)；真实来源绑定与逐条审查记录留在本地。
 
 目前两个队列共用材料生命周期与全局阅读顺序，再按公开范围筛选。它们不是独立的多租户权限系统，也没有第二套归档 authority。未来若需要不同 owner、独立排序政策或不同存储 provider，应再扩展 LoopX 的 queue identity 与授权契约；当前无需为展示分区重写核心 capability。
