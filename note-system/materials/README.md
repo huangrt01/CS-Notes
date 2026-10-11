@@ -25,6 +25,10 @@
 
 公开卡片只允许 `material_ref / title / sources / tier / lifecycle / read_scope / note / queue_rank`。不接受额外的原文或 provider 字段。新增或变更的记录默认进私有侧，必须重新审查；归档记录始终排除。审核同时绑定 `entry_digest` 与完整 record 的 SHA-256，不能只凭同一个 ID 或网址沿用公开许可。
 
+本仓库的 `素材：` 工作流默认将经核验的公开来源在当次完成字段审查与公开队列导出；私有侧是审查前的安全落点，不是公开素材的默认完成位置。内部来源、私人批注与待确认内容继续留本地。读取范围按实际证据填写，公开卡片与完整原文分开。
+
+用户读完与助手读取是两个状态。明确的用户完成记录应通过来源 authority 归档，保留稳定 ID、原来源、正文 backing 与归档证据，并移出当前排名；明确保留的已读参考注明复习用途，放入 backlog。拉取远端后，先核验并对账远端完成记录，再刷新本地投影；禁止用旧 authority 重建已经关闭的待阅读项。
+
 正文 hash 由来源 adapter 验证。record 的序列化约定见同步器 `canonical_json`：ASCII JSON、键排序、两空格缩进、末尾换行。审查输入包含 `scope=current_only`、授权依据 `owner_gate_ref`，以及每条记录的分类、理由、两个 digest 和可选 `public_card`。这是维护者的人工/agent 审查结果，不是按域名自动证明公开性的分类器。
 
 若来源 ID 含私人语义，审查记录可指定稳定的 `public_material_ref`，仅在公开导出时替换 ID；完整分区与来源验证仍使用 canonical ID，映射只留本地。别名不得重复或占用其他 canonical ID。纯书名清单可引用 `Learning-Materials/booklists/` 中的 Markdown，不附原始截图或私人收集记录。

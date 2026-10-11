@@ -15,7 +15,7 @@
 | Agent 框架、评估与工作流 | GAIA、MLE-bench、AgentCompass、Deep Research、CUA、ALE / LHTB、长程 benchmark 方法论、Harness-Delta Attribution（捷径 / 计算 / 剩余收益）、ATIF 轨迹格式、Workflow agent、trace-first eval、Prove2Me（verification-gated 形式化众包） | Agent benchmark、可组合评测基础设施、涨分归因、工具使用、工作流、安全评估和观测基建 |
 | Agent Harness / Agent Infra：总框架 | Agent Loop / Tool Calling / Middleware as effectful & Kleisli composition、ETCLOVG、概率执行语义、semantic recovery、Cloudflare Vulnerability Harness、long-horizon RL、rollout、dynamic environment、trace-native eval、governance、handoff、harness search | 把 Agent Memory / Workflow / Eval / Runtime 放到同一系统框架中 |
 | Context Engineering 与 Agent Runtime | Context / Responses API、runtime resource、session / prefix cache、agent context substrate | Agent runtime 的上下文底座和 API substrate |
-| Agent Memory：领域理论框架 | memory 形态、trajectory-derived experience、memory routing / ranking、personalization、benchmark（含 AML 榜单评测契约）、feedback / credit assignment | 当前 Agent Harness / OpenViking 主线和 memory 理论框架 |
+| Agent Memory：领域理论框架 | memory 形态、trajectory-derived experience、memory routing / ranking、personalization、benchmark（含 AML 榜单评测契约）、feedback / credit assignment、[Octop 的事实权威与派生视图](#octop-memory事实权威派生视图与可重放召回) | 当前 Agent Harness / OpenViking 主线和 memory 理论框架 |
 | Online Learning、持续学习与反馈优化 | Online learning、in-context vs in-weights、算力挑战 | 从反馈信号走向持续改进 / 个性化 agent |
 | 多模态 Search / Agent | 多模态检索、视觉 backbone、image rerank、M3-Agent | 多模态搜索和多模态 agent |
 | AI Search：搜索、Query 理解与生成式排序 | 召回融合、AI Search 推理链路、Query 理解、Query Rewrite、NL2SQL | 搜索业务与 LLM ranking / generation 的结合 |
@@ -4632,6 +4632,26 @@ RL 的问题不是“不重要”，而是当前阶段不够经济、可解释�
 | `atomic experience` | action / constraint / parameter provenance 级 | 未来更细的执行约束：某个 write action 前必须从当前 tool observation / catalog / state scope 取参数 | 适合在 action 前或 validator 中注入，尤其适合 pre-write guard |
 
 这个拆分的关键是区分 **source evidence** 和 **serving artifact**：raw trajectory 是证据层，`traj_view` 是从证据层派生出的可服务视图，atomic experience 则更像 action 前的局部约束或参数 provenance guard。它也解释了为什么当前验证先做 `traj_view`：它比 raw trajectory 干净，比 coarse plan experience 更有边界，又比 atomic experience 更容易从成功轨迹中稳定抽取。
+
+### Octop Memory：事实权威、派生视图与可重放召回
+
+> 来源：[Octop Memory 官方 README](https://github.com/TencentCloud/octop-memory/blob/8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf/README.md)、[Harness 集成 README](https://github.com/TencentCloud/octop-harness/blob/14a1cd9e22c4644ec427be0d2a3f129ac6355f0c/README.md)；2026-10-09 全文读取，未审查代码或运行。四组件的宿主边界见 [Agent 工程笔记](./AI-Agent-Engineering.md#octop将执行记忆浏览器与消息接入拆成独立组件)。
+
+Octop Memory 给出了从原始事件到可服务记忆的具体分层。宿主负责 agent 执行、模型与调度，Memory 负责 capture / extract / recall、持久存储与迁移；安装库不等于自动抽取已启用，抽取、晋升和页面再生成需要注入 `LLMClient`。
+
+```text
+RawEvent -> Candidate -> AtomCard -> dirty / regeneration -> EntityPage
+RawEvent -> Episode
+AtomCard --atom_id--> tree leaf
+```
+
+AtomCard 是事实记忆；EntityPage 是派生页面，tree 的 root / branch / leaf 组织引用与投影，而不另造一份事实权威。Candidate 的晋升会结合价值、证据、实体解析、重复与冲突，执行 promote / merge / drop；这些步骤可以自动进行，不能误写成每次都有人审批。页面更新通过标脏与再生成触发，不能假设每写入一条事实页面就立即一致。手动 `Memory.store` 不需要模型，也会创建 RawEvent、Candidate、AtomCard 与 leaf，因此原始来源和结构化事实仍可区分。
+
+**事实检索与历史搜索是不同入口。** 简单接口 `Memory.recall` 面向事实 leaf，`Memory.search` 搜索归档消息；供 prompt 使用的 `MemoryService.recall` 再做排序、去重与 token 预算。默认使用 atom / raw，解析出实体时可加入 page headline，配置向量能力后才使用 vector。默认策略中，持久记忆命中会抑制 raw fallback；传入当前 thread / session 时，召回排除它的 raw 事件，以减少刚说过的话被当成旧记忆再次注入。
+
+**召回结果应作为一次曝光快照。** Harness 在用户回合开始时召回一次，冻结后用于模型输入并保存到 checkpoint；捕获时保留原始用户文本，避免把召回注入的内容再写成用户新说出的事实。这对应上层框架的 construction / routing / exposure 三层，但 README 没有提供 paired replay 或 outcome delta 证明，不能据此宣称完成了经验学习闭环。可复用的验收点是：来源引用能追溯，派生页面能重新生成，同一回合能复用原曝光快照，更新记忆后能检查旧事实是否被误覆盖。
+
+**部署与读取边界。** 核心依赖使用 stdlib / SQLite / FTS5，持久层另支持 PostgreSQL；SQLite table prefix 和 PostgreSQL namespace 用于分区，访问控制仍需宿主保证。Chroma / Qdrant 需要已初始化的 `vector_index` 与 `embedding_provider`，仅安装依赖不够；README 说明现有验证包含 fake / mock，不能当成真实服务集成已测。Dashboard 源模块不随 wheel 分发，安装 extra 也不等于已有完整 dashboard 命令。此次仅核对 README 合同，未核验 SQL 隔离、抽取质量、迁移、冲突处理实现或真实后端；也未证明 recall 改善后续任务。
 
 ### Trajectory-derived experience：从轨迹到可检索经验
 
