@@ -1,6 +1,6 @@
 # Codex TODO User Action Queue
 
-> 更新时间：2026-05-08
+> 更新时间：2026-10-12
 > 用途：当 `推进TODO` 发现没有 Codex 可独立推进的 active TODO 时，本文件作为用户动作队列入口。这里不替代 `.trae/todos/todos.json`，只作为 `推进TODO` 的阻塞面板，把用户下一步压缩成可执行、可复制、可回填的动作卡片。
 
 ## 当前队列
