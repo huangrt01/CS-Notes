@@ -18,6 +18,24 @@ S 表示优先亲读，A 表示先读摘要、按需追原文，B 表示背景�
 
 ## 阅读与维护
 
+队列同时考虑近期可验证产物、长期研究价值与基础能力，不只按新鲜度或工程紧急程度排序。Top30 是选读入口，不是三十项并行任务；需要补哪个概念，先用推导、故障反例或小实验检查，再决定阅读深度。
+
+| 学习线 | 入口与读法 | 最小产物 |
+| --- | --- | --- |
+| 因果与贡献识别 | [What If](https://miguelhernan.org/whatifbook) 选读 §1.1–1.2、§2.1、§3.1–3.3、§3.6，按需追 §2.4 | 写一页实验协议：比较单位、干预、分配、结果窗口和识别假设；区分相关与贡献 |
+| 记忆与上下文诊断 | [PAIR](https://arxiv.org/html/2609.36526v1) 的成对延续；[CMP v3](https://arxiv.org/html/2610.02070v3) §2–3 与附录 I/J 的暴露干预和限制 | 明确可恢复状态、上下文预算和旁路信息；区分未召回、被使用与条件收益 |
+| 延迟信用分配 | [RUDDER](https://arxiv.org/html/1806.07857v3) §2–3 与限制，按问题触发阅读 | 在同一短轨迹上分开标注终局结果、预测贡献与可干预动作，不将预测分解当因果证明 |
+| 系统基本功 | [分布式系统 × LoopX 讲义](./distributed-systems-for-loopx/补课讲义.md) → [练习](./distributed-systems-for-loopx/练习与讨论.md) → [Recovery Lab](./distributed-systems-for-loopx/recovery_lab.py)；先状态机、事务、幂等与 fencing，再日志、共识和恢复 | 预测故障结果，解释修复所依赖的条件 |
+| 概率与序贯决策 | [Bandit Algorithms](https://tor-lattimore.com/downloads/book/book.pdf) 选读 §5.3、§7.1、§33.1–33.2，按需补 §3.3；能完成推导则跳读 | 写清目标、观察、预算、停止与最终选择；辨认独立、平稳等假设 |
+| 矩阵与表示 | [Mathematics for Machine Learning](https://mml-book.github.io/book/mml-book.pdf) §2.6、§4.5–4.6，按需补 §3.8；已有 SVD 笔记可先诊断跳读 | 手算低秩截断误差，解释矩阵近似目标与下游损失的关系 |
+| 优化原理 | [Boyd & Vandenberghe](https://web.stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf) §3.1 → §4.2 → §9.3，按需补强凸和线搜索前提 | 用二维二次目标检查条件数、步长、驻点与收敛结论；列出前提 |
+| 信息与压缩 | [Stanford EE376A](https://web.stanford.edu/class/ee376a/files/lecture_notes.pdf) §2.3 → [MIT 6.441 Chapter 23](https://ocw.mit.edu/courses/6-441-information-theory-spring-2016/resources/mit6_441s16_chapter_23/) §23.2；已知熵/KL可跳过基础定义 | 明确源、编码、任务变量和失真，区分平均损失与关键事件的尾部风险 |
+| 持续学习与联合演化 | 按队列选读 Harness-Zero、Fast Weight Attention、HGM、EvoTrainer；先机制、假设、关键对照，再源码 | 画出更新对象、反馈与采用路径，提出一个可推翻假设的对照 |
+
+已有 [RL 笔记](../Notes/Reinforcement-Learning.md)可用于定位 MDP/POMDP、信用分配与离策略评估概念。实现目录和重复综述可以由助手先整理；亲读重点放在决定问题如何定义、证据如何成立的部分。已读材料继续作为参考时标明回看目的，不重新列为首读任务。
+
+[数学笔记](../Notes/mathematics.md)已有 SVD、熵与 KL 的复习入口；新增材料各对应独立的章节选读单元，按诊断结果选择深度。上述教材与课程不要求整本或整门并行阅读，理论保证须与实际模型、搜索和压缩任务的假设分别核对。
+
 从仓库根目录运行实验：
 
 ```bash
@@ -28,7 +46,7 @@ python3 Learning-Materials/distributed-systems-for-loopx/recovery_lab.py
 
 ```bash
 python3 note-system/materials/material_queue.py
-python3 --no-user-site note-system/materials/material_queue.py --check
+python3 -s note-system/materials/material_queue.py --check
 python3 -m unittest discover -s note-system/materials/tests -p 'test_material_queue*.py'
 ```
 
