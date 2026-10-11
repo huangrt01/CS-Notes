@@ -2063,6 +2063,8 @@ WorkBuddy 还直接承接腾讯的团队记忆能力：TencentDB Agent Memory �
 
 ## Agent ToB&ToC 产品
 
+Personal Agent 可按四类系统职责比较：后台演化个人状态上下文、依据状态与更新做行为决策、后台长程工作、前台结合 prompt / memory 与前两者输出进行用户互动。Session 等层面的复用或解耦取决于效果与效率；具体框架见 [四类系统职责与 Session 边界](./AI-Agent-Engineering.md#personal-agent四类系统职责与-session-边界)。
+
 **从 Chat 入口到委派闭环**：Grok Bot 与 Muse 把持久环境、记忆、后台执行、协作、审批和结果返回接成连续体验。产品竞争要看用户交出去以后，还要承担多少转述、催办、冲突处理和决策整理，而不只是模型能力或功能数量。以下依据 2026-09-20 读取的官方产品文档与工程说明；属于文档调研，未经实际试用或源码审计。
 
 | 观察面 | Grok Bot | Muse / Muse Code |

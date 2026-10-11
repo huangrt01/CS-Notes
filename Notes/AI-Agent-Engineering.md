@@ -21,6 +21,9 @@
 | KDA 性能优化 agent 规则（Profile → Diagnose → Plan → Candidate → Validate → Measure → Promote/Reject） | [GPU.md](./GPU.md) |
 | 一致性程序 = 公开契约 + 自证 + 官方审查 + 版本化徽章 → agent benchmark / harness 生态 | [Software-开源项目成功之道.md](./Software-开源项目成功之道.md) |
 | Agent 的个人数据源与工具边界：GreenBubbles（本机只读微信库 + policy / audit 授权层 + 个人记忆 skill 流水线） | 本文件 [Agent 应用技术架构、系统设计](#agent-应用技术架构系统设计) |
+| Octop：独立 Harness / Memory / Browser / Gateway，渐进式工具 schema、回合级记忆快照、浏览器动作反馈与群聊上下文边界 | [四组件分工](#octop将执行记忆浏览器与消息接入拆成独立组件)；[事实权威与派生视图](./AI-Applied-Algorithms.md#octop-memory事实权威派生视图与可重放召回) |
+| Personal Agent：个人状态上下文演化、行为决策、后台长程工作与前台交互；Session 复用与解耦 | [四类系统职责](#personal-agent四类系统职责与-session-边界) |
+| Novix：专家判断改变探索方向、失败记录复用与任务评测回退；协同进化式 RSI 的证据边界 | [专家判断、失败资产与协同进化式 RSI](#novix专家判断失败资产与协同进化式-rsi) |
 
 ## Agent Sandbox 与运行环境
 
@@ -433,6 +436,50 @@ Lorca 把**跨端通信、实际执行和动作审批**分开：Mac UI 连接本
 **Session 隔离也不决定协作拓扑。**同一树内的独立 Session 通过 AgentControl 与收件 Session 的 mailbox 通信；独立任务之间还可以通过宿主任务工具和 App-server 注入工具级输入。两者在目标 agent loop 汇合，但寻址、缓冲、启动与结果返回合同不同。完整分层与代码链见 [Codex Sub-agent 架构调研](./Codex-Subagent.md)。
 
 **异步任务接口要区分受理、执行与交付。**主对话收到 `accepted` 后可以继续响应，后台任务完成后仍需确认结果交付；停止当前回复也不等于取消后台任务。状态查询、取消与补充输入应有明确的目标和确认语义，不能只从聊天文本推断任务状态。公开实现见 [Qwen Audio Agent 的 Work 与交付状态机](#语音-agent-runtime把-conversation-presence-与-durable-work-解耦)。
+
+#### Personal Agent：四类系统职责与 Session 边界
+
+> 设计框架，2026-10-09。这里划分系统职责，具体组合方式按效果与效率选择。
+
+Personal Agent 的持续性来自四类职责之间的协作。个人状态上下文需要后台算力长期演化；行为决策器消费这个状态及其更新；后台执行承担长程工作；前台把 prompt、memory 与后台判断接成用户互动。
+
+| 职责 | 主要输入 | 主要输出 |
+| --- | --- | --- |
+| 1. 后台演化个人状态上下文 | 个人相关信息、互动与工作反馈、已有状态 | 更新后的 personal state / context，以及有意义的状态变化 |
+| 2. Agentic 行为决策 | 当前状态上下文及其更新 | Agent 的行为决策，例如是否主动发消息、何时介入或继续工作 |
+| 3. 后台长程工作 | 已确定的工作目标、相关上下文与行为决策 | 持续推进的工作、进展与结果；反馈可供状态上下文更新 |
+| 4. 前台用户交互 | 当前 prompt、memory，以及 1 的状态上下文和 2 的决策输出 | 面向用户的理解、回答、澄清与互动；必要时表达后台工作结果 |
+
+四者形成反馈关系：互动与工作产生新信息，后台更新个人状态上下文，决策器据此重新判断行为，前台再结合当前请求组织互动。**更新状态、决定是否主动发消息、实际完成工作、如何与用户表达，是可以分别优化的职责。** Memory 提供可复用的信息，个人状态上下文表达当前状况，两者需要关联，但不必共用同一种表示或更新周期。
+
+**职责划分不预设四个 Agent 或四个 Session。** 四者可复用同一 Session，也可按上下文、运行生命周期或时延要求拆开；还可共享持久状态、模型和工具能力，只分离执行会话。共享 Session 有利于减少交接与重复上下文；拆分有利于前台及时响应、后台持续运行，以及分别优化状态演化和行为决策。选择应比较任务效果、状态一致性、交互延迟、token / 算力成本与交接开销，而不把“全共享”或“全解耦”固化成原则。
+
+解耦时应明确消费哪版状态、决策对应哪次更新、后台结果如何反馈，以及前台如何取得可用输出；复用时则要处理并发写入、上下文污染和不同工作的取消范围。可参考 [语音 Agent 的前台与后台分工](#语音-agent-runtime把-conversation-presence-与-durable-work-解耦)，但 Personal Agent 还包括个人状态演化与行为决策这两项独立职责。
+
+组件边界还应与状态权威、行动授权分别检查：Octop 将执行、记忆、浏览器和消息接入拆成可独立使用的库，提供了组合方式；拆库本身不证明权限隔离或可靠恢复，见下节。
+
+#### Octop：将执行、记忆、浏览器与消息接入拆成独立组件
+
+> 来源：[Tencent AI 原帖](https://x.com/tencentai_news/status/2108119869770375296)（2026-10-08）；2026-10-09 完整读取四份官方 README，并核对 GitHub 许可证元数据与 PyPI 发布信息。下文是文档合同与设计分析，未安装、运行或审查实现代码。
+
+Octop 的主张是让构建者按需拿走一个组件，而不必采用整个工作台。四个仓库的 GitHub 许可证元数据均为 MIT，四个同名 PyPI 包均已存在；此次核对的 PyPI 发布版本为 Harness 1.0.1，其余三个 1.0.0，README 则按下方固定 commit 读取。组件关系应按职责理解：
+
+| 组件 | 主要职责与入口 | 不能由此推断的保证 |
+| --- | --- | --- |
+| [Harness](https://github.com/TencentCloud/octop-harness/blob/14a1cd9e22c4644ec427be0d2a3f129ac6355f0c/README.md) | 包装 `deepagents.create_deep_agent` / LangGraph；`HarnessAgentManager` 管 agent，`HarnessAgent` 提供调用、流式事件、历史和取消；组合 model、tools、skills、workspace backend 与 checkpoint | 有 checkpoint 不等于业务副作用恰好执行一次；工具仍须经过宿主授权与执行策略 |
+| [Memory](https://github.com/TencentCloud/octop-memory/blob/8b6abc3b6817f6b6d993d68190bc7ffc0a70dccf/README.md) | 独立记忆服务：捕获、抽取、检索、存储与迁移；SQLite / PostgreSQL 保存持久状态，可通过 Python / CLI / JSON-RPC 接入宿主 | namespace 是数据分区，不能代替访问授权；有抽取管线不等于已验证记忆能改善任务 outcome |
+| [Browser](https://github.com/TencentCloud/octop-browser/blob/b3910fc50c964fabcc8a8cde6ccec7367dbb27dd/README.md) | 通过 WebSocket / CDP 操作 Chromium；持久 profile 保留登录，DOM 引用支持交互，提供 Python / CLI / MCP 入口 | 动作返回成功不等于业务状态已改变；复用登录态需要另行约束账户、秘密和写入权限 |
+| [Gateway](https://github.com/TencentCloud/octop-gateway/blob/c974b95026804cd4a726bb2df58f66a55a5bfa3e/README.md) | 平台 adapter 把消息转成 `InboundMessage`，由处理器产出 `MessageEvent`；`ChannelManager` 管队列、worker、限速、超时、媒体与发送 | channel ID 分开不等于端到端租户隔离；能发送消息也不等于获得发送授权 |
+
+**Harness 的两个具体机制。** 一是每个用户回合只召回一次记忆，冻结召回快照后加入 model-facing 用户消息；system prompt 保持稳定，原始用户文本与增强后的输入分开保存，checkpoint 可复用该快照。这样可以减少同一回合内记忆变化造成的输入漂移；它并不保证模型输出可确定重放。记忆内部状态链见 [Octop Memory](./AI-Applied-Algorithms.md#octop-memory事实权威派生视图与可重放召回)。二是渐进式工具 schema：默认 client 模式先曝光真实工具名、短描述与轻量参数引用，搜索结果把完整 schema 加入会话，下一模型步骤替换为完整定义，已加载集合按 thread 保留。执行仍经正常 ToolNode、guard 和 interrupt policy，不能因为工具被检索出来就跳过权限检查。native 模式另需模型路由支持，不能把宿主托管搜索当成所有模型都有的能力。
+
+**Browser 把动作、观察和可复用方法分开。** `dom_tree` 提供 minimal / interactive / full / structured 视图，README 要求每次点击前先获取 DOM；`ToolResult` 包含 success、content、error 与耗时、扫描节点、估计 token 等 metrics。工程验收应再读回页面或业务状态，不能只检查 success。默认 `close_session` 断开 CDP 而保留 Chrome；显式 kill 才结束进程，profile 数据仍保留。录制器可把点击、输入和导航折叠成 skill 草稿，重放由 agent 按语义选择动作，因此不同于固定坐标脚本或确定性事件回放。默认敏感值遮罩依赖识别规则，不等于所有私人信息都已脱敏；README 对 DOM 引用稳定性与成本的主张尚未实测。
+
+**Gateway 需要分开“看得到、会触发、会留存”。** `MessageProcessor` 将 `InboundMessage` 转成异步 `MessageEvent` 流：MESSAGE 是完整消息，DELTA 是增量，COMPLETED 触发收尾。QQ 群上下文另有 visibility、activation、history 三个维度；README 的默认策略是 auto 可见范围、提及触发、最近 10 条、300 秒 TTL，并在成功回复后清理。权限降级时需更新 visibility 到已获授权范围，或重启 / 重配 channel，以丢弃旧缓存；平台缺少权限变更事件时不能保证即时发现。Discord 又有独立默认值：服务器频道默认允许 bot 可访问的全部频道；关闭该选项后才用频道白名单，空名单拒绝，DM 则要求用户白名单。平台差异必须进入配置审查，不能用一套“接入成功”验收替代。
+
+这组设计的可复用点是：组件独立组合，事实状态与召回投影分开，工具发现与行动授权分开，消息可见范围与执行触发分开。仍需验证实现与故障合同：checkpoint 恢复后的重复副作用、持久 profile 的账户边界、群聊权限撤销，以及工具 schema 展开后的调用正确性。
+
+**读取范围。** 已读原帖正文及四份 README 全文；引用帖只读到页面展示的片段，未核验完整 Octop 工作台的多用户隔离。未读实现代码、测试与 README 外的文档，未运行示例，也未测真实向量后端、浏览器或消息平台。README 的 production-grade / 性能表述按作者声明保留，不作为本次验证结论。
 
 #### 主流 Agent-Loop 实现调研：多模态能力
 
@@ -933,6 +980,26 @@ Dense feedback 的三条判据（「dense」不是多喂日志）：
 - **反馈环境本身是资产，需要写清判据边界**：明确「哪类观测能支撑什么判断、它的极限在哪、哪些结论必须再做实验」。原文的反例很具体——大量无结构日志会淹没关键信号，覆盖不全的 profiling 会导致错误归因，microbenchmark 里成立的优化未必转化为端到端收益。
 - **人机分工要写进流程而不是口号**：人定义目标 / 约束 / 反馈环境 + 审查关键改动（系统架构、异步并发、生产风险），agent 负责假设 → 改动 → 实验 → 按反馈保留 / 修正 / 拒绝。值得注意的是本条里**没有**把「反馈环境怎么建」交给 agent 自己决定。
 - **RSI 的 claim boundary 要标清楚**：官方原文只承认出现了最小闭环，并给出更硬的背景（2025-10 起做网络安全能力研究与可信访问计划、GLM-4.7 之前内部用自家模型写代码还带「义务感」）。唐杰在 X 上更进一步，认为基于真实基建任务构建的分层可验证反馈环境本身可能成为训练下一代模型的环境——那是**推论**，不是本项目的已验证结论，引用时要分开。
+
+#### Novix：专家判断、失败资产与协同进化式 RSI
+
+> 来源：机器之心[《全球竞逐RSI，这支华人团队已跑通规模化闭环》](https://mp.weixin.qq.com/s/iLtJ8g3xwawKfnoShFBIFg)（2026-10-09）；[Novix 官网](https://novix.science/)用于核对科研 Agent 产品定位。以下机制与成绩来自报道，未独立复现实验，也未核验全部图片与动态演示。
+
+Novix 将专家的采用、否决、纠偏与评价标准（rubrics）接入持续探索：Agent 提出方向、运行实验、验证结果；专家判断什么值得继续、什么证据足够、哪些目标需要改变。反馈不仅修正当前答案，还应改变下一轮的目标、任务分解、工具选择和验证方式。报道将其称为 Co-Evolutionary RSI；需要区分“在一次任务中优化结果”和“跨轮提升系统自身能力”。
+
+- **专家 taste 是可演化的决策条件**：新证据可以改变专家判断，专家的新判断再改变探索路径。它不只是静态偏好或奖励标签；应保留一次采用 / 否决针对的候选、理由、评价标准版本及后续效果，才能判断反馈是否真正进入下一轮。
+- **失败资产与成功产物共存**：材料、目标、评价标准、工具调用、中间产物、失败路径和策略修改原因留在同一工作空间。失败用于约束下一次尝试，并暴露工具、环境、评估器和模型的缺口；不能只保存最终摘要、删除被否决的路径。
+- **验证必须对齐任务效用**：训练 loss、预测误差等代理指标改善，可能与最终决策效果相反。停止、回退、重选方向是有效进展，前提是依据稳定的任务评测，而非为了维持执行而不断修改标准。
+
+| 报道中的任务 | 结果与条件（未独立复现） | 可复用的判断 |
+| --- | --- | --- |
+| 模型后训练 | SynLogic 固定 135 题，Qwen2.5-7B 准确率 8.89% → 37.78%；ScienceWorld 30 项任务，Qwen2.5-7B-Instruct 平均分 11.2667 → 35.6333。后续 RL loss 下降，但任务探针 38.7 → 21.1，否决更新并回退较优模型 | 比较检查点时以真实任务表现为准；收益必须连同评测范围、失败更新和选择依据保留 |
+| 八座水坝的耦合控制 | 约 3.57 小时、578 次工具调用；纠正传播时距 44 → 16 小时，并因预测误差与调度收益脱钩而修改优化目标。16 个不可见测试周得分 0.719264，较专家参考方案高 6.50%，控制指令通过约束检查 | 检验预测能否改善下游决策，交付受约束的可执行控制器；代理指标不能代替整体目标 |
+| 钢材循环响应 | 从已有拉伸 / 循环试验提出本构假设、修改实现、标定参数；60 个不可见加载历程得分 0.620034，专家参考为 0.310910，所有实例返回有效结果 | 分开检查结果有效性与未知条件下的泛化，保留测试隔离、参考解和指标定义 |
+
+报道还声称训练数据、失败路径、日志与评测结果回流，用于改进 Novix 的分解、工具、harness 和模型；但当前材料没有提供足以复核这条跨轮因果链的版本对照、消融和完整评测协议。任务成绩、用户规模及“规模化 RSI”均保留来源归属；不能由一次模型训练或控制器优化成功直接推出通用递归自我改进已成立。
+
+与上节 [GLM Infra Agent](#glm-infra-agent把端到端指标拆成可归因的-dense-feedback-闭环) 对照：GLM 强调分层反馈帮助定位工程原因；Novix 强调专家判断影响探索方向。通用框架可记为 `目标与标准 → 候选 / 实验 → 任务评测 → 采用、否决或回退 → 版本化经验 → 下一轮`。验收应分别证明当前任务产物有效、反馈改变了后续行为、系统改进在独立任务上仍成立；三层证据不能互相替代。
 
 #### Waiting primitive：yield_time_ms 与 /loop 的设计差异
 
