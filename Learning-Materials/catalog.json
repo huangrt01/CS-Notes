@@ -9852,7 +9852,7 @@
     {
       "lifecycle": "active",
       "material_ref": "material-shine-2602-06358",
-      "note": "本轮核对正式发表页面、作者仓库及已有机制笔记，未重新精读全文或复现。关注 Context→LoRA 的超网络、双 LoRA、质量/延迟边界和蒸馏成本；持续写入、遗忘及模型与 Harness 协同仍需分别验证。",
+      "note": "已读参考：用户已确认读完，保留在 backlog 用于复习 Context→LoRA 超网络、双 LoRA、质量/延迟与蒸馏成本。已有机制笔记、正式发表页面与作者仓库已核对，未重新精读或复现；持续写入、遗忘及模型与 Harness 协同仍需分别验证。",
       "queue_rank": 198,
       "read_scope": "recorded_review",
       "sources": [
