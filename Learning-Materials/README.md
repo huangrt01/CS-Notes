@@ -22,6 +22,9 @@ S 表示优先亲读，A 表示先读摘要、按需追原文，B 表示背景�
 
 | 学习线 | 入口与读法 | 最小产物 |
 | --- | --- | --- |
+| 因果与贡献识别 | [What If](https://miguelhernan.org/whatifbook) 选读 §1.1–1.2、§2.1、§3.1–3.3、§3.6，按需追 §2.4 | 写一页实验协议：比较单位、干预、分配、结果窗口和识别假设；区分相关与贡献 |
+| 记忆与上下文诊断 | [PAIR](https://arxiv.org/html/2609.36526v1) 的成对延续；[CMP v3](https://arxiv.org/html/2610.02070v3) §2–3 与附录 I/J 的暴露干预和限制 | 明确可恢复状态、上下文预算和旁路信息；区分未召回、被使用与条件收益 |
+| 延迟信用分配 | [RUDDER](https://arxiv.org/html/1806.07857v3) §2–3 与限制，按问题触发阅读 | 在同一短轨迹上分开标注终局结果、预测贡献与可干预动作，不将预测分解当因果证明 |
 | 系统基本功 | [分布式系统 × LoopX 讲义](./distributed-systems-for-loopx/补课讲义.md) → [练习](./distributed-systems-for-loopx/练习与讨论.md) → [Recovery Lab](./distributed-systems-for-loopx/recovery_lab.py)；先状态机、事务、幂等与 fencing，再日志、共识和恢复 | 预测故障结果，解释修复所依赖的条件 |
 | 概率与序贯决策 | [Bandit Algorithms](https://tor-lattimore.com/downloads/book/book.pdf) 选读 §5.3、§7.1、§33.1–33.2，按需补 §3.3；能完成推导则跳读 | 写清目标、观察、预算、停止与最终选择；辨认独立、平稳等假设 |
 | 矩阵与表示 | [Mathematics for Machine Learning](https://mml-book.github.io/book/mml-book.pdf) §2.6、§4.5–4.6，按需补 §3.8；已有 SVD 笔记可先诊断跳读 | 手算低秩截断误差，解释矩阵近似目标与下游损失的关系 |
@@ -43,7 +46,7 @@ python3 Learning-Materials/distributed-systems-for-loopx/recovery_lab.py
 
 ```bash
 python3 note-system/materials/material_queue.py
-python3 --no-user-site note-system/materials/material_queue.py --check
+python3 -s note-system/materials/material_queue.py --check
 python3 -m unittest discover -s note-system/materials/tests -p 'test_material_queue*.py'
 ```
 

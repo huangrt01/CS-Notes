@@ -270,7 +270,7 @@
 | 262 | [UiPath for Coding Agents](<https://www.uipath.com/newsroom/uipath-for-coding-agents-launch>) | A | 沿用既有阅读记录 |
 | 263 | [SGLang v0.5.11 release](<https://github.com/sgl-project/sglang/releases>) | A | 沿用既有阅读记录 |
 | 264 | [ELF: Embedded Language Flows](<https://arxiv.org/abs/2605.10938>) · [来源 2](<https://github.com/lillian039/ELF>) | A | 沿用既有阅读记录 |
-| 265 | [LongMemEval-V2: Evaluating Long-Term Agent Memory Toward Experienced Colleagues](<https://arxiv.org/abs/2605.12493>) | S | 沿用既有阅读记录 |
+| 265 | [LongMemEval-V2: Evaluating Long-Term Agent Memory Toward Experienced Colleagues](<https://arxiv.org/abs/2605.12493>) · [来源 2](<https://arxiv.org/html/2605.12493v1>) | A | 沿用既有阅读记录；A：先看协议摘要，搭建跨任务记忆测试时选读 §3、A.5/E.1。已读协议/部分 prompt 与局限，未审查全部实验、代码或图像；固定 reader 的证据检索测试不直接证明在线学习。作为按需参考，区分知识转移、检索质量与 live 任务收益。 |
 | 266 | [TencentDB Agent Memory](<https://cloud.tencent.com/developer/article/2668579>) · [来源 2](<https://github.com/Tencent/TencentDB-Agent-Memory>) | S | 沿用既有阅读记录 |
 | 267 | [Needle: 26M function call model](<https://github.com/cactus-compute/needle>) | A | 沿用既有阅读记录 |
 | 268 | [Notion Developer Platform](<https://www.notion.com/blog/introducing-developer-platform>) | A | 沿用既有阅读记录 |
