@@ -630,15 +630,106 @@ $$
 
 **Agent-based 方案**：MemAgent（ICLR 2026，字节 Seed + 清华 AIR）引入固定长度 memory panel + overwrite strategy，用 Multi-Conv RL 训练 memory update 策略，8K 上下文训练模型在 3.5M token 任务上性能损失 <5%，复杂度从 $$O(N^2)$$ 降为 $$O(N)$$。核心洞察：长上下文的本质不是更大窗口，而是"读、记、忘"的 memory policy。详见 [AI-Applied-Algorithms.md - Context-Engineering](./AI-Applied-Algorithms.md)
 
-### Linear/Sparse Attention 工程
+### 稀疏注意力：算法、Indexer 与并行工程
 
-#### Intro
+> 来源：[vLLM PR #54951](https://github.com/vllm-project/vllm/pull/54951)、合入版本的 [`PrefillRowShard`](https://github.com/vllm-project/vllm/blob/a9fd692db809fc31ea76cbc451c35a25873dd539/vllm/model_executor/layers/sparse_attn_indexer.py#L330-L369)、[分片规划器](https://github.com/vllm-project/vllm/blob/a9fd692db809fc31ea76cbc451c35a25873dd539/vllm/v1/attention/backends/mla/indexer.py#L208-L266)与[聚焦测试](https://github.com/vllm-project/vllm/blob/a9fd692db809fc31ea76cbc451c35a25873dd539/tests/v1/attention/test_indexer_tp_row_shard.py)。背景讨论：[为什么 M2 是 Full Attention](https://www.xiaohongshu.com/explore/69018843000000000703bb85)
 
-> [为什么M2是FullAttention](https://www.xiaohongshu.com/explore/69018843000000000703bb85?app_platform=ios&app_version=8.86&share_from_user_hidden=true&xsec_source=app_share&type=normal&xsec_token=CBeHBH61bxaVIZ4pyF_-YomNi6kafK79CLuiuoWHO9E9w=&author_share=1&xhsshare=CopyLink&shareRedId=N0lEN0Y6Rk82NzUyOTgwNjc5OTg2NUpP&apptime=1761736838&share_id=9f706ecf4b8f49f48240b83852de05d3)
+#### 从 causal attention 到 row-wise top-k
 
+设第 $l$ 层第 $i$ 个位置的输入为 $h_i^{l-1}$：
 
+$$
+q_i^l=W_Qh_i^{l-1},\qquad k_j^l=W_Kh_j^{l-1},\qquad v_j^l=W_Vh_j^{l-1}
+$$
 
+Dense causal attention 的第 $i$ 行只允许读取 $j\le i$ 的 Key / Value：
 
+$$
+o_i^l=\sum_{j\le i}\operatorname{softmax}_j\left(\frac{q_i^l(k_j^l)^\top}{\sqrt d}\right)v_j^l
+$$
+
+因果性限制的是每一行可见的列，并不要求先得到同层的 $o_{i-1}^l$ 才能计算 $o_i^l$。真正的数据依赖是：
+
+$$
+h_i^l\leftarrow \{h_1^{l-1},\ldots,h_i^{l-1}\},
+\qquad
+h_i^l\not\leftarrow h_{i-1}^l
+$$
+
+因此 Transformer layer 必须依次执行，但一个 layer 内已知 query token 的多行可以并行。Prefill 的 prompt token 全部已知；decode 则必须先生成 $x_i$，才能以它为输入预测 $x_{i+1}$。两者的执行边界详见「[Prefill、Decode 与 token 维并行](#prefilldecode-与-token-维并行)」。
+
+稀疏注意力不再让每行读取全部历史位置。Indexer 先为第 $i$ 行生成候选分数并选出索引：
+
+$$
+I_i=\operatorname{TopK}_{j\le i}(s_{ij},k),
+\qquad
+o_i=\sum_{j\in I_i}\alpha_{ij}v_j
+$$
+
+这里的 top-k 是“为每个 query 选择历史 KV 位置”，不同于生成采样中的 top-k vocabulary filtering。每行 $I_i$ 只依赖本行 query、可见 Key 与 causal bounds，不读取 $I_{i-1}$；各行候选范围虽然不同，top-k 结果却没有行间数据依赖。
+
+稀疏化也不是免费午餐：attention 主计算只读取 top-k KV，但 indexer 仍可能要扫描很长的压缩 Key 历史并做 MQA（Multi-Query Attention）scoring。上下文越长，选择器本身越可能成为 TTFT 瓶颈；PR #54951 优化的正是“选哪些 KV”的 indexer，而非后续 sparse-attention kernel。
+
+还要区分两个并行轴：
+
+| 分片方式 | 每个 rank 拥有什么 | 合并方式 |
+| --- | --- | --- |
+| 按 query row 分片 | 一部分完整行、这些行所需的完整 Key 历史 | 按行拼接最终结果 |
+| 按 Key 列分片 | 所有 query、部分 Key 候选 | 每个 rank 先做 local top-k，再做 global top-k merge |
+
+PR #54951 使用第一种方式，所以 rank 之间交换的是已经排好序的最终索引，不是局部候选，也不需要再次归并 top-k。
+
+#### vLLM #54951：跨 TP rank 分片 prefill query rows
+
+该优化针对 GLM-5.3-Flash / DSA indexer 的一个具体冗余：原路径在每个 tensor-parallel rank 上复制相同的 prefill query rows，每个 rank 都对全部可见 Key 做 MQA scoring 与 row-wise top-k。PR 将完整行分给不同 rank，每行仍读取完整历史，最后用 `all_gatherv` 恢复全局行序。它没有改变模型权重、KV cache、采样或 attention 定义，也没有引入新的注意力近似。
+
+![vLLM sparse indexer prefill query-row sharding](./LLM-MLSys/vllm-sparse-indexer-prefill-row-sharding.png)
+
+*图：依据合入代码生成的 Codex 示意图，不是 GPU 实测图。TP4、fresh 64K prefill、pool size 4 时，按累计评分工作量得到 `[32768, 13573, 10414, 8781]`；后面的行能看到更长历史，所以行数更少。*
+
+完整控制流：
+
+1. Planner 读取每个请求的 `seq_len`、本轮 `query_len` 和压缩比 $\rho$，用该行可见的 pooled-Key 数估算工作量：
+
+   $$
+   c_i\approx \left\lfloor\frac{\text{first\_key}+\text{row\_in\_request}}{\rho}\right\rfloor
+   $$
+
+   再对 $c_i$ 求前缀和，在总工作量的 $1/p,2/p,\ldots$ 位置切出连续区间。它平衡的是 MQA work，不是机械均分行数。
+2. `PrefillRowShard.narrow()` 将 rank 的全局行区间与各 prefill chunk 求交，同时切出这些行自己的 `cu_seqlen_ks / cu_seqlen_ke` causal bounds。每个真实 prefill row 恰好归一个 rank；开头的 decode rows 和尾部 CUDA Graph padding 不动。
+3. 每个 rank 对自己拥有的行执行原来的量化 MQA scoring、causal masking 和 top-k。Key workspace 仍完整保留，因为后续 chunk 会复用它。
+4. `exchange_topk()` 对最终 `int32` 索引执行一次变长 `all_gatherv`，让每个 rank 恢复原全局行布局。GLM k-pool 路径还要交换 incomplete tail，宽度为 `2048 + 4 - 1 = 2051`。
+5. 代码随后才进入独立的 decode branch；分片起点显式加上 `num_decode_tokens`，所以它并没有并行化同一序列的自回归 decode step。
+
+这项优化成立的条件是“省掉的重复 scoring”大于“新增的索引通信”：
+
+$$
+\text{before}\approx p\sum_i c_i,
+\qquad
+\text{after}\approx \sum_i c_i+\operatorname{AllGatherV}(N\times k\times4\text{ bytes})
+$$
+
+随着 context 变长，可见 Key 历史与 $c_i$ 增长；每行交换的索引宽度 $k$ 固定，所以长上下文更容易摊薄通信。这也解释了它主要改善 prefill TTFT，而不是 decode TPOT。
+
+通信本身并不小：GLM 的 64K 示例中，完整 gathered result 为 `[65,536, 2,051]` 个 `int32`，约 512.75 MiB / indexer layer。代码在 dummy profiling 时按“两份完整 buffer”预留最坏临时空间；这是用显存与固定宽度通信换掉重复长历史 scoring，而不是零成本并行。
+
+安全门禁也反映了这一成本模型：只在 CUDA、TP $>1$、MQA prefill 且当前 batch 至少有 `16,384 × TP` 个 scheduled query rows 时启用；TP4 即至少 65,536 行。门禁看本轮 batch rows，不看请求累计 context length；多个短请求也可能共同达到。DCP、PCP、部分 collective / CUDA Graph 配置、小 prefill，以及 DeepSeek V4.1 的两级 `candidate_blocks` 路径保留原实现。Dummy profiling 还会预留 staging copy 与 gathered tensor 的最坏临时显存，防止真实执行 `all_gatherv` 时才 OOM。
+
+作者在 4×H200、TP4、C1、batch budget 65,536、固定输出 256 token 的 GLM-5.3-Flash 配置上报告：
+
+| 输入长度 | Server TTFT：基线 → 优化 | TTFT 降幅 | total tok/s 增幅 |
+| --- | --- | ---: | ---: |
+| 64K | 2.316s → 2.281s | 1.51% | 0.87% |
+| 128K | 4.782s → 4.605s | 3.69% | 2.79% |
+| 256K | 10.154s → 9.372s | 7.70% | 7.07% |
+| 512K | 22.760s → 19.418s | 14.68% | 15.78% |
+| 1M | 54.154s → 40.388s | 25.42% | 32.59% |
+
+![vLLM sparse indexer reported TTFT](./LLM-MLSys/vllm-sparse-indexer-reported-ttft.png)
+
+*图：由 PR 表格重绘。作者报告的 A/B 基于实现 revision `16934c6`，不是最终 merge head 的独立性能复测。*
+
+结果边界：1K–32K 未达到分片门槛，点估计在噪声附近，其中 2K TTFT 慢 2.84% 且区间跨零；1M 的 server TPOT 为 6.631 → 6.633 ms/token，没有直接 decode 加速。检索探针的 expected-answer presence 为 132/132 → 132/132，但每个长度只有三个不同任务并跨进程重复，不能代替广泛质量评测；top-k 集合一致也不等于输出顺序 bitwise 一致。PR 已于 2026-10-11 合入，CI 与聚焦测试覆盖了行区间完整性、分片门禁、layout gather 和临时显存预留。
 
 ### 分布式并行注意力
 
@@ -1000,14 +1091,58 @@ $$
   * ![image-20250630201017484](./LLM-MLSys/image-20250630201017484.png)
   
 
-#### prefill和decode
+#### Prefill、Decode 与 token 维并行
 
 ![image-20251005175111505](./LLM-MLSys/image-20251005175111505.png)
 
-* prefill：发生在计算第一个输出token过程中，这时Cache是空的，FLOPs同KV Cache关闭一致，存在大量gemm操作，推理速度慢。
-* Decode：
-  * 发生在计算第二个输出token至最后一个token过程中，这时Cache是有值的，每轮推理只需读取Cache，同时将当前轮计算出的新的Key、Value追加写入至Cache；
-  * FLOPs降低，gemm变为gemv操作，推理速度相对第一阶段变快，这时属于Memory-bound类型计算。
+Prefill 和 decode 的差别首先是“输入 token 是否已经知道”，其次才是 GEMM / GEMV 与 compute-bound / memory-bound：
+
+| 维度 | Prefill | Decode |
+| --- | --- | --- |
+| 输入 | prompt 的全部 token 已知 | 下一个 token 尚未生成 |
+| 单序列 query 数 | 一次处理很多行；超长 prompt 可切成 chunk | 每一步通常只有一个新 query |
+| KV cache | 为 prompt 各层批量建立 KV | 读取历史 KV，并追加当前 token 的 KV |
+| 主要并行性 | 同一 layer 内多 query rows 并行 | 不同请求 / batch 可并行；同一序列的生成步串行 |
+| 常见瓶颈 | 大矩阵计算，通常更偏 compute-bound | 反复读取权重与长 KV，通常更偏 memory-bound |
+
+从请求生命周期看，prefill 处理 prompt、建立各层 KV cache，并产生预测第一个输出 token 所需的 logits；从第二个输出 token 开始进入逐步 decode。若没有 prefix-cache 命中，prompt 的历史 KV 尚不存在，prefill 仍要完成整段 prompt 的 QKV 与 attention 计算，其 FLOPs 不会因为“开启 KV cache”而消失。单请求下，多 token 的线性层更接近大 GEMM；decode 每步只有一个新 token，更接近 GEMV。连续批处理可以把多个请求的 decode token 合批成小 GEMM，所以这只是理解性能差异的主导形态，不是固定 kernel 形状。
+
+对于 prompt `我 / 喜欢 / 苹果`，causal mask 形成三条 query row：
+
+```text
+                Key
+Query           我    喜欢   苹果
+我              ✓      ×      ×
+喜欢            ✓      ✓      ×
+苹果            ✓      ✓      ✓
+```
+
+三行的可见范围不同，但 token 已全部给定。第 $l$ 层的“苹果”读取的是第 $l-1$ 层的“我 / 喜欢 / 苹果”，不等待同层“喜欢”的输出，因此三行可以在该层并行；到下一层前仍有 layer barrier：
+
+```text
+embedding:  h₁⁰   h₂⁰   h₃⁰     全部已知
+               ↓     ↓     ↓
+layer 1:    h₁¹   h₂¹   h₃¹     行内并行
+               ↓     ↓     ↓
+layer 2:    h₁²   h₂²   h₃²     行内并行
+```
+
+Chunked prefill 也不改变这个结论。已完成 chunk 的 KV 在 cache 中；当前 chunk 的所有 token 也已知，所以每层可以并行计算当前 chunk 的多条 query row，只是每行同时读取“历史 chunk KV + 当前 chunk 中不晚于自己的 KV”。完成当前 chunk 的全部 layer 后，再推进下一 chunk。
+
+Decode 的时间轴不同：
+
+```text
+forward(x≤n) → sample xₙ₊₁ → forward(x≤n+1) → sample xₙ₊₂
+```
+
+$x_{n+1}$ 未生成时，下一次 forward 的输入不存在，因此同一序列的相邻 decode step 不能按上述 row parallelism 并行。KV cache 让历史 Key / Value 无需重算，但不会消除 token 生成依赖。
+
+判断“token 能否并行”时，应先问它位于哪个轴：
+
+- Transformer layers：前一层输出是后一层输入，串行。
+- Prefill positions：输入已知，同一层内并行；causal mask 只是读权限。
+- Decode time steps：下一 token 未知，同一序列内串行。
+- 不同请求、attention heads、tensor-parallel ranks：满足通信与布局条件时可以并行。
 
 ![image-20251005214442152](./LLM-MLSys/image-20251005214442152.png)
 
@@ -1811,6 +1946,7 @@ https://github.com/pytorch/TensorRT/releases/tag/v2.8.0
   * PagedAttention/tensor parallelism
   * Optimized multi-LoRA
   * Chunked prefill
+  * 长上下文稀疏注意力：[DSA indexer 的 prefill query-row TP 分片](#vllm-54951跨-tp-rank-分片-prefill-query-rows)
   * Automatic prefix caching
     * block level实现
   * Guided decoding

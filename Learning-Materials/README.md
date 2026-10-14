@@ -30,7 +30,7 @@ S 表示优先亲读，A 表示先读摘要、按需追原文，B 表示背景�
 | 矩阵与表示 | [Mathematics for Machine Learning](https://mml-book.github.io/book/mml-book.pdf) §2.6、§4.5–4.6，按需补 §3.8；已有 SVD 笔记可先诊断跳读 | 手算低秩截断误差，解释矩阵近似目标与下游损失的关系 |
 | 优化原理 | [Boyd & Vandenberghe](https://web.stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf) §3.1 → §4.2 → §9.3，按需补强凸和线搜索前提 | 用二维二次目标检查条件数、步长、驻点与收敛结论；列出前提 |
 | 信息与压缩 | [Stanford EE376A](https://web.stanford.edu/class/ee376a/files/lecture_notes.pdf) §2.3 → [MIT 6.441 Chapter 23](https://ocw.mit.edu/courses/6-441-information-theory-spring-2016/resources/mit6_441s16_chapter_23/) §23.2；已知熵/KL可跳过基础定义 | 明确源、编码、任务变量和失真，区分平均损失与关键事件的尾部风险 |
-| 持续学习与联合演化 | 按队列选读 Harness-Zero、Fast Weight Attention、HGM、EvoTrainer；先机制、假设、关键对照，再源码 | 画出更新对象、反馈与采用路径，提出一个可推翻假设的对照 |
+| 持续学习与联合演化 | 按队列选读 Dream-RSI、SkillOpt-Lite / HarnessOpt、HGM、Fast Weight Attention、EvoTrainer；先机制、假设、关键对照，再源码 | 画出更新对象、反馈与采用路径，提出一个可推翻假设的对照 |
 
 已有 [RL 笔记](../Notes/Reinforcement-Learning.md)可用于定位 MDP/POMDP、信用分配与离策略评估概念。实现目录和重复综述可以由助手先整理；亲读重点放在决定问题如何定义、证据如何成立的部分。已读材料继续作为参考时标明回看目的，不重新列为首读任务。
 

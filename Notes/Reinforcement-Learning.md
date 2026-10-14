@@ -370,6 +370,8 @@ Partial rollout 是一种工程优化：不一定每次都从头跑完整 episod
 
 > 来源：[Counterfactual Reasoning and Learning Systems](https://jmlr.csail.mit.edu/beta/papers/v14/bottou13a.html) / [arXiv](https://arxiv.org/abs/1209.2355)。
 
+读这一节前，先复习 [随机变量、条件化与独立性](./mathematics.md#概率语言随机变量条件化与独立性)和[从目标量到估计结果](./mathematics.md#从目标量到估计结果)；在线随机实验的 assignment、analysis unit 与 estimand 合同见 [A/B Testing](./Software-Engineering.md#ab-testing)。
+
 这篇文章是理解 **logged policy -> counterfactual evaluation -> off-policy learning** 的基础。它讲的不是一个广告系统 trick，而是一个更一般的问题：
 
 ```text

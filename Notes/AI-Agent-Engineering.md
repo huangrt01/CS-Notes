@@ -12,7 +12,7 @@
 | Sandbox / 远程执行控制面：环境生命周期与预热、unshare 嵌套、Crabbox、Arbor、ego lite、Tutti、WakeLoop | 本文件 [Agent Sandbox 与运行环境](#agent-sandbox-与运行环境) |
 | Codex Sub-agent 源码专项：能力与 prompt 生效、上下文 fork、InputQueue、结果路由、容量与恢复、跨独立任务通信 | [Codex-Subagent.md](./Codex-Subagent.md)（完整调研、源码片段与机制图） |
 | Multi-Agent 必要性与并发协议：能力差异、强单 Agent baseline、Held Draft、版本校验、协议选型与冲突回放 | [必要性与证据边界](./AI-Applied-Algorithms.md#多-agent-的必要性先证明收益来源再选择协作协议)、[长推理窗口与提交协议](#multi-agent-并发控制长推理窗口与提交协议) |
-| Harness 涨分归因与执行反馈：同预算基线、持续状态与反馈可见性、任务内搜索与跨任务迁移、变化规则的发现/复用/失效、旧能力回归、数据捷径、冻结评测器、held-out 继承门禁、action block 静默丢弃 | [EdgeBench](./AI-Applied-Algorithms.md#edgebench持续环境学习的长程-agent-实验合同)、[ServeLearnBench](#servelearnbench从服务评分中发现复用与淘汰经验)、[Rethinking Harness Evolution](#rethinking-harness-evolution把可迁移改进与任务内搜索拆开)、[Harness-Delta Attribution](./AI-Applied-Algorithms.md#harness-delta-attribution涨分后追问靠什么涨的)、[RSI-Gym](#rsi-gym冻结评测器下的-harness-自我改进实验合同)、[工具执行的语义反馈](#工具执行的语义反馈让模型知道实际执行了什么) |
+| Harness 涨分归因、能力持久化与执行反馈：同预算基线、任务内搜索与跨任务迁移、外置行为蒸馏进权重、变化规则的发现/复用/失效、旧能力回归、数据捷径、评测校准与选择偏差、冻结评测器、held-out 继承门禁、action block 静默丢弃 | [EdgeBench](./AI-Applied-Algorithms.md#edgebench持续环境学习的长程-agent-实验合同)、[ServeLearnBench](#servelearnbench从服务评分中发现复用与淘汰经验)、[Rethinking Harness Evolution](#rethinking-harness-evolution把可迁移改进与任务内搜索拆开)、[SoL-Pi](#sol-pi从开发轨迹搜索可迁移的-harness-效率机制)、[更新能力与使用收益](#harness-更新能力与使用收益)、[Harness-Zero](#harness-zero把外置-harness-行为蒸馏进权重)、[Claude build-eval / hillclimb](#claude-build-eval--hillclimb评测校准与防过拟合迭代)、[Harness-Delta Attribution](./AI-Applied-Algorithms.md#harness-delta-attribution涨分后追问靠什么涨的)、[RSI-Gym](#rsi-gym冻结评测器下的-harness-自我改进实验合同)、[工具执行的语义反馈](#工具执行的语义反馈让模型知道实际执行了什么) |
 | Muse：执行隔离、独立行动授权、工作流脚本与恢复条件 | [Secure VM / Sentinel](#muse-secure-vm-与-sentinel独立行动授权边界)、[Muse Code Workflows](#muse-code-workflows脚本编排与有条件恢复)；[Grok Bot / Muse 产品比较](./AI-Agent-Product&PE.md#agent-tobtoc-产品) |
 | Lorca：个人多设备 Agent，Device / Runner 分工、加密中继与执行权限 | [配对与信任边界](#lorca设备配对加密中继与执行权限)；[产品形态与发布状态](./AI-Agent-Product&PE.md#lorca本地运行手机操控的个人-agent-工作台) |
 | MCP、Skill、Function Calling、Assistants API 的开发用法；CLI 与 MCP 的选型；工具调用 ID 与结果关联 | 暂留 [AI-Agent-Product&PE.md](./AI-Agent-Product&PE.md#mcp)；[CLI 已经好用，为什么还需要 MCP](./AI-Agent-Product&PE.md#cli-已经好用为什么还需要-mcp)；[tool_use_id / tool_call_id / call_id 对照](./AI-Agent-Product&PE.md#工具调用-id-与结果关联)（协议 / API 工程边界，待后续决定是否迁入） |
@@ -25,12 +25,16 @@
 | Personal Agent：个人状态上下文演化、行为决策、后台长程工作与前台交互；Session 复用与解耦 | [四类系统职责](#personal-agent四类系统职责与-session-边界) |
 | Novix：专家判断改变探索方向、失败记录复用与任务评测回退；协同进化式 RSI 的证据边界 | [专家判断、失败资产与协同进化式 RSI](#novix专家判断失败资产与协同进化式-rsi) |
 
+> 阅读路径：Sandbox 材料按“基础与选型 → 执行与研究运行时 → 共享交互与设备接入”展开；系统设计材料先看 [系统地图与分层判断](#系统地图与分层判断)，再按系统责任进入对应章节。
+
 ## Agent Sandbox 与运行环境
 
 > 来源：https://mp.weixin.qq.com/s/atwxv9t568Z-heftnTkLhA、https://juejin.cn/post/7597266141912825902
 > 整理时间：2026-02-18、2026-03-04
 
-### 为什么 Agent 需要 Sandbox
+### Sandbox 基础与方案选择
+
+#### 为什么 Agent 需要 Sandbox
 
 AI 生成的代码不可信，必须在隔离环境中执行。Docker 容器共享宿主机内核，存在逃逸风险（如 CVE-2019-5736 runC 漏洞可获宿主机 root 权限）。Agent Sandbox 需要硬件级隔离（独立内核 + 独立内存 + 独立文件系统），同时保持毫秒级启动。
 
@@ -38,7 +42,7 @@ AI 生成的代码不可信，必须在隔离环境中执行。Docker 容器共�
 
 **运行环境验收**：网络探测应从工具实际执行的隔离环境发起；宿主进程能访问某服务，不代表隔离进程使用相同的解析、证书、代理配置或权限。`ping` 的 ICMP 可达性也不能替代实际 HTTPS 请求。可记录 DNS、连接、TLS、首字节与总耗时辅助分层判断；curl 的 `time_namelookup / time_connect / time_appconnect / time_starttransfer` 按请求起点累计，不应直接当作独立阶段耗时，连接复用与重定向还会影响解释。一次成功只证明该次请求和环境组合可用。[curl 计时字段](https://curl.se/docs/manpage.html#-w)
 
-### 方案对比
+#### 方案对比
 
 | 方案 | 隔离技术 | 启动速度 | 镜像构建 | 关键取舍 |
 |------|---------|---------|---------|---------|
@@ -51,7 +55,7 @@ AI 生成的代码不可信，必须在隔离环境中执行。Docker 容器共�
 
 **镜像分发**：Modal 的 Lazy Loading 方案（FUSE 按需加载，按内存→本地 SSD→缓存→CDN→对象存储优先级请求数据）可将 8GB 镜像的拉取时间从分钟级降至秒级。
 
-### 行业实践
+#### 行业实践
 
 沙箱负责执行隔离；环境生命周期分为 **Pet（长期维护、保留状态）**与 **Cattle（按任务分配、用后释放）**。临时实例也可通过预热池或快照快速就绪。
 
@@ -66,7 +70,9 @@ AI 生成的代码不可信，必须在隔离环境中执行。Docker 容器共�
 
 **预热降低启动成本**：把仓库准备和缓存构建前移，减少并发任务重复初始化的等待。衡量的是环境到手即可工作的时间。
 
-### Muse Secure VM 与 Sentinel：独立行动授权边界
+### 执行隔离、远程环境与研究运行时
+
+#### Muse Secure VM 与 Sentinel：独立行动授权边界
 
 > 来源：[Security and safety for AI agents: our approach with Muse](https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse)（2026-09-08）；读取时间：2026-09-20。以下是官方工程说明，未做源码审计或攻击验证。产品交互见 [Muse：以目标与注意力组织持续委派](./AI-Agent-Product&PE.md#muse以目标与注意力组织持续委派)。
 
@@ -100,7 +106,7 @@ Browser 也采用独立 broker：cell 外控制 CDP，浏览器 sub-agent 只获
 
 2026-10 开源的 Muse Gadgets 把这条授权边界推到用户自己的硬件上：Linux gadget 对 Muse 只暴露 `system.run` / `file.read` / `file.write` / `device.health` 四个命令，但一律以安装账号的身份执行（该账号能 sudo，Muse 就能 sudo），且社区设备没有厂商验证、官方写明无法防主动中间人攻击。设备侧的产品形态、已支持板卡与配对流程见 [AI-Agent-Product&PE.md - Muse Gadgets](./AI-Agent-Product&PE.md#muse-gadgets把-muse-接到-esp32-与-linux-设备2026-10-开源)。
 
-### E2B：AI agent 的 Firecracker 沙箱云（专项）
+#### E2B：AI agent 的 Firecracker 沙箱云（专项）
 
 > 来源：[E2B 官网](https://e2b.dev/)、[GitHub e2b-dev/E2B](https://github.com/e2b-dev/E2B)（SDK / CLI）、[GitHub e2b-dev/infra](https://github.com/e2b-dev/infra)（自托管基础设施，Terraform）、[Docs](https://e2b.dev/docs)、[llms.txt](https://e2b.dev/llms.txt)。整理时间 2026-08-25。
 
@@ -132,7 +138,7 @@ Browser 也采用独立 broker：cell 外控制 CDP，浏览器 sub-agent 只获
 * pause / resume + snapshot + auto-resume 是长任务跨 session 续跑的关键原语；
 * 自托管 + 开源 infra 是进企业的前提——数据不出客户云（呼应 4.2 开源商业化的托管模式）。
 
-### 嵌套 `unshare` sandbox：为什么 Docker 里要放宽 seccomp / AppArmor
+#### 嵌套 `unshare` sandbox：为什么 Docker 里要放宽 seccomp / AppArmor
 
 > 来源：[Cloudflare vulnerability harness](https://blog.cloudflare.com/build-your-own-vulnerability-harness/)、[Docker seccomp](https://docs.docker.com/engine/security/seccomp/)、[Docker AppArmor](https://docs.docker.com/engine/security/apparmor/)、[`unshare(2)`](https://man7.org/linux/man-pages/man2/unshare.2.html)。整理时间：2026-08-14。
 
@@ -159,7 +165,7 @@ security_opt:
 
 排障时先直接运行最小 `unshare --user --map-root-user ...` 并检查退出码；seccomp 默认以 `Permission Denied` 拒绝，AppArmor 拒绝则可在 `dmesg` / audit log 中看到 `apparmor="DENIED"`。所谓“静默失败”通常是 harness 吞掉了这个启动错误，不是内核没有留下信号。
 
-### Crabbox：lease + sync + evidence 的远程执行控制面
+#### Crabbox：lease + sync + evidence 的远程执行控制面
 
 > 来源：[README](https://github.com/openclaw/crabbox/blob/399c94a8f7dcd61bb5ce111013a6b9fe460ef29d/README.md)、[How Crabbox Works](https://github.com/openclaw/crabbox/blob/399c94a8f7dcd61bb5ce111013a6b9fe460ef29d/docs/how-it-works.md#L8-L20)、[`run.go`](https://github.com/openclaw/crabbox/blob/399c94a8f7dcd61bb5ce111013a6b9fe460ef29d/internal/cli/run.go#L620-L760)、[`provider_backend.go`](https://github.com/openclaw/crabbox/blob/399c94a8f7dcd61bb5ce111013a6b9fe460ef29d/internal/cli/provider_backend.go#L1244-L1294)、[`fleet.ts`](https://github.com/openclaw/crabbox/blob/399c94a8f7dcd61bb5ce111013a6b9fe460ef29d/worker/src/fleet.ts#L1892-L1997)、[`usage.ts`](https://github.com/openclaw/crabbox/blob/399c94a8f7dcd61bb5ce111013a6b9fe460ef29d/worker/src/usage.ts#L86-L142)。读取 commit `399c94a`，整理时间：2026-06-27。
 
@@ -185,7 +191,7 @@ security_opt:
 
 边界也要写清：Crabbox 的 trust model 是 developer execution tool，不是强敌对隔离环境。它适合可信开发/agent 工作流里的 remote execution substrate；如果面对不可信租户或恶意代码，还需要 microVM、权限隔离、secret boundary 和更强 policy gate。
 
-### Arbor：Hypothesis Tree 驱动的研究优化 runtime
+#### Arbor：Hypothesis Tree 驱动的研究优化 runtime
 
 > 来源：[README](https://github.com/RUC-NLPIR/Arbor/blob/7ad3c077a97fa86bb4da9af2110a68ea2d891323/README.md#L22-L27)、[How It Works](https://github.com/RUC-NLPIR/Arbor/blob/7ad3c077a97fa86bb4da9af2110a68ea2d891323/docs/how-it-works.md#L19-L25)、[`idea_tree.py`](https://github.com/RUC-NLPIR/Arbor/blob/7ad3c077a97fa86bb4da9af2110a68ea2d891323/src/coordinator/idea_tree.py#L28-L46)、[`orchestrator.py`](https://github.com/RUC-NLPIR/Arbor/blob/7ad3c077a97fa86bb4da9af2110a68ea2d891323/src/coordinator/orchestrator.py#L122-L128)、[`executor_run.py`](https://github.com/RUC-NLPIR/Arbor/blob/7ad3c077a97fa86bb4da9af2110a68ea2d891323/src/coordinator/tools/executor_run.py#L460-L680)、[`git_ops.py`](https://github.com/RUC-NLPIR/Arbor/blob/7ad3c077a97fa86bb4da9af2110a68ea2d891323/src/coordinator/tools/git_ops.py#L297-L305)、[`mcp/server.py`](https://github.com/RUC-NLPIR/Arbor/blob/7ad3c077a97fa86bb4da9af2110a68ea2d891323/src/mcp/server.py#L1-L16)。读取 commit `7ad3c07`，整理时间：2026-06-28。
 
@@ -202,7 +208,9 @@ security_opt:
 
 边界也要写清：Arbor 的强项建立在可运行 eval、稳定 metric、干净 dev / held-out split 之上。没有可靠评分器时，Hypothesis Tree 仍能做项目记忆，但 merge gate 会退化成弱证据；面对不可信代码，它也不是 sandbox，需要接 Crabbox / E2B / microVM 这类执行隔离层。
 
-### ego lite：把浏览器做成 agent / human 共享运行时
+### 共享交互、协作与设备接入
+
+#### ego lite：把浏览器做成 agent / human 共享运行时
 
 > 来源：[官网](https://lite.ego.app/)、[Quick start](https://lite.ego.app/document/en/docs/quick-start)、[Snapshot docs](https://lite.ego.app/document/en/docs/snapshot)、[Skills docs](https://lite.ego.app/document/en/docs/skills)、[GitHub README](https://github.com/citrolabs/ego-lite)（读取 HEAD `55ef29c`）、[官方 blog](https://lite.ego.app/blog/browser-for-run-browser-automation-tasks-in-parallel)。整理时间：2026-06-25。
 
@@ -235,7 +243,7 @@ security_opt:
 - repo 中 Skill / docs 开源，但 ego lite 浏览器本体是单独免费下载产品；企业可信度取决于本地数据边界、更新机制、权限审计和可关闭能力。
 - 高质量 Snapshot 是否真的稳定覆盖复杂 iframe、shadow DOM、第三方组件，需要用内部工具和真实 SaaS 页面长期试，而不是只看官网 demo。
 
-### agent 浏览器的人机验证：Codex 内嵌浏览器 vs ego lite 的状态差异（2026-09）
+#### agent 浏览器的人机验证：Codex 内嵌浏览器 vs ego lite 的状态差异（2026-09）
 
 > 来源：[ChatGPT 内置浏览器文档](https://learn.chatgpt.com/docs/browser)、[Help: built-in browser vs Chrome profile](https://help.openai.com/en/articles/20001277-using-the-built-in-browser-in-the-chatgpt-desktop-app)、[OpenAI: Building ChatGPT Atlas](https://openai.com/index/building-chatgpt-atlas/)、[openai/codex #19276](https://github.com/openai/codex/issues/19276)、[openai/codex #21876](https://github.com/openai/codex/issues/21876)、[Cloudflare Browser Integrity Check](https://developers.cloudflare.com/learning-paths/application-security/default-traffic-security/browser-integrity/)、[Cloudflare Bot Management fields](https://developers.cloudflare.com/bots/plans/bm-subscription/)、[ego lite 官网](https://lite.ego.app/)、[ego-lite GitHub](https://github.com/CitroLabs/ego-lite)、[少派派：给 Cursor / Codex 配浏览器](https://pwa.sspai.com/post/112795)。整理时间：2026-09-06。
 
@@ -256,7 +264,7 @@ security_opt:
 
 对 Agent infra 的启示：browser runtime 的“反人机验证友好度”不应追求 stealth，而要显式管理 profile 连续性、登录态继承、clearance / checkpoint cookie 与 human handoff gate——这也是把浏览器当作 execution environment 而不是普通 tool 的原因（见上文 ego lite 与 Crabbox 的讨论）。
 
-### Tutti：把多 agent 协作从 summary handoff 变成 shared workspace
+#### Tutti：把多 agent 协作从 summary handoff 变成 shared workspace
 
 > 来源：[官网](https://tutti.sh/)、GitHub [`tutti-os/tutti`](https://github.com/tutti-os/tutti)（2026-07-09：Apache-2.0，`1279` stars，`114` forks，主语言 TypeScript；读取 commit `443c857`）、[README: what/why](https://github.com/tutti-os/tutti/blob/443c8574df36ccd8ee09be19086cf2f3605a1b93/README.md#L28-L46)、[Big @ / app center / control center](https://github.com/tutti-os/tutti/blob/443c8574df36ccd8ee09be19086cf2f3605a1b93/README.md#L64-L143)、[Tutti vs Tutti VM](https://github.com/tutti-os/tutti/blob/443c8574df36ccd8ee09be19086cf2f3605a1b93/README.md#L151-L177)、[project structure](https://github.com/tutti-os/tutti/blob/443c8574df36ccd8ee09be19086cf2f3605a1b93/docs/architecture/project-structure.md#L21-L48)、[workbench lifecycle](https://github.com/tutti-os/tutti/blob/443c8574df36ccd8ee09be19086cf2f3605a1b93/docs/architecture/workbench-node-lifecycle.md#L8-L27)、[Agent Activity Packages](https://github.com/tutti-os/tutti/blob/443c8574df36ccd8ee09be19086cf2f3605a1b93/docs/architecture/agent-activity-packages.md#L43-L72)、[Workspace Issue Manager](https://github.com/tutti-os/tutti/blob/443c8574df36ccd8ee09be19086cf2f3605a1b93/docs/architecture/workspace-issue-manager.md#L15-L23)、[App Factory](https://github.com/tutti-os/tutti/blob/443c8574df36ccd8ee09be19086cf2f3605a1b93/docs/architecture/workspace-app-factory.md#L90-L137)、[Browser Node security](https://github.com/tutti-os/tutti/blob/443c8574df36ccd8ee09be19086cf2f3605a1b93/docs/architecture/browser-node-package.md#L237-L250)、[`tutti_mention_routing.go`](https://github.com/tutti-os/tutti/blob/443c8574df36ccd8ee09be19086cf2f3605a1b93/packages/agent/daemon/runtime/tutti_mention_routing.go#L8-L45)。整理时间：2026-07-09。
 
@@ -343,7 +351,7 @@ shared_workspace_ref_v0:
 
 短期可以借三件事：第一，把 agent / app / task / file 统一成 typed reference，而不是把上下文塞进 prompt；第二，把 Control Center 做成 attention queue，显式展示等待用户审批、等待外部状态、正在运行的任务；第三，把 workbench snapshot 和业务状态分离，避免 UI 布局快照污染 long-running state kernel。
 
-### WakeLoop：给本地 Agent 补上团队级 dispatch 与 return path
+#### WakeLoop：给本地 Agent 补上团队级 dispatch 与 return path
 
 > 来源：[官网](https://wakeloop.ai/)、[Agent Interface](https://wakeloop.ai/agent-interface)、[Local Agents Guide](https://wakeloop.ai/guides/local-agents)、[Privacy](https://wakeloop.ai/privacy)、[npm `wakeloop`](https://www.npmjs.com/package/wakeloop)。读取公开 CLI / Skill `v0.3.9`，整理时间：2026-08-06。
 
@@ -394,7 +402,7 @@ AWiki 是同一问题的另一种实现样本：用 Handle+DID 把 Agent 身份�
 - 官网称其开源，npm 包使用 MIT License 并附带 Skill / source map；但截至整理时未找到可直接审查的公开源码仓库或 repository metadata，当前可审查性弱于 Tutti。
 
 
-### Lorca：设备配对、加密中继与执行权限
+#### Lorca：设备配对、加密中继与执行权限
 
 > 基于 [ARCHITECTURE](https://github.com/egoist/lorca/blob/1db14e1df960d54635870aaacce7a59867e858a5/ARCHITECTURE.md)、[安全文档](https://github.com/egoist/lorca/blob/1db14e1df960d54635870aaacce7a59867e858a5/web/content/docs/security.mdx) 与关键代码，读取于 2026-09-25。属于静态机制核查，未做部署、攻击或恢复测试。
 
@@ -423,6 +431,22 @@ Lorca 把**跨端通信、实际执行和动作审批**分开：Mac UI 连接本
 
 ## Agent 应用技术架构、系统设计
 
+### 系统地图与分层判断
+
+这一章按系统责任分层，不按项目发布时间排列。遇到具体问题时，先判断它属于核心架构、任务级 workflow、长程控制面、评测学习、多 Agent 协作、上下文治理还是持久数据面，再进入对应案例。
+
+| 层次 | 主要问题 | 章节入口 |
+| --- | --- | --- |
+| 核心架构 | Agent loop、Session、组件和前后台职责怎样切分 | [核心架构、Session 与组件边界](#核心架构session-与组件边界) |
+| 任务级执行 | 怎样把计划、状态、证据、验证和恢复固化为 workflow | [Workflow、可恢复执行与任务级 Loop](#workflow可恢复执行与任务级-loop) |
+| 垂域优化 | 怎样围绕性能、基础设施和研究目标形成可归因的候选闭环 | [垂域优化 Loop 与证据闭环](#垂域优化-loop-与证据闭环) |
+| 长程控制 | 怎样跨 turn / run 保存状态、等待、恢复并完成交付 | [长程运行时与控制面原语](#长程运行时与控制面原语) |
+| 评测与学习 | 怎样区分搜索收益、Harness 更新、经验复用和权重内化 | [评测、持续学习与 Harness 演化](#评测持续学习与-harness-演化) |
+| 多 Agent | 创建、通信、并发、交接和结果验收怎样形成协议 | [多 Agent 编排与协作协议](#多-agent-编排与协作协议) |
+| Harness 工程 | 最小 loop、batteries-included runtime 与过程约束如何取舍 | [Harness 实现光谱与 Coding Agent 工程纪律](#harness-实现光谱与-coding-agent-工程纪律) |
+| Context 与观测 | 怎样控制上下文成本并定位模型、prompt、cache 和 serving 退化 | [Context、退化诊断与模型可观测性](#context退化诊断与模型可观测性) |
+| 数据与状态 | 工作区、版本化数据、个人数据和权限边界怎样接入 Agent | [数据面、持久状态与个人数据接入](#数据面持久状态与个人数据接入) |
+
 **Workflow 显式化**：AFlow（ICLR 2025）证明 workflow 可以被搜索、比较与自动优化，小模型以 4.55% 的 GPT-4o 推理成本在特定任务上超越 GPT-4o；AgentFlow（ICLR 2026）证明系统级 in-the-flow RL 训练 planner 优于只替换更强模型。工程侧的 Dynamic Workflow 则把 loop 的计划、状态、分支与验收显式化为可读脚本，避免每次都依赖模型运行时 instruction following。详见 [AI-Applied-Algorithms.md - Agent + Workflow](./AI-Applied-Algorithms.md)
 
 产品集成正在把这些层连接起来：Grok Bot 的 routines / 异步交接、Muse 的 Goals / 低噪通知、Sentinel 的独立授权，以及 Muse Code 的脚本与恢复，各自覆盖部分控制面。比较 Harness 时应分别核实「用户委派闭环、执行状态与恢复、行动授权」的实际合同，不能仅靠 runtime / control plane 的命名区分。见 [产品比较](./AI-Agent-Product&PE.md#agent-tobtoc-产品)、[Sentinel](#muse-secure-vm-与-sentinel独立行动授权边界)、[Muse Code Workflows](#muse-code-workflows脚本编排与有条件恢复)。
@@ -436,6 +460,8 @@ Lorca 把**跨端通信、实际执行和动作审批**分开：Mac UI 连接本
 **Session 隔离也不决定协作拓扑。**同一树内的独立 Session 通过 AgentControl 与收件 Session 的 mailbox 通信；独立任务之间还可以通过宿主任务工具和 App-server 注入工具级输入。两者在目标 agent loop 汇合，但寻址、缓冲、启动与结果返回合同不同。完整分层与代码链见 [Codex Sub-agent 架构调研](./Codex-Subagent.md)。
 
 **异步任务接口要区分受理、执行与交付。**主对话收到 `accepted` 后可以继续响应，后台任务完成后仍需确认结果交付；停止当前回复也不等于取消后台任务。状态查询、取消与补充输入应有明确的目标和确认语义，不能只从聊天文本推断任务状态。公开实现见 [Qwen Audio Agent 的 Work 与交付状态机](#语音-agent-runtime把-conversation-presence-与-durable-work-解耦)。
+
+### 核心架构、Session 与组件边界
 
 #### Personal Agent：四类系统职责与 Session 边界
 
@@ -546,6 +572,8 @@ Octop 的主张是让构建者按需拿走一个组件，而不必采用整个�
 - 这不是“模型智商变了”，而是 harness 与模型是联合系统：prompt 前缀、工具 schema、上下文结构都是模型行为的可观测输入，应纳入版本化和回归测试——和 AI-native SDLC playbook 的 continuous evals / CLAUDE.md / skills 同一条纪律。
 
 **边界**：社区推测、非官方结论；具体模型/版本行为未经官方确认；attention sink 是机制类比，不是因果证明。
+
+### Workflow、可恢复执行与任务级 Loop
 
 #### Dynamic Workflow：把 loop 编译成可重放脚本
 
@@ -894,6 +922,8 @@ omh_workflow_native_agent_contract_v0:
 - **风险**：approval 默认 `yolo`，subagents 为避免 UI stall 也 headless `yolo`，虽然父 `task` approval 被视为授权边界，但企业 / 多 repo / 私密 workspace 场景必须重新设计 permission lease、tool policy、workspace scope 和 audit log。advisor 默认只读，但 `WATCHDOG.yml` 可以授予 mutating tools；这很强，也很容易越权。
 - **和 LoopX 的关系**：OMH 更像强 executor / workflow runner / local terminal cockpit；LoopX 更应该保留外部 State Kernel / durable ledger / quota / handoff / evidence graph。短期不应把 LoopX 变成 OMH，而是把 OMH 的成熟 primitive 拆出来吸收：`workflow_artifact_v0`、`flow_promotion_evidence_v0`、`node_workspace_access_guard_v0`、`operator_frontier_dashboard_v0`、`hash_anchored_edit_evidence_v0`、`advisor_sidecar_v0`。最理想的组合是：LoopX 管长程目标与跨 agent 状态，OMH 这类 runtime 负责单个 bounded workflow / executor loop。
 
+### 垂域优化 Loop 与证据闭环
+
 #### Kernel Design Agents：把 CUDA kernel 优化变成 evidence-backed candidate loop
 
 > 来源：KDA [README](https://github.com/mit-han-lab/kernel-design-agents/blob/dda6be3cf1baedd3ed9c76511ef02f72243cc14c/README.md#L3-L70)、[agent-flow](https://github.com/mit-han-lab/kernel-design-agents/blob/dda6be3cf1baedd3ed9c76511ef02f72243cc14c/docs/agent-flow.md#L3-L50)、[basic-flow prompt](https://github.com/mit-han-lab/kernel-design-agents/blob/dda6be3cf1baedd3ed9c76511ef02f72243cc14c/prompts/basic-flow.md#L5-L39)、[CLAUDE.md](https://github.com/mit-han-lab/kernel-design-agents/blob/dda6be3cf1baedd3ed9c76511ef02f72243cc14c/CLAUDE.md#L3-L33)、KernelWiki [README](https://github.com/mit-han-lab/KernelWiki/blob/2777d18ffb3a3d682d8f25a3e3b8864d925a5ff1/README.md#L37-L126) / [SKILL.md](https://github.com/mit-han-lab/KernelWiki/blob/2777d18ffb3a3d682d8f25a3e3b8864d925a5ff1/SKILL.md#L14-L112)、ncu-report-skill [README](https://github.com/mit-han-lab/ncu-report-skill/blob/1cf238d6b41c79bd35041192506c4d45e765a3f1/README.md#L10-L40) / [SKILL.md](https://github.com/mit-han-lab/ncu-report-skill/blob/1cf238d6b41c79bd35041192506c4d45e765a3f1/SKILL.md#L14-L91)。读取 KDA commit `dda6be3`，整理时间：2026-07-05。
@@ -1000,6 +1030,8 @@ Novix 将专家的采用、否决、纠偏与评价标准（rubrics）接入持�
 报道还声称训练数据、失败路径、日志与评测结果回流，用于改进 Novix 的分解、工具、harness 和模型；但当前材料没有提供足以复核这条跨轮因果链的版本对照、消融和完整评测协议。任务成绩、用户规模及“规模化 RSI”均保留来源归属；不能由一次模型训练或控制器优化成功直接推出通用递归自我改进已成立。
 
 与上节 [GLM Infra Agent](#glm-infra-agent把端到端指标拆成可归因的-dense-feedback-闭环) 对照：GLM 强调分层反馈帮助定位工程原因；Novix 强调专家判断影响探索方向。通用框架可记为 `目标与标准 → 候选 / 实验 → 任务评测 → 采用、否决或回退 → 版本化经验 → 下一轮`。验收应分别证明当前任务产物有效、反馈改变了后续行为、系统改进在独立任务上仍成立；三层证据不能互相替代。
+
+### 长程运行时与控制面原语
 
 #### Waiting primitive：yield_time_ms 与 /loop 的设计差异
 
@@ -1136,6 +1168,8 @@ Goal 状态 → Effect 请求 → 权限 / Quota 解释
 这比论文先更新状态、再执行动作的算法更明确地表达了提交边界，但仍须验证失败、超时、重复执行与回执落盘中断；不能据此宣称实现已经更可靠。通用 schema + 垂域扩展解决的是表达能力，`resume_when` 解决的是已知条件下的恢复调度，目标对齐的动态 state 解决的是当前决策：三者都不能替代原始证据保留、迟到信息召回与历史审计。机制、图 1、表 5 和适用条件见 [SKILL.state](./AI-Applied-Algorithms.md#skillstate以结构化执行状态替代追加历史)。
 
 **与 CH / Prime 的关系（2026-10）**：三者都把跨轮信息留在模型之外。按 [ServeLearnBench 的实验实现](#servelearnbench从服务评分中发现复用与淘汰经验)，CH 的行动与 Refiner 分层更接近 LoopX 的外置控制面；Prime 更接近自行维护文件、技能和代码的执行 runtime。LoopX 持有目标、任务、权限、证据与恢复状态，不能等同于自动学习器：Reward Memory 区分召回、采用与实际效用，效用投影只提出复核/衰减建议，不自动删除记忆或授予行动权限。能力代码改进走有边界的任务、验证与版本化启用。来源：[控制面架构](https://github.com/loopx-project/loopx/blob/271a3d98c601d86363159711b5672cdd6be2171d/docs/development/control-plane-course/02-goal-control-plane-architecture.md)、[经验消费](https://github.com/loopx-project/loopx/blob/271a3d98c601d86363159711b5672cdd6be2171d/docs/reference/reward-memory-decision-consumption.md)、[效用投影](https://github.com/loopx-project/loopx/blob/271a3d98c601d86363159711b5672cdd6be2171d/docs/reference/protocols/reward-memory-utility-projection-v0.md)。
+
+### 评测、持续学习与 Harness 演化
 
 #### EdgeBench / SForge：长程评测的状态、反馈与测量平面
 
@@ -1292,6 +1326,250 @@ Harness 修改后涨分，可能来自两种收益：**多花计算做任务内�
 
 长程游戏的正结果主要支持 **单任务内 Harness Scaling**；是否能冻结这些修改并迁移到新任务，仍需要另一组实验。
 
+#### SoL-Pi：从开发轨迹搜索可迁移的 Harness 效率机制
+
+> 来源：[论文 arXiv 2609.20519v1](https://arxiv.org/html/2609.20519v1)、[官方研究博客](https://nvlabs.github.io/SoL-Pi/)、[仓库 commit `06b3ee3`](https://github.com/NVlabs/SoL-Pi/tree/06b3ee358ddc5cebc5fb21a8e7493fab2db508ce)。读取论文 HTML / TeX、博客、关键图与四个机制源码；未复现实验，以下指标均为作者报告。整理时间：2026-10-14。
+
+**定位**：SoL-Pi 为“自动研究能从大量开发轨迹中筛出可复用的 harness 效率机制”提供了有价值的系统证据。它改的是外部工具、上下文和观察边界，不是模型权重。留下的四种机制都很小：少一次模型往返、少重传一段观察、在合适时机压缩、把读日志委派给便宜模型。Harness evolving 在这里更像**量变引起质变：一处处抠交互、上下文和回退边界，最后积成系统级成本差异**。至于效率改进能否继续递归复利、形成 scaling law，仍是作者提出的研究设想。
+
+##### 搜索合同：152 个方向怎样缩成四种机制
+
+作者从 context、progress、tools、delegation、prompt/policy、improvement/evaluation 六类提出 **152 个方向**，在 **535 个开发环境、3,000 多次运行、60,000 多次模型交互**中筛选。开发环境分成两类：
+
+- **495 个 GitHub issue–PR 派生任务**：恢复到修复前的仓库，离线安装依赖；向执行 Agent 隐藏 PR 和维护者回归测试，只保留测试“修复前失败、修复后通过”的环境。
+- **40 个 verifier-first 合成环境**：先写可执行成功条件，再围绕 verifier 构造任务；主要采用 Terminal-Bench-2 风格接口，允许多条解法。
+
+每条独立 lineage 循环执行「提出修改 → 实现 → reviewer 检查 → 固定实验 → 保留、修订或丢弃」。筛选先检查所有能力指标是否留在预先声明的容差内，再要求至少一个效率指标改善，最后保留声明指标上的非支配候选。因此它优化的是**能力约束下的效率 Pareto 前沿**，不是单纯追求便宜，也不保证分数零损失。
+
+![SoL-Pi 的开发环境与 EdgeBench 隔离边界](./AI-Agent-Engineering/sol-pi-search-heldout.png)
+
+任务划分要按实际决策权理解：
+
+| 阶段 | 任务 | 是否能影响后续修改 |
+| --- | --- | --- |
+| 开发 / 搜索（train/dev） | 495 个仓库任务 + 40 个合成任务 | 可以；用于分析轨迹、改代码 / prompt、搜参数和整合机制 |
+| 冻结后验收（validation） | EdgeBench 11 个任务 | 失败只拒绝已冻结候选，不把反馈交回搜索者修复；但仍影响候选是否获准发布 |
+| 最终泛化测试（test） | EdgeBench 剩余 40 个任务 | 按协议不回流搜索 |
+| 额外跨基准评估 | Terminal-Bench 4 的 63 个 CPU 任务、IMO 2026 的 6 道 Lean 题、kernel 优化 | 评估其他任务分布与多 Agent 场景，未列入搜索集 |
+
+论文主表报告全部 51 个公开 EdgeBench 任务，没有单列最后 40 个。因此，冻结限制了针对具体题目继续修补，但 11 个验收任务仍承担 selection 作用；主表也不是纯粹的最终 test 指标。
+
+##### 四种机制
+
+1. **Action Fusion：把修改与紧随其后的验证合成一次工具调用。**SoL-Pi 给 `edit` / `write` 增加可选的 `then_run`：
+
+   ```json
+   {
+     "path": "solver.py",
+     "content": "...修改后的代码...",
+     "then_run": {
+       "command": "python -m pytest tests/test_solver.py",
+       "timeout": 60
+     }
+   }
+   ```
+
+   Harness 本地完成写入与命令执行，再把组合结果一次返回，省掉“模型看到 edit 成功后再决定跑测试”的中间往返。它不是通用事务：需要先检查修改结果、由验证结果决定命令，或命令不够安全时仍应拆开。实现见 [`then-run.ts`](https://github.com/NVlabs/SoL-Pi/blob/06b3ee358ddc5cebc5fb21a8e7493fab2db508ce/src/sol-pi/extensions/action-fusion/then-run.ts)。
+
+2. **Online Context Compact：在子任务完成边界重算“现在压缩值不值”。**Agent 通过 `update_plan` 维护步骤；当已有步骤从未完成变成完成时，系统依据历史每步请求数、剩余步骤、上下文增长速度和 cache rewrite 成本预测未来输入节省，接近窗口上限时也可压缩。`update_plan` 只是注册的工具和 prompt 约定，代码没有强制第一次必须调用，也没有保证模型稳定维护计划；因此这项机制的触发仍依赖模型行为。实现见 [`tools.ts`](https://github.com/NVlabs/SoL-Pi/blob/06b3ee358ddc5cebc5fb21a8e7493fab2db508ce/src/sol-pi/extensions/online-context-compact/tools.ts) 与 [`economics.ts`](https://github.com/NVlabs/SoL-Pi/blob/06b3ee358ddc5cebc5fb21a8e7493fab2db508ce/src/sol-pi/extensions/online-context-compact/economics.ts)。
+
+3. **ObservationPack：保留可回查性，停止重复传输全文。**工具输出超过 10 KiB 时先归档；接下来的两次 provider 请求仍带全文，从第三次起替换为稳定 ID、原始大小和完整首尾行摘录，需要细节时用 `obs_recall` 分页取回。论文与当前 release 将默认摘录概括为约 1 KiB；博客的搜索轨迹中，获选 V2 是 head 2,048 B + tail 1,536 B + 前两次全文，属于实验版本，不能混成同一个固定参数。实现见 [`observation-pack/index.ts`](https://github.com/NVlabs/SoL-Pi/blob/06b3ee358ddc5cebc5fb21a8e7493fab2db508ce/src/sol-pi/extensions/observation-pack/index.ts)。
+
+4. **Evidence-Preserving Reducer：委派证据提取，保留诊断决策。**对预定义 build / test 命令产生的至少 4 KiB 日志，先归档原文，再让便宜模型提取结构化 receipt；确定性校验 schema、原文 hash、退出状态、逐字 quote 和压缩后大小。校验失败、疑似含凭据或没有缩短时直接退回原日志。主模型负责判断原因和下一步，必要时可回查归档。[命令白名单](https://github.com/NVlabs/SoL-Pi/blob/06b3ee358ddc5cebc5fb21a8e7493fab2db508ce/src/sol-pi/extensions/evidence-preserving-reducer/config.ts)覆盖 `pytest / cargo test / go test / npm test / make / ninja / cmake / Lean / Coq` 等。
+
+   这项机制具有明显的开发任务分布特征。我推测它主要从 495 个仓库修复任务中反复出现的「修改 → 构建 / 测试 → 长日志中找少量关键报错」轨迹里被筛选和打磨；40 个 Terminal-Bench 风格环境也可能贡献了证据。公开材料没有给出 EPR 的具体来源任务，因此不能把这个推测写成作者结论。逐字 quote 校验只证明“没有编造引用”，不证明便宜模型没有漏掉决定性证据。
+
+##### 一条公开演化轨迹：Action Fusion
+
+![Action Fusion 从机会分析到冻结验收的 27 次迭代](./AI-Agent-Engineering/sol-pi-action-fusion-discovery.png)
+
+- Oracle analysis 在已有轨迹中观察到 12.3% 的跨回合转移可把 edit/write 与下一动作相邻合并，其中 85.1% 的下一动作是 bash；“全部触发可少 149 个 turn、少 11.5% token”是轨迹反事实估计，不是实测重跑。
+- Baseline 阶段发现只靠 prompt 触发不稳定，遂把能力写进工具 schema；使用率达到 87.7%，invalid call 为 0。
+- Prompt / schema 搜索的 trigger rate 在 28.3%–100% 间波动，task score 也非单调；最终选择第 10 批的 100% trigger rate / 87.0 task score，而不是只看最高分 88.9。
+- 冻结后再做两次独立检查。被继承的是工具 schema、触发规则与回退边界的组合，不能把收益只归因于一句 prompt。
+
+这条轨迹说明自动研究比较擅长把直觉改进工程化：先量化机会，再把不稳定的模型自觉变成显式接口，最后同时守能力和效率门禁。它没有公开 EPR、Online Context Compact 的同等完整谱系，不能把 Action Fusion 的 27 次演化细节外推给全部四种机制。
+
+##### 研究编排也经历了三代失败
+
+| 编排方式 | 结果与问题 |
+| --- | --- |
+| YAML 编译成固定 workflow | 交接清楚，但遇到图外情况经常需要人工修复 |
+| 主 Agent 维护长期编排代码 | 运行时灵活，但分支、测试、兼容逻辑持续累积；启动新实验可能先花十多个小时改协调代码 |
+| 一次性 skill loop | 每个实验复制最小模板，结束后保留候选和证据、丢弃实验专属编排修改；模板本身成为需要重点维护的共享依赖 |
+
+核心取舍是：搜索 lineage 需要持久化候选、指标和证据，**实验编排代码本身不必永久演化**。一次性 loop 用重复实例化换掉长期 coordinator 的状态污染和兼容债务。
+
+##### 效果与证据边界
+
+完整四机制的 `Efficiency` 配置在 GPT-5.6 Sol 上把 Pi 的 token 成本从 1,339 降到 894（−33.2%），总 token 从 2.1538B 降到 1.0990B（−49.0%），平均分从 44.833 降到 42.003，只保留 93.7%。迁移到未参与搜索的 Opus 5 后，成本从 1,741 降到 1,158（−33.5%），平均分从 44.756 降到 42.224。它证明了较强的效率迁移证据，也明确存在约 6% 的点估计分数损失。
+
+论文另报 `Performance` 配置，但它不是同一套四机制：每个 backend 都从单机制消融中事后选择平均分最高者，Sol 选 ObservationPack，Opus 5 选 Action Fusion。它不能被解释为“一套预先固定配置在新模型上盲测”。主结果以点估计为主，swarm 每种配置只有一次运行；小幅分数差异不能当成稳定能力提升。论文也没有完成与同预算 parallel / sequential search 的系统对照，因此没有证明自动研究是这笔预算的最优用途。
+
+**可复用判断**：SoL-Pi 的强点不在四个点子反直觉，而在于把点子变成「明确触发条件 + 可观测指标 + 证据保留 + 失败回退 + held-out 验收」的机制。对 Harness 研究，更可靠的单位不是一段更聪明的 prompt，而是一个能被单独触发、记录、关闭和反事实比较的窄机制。
+
+#### Harness 更新能力与使用收益
+
+> 来源：[Harness Updating Is Not Harness Benefit，§3–4](https://arxiv.org/html/2605.30621v1#S3)。区分“写出有用更新”和“执行时用好更新”，不把二者视为同一种能力。
+
+Solver 执行任务 → 留下轨迹、结果与反馈 → Evolver 修改外部 harness → Solver 使用新 harness 执行后续任务。模型权重固定：
+
+$$
+A_t=(f,H_t),\qquad H_t=\operatorname{Apply}\bigl(H_{t-1},e(H_{t-1},\mathcal D_t)\bigr)
+$$
+
+其中 f 是 Solver，e 是 Evolver，H 是外部 harness，D 是执行证据。本实验只允许 SWE-bench、SkillsBench 修改 skills；MCP-Atlas 另可修改 system prompt、追加 memory；工具接口、模型权重与评测器固定，主要测外部指令和经验的更新与使用。
+
+以不更新 harness 为基线，沿 Solver–Evolver 配对矩阵分别度量：
+
+$$
+\begin{aligned}
+\Delta(f,e)&=S_{\mathrm{evolved}}(f,e)-S_{\mathrm{base}}(f)\\
+\Delta_{\mathrm{update}}(e)&=\frac{1}{3}\sum_{f\in\mathcal F^\star}\Delta(f,e)\\
+\Delta_{\mathrm{benefit}}(f)&=\max_{e\in\mathcal E^\star}\Delta(f,e)
+\end{aligned}
+$$
+
+更新能力：固定 Opus 4.6、Sonnet 4.6、Qwen3-235B 三个 Solver，比较七个 Evolver 的平均增益。使用收益：固定三个 Evolver，比较六个 Solver 的最佳增益；取 max 是候选中选优，不是预期收益。各组合独立产生 harness，并非给所有 Solver 同一份固定经验。
+
+- **Evolver 侧**：小模型也能写出有效更新，基础能力更强未呈现稳定优势。但下游增益还受更新空间、Solver 执行能力与噪声制约，不直接等于分析总结能力；缺少充分的多次独立演化与置信区间，不能排除实验波动，也不能认定大小模型等效。
+- **Solver 侧**：SWE/MCP 中间能力层增益较大，弱模型可能接不住指导，强模型已有较多能力；这是有限设置的观察，不是普遍倒 U 型规律。经验失效还要区分“未成功加载”与“加载后未持续遵循”，特别是遇到异常后是否执行备用分支。
+
+#### Harness-Zero：把外置 Harness 行为蒸馏进权重
+
+> 来源：[论文 arXiv 2609.24974v1](https://arxiv.org/html/2609.24974v1)、[固定版本仓库](https://github.com/metaevo-ai/harness-zero/tree/c0c3f7c698b612e8835e1b48ed6e564aaeb63cd7)、[微信导读](https://mp.weixin.qq.com/s/wymvqX6g03qdT1qD8OLfBw)。读取论文 HTML / PDF / TeX、全部附录、表 1–11、关键图与 [`review.py`](https://github.com/metaevo-ai/harness-zero/blob/c0c3f7c698b612e8835e1b48ed6e564aaeb63cd7/src/harness_zero/review.py)、[`student.py`](https://github.com/metaevo-ai/harness-zero/blob/c0c3f7c698b612e8835e1b48ed6e564aaeb63cd7/src/harness_zero/student.py)、[`sft.py`](https://github.com/metaevo-ai/harness-zero/blob/c0c3f7c698b612e8835e1b48ed6e564aaeb63cd7/src/harness_zero/sft.py)、[`train.py`](https://github.com/metaevo-ai/harness-zero/blob/c0c3f7c698b612e8835e1b48ed6e564aaeb63cd7/src/harness_zero/train.py) 等核心代码；未复现训练或 benchmark。整理时间：2026-10-14。
+
+**定位**：Harness-Zero 把持久改进对象从外置 Harness 换成模型参数。它证明特定领域中可执行、可观察的程序性行为可以蒸馏进权重；没有证明通用 Harness、持续演化或统一智能已经进入权重。所谓 Zero 也不是没有 Harness：部署仍保留固定 prompt、一个 Bash `execute` 工具和可选单层 subagent，只移除了领域专用 Harness、私有参考 Harness 与 Reviewer。
+
+$$
+\text{优化 Harness }h^\star
+\rightarrow \text{目标 action space 内的纠正轨迹}
+\rightarrow \text{模型权重}
+$$
+
+| 对象 | 作用 |
+| --- | --- |
+| $h$ | 固定的最小部署 Harness；定义学生最终可用的 action space |
+| $h^\star$ | 在训练任务上演化出的领域 Harness：tools、middleware、skills、memory |
+| $\mathcal K=\operatorname{Adapt}(h^\star;h)$ | Reviewer 的私有参考 Harness；把 $h^\star$ 的行为翻译为 $h$ 内可执行的纠正 |
+
+$\mathcal K$ 不挂进学生 sandbox，而是以只读 `/components` 目录挂载在 Harnessing Agent 自己的独立 workspace。入口 `index.json` 为每个可读组件列出 `identifier / kind / relative path / 一行摘要`；Reviewer 在第一次决策前先读索引，随后只在相关时打开具体文件。Review middleware 不是可读文件，而是在每个 proposal 上自动运行，命中条件时把证据和提示附进 Reviewer 收到的 update。因而 $\mathcal K$ 能提供私有审查知识，却不能直接替学生操作环境；所有干预最终仍要翻译成 $h$ 能执行、学生能观察的 response。
+
+![Harness-Zero：Harness 演化、逐响应审查与权重蒸馏](./AI-Agent-Engineering/harness-zero-agent-as-harness.png)
+
+训练数据收集时，学生先在 $h$ 下产生尚未执行的 proposal；Harnessing Agent 读取学生可见轨迹、proposal、私有 $\mathcal K$ 和自己的审查历史，逐步决定 `PASS` 或 `REPLACE`：
+
+$$
+\begin{aligned}
+y_t&\sim\pi_{\theta_0}^{h}(\cdot\mid c_t)\\
+(d_t,z_t)&\sim\pi_H(\cdot\mid c_t,y_t,\mathcal K,r_{<t})\\
+\tilde y_t&=\begin{cases}y_t,&d_t=\text{PASS}\\z_t,&d_t=\text{REPLACE}\end{cases}\\
+c_{t+1}&=T_h(c_t,\tilde y_t)
+\end{aligned}
+$$
+
+`ReviewSubmission` 保存 `candidate_id / decision / replacement / components_used / reason`；replacement 是完整的 `AssistantResponse(reasoning, content, tool_call)`，最多调用一次目标 Harness 原生的 `execute(command=...)`。只有 accepted response $\tilde y_t$ 和执行 observation 进入学生轨迹；原 proposal、审查理由、组件名和 Reviewer 私有推理留在 sidecar。SFT 再对 accepted responses 做行为克隆：
+
+$$
+\hat\theta=\arg\min_\theta-
+\sum_{\tau\in\mathcal D_{\mathrm{review}}}\sum_t
+\log\pi_\theta^h(\tilde y_t\mid c_t)
+$$
+
+> **最核心的蒸馏信号**：在学生实际到达的状态上，用目标 action space 内的动作替换错误下一步；随后训练学生在相同状态下直接产生这个动作。
+
+这更像**基于学生当前状态的纠正式模仿学习**：强教师不重新独立解整题，只纠正下一步；纠正必须落在部署 action space，执行结果重新回到学生可见轨迹。它又不是完整 DAgger：论文没有用更新后的学生反复采集、聚合多轮数据。训练期间的逐响应审查可以理解为 response-boundary 的实时监督，但部署时没有在线学习。
+
+**组件怎样被翻译。** 适配保留组件解决的问题，但改变它生效的位置和方式：tool 变成学生可通过 $h$ 执行的 action recipe，middleware 变成从 proposal 与可见轨迹识别条件的 review middleware，skill 变成生成 student-native replacement 的 review guidance，memory 变成可识别的 failure pattern 与定向干预。
+
+![Table 6：从学生侧 Harness 到私有参考 Harness 的组件级适配](./AI-Agent-Engineering/harness-zero-component-adaptation.png)
+
+*来源：[论文 Table 6](https://arxiv.org/html/2609.24974v1#A2.T6)。*
+
+SpreadsheetBench 的 `prefilled_guard` 给出一个具体例子。它在 $h^\star$ 中能直接比较输入与输出 workbook，阻止学生覆盖预填单元格；Reviewer 无权私下操作学生 sandbox，因此 $\mathcal K$ 必须把能力改写：
+
+| $h^\star$ | $\mathcal K$ |
+| --- | --- |
+| `prefilled_guard` 中间件直接检查文件 | review middleware 检查学生可见轨迹里是否已有比较证据 |
+| `prefilled_diff` 工具 | action recipe：生成等价的 Bash / Python 检查脚本 |
+| “保护预填单元格”的 skill / memory | failure pattern：识别何时必须干预 |
+
+学生准备结束但没有比较证据时，Reviewer 用 `REPLACE` 生成一个执行检查脚本的响应；$h$ 执行脚本，检查结果进入下一轮上下文。蒸馏模型在对应 support tasks 上有 24/26（92%）主动保护预填单元格。论文只发布了这一机制级 worked example，没有公开完整真实任务的 proposal / replacement / observation 轨迹，也没有给出三轮 Harness 演化的逐轮补丁、分数和拒绝谱系。
+
+**结果与关键消融。** 三个领域分别训练三个 Qwen3.5-9B checkpoint，不是一个统一模型：
+
+| 设置 | SpreadsheetBench | AppWorld | USPTO | 平均 |
+| --- | ---: | ---: | ---: | ---: |
+| 基础模型 + $h$ | 31.0 | 26.8 | 12.0 | 23.3 |
+| 基础模型 + $h^\star$ | 39.0 | 48.2 | **38.0** | 41.7 |
+| 蒸馏模型 + $h$ | **44.0** | **58.9** | 30.0 | **44.3** |
+
+“拆掉 Harness 后更强”只能读成：三个领域的独立蒸馏 checkpoint 在 macro-average 上高于基础模型挂载 $h^\star$。USPTO 仍低 8 点，也没有证明移除动作本身带来提升。
+
+[表 3](https://arxiv.org/html/2609.24974v1#S4.T3)更关键：强 Harness 必须先经过“翻译层”，才能成为弱学生可学习的监督。这里的 `collection success` 是轨迹生成系统在同一组 500 个 USPTO collection tasks 上被任务 verifier 判定成功的比例：
+
+$$
+\text{collection success}
+=\frac{\text{成功解决的 collection tasks 数}}{500}
+$$
+
+它度量 SFT 之前，trajectory source 当场解决训练任务的能力；不是轨迹通过结构 / 隐私过滤的比例，不是 Reviewer 的 `PASS` 比例，也不是蒸馏模型的测试成绩。**USPTO 不做成功轨迹过滤：论文保留全部 500 条成功和失败轨迹**，因此每个条件都用同一组 rollout 训练，再把 SFT 2 个 epoch 后的模型放到独立 100 题 test split，在最小 Harness $h$ 下测 pass@1。[论文附录 D](https://arxiv.org/html/2609.24974v1#A4)明确说明这一点；仓库通用 [`build_sft_file`](https://github.com/metaevo-ai/harness-zero/blob/c0c3f7c698b612e8835e1b48ed6e564aaeb63cd7/src/harness_zero/sft.py#L12) 默认 `reward_threshold=1.0`，复现二元奖励的 USPTO 全量设置时需显式设为 `0`。
+
+| USPTO 监督来源 | 采集成功率 | 蒸馏后 pass@1 |
+| --- | ---: | ---: |
+| 基础模型 | — | 12 |
+| 强教师轨迹 | 52.0 | 12 |
+| 强教师 + $h^\star$ | 62.0 | **3** |
+| 学生 + $h^\star$ | 39.4 | 12 |
+| 空 $\mathcal K$ 的普通审查 | 44.2 | 11 |
+| Reviewer 直接知道标准答案 | **98.6** | 15 |
+| Harness-Zero $\mathcal K$ | 59.4 | **30** |
+
+关键反例是：Oracle 采集时做对 98.6%（493/500），蒸馏后却只有 15%；Harness-Zero 只做对 59.4%（297/500），蒸馏后达到 30%。因此，**轨迹生成系统最终答对多少题，不等于轨迹包含多少学生能够迁移的监督。**强教师的完整答案可能远离弱学生状态；Oracle 容易产生题目级捷径；直接蒸馏 $h^\star$ 又会让模型学习部署时不存在的工具调用，耗尽 turn budget。真正决定蒸馏价值的是：纠正是否从学生当前状态出发，并与部署时的 action space 一致。
+
+作者还把 $h^\star$ 的规则写成 28 个确定性 trajectory detector，报告平均恢复率 82.3%。完整分页只有 40%、mutation 后读回 50%、matching key normalization 60%，提示复杂、延迟触发、需要跨多步保持状态的行为更难内化。但 support tasks 是事后选择的：基础模型必须在 $h^\star$ 下出现、在 $h$ 下不出现该行为，因此 0% / 100% 基线由定义保证；82.3% 是这些 detector 的 pattern-macro recovery，不是全部 Harness 能力的覆盖率。
+
+**证据边界与可复用判断**：
+
+- SpreadsheetBench / AppWorld 只保留 reward=1 且无执行异常的成功轨迹，存在 success filtering；USPTO 纳入全部 500 条成功和失败轨迹。三者的数据选择合同不同，不能把结果直接横比。
+- 每个领域单独训练，未证明一个模型能持续吸收多个 Harness 而不遗忘或干扰；也没有测试规则撤销后停止旧行为。
+- 只报告单次 pass@1 / SGC 与训练 seed 42，没有多 seed、方差或置信区间。
+- 私有信息隔离依赖权限边界、敏感字符串扫描和 Reviewer 视角 reasoning mask，不是形式化无泄漏证明。
+- 每步至少增加一次 Reviewer 模型调用；USPTO 数据收集平均 237.2 秒，对比最小 Harness 的 100.1 秒，约 2.4 倍。论文没有实测蒸馏后的部署成本。
+- 弱 Reviewer 可能越改越坏：DeepSeek-V4-Flash 相对 code-as-harness 低 1 点，Qwen3.6-35B-A3B 低 12 点。
+
+Harness-Zero 比“改 Harness 后涨分”多证明了一步：外置行为可以在相同目标接口下被模型吸收。它仍没有证明 Harness 演化是同预算下的最佳搜索方法。对 LoopX，更完整的实验应同时保留 `base+h / base+h^\star / 直接蒸馏强教师 / 直接蒸馏 h^\star / empty-K review / K-guided review→distilled+h`，预注册行为 detector，并增加统一多领域 checkpoint、规则失效和成本对照。与 SHINE 相比，它通过纠正轨迹离线训练领域 LoRA，不是按 context 动态生成 LoRA 的超网络；与 ServeLearnBench 相比，它把经验写入慢更新的权重，没有覆盖在线规则发现、复用与失效。
+
+#### Claude build-eval / hillclimb：评测校准与防过拟合迭代
+
+> 来源：Lance Martin，[Automating eval design and hillclimbing with Claude](https://claude.dev/blog/automating-eval-design-and-hillclimbing/)（2026-09-28）；[官方评测指南与脚手架](https://github.com/anthropics/skills/tree/dbd4588f9e1033efb41dad4bef2f7947c8993d44/skills/claude-api/shared/evals)。下列案例为作者报告，未独立复现。
+
+**先让评测值得被优化**：任务分布贴近实际使用；能力变化能反映到分数；存在可解决的提升空间；噪声小到足以支持决策。更强模型、更高 effort 通常应有收益，但只是检查任务与评分器的线索，不是普遍定律。低分不能主要来自题意含糊、环境故障或错误答案；噪声需区分模型采样、Judge、API 错误与环境残留。
+
+取样优先级是生产轨迹 → 工单与 bug → 手写案例 → 基于代码生成案例，再由熟悉业务的人确认题型、比例和重要边界。只挑当前模型失败的题会偏向其特有弱点；生产日志也可能因用户只尝试容易成功的任务而偏易。已有轨迹用于提取初始任务与环境，答案留给评分器。
+
+| 工作流 | 职责 | 产物 |
+| --- | --- | --- |
+| `build-eval` | 确认任务代表性与评分可信度；能程序验证就直接检查，开放式输出用可核验 rubric 并人工校准 | 案例、评分器、runner、基线、逐次轨迹 |
+| `hillclimb` | 在明确目标和约束下提出一个行为假设、修改并筛选；可改 prompt、skill、工具描述、模型/effort 或 harness | 每轮补丁、修改理由、分数、成本、保留或回退记录 |
+
+![Figure 6：Analyzer 读取 train 失败，评测结果决定补丁保留或回退](./AI-Agent-Engineering/claude-eval-hillclimb-loop.png)
+
+一轮是「train 轨迹诊断 → 一个有因果假设的补丁 → 重测 → 保留/回退」。这里的 train 是优化器可读案例，不是权重训练。质量提升模式下，原文用 train/test 同升作为保留信号；只涨 train 是过拟合警报。连续停滞时先区分知识缺口、结构问题、评分器错误与噪声，不继续机械堆提示词。
+
+![Figure 9：API skill 的改进轨迹，最后阶段包含任务与评分器修正](./AI-Agent-Engineering/claude-api-skill-hillclimb-trajectory.png)
+
+API skill 的真实路径：补齐八项功能说明，66.1% → 74.3%；修 C#/Java 类型表，到 77.5%；调整知识组织，到 80.1%；再修任务/评分器并继续改 skill，到 87.9%。
+
+第三阶段的失败是：正确用法已经在文档里，模型仍沿用记住的旧 API。修改是在 skill 前部增加「旧写法 → 当前写法」迁移表：fixed-budget extended thinking → adaptive thinking、旧版 web search/fetch → 当前版本，并把 C#/Java 的旧写法警告移到正确示例前。**知识已经写进去，不代表模型会在需要时找到它、用它覆盖旧习惯。**这是原文描述的修改，未公开完整 before/after 补丁。
+
+曲线最后一段混入评分口径修正，不能全算作 skill 提升。[当前指南 Step 4.5](https://github.com/anthropics/skills/blob/dbd4588f9e1033efb41dad4bef2f7947c8993d44/skills/claude-api/shared/evals/eval-hillclimb.md#L279)要求改 grader 后重评历史版本；题目输入变化还需重跑受影响的比较。
+
+**两种隔离要分开**：
+
+- 内容隔离：Analyzer 只接收 train 轨迹，减少按 test 题目改补丁；但 test 文件仍在磁盘，当前指南主要在交接时过滤，并非自动实施文件权限隔离。[Step 4](https://github.com/anthropics/skills/blob/dbd4588f9e1033efb41dad4bef2f7947c8993d44/skills/claude-api/shared/evals/eval-hillclimb.md#L225)
+- 选择隔离：默认每轮测 test、据此保留版本，test 实际承担 validation/selection 的角色，仍有高频反馈导致的自适应过拟合。当前指南提供可选 train/validation/test 三分法，成本指南明确写出 [Selection set != holdout](https://github.com/anthropics/skills/blob/dbd4588f9e1033efb41dad4bef2f7947c8993d44/skills/claude-api/shared/evals/cost-hillclimb.md#L357)；独立最终测试需要在搜索与选版本结束后才开放，不能仅凭 `test_ids` 字段认定已隔离。
+
 #### RSI-Gym：冻结评测器下的 Harness 自我改进实验合同
 
 > 来源：[仓库与 README](https://github.com/rmax-ai/rsi-gym/tree/50ce4005dad1a0ed8c2b50209522f454d7dc2f0d)、[SPEC](https://github.com/rmax-ai/rsi-gym/blob/50ce4005dad1a0ed8c2b50209522f454d7dc2f0d/SPEC.md)、[`models.py`](https://github.com/rmax-ai/rsi-gym/blob/50ce4005dad1a0ed8c2b50209522f454d7dc2f0d/src/rsi_gym/models.py)、[`archive.json`](https://github.com/rmax-ai/rsi-gym/blob/50ce4005dad1a0ed8c2b50209522f454d7dc2f0d/docs/example-run/headline-01/archive.json)、[`meta-demo-01`](https://github.com/rmax-ai/rsi-gym/tree/50ce4005dad1a0ed8c2b50209522f454d7dc2f0d/docs/example-run/meta-demo-01)。读取 commit `50ce400`（v0.1.0）；本地复核 `119 passed, 1 skipped`，整理时间：2026-10-09。
@@ -1411,6 +1689,8 @@ A2 的 validation success 从 `0.85` 升到 `1.00`，hidden 也从 `0.85` 升到
 - LoopsBench 是 RFC v0 组合（ALE / LHTB / DeepSWE）之外的第 4 个天然候选：它专门测「Loop 层」（依赖 DAG 上的持续推进 + regression 守卫），比 LHTB 更贴近软件工程的 dependency 结构，与 LHTB（terminal 长 loop + dense progress）互补；
 - 论文列为开放问题的 state retention / residual routing / regression obligation retention，正是 LoopX 的 goal state / evidence ledger / todo ownership / replan / completion audit 语义——可在 LoopsBench 上做 C2 / C3 机制研究（证据：跨 run 是否真的减少重复路由与 regression）；
 - 方法论可复用：lower-bound 依赖图（宁缺勿滥）、Ready Frontier 动态评测、Regression Obligation 持续守卫、评测与编辑环境分离（呼应 LHTB 的 verifier isolation 教训）；对 eval 纪律意味着 benchmark 层只做 observation，不改任务与 verifier 语义。
+
+### 多 Agent 编排与协作协议
 
 #### Claude Tag：AI Coworker 的范式精华与 LoopX 验证
 
@@ -1676,6 +1956,8 @@ Hooks 是这套设计最值得借鉴的地方：`TaskCreated` 可以做任务准
 - task completed 不是文本声明，而是 artifact refs + validation refs + event history。mailbox 只传协调消息，长期事实必须落在 ledger / event store / artifact store。
 - Agent Teams 更像高质量产品原型和设计样本，不是生产级 orchestration kernel。它仍暴露出 resume / rewind、状态延迟、关停、单 lead、不可嵌套、权限粒度、leader transfer 等边界；真正的长程 agent control plane 需要把这些能力外置成 durable state 和可回放 trace。
 
+### Harness 实现光谱与 Coding Agent 工程纪律
+
 #### oh-my-pi：batteries-included coding agent runtime
 
 > 来源：[can1357/oh-my-pi README](https://github.com/can1357/oh-my-pi/blob/b258c790a5b9f584da2a6ac34e6365fde3a1ee8e/README.md#L100-L178)、[tool list / provider / native runtime](https://github.com/can1357/oh-my-pi/blob/b258c790a5b9f584da2a6ac34e6365fde3a1ee8e/README.md#L220-L490)、[`bash` tool runtime](https://github.com/can1357/oh-my-pi/blob/b258c790a5b9f584da2a6ac34e6365fde3a1ee8e/docs/tools/bash.md#L21-L76)、[`task` subagent runtime](https://github.com/can1357/oh-my-pi/blob/b258c790a5b9f584da2a6ac34e6365fde3a1ee8e/docs/tools/task.md#L27-L99)、[`hashline` edit tool](https://github.com/can1357/oh-my-pi/blob/b258c790a5b9f584da2a6ac34e6365fde3a1ee8e/docs/tools/edit.md#L21-L48)、[`memory`](https://github.com/can1357/oh-my-pi/blob/b258c790a5b9f584da2a6ac34e6365fde3a1ee8e/docs/memory.md#L1-L98)、[`compaction`](https://github.com/can1357/oh-my-pi/blob/b258c790a5b9f584da2a6ac34e6365fde3a1ee8e/docs/compaction.md#L24-L142)、[`rulebook`](https://github.com/can1357/oh-my-pi/blob/b258c790a5b9f584da2a6ac34e6365fde3a1ee8e/docs/rulebook-matching-pipeline.md#L29-L80)。读取 commit `b258c79`，整理时间：2026-07-04。
@@ -1920,6 +2202,8 @@ Codex V2 在同一 root 控制域内复用完整 agent loop：每个 child 有�
 
 **跨独立任务消息走另一入口。**`send_message_to_thread` 在核验的公开 TUI 中通过本地 MCP → App-server `turn/start.toolOutput`，接收端成为 `call_id=None` 的独立 FunctionCallOutput：活动普通 turn 加入 pending input，空闲则启动 RegularTask；不会先进入树内 mailbox，也不会自动获得父子归属或用户授权。发送成功只表示提交，结果另由 wait/read 或显式回信获得。详见 [跨任务通信的完整链路与生效条件](./Codex-Subagent.md#11-跨任务与外部-agent作为边界理解不混进核心协议)（该节另固定到 2026-09-19 的 `78245b47af2a…`）。
 
+### Context、退化诊断与模型可观测性
+
 #### Context Management 与 Token 效率
 
 **推理状态保留（thinking retention）**：可见聊天历史完整，不代表下一次调用仍能使用之前的推理状态。Reasoning summary 是可读摘要，也不等于可续用的 reasoning item。保留后者可能减少工具往返中的重复推理；具体质量收益需要评测，不能仅凭“忘了前文”的表现判断状态丢失。
@@ -1928,6 +2212,8 @@ Codex V2 在同一 root 控制域内复用完整 agent loop：每个 child 有�
 - **传回历史与实际使用分开看**：OpenAI Responses API 在支持的模型上提供 `reasoning.context`：`current_turn` 不把更早轮次的推理纳入下一次采样；`all_turns` 允许使用可用且兼容的历史推理。后者不能补回缺失的 item，切换模型族也可能失去兼容性；应检查响应中的实际模式，不能由 API 能力反推客户端已启用。
 - **续用依赖完整历史链路**：可通过 `previous_response_id`、conversation 或完整重放历史传递状态；无存储模式可回传带 `encrypted_content` 的 reasoning item。只拼接最终回答或摘要，不能等价替代这些 item；也不需要导出原始思维链。
 - **Compaction 是另一种操作**：它用更短的表示保留关键状态；是否压缩、是否保留跨轮推理，需要分别检查。长程任务仍应外置可复核的结论、证据、约束与待办，兼顾状态连续性、上下文成本和陈旧信息。
+
+压缩 Prompt 是否真正保住任务谓词、可执行状态与完成进度，需要在同一环境状态下比较压缩前后的 continuation；归因方法、真实失败案例与硬上下文边界见 [PAIR：用同状态反事实续跑归因压缩损伤](./AI-Applied-Algorithms.md#pair用同状态反事实续跑归因压缩损伤)。
 
 来源：[OpenAI 推理状态保留](https://developers.openai.com/api/docs/guides/reasoning#preserve-reasoning-across-calls)、[Reasoning summaries](https://developers.openai.com/api/docs/guides/reasoning#reasoning-summaries)、[Compaction](https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide#compaction)（核验于 2026-09-23；支持范围以模型文档为准）。缓存影响另见 [上下文编辑与缓存观测](./LLM-MLSys.md#上下文编辑与缓存观测)。
 
@@ -2025,6 +2311,8 @@ Serving infra 层也有相同模式。Z.ai 的 Scaling Pain 把 GLM-5 在高并�
 - 告警升级要有分级与恢复门槛：`告知并暂停 → 连续复测 → 全部不一致才锁定 → 用户显式授权才恢复`，而不是检测到一次异常就中止长任务。
 - 误报率要独立标定：把 holdout 验证集、bank hash、样本快照 ID 作为评估契约的一部分，禁止用「单次误报率连乘」推算停工率。
 
+### 数据面、持久状态与个人数据接入
+
 #### Agent Bucket：万亿级 Agent 原生存储桶
 
 > [Agent Bucket：万亿级 Agent 原生存储桶](https://mp.weixin.qq.com/s/A6sUm-s44MwM7ZvIzqs_Eg)
@@ -2116,6 +2404,8 @@ Serving infra 层也有相同模式。Z.ai 的 Scaling Pain 把 GLM-5 在高并�
 - 搜索 fallback 只在最近 500 条消息窗口内扫描（单会话优化后 p95 ~246 ms、16 会话 ~352 ms），不是全量检索；项目据此**拒绝了**建持久加密文本缓存（实测 ~352 ms 不值得多留一份消息副本）。
 - 备份只含数据库（含库内语音），**不含**图片/视频/文档；旧备份不自动删除，需你自己彻底删除。
 - 加密栈（BIP-39、HKDF-SHA-256、Argon2id、XChaCha20-Poly1305）未经外部评审；审计链无签名；所有时延都是合成 benchmark 或单台 M2 Max 的样本，没有在真实活跃账号上测过。
+
+### 延伸材料与托管编排接口
 
 #### [一口气学会如何思考AI Agent系统设计](https://www.bilibili.com/video/BV1WoeozgEyn/)
 
