@@ -5,6 +5,7 @@
 | 位置 | 内容 |
 | --- | --- |
 | [materials/](./materials/README.md) | 素材公开/私有分区、目录校验、Markdown 生成、同步与回滚 |
+| [sync-notes](../.codex/skills/sync-notes/SKILL.md) | 「sync笔记」的默认入口；通用逻辑留仓库，私有绑定与运行证据留本地 |
 | [personal-workstation/](./personal-workstation/README.md) | 从公开仓库重建开发环境、Codex GPT/DS 与 App 协同、软件清单及 Astra 交接 |
 | [Learning-Materials/](../Learning-Materials/README.md) | 当前公开素材目录、阅读顺序、讲义与实验 |
 | [Notes/](../Notes/) | 整理后的长期知识笔记 |
@@ -15,7 +16,7 @@
 
 ```bash
 python3 note-system/materials/material_queue.py --check
-python3 -m unittest discover -s note-system/materials/tests -p 'test_material_queue*.py'
+python3 -m unittest discover -s note-system/materials/tests -p 'test_material*.py'
 ```
 
 通用代码与合成测试必须能在公开克隆中运行，不能隐式依赖维护者本机目录、登录状态或 LoopX 安装。接入真实来源所需的 adapter 由本地配置提供；公开/私有边界和具体接口见 [materials 维护说明](./materials/README.md)。

@@ -25,7 +25,7 @@
     {
       "name": "git-split-commit-pr",
       "files": {
-        "SKILL.md": "94538efb1e15f56c8e81f2f47647f0028ddc5b462d326243b16f0854e9e27309"
+        "SKILL.md": "2ebea3266e086b579a9ca19e8b45e683e3000725f54b16d10c647a7b1b00a401"
       }
     },
     {
@@ -84,6 +84,13 @@
       "name": "xiaohongshu-reader",
       "files": {
         "SKILL.md": "34d718f667e5c50af6dcfb6cdba961aacb37b4538fcd94db03fe855921409c5d"
+      }
+    },
+    {
+      "name": "sync-notes",
+      "files": {
+        "SKILL.md": "d55ede12e7a091fb3304e84240244f9b9cc4daa9e8cd74f9f7035ce12d4413da",
+        "agents/openai.yaml": "5a1cb0e2f58072d737c5fc2c53a5fe06c4dda3ef7963147d112a14ab3c36b93e"
       }
     }
   ]

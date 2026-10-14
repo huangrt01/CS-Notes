@@ -4,6 +4,25 @@
 tmp*
 .tmp/
 .local/
+# Only reviewed skill sources are public; other Codex state stays local.
+# Keep this allowlist aligned with note-system/skills/manifest.json.
+!/.codex/
+/.codex/*
+!/.codex/skills/
+/.codex/skills/*
+!/.codex/skills/cs-notes-writing-style/
+!/.codex/skills/managed-lark-docs/
+!/.codex/skills/help-me-review/
+!/.codex/skills/git-split-commit-pr/
+!/.codex/skills/cli-creator/
+!/.codex/skills/external-research/
+!/.codex/skills/markdown-toc/
+!/.codex/skills/gourmet-organizer/
+!/.codex/skills/github-gh-cli/
+!/.codex/skills/ai-hotspots/
+!/.codex/skills/wechat-article-reader/
+!/.codex/skills/xiaohongshu-reader/
+!/.codex/skills/sync-notes/
 .codepilot-uploads/
 # **/创作/**
 .trae/logs

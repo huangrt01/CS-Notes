@@ -61,6 +61,8 @@
 
 笔记与素材的管理代码、规则和测试集中在 [note-system](note-system/README.md)，与学习内容分开维护。
 
+仓库助手指令：[sync笔记](.codex/skills/sync-notes/SKILL.md)负责拉取、保留本地新增、三方对账与公开提交；`sync笔记，仅检查` 只生成同步计划。
+
 * 用「子标题」清晰表达结构
 * 在「子标题」压缩信息：提炼正文内容
 

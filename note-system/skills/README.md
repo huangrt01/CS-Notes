@@ -1,6 +1,6 @@
 # 可移植的个人 skills
 
-公开源文件维护在 `.codex/skills/`；[manifest.json](./manifest.json) 只列审查过的 12 个 skill 与每个文件的 SHA-256。这个清单是个人装机选集，不是整台电脑的技能备份。
+公开源文件维护在 `.codex/skills/`；[manifest.json](./manifest.json) 只列审查过的 skill 与每个文件的 SHA-256。这个清单是个人装机选集，不是整台电脑的技能备份。
 
 | Skill | 保留的价值 | 本轮优化 |
 | --- | --- | --- |
@@ -8,6 +8,7 @@
 | [managed-lark-docs](../../.codex/skills/managed-lark-docs/SKILL.md) | 飞书文档局部 patch、评论锚点保护与远端读回 | 移除私有项目 profile；mirror 保持私有，LoopX 集成按需启用 |
 | [help-me-review](../../.codex/skills/help-me-review/SKILL.md) | 沿调用链带读，解释为什么这样实现 | 分清发现与教学，移除私人项目专属检查项 |
 | [git-split-commit-pr](../../.codex/skills/git-split-commit-pr/SKILL.md) | 脏工作区拆分、公开审查、独立 PR | 删除特定机器的合并例外，保留无关修改 |
+| [sync-notes](../../.codex/skills/sync-notes/SKILL.md) | 笔记与素材的三方对账、公开提交 | 本地新增不因远端缺失归档；用户完成依据逐条核验 |
 | [cli-creator](../../.codex/skills/cli-creator/SKILL.md) | 可组合命令、稳定 JSON、认证与安装验收 | 按已装工具链选择语言，保留原 Apache 许可与参考文件 |
 | [external-research](../../.codex/skills/external-research/SKILL.md) | 问题驱动研究，区分声称、观察、测试与推断 | 专项研究按需读 references，浏览器能力不是硬依赖 |
 | [markdown-toc](../../.codex/skills/markdown-toc/SKILL.md) | 修改前看结构、行号和落点 | 路径正确引用，跳过代码围栏里的假标题 |
@@ -44,6 +45,8 @@ python3 note-system/skills/check.py
 
 `--refresh` 只是重算文件清单与摘要，不是自动安全审查或发布许可。不要将凭证、私人材料或运行缓存放进 skill 目录。安装时会拒绝摘要不符、额外文件和源目录内的 symlink。
 
+新增公开技能时同步 manifest 与仓库 `.gitignore` 的审查白名单，并确认源文件实际进入 staged diff；本机可能有额外的 `.codex` ignore，不能把目录已创建误报为已提交。未审查技能与 Codex 运行状态继续留本地。
+
 ## 其余能力的处置
 
 - LoopX 生成的 workflow skills 从公开 LoopX 安装器维护；不在这里复制一套分叉。
@@ -54,4 +57,4 @@ python3 note-system/skills/check.py
 
 ## Astra 验收
 
-核对 manifest、12 个链接与源 commit；确认改一个测试副本会进入对应 checkout 的 diff，测试后还原测试副本。检查客户端发现路径，试用一次 Markdown 标题提取、一次短文改写与一次只读代码带读。试用飞书维护时，在用户授权的目标上检查局部 patch 与评论锚点，不用真实文档做未经授权的写入测试。校验脚本通过不代表所有自然语言工作流效果已验证；报告实际调用和未测试范围。
+核对 manifest 中的每个链接与源 commit；确认改一个测试副本会进入对应 checkout 的 diff，测试后还原测试副本。检查客户端发现路径，试用一次 Markdown 标题提取、一次短文改写与一次只读代码带读。试用飞书维护时，在用户授权的目标上检查局部 patch 与评论锚点，不用真实文档做未经授权的写入测试。校验脚本通过不代表所有自然语言工作流效果已验证；报告实际调用和未测试范围。

@@ -1,0 +1,4 @@
+interface:
+  display_name: "同步笔记"
+  short_description: "安全同步笔记与素材队列，保留本地新增并逐条核验用户完成状态"
+  default_prompt: "使用 $sync-notes 同步笔记：保留本地新增与私有状态，拉取远端、核验素材完成依据，验证后提交并推送公开改动。"
