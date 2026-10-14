@@ -178,6 +178,7 @@ Context 已改变，否则不动。ranking apply / readback / projection / audit
 用户确认读完的材料按受管流程归档并保留来源/backing；若明确保留为已读参考，标明复习目标并放入 backlog。
 Codex 的 `read_scope` 只描述助手读取范围，不能据此推断用户读完。Git pull 后须将已核验的远端完成状态
 对账到本地 authority，再刷新投影，不能用旧 catalog 把已读材料重新放回待阅读队列。
+归档证据必须逐条绑定 material ref 和可追溯的用户完成声明。远端缺条目、PR 的笼统“已完成阅读”、助手 read_scope 或已整理成笔记，均不能单独证明用户读完。Git 对账先比较共同基线、本地与远端，区分未提交的新素材和远端删除；没有逐条完成证据的差异保留待阅读状态，不生成归档 transition。
 
 **指令约定**
 
