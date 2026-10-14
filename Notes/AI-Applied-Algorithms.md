@@ -12,7 +12,7 @@
 | --- | --- | --- |
 | RAG 与知识检索 | RAG 基础链路、Embedding / Retrieval / Rerank、GraphRAG / KGQA、Agentic RAG、检索增强 LM | 检索 / 上下文召回的基本算法和典型路线 |
 | Agent 基础与经典范式 | CoT、ReAct、ToT、Plan-and-Execute、Function Calling | Agent 基础概念和经典 reasoning / action 框架 |
-| Agent 框架、评估与工作流 | GAIA、MLE-bench、AgentCompass、Deep Research、CUA、ALE / LHTB、长程 benchmark 方法论、Harness-Delta Attribution（捷径 / 计算 / 剩余收益）、ATIF 轨迹格式、Workflow agent、trace-first eval、Prove2Me（verification-gated 形式化众包） | Agent benchmark、可组合评测基础设施、涨分归因、工具使用、工作流、安全评估和观测基建 |
+| Agent 框架、评估与工作流 | GAIA、MLE-bench、AgentCompass、Deep Research、CUA、ALE / LHTB、长程 benchmark 方法论、Harness-Delta Attribution（捷径 / 计算 / 剩余收益）、PAIR（压缩边界归因）、ATIF 轨迹格式、Workflow agent、trace-first eval、Prove2Me（verification-gated 形式化众包） | Agent benchmark、可组合评测基础设施、涨分归因、工具使用、工作流、安全评估和观测基建 |
 | Agent Harness / Agent Infra：总框架 | Agent Loop / Tool Calling / Middleware as effectful & Kleisli composition、ETCLOVG、概率执行语义、semantic recovery、Cloudflare Vulnerability Harness、long-horizon RL、rollout、dynamic environment、trace-native eval、governance、handoff、harness search | 把 Agent Memory / Workflow / Eval / Runtime 放到同一系统框架中 |
 | Context Engineering 与 Agent Runtime | Context / Responses API、runtime resource、session / prefix cache、agent context substrate | Agent runtime 的上下文底座和 API substrate |
 | Agent Memory：领域理论框架 | memory 形态、trajectory-derived experience、memory routing / ranking、personalization、benchmark（含 AML 榜单评测契约）、feedback / credit assignment、[Octop 的事实权威与派生视图](#octop-memory事实权威派生视图与可重放召回) | 当前 Agent Harness / OpenViking 主线和 memory 理论框架 |
@@ -1314,6 +1314,8 @@ Thought:{agent_scratchpad}
 
 评测结论还需同时绑定主张、资源预算和有效性检查：见下节「预算—性能曲线与评测主张」。同预算比较、强引出能力与防护稳健性使用不同实验设计；单点分数无法独立表示系统能力上限。对于自动搜索出来的 harness，再用 [Harness-Delta Attribution](#harness-delta-attribution涨分后追问靠什么涨的) 区分额外计算、数据捷径和剩余结构收益，并用 [Rethinking Harness Evolution](./AI-Agent-Engineering.md#rethinking-harness-evolution把可迁移改进与任务内搜索拆开) 区分跨任务共享 harness 与任务内 Harness Scaling，最后独立验证 held-out 迁移。
 
+优化前先校准任务代表性、评分器、可提升空间与噪声；优化中区分「不读测试内容」与「不让测试分数参与选版本」。每轮用于选 winner 的 test 实际是 selection set，最终泛化仍需独立留出验证。机制与案例见 [Claude build-eval / hillclimb](./AI-Agent-Engineering.md#claude-build-eval--hillclimb评测校准与防过拟合迭代)。外部经验的收益还应拆成 [Harness 更新能力与使用收益](./AI-Agent-Engineering.md#harness-更新能力与使用收益)：能总结出经验，不等于执行者能加载并持续遵循；下游增益接近也不能直接证明更新模型能力等效。
+
 现实滥用调查补充了实验室评测之外的证据，但需区分“提出请求 → 生成内容 → 工具执行 → 现实目标达成”。模型安全还覆盖实际数据处理方、生产凭证与沙箱权限，案例和治理边界见 [AI 服务供应链与 Agent 滥用](./Security-Privacy-Cryptography.md#ai-服务供应链与-agent-滥用)。
 
 #### 预算—性能曲线与评测主张
@@ -1513,11 +1515,90 @@ $$
 
 原文汇总图还将负 G 截为零；复核必须回到带符号的 O/T/G 与四个原始分数。三个评估细节同样关键：同调用次数不保证同 tokens / 成本 / 时延；CREATE 这类 pooled metric 要先合并输出再评分，不能相加每次运行的得分；paired bootstrap 的区间若包含零，应报告噪声范围内，选型集上的赢家还受 winner’s curse 影响。
 
-赢家诅咒来自“同一集合既选方案又证明赢家”：选中的最大涨幅往往含正向噪声，只对最终方案做普通显著性检验 / bootstrap 没有自动考虑此前搜索。最直接的做法是开发／验证集选优，冻结 harness、指标与分析规则后，再用未参与选择的测试集评估；若按测试反馈继续修改，该集合也进入优化循环。统计解释见 [选优后的统计推断](./mathematics.md#选优后的统计推断赢家诅咒多重比较与提前停止)，线上实践见 [A/B 实验设计](./Software-Engineering.md#实验设计)。
+赢家诅咒来自“同一集合既选方案又证明赢家”：选中的最大涨幅往往含正向噪声，只对最终方案做普通显著性检验 / bootstrap 没有自动考虑此前搜索。最直接的做法是开发／验证集选优，冻结 harness、指标与分析规则后，再用未参与选择的测试集评估；若按测试反馈继续修改，该集合也进入优化循环。统计解释见 [选优后的统计推断](./mathematics.md#选优后的统计推断赢家诅咒多重比较与提前停止)，线上实践见 [A/B 的分析、确认与反馈边界](./Software-Engineering.md#分析确认与反馈边界)。
 
 一个值得迁移的正例是 SWE-bench 30B-A3B 的 `multi_action_feedback`：模型输出多个 action block，解析器只执行第一个；显式反馈哪些没有执行，可纠正“已经全部成功”的错误状态判断。机制与原话见 [工具执行的语义反馈](./AI-Agent-Engineering.md#工具执行的语义反馈让模型知道实际执行了什么)。该案例的 held-out 测试从 12% 到 26%，是独立于训练归因的迁移证据；SWE 划分为 48/24/50 个 train/val/test 实例且保持相似仓库构成，不等于向新仓库或任意任务迁移。
 
 可迁移到 eval 报告的字段：`scores(B/E/B_cc/E_neutral)`、带符号的 `raw(O/T/G)`、`shares`、逐题 `compute_ledger`、预算匹配 / neutralization `policies`、干预审查记录 `approvals`、`caveats`，另记 `split / feedback_visibility / selection_rule / held_out_score`。比较 memory、multi-agent 或 harness evolution 时，先保留同预算强基线和独立测试，再讨论结构本身的价值。
+
+#### PAIR：用同状态反事实续跑归因压缩损伤
+
+> 来源：[Adapting Context Compression for Long-Horizon Agents with Counterfactual Continuations](https://arxiv.org/html/2609.36526v1)（PAIR，v1，2026-09-29）。完整阅读论文、附录、Prompt 与 TeX；没有官方实现仓库，以下实验未独立复现。
+
+PAIR 的核心不是再发明一种摘要格式，而是回答一个归因问题：**某次压缩之后任务变差，究竟是不是这次压缩造成的？** 它冻结 Agent、compressor model、tools 与 decoding config，从同一个环境快照分别运行 PRE / POST continuation：PRE 保留压缩前上下文，POST 换成压缩摘要。两边面对相同后续状态，差异才较接近单次压缩的局部影响。
+
+![PAIR：从同状态反事实续跑到压缩 Prompt 适配](./AI-Applied-Algorithms/pair-counterfactual-compression-pipeline.png)
+
+*原图：[论文 Figure 3](https://arxiv.org/html/2609.36526v1#S4.F3)。*
+
+一条压缩边界需同时保存 `environment state + pre-context + generated summary`。对边界 $t$ 重复运行 continuation，定义：
+
+$$
+\hat H_t
+=
+\overline{\operatorname{success}}_{\mathrm{PRE}}
+-
+\overline{\operatorname{success}}_{\mathrm{POST}}
+$$
+
+$$
+\hat B_t
+=
+\overline{\operatorname{steps}}_{\mathrm{POST}}
+-
+\overline{\operatorname{steps}}_{\mathrm{PRE}}
+$$
+
+$\hat H_t$ 是 outcome hazard：压缩使成功率下降多少；$\hat B_t$ 是 interaction burden：压缩使后续多走多少步。论文默认把下面任一条件成立视为有害边界：
+
+$$
+\hat H_t\ge 0.5
+\quad\lor\quad
+\hat B_t\ge 5
+$$
+
+为了不在所有边界上都跑满重复实验，PAIR 用三轮 successive halving。每个边界先跑一对 PRE / POST，连续两轮只保留分数最高的一半，最多累积三对：
+
+$$
+s_t^{(r)}
+=
+\max\left(
+\frac{\hat H_t^{(r)}}{\tau_H},
+\frac{\hat B_t^{(r)}}{\tau_B}
+\right)
+$$
+
+除以阈值是为了统一成功率差与步骤差的量纲；取 `max` 是为了对齐最终的 OR 条件。$s\ge 1$ 表示至少一个维度达到阈值。它只是预算分配和排序分数，不是概率、reward 或统计显著性；早期少量采样仍可能把真实有害边界淘汰。
+
+两个真实 Prompt 演化案例解释了为什么摘要质量不能只看“信息是否大致保留”：
+
+| 失败类型 | 初始摘要怎样丢状态 | PRE / POST 证据 | Prompt 修正与重放 |
+| --- | --- | --- | --- |
+| 丢失任务谓词 | 任务只统计 coworker 转账；Agent 已得到 36 笔 received transactions、总额 1676，但还没筛 coworker。P0 却写成 “Use total 1676 as answer”，把中间统计冒充最终答案；正确答案是 786 | PRE 3/3，POST 1/3，$\hat H=0.67$ | 强制保留 predicate、scope、relationship filter、temporal condition，并区分中间统计与已验证答案。重放：P0 0/3、ACON-UT 2/3、PAIR 3/3 |
+| 丢失可执行状态 | 登录与联系人 API 已读，摘要只写“规格已读取”，没有 signature、参数、变量和已完成状态；Agent 重新读文档并碎片化认证 | PRE / POST 均 3/3，但平均 9 / 14 步，$\hat B=5$ | 保留 credential / token handle、变量、API signature、已读文档和完成进度，不重开已完成认证。重放：P0 14.7 步、PAIR 10.7、PRE 9.0 |
+
+第一类让 Agent 流畅地做错任务，主要体现 outcome hazard；第二类仍能完成任务，却重复重建可执行状态，主要体现 interaction burden。后一个案例的初始 diagnosis 还曾误猜“增加了 verification”；回看 paired trajectory 才发现真正原因是重复查文档与认证。这说明压缩摘要要同时保持**任务语义**和**下一步可直接执行的状态**。
+
+这也解释了 PAIR 与 ACON 的差异。ACON 从完整成功轨迹和压缩失败轨迹总结经验，容易产生 retry、verification、State Table 等教下游 Agent“怎样做任务”的 agent-facing policy；PAIR 用局部边界证据约束 compressor，主要回答“状态应怎样表示”。AppWorld 中，PAIR 摘要显式保留 token 的比例为 69%，ACON 为 0%；保留可执行 API 的比例为 80% / 48%；压缩后第一步重新查文档的比例为 22% / 38%。这些是机制统计，不等于 PAIR 在所有任务上都优于行为规则。
+
+**超出硬上下文窗口时怎么办。** 原论文的 2K / 4K / 8K 是人为压缩阈值，不是模型硬上限；no-compression 的平均 peak context 分别为 AppWorld 12.53K、OfficeBench 7.02K、$\tau^2$-Retail 6.79K。真正超过模型上限时，PRE 无法续跑，原始 PAIR 的终局对照不成立。可工程化扩展成 bounded paired continuation：
+
+```text
+相同 snapshot
+├── PRE
+└── POST
+
+first_of(checkpoint, H steps, token budget, terminal, context safety limit)
+```
+
+它可以比较 milestone hazard、step / token burden 和状态重建行为，但这是扩展方案，不是论文原方法；此时不能继续使用论文的终局 performance-difference 恒等式，也不能把多个局部 hazard 直接相加成总任务损失。
+
+**证据边界**：
+
+- AppWorld 两组相对最佳 ACON 变体的 Pass$^3$ 差异区间排除 0；OfficeBench 与 $\tau^2$-Retail 的区间跨 0。不能把六组点估计都写成稳定胜出。
+- 单设置离线适配消耗 39.6M–90.8M tokens，六个设置合计 357.32M；ACON 更便宜。论文没有证明相同总预算下，PAIR 优于普通 Prompt search。
+- 边界重放有随机性：只有 3/7 个 outcome case、1/6 个 burden case 完整满足“初始缺陷复现、适配 Prompt 修复”，所以局部诊断之后仍需端到端选型。
+- 方法需要可恢复的 environment state，且属于 task-family 级离线 Prompt 适配；跨模型迁移不等于跨任务领域泛化，也没有证明在线持续演化。
 
 #### AgentCompass：评测对象不是裸模型，而是完整执行配置
 

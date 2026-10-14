@@ -533,15 +533,33 @@ https://github.com/google-research/tuning_playbook
 
 ![image-20250111195734138](./Machine-Learning/image-20250111195734138.png)
 
-### Evalutaion/Validation
+### Evaluation / Validation
+
+#### 先分清描述、预测与干预
+
+> 参考：[Hernán & Robins, *Causal Inference: What If*, Ch. 1–3](https://miguelhernan.org/s/hernanrobins_WhatIf_19aug26.pdf)。三类问题可以使用相似的数据和模型，但结论对象不同。
+
+| 问题 | 典型问法 | 主要验收 |
+| --- | --- | --- |
+| 描述 | 已观测数据里发生了什么？ | 口径、覆盖率、采样与测量误差 |
+| 预测 | 看到特征 $X$ 后，能否预测结果 $Y$？ | 未见样本上的 calibration、AUC、loss 等 |
+| 干预 | 主动把 $A$ 改成另一个值，$Y$ 会怎样？ | 明确干预、对照、分配机制、目标效应与识别假设 |
+
+例如，“根据历史轨迹预测哪些 Agent 任务会失败”是预测问题；“给同类任务注入某条 memory，平均能提高多少成功率”是干预问题。一个特征能稳定预测失败，可能只是任务难度或用户类型的代理，不代表修改这个特征会改善结果。
+
+高 AUC、held-out generalization、feature importance、PDP 或相关系数都不自动给出因果效应。普通 train/test split 证明的是模型对相近数据生成过程的预测泛化；它没有创建“同一对象接受与不接受干预”的对照，也没有自动消除混杂、选择偏差或干预后的反馈。在线干预见 [A/B Testing](./Software-Engineering.md#ab-testing)；已有日志上的策略反事实评估见 [Counterfactual evaluation / Off-policy evaluation](./Reinforcement-Learning.md#counterfactual-evaluation--off-policy-evaluation)。
+
+#### 预测指标
 
 * Metrics
   * **Mean Absolute Error** (MAE)
   * Normalized Discounted Cumulative Gain (NDCG)
   * Root Mean Square Error 
 
-* holdout validation, cross-validation, leave-one-out validation, etc
-  * “leave-one-out” 将数据分割为训练集、验证集和测试集。具体操作是对于每个用户，将其一个交互行为数据留出作为测试集，其余的作为训练集和验证集。例如，对于有N个交互行为的用户，选择其中第N个行为作为测试数据，其余N-1个行为用于训练和验证。
+#### 数据划分与验证
+
+* 常见方法包括 holdout validation、cross-validation、leave-one-out validation 等。划分单位要服从数据依赖：同一用户、会话或时间序列的高度相关样本不能随意跨 train/test 泄漏。
+* 推荐系统中常见的 per-user leave-one-out：对每个用户留出一个交互作为测试，其余用于训练和验证。例如用户有 $N$ 个交互时，选择第 $N$ 个行为作为测试数据，其余 $N-1$ 个行为用于训练和验证。这是按用户构造的留出协议，不等同于经典统计中“每次只留一个总体样本”的完整 LOOCV。
 
 ```python
 train_data, validation_data, test_data = np.split(model_data.sample(frac=1, random_state=1729), [int(0.7 * len(model_data)), int(0.9 * len(model_data))])   # Randomly sort the data then split out first 70%, second 20%, and last 10%
