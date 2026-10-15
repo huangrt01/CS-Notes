@@ -1,10 +1,25 @@
+# Machine Learning
+
 [toc]
 
-## Machine Learning
+这份笔记按“建模对象 → 优化训练 → 评估推断 → 表示学习 → 具体任务 → 工程实践”组织。阅读时不必线性通读：先从当前问题所在的模块进入，再沿章节内链接补前置知识。
 
-Materials
+## 阅读地图
+
+| 当前问题 | 建议入口 |
+| --- | --- |
+| 模型由哪些结构与非线性组成？ | 建模基础：架构、RNN、激活函数、损失函数 |
+| 为什么训练不收敛或训练不稳定？ | 优化、训练与调参：优化器、学习率、采样、训练技巧 |
+| 分数变化能否支持一个结论？ | 评估、验证与因果推断：问题定义、潜在结果、识别条件、target trial 与数据划分 |
+| 怎样学习可迁移的表示？ | 表示学习与无监督学习：对比目标、负样本、聚类、降维 |
+| 怎样解决排序、语言或视觉任务？ | 排序、语言与视觉：LTR、Position Bias、NLP、CV |
+| 怎样连接分布式训练与实践代码？ | 课程与工程实践：NVIDIA 课程与 Multi-GPU / Horovod |
+
+### Materials
 
 * http://neuralnetworksanddeeplearning.com/
+
+## 1. 建模基础
 
 ### Intro
 
@@ -90,6 +105,139 @@ Materials
     *   **Cross-Entropy**: 标准多分类。
     *   **Focal Loss**: 解决类别不平衡，关注难分样本。
 
+### RNN/LSTM/GRU
+
+* Intro
+  * GRU解决了RNN的梯度消失问题，参数量比LSTM小
+
+![image-20250610024850494](./Machine-Learning/image-20250610024850494.png)
+
+### 激活函数
+
+#### Intro
+
+* 各种激活函数
+  * ![image-20251004022659992](./Machine-Learning/image-20251004022659992.png)
+
+* 选激活函数 https://machinelearningmastery.com/choose-an-activation-function-for-deep-learning/
+  * When using the ReLU function for hidden layers, it is a good practice to use a “*He Normal*” or “*He Uniform*” weight initialization and scale input data to the range 0-1 (normalize) prior to training.
+* 典型问题：XOR问题
+* ![image-20241221123336418](./Machine-Learning/image-20241221123336418.png)
+
+
+
+* sigmoid函数
+  * 1/(1+e^(-x))
+  * 非常适合作为模型的输出函数用于输出一个0~1范围内的概率值
+  * 已经不太受欢迎，实际中很少作为激活函数
+    * 容易造成梯度消失。我们从导函数图像中了解到sigmoid的导数都是小于0.25的，那么在进行反向传播的时候，梯度相乘结果会慢慢的趋向于0。这样几乎就没有梯度信号通过神经元传递到前面层的梯度更新中，因此这时前面层的权值几乎没有更新，这就叫梯度消失。除此之外，为了防止饱和，必须对于权重矩阵的初始化特别留意。如果初始化权重过大，可能很多神经元得到一个比较小的梯度，致使神经元不能很好的更新权重提前饱和，神经网络就几乎不学习。
+    * 函数输出不是以 0 为中心的，梯度可能就会向特定方向移动，从而降低权重更新的效率
+    * 指数计算消耗资源
+* Tanh(x)=2Sigmoid(2x)−1
+  * 相比sigmoid，以0为中心
+
+##### LLM中的各种激活函数
+
+https://sathvikjoel.github.io/posts/tech/05032024_activationfunctions/
+
+#### ReLU系列
+
+* ReLU
+  * 优点：
+    * ReLU解决了梯度消失的问题，当输入值为正时，神经元不会饱和
+    * 由于ReLU线性、非饱和的性质，在SGD中能够快速收敛
+    * 计算复杂度低，不需要进行指数运算
+  * 缺点：
+    * 输出不是以0为中心的
+    * Dead ReLU 问题：要设置一个合适的较小的学习率
+* Leaky ReLU：解决了ReLU输入值为负时神经元出现的死亡的问题
+  * 函数中的α，需要通过先验知识人工赋值（一般设为0.01）
+  * 有些近似线性，导致在复杂分类中效果不好。
+* Parametric ReLU：alpha可学习
+* ELU：
+  * ![image-20241221141507094](./Machine-Learning/image-20241221141507094.png)
+
+#### GELU
+
+* 高斯误差线性单元（Gaussian Error Linear Unit，GELU）是一种在深度学习领域广泛应用的激活函数，是一种非线性激活函数
+  * 其精确的数学表达式为： $$ \text{GELU}(x)=x \cdot \Phi(x) $$ 其中，$$\Phi(x)$$ 是标准正态分布的累积分布函数，其表达式为： $$ \Phi(x)=\frac{1}{2}\left[1 + \text{erf}\left(\frac{x}{\sqrt{2}}\right)\right] $$ 这里的 $$\text{erf}(x)$$ 是误差函数，定义为： $$ \text{erf}(x)=\frac{2}{\sqrt{\pi}}\int_{0}^{x}e^{-t^{2}}dt $$
+  * 在实际应用中，为了提高计算效率，通常使用近似公式来计算 GELU，常见的近似公式有： - 近似公式一： $$ \text{GELU}(x) \approx 0.5x\left(1 + \tanh\left[\sqrt{\frac{2}{\pi}}\left(x + 0.044715x^{3}\right)\right]\right) $$ - 近似公式二： $$ \text{GELU}(x) \approx x \cdot \sigma(1.702x) $$ 其中 $$\sigma(x)$$ 是 sigmoid 函数，$$\sigma(x)=\frac{1}{1 + e^{-x}}$$。
+
+### 损失函数 (Loss Functions)
+
+损失函数（或成本函数）用于衡量模型预测值与真实值之间的差异。模型训练的目标是最小化损失函数。
+
+#### BPR Loss (Bayesian Personalized Ranking)
+
+BPR Loss 是一种在推荐系统中广泛应用的**成对排序损失 (Pairwise Ranking Loss)**，尤其适用于处理隐式反馈数据（如点击、购买、观看等）。
+
+它的核心思想不是直接预测用户对物品的评分（pointwise），而是对物品进行排序（pairwise）。它试图最大化用户对“正样本”（用户交互过的物品 `i`）的预测分数高于“负样本”（用户未交互过的物品 `j`）的预测分数的概率。
+
+*   **数据假设**：BPR 假设用户对他们交互过的物品的偏好程度，要高于他们未交互过的物品。
+*   **训练数据**：训练数据由三元组 `(u, i, j)` 构成，其中 `u` 代表用户，`i` 是该用户交互过的正样本，`j` 是为该用户采样的、他未交互过的负样本。
+*   **损失函数**：
+    $ \mathcal{L}_{\text{BPR}} = \sum_{(u,i,j) \in D_S} -\ln \sigma(\hat{x}_{ui} - \hat{x}_{uj}) + \lambda ||\Theta||^2 $
+    *   $\hat{x}_{ui}$ 是模型预测的用户 `u` 对物品 `i` 的分数。在矩阵分解模型中，这通常是用户和物品隐向量的内积：$\hat{x}_{ui} = \mathbf{v}_u^T \mathbf{v}_i$。
+    *   我们希望正样本的分数高于负样本，即 $\hat{x}_{ui} > \hat{x}_{uj}$。当这个差值越大，$\sigma(\hat{x}_{ui} - \hat{x}_{uj})$ 越接近1，损失 $-\ln(\cdot)$ 越接近0。
+
+#### 交叉熵 (Cross-Entropy)
+
+*   交叉熵源于信息论，衡量两个概率分布之间的差异。在机器学习中，它常用于分类任务。
+*   **定义**: $H(p, q) = - \sum_{x} p(x) \log(q(x))$
+    *   `p`: 真实分布 (true distribution)
+    *   `q`: 预测分布 (predicted distribution)
+*   **分类任务中的应用**:
+    *   **二元交叉熵 (Binary Cross-Entropy)**: 用于二分类问题。对于单个样本，损失为 $L = -(y \log(\hat{y}) + (1-y) \log(1-\hat{y}))$，其中 `y` 是真实标签 (0或1)，$$\hat{y}$$ 是模型预测为类别1的概率。
+    *   **分类交叉熵 (Categorical Cross-Entropy)**: 用于多分类问题。对于单个样本，损失为 $L = - \sum_{c=1}^{M} y_c \log(\hat{y}_c)$，其中 `M` 是类别数，`y_c` 是一个 one-hot 向量，表示真实类别，$$\hat{y}_c$$ 是模型对类别 `c` 的预测概率。
+
+#### 均方误差 (Mean Squared Error, MSE)
+
+*   MSE 主要用于回归任务，计算预测值与真实值之差的平方的均值。
+*   **定义**: $MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$
+*   对异常值（outliers）非常敏感，因为误差被平方了。
+
+#### 平均绝对误差 (Mean Absolute Error, MAE)
+
+*   MAE 也用于回归任务，计算预测值与真实值之差的绝对值的均值。
+*   **定义**: $MAE = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|$
+*   相比 MSE，MAE 对异常值的鲁棒性更好。
+
+#### Hinge Loss
+
+*   主要用于“最大间隔”分类，特别是支持向量机 (SVM)。
+*   它会惩罚那些不仅被错误分类，而且离决策边界不够远的样本。
+*   **定义**: $L(y, \hat{y}) = \max(0, 1 - y \cdot \hat{y})$
+    *   `y` 是真实标签，取值为 `{-1, 1}`。
+    *   `\hat{y}` 是分类器的原始输出（不是概率）。当 `y` 和 `\hat{y}` 同号且 $$|\hat{y}| \ge 1$$ 时，损失为0。
+
+#### Huber Loss
+
+*   结合了 MSE 和 MAE 的优点，对异常值具有鲁棒性。当误差较小时，它像 MSE 一样是二次的；当误差较大时，它像 MAE 一样是线性的。
+*   **定义**:
+    $
+    L_{\delta}(y, \hat{y}) =
+    \begin{cases}
+    \frac{1}{2}(y - \hat{y})^2 & \text{for } |y - \hat{y}| \le \delta \\
+    \delta (|y - \hat{y}| - \frac{1}{2}\delta) & \text{otherwise}
+    \end{cases}
+    $
+    *   `\delta` 是一个超参数，用于区分“小误差”和“大误差”。
+
+#### Focal Loss
+
+*   对标准交叉熵的改进，旨在解决类别不平衡问题（如目标检测）。
+*   它通过降低已正确分类样本的权重，使模型更专注于学习难分类的样本。
+*   **定义**: $FL(p_t) = -\alpha_t (1-p_t)^\gamma \log(p_t)$
+    *   `p_t` 是模型对真实类别的预测概率。
+    *   `\gamma` (gamma) 是聚焦参数 (`\gamma > 0`)，`\gamma` 越大，对易分类样本的降权效果越明显。
+    *   `\alpha_t` 是一个平衡因子，用于平衡正负样本的重要性。
+
+### ML Theory
+
+* 参考「mathematics.md」
+
+## 2. 优化、训练与调参
+
 ### Optimizer
 
 > https://speech.ee.ntu.edu.tw/~tlkagk/courses/ML2020/Optimization.pdf
@@ -129,7 +277,7 @@ Materials
 
   * Strong convexity $$\mu$$ and Lipschtiz hessian $$H$$
 
-  * Quadratic convergence: 
+  * Quadratic convergence:
 
     * $$\|w_{t+1} - w_*\| \leq \frac{H}{\mu} \|w_t - w_*\|^2$$
 
@@ -210,7 +358,7 @@ Materials
 
 - 本质：
 
-  - using the average $$\frac{1}{t}\sum_t g_t \circ g_t$$ to estimate hessian 
+  - using the average $$\frac{1}{t}\sum_t g_t \circ g_t$$ to estimate hessian
 
   - a **naturally decay learning rate** $$\frac{\eta}{\sqrt{t}}$$
 
@@ -238,7 +386,7 @@ Materials
   - Bias-corrected 2nd moment: $$\hat{v}_t \leftarrow \frac{v_t}{1-\beta_2^t}$$
   - Adam Update model: $$w_{t} \leftarrow w_{t-1} - \eta \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}$$
   - AdamW Update model: 在 Adam 的基础上，增加了权重衰减的步骤。设权重衰减系数为 $$\lambda$$，则更新公式变为 $$w_{t} \leftarrow w_{t-1}(1 - \eta\lambda)- \eta \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}$$
-  - Note: 
+  - Note:
     - bias correction could be ignored
     - AdaGrad uses **uniformly weighted** average, while Adam assigns **larger weights for later** items
       - Intuition: 哪一种近似 Hessian 的方式在模型上更合适，需要考虑旧的 sparse item 的期望更新方式
@@ -309,7 +457,7 @@ Materials
     - $$\|u_t\|$$ is unstable
   - Using large learning rate: diverge for large $$\|u_t\|$$
   - Using small learning rate: slow convergence for small $$\|u_t\|$$
-  - LAMB: 
+  - LAMB:
     - Adaptive learning rate: $$ \frac{\eta \|w_{t-1}\|}{\|u_t\|}$$
   - Smaller when $$\|u_t\|$$is large
   - Larger when $$\|u_t\|$$is small
@@ -368,13 +516,11 @@ Materials
 
 #### LARS – 按层自适应学习率调整
 
-*  [LARS论文](https://arxiv.org/abs/1904.00962): 
+*  [LARS论文](https://arxiv.org/abs/1904.00962):
    *  大LR -> LR warm-up -> LARS，只是能保证大batch训练能训，关于效果问题，作者认为“increasing the batch does not give much additional gradient information comparing to smaller batches.”
 *  [LARC](https://github.com/NVIDIA/apex/blob/master/apex/parallel/LARC.py): 带梯度裁剪的分层自适应学习率，以具有动力的SGD作为基础优化器
 *  [LAMB](https://arxiv.org/abs/1904.00962): 分层自适应学习率，以 Adam 作为基础优化器，在BERT等语言模型上比LARC更成功
 *  [NovoGrad](https://arxiv.org/abs/1905.11286): 按层计算的移动平均值，在几个不同的领域也有不错的表现
-
-
 
 ### 反向传播技巧
 
@@ -391,194 +537,10 @@ https://hassanaskary.medium.com/intuitive-explanation-of-straight-through-estima
 
 * 一种从离散分布取样的方法，它的形式可以允许我们定义一种可微分的，离散分布的近似取样，这种取样方式不像「干脆以各类概率值的概率向量替代取样」这么粗糙，也不像直接取样一样不可导（因此没办法应对可能的 bp ）
 
-
-
-### 激活函数
-
-#### Intro
-
-* 各种激活函数
-  * ![image-20251004022659992](./Machine-Learning/image-20251004022659992.png)
-
-* 选激活函数 https://machinelearningmastery.com/choose-an-activation-function-for-deep-learning/
-  * When using the ReLU function for hidden layers, it is a good practice to use a “*He Normal*” or “*He Uniform*” weight initialization and scale input data to the range 0-1 (normalize) prior to training.
-* 典型问题：XOR问题
-* ![image-20241221123336418](./Machine-Learning/image-20241221123336418.png)
-
-
-
-* sigmoid函数
-  * 1/(1+e^(-x))
-  * 非常适合作为模型的输出函数用于输出一个0~1范围内的概率值
-  * 已经不太受欢迎，实际中很少作为激活函数
-    * 容易造成梯度消失。我们从导函数图像中了解到sigmoid的导数都是小于0.25的，那么在进行反向传播的时候，梯度相乘结果会慢慢的趋向于0。这样几乎就没有梯度信号通过神经元传递到前面层的梯度更新中，因此这时前面层的权值几乎没有更新，这就叫梯度消失。除此之外，为了防止饱和，必须对于权重矩阵的初始化特别留意。如果初始化权重过大，可能很多神经元得到一个比较小的梯度，致使神经元不能很好的更新权重提前饱和，神经网络就几乎不学习。
-    * 函数输出不是以 0 为中心的，梯度可能就会向特定方向移动，从而降低权重更新的效率
-    * 指数计算消耗资源
-* Tanh(x)=2Sigmoid(2x)−1
-  * 相比sigmoid，以0为中心
-
-##### LLM中的各种激活函数
-
-https://sathvikjoel.github.io/posts/tech/05032024_activationfunctions/
-
-#### ReLU系列
-
-* ReLU
-  * 优点：
-    * ReLU解决了梯度消失的问题，当输入值为正时，神经元不会饱和
-    * 由于ReLU线性、非饱和的性质，在SGD中能够快速收敛
-    * 计算复杂度低，不需要进行指数运算
-  * 缺点：
-    * 输出不是以0为中心的
-    * Dead ReLU 问题：要设置一个合适的较小的学习率
-* Leaky ReLU：解决了ReLU输入值为负时神经元出现的死亡的问题
-  * 函数中的α，需要通过先验知识人工赋值（一般设为0.01）
-  * 有些近似线性，导致在复杂分类中效果不好。
-* Parametric ReLU：alpha可学习
-* ELU：
-  * ![image-20241221141507094](./Machine-Learning/image-20241221141507094.png)
-
-#### GELU
-
-* 高斯误差线性单元（Gaussian Error Linear Unit，GELU）是一种在深度学习领域广泛应用的激活函数，是一种非线性激活函数
-  * 其精确的数学表达式为： $$ \text{GELU}(x)=x \cdot \Phi(x) $$ 其中，$$\Phi(x)$$ 是标准正态分布的累积分布函数，其表达式为： $$ \Phi(x)=\frac{1}{2}\left[1 + \text{erf}\left(\frac{x}{\sqrt{2}}\right)\right] $$ 这里的 $$\text{erf}(x)$$ 是误差函数，定义为： $$ \text{erf}(x)=\frac{2}{\sqrt{\pi}}\int_{0}^{x}e^{-t^{2}}dt $$ 
-  * 在实际应用中，为了提高计算效率，通常使用近似公式来计算 GELU，常见的近似公式有： - 近似公式一： $$ \text{GELU}(x) \approx 0.5x\left(1 + \tanh\left[\sqrt{\frac{2}{\pi}}\left(x + 0.044715x^{3}\right)\right]\right) $$ - 近似公式二： $$ \text{GELU}(x) \approx x \cdot \sigma(1.702x) $$ 其中 $$\sigma(x)$$ 是 sigmoid 函数，$$\sigma(x)=\frac{1}{1 + e^{-x}}$$。 
-
-
-
-### 损失函数 (Loss Functions)
-
-损失函数（或成本函数）用于衡量模型预测值与真实值之间的差异。模型训练的目标是最小化损失函数。
-
-#### BPR Loss (Bayesian Personalized Ranking)
-
-BPR Loss 是一种在推荐系统中广泛应用的**成对排序损失 (Pairwise Ranking Loss)**，尤其适用于处理隐式反馈数据（如点击、购买、观看等）。
-
-它的核心思想不是直接预测用户对物品的评分（pointwise），而是对物品进行排序（pairwise）。它试图最大化用户对“正样本”（用户交互过的物品 `i`）的预测分数高于“负样本”（用户未交互过的物品 `j`）的预测分数的概率。
-
-*   **数据假设**：BPR 假设用户对他们交互过的物品的偏好程度，要高于他们未交互过的物品。
-*   **训练数据**：训练数据由三元组 `(u, i, j)` 构成，其中 `u` 代表用户，`i` 是该用户交互过的正样本，`j` 是为该用户采样的、他未交互过的负样本。
-*   **损失函数**：
-    $ \mathcal{L}_{\text{BPR}} = \sum_{(u,i,j) \in D_S} -\ln \sigma(\hat{x}_{ui} - \hat{x}_{uj}) + \lambda ||\Theta||^2 $
-    *   $\hat{x}_{ui}$ 是模型预测的用户 `u` 对物品 `i` 的分数。在矩阵分解模型中，这通常是用户和物品隐向量的内积：$\hat{x}_{ui} = \mathbf{v}_u^T \mathbf{v}_i$。
-    *   我们希望正样本的分数高于负样本，即 $\hat{x}_{ui} > \hat{x}_{uj}$。当这个差值越大，$\sigma(\hat{x}_{ui} - \hat{x}_{uj})$ 越接近1，损失 $-\ln(\cdot)$ 越接近0。
-
-#### 交叉熵 (Cross-Entropy)
-
-*   交叉熵源于信息论，衡量两个概率分布之间的差异。在机器学习中，它常用于分类任务。
-*   **定义**: $H(p, q) = - \sum_{x} p(x) \log(q(x))$
-    *   `p`: 真实分布 (true distribution)
-    *   `q`: 预测分布 (predicted distribution)
-*   **分类任务中的应用**:
-    *   **二元交叉熵 (Binary Cross-Entropy)**: 用于二分类问题。对于单个样本，损失为 $L = -(y \log(\hat{y}) + (1-y) \log(1-\hat{y}))$，其中 `y` 是真实标签 (0或1)，$$\hat{y}$$ 是模型预测为类别1的概率。
-    *   **分类交叉熵 (Categorical Cross-Entropy)**: 用于多分类问题。对于单个样本，损失为 $L = - \sum_{c=1}^{M} y_c \log(\hat{y}_c)$，其中 `M` 是类别数，`y_c` 是一个 one-hot 向量，表示真实类别，$$\hat{y}_c$$ 是模型对类别 `c` 的预测概率。
-
-#### 均方误差 (Mean Squared Error, MSE)
-
-*   MSE 主要用于回归任务，计算预测值与真实值之差的平方的均值。
-*   **定义**: $MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$
-*   对异常值（outliers）非常敏感，因为误差被平方了。
-
-#### 平均绝对误差 (Mean Absolute Error, MAE)
-
-*   MAE 也用于回归任务，计算预测值与真实值之差的绝对值的均值。
-*   **定义**: $MAE = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|$
-*   相比 MSE，MAE 对异常值的鲁棒性更好。
-
-#### Hinge Loss
-
-*   主要用于“最大间隔”分类，特别是支持向量机 (SVM)。
-*   它会惩罚那些不仅被错误分类，而且离决策边界不够远的样本。
-*   **定义**: $L(y, \hat{y}) = \max(0, 1 - y \cdot \hat{y})$
-    *   `y` 是真实标签，取值为 `{-1, 1}`。
-    *   `\hat{y}` 是分类器的原始输出（不是概率）。当 `y` 和 `\hat{y}` 同号且 $$|\hat{y}| \ge 1$$ 时，损失为0。
-
-#### Huber Loss
-
-*   结合了 MSE 和 MAE 的优点，对异常值具有鲁棒性。当误差较小时，它像 MSE 一样是二次的；当误差较大时，它像 MAE 一样是线性的。
-*   **定义**:
-    $
-    L_{\delta}(y, \hat{y}) =
-    \begin{cases}
-    \frac{1}{2}(y - \hat{y})^2 & \text{for } |y - \hat{y}| \le \delta \\
-    \delta (|y - \hat{y}| - \frac{1}{2}\delta) & \text{otherwise}
-    \end{cases}
-    $
-    *   `\delta` 是一个超参数，用于区分“小误差”和“大误差”。
-
-#### Focal Loss
-
-*   对标准交叉熵的改进，旨在解决类别不平衡问题（如目标检测）。
-*   它通过降低已正确分类样本的权重，使模型更专注于学习难分类的样本。
-*   **定义**: $FL(p_t) = -\alpha_t (1-p_t)^\gamma \log(p_t)$
-    *   `p_t` 是模型对真实类别的预测概率。
-    *   `\gamma` (gamma) 是聚焦参数 (`\gamma > 0`)，`\gamma` 越大，对易分类样本的降权效果越明显。
-    *   `\alpha_t` 是一个平衡因子，用于平衡正负样本的重要性。
-
-### Tuning
-
-https://github.com/google-research/tuning_playbook
-
-### Visualization 可视化
-
-#### t-SNE：可视化高维向量
-
-* 科普文章 https://medium.com/@sachinsoni600517/mastering-t-sne-t-distributed-stochastic-neighbor-embedding-0e365ee898ea
-
-#### k-means clustering
-
-* k个初值，means方法归类，N次迭代
-
-#### Partial Dependency Plots (PDP, 部分依赖图)
-
-![image-20250111195734138](./Machine-Learning/image-20250111195734138.png)
-
-### Evaluation / Validation
-
-#### 先分清描述、预测与干预
-
-> 参考：[Hernán & Robins, *Causal Inference: What If*, Ch. 1–3](https://miguelhernan.org/s/hernanrobins_WhatIf_19aug26.pdf)。三类问题可以使用相似的数据和模型，但结论对象不同。
-
-| 问题 | 典型问法 | 主要验收 |
-| --- | --- | --- |
-| 描述 | 已观测数据里发生了什么？ | 口径、覆盖率、采样与测量误差 |
-| 预测 | 看到特征 $X$ 后，能否预测结果 $Y$？ | 未见样本上的 calibration、AUC、loss 等 |
-| 干预 | 主动把 $A$ 改成另一个值，$Y$ 会怎样？ | 明确干预、对照、分配机制、目标效应与识别假设 |
-
-例如，“根据历史轨迹预测哪些 Agent 任务会失败”是预测问题；“给同类任务注入某条 memory，平均能提高多少成功率”是干预问题。一个特征能稳定预测失败，可能只是任务难度或用户类型的代理，不代表修改这个特征会改善结果。
-
-高 AUC、held-out generalization、feature importance、PDP 或相关系数都不自动给出因果效应。普通 train/test split 证明的是模型对相近数据生成过程的预测泛化；它没有创建“同一对象接受与不接受干预”的对照，也没有自动消除混杂、选择偏差或干预后的反馈。在线干预见 [A/B Testing](./Software-Engineering.md#ab-testing)；已有日志上的策略反事实评估见 [Counterfactual evaluation / Off-policy evaluation](./Reinforcement-Learning.md#counterfactual-evaluation--off-policy-evaluation)。
-
-#### 预测指标
-
-* Metrics
-  * **Mean Absolute Error** (MAE)
-  * Normalized Discounted Cumulative Gain (NDCG)
-  * Root Mean Square Error 
-
-#### 数据划分与验证
-
-* 常见方法包括 holdout validation、cross-validation、leave-one-out validation 等。划分单位要服从数据依赖：同一用户、会话或时间序列的高度相关样本不能随意跨 train/test 泄漏。
-* 推荐系统中常见的 per-user leave-one-out：对每个用户留出一个交互作为测试，其余用于训练和验证。例如用户有 $N$ 个交互时，选择第 $N$ 个行为作为测试数据，其余 $N-1$ 个行为用于训练和验证。这是按用户构造的留出协议，不等同于经典统计中“每次只留一个总体样本”的完整 LOOCV。
-
-```python
-train_data, validation_data, test_data = np.split(model_data.sample(frac=1, random_state=1729), [int(0.7 * len(model_data)), int(0.9 * len(model_data))])   # Randomly sort the data then split out first 70%, second 20%, and last 10%
-```
-
-#### 衡量相关性
-
-* cosine similarity
-* Pearson correlation
-  * ![image-20241231004219620](./Machine-Learning/image-20241231004219620.png)
-
-
-
 ### 训练采样
 
 * Intro
   * https://www.tensorflow.org/extras/candidate_sampling.pdf
-
-
 
 ### 模型训练技巧
 
@@ -603,7 +565,7 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
   * 保证training/serving一致性：training或serving时scale
   * In the dense setting, dropout serves to separate effects from strongly correlated features, resulting in a more robust classifier. But in our sparse, noisy setting adding in dropout appears to simply reduce the amount of data available for learning. 《Ad Click Prediction: a View from the Trenches》
 * Initialization
-  
+
   * Xavier Initialization
   * ![image-20241219212615709](./Machine-Learning/image-20241219212615709.png)
   * Kaiming Initialization主要用于激活函数为ReLU（Rectified Linear Unit）的神经网络。
@@ -646,90 +608,354 @@ train_data, validation_data, test_data = np.split(model_data.sample(frac=1, rand
     *   **核心**: 直接惩罚 logits 的方差，当 logits 数值分布两极分化时施加损失。
     *   **效果**: 迫使 logits 分布更平坦，降低模型对少数选项的“极端自信”。
 
-### ML Theory
+### Tuning
 
-* 参考「mathematics.md」
+https://github.com/google-research/tuning_playbook
 
+## 3. 评估、验证与因果推断
 
+### 问题定义：描述、预测与干预
 
+#### 先分清描述、预测与干预
 
+> 参考：[Hernán & Robins, *Causal Inference: What If*, Ch. 1–3](https://miguelhernan.org/s/hernanrobins_WhatIf_19aug26.pdf)。三类问题可以使用相似的数据和模型，但结论对象不同。
 
-### Learning To Rank
+| 问题 | 典型问法 | 主要验收 |
+| --- | --- | --- |
+| 描述 | 已观测数据里发生了什么？ | 口径、覆盖率、采样与测量误差 |
+| 预测 | 看到特征 $X$ 后，能否预测结果 $Y$？ | 未见样本上的 calibration、AUC、loss 等 |
+| 干预 | 主动把 $A$ 改成另一个值，$Y$ 会怎样？ | 明确干预、对照、分配机制、目标效应与识别假设 |
 
-#### Pairwise 方法与损失函数
+例如，“根据历史轨迹预测哪些 Agent 任务会失败”是预测问题；“给同类任务注入某条 memory，平均能提高多少成功率”是干预问题。一个特征能稳定预测失败，可能只是任务难度或用户类型的代理，不代表修改这个特征会改善结果。
 
-在排序学习（Learning to Rank, LTR）中，**Pairwise** 方法是一种主流思想，它将排序问题转化为对“物品对”的偏序关系的判断。其核心目标是学习一个排序函数 `f(x)`，使得对于任意一个正样本 `d+` 和负样本 `d-`，模型打分满足 `f(d+) > f(d-)`。以下是实现这一目标的两种核心损失函数。
+高 AUC、held-out generalization、feature importance、PDP 或相关系数都不自动给出因果效应。普通 train/test split 证明的是模型对相近数据生成过程的预测泛化；它没有创建“同一对象接受与不接受干预”的对照，也没有自动消除混杂、选择偏差或干预后的反馈。在线干预见 [A/B Testing](./Software-Engineering.md#ab-testing)；已有日志上的策略反事实评估见 [Counterfactual evaluation / Off-policy evaluation](./Reinforcement-Learning.md#counterfactual-evaluation--off-policy-evaluation)。
 
-| 特性         | 交叉熵损失 (Cross-Entropy Loss)  | 铰链损失 (Hinge Loss)           |
-| :----------- | :------------------------------- | :------------------------------ |
-| **核心思想** | 概率最大化 (Maximize Likelihood) | 间隔最大化 (Maximize Margin)    |
-| **优化目标** | `s+` 远大于 `s-`                 | `s+` 至少比 `s-` 大一个间隔 `m` |
-| **损失特性** | 平滑，理论上永不为0              | 非平滑，当间隔满足时为0         |
-| **关注点**   | 所有序对                         | 违反间隔的“困难”序对            |
+### 因果推断：潜在结果、随机化与识别
 
-##### 1. 交叉熵损失 (Cross-Entropy Loss) for Ranking
+#### 潜在结果：先定义因果问题，再谈估计
 
-这种方法将排序问题看作一个**概率问题**，核心是最大化模型正确预测偏序关系的概率。著名的 **RankNet** 算法就采用了这种损失。
+> 来源：[Hernán & Robins, *Causal Inference: What If*, Chapter 1, “A Definition of Causal Effect”](https://miguelhernan.org/s/hernanrobins_WhatIf_19aug26.pdf)，书籍入口见 [What If](https://miguelhernan.org/whatifbook)。Chapter 1 的任务是把已有的因果直觉写成可检验的数学对象。
 
-*   **概率建模**: 模型对正负样本的打分分别为 `s+` 和 `s-`。`d+` 排在 `d-` 前面的概率可以通过 Sigmoid 函数建模：
-    $ P(d^+ \succ d^-) = \sigma(s^+ - s^-) = \frac{1}{1 + e^{-(s^+ - s^-)}} $
-*   **损失函数**: 最小化正确排序概率的负对数，即交叉熵损失：
-    $ L_{CE} = -\log(\sigma(s^+ - s^-)) = \log(1 + e^{-(s^+ - s^-)}) $
-*   **直觉**: 这是一个“软”损失。它总是试图无限拉大正负样本的分数差距，因为即使 `s+ > s-`，只要差距不是无穷大，损失就不会为0。
+作者先指出一种常见错位：研究给出了 effect estimate，却没有明确因果问题和假设，所用方法也无法在这些假设下回答该问题，于是数字即使算对了也很难解释。正确顺序是：
 
-##### 2. 铰链损失 (Hinge Loss) for Ranking
+1. 定义要比较的干预、结果、总体和时间窗；
+2. 声明把观测数据连接到反事实世界所需的假设；
+3. 判断目标效应能否从观测分布中识别；
+4. 再选择估计模型和统计方法。
 
-这种方法源于支持向量机 (SVM)，将排序问题看作一个**带间隔 (Margin) 的分类问题**。它追求的目标是正样本的分数要比负样本高出一个指定的间隔 `m`。著名的 **RankSVM** 算法采用了此损失。
+全书也按这个顺序展开：
 
-*   **间隔目标**: `s+ - s- ≥ m` (通常 `m` 设为1)。
-*   **损失函数**: 只有当间隔目标未被满足时，才产生损失：
-    $ L_{Hinge} = \max(0, m - (s^+ - s^-)) $
-*   **直觉**: 这是一个“硬”损失。一旦分数差满足了间隔要求，损失就降为0。这使得模型更专注于学习那些“难分的”或“排错的”样本对，而对已经“足够好”的样本对不再进行优化。GBDT（Gradient Boosting Decision Tree）
+| 部分 | 核心问题 | 主要任务 |
+| --- | --- | --- |
+| Part I：causal inference without models | 在不先指定参数模型时，因果效应能否由观测分布表达？ | 非参数识别（identification） |
+| Part II：causal inference with models | 识别之后，怎样用有限样本估计目标量？ | 使用参数模型估计（estimation） |
+| Part III：complex longitudinal data | 干预、混杂和状态都随时间变化时怎么办？ | 估计时变干预策略的因果效应 |
 
-* 通过拟合残差，生成第N颗子树
+##### 个体因果效应与 consistency
 
-#### XGBoost
+设二元干预为 $A\in\{0,1\}$，结果为 $Y$。$Y_i^{a=1}$ 表示个体 $i$ 接受干预时的潜在结果，$Y_i^{a=0}$ 表示同一个体不接受干预时的潜在结果。个体因果效应是：
 
-https://xgboost.readthedocs.io/en/stable/tutorials/model.html
+$$
+\tau_i=Y_i^{a=1}-Y_i^{a=0}
+$$
 
-XGBoost stands for “Extreme Gradient Boosting”, where the term “Gradient Boosting” originates from the paper *Greedy Function Approximation: A Gradient Boosting Machine*, by Friedman.
+只要两个潜在结果不同，干预就对该个体有因果效应。问题在于，同一个体实际只能处于一种干预状态，因此通常只能观察两个潜在结果中的一个。这是因果推断的根本缺失数据问题，而不是多收集几个普通特征就能消除的问题。
 
-![image-20241210004602072](./Machine-Learning/image-20241210004602072.png)
+**Consistency** 把实际观测与相应的潜在结果连接起来：
 
-![image-20241210004925060](./Machine-Learning/image-20241210004925060.png)
+$$
+A_i=a\quad\Longrightarrow\quad Y_i=Y_i^a
+$$
 
-![image-20241210004943879](./Machine-Learning/image-20241210004943879.png)
+也可写成 $Y=Y^A$。它只说明“实际接受 $a$ 时，观测结果等于 $a$ 下的潜在结果”，没有替我们补出另一个未观测结果。
 
-![image-20241210005132323](./Machine-Learning/image-20241210005132323.png)
+二元结果下，每个个体可按 $(Y_i^0,Y_i^1)$ 分成四类：
 
-![illustration of structure score (fitness)](./Machine-Learning/struct_score.png)
+| 类型 | 含义 | 若 $Y=1$ 表示成功 |
+| --- | --- | --- |
+| `00` | 无论是否干预，结果都是 0 | 始终失败 |
+| `01` | 干预把结果从 0 变为 1 | 被干预帮助 |
+| `10` | 干预把结果从 1 变为 0 | 被干预伤害 |
+| `11` | 无论是否干预，结果都是 1 | 始终成功 |
 
+最后一列依赖 outcome coding。若 $Y=1$ 表示死亡或失败，`01` 与 `10` 的价值判断会反过来。作者还在旁注中提到，**Karma** 也常被用来描述会产生结果的行动；统计因果文献更常使用 intervention、exposure、policy 或 treatment。
 
+##### 平均效应不会告诉你每个人发生了什么
 
-#### LTR
+对明确总体取平均，平均因果效应为：
 
-https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html
+$$
+\tau=E[Y^{a=1}]-E[Y^{a=0}]
+=E[Y^{a=1}-Y^{a=0}]
+$$
 
-* Intro
-  * The default objective is `rank:ndcg` based on the `LambdaMART` [[2$$](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references) algorithm, which in turn is an adaptation of the `LambdaRank` [[3$$](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references) framework to gradient boosting trees. For a history and a summary of the algorithm, see [[5$$](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references)
-  * 《Unbiased LambdaMART: An Unbiased Pairwise Learning-to-Rank Algorithm》
-* 调参
-  * lambdarank_num_pair_per_sample
+非零平均效应即：
 
-### Position Bias
+$$
+E[Y^{a=1}]\ne E[Y^{a=0}]
+$$
 
-* Intro
+要区分两种零效应：
 
-  * Obtaining real relevance degrees for query results is an expensive and strenuous, requiring human labelers to label all results one by one. When such labeling task is infeasible, we might want to train the learning-to-rank model on user click data instead, as it is relatively easy to collect. Another advantage of using click data directly is that it can reflect the most up-to-date user preferences [[1$$](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references). However, user clicks are often biased, as users tend to choose results that are displayed in higher positions. User clicks are also noisy, where users might accidentally click on irrelevant documents. To ameliorate these issues, XGBoost implements the `Unbiased LambdaMART` [[4$$](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references) algorithm to debias the position-dependent click data. The feature can be enabled by the `lambdarank_unbiased` parameter; see [Parameters for learning to rank (rank:ndcg, rank:map, rank:pairwise)](https://xgboost.readthedocs.io/en/stable/parameter.html#ltr-param) for related options and [Getting started with learning to rank](https://xgboost.readthedocs.io/en/stable/python/examples/learning_to_rank.html#sphx-glr-python-examples-learning-to-rank-py) for a worked example with simulated user clicks.
+- **average null**：平均差为 0；正负个体效应可能相互抵消。
+- **sharp null**：对每个个体都有 $Y_i^1=Y_i^0$；没有任何人的结果被改变。
 
-  
+Chapter 1 的 20 人例子中，6 人的个体效应为 $+1$，6 人为 $-1$，8 人为 0。平均效应为 0，但 12 人确实受到了干预影响。因此，“总体平均没涨”不能推出“这个机制对任何任务都没用”，也不能排除明显的 treatment-effect heterogeneity。
 
-### RNN/LSTM/GRU
+![平均零效应与个体零效应](./Machine-Learning/whatif-ch1-average-null-vs-sharp-null.png)
 
-* Intro
-  * GRU解决了RNN的梯度消失问题，参数量比LSTM小
+*根据 What If Chapter 1 Table 1.1 重绘的 Codex 示意图：正负个体效应可以在平均时完全抵消。此时 average null 成立，sharp null 不成立。颜色只区分效应方向；“受益 / 受损”依赖 $Y=1$ 的结果编码。*
 
-![image-20250610024850494](./Machine-Learning/image-20250610024850494.png)
+##### 效应尺度与 outcome coding
+
+令 $p_a=\Pr(Y^a=1)$。同一个因果对比可以在不同尺度上表达：
+
+$$
+\text{Risk Difference}=p_1-p_0
+$$
+
+$$
+\text{Risk Ratio}=\frac{p_1}{p_0}
+$$
+
+$$
+\text{Odds Ratio}=\frac{p_1/(1-p_1)}{p_0/(1-p_0)}
+$$
+
+零效应在差值尺度上是 0，在 ratio 尺度上是 1。差值回答绝对改变了多少，ratio 回答相对变成了多少倍；NNT 是绝对风险差的倒数变形，也必须绑定具体总体、结果和时间窗。
+
+如果 $Y=1$ 表示成功，success ratio 是 $p_1/p_0$；若把失败另编码为 $F=1-Y$，failure risk ratio 则是：
+
+$$
+\frac{\Pr(F^1=1)}{\Pr(F^0=1)}
+=\frac{1-p_1}{1-p_0}
+$$
+
+二者衡量的是不同的相对变化，并非互为倒数。例如成功率从 0.8 升到 0.9，success ratio 为 1.125，failure risk ratio 为 0.5。它们都表示改善，但方向和量级不同。相比之下，失败率差恰好是成功率差的相反数。报告 benchmark 效果时，应先声明 $Y=1$ 的含义，再声明使用差值还是比值。
+
+##### 干扰、干预版本与 SUTVA
+
+$Y_i^a$ 隐含个体 $i$ 的结果只取决于自己的干预值。若其他单元的干预也会影响它，更完整的反事实需要写成 $Y_i(a_i,\mathbf a_{-i})$。Cox 曾把 no interference 称为“no interaction between units”，Rubin 将其纳入 SUTVA（stable-unit-treatment-value assumption）。SUTVA 还要求同一个 $a$ 不暗藏多个会产生不同结果的干预版本。
+
+在 Agent 实验中，共享 rate limit、缓存、在线学习的模型、共享 memory 或一个任务产生的状态污染，都可能造成 interference；“使用 memory”若包含不同检索器、注入位置和长度，也不是一个稳定的 treatment。实验合同必须把这些版本和隔离边界写清楚。
+
+##### 非确定性反事实：$Q$ 是个体概率，$p$ 是总体概率
+
+潜在结果不一定是预先固定的 0 或 1。模型采样、工具和环境都可能让同一任务在同一 harness 下有不同结果。Chapter 1 的 Technical Point 1.2 用 $Q_{Y^a}(y)$ 表示个体在干预 $a$ 下得到结果 $y$ 的概率，用 $p_{Y^a}(y)$ 表示整个总体的边际概率：
+
+$$
+p_{Y^a}(y)=E\left[Q_{Y^a}(y)\right]
+$$
+
+映射到 Agent benchmark，可以写成：
+
+$$
+Q_{i,a}(1)=\Pr(Y_i^a=1\mid \text{task }i),\qquad
+p_a=E_i[Q_{i,a}(1)]
+$$
+
+- 一次 rollout 只产生一个 $Y_i^a$ 的实现；
+- 固定任务 $i$ 和 harness $a$ 重复 rollout，才是在估计 $Q_{i,a}(1)$；
+- 再跨目标任务总体平均，才是在估计 $p_a$。
+
+这里有两类随机误差：抽到哪些任务的 sampling variability，以及同一 task-treatment 下结果本身的 nondeterminism。增加 rollout 可以减小后者的估计噪声，却不会自动解决干预分配、混杂、选择偏差或任务总体不匹配。
+
+##### Association 比较现实中的两组，causation 比较同一总体的两个世界
+
+关联比较实际接受不同处理的两个子总体：
+
+$$
+E[Y\mid A=1]-E[Y\mid A=0]
+$$
+
+因果效应比较同一目标总体在两个反事实世界中的结果：
+
+$$
+E[Y^1]-E[Y^0]
+$$
+
+![因果比较与关联比较](./Machine-Learning/whatif-figure-1-1-causation-vs-association.png)
+
+*Figure 1.1：因果问题把同一整个人群分别置于“全部处理”和“全部不处理”的世界；关联问题只比较现实中恰好接受处理与未接受处理的两个子群。原图来自 What If Chapter 1。*
+
+因此，处理组成功率高于未处理组只证明 association；如果更容易成功的任务本来就更常获得新 harness，这个差异甚至可能完全来自选择机制。因果推断接下来要回答的正是：在什么条件下，现实世界的观测分布可以识别这两个反事实世界之间的差异。
+
+对 Agent / LoopX 实验，至少先写清：目标任务总体、干预与对照的精确版本、outcome coding 与时间窗、效应尺度、分配单位、rollout 数量、可能的 interference，以及结论究竟是观测关联还是已识别的因果效应。
+
+#### 随机化没有补齐反事实，而是创造可信替身
+
+> 来源：[Hernán & Robins, *Causal Inference: What If*, Chapter 2, “Randomized Experiments”](https://miguelhernan.org/s/hernanrobins_WhatIf_19aug26.pdf)。以下讨论的是总体平均因果效应；同一对象的个体反事实通常仍不可同时观察。
+
+随机试验仍然只观察 $Y=Y^A$，另一个潜在结果依旧缺失。随机化的作用是让“哪个潜在结果会被观察”由一个与潜在结果无关的机制决定，从而得到 exchangeability：
+
+$$
+Y^a\perp A,\qquad a\in\{0,1\}
+$$
+
+于是实际接受 $a$ 的人可以代表整个总体在 $a$ 下的反事实结果。对均值而言，识别链只有两步：
+
+$$
+\underbrace{E[Y^a]}_{\text{目标反事实均值}}
+=\underbrace{E[Y^a\mid A=a]}_{\text{exchangeability}}
+=\underbrace{E[Y\mid A=a]}_{\text{consistency}}
+$$
+
+这解释了为什么理想的边际随机试验中，观测关联可以识别平均因果效应。它没有让每个个体的两个潜在结果同时可见，也没有消除有限样本波动、失访、依从性问题或测量错误。
+
+需要区分三种强度：full exchangeability 要求整组潜在结果与 $A$ 联合独立；exchangeability 要求每个 $Y^a$ 分别与 $A$ 独立；若目标只包含均值，mean exchangeability 已经足够。更强条件蕴含更弱条件，反向通常不成立。
+
+#### 条件随机化：先在可比较人群内估计，再还原目标总体
+
+当治疗概率依赖基线变量 $L$ 时，例如重症患者更可能接受治疗，随机化只保证：
+
+$$
+Y^a\perp A\mid L
+$$
+
+每个 $L=l$ 层内的处理组和对照组可交换；两组在总体上的 $L$ 构成仍可能不同，因此不能直接比较原始总体均值。Chapter 2 的 20 人例子给出一个清楚的反例：
+
+| 基线层 | 人数占比 | $\Pr(A=1\mid L)$ | 处理组风险 | 对照组风险 |
+| --- | ---: | ---: | ---: | ---: |
+| $L=0$，非重症 | $8/20=0.4$ | $0.5$ | $1/4$ | $1/4$ |
+| $L=1$，重症 | $12/20=0.6$ | $0.75$ | $2/3$ | $2/3$ |
+
+每一层内治疗都没有效果，但重症患者在处理组中占比更高。直接比较得到：
+
+$$
+\frac{\Pr(Y=1\mid A=1)}{\Pr(Y=1\mid A=0)}
+=\frac{7/13}{3/7}\approx1.26
+$$
+
+这个原始关联把预后构成差异误当成治疗效果。两种等价方法可以恢复目标总体：
+
+1. **Standardization**：分别估计每个 $L$ 层的处理风险，再按目标总体的 $\Pr(L=l)$ 加权：
+
+$$
+E[Y^a]=\sum_l E[Y\mid A=a,L=l]\Pr(L=l)
+$$
+
+   本例两种干预的标准化风险都为 $0.4\times1/4+0.6\times2/3=0.5$，因果风险比为 1。
+2. **Inverse probability weighting（IPW）**：给每个人权重
+
+$$
+W^A=\frac{1}{\Pr(A\mid L)}
+$$
+
+   本例 $L=0$ 两组权重均为 2；$L=1,A=0$ 为 4；$L=1,A=1$ 约为 1.33。低概率出现的处理路径被复制得更多，使加权后的每个处理组都重新具有目标总体的 $L$ 分布。
+
+![IPW 构造伪总体](./Machine-Learning/whatif-figure-2-3-ipw-pseudopopulation.png)
+
+*What If Figure 2.3：IPW 依据实际接受该处理的条件概率复制样本，构造 treatment 与 $L$ 独立的 pseudo-population。图中的权重来自试验已知的分配概率；观察研究中通常还要估计这些概率。*
+
+Standardization 与 IPW 使用同一组识别条件，区别是重建反事实总体的方向：前者把分层 outcome model 汇总回目标总体，后者重加权观测个体以模拟目标总体。二者得到同一个数，不构成两份独立的因果证据。
+
+#### 观察研究：数据之外还需要三项识别条件
+
+> 来源：[What If Chapter 3, “Observational Studies”](https://miguelhernan.org/s/hernanrobins_WhatIf_19aug26.pdf)。观察研究可以被分析成一个条件随机试验的模拟，但这是一组需要领域知识支持、无法只靠数据完全验证的假设。
+
+$$
+\boxed{
+\text{定义明确的干预}
++\text{consistency}
++\text{exchangeability}
++\text{positivity}
+\Longrightarrow
+\text{用观测分布识别反事实均值}
+}
+$$
+
+| 条件 | 形式 | 它排除什么问题 |
+| --- | --- | --- |
+| Consistency | $A=a\Rightarrow Y=Y^a$ | 实际处理与反事实里定义的处理不是同一件事，或同一标签暗藏会改变结果的版本 |
+| Conditional exchangeability | $Y^a\perp A\mid L$ | 给定 $L$ 后，仍有同时影响处理选择和结果的未控制原因 |
+| Positivity | $\Pr(A=a\mid L=l)>0$ | 某类目标个体从未接受某个待比较处理，数据里没有可充当其替身的人 |
+
+Exchangeability 可以理解为“替身是否可信”，positivity 是“替身是否存在”，consistency 是“替身接受的是否真是同一种处理”。观察研究常把 conditional exchangeability 解释为：给定 $L$ 后，没有仍同时影响处理分配和结果的未测量因素。它通常不能从已观测数据中被证明；收集很多变量也不保证成立。
+
+调整变量应服从因果问题。只需要处理会破坏反事实可交换性的变量，$L$ 不必包含每个 outcome predictor、treatment predictor 或可获得特征；多调变量既不自动增加可信度，还可能在后续 DAG 分析中因调整 mediator 或 collider 引入偏差。这里的“只需要”不表示最小调整集可直接从相关性或 feature importance 中读出，它依赖领域知识和因果结构。
+
+Positivity 只要求在目标总体中实际出现、且为实现 exchangeability 所需的 $L$ 层成立。若 $L=1$ 的人全部接受处理，则无法从数据估计他们在 $A=0$ 下会怎样：
+
+![Positivity failure](./Machine-Learning/whatif-figure-3-1-positivity-failure.png)
+
+*What If Figure 3.1：$L=1$ 层的 $\Pr(A=0\mid L=1)=0$。Standardization 所需的 $E[Y\mid A=0,L=1]$ 无法从数据定义，IPW 也出现除以零。此时比较两个加权组，相当于比较不同支持集上的人群，不再是同一总体的两个反事实世界。*
+
+有限样本中很小但非零的概率也会产生极端权重和高方差；这是 practical positivity 问题。多跑 seeds 只能减小 rollout 随机误差，不能创造从未出现的 treatment–covariate 组合，也不能修复未测量混杂或处理定义漂移。
+
+#### 先定义可操作的干预，再讨论 consistency
+
+“使用新 harness”“收到 native feedback”或“采取健康生活方式”都可能包含多个会产生不同结果的版本。干预必须精确到：专家基于当前知识认为，对本问题已不存在有意义的歧义。它不需要描述到无限细；例如若手术服颜色不会影响结果，就无需写入协议。
+
+更精确的干预通常让自然发生的后续步骤更少，因而效果更容易跨环境迁移；宽泛干预的结果更依赖当地实践、人员和后续行为。但精确化会改变问题本身：把“降低血压”具体化为某种药物、剂量和疗程，估计的是该方案的效果，不再是一个抽象生理状态的效果。
+
+对本身不是行动的变量，作者引入 **effective no-direct-effect intervention（ENDE intervention）**：
+
+> 存在一种干预 $X$，能够把 $A$ 改成指定值，并且除经由 $A$ 外，不直接影响 $Y$。
+
+例如某些降压药可能近似通过血压影响中风，而饮食和运动还会沿其他路径影响中风，因此不当然是 ENDE。对社会经济地位这类变量，是否存在这样的干预更可疑。ENDE 是让抽象变量的因果效应获得操作含义的假设，不是从数据自动发现的事实。
+
+#### Target trial：把因果问题写成实验合同
+
+Target trial 是我们想做却未必能做的假想随机试验。观察数据分析要先写出它的协议，再说明现有数据怎样模拟每个组件：
+
+| 协议组件 | Agent / LoopX 实验中的对应问题 |
+| --- | --- |
+| Eligibility criteria | 哪些任务、仓库、难度和初始状态属于目标总体；每个对象原则上能否接受所有待比较策略 |
+| Interventions / strategies | 完整 runner policy：反馈可见性、budget、cooldown、工具、持久状态和版本 |
+| Assignment | run 开始前随机分配；若概率依赖任务族或难度，应记录条件分配概率并分层分析 |
+| Outcomes | 固定预算后的 hidden score、成功率、成本或时间；先声明 $Y=1$ 的含义 |
+| Start / end of follow-up | time zero 对齐到相同提交、workspace、模型版本和上下文，并固定观察终点 |
+| Causal contrast | 比较 assignment policy、实际遵循策略，还是某个动态策略；优先预先声明而非事后挑选 |
+
+它的价值是暴露实验合同中的伪因果比较：
+
+- 按“实际收到完整反馈”事后分组，通常是在按处理后的行为或系统状态分组；这不等于 run 开始时随机分配的反馈策略。
+- 某类任务从未运行 blind 或 native 模式，是 positivity failure；模型或任务强弱再匹配也补不出该反事实。
+- `native feedback` 在任务间包含不同字段、频率或 grader 信息，是 consistency / treatment-version 问题。
+- 共享记忆、缓存、限流或上一 run 更新的状态会产生 interference；随机分配 run 也不能自动隔离它。
+- 多 hidden seeds 和重复 rollout 改善精度，但不修复混杂、positivity、干预定义或 time-zero 错位。
+
+因此，对 benchmark 涨分最先问的不是“统计方法够不够复杂”，而是：**目标试验能否写清、分配是否可信、每种任务是否都有策略覆盖、各组收到的是否真是同一版本的干预。**识别成立之后，才轮到模型、标准误和置信区间。
+
+### 预测评估与数据划分
+
+#### 预测指标
+
+* Metrics
+  * **Mean Absolute Error** (MAE)
+  * Normalized Discounted Cumulative Gain (NDCG)
+  * Root Mean Square Error
+
+#### 数据划分与验证
+
+* 常见方法包括 holdout validation、cross-validation、leave-one-out validation 等。划分单位要服从数据依赖：同一用户、会话或时间序列的高度相关样本不能随意跨 train/test 泄漏。
+* 推荐系统中常见的 per-user leave-one-out：对每个用户留出一个交互作为测试，其余用于训练和验证。例如用户有 $N$ 个交互时，选择第 $N$ 个行为作为测试数据，其余 $N-1$ 个行为用于训练和验证。这是按用户构造的留出协议，不等同于经典统计中“每次只留一个总体样本”的完整 LOOCV。
+
+```python
+train_data, validation_data, test_data = np.split(model_data.sample(frac=1, random_state=1729), [int(0.7 * len(model_data)), int(0.9 * len(model_data))])   # Randomly sort the data then split out first 70%, second 20%, and last 10%
+```
+
+#### 衡量相关性
+
+* cosine similarity
+* Pearson correlation
+  * ![image-20241231004219620](./Machine-Learning/image-20241231004219620.png)
+
+### Visualization 可视化
+
+#### t-SNE：可视化高维向量
+
+* 科普文章 https://medium.com/@sachinsoni600517/mastering-t-sne-t-distributed-stochastic-neighbor-embedding-0e365ee898ea
+
+#### k-means clustering
+
+* k个初值，means方法归类，N次迭代
+
+#### Partial Dependency Plots (PDP, 部分依赖图)
+
+![image-20250111195734138](./Machine-Learning/image-20250111195734138.png)
+
+## 4. 表示学习与无监督学习
 
 ### Contrastive Learning
 
@@ -792,7 +1018,7 @@ Lifted Structured Loss (Song et al. 2015) utilizes all the pairwise edges within
 Let $$D_{ij} = \| f(\mathbf{x}_i) - f(\mathbf{x}_j) \|_2$$, a structured loss function is defined as
 
 $$
-\mathcal{L}_{\text{struct}} = \frac{1}{2|\mathcal{P}|} \sum_{(i,j) \in \mathcal{P}} \max\big(0, 
+\mathcal{L}_{\text{struct}} = \frac{1}{2|\mathcal{P}|} \sum_{(i,j) \in \mathcal{P}} \max\big(0,
 \, \mathcal{L}_{\text{struct}}^{(ij)}\big)^2
 $$
 
@@ -858,8 +1084,8 @@ Here I listed the original form of NCE loss which works with only one positive a
 * The **InfoNCE loss** in CPC ([Contrastive Predictive Coding](https://lilianweng.github.io/posts/2019-11-10-self-supervised/#contrastive-predictive-coding); [van den Oord, et al. 2018](https://arxiv.org/abs/1807.03748)), inspired by [NCE](https://lilianweng.github.io/posts/2021-05-31-contrastive/#NCE), uses categorical cross-entropy loss to identify the positive sample amongst a set of unrelated noise samples.
 
 * **The probability of we detecting the positive sample correctly is:** $$ p(C = \text{pos}|\mathcal{X}, \boldsymbol{c}) = \frac{p(\boldsymbol{x}_{\text{pos}}|\boldsymbol{c}) \prod_{\substack{i=1, \dots, N; i \neq \text{pos}}} p(\boldsymbol{x}_i)}{\sum_{j=1}^N \left[ p(\boldsymbol{x}_j|\boldsymbol{c}) \prod_{\substack{i=1, \dots, N; i \neq j}} p(\boldsymbol{x}_i) \right]} = \frac{\frac{p(\boldsymbol{x}_{\text{pos}}|\boldsymbol{c})}{p(\boldsymbol{x}_{\text{pos}})}}{\sum_{j=1}^N \frac{p(\boldsymbol{x}_j|\boldsymbol{c})}{p(\boldsymbol{x}_j)}} = \frac{f(\boldsymbol{x}_{\text{pos}}, \boldsymbol{c})}{\sum_{j=1}^N f(\boldsymbol{x}_j, \boldsymbol{c})} $$ where the scoring function is $$ f(\boldsymbol{x}, \boldsymbol{c}) \propto \frac{p(\boldsymbol{x}|\boldsymbol{c})}{p(\boldsymbol{x})} $$.
-  * Given a context vector $$ \boldsymbol{c} $$, the positive sample should be drawn from the conditional distribution $$ p(\boldsymbol{x}|\boldsymbol{c}) $$, while $$ N - 1 $$ negative samples are drawn from the proposal distribution $$ p(\boldsymbol{x}) $$, independent from the context $$ \boldsymbol{c} $$. For brevity, let us label all the samples as $$ \mathcal{X} = \{\boldsymbol{x}_i\}_{i=1}^N $$, among which only one of them $$ \boldsymbol{x}_{\text{pos}} $$ is a positive sample. 
-* The InfoNCE loss optimizes the negative log probability of classifying the positive sample correctly: $$ \mathcal{L}_{\text{InfoNCE}} = -\mathbb{E} \left[ \log \frac{f(\boldsymbol{x}, \boldsymbol{c})}{\sum_{\boldsymbol{x}' \in \mathcal{X}} f(\boldsymbol{x}', \boldsymbol{c})} \right] $$ 
+  * Given a context vector $$ \boldsymbol{c} $$, the positive sample should be drawn from the conditional distribution $$ p(\boldsymbol{x}|\boldsymbol{c}) $$, while $$ N - 1 $$ negative samples are drawn from the proposal distribution $$ p(\boldsymbol{x}) $$, independent from the context $$ \boldsymbol{c} $$. For brevity, let us label all the samples as $$ \mathcal{X} = \{\boldsymbol{x}_i\}_{i=1}^N $$, among which only one of them $$ \boldsymbol{x}_{\text{pos}} $$ is a positive sample.
+* The InfoNCE loss optimizes the negative log probability of classifying the positive sample correctly: $$ \mathcal{L}_{\text{InfoNCE}} = -\mathbb{E} \left[ \log \frac{f(\boldsymbol{x}, \boldsymbol{c})}{\sum_{\boldsymbol{x}' \in \mathcal{X}} f(\boldsymbol{x}', \boldsymbol{c})} \right] $$
 * The fact that $$ f(\boldsymbol{x}, \boldsymbol{c}) $$ estimates the density ratio $$ \frac{p(\boldsymbol{x}|\boldsymbol{c})}{p(\boldsymbol{x})} $$ has a connection with mutual information optimization. To maximize the mutual information between input $$ \boldsymbol{x} $$ and context vector $$ \boldsymbol{c} $$, we have: $$ I(\boldsymbol{x}; \boldsymbol{c}) = \sum_{\boldsymbol{x}, \boldsymbol{c}} p(\boldsymbol{x}, \boldsymbol{c}) \log \frac{p(\boldsymbol{x}, \boldsymbol{c})}{p(\boldsymbol{x})p(\boldsymbol{c})} = \sum_{\boldsymbol{x}, \boldsymbol{c}} p(\boldsymbol{x}, \boldsymbol{c}) \log \frac{p(\boldsymbol{x}|\boldsymbol{c})}{p(\boldsymbol{x})} $$ where the logarithmic term is estimated by $$ f $$.
   * 最小化 InfoNCE Loss，实际上是在 最大化锚点 c 和正样本 x_i 之间互信息 (Mutual Information) 的一个下界
 
@@ -869,7 +1095,7 @@ Here I listed the original form of NCE loss which works with only one positive a
   * N-pair：$$s(x,c)=f(x)^\top f(c)$$（几何相似度，负例为其他标签样本）。
   * 选择：自监督/互信息目标优先 InfoNCE；监督度量学习优先 N-pair。
 
-* For sequence prediction tasks, rather than modeling the future observations $$ p_k(\boldsymbol{x}_{t + k}|\boldsymbol{c}_t) $$ directly (which could be fairly expensive), CPC models a density function to preserve the mutual information between $$ \boldsymbol{x}_{t + k} $$ and $$ \boldsymbol{c}_t $$: $$ f_k(\boldsymbol{x}_{t + k}, \boldsymbol{c}_t) = \exp\left( \boldsymbol{z}_{t + k}^\top \mathbf{W}_k \boldsymbol{c}_t \right) \propto \frac{p(\boldsymbol{x}_{t + k}|\boldsymbol{c}_t)}{p(\boldsymbol{x}_{t + k})} $$ where $$ \boldsymbol{z}_{t + k} $$ is the encoded input and $$ \mathbf{W}_k $$ is a trainable weight matrix. 
+* For sequence prediction tasks, rather than modeling the future observations $$ p_k(\boldsymbol{x}_{t + k}|\boldsymbol{c}_t) $$ directly (which could be fairly expensive), CPC models a density function to preserve the mutual information between $$ \boldsymbol{x}_{t + k} $$ and $$ \boldsymbol{c}_t $$: $$ f_k(\boldsymbol{x}_{t + k}, \boldsymbol{c}_t) = \exp\left( \boldsymbol{z}_{t + k}^\top \mathbf{W}_k \boldsymbol{c}_t \right) \propto \frac{p(\boldsymbol{x}_{t + k}|\boldsymbol{c}_t)}{p(\boldsymbol{x}_{t + k})} $$ where $$ \boldsymbol{z}_{t + k} $$ is the encoded input and $$ \mathbf{W}_k $$ is a trainable weight matrix.
 
 
 ##### Soft-Nearest Neighbors (SNN)
@@ -919,7 +1145,7 @@ $$p_{\mathbf{x}}^-(\mathbf{x}') = \frac{p(\mathbf{x}') - \eta^+\, p_{\mathbf{x}}
 for sampling \(\mathbf{x}^-\) to debias the loss. With \(N\) samples \(\{\mathbf{u}_i\}_{i=1}^N\) from \(p\) and \(M\) samples \(\{\mathbf{v}_i\}_{i=1}^M\) from \(p_{\mathbf{x}}^+\), we can estimate the expectation of the second term $$\mathbb{E}_{\mathbf{x}^-\sim p_{\mathbf{x}}^-}[\exp(f(\mathbf{x})^\top f(\mathbf{x}^-))]$$ in the denominator of contrastive learning loss:
 
 $$
-g\big(\mathbf{x}, \{\mathbf{u}_i\}_{i=1}^N, \{\mathbf{v}_i\}_{i=1}^M\big) = \max\left\{ 
+g\big(\mathbf{x}, \{\mathbf{u}_i\}_{i=1}^N, \{\mathbf{v}_i\}_{i=1}^M\big) = \max\left\{
 \frac{1}{\eta^-}\left( \frac{1}{N}\sum_{i=1}^N \exp\big(f(\mathbf{x})^\top f(\mathbf{u}_i)\big) - \frac{\eta^+}{M}\sum_{i=1}^M \exp\big(f(\mathbf{x})^\top f(\mathbf{v}_i)\big) \right),\; \exp(-1/\tau) \right\}
 $$
 
@@ -1291,7 +1517,7 @@ K-Means是无监督学习中最基础的聚类算法之一。
     4.  **迭代**: 重复步骤2和3，直到簇中心不再发生显著变化或达到最大迭代次数。
 
 *   **应用**:
-    *   在深度学习中，常用于初始化向量量化（Vector Quantization）模型中的码本（Codebook）。通过K-Means提供一个比随机初始化更好的起点，有助于模型稳定训练，缓解码本崩塌问题。 
+    *   在深度学习中，常用于初始化向量量化（Vector Quantization）模型中的码本（Codebook）。通过K-Means提供一个比随机初始化更好的起点，有助于模型稳定训练，缓解码本崩塌问题。
 
 ###### Deep Cluster
 
@@ -1357,21 +1583,21 @@ Sinkhorn-Knopp 算法是一种经典的矩阵缩放算法，用于将非负矩�
         Q = torch.exp(out / epsilon).t() # Q is K x B
         B = Q.shape[1] # number of samples to assign
         K = Q.shape[0] # how many prototypes
-    
+
         # make the matrix sums to 1
         sum_Q = torch.sum(Q)
         Q /= sum_Q
-    
+
         for _ in range(sinkhorn_iterations):
             # normalize each row: total weight per prototype must be 1/K
             sum_of_rows = torch.sum(Q, dim=1, keepdim=True)
             Q /= sum_of_rows
             Q /= K
-    
+
             # normalize each column: total weight per sample must be 1/B
             Q /= torch.sum(Q, dim=0, keepdim=True)
             Q /= B
-    
+
         Q *= B # the colomns must sum to 1 so that Q is an assignment
         return Q.t()
     ```
@@ -1564,7 +1790,7 @@ where $s$ is a sentence sampled from the text corpus $\mathcal{D}$. Only the flo
     ```python
     import torch
     import torch.nn as nn
-    
+
     class AffineCoupling(nn.Module):
         def __init__(self, dim, hidden_dim=512):
             super().__init__()
@@ -1575,41 +1801,41 @@ where $s$ is a sentence sampled from the text corpus $\mathcal{D}$. Only the flo
                 nn.ReLU(),
                 nn.Linear(hidden_dim, dim) # Outputs concatenated s and t
             )
-    
+
         def forward(self, x):
             # x: [batch_size, dim]
             # 1. Split input
             x_a, x_b = x.chunk(2, dim=1)
-    
+
             # 2. Predict parameters (s, t) based on x_a
             # s and t can be arbitrarily complex functions of x_a
             params = self.net(x_a)
             log_s, t = params.chunk(2, dim=1)
             s = torch.sigmoid(log_s + 2) # Sigmoid+offset for stability
-    
+
             # 3. Affine Transformation on x_b
             # y_a = x_a (Identity)
             # y_b = s * x_b + t
             y_a = x_a
             y_b = s * x_b + t
             y = torch.cat([y_a, y_b], dim=1)
-    
+
             # 4. Log Determinant (Sum of log diagonal elements)
             # Jacobian is triangular, diagonal contains 1s (for y_a) and s (for y_b)
             # log_det = sum(log(1)) + sum(log(s)) = sum(log(s))
-            log_det = torch.sum(torch.log(s), dim=1) 
-            
+            log_det = torch.sum(torch.log(s), dim=1)
+
             return y, log_det
-    
+
     # Loss Calculation
     def loss_function(z, log_det):
         # 1. Prior Log-Likelihood: log p_Z(z)
         # z ~ N(0, I) => log p(z) = -0.5 * z^2 - const
         prior_ll = -0.5 * torch.sum(z ** 2, dim=1)
-        
+
         # 2. Flow Log-Likelihood: log p_X(x) = log p_Z(z) + log_det
         log_likelihood = prior_ll + log_det
-        
+
         # 3. Minimize Negative Log-Likelihood
         loss = -torch.mean(log_likelihood)
         return loss
@@ -1680,7 +1906,7 @@ Whitening operations were shown to outperform BERT-flow and achieve SOTA with 25
 
 ###### Context Prediction: Quick-Thought
 
-**Quick-Thought (QT) vectors** ([Logeswaran & Lee, 2018](https://arxiv.org/abs/1803.02893)) formulate sentence representation learning as a *classification* problem: Given a sentence and its context, a classifier distinguishes context sentences from other contrastive sentences based on their vector representations ([“cloze test”](https://lilianweng.github.io/posts/2019-01-31-lm/#MLM)). 
+**Quick-Thought (QT) vectors** ([Logeswaran & Lee, 2018](https://arxiv.org/abs/1803.02893)) formulate sentence representation learning as a *classification* problem: Given a sentence and its context, a classifier distinguishes context sentences from other contrastive sentences based on their vector representations ([“cloze test”](https://lilianweng.github.io/posts/2019-01-31-lm/#MLM)).
 
 **传统瓶颈**：生成式模型（如 Skip-Thought）需逐词重建句子，每一步都要在庞大的**词表空间（Vocabulary Size）**上计算 Softmax，计算量巨大。
 
@@ -1719,6 +1945,247 @@ where $T_{\omega} : \mathcal{F} \times \mathcal{E} \to \mathbb{R}$ is a learnabl
 The unsupervised numbers on SentEval with IS-BERT outperforms most of the unsupervised baselines (Sep 2020), but unsurprisingly weaker than supervised runs. When using labelled NLI datasets, IS-BERT produces results comparable with SBERT (See Fig. 25 & 30).
 
 ![image-20251222230639068](./Machine-Learning/image-20251222230639068.png)
+
+### 特征压缩、降维
+
+#### Intro
+
+* **Different from random projections, the hashing-trick**：
+  * preserves sparsity
+  * introduces no additional overhead to store projection matrices
+
+* According to [JL-lemma](https://en.wikipedia.org/wiki/Johnson–Lindenstrauss_lemma), [random projection](https://en.wikipedia.org/wiki/Random_projection) reduces the dimensionality of data while approximately preserving the pairwise distances between data points.
+
+  * 压缩 feature num 而非压缩 embedding size (PCA, SVD)
+
+  * 输入 feature，输出 concated_compressed_embedding + dot_products
+
+  * 变种：instance-wise (Y adaptive to X), implicit-order, GroupCDot, CDotFlex
+
+  * 对比：比[AutoInt](https://arxiv.org/pdf/1810.11921.pdf)计算量小；比[DCN-V2](https://arxiv.org/pdf/2008.13535.pdf)线上效果好
+
+  * 应用：
+    * Random projection in dimensionality reduction: Applications to image and text data
+
+* Q-Former
+
+#### Feature Hashing
+
+> https://arxiv.org/pdf/0902.2206 Feature Hashing for Large Scale Multitask Learning
+
+##### Kernel Trick
+
+* **目标**: 在低维空间中计算高维特征空间的内积，以避免显式的高维映射带来的巨大计算量。
+* **核心思想**: 存在一个核函数 $$K(x_i, x_j)$$，它等于将向量 $$x_i, x_j$$ 映射到高维空间后的内积。
+  * 设 $$\phi(x)$$ 是一个从低维输入空间到高维特征空间的映射函数。
+  * 核技巧的关键在于，许多算法（如SVM）的计算只依赖于特征空间中样本的内积，即 $$<\phi(x_i), \phi(x_j)>$$。
+  * 我们可以直接定义核函数 $$K(x_i, x_j) = <\phi(x_i), \phi(x_j)>$$，从而无需计算高维映射 $$\phi(x)$$。
+* **示例 (多项式核)**:
+  * 设 $$x = (x_1, x_2)$$，映射 $$\phi(x) = (x_1^2, \sqrt{2}x_1x_2, x_2^2)$$
+  * 高维内积: $$<\phi(x), \phi(z)> = x_1^2z_1^2 + 2x_1x_2z_1z_2 + x_2^2z_2^2 = (x_1z_1 + x_2z_2)^2 = (<x, z>)^2$$。
+  *   这里的核函数就是 $K(x, z) = (<x, z>)^2$。我们只需在原始低维空间计算内积再平方，就等价于高维空间的内积结果。
+
+*   **局限性：核矩阵的存储**
+    *   **为何要存储**: 许多核方法（如SVM）的优化求解过程需要用到所有样本对之间的核函数值，即完整的 $n \times n$ 核矩阵（Gram matrix）$K$，其中 $K_{ij} = K(x_i, x_j)$。
+    *   **为何不可行**: 存储核矩阵的内存复杂度为 $O(n^2)$，其中 $n$ 是样本数。
+        *   当 $n$ 很大时，$n^2$ 会导致内存爆炸。例如，对于 $n=10^5$ 个样本，使用单精度浮点数（4字节），存储核矩阵需要 $(10^5)^2 \times 4 \text{ bytes} = 40 \text{ GB}$ 内存，这对于单机尤其是GPU来说是不可行的。
+    *   因此，核方法不适用于样本规模（$n$）极大的场景。
+
+##### Hashing Trick
+
+*   **核心思想**: 将高维、稀疏的类别特征（如单词、ID）通过哈希函数映射到一个固定长度的低维向量中，从而在不创建和维护巨大词典的情况下，直接将类别特征数值化。
+*   **与Feature Hashing的关系**: Hashing Trick是Feature Hashing思想在更广义特征工程中的应用，两者经常被混用。Feature Hashing通常指将整个特征向量降维的方法，而Hashing Trick更侧重于处理单个或多个离散特征的编码问题。
+*   **工作流程**:
+    1.  选择一个哈希函数 `h` 和一个目标维度 `m`（哈希桶的数量）。
+    2.  对于一个类别特征（如单词 `"apple"`），计算其哈希值：`index = h("apple") % m`。
+    3.  将这个特征在最终的输入向量中的第 `index` 个位置上置为1（或使用带符号的哈希增加数值稳定性）。
+*   **优缺点**:
+    *   **优点**: 无需预先构建词典、内存占用固定、可处理在线学习中出现的新特征。
+    *   **缺点**: 哈希碰撞。不同的原始特征可能被映射到同一个索引，导致信息损失。但实践证明，在推荐、广告等大规模稀疏场景下，适度的碰撞对模型效果影响有限，甚至有时能起到正则化的作用。
+*   **应用**: 广泛应用于计算广告（CTR预估）、推荐系统等需要处理海量ID类特征的场景。
+
+```Python
+class UserIdEmbedder(nn.Module):
+    def __init__(self, num_buckets, embedding_dim) -> None:
+        super().__init__()
+        self.num_buckets = num_buckets
+        self.emb = nn.Embedding(num_buckets, embedding_dim)
+
+    def forward(self, x: Tensor) -> Tensor:
+        hashed_indices = x % self.num_buckets
+        # hashed_indices = torch.tensor([hash(token) % self.num_buckets for token in x], device=x.device)
+        return self.emb(hashed_indices)
+```
+
+
+
+##### Feature Hashing 应用于 Multitask Learning
+
+* **目标**: 低维空间处理高维数据，规避核矩阵 O (n²) 存储 / 计算瓶颈，支持大规模多任务学习（如十万级用户垃圾过滤）。
+  * 核心思想: 设计无偏哈希函数，将高维输入映射到低维空间，用哈希内积近似原始内积，多任务独立哈希抑制参数干扰。
+* 设哈希函数对：h:ℕ→{1,...,m}（索引映射至 m 个哈希桶），ξ:ℕ→{±1}（符号随机化），高维 x→低维 φ(x)∈ℝ^m，满足$$\phi_i(x)=\sum_{j:h(j)=i}\xi(j)x_j$$。
+  - 注1：尽管定义1中的哈希函数是在自然数集N上定义的，但在实践中，我们通常考虑对任意字符串使用哈希函数。这两者是等价的，因为每个有限长度的字符串都可以用一个唯一的自然数来表示
+  - 注2： 二进制哈希值 $$\xi$$的目的是消除偏差
+  - 理解：x是高维特征，x_j是数值，0<=i<m,  $$\phi_i(x)$$是数值，φ(x) m维
+* 性质：
+  * 线性运算
+  * 流式计算
+    * $$\begin{array}{rcl} \phi_i^{(h, \xi)}(x \| \Delta x) &=& \phi_i^{(h, \xi)}(x \| 0 + 0 \| \Delta x) \\\\ &=& \phi_i^{(h, \xi)}(x \| 0) + \phi_i^{(h, \xi)}(0 \| \Delta x) \\\\ &=& \phi_i^{(h, \xi)}(x) + \phi_i^{(h, \xi)}(\Delta x) \end{array}$$
+* 无偏性：
+  * 哈希内积定义：$$\left<x,x'\right>_\phi = \left<\phi(x),\phi(x')\right>$$
+  * **定义 1**下**，**哈希核是无偏的，并且有：
+    * $$\begin{array}{rcl} \mathbf{E}_\phi\left[\langle x, x' \rangle_\phi\right] &=& \langle x, x' \rangle \\\\ \sigma_{x,x'}^2 &=& \frac{1}{m} \left( \sum_{i \neq j} x_i^2 x_j'^2 + x_i x_i' x_j x_j' \right) \\ \end{array}$$
+      * -> 替代核函数$$K(x,x')$$
+    * 因此，特别地，当$$\|x\|_2 = \|x'\|_2 = 1$$时，有$$\ \sigma_{x,x'}^2 = O( \frac{1}{m})$$。
+    * 注：这表明，哈希核的典型值应集中在目标值的 $$O(\sqrt{1/m})$$ 范围内。
+    * 注：使用切比雪夫不等式证明，所有观测值中有一半落在 $$\sqrt{2}\sigma$$ 的范围内
+* Concentration of Measure Bounds
+  * <img src="./Machine-Learning/image-20251028014007258.png" alt="image-20251028014007258" style="zoom:50%;" />
+* 多任务适配：对任务 u∈U，映射$$\phi_u(x)=\phi(x,u)$$（输入扩展为 (x,u)），参数合并为$$w_h=\phi_0(w_0)+\sum_{u∈U}\phi_u(w_u)$$，存储量从 O (d×|U|) 降至 O (m)。
+* 示例 (个性化哈希): collaborative email spam filtering
+  - 设 x 为邮件词向量（d=4×10⁷），u 为用户 ID，$$\phi_u(x)=\phi(\text{concat}(x_j,u))$$（词 - 用户对哈希）。
+  - 预测内积：$$\left<\phi_0(x)+\phi_u(x),w_h\right> \approx \left<x,w_0\right>+\left<(x,u),w_u\right>$$，等价原始多任务预测。
+  - 仅需 m=2²²（≈4×10⁶）存储$$w_h$$，无需 O (4×10⁷×4×10⁵) 原始参数。
+* 局限性：哈希误差
+  - **误差来源**:
+    - ①失真误差$$\epsilon_d=\sum_{v∈\{u,0\}}|\left<\phi_v(x),\phi_v(w_v)\right> - \left<x,w_v\right>|$$（内积偏差）；
+    - ②干扰误差$$\epsilon_i=\sum_{v≠0}\left<\phi_0(x),\phi_v(w_v)\right>+\sum_{v≠u}\left<\phi_u(x),\phi_v(w_v)\right>$$（多任务参数干扰）。
+  - **控制条件**: 需满足$$m≥\Omega(\frac{1}{\epsilon^2}\log(\frac{1}{\delta}))$$（定理 3），过小 m 会加剧哈希碰撞，导致误差超出阈值。
+
+##### 无偏性的数学证明和分析
+
+根据定义，哈希内积为： $$\left<x,x'\right>_\phi = \left<\phi(x),\phi(x')\right> = \sum_{i=1}^m \phi_i(x) \phi_i(x')$$ 其中 $$\phi_i(x)=\sum_{j:h(j)=i}\xi(j)x_j$$ 。
+
+$$E_\phi[\left<x,x'\right>_\phi] = E_{h,\xi}\left[\sum_{i=1}^m \left(\sum_{j:h(j)=i}\xi(j)x_j\right) \left(\sum_{k:h(k)=i}\xi(k)x'_k\right)\right]$$
+
+利用期望的线性性质，将求和移到外面： $$= \sum_{i=1}^m E_{h,\xi}\left[\sum_{j:h(j)=i}\sum_{k:h(k)=i} \xi(j)\xi(k)x_j x'_k\right]$$ $$= \sum_{j,k} x_j x'_k E_{h,\xi}\left[\xi(j)\xi(k) \cdot \mathbf{1}_{h(j)=h(k)}\right]$$ 其中 $\mathbf{1}_{h(j)=h(k)}$ 是指示函数，当 $h(j)=h(k)$ 时为1，否则为0。
+
+分情况讨论 $j$ 和 $k$ ，即可证明： $$E_\phi[\left<x,x'\right>_\phi] = \sum_{j=1}^d x_j x'_j \cdot 1 = \sum_{j=1}^d x_j x'_j = \langle x, x' \rangle$$
+
+
+
+* 数学意义：期望上的等价性
+
+  - “无偏性”意味着，虽然单次哈希映射得到的内积 $\langle\phi(x), \phi(x')\rangle$ 是一个随机值，它会因为哈希碰撞而偏离真实的内积 $\langle x, x' \rangle$ ，但如果我们进行无穷多次哈希（每次都用一组新的随机哈希函数），然后取所有结果的平均值，这个平均值会精确地收敛到真实的内积。
+  - --> Deep Hash Embedding 的思路，多组哈希函数的价值
+
+  - 这为Feature Hashing提供了理论上的正确性保证。它告诉我们，哈希映射不是一个随意的、破坏性的过程，而是一个在统计期望上保持了原始几何关系的变换。
+
+* 无偏性是Feature Hashing的灵魂。它保证了我们用一个计算上可行（低维、稀疏）的随机过程，去近似一个计算上不可行（超高维）的确定性过程时，在统计意义上是正确的。
+
+
+
+#### [DHE] Learning to Embed Categorical Features without Embedding Tables for Recommendation
+
+* Intro
+  * 挑战1: Highly-skewed data distribution: The categorical features
+    in recommendation data usually follow highly skewed power-
+    law distributions. The small number of training examples on
+    infrequent feature values hurts the embedding quality for the
+    tail items significantly.
+
+![image-20241226232352140](./Machine-Learning/image-20241226232352140.png)
+
+* 思路：
+  * 解决one-hot hashing的collision问题，兼顾压缩+唯一性
+  * 一种思路是concat多个hash embedding
+* 编码设计原则
+  - **唯一性**：确保每个特征值的编码唯一，避免冲突影响模型性能。
+  - **等相似性**：避免引入错误的归纳偏差，使任意两个编码在相似性上无差异。
+  - **高维度**：便于后续解码函数区分不同特征值，高维空间可分性更强。
+  - **高香农熵**：从信息论角度防止冗余维度，最大化每个维度的熵。
+
+- **密集哈希编码** Dense Hash Encoding：
+  - 使用 $$k$$ 个独立的通用哈希函数 $$\{H^{(i)}\}_{i=1}^k$$ 将单个特征值 $$s$$ 映射为一个 $$k$$ 维的密集整数向量。
+
+  - 编码函数: $$E(s) = [H^{(1)}(s), H^{(2)}(s), \dots, H^{(k)}(s)] \in \mathbb{R}^k$$
+
+  - 其中每个哈希函数 $$H^{(i)}: \mathbb{N} \to \{1, 2, \dots, m\}$$。
+
+  - $$m$$ 是一个与Embedding Table无关的足够大的数（如 $$10^6$$），以保证哈希值在 $$\{1, ..., m\}$$ 上近似均匀分布。
+
+  - 此过程无需存储，可并行计算，生成的向量再通过后续网络（如MLP）学习为实值Embedding。
+
+- **Deep Embedding Network**
+  - 发现 Mish 激活函数和批量归一化（BN）能提高性能。网络结构上，约五层隐藏层的效果较好，且简单等宽 MLP 架构表现最佳
+  - side feature enhanced encodings for DHE
+    - directly concatenating the generalizable features and the hash encodings.
+    - the hash encoding provides a unique identifier for memorization while the other features enable the generalization ability.
+
+* 结论：
+  * 1024个hash function效果最好
+  * RQ4: 批量归一化（BN）能显著稳定和加速训练并提高性能，在激活函数方面，Mish 激活函数优于 ReLU
+  * 4.8 简单等宽 MLP 表现最佳，添加残差连接反而略降性能
+
+## 5. 排序、语言与视觉
+
+### Learning To Rank
+
+#### Pairwise 方法与损失函数
+
+在排序学习（Learning to Rank, LTR）中，**Pairwise** 方法是一种主流思想，它将排序问题转化为对“物品对”的偏序关系的判断。其核心目标是学习一个排序函数 `f(x)`，使得对于任意一个正样本 `d+` 和负样本 `d-`，模型打分满足 `f(d+) > f(d-)`。以下是实现这一目标的两种核心损失函数。
+
+| 特性         | 交叉熵损失 (Cross-Entropy Loss)  | 铰链损失 (Hinge Loss)           |
+| :----------- | :------------------------------- | :------------------------------ |
+| **核心思想** | 概率最大化 (Maximize Likelihood) | 间隔最大化 (Maximize Margin)    |
+| **优化目标** | `s+` 远大于 `s-`                 | `s+` 至少比 `s-` 大一个间隔 `m` |
+| **损失特性** | 平滑，理论上永不为0              | 非平滑，当间隔满足时为0         |
+| **关注点**   | 所有序对                         | 违反间隔的“困难”序对            |
+
+##### 1. 交叉熵损失 (Cross-Entropy Loss) for Ranking
+
+这种方法将排序问题看作一个**概率问题**，核心是最大化模型正确预测偏序关系的概率。著名的 **RankNet** 算法就采用了这种损失。
+
+*   **概率建模**: 模型对正负样本的打分分别为 `s+` 和 `s-`。`d+` 排在 `d-` 前面的概率可以通过 Sigmoid 函数建模：
+    $ P(d^+ \succ d^-) = \sigma(s^+ - s^-) = \frac{1}{1 + e^{-(s^+ - s^-)}} $
+*   **损失函数**: 最小化正确排序概率的负对数，即交叉熵损失：
+    $ L_{CE} = -\log(\sigma(s^+ - s^-)) = \log(1 + e^{-(s^+ - s^-)}) $
+*   **直觉**: 这是一个“软”损失。它总是试图无限拉大正负样本的分数差距，因为即使 `s+ > s-`，只要差距不是无穷大，损失就不会为0。
+
+##### 2. 铰链损失 (Hinge Loss) for Ranking
+
+这种方法源于支持向量机 (SVM)，将排序问题看作一个**带间隔 (Margin) 的分类问题**。它追求的目标是正样本的分数要比负样本高出一个指定的间隔 `m`。著名的 **RankSVM** 算法采用了此损失。
+
+*   **间隔目标**: `s+ - s- ≥ m` (通常 `m` 设为1)。
+*   **损失函数**: 只有当间隔目标未被满足时，才产生损失：
+    $ L_{Hinge} = \max(0, m - (s^+ - s^-)) $
+*   **直觉**: 这是一个“硬”损失。一旦分数差满足了间隔要求，损失就降为0。这使得模型更专注于学习那些“难分的”或“排错的”样本对，而对已经“足够好”的样本对不再进行优化。GBDT（Gradient Boosting Decision Tree）
+
+* 通过拟合残差，生成第N颗子树
+
+#### XGBoost
+
+https://xgboost.readthedocs.io/en/stable/tutorials/model.html
+
+XGBoost stands for “Extreme Gradient Boosting”, where the term “Gradient Boosting” originates from the paper *Greedy Function Approximation: A Gradient Boosting Machine*, by Friedman.
+
+![image-20241210004602072](./Machine-Learning/image-20241210004602072.png)
+
+![image-20241210004925060](./Machine-Learning/image-20241210004925060.png)
+
+![image-20241210004943879](./Machine-Learning/image-20241210004943879.png)
+
+![image-20241210005132323](./Machine-Learning/image-20241210005132323.png)
+
+![illustration of structure score (fitness)](./Machine-Learning/struct_score.png)
+
+
+
+#### LTR
+
+https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html
+
+* Intro
+  * The default objective is `rank:ndcg` based on the `LambdaMART` [[2$$](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references) algorithm, which in turn is an adaptation of the `LambdaRank` [[3$$](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references) framework to gradient boosting trees. For a history and a summary of the algorithm, see [[5$$](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references)
+  * 《Unbiased LambdaMART: An Unbiased Pairwise Learning-to-Rank Algorithm》
+* 调参
+  * lambdarank_num_pair_per_sample
+
+### Position Bias
+
+* Intro
+
+  * Obtaining real relevance degrees for query results is an expensive and strenuous, requiring human labelers to label all results one by one. When such labeling task is infeasible, we might want to train the learning-to-rank model on user click data instead, as it is relatively easy to collect. Another advantage of using click data directly is that it can reflect the most up-to-date user preferences [[1$$](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references). However, user clicks are often biased, as users tend to choose results that are displayed in higher positions. User clicks are also noisy, where users might accidentally click on irrelevant documents. To ameliorate these issues, XGBoost implements the `Unbiased LambdaMART` [[4$$](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html#references) algorithm to debias the position-dependent click data. The feature can be enabled by the `lambdarank_unbiased` parameter; see [Parameters for learning to rank (rank:ndcg, rank:map, rank:pairwise)](https://xgboost.readthedocs.io/en/stable/parameter.html#ltr-param) for related options and [Getting started with learning to rank](https://xgboost.readthedocs.io/en/stable/python/examples/learning_to_rank.html#sphx-glr-python-examples-learning-to-rank-py) for a worked example with simulated user clicks.
 
 ### NLP
 
@@ -1972,11 +2439,6 @@ def find_most_similar(input_word):
 
 * 困惑度(perplexity)的基本概念及多种模型下的计算（N-gram, 主题模型, 神经网络）https://zhuanlan.zhihu.com/p/114432097
 
-
-
-
-
-
 ### CV
 
 #### 卷积网络
@@ -2026,7 +2488,7 @@ def find_most_similar(input_word):
 
 
 * group convolution
-  * only the input channels in the same group are used for computing a given output channel. A group convolution with total Ci input, Co output channels and G groups is essentially G independent convolutions each with d=Ci/G input and Co/G output channels. 
+  * only the input channels in the same group are used for computing a given output channel. A group convolution with total Ci input, Co output channels and G groups is essentially G independent convolutions each with d=Ci/G input and Co/G output channels.
   * depth-wise convolution: Ci=Co=G and consequently group size d=1
 * 1x1卷积核
   * 《Network-in-Network》论文中首次介绍了1x1卷积层用于“跨信道下采样”或“跨信道池池化”。
@@ -2090,13 +2552,11 @@ def find_most_similar(input_word):
 
 ##### PixelCNN
 
-
+## 6. 其他学习范式与应用方向
 
 ### RL —— Reinforcement Learning
 
 > 见 RL.md
-
-
 
 ### AutoML
 
@@ -2105,177 +2565,6 @@ def find_most_similar(input_word):
   * automl的收益问题
   * 不太适合离散输入
 * [AutoTVM 探秘（二）](https://reku1997.gitee.io/2019/12/31/autotvm-2/)
-
-### 特征压缩、降维
-
-#### Intro
-
-* **Different from random projections, the hashing-trick**：
-  * preserves sparsity
-  * introduces no additional overhead to store projection matrices
-
-* According to [JL-lemma](https://en.wikipedia.org/wiki/Johnson–Lindenstrauss_lemma), [random projection](https://en.wikipedia.org/wiki/Random_projection) reduces the dimensionality of data while approximately preserving the pairwise distances between data points.
-
-  * 压缩 feature num 而非压缩 embedding size (PCA, SVD)
-
-  * 输入 feature，输出 concated_compressed_embedding + dot_products
-
-  * 变种：instance-wise (Y adaptive to X), implicit-order, GroupCDot, CDotFlex
-
-  * 对比：比[AutoInt](https://arxiv.org/pdf/1810.11921.pdf)计算量小；比[DCN-V2](https://arxiv.org/pdf/2008.13535.pdf)线上效果好
-
-  * 应用：
-    * Random projection in dimensionality reduction: Applications to image and text data
-
-* Q-Former
-
-#### Feature Hashing
-
-> https://arxiv.org/pdf/0902.2206 Feature Hashing for Large Scale Multitask Learning
-
-##### Kernel Trick
-
-* **目标**: 在低维空间中计算高维特征空间的内积，以避免显式的高维映射带来的巨大计算量。
-* **核心思想**: 存在一个核函数 $$K(x_i, x_j)$$，它等于将向量 $$x_i, x_j$$ 映射到高维空间后的内积。
-  * 设 $$\phi(x)$$ 是一个从低维输入空间到高维特征空间的映射函数。
-  * 核技巧的关键在于，许多算法（如SVM）的计算只依赖于特征空间中样本的内积，即 $$<\phi(x_i), \phi(x_j)>$$。
-  * 我们可以直接定义核函数 $$K(x_i, x_j) = <\phi(x_i), \phi(x_j)>$$，从而无需计算高维映射 $$\phi(x)$$。
-* **示例 (多项式核)**:
-  * 设 $$x = (x_1, x_2)$$，映射 $$\phi(x) = (x_1^2, \sqrt{2}x_1x_2, x_2^2)$$
-  * 高维内积: $$<\phi(x), \phi(z)> = x_1^2z_1^2 + 2x_1x_2z_1z_2 + x_2^2z_2^2 = (x_1z_1 + x_2z_2)^2 = (<x, z>)^2$$。
-  *   这里的核函数就是 $K(x, z) = (<x, z>)^2$。我们只需在原始低维空间计算内积再平方，就等价于高维空间的内积结果。
-
-*   **局限性：核矩阵的存储**
-    *   **为何要存储**: 许多核方法（如SVM）的优化求解过程需要用到所有样本对之间的核函数值，即完整的 $n \times n$ 核矩阵（Gram matrix）$K$，其中 $K_{ij} = K(x_i, x_j)$。
-    *   **为何不可行**: 存储核矩阵的内存复杂度为 $O(n^2)$，其中 $n$ 是样本数。
-        *   当 $n$ 很大时，$n^2$ 会导致内存爆炸。例如，对于 $n=10^5$ 个样本，使用单精度浮点数（4字节），存储核矩阵需要 $(10^5)^2 \times 4 \text{ bytes} = 40 \text{ GB}$ 内存，这对于单机尤其是GPU来说是不可行的。
-    *   因此，核方法不适用于样本规模（$n$）极大的场景。
-
-##### Hashing Trick
-
-*   **核心思想**: 将高维、稀疏的类别特征（如单词、ID）通过哈希函数映射到一个固定长度的低维向量中，从而在不创建和维护巨大词典的情况下，直接将类别特征数值化。
-*   **与Feature Hashing的关系**: Hashing Trick是Feature Hashing思想在更广义特征工程中的应用，两者经常被混用。Feature Hashing通常指将整个特征向量降维的方法，而Hashing Trick更侧重于处理单个或多个离散特征的编码问题。
-*   **工作流程**:
-    1.  选择一个哈希函数 `h` 和一个目标维度 `m`（哈希桶的数量）。
-    2.  对于一个类别特征（如单词 `"apple"`），计算其哈希值：`index = h("apple") % m`。
-    3.  将这个特征在最终的输入向量中的第 `index` 个位置上置为1（或使用带符号的哈希增加数值稳定性）。
-*   **优缺点**:
-    *   **优点**: 无需预先构建词典、内存占用固定、可处理在线学习中出现的新特征。
-    *   **缺点**: 哈希碰撞。不同的原始特征可能被映射到同一个索引，导致信息损失。但实践证明，在推荐、广告等大规模稀疏场景下，适度的碰撞对模型效果影响有限，甚至有时能起到正则化的作用。
-*   **应用**: 广泛应用于计算广告（CTR预估）、推荐系统等需要处理海量ID类特征的场景。
-
-```Python
-class UserIdEmbedder(nn.Module):
-    def __init__(self, num_buckets, embedding_dim) -> None:
-        super().__init__()
-        self.num_buckets = num_buckets
-        self.emb = nn.Embedding(num_buckets, embedding_dim)
-    
-    def forward(self, x: Tensor) -> Tensor:
-        hashed_indices = x % self.num_buckets
-        # hashed_indices = torch.tensor([hash(token) % self.num_buckets for token in x], device=x.device)
-        return self.emb(hashed_indices)
-```
-
-
-
-##### Feature Hashing 应用于 Multitask Learning
-
-* **目标**: 低维空间处理高维数据，规避核矩阵 O (n²) 存储 / 计算瓶颈，支持大规模多任务学习（如十万级用户垃圾过滤）。
-  * 核心思想: 设计无偏哈希函数，将高维输入映射到低维空间，用哈希内积近似原始内积，多任务独立哈希抑制参数干扰。
-* 设哈希函数对：h:ℕ→{1,...,m}（索引映射至 m 个哈希桶），ξ:ℕ→{±1}（符号随机化），高维 x→低维 φ(x)∈ℝ^m，满足$$\phi_i(x)=\sum_{j:h(j)=i}\xi(j)x_j$$。
-  - 注1：尽管定义1中的哈希函数是在自然数集N上定义的，但在实践中，我们通常考虑对任意字符串使用哈希函数。这两者是等价的，因为每个有限长度的字符串都可以用一个唯一的自然数来表示
-  - 注2： 二进制哈希值 $$\xi$$的目的是消除偏差
-  - 理解：x是高维特征，x_j是数值，0<=i<m,  $$\phi_i(x)$$是数值，φ(x) m维
-* 性质：
-  * 线性运算
-  * 流式计算
-    * $$\begin{array}{rcl} \phi_i^{(h, \xi)}(x \| \Delta x) &=& \phi_i^{(h, \xi)}(x \| 0 + 0 \| \Delta x) \\\\ &=& \phi_i^{(h, \xi)}(x \| 0) + \phi_i^{(h, \xi)}(0 \| \Delta x) \\\\ &=& \phi_i^{(h, \xi)}(x) + \phi_i^{(h, \xi)}(\Delta x) \end{array}$$
-* 无偏性：
-  * 哈希内积定义：$$\left<x,x'\right>_\phi = \left<\phi(x),\phi(x')\right>$$
-  * **定义 1**下**，**哈希核是无偏的，并且有：
-    * $$\begin{array}{rcl} \mathbf{E}_\phi\left[\langle x, x' \rangle_\phi\right] &=& \langle x, x' \rangle \\\\ \sigma_{x,x'}^2 &=& \frac{1}{m} \left( \sum_{i \neq j} x_i^2 x_j'^2 + x_i x_i' x_j x_j' \right) \\ \end{array}$$
-      * -> 替代核函数$$K(x,x')$$
-    * 因此，特别地，当$$\|x\|_2 = \|x'\|_2 = 1$$时，有$$\ \sigma_{x,x'}^2 = O( \frac{1}{m})$$。
-    * 注：这表明，哈希核的典型值应集中在目标值的 $$O(\sqrt{1/m})$$ 范围内。 
-    * 注：使用切比雪夫不等式证明，所有观测值中有一半落在 $$\sqrt{2}\sigma$$ 的范围内
-* Concentration of Measure Bounds
-  * <img src="./Machine-Learning/image-20251028014007258.png" alt="image-20251028014007258" style="zoom:50%;" />
-* 多任务适配：对任务 u∈U，映射$$\phi_u(x)=\phi(x,u)$$（输入扩展为 (x,u)），参数合并为$$w_h=\phi_0(w_0)+\sum_{u∈U}\phi_u(w_u)$$，存储量从 O (d×|U|) 降至 O (m)。
-* 示例 (个性化哈希): collaborative email spam filtering
-  - 设 x 为邮件词向量（d=4×10⁷），u 为用户 ID，$$\phi_u(x)=\phi(\text{concat}(x_j,u))$$（词 - 用户对哈希）。
-  - 预测内积：$$\left<\phi_0(x)+\phi_u(x),w_h\right> \approx \left<x,w_0\right>+\left<(x,u),w_u\right>$$，等价原始多任务预测。
-  - 仅需 m=2²²（≈4×10⁶）存储$$w_h$$，无需 O (4×10⁷×4×10⁵) 原始参数。
-* 局限性：哈希误差
-  - **误差来源**: 
-    - ①失真误差$$\epsilon_d=\sum_{v∈\{u,0\}}|\left<\phi_v(x),\phi_v(w_v)\right> - \left<x,w_v\right>|$$（内积偏差）；
-    - ②干扰误差$$\epsilon_i=\sum_{v≠0}\left<\phi_0(x),\phi_v(w_v)\right>+\sum_{v≠u}\left<\phi_u(x),\phi_v(w_v)\right>$$（多任务参数干扰）。
-  - **控制条件**: 需满足$$m≥\Omega(\frac{1}{\epsilon^2}\log(\frac{1}{\delta}))$$（定理 3），过小 m 会加剧哈希碰撞，导致误差超出阈值。
-
-##### 无偏性的数学证明和分析
-
-根据定义，哈希内积为： $$\left<x,x'\right>_\phi = \left<\phi(x),\phi(x')\right> = \sum_{i=1}^m \phi_i(x) \phi_i(x')$$ 其中 $$\phi_i(x)=\sum_{j:h(j)=i}\xi(j)x_j$$ 。
-
-$$E_\phi[\left<x,x'\right>_\phi] = E_{h,\xi}\left[\sum_{i=1}^m \left(\sum_{j:h(j)=i}\xi(j)x_j\right) \left(\sum_{k:h(k)=i}\xi(k)x'_k\right)\right]$$
-
-利用期望的线性性质，将求和移到外面： $$= \sum_{i=1}^m E_{h,\xi}\left[\sum_{j:h(j)=i}\sum_{k:h(k)=i} \xi(j)\xi(k)x_j x'_k\right]$$ $$= \sum_{j,k} x_j x'_k E_{h,\xi}\left[\xi(j)\xi(k) \cdot \mathbf{1}_{h(j)=h(k)}\right]$$ 其中 $\mathbf{1}_{h(j)=h(k)}$ 是指示函数，当 $h(j)=h(k)$ 时为1，否则为0。
-
-分情况讨论 $j$ 和 $k$ ，即可证明： $$E_\phi[\left<x,x'\right>_\phi] = \sum_{j=1}^d x_j x'_j \cdot 1 = \sum_{j=1}^d x_j x'_j = \langle x, x' \rangle$$ 
-
-
-
-* 数学意义：期望上的等价性
-
-  - “无偏性”意味着，虽然单次哈希映射得到的内积 $\langle\phi(x), \phi(x')\rangle$ 是一个随机值，它会因为哈希碰撞而偏离真实的内积 $\langle x, x' \rangle$ ，但如果我们进行无穷多次哈希（每次都用一组新的随机哈希函数），然后取所有结果的平均值，这个平均值会精确地收敛到真实的内积。
-  - --> Deep Hash Embedding 的思路，多组哈希函数的价值
-
-  - 这为Feature Hashing提供了理论上的正确性保证。它告诉我们，哈希映射不是一个随意的、破坏性的过程，而是一个在统计期望上保持了原始几何关系的变换。
-
-* 无偏性是Feature Hashing的灵魂。它保证了我们用一个计算上可行（低维、稀疏）的随机过程，去近似一个计算上不可行（超高维）的确定性过程时，在统计意义上是正确的。
-
-
-
-#### [DHE] Learning to Embed Categorical Features without Embedding Tables for Recommendation
-
-* Intro
-  * 挑战1: Highly-skewed data distribution: The categorical features
-    in recommendation data usually follow highly skewed power-
-    law distributions. The small number of training examples on
-    infrequent feature values hurts the embedding quality for the
-    tail items significantly.
-
-![image-20241226232352140](./Machine-Learning/image-20241226232352140.png)
-
-* 思路：
-  * 解决one-hot hashing的collision问题，兼顾压缩+唯一性
-  * 一种思路是concat多个hash embedding
-* 编码设计原则
-  - **唯一性**：确保每个特征值的编码唯一，避免冲突影响模型性能。
-  - **等相似性**：避免引入错误的归纳偏差，使任意两个编码在相似性上无差异。
-  - **高维度**：便于后续解码函数区分不同特征值，高维空间可分性更强。
-  - **高香农熵**：从信息论角度防止冗余维度，最大化每个维度的熵。
-
-- **密集哈希编码** Dense Hash Encoding：
-  - 使用 $$k$$ 个独立的通用哈希函数 $$\{H^{(i)}\}_{i=1}^k$$ 将单个特征值 $$s$$ 映射为一个 $$k$$ 维的密集整数向量。
-
-  - 编码函数: $$E(s) = [H^{(1)}(s), H^{(2)}(s), \dots, H^{(k)}(s)] \in \mathbb{R}^k$$
-  
-  - 其中每个哈希函数 $$H^{(i)}: \mathbb{N} \to \{1, 2, \dots, m\}$$。
-  
-  - $$m$$ 是一个与Embedding Table无关的足够大的数（如 $$10^6$$），以保证哈希值在 $$\{1, ..., m\}$$ 上近似均匀分布。
-  
-  - 此过程无需存储，可并行计算，生成的向量再通过后续网络（如MLP）学习为实值Embedding。
-  
-- **Deep Embedding Network**
-  - 发现 Mish 激活函数和批量归一化（BN）能提高性能。网络结构上，约五层隐藏层的效果较好，且简单等宽 MLP 架构表现最佳
-  - side feature enhanced encodings for DHE
-    - directly concatenating the generalizable features and the hash encodings.
-    - the hash encoding provides a unique identifier for memorization while the other features enable the generalization ability.
-
-* 结论：
-  * 1024个hash function效果最好
-  * RQ4: 批量归一化（BN）能显著稳定和加速训练并提高性能，在激活函数方面，Mish 激活函数优于 ReLU
-  * 4.8 简单等宽 MLP 表现最佳，添加残差连接反而略降性能
 
 ### AI4Science
 
@@ -2290,6 +2579,7 @@ $$E_\phi[\left<x,x'\right>_\phi] = E_{h,\xi}\left[\sum_{i=1}^m \left(\sum_{j:h(j
   * “癌症、气候变迁、能源、基因组学、宏观经济学、金融系统、物理学等，太多我们想掌握的系统知识正变得极其复杂,如此巨大的信息量让最聪明的人穷其一生也无法完全掌握。如何才能从如此庞大的数据量中筛选出正确的见解呢？” 未来超级智能机器将与人类专家合作解决一切问题，一种通用人工智能可以自动将非结构化信息转换为可使用知识，这是一种针对任何问题的元解决方法（meta-solution）。
 * ChemCrow
 
+## 7. 课程与工程实践
 
 ### Fundamentals of Deep Learning -- nvidia
 
@@ -2310,7 +2600,7 @@ x_test = x_test.reshape(10000, 784)
 
 # Normalization
 x_train = x_train / 255
-x_test = x_test / 255 
+x_test = x_test / 255
 
 import tensorflow.keras as keras
 num_categories = 10
@@ -2373,13 +2663,13 @@ num_images = 20
 for i in range(num_images):
     row = x_train[i]
     label = y_train[i]
-    
+
     image = row.reshape(28,28)
     plt.subplot(1, num_images, i+1)
     plt.title(label, fontdict={'fontsize': 30})
     plt.axis('off')
     plt.imshow(image, cmap='gray')
-    
+
 x_train = x_train / 255
 x_test = x_test / 255
 
@@ -2421,7 +2711,7 @@ data augmentation
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 datagen = ImageDataGenerator(
         rotation_range=10,  # randomly rotate images in the range (degrees, 0 to 180)
-        zoom_range = 0.1, # Randomly zoom image 
+        zoom_range = 0.1, # Randomly zoom image
         width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
         height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
         horizontal_flip=True,  # randomly flip images horizontally
@@ -2448,7 +2738,7 @@ def predict_letter(file_path):
     show_image(file_path)
     image = load_and_scale_image(file_path)
     image = image_utils.img_to_array(image)
-    image = image.reshape(1,28,28,1) 
+    image = image.reshape(1,28,28,1)
     image = image/255
     prediction = model.predict(image)
     # convert prediction to letter
@@ -2477,7 +2767,7 @@ base_model = keras.applications.VGG16(
     include_top=False)
 base_model.trainable = False
 inputs = keras.Input(shape=(224, 224, 3))
-# Separately from setting trainable on the model, we set training to False 
+# Separately from setting trainable on the model, we set training to False
 x = base_model(inputs, training=False)
 x = keras.layers.GlobalAveragePooling2D()(x)
 # A Dense classifier with a single unit (binary classification)
@@ -2491,23 +2781,23 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 datagen = ImageDataGenerator(
         samplewise_center=True,  # set each sample mean to 0
         rotation_range=10,  # randomly rotate images in the range (degrees, 0 to 180)
-        zoom_range = 0.1, # Randomly zoom image 
+        zoom_range = 0.1, # Randomly zoom image
         width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
         height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
         horizontal_flip=True,  # randomly flip images
         vertical_flip=False) # we don't expect Bo to be upside-down so we will not flip vertically
 
 # load and iterate training dataset
-train_it = datagen.flow_from_directory('presidential_doggy_door/train/', 
-                                       target_size=(224, 224), 
-                                       color_mode='rgb', 
-                                       class_mode='binary', 
+train_it = datagen.flow_from_directory('presidential_doggy_door/train/',
+                                       target_size=(224, 224),
+                                       color_mode='rgb',
+                                       class_mode='binary',
                                        batch_size=8)
 # load and iterate test dataset
-test_it = datagen.flow_from_directory('presidential_doggy_door/test/', 
-                                      target_size=(224, 224), 
-                                      color_mode='rgb', 
-                                      class_mode='binary', 
+test_it = datagen.flow_from_directory('presidential_doggy_door/test/',
+                                      target_size=(224, 224),
+                                      color_mode='rgb',
+                                      class_mode='binary',
                                       batch_size=8)
 
 model.fit(train_it, steps_per_epoch=12, validation_data=test_it, validation_steps=4, epochs=20)
@@ -2541,7 +2831,7 @@ model.fit(train_it, steps_per_epoch=12, validation_data=test_it, validation_step
 [pretrained word embedding](https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html), [GPT2](https://openai.com/blog/better-language-models/), [BERT](https://ai.googleblog.com/2018/11/open-sourcing-bert-state-of-art-pre.html)
 
 ```python
-import os 
+import os
 import pandas as pd
 
 nyt_dir = 'nyt_dataset/articles/'
@@ -2570,12 +2860,12 @@ subset_dict = {key: value for key, value in tokenizer.word_index.items() \
 print(subset_dict)
 tokenizer.texts_to_sequences(['a','man','a','plan','a','canal','panama'])
 
-# Convert data to sequence of tokens 
+# Convert data to sequence of tokens
 input_sequences = []
 for line in all_headlines:
     # Convert our headline into a sequence of tokens
     token_list = tokenizer.texts_to_sequences([line])[0]
-    
+
     # Create a series of sequences for each headline
     for i in range(1, len(token_list)):
         partial_sequence = token_list[:i+1]
@@ -2583,12 +2873,12 @@ for line in all_headlines:
 print(tokenizer.sequences_to_texts(input_sequences[:5]))
 input_sequences[:5]
 
-# Convert data to sequence of tokens 
+# Convert data to sequence of tokens
 input_sequences = []
 for line in all_headlines:
     # Convert our headline into a sequence of tokens
     token_list = tokenizer.texts_to_sequences([line])[0]
-    
+
     # Create a series of sequences for each headline
     for i in range(1, len(token_list)):
         partial_sequence = token_list[:i+1]
@@ -2619,7 +2909,7 @@ from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout
 from tensorflow.keras.models import Sequential
 
 # Input is max sequence length - 1, as we've removed the last word for the label
-input_len = max_sequence_len - 1 
+input_len = max_sequence_len - 1
 model = Sequential()
 # Add input embedding layer
 model.add(Embedding(total_words, 10, input_length=input_len))
@@ -2661,7 +2951,7 @@ def generate_headline(seed_text, next_words=1):
         seed_text += " " + next_word
     # Return headline as title-case
     return seed_text.title()
-  
+
 seed_texts = [
     'washington dc is',
     'today in new york',
@@ -2670,8 +2960,6 @@ seed_texts = [
 for seed in seed_texts:
     print(generate_headline(seed, next_words=5))
 ```
-
-
 
 ### Fundamentals of Deep Learning for MultiGPUs -- Nvidia
 
@@ -2707,7 +2995,7 @@ max_number_of_epochs = 1000
 loss_array = []
 b_array = []
 w_array = []
-    
+
 with tf.Session() as sess:
     # Initialize the necessary variables
     sess.run(tf.global_variables_initializer())
@@ -2736,7 +3024,7 @@ with tf.Session() as sess:
     print("")
     print("Training finished after {} epochs".format(i+1))
     print("")
-    
+
     print("After training: w = {:4.3f}, b = {:4.3f}, loss = {:7.3f}".format(w_value, b_value, loss_value))
 ```
 
@@ -2752,7 +3040,7 @@ num_batches_in_epoch = (n_samples + batch_size - 1) // batch_size
 
 * 非常小或非常大的批量对于模型训练的收敛来说可能不是的最佳选择（非常小的批量带来的噪声往往过于嘈杂而无法使模型充分收敛到损失函数的最小值，而非常大的批量则往往造成训练的早期阶段就发散）
 * 观察到大batch size的val_acc和acc很接近，不容易过拟合，但后期准确度效果提升缓慢
-* Machine-Learning/GPU_training_batch_size.py 
+* Machine-Learning/GPU_training_batch_size.py
 
 
 
@@ -2820,7 +3108,7 @@ $ mpirun -np 16 -H server1:4,server2:4,server3:4,server4:4 -bind-to none -map-by
 python train.py
 ```
 
-
+## 8. 术语与待整理项
 
 ### 术语
 
