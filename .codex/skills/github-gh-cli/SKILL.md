@@ -21,6 +21,11 @@ Use this skill when the task is about GitHub data and `gh` is the fastest path:
 - When outside the target repository, pass `--repo owner/repo` explicitly.
 - If auth is missing, ask the user to handle `gh auth login`; do not attempt interactive credential setup yourself.
 
+### Authorized PR after an upstream push denial
+
+- An upstream 403 or `permissions.push=false` is a denial of direct upstream writes, not evidence that PR creation is unavailable. For an already authorized PR, inspect the current account and its existing fork; verify its parent is the intended upstream, `permissions.push=true`, the exact source branch/head and the original publication scope.
+- Reuse that existing fork with a normal push and an explicit upstream/base/owner-qualified head. Look up an existing PR first and read back uncertain effects before retrying. Preserve `origin`; do not force push, switch accounts, request broader access or create a new fork merely to recover this case. Report the specific gap if no authorized route exists.
+
 ### Contributor scope and permission advice
 
 - Inventory a stated time window before recommending a contributor's scope; disclose date bounds and result caps. Sample across modules and work types, including CI/mainline recovery, build tooling, architecture upkeep and regression follow-through. A few recent feature PRs do not establish the person's full role.
