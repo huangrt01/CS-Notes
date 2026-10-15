@@ -55,9 +55,12 @@
 | received treatment / exposure | 被分配后是否真的接受或看到了干预？ |
 | analysis unit | 最终按用户、请求还是任务计算一个观测？ |
 | outcome / time window | 主要结果、护栏指标和观测窗口是什么？ |
+| outcome coding / effect scale | $Y=1$ 表示成功还是失败？报告绝对差、风险比还是其他尺度？ |
 | estimand | 要估计“分配策略”的平均效果，还是实际接受干预时的效果？适用于哪个人群？ |
 
 * **预先确定分析合同**：主要指标、护栏指标、随机化 / 分析单位、比较哪些版本与人群、样本量或停止规则。上线收益同时报告效应量、区间与业务意义，不能只报赢家的 P 值。
+
+潜在结果、average null 与 sharp null、干扰假设，以及 success / failure 编码为何会改变 ratio 的解释，见 [潜在结果：先定义因果问题，再谈估计](./Machine-Learning.md#潜在结果先定义因果问题再谈估计)。
 
 **assignment 不等于 received treatment。** 用户被分到新版本，可能没有真正触发功能。按最初分配比较（intention-to-treat）保留随机化带来的可比性；只比较“实际使用者”与未使用者，会让自选择重新进入。若要估计实际接受干预的效果，需要额外设计与假设，不能把曝光后筛选当成普通分组。
 
