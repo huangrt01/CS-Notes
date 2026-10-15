@@ -610,3 +610,4 @@
 | 602 | [赵克常《炒股挣钱》：风险认知课，不是可复制的投资研究方法](<https://x.com/ActionXAi/status/2083691580196856018>) | B | 沿用既有阅读记录 |
 | 603 | [未核实的 MLSys 截图线索：集中式推理、确定性信号与知识图谱控制面](<https://mlsys.org/Conferences/2026/CallForResearchPapers>) | B | 沿用既有阅读记录；来源真实性未确认；保留为核验案例，不作为论文结论。 |
 | 604 | [Evolvent AI GitHub 组织复核：与既有研究目录的重复记录](<https://github.com/evolvent-ai>) | B | 沿用既有阅读记录；保留稳定 ID 与重复记录；不因重复而静默删除。 |
+| 605 | [tison 博客索引：活动纪实、书评、个人经历与基础工具](<https://www.tisonkun.org/archives/>) · [来源 2](<https://github.com/tisonkun/tisonkun.github.io>) · [来源 3](<https://github.com/tisonkun/tisonkun.github.io/tree/ffcbea77d9c62965eaba03569f694b551c1ca47d/source/_posts>) | B | 沿用既有阅读记录；站点归档与 commit ffcbea7 源码；全站 107 篇完整清点，本组 7 篇源 Markdown 全文解析并哈希；P0 文章定向语义复核，用户未读完。 全站 107 篇中的 7 篇；P3 7 篇。不安排整块阅读；需要背景或书目时检索即可。 Codex 已完整解析并哈希源码，用户未读完；文章级清单保存在受管内容和派生阅读地图中。 |
