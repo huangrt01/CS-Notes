@@ -10058,7 +10058,7 @@
     {
       "lifecycle": "candidate",
       "material_ref": "material-cheekypint-meta-muse-wonder-20261013",
-      "note": "已读分享原帖、Cheeky Pint #35官方节目入口及转录前27000字符，覆盖个人Agent案例、模型即产品、active memory/focus。转录100000字符截断；完整134分钟视频、中文字幕、后半场与独立评测未核验。A档：可转化为跨任务记忆使用、压缩保留、挫折后完成与主动介入的评测维度。嘉宾自报SOTA和VM安全并非独立证据。先读摘要及00:07:28/00:14:35相关段落即可；",
+      "note": "已读分享原帖、Cheeky Pint #35官方节目入口及转录前27000字符，覆盖个人Agent案例、模型即产品、active memory/focus。转录100000字符截断；完整134分钟视频、中文字幕、后半场与独立评测未核验。A档：可转化为跨任务记忆使用、压缩保留、挫折后完成与主动介入的评测维度。嘉宾自报SOTA和VM安全并非独立证据。先读摘要及00:07:28/00:14:35相关段落即可。",
       "queue_rank": 54,
       "read_scope": "recorded_review",
       "sources": [
@@ -10084,7 +10084,7 @@
     {
       "lifecycle": "candidate",
       "material_ref": "material-longharness-2610-13075",
-      "note": "已读v1方法/实验与A–E、TeX主表和完整prompt，实际看图1–4像素；未运行实现、取得原始轨迹或独立复现。证据与结论分离，缺口驱动检索；读后注册、逐项接纳、revision新ID、旧ID失活，观察后更新结论。引用有效不保证源忠实，compute不校operand，全history不自动压缩。GLM同backbone V1/V2 60.2/61.1，QwenV2超Codex仅1.1pp；不同工具/预算，不代表商业原生模型排名或等成本因果收益。图4修正未采用案例与append-only消融有参考价值，conditional pipeline分母不同。S选读§2、B2–4、Table2/3、E/Fig4；",
+      "note": "已读v1方法/实验与A–E、TeX主表和完整prompt，实际看图1–4像素；未运行实现、取得原始轨迹或独立复现。证据与结论分离，缺口驱动检索；读后注册、逐项接纳、revision新ID、旧ID失活，观察后更新结论。引用有效不保证源忠实，compute不校operand，全history不自动压缩。GLM同backbone V1/V2 60.2/61.1，QwenV2超Codex仅1.1pp；不同工具/预算，不代表商业原生模型排名或等成本因果收益。图4修正未采用案例与append-only消融有参考价值，conditional pipeline分母不同。S选读§2、B2–4、Table2/3、E/Fig4。",
       "queue_rank": 7,
       "read_scope": "recorded_review",
       "sources": [
@@ -10097,7 +10097,7 @@
     {
       "lifecycle": "candidate",
       "material_ref": "material-sla-2610-07625",
-      "note": "原帖主文、v1正文/B–D与Kernel Advisor完整prompt已读；HTML100K截断，E其他prompt/完整thread/帖图/Fig4未读。实际看Fig1/2/3/5像素；公开repo仅preprint无实现，未复现。harness保存候选与outcome，每次重建Advisor/Worker上下文并分派具体实验。共同checkpoint3次续延消融均stateless，只检验context/assignment差异。Kernel同目标67.9M vs986.3M tokens（14.5×），多数task单run；Advisor低于0.6%tokens但1.2–2.3%model费用，未含执行/评测算力。D3有18.99→19.64的候选继承轨迹，不代表总体频率。S选读§3、4.3–4.4/B/D3；，可转rolecontext/adoption与全成本对照。 本轮先选读§3.2的实验分派、Kernel Advisor prompt及D.3候选继承轨迹，约45–60分钟；输出候选→执行→评分→下一选择表，不把状态保存或更多事件当作涨分证据。",
+      "note": "原帖主文、v1正文/B–D与Kernel Advisor完整prompt已读；HTML100K截断，E其他prompt/完整thread/帖图/Fig4未读。实际看Fig1/2/3/5像素；公开repo仅preprint无实现，未复现。harness保存候选与outcome，每次重建Advisor/Worker上下文并分派具体实验。共同checkpoint3次续延消融均stateless，只检验context/assignment差异。Kernel同目标67.9M vs986.3M tokens（14.5×），多数task单run；Advisor低于0.6%tokens但1.2–2.3%model费用，未含执行/评测算力。D3有18.99→19.64的候选继承轨迹，不代表总体频率。S选读§3、4.3–4.4/B/D3；可转rolecontext/adoption与全成本对照。 本轮先选读§3.2的实验分派、Kernel Advisor prompt及D.3候选继承轨迹，约45–60分钟；输出候选→执行→评分→下一选择表，不把状态保存或更多事件当作涨分证据。",
       "queue_rank": 1,
       "read_scope": "recorded_review",
       "sources": [
@@ -10112,7 +10112,7 @@
     {
       "lifecycle": "candidate",
       "material_ref": "material-anthropic-scion-20261013",
-      "note": "已读2026-10-13官方全文及6图像素；性能图顶部legend遮挡，源码/原始数据/独立复现未验。图中30401是Sep9单日，非整月日均或质量。Scion first-parent增量changeset与content-addressed blobs，tree/blame/history递推派生；不可变对象缓存、可变ref单rowCAS，服务端查询API、按需sparsecheckout、严格分层缓存。CPU/内存footprint200×缩减等为厂商报告，具体CIcheckout31→3.5s，不泛化为所有操作100×。postmerge/predeploy测试不等于取消审批或发布gate，特殊巨大在线monorepo方案非通用Git替代。，摘要+Data structures/Scaling Scion选读。",
+      "note": "已读2026-10-13官方全文及6图像素；性能图顶部legend遮挡，源码/原始数据/独立复现未验。图中30401是Sep9单日，非整月日均或质量。Scion first-parent增量changeset与content-addressed blobs，tree/blame/history递推派生；不可变对象缓存、可变ref单rowCAS，服务端查询API、按需sparsecheckout、严格分层缓存。CPU/内存footprint200×缩减等为厂商报告，具体CIcheckout31→3.5s，不泛化为所有操作100×。postmerge/predeploy测试不等于取消审批或发布gate，特殊巨大在线monorepo方案非通用Git替代；摘要+Data structures/Scaling Scion选读。",
       "queue_rank": 52,
       "read_scope": "full_text",
       "sources": [
