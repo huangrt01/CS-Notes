@@ -43,6 +43,8 @@ description: Synchronize CS-Notes Git changes and material projections when the 
 
    未激活或公开克隆没有 source adapter 时，保留 Git 对账结果，明确无法结算的 source 操作，不创建替代 authority；合法的公开内容仍可按授权提交。
 6. 阅读最终 diff，确认没有材料无依据消失、重复 ID、未审查状态泄露和私有内容。按主题只暂存明确路径，遵循 `git-split-commit-pr`。默认完整指令已授权公开内容 commit/push；不要求重复确认，不借该指令授权公司内容、凭证、内部来源或外部消息。
-7. 核验远端 head 和常用 checkout 的实际状态，核验材料队列读回。完成报告包含提交链接、剩余改动或具体阻塞；不能只报告独立 worktree 干净。
+7. 推送前核对当前 GitHub 账号、上游与已有 fork 的权限。上游 `push=false` 或一次明确的 403 只说明该账号不能直推上游，不代表不能提 PR。用户已要求提 PR 时，检查当前账号的已有 fork 是否确为同一上游且 `push=true`；核对目标分支、远端 head 和原授权范围后，正常推送到已有 fork，再以明确的 `--repo 上游 --base 原基线 --head 当前账号:分支` 创建 PR。先查询同 head 的现有 PR，发送结果不明时先读回，不重复推送或建 PR。不覆盖 `origin`、不 force push、不切账号或扩大权限；没有合适的已授权 fork 时说明精确缺口。单纯同步请求不借此新建 fork 或改成 PR。
+   更新已有 PR 时，先读取其真实 `headRepository / headRefName / headRefOid`，核对该仓库权限与预期 head，再正常推到它的确切来源。主仓库存在同名分支或本地 upstream 指向主仓库，不代表该分支就是 PR 来源。推送后必须读回 PR head 与本地提交一致，才可报告更新成功或继续合并。
+8. 核验远端 head 和常用 checkout 的实际状态，核验材料队列读回。完成报告包含提交链接、剩余改动或具体阻塞；不能只报告独立 worktree 干净。
 
 同步中发现已核验的流程缺陷时，把修复落到现有 owner 的 AGENTS、skill 或工具层，并用原失误的合成反例验证。稳定规则与通用代码维护在仓库，私有配置和运行证据留本地；不要为每次同步另写本机专属脚本。

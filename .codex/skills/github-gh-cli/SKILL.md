@@ -20,6 +20,19 @@ Use this skill when the task is about GitHub data and `gh` is the fastest path:
 - Prefer `--json` and `--jq` when you need structured results.
 - When outside the target repository, pass `--repo owner/repo` explicitly.
 - If auth is missing, ask the user to handle `gh auth login`; do not attempt interactive credential setup yourself.
+- Before updating or merging an existing PR, resolve its actual head repository, branch and SHA (`headRepository`, `headRefName`, `headRefOid`, or REST `.head`). A local upstream or an identically named branch in the base repository does not identify the PR source. Verify that exact repository's permissions and expected head, push normally there, and read back the PR head equal to the intended local commit before claiming an update or merging.
+
+### Authorized PR after an upstream push denial
+
+- An upstream 403 or `permissions.push=false` is a denial of direct upstream writes, not evidence that PR creation is unavailable. For an already authorized PR, inspect the current account and its existing fork; verify its parent is the intended upstream, `permissions.push=true`, the exact source branch/head and the original publication scope.
+- Reuse that existing fork with a normal push and an explicit upstream/base/owner-qualified head. Look up an existing PR first and read back uncertain effects before retrying. Preserve `origin`; do not force push, switch accounts, request broader access or create a new fork merely to recover this case. Report the specific gap if no authorized route exists.
+
+### Contributor scope and permission advice
+
+- Inventory a stated time window before recommending a contributor's scope; disclose date bounds and result caps. Sample across modules and work types, including CI/mainline recovery, build tooling, architecture upkeep and regression follow-through. A few recent feature PRs do not establish the person's full role.
+- Inspect substantive PR bodies, selected diffs and follow-up records. Separate public author/test claims from independently checked behavior; PR volume alone proves neither quality nor review qualification.
+- Check both formal cross-author reviews and ordinary PR comments. A `reviewed-by:` search misses comment-only validation and responsibility for regressions; missing search results are not proof of no review work.
+- Distinguish repository management permissions, maintainer responsibility, CODEOWNERS eligibility and bypass authority. Apply each appointment's actual rules without treating a subsystem checklist as the whole assessment of repository-wide maintenance.
 
 ## Common commands
 
