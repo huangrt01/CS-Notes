@@ -20,6 +20,7 @@ Use this skill when the task is about GitHub data and `gh` is the fastest path:
 - Prefer `--json` and `--jq` when you need structured results.
 - When outside the target repository, pass `--repo owner/repo` explicitly.
 - If auth is missing, ask the user to handle `gh auth login`; do not attempt interactive credential setup yourself.
+- Before updating or merging an existing PR, resolve its actual head repository, branch and SHA (`headRepository`, `headRefName`, `headRefOid`, or REST `.head`). A local upstream or an identically named branch in the base repository does not identify the PR source. Verify that exact repository's permissions and expected head, push normally there, and read back the PR head equal to the intended local commit before claiming an update or merging.
 
 ### Authorized PR after an upstream push denial
 
