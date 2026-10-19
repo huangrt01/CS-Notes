@@ -19,6 +19,18 @@ from datetime import datetime
 import material_queue as public
 
 
+PUBLIC_CARD_FIELD_ORDER = (
+    "material_ref",
+    "title",
+    "sources",
+    "tier",
+    "lifecycle",
+    "read_scope",
+    "note",
+    "queue_rank",
+)
+
+
 def digest(data):
     return hashlib.sha256(data).hexdigest()
 
@@ -192,6 +204,10 @@ class QueuePublisher:
             if alias != ref and alias in canonical_refs:
                 raise ValueError("public alias collides with a canonical identity")
             card["material_ref"] = alias
+        public_entries = [
+            {field: card[field] for field in PUBLIC_CARD_FIELD_ORDER}
+            for card in public_entries
+        ]
         public_catalog = {
             "schema_version": public.SCHEMA,
             "queue_id": "external",

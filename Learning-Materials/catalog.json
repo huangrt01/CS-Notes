@@ -4067,9 +4067,9 @@
         "https://my.feishu.cn/wiki/AfvNwnZiEirKPSkmUz7cfDlYnM1"
       ],
       "tier": "A",
+      "lifecycle": "candidate",
       "read_scope": "recorded_review",
       "note": "既往已读文字正文，视频、图片与白板未逐一展开。讨论完整问题所有权、工具权限、直接用户反馈与组织认可如何支持 AI Builder。",
-      "lifecycle": "candidate",
       "queue_rank": null
     },
     {
@@ -8464,9 +8464,9 @@
         "https://www.nbd.com.cn/articles/2026-07-23/4504599.html"
       ],
       "tier": "A",
+      "lifecycle": "candidate",
       "read_scope": "metadata",
       "note": "已取得 42 页 PDF、提取文本并检查首页，未逐段精读。网传转写稿，未经 DeepSeek 或本人公开确认；ASR 与 AI 整理可能引入错误，不作为官方口径。",
-      "lifecycle": "candidate",
       "queue_rank": null
     },
     {
@@ -8979,9 +8979,9 @@
         "./booklists/business-biography-and-general-knowledge.md"
       ],
       "tier": "B",
+      "lifecycle": "candidate",
       "read_scope": "metadata",
       "note": "《沃顿商学院时间管理课（修订版）》《小米创业思考》《埃隆·马斯克传》《冲向火星》《金钱博弈：重振韩国第一银行内幕》《进化论50讲》；正文未读。",
-      "lifecycle": "candidate",
       "queue_rank": 218
     },
     {
@@ -9590,44 +9590,44 @@
       "queue_rank": 18
     },
     {
-      "lifecycle": "candidate",
       "material_ref": "material-storm-reward-seeking-zhihu-2064127486921909656",
-      "note": "已读青稞公开转载全文；知乎原页未读，图片未解释。区分 reward seeking 与 reward hacking，关注 grader 猜测、浅层自检导致早停和交付失真。已核对部分相关一手文本；LangChain 的 52.8→66.5 是整体 harness 收益，不能归因于单一中间件。建议读 §1、§3、§5，结合外部完成契约、独立验证及预算／无进展停止条件。",
-      "read_scope": "recorded_review",
+      "title": "长程智能体自我检查与早停行为：Reward Seeking 现象及其缓解措施",
       "sources": [
         "https://zhuanlan.zhihu.com/p/2064127486921909656",
         "https://qingkeai.online/blog/Reward-Seeking"
       ],
       "tier": "S",
-      "title": "长程智能体自我检查与早停行为：Reward Seeking 现象及其缓解措施",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读青稞公开转载全文；知乎原页未读，图片未解释。区分 reward seeking 与 reward hacking，关注 grader 猜测、浅层自检导致早停和交付失真。已核对部分相关一手文本；LangChain 的 52.8→66.5 是整体 harness 收益，不能归因于单一中间件。建议读 §1、§3、§5，结合外部完成契约、独立验证及预算／无进展停止条件。",
       "queue_rank": 9
     },
     {
-      "lifecycle": "candidate",
       "material_ref": "material-chyroc-open-muse",
-      "note": "已读固定 commit 的 README、关键设计文档和部分源码，未运行测试或应用。关注 MA 云端循环与设备操作分界、未确认会话恢复、记忆写后读回、Agent 版本和跨设备 claim。优先读 conversations／identity 的恢复路径及 verification 未覆盖项。跨设备编辑没有原子 CAS；历史验证记录不等于当前版本实测。",
-      "queue_rank": 55,
-      "read_scope": "recorded_review",
+      "title": "Open Muse：跨设备个人 Agent 的 MA 客户端、未确认写入恢复与权限边界",
       "sources": [
         "https://github.com/chyroc/open-muse",
         "https://github.com/chyroc/open-muse/blob/d144a7a59134f67fd8d1d4b40a773ade429e9594/README.zh-CN.md"
       ],
       "tier": "S",
-      "title": "Open Muse：跨设备个人 Agent 的 MA 客户端、未确认写入恢复与权限边界"
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读固定 commit 的 README、关键设计文档和部分源码，未运行测试或应用。关注 MA 云端循环与设备操作分界、未确认会话恢复、记忆写后读回、Agent 版本和跨设备 claim。优先读 conversations／identity 的恢复路径及 verification 未覆盖项。跨设备编辑没有原子 CAS；历史验证记录不等于当前版本实测。",
+      "queue_rank": 55
     },
     {
-      "lifecycle": "candidate",
       "material_ref": "material-deepseek-dsec-2609-22978",
-      "note": "已选读 DSec v1 摘要、引言及 §2、§4–6、§8；X 仅截断预览，配图与后续未读。关注环境分层、按需加载、超卖 QoS、trainer／worker／sandbox 状态归属、结果复用和 pause／resume。性能与规模是作者报告，未复现；§8 不验证 RL 集成。优先读 §4、§6。",
-      "queue_rank": 40,
-      "read_scope": "recorded_review",
+      "title": "DeepSeek DSec：Agent 训练沙箱的平台约束与 RL 协同（jerrychaox 线索）",
       "sources": [
         "https://x.com/jerrychaox/status/2106956444923015589",
         "https://arxiv.org/abs/2609.22978v1",
         "https://arxiv.org/html/2609.22978v1"
       ],
       "tier": "S",
-      "title": "DeepSeek DSec：Agent 训练沙箱的平台约束与 RL 协同（jerrychaox 线索）"
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已选读 DSec v1 摘要、引言及 §2、§4–6、§8；X 仅截断预览，配图与后续未读。关注环境分层、按需加载、超卖 QoS、trainer／worker／sandbox 状态归属、结果复用和 pause／resume。性能与规模是作者报告，未复现；§8 不验证 RL 集成。优先读 §4、§6。",
+      "queue_rank": 40
     },
     {
       "material_ref": "material-raft-cold-wake-20261005",
@@ -9660,15 +9660,15 @@
     },
     {
       "material_ref": "material-rlvr-boundary-wechat-20261007",
-      "note": "公众号正文已读，论文只核对摘要、项目说明和获奖公告，未读论文全文或复现。小 k 答题效率与大 k 覆盖范围需要分别评估；宣传标题、唯一满分及 PRM 数字未独立核验，不能推出 RL 永远无法产生新能力。建议转读原论文。",
-      "queue_rank": 213,
-      "read_scope": "full_text",
+      "title": "清华斩获NeurIPS唯一满分！一剑刺破o1神话：强化学习根本没有造出新智慧",
       "sources": [
         "https://mp.weixin.qq.com/s/EB9L5zEw0CBBV19m1BTIYg"
       ],
       "tier": "B",
-      "title": "清华斩获NeurIPS唯一满分！一剑刺破o1神话：强化学习根本没有造出新智慧",
-      "lifecycle": "candidate"
+      "lifecycle": "candidate",
+      "read_scope": "full_text",
+      "note": "公众号正文已读，论文只核对摘要、项目说明和获奖公告，未读论文全文或复现。小 k 答题效率与大 k 覆盖范围需要分别评估；宣传标题、唯一满分及 PRM 数字未独立核验，不能推出 RL 永远无法产生新能力。建议转读原论文。",
+      "queue_rank": 213
     },
     {
       "material_ref": "material-awesome-rsi-understanding-20261007",
@@ -9787,17 +9787,17 @@
       "queue_rank": 19
     },
     {
-      "lifecycle": "active",
       "material_ref": "material-shine-2602-06358",
-      "note": "已读参考：保留用于复习 Context→LoRA 超网络、双 LoRA、质量/延迟与蒸馏成本；需要 context→adapter 接口、遗忘或成本对照时回看已有笔记，不作为待首读材料。已有机制笔记、正式发表页面与作者仓库已核对，未重新精读或复现；持续写入、遗忘及模型与 Harness 协同仍需分别验证。",
-      "queue_rank": 224,
-      "read_scope": "recorded_review",
+      "title": "SHINE：单次前向 Context→LoRA 的参数内化与适配边界",
       "sources": [
         "https://proceedings.mlr.press/v306/liu26ek.html",
         "https://github.com/MuLabPKU/SHINE"
       ],
       "tier": "S",
-      "title": "SHINE：单次前向 Context→LoRA 的参数内化与适配边界"
+      "lifecycle": "active",
+      "read_scope": "recorded_review",
+      "note": "已读参考：保留用于复习 Context→LoRA 超网络、双 LoRA、质量/延迟与蒸馏成本；需要 context→adapter 接口、遗忘或成本对照时回看已有笔记，不作为待首读材料。已有机制笔记、正式发表页面与作者仓库已核对，未重新精读或复现；持续写入、遗忘及模型与 Harness 协同仍需分别验证。",
+      "queue_rank": 224
     },
     {
       "material_ref": "material-continual-learning-bench-2606-05661",
@@ -9815,100 +9815,98 @@
     },
     {
       "material_ref": "material-periodic-weak-spots-2609-36322",
-      "note": "已读论文 v1 正文 §§1–7、部分附录与 Table 8，查看图 2 和表 8；未完整读附录、代码或复现。分块 KV 压缩出现相位敏感性，适合补充输入位移、最差组与均值对照评测；未证明真实 Agent 的安全影响。",
-      "queue_rank": 67,
-      "read_scope": "recorded_review",
+      "title": "Periodic Weak Spots：分块 KV-cache 压缩的相位敏感性与评测盲点",
       "sources": [
         "https://arxiv.org/abs/2609.36322",
         "https://arxiv.org/pdf/2609.36322v1"
       ],
       "tier": "A",
-      "title": "Periodic Weak Spots：分块 KV-cache 压缩的相位敏感性与评测盲点",
-      "lifecycle": "candidate"
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读论文 v1 正文 §§1–7、部分附录与 Table 8，查看图 2 和表 8；未完整读附录、代码或复现。分块 KV 压缩出现相位敏感性，适合补充输入位移、最差组与均值对照评测；未证明真实 Agent 的安全影响。",
+      "queue_rank": 67
     },
     {
       "material_ref": "material-indigox-indigo-talk-ep52-2108418574973018285",
-      "note": "已读 indigo 原帖介绍与引用长文的截断预览；完整长文、视频与字幕未读。作为 Vibe Coding 决策负担和交付价值的产品观察；产品数量、倦怠及 Agent OS 机制未独立核验。",
-      "queue_rank": 216,
-      "read_scope": "recorded_review",
+      "title": "INDIGO TALK EP52：与郭宇聊软件廉价化、Vibe Coding决策负担与交付价值（原帖已读，长文/视频待读）",
       "sources": [
         "https://x.com/indigox/status/2108418574973018285"
       ],
       "tier": "B",
-      "title": "INDIGO TALK EP52：与郭宇聊软件廉价化、Vibe Coding决策负担与交付价值（原帖已读，长文/视频待读）",
-      "lifecycle": "candidate"
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读 indigo 原帖介绍与引用长文的截断预览；完整长文、视频与字幕未读。作为 Vibe Coding 决策负担和交付价值的产品观察；产品数量、倦怠及 Agent OS 机制未独立核验。",
+      "queue_rank": 216
     },
     {
       "material_ref": "material-novix-coevolutionary-rsi-20261009",
-      "note": "已读机器之心报道正文并核对官网定位；未复现任务成绩。关注专家评价标准、失败路径留存、任务评测与回退；任务成功不能直接证明跨轮系统改进或规模化 RSI，成绩保留报道归属。",
-      "queue_rank": 140,
-      "read_scope": "full_text",
+      "title": "全球竞逐RSI，这支华人团队已跑通规模化闭环",
       "sources": [
         "https://mp.weixin.qq.com/s/iLtJ8g3xwawKfnoShFBIFg",
         "https://novix.science"
       ],
       "tier": "B",
-      "title": "全球竞逐RSI，这支华人团队已跑通规模化闭环",
-      "lifecycle": "candidate"
+      "lifecycle": "candidate",
+      "read_scope": "full_text",
+      "note": "已读机器之心报道正文并核对官网定位；未复现任务成绩。关注专家评价标准、失败路径留存、任务评测与回退；任务成功不能直接证明跨轮系统改进或规模化 RSI，成绩保留报道归属。",
+      "queue_rank": 140
     },
     {
       "material_ref": "material-vista-visual-harness-2610-02200",
-      "note": "已读公开解读及论文 v1 的机制与增量消融，未独立复现。无损截图、主动重注意与长程交互用于分析 harness 收益；公开游戏、预算差异及动作数限制泛化和效率结论。",
-      "queue_rank": 27,
-      "read_scope": "recorded_review",
+      "title": "VISTA：无损视觉记忆、主动重注意与长程交互消融（智猩猩AI入口，论文v1核验）",
       "sources": [
         "https://mp.weixin.qq.com/s/GR3UXxQv3BbR-OWX4AnJuA",
         "https://arxiv.org/html/2610.02200v1",
         "https://vista-research.github.io/"
       ],
       "tier": "S",
-      "title": "VISTA：无损视觉记忆、主动重注意与长程交互消融（智猩猩AI入口，论文v1核验）",
-      "lifecycle": "candidate"
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读公开解读及论文 v1 的机制与增量消融，未独立复现。无损截图、主动重注意与长程交互用于分析 harness 收益；公开游戏、预算差异及动作数限制泛化和效率结论。",
+      "queue_rank": 27
     },
     {
       "material_ref": "material-holon-event-driven-kernel-20261009",
-      "note": "已读官方文章全文；图片像素、实现代码、关联文档与实验未核验。持久 WorkItem 与瞬态 Turn 分离，讨论四类唤醒、WaitHandle 与因果切片；架构主张不等于可靠性或零成本实证。",
-      "queue_rank": 63,
-      "read_scope": "full_text",
+      "title": "Holon：持久工作项与瞬态Turn分离、四类唤醒和因果切片",
       "sources": [
         "https://holon.run/zh-CN/blog/event-driven-kernel"
       ],
       "tier": "A",
-      "title": "Holon：持久工作项与瞬态Turn分离、四类唤醒和因果切片",
-      "lifecycle": "candidate"
+      "lifecycle": "candidate",
+      "read_scope": "full_text",
+      "note": "已读官方文章全文；图片像素、实现代码、关联文档与实验未核验。持久 WorkItem 与瞬态 Turn 分离，讨论四类唤醒、WaitHandle 与因果切片；架构主张不等于可靠性或零成本实证。",
+      "queue_rank": 63
     },
     {
       "material_ref": "material-dalio-changing-world-order-9781982160272",
-      "note": "已读作者官方介绍、资源索引和出版社书介；全书、图表与视频未读。Big Cycle 属于作者的历史分析框架，历史因果和预测未独立核验，作为宏观通识背景。",
-      "queue_rank": 219,
-      "read_scope": "recorded_review",
+      "title": "Ray Dalio：The Changing World Order（官方介绍已读，全书待读）",
       "sources": [
         "https://economicprinciples.org/the-changing-world-order/",
         "https://www.simonandschuster.com/books/Principles-for-Dealing-with-the-Changing-World-Order/Ray-Dalio/Principles/9781982160272"
       ],
       "tier": "B",
-      "title": "Ray Dalio：The Changing World Order（官方介绍已读，全书待读）",
-      "lifecycle": "candidate"
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读作者官方介绍、资源索引和出版社书介；全书、图表与视频未读。Big Cycle 属于作者的历史分析框架，历史因果和预测未独立核验，作为宏观通识背景。",
+      "queue_rank": 219
     },
     {
       "material_ref": "material-ideascientist-2610-04074",
-      "note": "已读原帖及论文 v1 正文与部分附录，查看 Figure 3/4；未读完整附录、源码或复现。跨领域机制迁移、分角色 GRPO/LoRA、引用门禁与反证条件用于科研提案生成；结构迁移比例不等于科研成功率，RL 归因与外部基线预算仍有限制。",
-      "queue_rank": 54,
-      "read_scope": "recorded_review",
+      "title": "IdeaScientist：跨领域机制迁移、分角色 RL 与科研提案评测",
       "sources": [
         "https://x.com/xudong07452910/status/2109124076996575495",
         "https://arxiv.org/html/2610.04074v1",
         "https://arxiv.org/pdf/2610.04074v1"
       ],
       "tier": "A",
-      "title": "IdeaScientist：跨领域机制迁移、分角色 RL 与科研提案评测",
-      "lifecycle": "candidate"
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读原帖及论文 v1 正文与部分附录，查看 Figure 3/4；未读完整附录、源码或复现。跨领域机制迁移、分角色 GRPO/LoRA、引用门禁与反证条件用于科研提案生成；结构迁移比例不等于科研成功率，RL 归因与外部基线预算仍有限制。",
+      "queue_rank": 54
     },
     {
       "material_ref": "material-e2b-edgebench-pr11-20261011",
-      "note": "2026-10-11 已读 PR 描述、固定版本中文文档与 E2B 官方说明；选择性检查后端、Agent 续跑及 Judge/Game 源码，未审计全部 diff 或运行。关注模板固定资源、租约/断流/Agent/VM 四层恢复、独立评测与 best/final 区分；作者的 51 任务运行报告未独立复现。 优先读资源固定、评分与恢复边界；后端源码由助手转检查表，不要求首读整个PR。",
-      "queue_rank": 26,
-      "read_scope": "recorded_review",
+      "title": "E2B × EdgeBench：MicroVM、Work/Judge/Game、租约与评测一致性",
       "sources": [
         "https://github.com/ByteDance-Seed/EdgeBench/pull/11",
         "https://github.com/ByteDance-Seed/EdgeBench/blob/55badf73321f81509878f6501ae2697ac2d58f58/sforge/harness/backend/e2b_backend.py",
@@ -9918,8 +9916,10 @@
         "https://docs.e2b.dev/sandbox/snapshots"
       ],
       "tier": "A",
-      "title": "E2B × EdgeBench：MicroVM、Work/Judge/Game、租约与评测一致性",
-      "lifecycle": "candidate"
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "2026-10-11 已读 PR 描述、固定版本中文文档与 E2B 官方说明；选择性检查后端、Agent 续跑及 Judge/Game 源码，未审计全部 diff 或运行。关注模板固定资源、租约/断流/Agent/VM 四层恢复、独立评测与 best/final 区分；作者的 51 任务运行报告未独立复现。 优先读资源固定、评分与恢复边界；后端源码由助手转检查表，不要求首读整个PR。",
+      "queue_rank": 26
     },
     {
       "material_ref": "material-bandit-algorithms-foundations-20261011",
@@ -10015,113 +10015,6 @@
       "queue_rank": 20
     },
     {
-      "lifecycle": "candidate",
-      "material_ref": "material-sun-alan-interview-0z-vhbvbmuy",
-      "note": "已核验主持人原帖和官方4:22:29视频页面；读第三方转写README、01/07/16章及11章前段。关注Claude Code记账/日报、MD与照片供不同Agent交接、职业机动性与先自由后财富观点；不是技术实证或投资/健康结论。未逐句回听原音、未读全部16章，完整字幕与转写准确性、健康/金融/历史/RSI说法未独立验证。",
-      "queue_rank": 217,
-      "read_scope": "recorded_review",
-      "sources": [
-        "https://www.youtube.com/watch?v=0Z-vhBvBmUY",
-        "https://x.com/AlanShao111/status/2108407966236020814",
-        "https://github.com/LeoLee0812/sunyuchen-alan-interview/blob/e4c2465f57c12c1678a5d34061fd1be2e1e58fa8/README.md"
-      ],
-      "tier": "B",
-      "title": "孙宇晨 × 邵艾伦（薄肌版）：对话孙宇晨，年轻人如何抓住AI时代的机会？"
-    },
-    {
-      "lifecycle": "candidate",
-      "material_ref": "material-rsi-anything-2610-13912",
-      "note": "已读原帖全文、论文v1方法/代码修复/GUI/规划与讨论选段、官方固定commit README/工作流/评测说明及代码修复图。固定coder、四候选筛一、相近测试预算下26.3%→29.2%→31.2%；更新触发与component/pair验收可转化为预测—实测账本和组合验收契约。建议先读§2.4–2.5、§3.1/§6.1、§5；未全文精读、未审计训练代码或复现，长期同任务共同演化未证实。",
-      "queue_rank": 14,
-      "read_scope": "recorded_review",
-      "sources": [
-        "https://x.com/0xlogicrw/status/2109601836923822327",
-        "https://arxiv.org/html/2610.13912v1",
-        "https://github.com/Gen-Verse/RSI-Anything/blob/99dbf000a424b9033651b1096c5da2b6d5fa3865/README.md"
-      ],
-      "tier": "S",
-      "title": "RSI-Anything：世界模型引导候选选择、反馈适应与策略—预测器组合验收"
-    },
-    {
-      "lifecycle": "candidate",
-      "material_ref": "material-score-centering-2609-20807",
-      "note": "已读2609.20807v1正文§1–6及附录A/B文字，实际查看PDF图1/4；其余图表未逐一看图，完整训练代码未审计，未复现。SC按prefix减去sampler下期望score以去漂移；残余Cov_q不等于on-policy梯度，严重滞后时SC+TIS/MIS更优。S选读§4、A1/A2、5.3和局限。严重失配、短序列训练准确率不代表生产长程收益；vLLM/SGLang开销未测。",
-      "queue_rank": 34,
-      "read_scope": "full_text",
-      "sources": [
-        "https://arxiv.org/abs/2609.20807v1",
-        "https://arxiv.org/html/2609.20807v1"
-      ],
-      "tier": "S",
-      "title": "Score Centering Stabilizes Off-policy Reinforcement Learning：训推失配的漂移校正与重要性采样组合"
-    },
-    {
-      "lifecycle": "candidate",
-      "material_ref": "material-cheekypint-meta-muse-wonder-20261013",
-      "note": "已读分享原帖、Cheeky Pint #35官方节目入口及转录前27000字符，覆盖个人Agent案例、模型即产品、active memory/focus。转录100000字符截断；完整134分钟视频、中文字幕、后半场与独立评测未核验。A档：可转化为跨任务记忆使用、压缩保留、挫折后完成与主动介入的评测维度。嘉宾自报SOTA和VM安全并非独立证据。先读摘要及00:07:28/00:14:35相关段落即可。",
-      "queue_rank": 59,
-      "read_scope": "recorded_review",
-      "sources": [
-        "https://x.com/michaelzsguo/status/2109756809993163051",
-        "https://cheekypint.transistor.fm/35",
-        "https://cheekypint.substack.com/p/muse-wonder-zuckerberg-and-wangs"
-      ],
-      "tier": "A",
-      "title": "Cheeky Pint #35：Muse Wonder、个人 Agent 的模型产品化与 active memory/focus"
-    },
-    {
-      "lifecycle": "candidate",
-      "material_ref": "material-anthropic-managed-agents-20260408",
-      "note": "已读2026-04-08官方正文全文及4张架构图/接口表像素；外链docs、API/源码、安全审计与独立复现未读。A档：session事件日志、可替换harness与sandbox分离，恢复计算与保存事实各有职责；context管理可换而原事件可追溯，凭证通过resource绑定或vault/proxy。日志追加幂等不证明外部effect exactly-once。厂商报告p50 TTFT约降60%、p95降超过90%，不是任务成功率，缺原始对照。选读解耦章节、接口表与session/context章节，可转恢复故障矩阵和状态所有权检查表。",
-      "queue_rank": 41,
-      "read_scope": "full_text",
-      "sources": [
-        "https://www.anthropic.com/engineering/managed-agents"
-      ],
-      "tier": "A",
-      "title": "Anthropic Managed Agents：brain/hands/session 解耦、可替换 harness 与持久事件接口"
-    },
-    {
-      "lifecycle": "candidate",
-      "material_ref": "material-longharness-2610-13075",
-      "note": "已读v1方法/实验与A–E、TeX主表和完整prompt，实际看图1–4像素；未运行实现、取得原始轨迹或独立复现。证据与结论分离，缺口驱动检索；读后注册、逐项接纳、revision新ID、旧ID失活，观察后更新结论。引用有效不保证源忠实，compute不校operand，全history不自动压缩。GLM同backbone V1/V2 60.2/61.1，QwenV2超Codex仅1.1pp；不同工具/预算，不代表商业原生模型排名或等成本因果收益。图4修正未采用案例与append-only消融有参考价值，conditional pipeline分母不同。S选读§2、B2–4、Table2/3、E/Fig4。",
-      "queue_rank": 10,
-      "read_scope": "recorded_review",
-      "sources": [
-        "https://arxiv.org/abs/2610.13075v1",
-        "https://arxiv.org/html/2610.13075v1"
-      ],
-      "tier": "S",
-      "title": "LongHarness：证据—结论协同、EvidenceBank 修订生命周期与缺口驱动检索"
-    },
-    {
-      "lifecycle": "candidate",
-      "material_ref": "material-sla-2610-07625",
-      "note": "原帖主文、v1正文/B–D与Kernel Advisor完整prompt已读；HTML100K截断，E其他prompt/完整thread/帖图/Fig4未读。实际看Fig1/2/3/5像素；公开repo仅preprint无实现，未复现。harness保存候选与outcome，每次重建Advisor/Worker上下文并分派具体实验。共同checkpoint3次续延消融均stateless，只检验context/assignment差异。Kernel同目标67.9M vs986.3M tokens（14.5×），多数task单run；Advisor低于0.6%tokens但1.2–2.3%model费用，未含执行/评测算力。D3有18.99→19.64的候选继承轨迹，不代表总体频率。S选读§3、4.3–4.4/B/D3；可转rolecontext/adoption与全成本对照。 本轮先选读§3.2的实验分派、Kernel Advisor prompt及D.3候选继承轨迹，约45–60分钟；输出候选→执行→评分→下一选择表，不把状态保存或更多事件当作涨分证据。",
-      "queue_rank": 1,
-      "read_scope": "recorded_review",
-      "sources": [
-        "https://x.com/qizhengz_alex/status/2109729101041086588",
-        "https://arxiv.org/abs/2610.07625v1",
-        "https://arxiv.org/html/2610.07625v1",
-        "https://github.com/Alex-q-z/stateless-language-agents/tree/1271183f6c73729d0c5e1602e12951fba59cf657"
-      ],
-      "tier": "S",
-      "title": "Stateless Language Agents（SLA）：harness 持有研究状态、角色上下文重构与长程实验分派"
-    },
-    {
-      "lifecycle": "candidate",
-      "material_ref": "material-anthropic-scion-20261013",
-      "note": "已读2026-10-13官方全文及6图像素；性能图顶部legend遮挡，源码/原始数据/独立复现未验。图中30401是Sep9单日，非整月日均或质量。Scion first-parent增量changeset与content-addressed blobs，tree/blame/history递推派生；不可变对象缓存、可变ref单rowCAS，服务端查询API、按需sparsecheckout、严格分层缓存。CPU/内存footprint200×缩减等为厂商报告，具体CIcheckout31→3.5s，不泛化为所有操作100×。postmerge/predeploy测试不等于取消审批或发布gate，特殊巨大在线monorepo方案非通用Git替代；摘要+Data structures/Scaling Scion选读。",
-      "queue_rank": 57,
-      "read_scope": "full_text",
-      "sources": [
-        "https://www.anthropic.com/engineering/redesigning-source-control"
-      ],
-      "tier": "A",
-      "title": "Anthropic Scion：每日合并增长背后的源码控制、派生索引与分层缓存架构"
-    },
-    {
       "material_ref": "material-anthropic-roadmap-202107",
       "title": "Anthropic 2021 Concise Research Roadmap：编程助手、长记忆、工具使用 RL 与对齐的早期框架",
       "sources": [
@@ -10137,69 +10030,329 @@
       "queue_rank": 74
     },
     {
-      "lifecycle": "candidate",
       "material_ref": "material-whatif-identification-estimation-10-1-10-2-20261014",
+      "title": "What If §10.1–10.2：先分清 identification 与 estimation",
+      "sources": [
+        "https://miguelhernan.org/whatifbook",
+        "https://miguelhernan.org/s/hernanrobins_WhatIf_19aug26.pdf"
+      ],
+      "tier": "A",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
       "note": "§10.1–10.2；PDF 页 146–151，对应印刷页 137–142，止于 §10.3 标题；Codex 已核对，用户未读完。 在读完 S132 的 Ch. 1–3 后读，约 20 分钟。拿一条 benchmark 涨分结论，分别写出 estimand、identifying assumptions、estimator、estimate、随机误差与系统性偏差；能完成即可，不继续读 §10.3。",
-      "queue_rank": 6,
-      "read_scope": "recorded_review",
-      "sources": [
-        "https://miguelhernan.org/whatifbook",
-        "https://miguelhernan.org/s/hernanrobins_WhatIf_19aug26.pdf"
-      ],
-      "tier": "A",
-      "title": "What If §10.1–10.2：先分清 identification 与 estimation"
+      "queue_rank": 6
     },
     {
-      "lifecycle": "candidate",
       "material_ref": "material-whatif-dag-confounding-selection-ch6-8-20261014",
-      "note": "Ch. 6–8；PDF 页 84–132，对应印刷页 75–123；Codex 已核对，用户未读完。 在 §10.1–10.2 后读。精读 §6.1–6.5、§7.1–7.4、§8.1–8.5，其余作补充；用一个 Agent memory 实验画出 task difficulty、memory exposure、tool choice、outcome 和 selection 的 DAG，标出 confounder、mediator、collider 与可调整集合。",
-      "queue_rank": 35,
-      "read_scope": "recorded_review",
+      "title": "What If Ch. 6–8：DAG、混杂与选择偏差",
       "sources": [
         "https://miguelhernan.org/whatifbook",
         "https://miguelhernan.org/s/hernanrobins_WhatIf_19aug26.pdf"
       ],
       "tier": "A",
-      "title": "What If Ch. 6–8：DAG、混杂与选择偏差"
-    },
-    {
       "lifecycle": "candidate",
-      "material_ref": "material-whatif-causal-ml-18-1-18-3-20261014",
-      "note": "§18.1–18.3；PDF 页 250–256，对应印刷页 241–247，止于 §18.4 展开；Codex 已核对，用户未读完。 读 §18.1–18.3，约 25 分钟。把当前 Agent eval 中的特征分成 confounder、mediator、collider、instrument、纯预测变量五类，并解释为何 feature importance 或 cross-validation 不能决定 adjustment set。",
-      "queue_rank": 36,
       "read_scope": "recorded_review",
+      "note": "Ch. 6–8；PDF 页 84–132，对应印刷页 75–123；Codex 已核对，用户未读完。 在 §10.1–10.2 后读。精读 §6.1–6.5、§7.1–7.4、§8.1–8.5，其余作补充；用一个 Agent memory 实验画出 task difficulty、memory exposure、tool choice、outcome 和 selection 的 DAG，标出 confounder、mediator、collider 与可调整集合。",
+      "queue_rank": 35
+    },
+    {
+      "material_ref": "material-whatif-causal-ml-18-1-18-3-20261014",
+      "title": "What If §18.1–18.3：变量选择、预测 ML 与因果估计的边界",
       "sources": [
         "https://miguelhernan.org/whatifbook",
         "https://miguelhernan.org/s/hernanrobins_WhatIf_19aug26.pdf"
       ],
       "tier": "A",
-      "title": "What If §18.1–18.3：变量选择、预测 ML 与因果估计的边界"
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "§18.1–18.3；PDF 页 250–256，对应印刷页 241–247，止于 §18.4 展开；Codex 已核对，用户未读完。 读 §18.1–18.3，约 25 分钟。把当前 Agent eval 中的特征分成 confounder、mediator、collider、instrument、纯预测变量五类，并解释为何 feature importance 或 cross-validation 不能决定 adjustment set。",
+      "queue_rank": 36
     },
     {
+      "material_ref": "material-whatif-longitudinal-agent-feedback-ch19-20-22-20261014",
       "title": "What If Ch. 19–20、§22.1/22.4–22.5：长程干预、反馈与 target trial",
       "sources": [
         "https://miguelhernan.org/whatifbook",
         "https://miguelhernan.org/s/hernanrobins_WhatIf_19aug26.pdf"
       ],
       "tier": "A",
+      "lifecycle": "candidate",
       "read_scope": "recorded_review",
       "note": "保留原有Ch.19–20/§22.1/22.4–22.5审阅记录；本轮抽核§19.1–19.2、19.4、20.1–20.3、22.4及22.5开头相关段落，非全书重读；用户未读完。已有序贯策略问题时优先：先用§10.1–10.2区分识别与估计，再读动态策略、反馈混杂、positivity/consistency及time-zero；区分给定checkpoint的局部效应与整套策略价值，工程fork不等于观测数据cloning。产出一页H_t/A_t/Y与比较资格，约60–90分钟。",
-      "material_ref": "material-whatif-longitudinal-agent-feedback-ch19-20-22-20261014",
-      "lifecycle": "candidate",
       "queue_rank": 7
     },
     {
-      "lifecycle": "candidate",
       "material_ref": "material-whatif-ipw-gformula-ch12-15-20261014",
-      "note": "Ch. 12–15；PDF 页 172–217，对应印刷页 163–208；Codex 已核对，用户未读完。 没有真实观测数据与明确 estimand 时先不读。需要实现时，先做 Ch. 12 与 Ch. 13 的同一数据双解，再读 Ch. 15 比较 propensity 用法；只有问题需要 structural nested model 时才进入 Ch. 14。",
-      "queue_rank": 37,
-      "read_scope": "recorded_review",
+      "title": "What If Ch. 12–15：IPW、g-formula、g-estimation 与 propensity 的实现选读",
       "sources": [
         "https://miguelhernan.org/whatifbook",
         "https://miguelhernan.org/s/hernanrobins_WhatIf_19aug26.pdf"
       ],
       "tier": "A",
-      "title": "What If Ch. 12–15：IPW、g-formula、g-estimation 与 propensity 的实现选读"
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "Ch. 12–15；PDF 页 172–217，对应印刷页 163–208；Codex 已核对，用户未读完。 没有真实观测数据与明确 estimand 时先不读。需要实现时，先做 Ch. 12 与 Ch. 13 的同一数据双解，再读 Ch. 15 比较 propensity 用法；只有问题需要 structural nested model 时才进入 Ch. 14。",
+      "queue_rank": 37
+    },
+    {
+      "material_ref": "material-tisonkun-blog-ai-native-coding-20261016",
+      "title": "tison 博客选读：AI-native 编程、质量与开源协同",
+      "sources": [
+        "https://www.tisonkun.org/archives/",
+        "https://github.com/tisonkun/tisonkun.github.io",
+        "https://github.com/tisonkun/tisonkun.github.io/tree/ffcbea77d9c62965eaba03569f694b551c1ca47d/source/_posts"
+      ],
+      "tier": "S",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "同步既有公开卡片的阅读记录；本次未重读原文。站点归档与 commit ffcbea7 源码；全站 107 篇完整清点，本组 5 篇源 Markdown 全文解析并哈希；P0 文章定向语义复核，用户未读完。 全站 107 篇中的 5 篇；P0 5 篇。优先亲读 2026 年四篇，再读 2025 年末的总论；产出一张“Agent 生成—验证—Owner 负责—上游接受”证据链。 Codex 已完整解析并哈希源码，用户未读完；文章级清单保存在受管内容和派生阅读地图中。",
+      "queue_rank": 227
+    },
+    {
+      "material_ref": "material-tisonkun-blog-open-source-commercial-20261016",
+      "title": "tison 博客选读：开源商业、许可证、品牌与供应链",
+      "sources": [
+        "https://www.tisonkun.org/archives/",
+        "https://github.com/tisonkun/tisonkun.github.io",
+        "https://github.com/tisonkun/tisonkun.github.io/tree/ffcbea77d9c62965eaba03569f694b551c1ca47d/source/_posts"
+      ],
+      "tier": "S",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "同步既有公开卡片的阅读记录；本次未重读原文。站点归档与 commit ffcbea7 源码；全站 107 篇完整清点，本组 24 篇源 Markdown 全文解析并哈希；P0 文章定向语义复核，用户未读完。 全站 107 篇中的 24 篇；P0 2 篇、P1 13 篇、P2 9 篇。先读《创新与变现》《开源孪生》，再按许可证、品牌或供应链问题查对应专题；可并入开源商业合作材料。 Codex 已完整解析并哈希源码，用户未读完；文章级清单保存在受管内容和派生阅读地图中。",
+      "queue_rank": 228
+    },
+    {
+      "material_ref": "material-tisonkun-blog-maintainer-governance-20261016",
+      "title": "tison 博客选读：维护者、治理与开源协作",
+      "sources": [
+        "https://www.tisonkun.org/archives/",
+        "https://github.com/tisonkun/tisonkun.github.io",
+        "https://github.com/tisonkun/tisonkun.github.io/tree/ffcbea77d9c62965eaba03569f694b551c1ca47d/source/_posts"
+      ],
+      "tier": "A",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "同步既有公开卡片的阅读记录；本次未重读原文。站点归档与 commit ffcbea7 源码；全站 107 篇完整清点，本组 28 篇源 Markdown 全文解析并哈希；P0 文章定向语义复核，用户未读完。 全站 107 篇中的 28 篇；P0 1 篇、P1 8 篇、P2 13 篇、P3 6 篇。摘要优先；需要设计 maintainer SOP 时精读《开源共同体的治理模型》《Community of Peers》和 Rust 标准库贡献案例。 Codex 已完整解析并哈希源码，用户未读完；文章级清单保存在受管内容和派生阅读地图中。",
+      "queue_rank": 229
+    },
+    {
+      "material_ref": "material-tisonkun-blog-rust-data-systems-20261016",
+      "title": "tison 博客选读：Rust、数据库与系统工程",
+      "sources": [
+        "https://www.tisonkun.org/archives/",
+        "https://github.com/tisonkun/tisonkun.github.io",
+        "https://github.com/tisonkun/tisonkun.github.io/tree/ffcbea77d9c62965eaba03569f694b551c1ca47d/source/_posts"
+      ],
+      "tier": "A",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "同步既有公开卡片的阅读记录；本次未重读原文。站点归档与 commit ffcbea7 源码；全站 107 篇完整清点，本组 27 篇源 Markdown 全文解析并哈希；P0 文章定向语义复核，用户未读完。 全站 107 篇中的 27 篇；P0 3 篇、P1 4 篇、P2 11 篇、P3 9 篇。按项目需要查读；近期只保留《配置系统》、ScopeDB、Async Rust 原语三篇为高优先级。 Codex 已完整解析并哈希源码，用户未读完；文章级清单保存在受管内容和派生阅读地图中。",
+      "queue_rank": 230
+    },
+    {
+      "material_ref": "material-tisonkun-blog-devrel-workflow-20261016",
+      "title": "tison 博客选读：DevRel、开发体验、指标与工程工作流",
+      "sources": [
+        "https://www.tisonkun.org/archives/",
+        "https://github.com/tisonkun/tisonkun.github.io",
+        "https://github.com/tisonkun/tisonkun.github.io/tree/ffcbea77d9c62965eaba03569f694b551c1ca47d/source/_posts"
+      ],
+      "tier": "A",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "同步既有公开卡片的阅读记录；本次未重读原文。站点归档与 commit ffcbea7 源码；全站 107 篇完整清点，本组 16 篇源 Markdown 全文解析并哈希；P0 文章定向语义复核，用户未读完。 全站 107 篇中的 16 篇；P0 1 篇、P1 5 篇、P2 9 篇、P3 1 篇。摘要即可；实际经营开源项目时，再按 Review、贡献入口、指标或文档主题查读。 Codex 已完整解析并哈希源码，用户未读完；文章级清单保存在受管内容和派生阅读地图中。",
+      "queue_rank": 231
+    },
+    {
+      "material_ref": "material-tisonkun-blog-context-index-20261016",
+      "title": "tison 博客索引：活动纪实、书评、个人经历与基础工具",
+      "sources": [
+        "https://www.tisonkun.org/archives/",
+        "https://github.com/tisonkun/tisonkun.github.io",
+        "https://github.com/tisonkun/tisonkun.github.io/tree/ffcbea77d9c62965eaba03569f694b551c1ca47d/source/_posts"
+      ],
+      "tier": "B",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "同步既有公开卡片的阅读记录；本次未重读原文。站点归档与 commit ffcbea7 源码；全站 107 篇完整清点，本组 7 篇源 Markdown 全文解析并哈希；P0 文章定向语义复核，用户未读完。 全站 107 篇中的 7 篇；P3 7 篇。不安排整块阅读；需要背景或书目时检索即可。 Codex 已完整解析并哈希源码，用户未读完；文章级清单保存在受管内容和派生阅读地图中。",
+      "queue_rank": null
+    },
+    {
+      "material_ref": "material-sla-2610-07625",
+      "title": "Stateless Language Agents（SLA）：harness 持有研究状态、角色上下文重构与长程实验分派",
+      "sources": [
+        "https://x.com/qizhengz_alex/status/2109729101041086588",
+        "https://arxiv.org/abs/2610.07625v1",
+        "https://arxiv.org/html/2610.07625v1",
+        "https://github.com/Alex-q-z/stateless-language-agents/tree/1271183f6c73729d0c5e1602e12951fba59cf657"
+      ],
+      "tier": "S",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "原帖主文、v1正文/B–D与Kernel Advisor完整prompt已读；HTML100K截断，E其他prompt/完整thread/帖图/Fig4未读。实际看Fig1/2/3/5像素；公开repo仅preprint无实现，未复现。harness保存候选与outcome，每次重建Advisor/Worker上下文并分派具体实验。共同checkpoint3次续延消融均stateless，只检验context/assignment差异。Kernel同目标67.9M vs986.3M tokens（14.5×），多数task单run；Advisor低于0.6%tokens但1.2–2.3%model费用，未含执行/评测算力。D3有18.99→19.64的候选继承轨迹，不代表总体频率。S选读§3、4.3–4.4/B/D3；可转rolecontext/adoption与全成本对照。 本轮先选读§3.2的实验分派、Kernel Advisor prompt及D.3候选继承轨迹，约45–60分钟；输出候选→执行→评分→下一选择表，不把状态保存或更多事件当作涨分证据。",
+      "queue_rank": 1
+    },
+    {
+      "material_ref": "material-longharness-2610-13075",
+      "title": "LongHarness：证据—结论协同、EvidenceBank 修订生命周期与缺口驱动检索",
+      "sources": [
+        "https://arxiv.org/abs/2610.13075v1",
+        "https://arxiv.org/html/2610.13075v1"
+      ],
+      "tier": "S",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读v1方法/实验与A–E、TeX主表和完整prompt，实际看图1–4像素；未运行实现、取得原始轨迹或独立复现。证据与结论分离，缺口驱动检索；读后注册、逐项接纳、revision新ID、旧ID失活，观察后更新结论。引用有效不保证源忠实，compute不校operand，全history不自动压缩。GLM同backbone V1/V2 60.2/61.1，QwenV2超Codex仅1.1pp；不同工具/预算，不代表商业原生模型排名或等成本因果收益。图4修正未采用案例与append-only消融有参考价值，conditional pipeline分母不同。S选读§2、B2–4、Table2/3、E/Fig4。",
+      "queue_rank": 10
+    },
+    {
+      "material_ref": "material-rsi-anything-2610-13912",
+      "title": "RSI-Anything：世界模型引导候选选择、反馈适应与策略—预测器组合验收",
+      "sources": [
+        "https://x.com/0xlogicrw/status/2109601836923822327",
+        "https://arxiv.org/html/2610.13912v1",
+        "https://github.com/Gen-Verse/RSI-Anything/blob/99dbf000a424b9033651b1096c5da2b6d5fa3865/README.md"
+      ],
+      "tier": "S",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读原帖全文、论文v1方法/代码修复/GUI/规划与讨论选段、官方固定commit README/工作流/评测说明及代码修复图。固定coder、四候选筛一、相近测试预算下26.3%→29.2%→31.2%；更新触发与component/pair验收可转化为预测—实测账本和组合验收契约。建议先读§2.4–2.5、§3.1/§6.1、§5；未全文精读、未审计训练代码或复现，长期同任务共同演化未证实。",
+      "queue_rank": 14
+    },
+    {
+      "material_ref": "material-score-centering-2609-20807",
+      "title": "Score Centering Stabilizes Off-policy Reinforcement Learning：训推失配的漂移校正与重要性采样组合",
+      "sources": [
+        "https://arxiv.org/abs/2609.20807v1",
+        "https://arxiv.org/html/2609.20807v1"
+      ],
+      "tier": "S",
+      "lifecycle": "candidate",
+      "read_scope": "full_text",
+      "note": "已读2609.20807v1正文§1–6及附录A/B文字，实际查看PDF图1/4；其余图表未逐一看图，完整训练代码未审计，未复现。SC按prefix减去sampler下期望score以去漂移；残余Cov_q不等于on-policy梯度，严重滞后时SC+TIS/MIS更优。S选读§4、A1/A2、5.3和局限。严重失配、短序列训练准确率不代表生产长程收益；vLLM/SGLang开销未测。",
+      "queue_rank": 34
+    },
+    {
+      "material_ref": "material-anthropic-managed-agents-20260408",
+      "title": "Anthropic Managed Agents：brain/hands/session 解耦、可替换 harness 与持久事件接口",
+      "sources": [
+        "https://www.anthropic.com/engineering/managed-agents"
+      ],
+      "tier": "A",
+      "lifecycle": "candidate",
+      "read_scope": "full_text",
+      "note": "已读2026-04-08官方正文全文及4张架构图/接口表像素；外链docs、API/源码、安全审计与独立复现未读。A档：session事件日志、可替换harness与sandbox分离，恢复计算与保存事实各有职责；context管理可换而原事件可追溯，凭证通过resource绑定或vault/proxy。日志追加幂等不证明外部effect exactly-once。厂商报告p50 TTFT约降60%、p95降超过90%，不是任务成功率，缺原始对照。选读解耦章节、接口表与session/context章节，可转恢复故障矩阵和状态所有权检查表。",
+      "queue_rank": 41
+    },
+    {
+      "material_ref": "material-anthropic-scion-20261013",
+      "title": "Anthropic Scion：每日合并增长背后的源码控制、派生索引与分层缓存架构",
+      "sources": [
+        "https://www.anthropic.com/engineering/redesigning-source-control"
+      ],
+      "tier": "A",
+      "lifecycle": "candidate",
+      "read_scope": "full_text",
+      "note": "已读2026-10-13官方全文及6图像素；性能图顶部legend遮挡，源码/原始数据/独立复现未验。图中30401是Sep9单日，非整月日均或质量。Scion first-parent增量changeset与content-addressed blobs，tree/blame/history递推派生；不可变对象缓存、可变ref单rowCAS，服务端查询API、按需sparsecheckout、严格分层缓存。CPU/内存footprint200×缩减等为厂商报告，具体CIcheckout31→3.5s，不泛化为所有操作100×。postmerge/predeploy测试不等于取消审批或发布gate，特殊巨大在线monorepo方案非通用Git替代；摘要+Data structures/Scaling Scion选读。",
+      "queue_rank": 57
+    },
+    {
+      "material_ref": "material-cheekypint-meta-muse-wonder-20261013",
+      "title": "Cheeky Pint #35：Muse Wonder、个人 Agent 的模型产品化与 active memory/focus",
+      "sources": [
+        "https://x.com/michaelzsguo/status/2109756809993163051",
+        "https://cheekypint.transistor.fm/35",
+        "https://cheekypint.substack.com/p/muse-wonder-zuckerberg-and-wangs"
+      ],
+      "tier": "A",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读分享原帖、Cheeky Pint #35官方节目入口及转录前27000字符，覆盖个人Agent案例、模型即产品、active memory/focus。转录100000字符截断；完整134分钟视频、中文字幕、后半场与独立评测未核验。A档：可转化为跨任务记忆使用、压缩保留、挫折后完成与主动介入的评测维度。嘉宾自报SOTA和VM安全并非独立证据。先读摘要及00:07:28/00:14:35相关段落即可。",
+      "queue_rank": 59
+    },
+    {
+      "material_ref": "material-sun-alan-interview-0z-vhbvbmuy",
+      "title": "孙宇晨 × 邵艾伦（薄肌版）：对话孙宇晨，年轻人如何抓住AI时代的机会？",
+      "sources": [
+        "https://www.youtube.com/watch?v=0Z-vhBvBmUY",
+        "https://x.com/AlanShao111/status/2108407966236020814",
+        "https://github.com/LeoLee0812/sunyuchen-alan-interview/blob/e4c2465f57c12c1678a5d34061fd1be2e1e58fa8/README.md"
+      ],
+      "tier": "B",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已核验主持人原帖和官方4:22:29视频页面；读第三方转写README、01/07/16章及11章前段。关注Claude Code记账/日报、MD与照片供不同Agent交接、职业机动性与先自由后财富观点；不是技术实证或投资/健康结论。未逐句回听原音、未读全部16章，完整字幕与转写准确性、健康/金融/历史/RSI说法未独立验证。",
+      "queue_rank": 217
+    },
+    {
+      "material_ref": "material-scaling-discovery-forgetting-2610-20563",
+      "title": "Scaling Discovery Requires Forgetting：仅继承最佳候选的搜索重启与同状态停滞消融",
+      "sources": [
+        "https://x.com/shangyint/status/2110771398209863821",
+        "https://arxiv.org/abs/2610.20563v1",
+        "https://arxiv.org/pdf/2610.20563v1"
+      ],
+      "tier": "S",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读作者原帖主文/可见回复（两条Show more未展开），arXiv2610.20563v1经HTML404后读PDF及TeX§1–6、Table1–4、A/B任务与完整prompt；实际看Fig2/4/5，Fig2另补完整第4页，未读帖图/代码或复现。S：周期清空session与可见候选历史，仅继承best+score，配合四agent异步候选共享恢复探索；不同于SLA保留研究state及Fork-and-Flush继承全workspace。同checkpoint各续30proposals的team消融：continue+1.4%/$24.67，forget+9.2%/$15.32，均三次且方差大；非等全成本，主结果单模型/Pi、四编程任务。优先§3、4.3/Table3/Fig4、§5及AppB，转为保留/清除/触发/采用/评分/费用消融卡，审计历史不直接删除。按用户高优先级要求置首读区，其他素材相对顺序保留。",
+      "queue_rank": 2
+    },
+    {
+      "material_ref": "material-third-moment-openai-20261014",
+      "title": "Third Moment Research：外层harness监督、失败场景驱动改进与长程研究成本（OpenAI客户案例）",
+      "sources": [
+        "https://openai.com/zh-Hans-CN/index/third-moment-research/",
+        "https://openai.com/index/third-moment-research/"
+      ],
+      "tier": "S",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读中英文官方客户案例五节及四步改进循环图完整像素。关注外层harness看轨迹决定重试/终止/转人工；行为→重复问题/相似性矩阵→合成环境→Codex改harness。回测约3小时→3–5分钟的报告轨迹揭示环境性能、轮询、token和context耦合；scoreboard以输出不变/同硬件验收。10,000并发/36–48小时与收益均为客户报告；数十万个为路线图，无原始数据、源码、独立复现或模型权重更新证据。优先读监督机制、回测案例与循环图，形成监督policy、场景验收与成本账本。",
+      "queue_rank": 4
+    },
+    {
+      "material_ref": "material-anthropic-infrastructure-noise-20260205",
+      "title": "Agent 评测的基础设施噪声：资源配额、硬上限与分数的混杂",
+      "sources": [
+        "https://www.anthropic.com/engineering/infrastructure-noise"
+      ],
+      "tier": "A",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读官方文章正文与报告数字；图像、原始数据与独立复现未核验。相同model/harness/task改变资源配置，Terminal-Bench 1×到3×的故障率下降但分数差未超噪声；更宽资源也会改变可用策略，不能把消除故障等同能力提升。6pp及3×是作者特定实验，不是通用阈值。先读How we got here、Other sources of variance、What we recommend，约15分钟；形成CPU/RAM保证值与硬上限、并发、临时盘、timeout/latency和故障开销的匹配表，再读自身完整轨迹。",
+      "queue_rank": 5
+    },
+    {
+      "material_ref": "material-terminal-rsi-2610-22192",
+      "title": "Terminal-RSI：验证轨迹重写、critic继承与按轮次信用分配的递归训练",
+      "sources": [
+        "https://jyyang26.github.io/terminal-rsi/",
+        "https://arxiv.org/abs/2610.22192v1",
+        "https://arxiv.org/html/2610.22192v1"
+      ],
+      "tier": "S",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读项目页、arXiv2610.22192v1主文§1–5及TeX A/B/C/E/F/H，实际看总体框架、Fig4/6和embedding案例图；D/G完整证明诊断、其余图/原始日志/代码/权重/复现未核验。S：actor-only已验证native replay与critic继承PPO交替；TB-GAE跳observation且仅跨turn衰减，SPR用strict-success offset+饱和partial credit。RPR1记录为unit-clock standard GAE，不能归因TB-GAE在线收益；4352轨迹失败奖励份额50.09→28.72%是离线重评分。作者报TB4/2.1/3/Hard=19.84/86.52/16.95/79%，Mean@3非pass@3/训练种子，前沿reference与历史manifest尚未完整对账。LHTB0.21→0.37且0→5/46 strict，SWR1003→6%后续平台。优先§2.1–2.3、3.3/5及E/F，转参数交接/信用时钟/完成奖励验收卡；列Top10，保留其他相对顺序。",
+      "queue_rank": 12
+    },
+    {
+      "material_ref": "material-cope-action-forecasting-2610-20597",
+      "title": "CoPE：成功轨迹多步动作预测、共享参数与样本效率边界",
+      "sources": [
+        "https://x.com/haofeiyu44/status/2111158324984991902",
+        "https://ulab-uiuc.github.io/CoPE/",
+        "https://arxiv.org/html/2610.20597v2",
+        "https://github.com/ulab-uiuc/CoPE/blob/bf5de86bbedeb88e0d436435c80b2bc373fabf15/src/verl/agent_trainer/ppo/action_forecast.py",
+        "https://github.com/ulab-uiuc/CoPE/blob/bf5de86bbedeb88e0d436435c80b2bc373fabf15/docs/TAU2_GRPO.md"
+      ],
+      "tier": "S",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读作者原帖主文/可见截断回复、项目页、arXiv2610.20597v2§4–9及B奖励/指标/C6prompt选段，实际看方法/ScienceWorld效率/K消融图；固定repo bf5de86的README、tau2适配记录和AF target/batch builder选段，未全审调用者/actorloss或复现。S：GRPO全轨迹+成功轨迹actionforecast共享backbone，h_t预测a_t:t+K且只训练时使用；组内成功数归一化，推理仍单步。2×是ScienceWorld里程碑RLsteps，非五项皆2×/全成本减半；tau2整体27.5→28.7但Airline26.2→16.2，成功拒绝选择偏差需看。代码k总动作数含current，论文K最大offset；repo历史tau2协议不等于论文表。第11，Terminal-RSI后；优先§5.2/Alg1、§8负例、§9，转目标schema/选择偏差/成本对照卡。",
+      "queue_rank": 13
     },
     {
       "material_ref": "material-intelligence-explosion-2609-36054",
@@ -10217,17 +10370,17 @@
       "queue_rank": 15
     },
     {
-      "material_ref": "material-third-moment-openai-20261014",
-      "title": "Third Moment Research：外层harness监督、失败场景驱动改进与长程研究成本（OpenAI客户案例）",
+      "material_ref": "material-mrt-sequential-causal-excursion-20261017",
+      "title": "微随机试验（MRT）：序贯决策点、causal excursion effect 与历史策略依赖",
       "sources": [
-        "https://openai.com/zh-Hans-CN/index/third-moment-research/",
-        "https://openai.com/index/third-moment-research/"
+        "https://arxiv.org/abs/2107.03544v3",
+        "https://arxiv.org/pdf/2107.03544v3"
       ],
-      "tier": "S",
+      "tier": "A",
       "lifecycle": "candidate",
       "read_scope": "recorded_review",
-      "note": "已读中英文官方客户案例五节及四步改进循环图完整像素。关注外层harness看轨迹决定重试/终止/转人工；行为→重复问题/相似性矩阵→合成环境→Codex改harness。回测约3小时→3–5分钟的报告轨迹揭示环境性能、轮询、token和context耦合；scoreboard以输出不变/同硬件验收。10,000并发/36–48小时与收益均为客户报告；数十万个为路线图，无原始数据、源码、独立复现或模型权重更新证据。优先读监督机制、回测案例与循环图，形成监督policy、场景验收与成本账本。",
-      "queue_rank": 4
+      "note": "Codex选读PDF9–12、14–16、34–39、43–46、54–56相关段落，未读透附录/代码或复验，用户未读完。数字干预论文：定义eligible决策点、已知随机概率、近端/远端结果和历史策略依赖；MRT不等于单checkpoint fork。先读What If识别与长程干预；仅多决策点随机化成为真实工作时再读式(1)–(2)、WCLS和validity，45–60分钟。当前由摘要覆盖，暂不实现估计器。",
+      "queue_rank": 38
     },
     {
       "material_ref": "material-openai-maintenance-gpt6-20261014",
@@ -10243,157 +10396,7 @@
       "queue_rank": 39
     },
     {
-      "title": "Sac《小王子：星辰之旅》：Opus、Tripo与Blender的3D游戏创作案例",
-      "sources": [
-        "https://x.com/Saccc_c/status/2109962425512734739",
-        "https://littleprince.dev/"
-      ],
-      "tier": "B",
-      "read_scope": "recorded_review",
-      "note": "已读Sac于2026-10-13发布的原帖主文及littleprince.dev首页文字。作者称花16天用Opus 5.5结合Tripo、Blender，将《小王子》做成可探索星球的3D剧情游戏，计划后续开源项目与制作流程；模型分工、耗时及完成度为作者自述，未核验源码或制作记录。首页有开始旅程入口并建议Chrome/Edge；读取时画面准备0%。视频、游戏场景像素、完整玩法、性能与成本未核验。B：AI辅助3D创作与多工具交付的产品案例，先存ranked backlog；待公开制作流程/源码后再拆解资产、场景与交互工作流，不挤占当前研究及基础首读。",
-      "material_ref": "material-sac-littleprince-2109962425512734739",
-      "lifecycle": "candidate",
-      "queue_rank": 225
-    },
-    {
-      "title": "创业履历与投资尽调：动察对孟醒及相关项目的评论（争议待核验）",
-      "sources": [
-        "https://mp.weixin.qq.com/s/WuWV8DElwr6KZc5p49sgOA",
-        "https://www.5ycap.com/team",
-        "https://elsewhere.news/zh/elsewhere/elsewhere-1786673275421"
-      ],
-      "tier": "B",
-      "read_scope": "recorded_review",
-      "note": "已读取公众号返回的完整正文（12,708字符），并核对5Y Capital官方团队页及elsewhere原访谈介绍；未听访谈全音视频，未核验完整判决、融资文件及文中全部履历细节，配图未逐张读取。文章是带鲜明立场的争议评论，不能将其融资报道、责任指控或动机推断写成已证实事实。可转化为创业/投资尽调框架：区分头衔与实际贡献，按时间线核对交付及交接责任，区分能力、诚信与共享基础设施信任。B档标准价值背景材料，与当前技术主线相关性间接，进入ranked_backlog尾部，保持Top30顺序；该位置为本次有界处置，不代表全面重排。",
-      "material_ref": "material-beating-mengxing-founder-diligence-20261015",
-      "lifecycle": "candidate",
-      "queue_rank": 226
-    },
-    {
-      "lifecycle": "candidate",
-      "material_ref": "material-tisonkun-blog-ai-native-coding-20261016",
-      "note": "同步既有公开卡片的阅读记录；本次未重读原文。站点归档与 commit ffcbea7 源码；全站 107 篇完整清点，本组 5 篇源 Markdown 全文解析并哈希；P0 文章定向语义复核，用户未读完。 全站 107 篇中的 5 篇；P0 5 篇。优先亲读 2026 年四篇，再读 2025 年末的总论；产出一张“Agent 生成—验证—Owner 负责—上游接受”证据链。 Codex 已完整解析并哈希源码，用户未读完；文章级清单保存在受管内容和派生阅读地图中。",
-      "queue_rank": 227,
-      "read_scope": "recorded_review",
-      "sources": [
-        "https://www.tisonkun.org/archives/",
-        "https://github.com/tisonkun/tisonkun.github.io",
-        "https://github.com/tisonkun/tisonkun.github.io/tree/ffcbea77d9c62965eaba03569f694b551c1ca47d/source/_posts"
-      ],
-      "tier": "S",
-      "title": "tison 博客选读：AI-native 编程、质量与开源协同"
-    },
-    {
-      "lifecycle": "candidate",
-      "material_ref": "material-tisonkun-blog-open-source-commercial-20261016",
-      "note": "同步既有公开卡片的阅读记录；本次未重读原文。站点归档与 commit ffcbea7 源码；全站 107 篇完整清点，本组 24 篇源 Markdown 全文解析并哈希；P0 文章定向语义复核，用户未读完。 全站 107 篇中的 24 篇；P0 2 篇、P1 13 篇、P2 9 篇。先读《创新与变现》《开源孪生》，再按许可证、品牌或供应链问题查对应专题；可并入开源商业合作材料。 Codex 已完整解析并哈希源码，用户未读完；文章级清单保存在受管内容和派生阅读地图中。",
-      "queue_rank": 228,
-      "read_scope": "recorded_review",
-      "sources": [
-        "https://www.tisonkun.org/archives/",
-        "https://github.com/tisonkun/tisonkun.github.io",
-        "https://github.com/tisonkun/tisonkun.github.io/tree/ffcbea77d9c62965eaba03569f694b551c1ca47d/source/_posts"
-      ],
-      "tier": "S",
-      "title": "tison 博客选读：开源商业、许可证、品牌与供应链"
-    },
-    {
-      "lifecycle": "candidate",
-      "material_ref": "material-tisonkun-blog-maintainer-governance-20261016",
-      "note": "同步既有公开卡片的阅读记录；本次未重读原文。站点归档与 commit ffcbea7 源码；全站 107 篇完整清点，本组 28 篇源 Markdown 全文解析并哈希；P0 文章定向语义复核，用户未读完。 全站 107 篇中的 28 篇；P0 1 篇、P1 8 篇、P2 13 篇、P3 6 篇。摘要优先；需要设计 maintainer SOP 时精读《开源共同体的治理模型》《Community of Peers》和 Rust 标准库贡献案例。 Codex 已完整解析并哈希源码，用户未读完；文章级清单保存在受管内容和派生阅读地图中。",
-      "queue_rank": 229,
-      "read_scope": "recorded_review",
-      "sources": [
-        "https://www.tisonkun.org/archives/",
-        "https://github.com/tisonkun/tisonkun.github.io",
-        "https://github.com/tisonkun/tisonkun.github.io/tree/ffcbea77d9c62965eaba03569f694b551c1ca47d/source/_posts"
-      ],
-      "tier": "A",
-      "title": "tison 博客选读：维护者、治理与开源协作"
-    },
-    {
-      "lifecycle": "candidate",
-      "material_ref": "material-tisonkun-blog-rust-data-systems-20261016",
-      "note": "同步既有公开卡片的阅读记录；本次未重读原文。站点归档与 commit ffcbea7 源码；全站 107 篇完整清点，本组 27 篇源 Markdown 全文解析并哈希；P0 文章定向语义复核，用户未读完。 全站 107 篇中的 27 篇；P0 3 篇、P1 4 篇、P2 11 篇、P3 9 篇。按项目需要查读；近期只保留《配置系统》、ScopeDB、Async Rust 原语三篇为高优先级。 Codex 已完整解析并哈希源码，用户未读完；文章级清单保存在受管内容和派生阅读地图中。",
-      "queue_rank": 230,
-      "read_scope": "recorded_review",
-      "sources": [
-        "https://www.tisonkun.org/archives/",
-        "https://github.com/tisonkun/tisonkun.github.io",
-        "https://github.com/tisonkun/tisonkun.github.io/tree/ffcbea77d9c62965eaba03569f694b551c1ca47d/source/_posts"
-      ],
-      "tier": "A",
-      "title": "tison 博客选读：Rust、数据库与系统工程"
-    },
-    {
-      "lifecycle": "candidate",
-      "material_ref": "material-tisonkun-blog-devrel-workflow-20261016",
-      "note": "同步既有公开卡片的阅读记录；本次未重读原文。站点归档与 commit ffcbea7 源码；全站 107 篇完整清点，本组 16 篇源 Markdown 全文解析并哈希；P0 文章定向语义复核，用户未读完。 全站 107 篇中的 16 篇；P0 1 篇、P1 5 篇、P2 9 篇、P3 1 篇。摘要即可；实际经营开源项目时，再按 Review、贡献入口、指标或文档主题查读。 Codex 已完整解析并哈希源码，用户未读完；文章级清单保存在受管内容和派生阅读地图中。",
-      "queue_rank": 231,
-      "read_scope": "recorded_review",
-      "sources": [
-        "https://www.tisonkun.org/archives/",
-        "https://github.com/tisonkun/tisonkun.github.io",
-        "https://github.com/tisonkun/tisonkun.github.io/tree/ffcbea77d9c62965eaba03569f694b551c1ca47d/source/_posts"
-      ],
-      "tier": "A",
-      "title": "tison 博客选读：DevRel、开发体验、指标与工程工作流"
-    },
-    {
-      "lifecycle": "candidate",
-      "material_ref": "material-tisonkun-blog-context-index-20261016",
-      "note": "同步既有公开卡片的阅读记录；本次未重读原文。站点归档与 commit ffcbea7 源码；全站 107 篇完整清点，本组 7 篇源 Markdown 全文解析并哈希；P0 文章定向语义复核，用户未读完。 全站 107 篇中的 7 篇；P3 7 篇。不安排整块阅读；需要背景或书目时检索即可。 Codex 已完整解析并哈希源码，用户未读完；文章级清单保存在受管内容和派生阅读地图中。",
-      "queue_rank": null,
-      "read_scope": "recorded_review",
-      "sources": [
-        "https://www.tisonkun.org/archives/",
-        "https://github.com/tisonkun/tisonkun.github.io",
-        "https://github.com/tisonkun/tisonkun.github.io/tree/ffcbea77d9c62965eaba03569f694b551c1ca47d/source/_posts"
-      ],
-      "tier": "B",
-      "title": "tison 博客索引：活动纪实、书评、个人经历与基础工具"
-    },
-    {
-      "material_ref": "material-anthropic-infrastructure-noise-20260205",
-      "note": "已读官方文章正文与报告数字；图像、原始数据与独立复现未核验。相同model/harness/task改变资源配置，Terminal-Bench 1×到3×的故障率下降但分数差未超噪声；更宽资源也会改变可用策略，不能把消除故障等同能力提升。6pp及3×是作者特定实验，不是通用阈值。先读How we got here、Other sources of variance、What we recommend，约15分钟；形成CPU/RAM保证值与硬上限、并发、临时盘、timeout/latency和故障开销的匹配表，再读自身完整轨迹。",
-      "read_scope": "recorded_review",
-      "sources": [
-        "https://www.anthropic.com/engineering/infrastructure-noise"
-      ],
-      "tier": "A",
-      "title": "Agent 评测的基础设施噪声：资源配额、硬上限与分数的混杂",
-      "lifecycle": "candidate",
-      "queue_rank": 5
-    },
-    {
-      "title": "Scaling Discovery Requires Forgetting：仅继承最佳候选的搜索重启与同状态停滞消融",
-      "sources": [
-        "https://x.com/shangyint/status/2110771398209863821",
-        "https://arxiv.org/abs/2610.20563v1",
-        "https://arxiv.org/pdf/2610.20563v1"
-      ],
-      "tier": "S",
-      "read_scope": "recorded_review",
-      "note": "已读作者原帖主文/可见回复（两条Show more未展开），arXiv2610.20563v1经HTML404后读PDF及TeX§1–6、Table1–4、A/B任务与完整prompt；实际看Fig2/4/5，Fig2另补完整第4页，未读帖图/代码或复现。S：周期清空session与可见候选历史，仅继承best+score，配合四agent异步候选共享恢复探索；不同于SLA保留研究state及Fork-and-Flush继承全workspace。同checkpoint各续30proposals的team消融：continue+1.4%/$24.67，forget+9.2%/$15.32，均三次且方差大；非等全成本，主结果单模型/Pi、四编程任务。优先§3、4.3/Table3/Fig4、§5及AppB，转为保留/清除/触发/采用/评分/费用消融卡，审计历史不直接删除。按用户高优先级要求置首读区，其他素材相对顺序保留。",
-      "material_ref": "material-scaling-discovery-forgetting-2610-20563",
-      "lifecycle": "candidate",
-      "queue_rank": 2
-    },
-    {
-      "title": "Terminal-RSI：验证轨迹重写、critic继承与按轮次信用分配的递归训练",
-      "sources": [
-        "https://jyyang26.github.io/terminal-rsi/",
-        "https://arxiv.org/abs/2610.22192v1",
-        "https://arxiv.org/html/2610.22192v1"
-      ],
-      "tier": "S",
-      "read_scope": "recorded_review",
-      "note": "已读项目页、arXiv2610.22192v1主文§1–5及TeX A/B/C/E/F/H，实际看总体框架、Fig4/6和embedding案例图；D/G完整证明诊断、其余图/原始日志/代码/权重/复现未核验。S：actor-only已验证native replay与critic继承PPO交替；TB-GAE跳observation且仅跨turn衰减，SPR用strict-success offset+饱和partial credit。RPR1记录为unit-clock standard GAE，不能归因TB-GAE在线收益；4352轨迹失败奖励份额50.09→28.72%是离线重评分。作者报TB4/2.1/3/Hard=19.84/86.52/16.95/79%，Mean@3非pass@3/训练种子，前沿reference与历史manifest尚未完整对账。LHTB0.21→0.37且0→5/46 strict，SWR1003→6%后续平台。优先§2.1–2.3、3.3/5及E/F，转参数交接/信用时钟/完成奖励验收卡；列Top10，保留其他相对顺序。",
-      "material_ref": "material-terminal-rsi-2610-22192",
-      "lifecycle": "candidate",
-      "queue_rank": 12
-    },
-    {
+      "material_ref": "material-perplexity-space-execution-identity-20261014",
       "title": "Perplexity SPACE：执行身份绑定、旧执行隔离与长连接恢复",
       "sources": [
         "https://x.com/perplexity_ai/status/2110400881028149315",
@@ -10401,67 +10404,77 @@
         "https://www.perplexity.ai/uk/hub/blog/how-space-routes-requests-to-the-right-sandbox-execution"
       ],
       "tier": "A",
+      "lifecycle": "candidate",
       "read_scope": "recorded_review",
       "note": "已读Perplexity原帖/3条可见回复，并读官方uk公开版本正文、与官方英文索引及原帖核对；canonical遇验证墙，6图像素、SPACE/竞品源码、部署和独立测试未读。A：稳定sandboxID不同于execution generation；短期Ed25519 capability绑定执行/placement/access，接收端比对durable runtime，旧流按identity epoch撤销。120s+最多15s时钟allowance不等于全局瞬时撤权；旧cap与尚未知retirement的旧receiver仍可能匹配。RefreshRoute仅同sandbox代次错误，eligible operation重建一次，cache替换绑定旧route且不续callerexpiry，不保证任意写重放。millions/day、低于0.0002%及竞品比较均为厂商报告。第40位ranked_backlog，Managed Agents之后；可转执行身份/旧流/恢复反例矩阵，当前摘要足够。",
-      "material_ref": "material-perplexity-space-execution-identity-20261014",
-      "lifecycle": "candidate",
       "queue_rank": 42
     },
     {
-      "title": "CoPE：成功轨迹多步动作预测、共享参数与样本效率边界",
+      "material_ref": "material-weiyong-fde-delivery-economics-2111798398668136528",
+      "title": "唯庸的FDE业务复盘：分期验证、交付边界与全成本报价",
       "sources": [
-        "https://x.com/haofeiyu44/status/2111158324984991902",
-        "https://ulab-uiuc.github.io/CoPE/",
-        "https://arxiv.org/html/2610.20597v2",
-        "https://github.com/ulab-uiuc/CoPE/blob/bf5de86bbedeb88e0d436435c80b2bc373fabf15/src/verl/agent_trainer/ppo/action_forecast.py",
-        "https://github.com/ulab-uiuc/CoPE/blob/bf5de86bbedeb88e0d436435c80b2bc373fabf15/docs/TAU2_GRPO.md"
-      ],
-      "tier": "S",
-      "read_scope": "recorded_review",
-      "note": "已读作者原帖主文/可见截断回复、项目页、arXiv2610.20597v2§4–9及B奖励/指标/C6prompt选段，实际看方法/ScienceWorld效率/K消融图；固定repo bf5de86的README、tau2适配记录和AF target/batch builder选段，未全审调用者/actorloss或复现。S：GRPO全轨迹+成功轨迹actionforecast共享backbone，h_t预测a_t:t+K且只训练时使用；组内成功数归一化，推理仍单步。2×是ScienceWorld里程碑RLsteps，非五项皆2×/全成本减半；tau2整体27.5→28.7但Airline26.2→16.2，成功拒绝选择偏差需看。代码k总动作数含current，论文K最大offset；repo历史tau2协议不等于论文表。第11，Terminal-RSI后；优先§5.2/Alg1、§8负例、§9，转目标schema/选择偏差/成本对照卡。",
-      "material_ref": "material-cope-action-forecasting-2610-20597",
-      "lifecycle": "candidate",
-      "queue_rank": 13
-    },
-    {
-      "title": "微随机试验（MRT）：序贯决策点、causal excursion effect 与历史策略依赖",
-      "sources": [
-        "https://arxiv.org/abs/2107.03544v3",
-        "https://arxiv.org/pdf/2107.03544v3"
+        "https://x.com/weiyong_wang/status/2111798398668136528"
       ],
       "tier": "A",
-      "read_scope": "recorded_review",
-      "note": "Codex选读PDF9–12、14–16、34–39、43–46、54–56相关段落，未读透附录/代码或复验，用户未读完。数字干预论文：定义eligible决策点、已知随机概率、近端/远端结果和历史策略依赖；MRT不等于单checkpoint fork。先读What If识别与长程干预；仅多决策点随机化成为真实工作时再读式(1)–(2)、WCLS和validity，45–60分钟。当前由摘要覆盖，暂不实现估计器。",
-      "material_ref": "material-mrt-sequential-causal-excursion-20261017",
       "lifecycle": "candidate",
-      "queue_rank": 38
+      "read_scope": "full_text",
+      "note": "已读2026-10-18原帖展开全文及3张配图像素；履历、约200单／百万营收／不足10%结余、客户复购均为作者自述，未核账目或客户验收，图中文字部分遮挡、合同打码。价值在付费验证后再开发、分期扩范围、按量调用与维护成本分列；20万元／一个月上限及收款比例只是其做法，成本加成不等于销售利润率。A/high_value，摘要先读；可转为企业AI交付验收和成本清单，放经营问题后的ranked backlog，不占Top30。",
+      "queue_rank": 69
     },
     {
+      "material_ref": "material-sac-littleprince-2109962425512734739",
+      "title": "Sac《小王子：星辰之旅》：Opus、Tripo与Blender的3D游戏创作案例",
+      "sources": [
+        "https://x.com/Saccc_c/status/2109962425512734739",
+        "https://littleprince.dev/"
+      ],
+      "tier": "B",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读Sac于2026-10-13发布的原帖主文及littleprince.dev首页文字。作者称花16天用Opus 5.5结合Tripo、Blender，将《小王子》做成可探索星球的3D剧情游戏，计划后续开源项目与制作流程；模型分工、耗时及完成度为作者自述，未核验源码或制作记录。首页有开始旅程入口并建议Chrome/Edge；读取时画面准备0%。视频、游戏场景像素、完整玩法、性能与成本未核验。B：AI辅助3D创作与多工具交付的产品案例，先存ranked backlog；待公开制作流程/源码后再拆解资产、场景与交互工作流，不挤占当前研究及基础首读。",
+      "queue_rank": 225
+    },
+    {
+      "material_ref": "material-beating-mengxing-founder-diligence-20261015",
+      "title": "创业履历与投资尽调：动察对孟醒及相关项目的评论（争议待核验）",
+      "sources": [
+        "https://mp.weixin.qq.com/s/WuWV8DElwr6KZc5p49sgOA",
+        "https://www.5ycap.com/team",
+        "https://elsewhere.news/zh/elsewhere/elsewhere-1786673275421"
+      ],
+      "tier": "B",
+      "lifecycle": "candidate",
+      "read_scope": "recorded_review",
+      "note": "已读取公众号返回的完整正文（12,708字符），并核对5Y Capital官方团队页及elsewhere原访谈介绍；未听访谈全音视频，未核验完整判决、融资文件及文中全部履历细节，配图未逐张读取。文章是带鲜明立场的争议评论，不能将其融资报道、责任指控或动机推断写成已证实事实。可转化为创业/投资尽调框架：区分头衔与实际贡献，按时间线核对交付及交接责任，区分能力、诚信与共享基础设施信任。B档标准价值背景材料，与当前技术主线相关性间接，进入ranked_backlog尾部，保持Top30顺序；该位置为本次有界处置，不代表全面重排。",
+      "queue_rank": 226
+    },
+    {
+      "material_ref": "material-vctbtc-sun-market-interview-2111144673092030556",
       "title": "孙宇晨访谈：AI应用、加密资产与市场判断（赛博永生/vct 分享）",
       "sources": [
         "https://x.com/vctbtc/status/2111144673092030556",
         "https://www.bidclub.ai/e/justin-sun-deep-interview-btc-nasdaq-ai-20261016"
       ],
       "tier": "B",
+      "lifecycle": "candidate",
       "read_scope": "recorded_review",
       "note": "原帖公开接口仅返回截断文字；已读第三方自动转写页概要及BTC、AI产业链与仓位选段，未观看47分钟视频或核验原音。保留AI应用及数据闭环的产品观点；密码破解、估值、行情、仓位与时间表均为受访者自述或预测，未独立证实。不同于已有邵艾伦访谈，作为背景材料置于ranked backlog尾部，不挤占当前技术学习；助手摘要即可。",
-      "material_ref": "material-vctbtc-sun-market-interview-2111144673092030556",
-      "lifecycle": "candidate",
       "queue_rank": 232
     },
     {
+      "material_ref": "material-vctbtc-william-joy-talk-2111403780453675014",
       "title": "仙道（金明）本末香港演讲：投资、健康与人生哲学（视频待读）",
       "sources": [
         "https://x.com/vctbtc/status/2111403780453675014"
       ],
       "tier": "U",
+      "lifecycle": "candidate",
       "read_scope": "metadata",
       "note": "已读X公开接口和页面引介元数据；另见公开转载引介，未观看46分22秒视频或读取字幕、完整转写。分享者称其为金明（William Joy／仙道）本末香港演讲，涉及投资、卡牌、健康抗衰、美学、人生哲学与社会责任，尚非演讲内容核验。引用上一条孙宇晨访谈，但本条媒体ID与时长不同，保留独立阅读单元。履历、收益及健康说法未核验；先放视频待读backlog，待字幕或原视频可读后再分档，不挤占当前技术学习。",
-      "material_ref": "material-vctbtc-william-joy-talk-2111403780453675014",
-      "lifecycle": "candidate",
       "queue_rank": 233
     },
     {
+      "material_ref": "material-uping-william-joy-health-2111482520328097937",
       "title": "金明健康管理15项：习惯、监测设备与抗衰主张的证据分层",
       "sources": [
         "https://x.com/uping123zzz/status/2111482520328097937",
@@ -10470,23 +10483,10 @@
         "https://www.fda.gov/medical-devices/letters-health-care-providers/follow-instructions-safe-use-hyperbaric-oxygen-therapy-devices-letter-health-care-providers"
       ],
       "tier": "B",
+      "lifecycle": "candidate",
       "read_scope": "recorded_review",
       "note": "已读原帖及被引15项摘编全文、核对两张配图像素；演讲未观看，图中部分字被遮挡。选读DO-HEALTH摘要、人群和局限，并读FDA高压氧安全说明。区分生活习惯、设备自述与待验证干预；老年人三年甲基化指标的小幅变化不能证明33岁变18岁，AI整理价格未核验。与已收录演讲关联，作为独立健康专题背景阅读置于backlog；摘要即可，不据此照单实施或购买。",
-      "material_ref": "material-uping-william-joy-health-2111482520328097937",
-      "lifecycle": "candidate",
       "queue_rank": 234
-    },
-    {
-      "title": "唯庸的FDE业务复盘：分期验证、交付边界与全成本报价",
-      "sources": [
-        "https://x.com/weiyong_wang/status/2111798398668136528"
-      ],
-      "tier": "A",
-      "read_scope": "full_text",
-      "note": "已读2026-10-18原帖展开全文及3张配图像素；履历、约200单／百万营收／不足10%结余、客户复购均为作者自述，未核账目或客户验收，图中文字部分遮挡、合同打码。价值在付费验证后再开发、分期扩范围、按量调用与维护成本分列；20万元／一个月上限及收款比例只是其做法，成本加成不等于销售利润率。A/high_value，摘要先读；可转为企业AI交付验收和成本清单，放经营问题后的ranked backlog，不占Top30。",
-      "material_ref": "material-weiyong-fde-delivery-economics-2111798398668136528",
-      "lifecycle": "candidate",
-      "queue_rank": 69
     }
   ]
 }

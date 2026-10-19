@@ -208,6 +208,18 @@ class QueuePublication(unittest.TestCase):
             if name != "PRIVATE_QUEUE.md":
                 self.assertNotIn("material-internal", path.read_text())
 
+    def test_catalog_field_order_is_stable_across_review_serialization(self):
+        card = self.reviews["records"][0]["public_card"]
+        self.reviews["records"][0]["public_card"] = {
+            key: card[key] for key in reversed(tuple(card))
+        }
+        self.write_reviews()
+        self.publish()
+        exported = q.load(self.publisher.targets["catalog.json"])
+        self.assertEqual(
+            tuple(exported["entries"][0]), q.PUBLIC_CARD_FIELD_ORDER
+        )
+
     def test_source_review_pointer_and_destination_conflicts_rejected(self):
         self.publish()
         self.prepare_change()
