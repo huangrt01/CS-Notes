@@ -4,7 +4,7 @@
     {
       "name": "cs-notes-writing-style",
       "files": {
-        "SKILL.md": "afe1d1d5a27100ea7bc52a2f05fff0bd6abca1e9e4c677236cf79969f6973254"
+        "SKILL.md": "f60403e2d90e3f546b8b06ae17b5cf7a138f8cf4026bc82232cc0dab611178f0"
       }
     },
     {
@@ -62,7 +62,7 @@
     {
       "name": "github-gh-cli",
       "files": {
-        "SKILL.md": "ea8034fe88e55c10a9a8b79397613acaf26ddffc4e9ad8ab64b0048e913199c5",
+        "SKILL.md": "4bb7977c74ea1205345ec442539b1cb09324177b68306f216f6691642807645a",
         "agents/openai.yaml": "f7a33fec17c9c9410a76fdba93d9e2ddc74133ed41c7f398cc4ab74835d3043a"
       }
     },
@@ -77,7 +77,7 @@
     {
       "name": "wechat-article-reader",
       "files": {
-        "SKILL.md": "ae173f9fd76a2f38bc180ebc2e84556bd88af0016c53b8668e195f891d360d7c"
+        "SKILL.md": "e7e7ddd28272625e890fa90d4cee08e58edc5cae3b1bc00518ba9517ba4f8e20"
       }
     },
     {
@@ -89,7 +89,7 @@
     {
       "name": "sync-notes",
       "files": {
-        "SKILL.md": "d55ede12e7a091fb3304e84240244f9b9cc4daa9e8cd74f9f7035ce12d4413da",
+        "SKILL.md": "1a06fa95a369e43eae0f065fbe43af8f12c9092ca0d36f0f0bdde82ad090723c",
         "agents/openai.yaml": "5a1cb0e2f58072d737c5fc2c53a5fe06c4dda3ef7963147d112a14ab3c36b93e"
       }
     }
