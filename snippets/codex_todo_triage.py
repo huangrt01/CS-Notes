@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[1]
 TODOS_JSON = REPO_ROOT / ".trae" / "todos" / "todos.json"
 DEFAULT_OUTPUT = REPO_ROOT / ".local" / "CODEX_TODO_TRIAGE_INDEX.md"
 LEARNING_MATERIALS = REPO_ROOT / ".local" / "LEARNING_MATERIAL_CANDIDATES.md"
@@ -548,6 +548,85 @@ def blocker_checks(data: dict[str, Any]) -> list[tuple[str, str, str]]:
     return checks
 
 
+def render_mechanism_checks() -> str:
+    lines = ["# TODO 机制检查", ""]
+    checks: list[tuple[str, str, str]] = []
+
+    # 检查 AGENTS.md 是否存在
+    agents_md = REPO_ROOT / "AGENTS.md"
+    if not agents_md.exists():
+        checks.append(("AGENTS.md", "missing", "AGENTS.md 不存在。"))
+    else:
+        # 检查 AGENTS.md 中是否包含推进TODO的关键协议
+        content = agents_md.read_text(encoding="utf-8")
+        if "推进TODO" in content and "流程优化" in content and "素材：" in content:
+            checks.append(("AGENTS.md", "ok", "AGENTS.md 存在，且包含推进TODO的关键协议。"))
+        else:
+            checks.append(("AGENTS.md", "needs-check", "AGENTS.md 存在，但可能需要检查是否包含最新的推进TODO协议。"))
+
+    # 检查 Codex-TODO-System-v2.md 是否存在
+    v2_doc = REPO_ROOT / ".trae" / "documents" / "Codex-TODO-System-v2.md"
+    if not v2_doc.exists():
+        checks.append(("Codex-TODO-System-v2.md", "missing", "Codex-TODO-System-v2.md 不存在。"))
+    else:
+        checks.append(("Codex-TODO-System-v2.md", "exists", "Codex-TODO-System-v2.md 存在。"))
+
+    # 检查 Codex-TODO-User-Action-Queue.md 是否存在
+    user_queue_doc = REPO_ROOT / ".trae" / "documents" / "Codex-TODO-User-Action-Queue.md"
+    if not user_queue_doc.exists():
+        checks.append(("Codex-TODO-User-Action-Queue.md", "missing", "Codex-TODO-User-Action-Queue.md 不存在。"))
+    else:
+        checks.append(("Codex-TODO-User-Action-Queue.md", "exists", "Codex-TODO-User-Action-Queue.md 存在。"))
+
+    # 检查 triage 索引是否是最新的
+    triage_index = REPO_ROOT / ".local" / "CODEX_TODO_TRIAGE_INDEX.md"
+    if not triage_index.exists():
+        checks.append(("CODEX_TODO_TRIAGE_INDEX.md", "missing", "CODEX_TODO_TRIAGE_INDEX.md 不存在，需要运行 codex_triage.py 生成。"))
+    else:
+        import time
+        file_mtime = triage_index.stat().st_mtime
+        now = time.time()
+        age_hours = (now - file_mtime) / 3600
+        if age_hours < 24:
+            checks.append(("CODEX_TODO_TRIAGE_INDEX.md", "fresh", f"CODEX_TODO_TRIAGE_INDEX.md 是新鲜的（{age_hours:.1f}小时前更新）。"))
+        elif age_hours < 72:
+            checks.append(("CODEX_TODO_TRIAGE_INDEX.md", "stale", f"CODEX_TODO_TRIAGE_INDEX.md 可能需要刷新（{age_hours:.1f}小时前更新）。"))
+        else:
+            checks.append(("CODEX_TODO_TRIAGE_INDEX.md", "old", f"CODEX_TODO_TRIAGE_INDEX.md 比较旧（{age_hours:.1f}小时前更新），建议运行 codex_triage.py 刷新。"))
+
+    # 检查 snippets/ 目录下的脚本
+    snippets_dir = REPO_ROOT / "snippets"
+    if not snippets_dir.exists():
+        checks.append(("snippets/", "missing", "snippets/ 目录不存在。"))
+    else:
+        script_count = len(list(snippets_dir.glob("*.py"))) + len(list(snippets_dir.glob("*.sh")))
+        checks.append(("snippets/", "exists", f"snippets/ 目录存在，包含约 {script_count} 个脚本。"))
+
+    # 检查 .codex/skills/ 目录
+    codex_skills_dir = REPO_ROOT / ".codex" / "skills"
+    if not codex_skills_dir.exists():
+        checks.append((".codex/skills/", "missing", ".codex/skills/ 目录不存在。"))
+    else:
+        skill_count = len(list(codex_skills_dir.glob("*/SKILL.md"))) + len(list(codex_skills_dir.glob("SKILL.md")))
+        checks.append((".codex/skills/", "exists", f".codex/skills/ 目录存在，包含约 {skill_count} 个技能。"))
+
+    # 检查 .trae/openclaw-skills/ 目录（备选）
+    openclaw_skills_dir = REPO_ROOT / ".trae" / "openclaw-skills"
+    if not openclaw_skills_dir.exists():
+        checks.append((".trae/openclaw-skills/", "missing", ".trae/openclaw-skills/ 目录不存在。"))
+    else:
+        skill_count = len(list(openclaw_skills_dir.glob("*/SKILL.md"))) + len(list(openclaw_skills_dir.glob("SKILL.md")))
+        checks.append((".trae/openclaw-skills/", "exists", f".trae/openclaw-skills/ 目录存在，包含约 {skill_count} 个技能。"))
+
+    if not checks:
+        lines.append("当前没有可检查的机制项。")
+        return "\n".join(lines)
+
+    for name, status, message in checks:
+        lines.append(f"- `{name}` [{status}] {message}")
+    return "\n".join(lines)
+
+
 def render_blocker_checks(data: dict[str, Any]) -> str:
     checks = blocker_checks(data)
     lines = ["# TODO 阻塞检查", ""]
@@ -717,6 +796,11 @@ def main() -> None:
         help="Run lightweight local checks for known blocked TODOs.",
     )
     parser.add_argument(
+        "--check-mechanisms",
+        action="store_true",
+        help="Check if local mechanism docs, scripts, indexes and skills are consistent with latest user rules.",
+    )
+    parser.add_argument(
         "--apply-codex-triage",
         action="store_true",
         help="Annotate todos.json with non-destructive codex_triage metadata.",
@@ -748,6 +832,10 @@ def main() -> None:
 
     if args.check_blockers:
         print(render_blocker_checks(data))
+        return
+
+    if args.check_mechanisms:
+        print(render_mechanism_checks())
         return
 
     content = render(data)
