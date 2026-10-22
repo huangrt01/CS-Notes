@@ -894,6 +894,8 @@ cat cpu.stat
 
 ### 多租户系统
 
+多租户隔离同时覆盖业务数据、管理权限与旁路副本。主库访问受限，不代表控制台、迁移任务、日志或支持附件具有同样的租户边界；需独立验证低权限角色不能取得管理能力、跨租户请求被拒绝，以及临时授权失效后不能继续访问。结合公开事件的证据边界与防御审查见 [云数据库的控制平面与旁路数据安全](./Security-Privacy-Cryptography.md#云数据库的控制平面与旁路数据安全)。
+
 #### 阿里云 IDaaS
 
 [**阿里云的 IDaaS**](*https://cn.aliyun.com/product/idaas?from_alibabacloud=*) 正好是解决这个问题的专业服务。MuseAI 的业务代码可以不用和阿里集团的 BUC 系统直接交互，而是和 IDaaS交互。IDaaS 则把阿里集团的 BUC 视作一个[**身份提供方（IdP）**](*https://help.aliyun.com/zh/idaas/eiam/user-guide/idps/*)接入其用户池。在这个架构下，阿里集团只是 MuseAI 的多个租户之一。这样 MuseAI 不仅可以获取更高质量的用户管理系统，而且可以零开发成本的接入其他集团租户
