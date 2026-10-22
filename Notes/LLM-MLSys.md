@@ -50,6 +50,7 @@
 
 * LLM推理到底需要什么样的芯片？ https://wallstreetcn.com/articles/3709523
 * 分离式架构按瓶颈拆资源：PD 分离拆推理阶段，[AFD](#attention-ffn-disaggregation-afd)拆层内算子；两者都要把通信、调度和状态驻留代价计入端到端收益。新硬件还需同时维护[通用编程模型与专用加速的边界](#通用编程模型与专用加速的边界)。
+* 大规模在线推理的优化对象已经从单机 engine 扩展到跨集群协同系统：阶段分离、并行策略、KV 存储、负载均衡、故障转移和 API 编解码共同决定有效吞吐。生产案例见 [DeepInfer](#deepinfer生产推理系统不只是模型执行引擎)。
 
 ![image-20251005214302319](./LLM-MLSys/image-20251005214302319.png)
 
@@ -1201,6 +1202,22 @@ $$
 
 来源：[OpenAI Prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching)、[Reasoning items：Caching](https://developers.openai.com/cookbook/examples/responses_api/reasoning_items#caching)。推理保留的接口边界见 [Context Management](./AI-Agent-Engineering.md#context-management-与-token-效率)。
 
+##### DeepInfer：Block KV 与 SWA state 分层
+
+DeepSeek V4.1 Flash 同时存在可分页的 block KV 与固定窗口的 SWA state，DeepInfer 没把它们强行塞进同一种缓存：
+
+| 状态 | 主要落点 | 复用方式 |
+| --- | --- | --- |
+| 运行中的 block KV / state | GPU HBM | 当前请求直接读取 |
+| SWA KV state | 产生它的机器内存 | 跨机器命中时经 400G VLAN 拉取 |
+| 分页 block KV | 独立 3FS SSD 集群 | prefix hash-chain 匹配后异步 fetch；再以 GDR 搬入 HBM |
+
+持久化 block KV 与计算节点解耦，使任意 prefill engine 都能命中前缀，路由不必为了 cache affinity 牺牲负载均衡。官方生产系统用约 100 PiB SSD 保存缓存，峰值聚合读带宽约 10 TiB/s、写带宽约 850 GiB/s；Agent 流量 TTL 为 3 天、聊天流量为 7 天。SWA state 则只服务活跃会话，官方披露其本机内存 TTL 约 180 秒、命中率超过 98%。这说明 prefix cache 已从“单机显存优化”变成容量、网络、GC、数据生命周期和可靠性共同约束的存储系统。
+
+SWA state 更小但依赖最近窗口。DeepInfer 每 128 token 建立一次状态边界；缺失 state 时不从头精确重算，而采用 **SWA bounded replay**：只重放最近 128 个 token，并把 attention window 截断在重放片段内。这样重算成本不再随上下文长度增长，但官方明确称得到的是近似 SWA KV；它是模型结构允许下的准确率—计算量取舍，不是通用、无损的 prefix caching。V4.1 的最大命中位置还要为 128-token 窗口和最多 6-token 的投机回退预留空间，因此长度为 $L$ 的输入最多命中到 $L-134$。
+
+缓存路径也按可重叠程度拆开：metadata matching 必须在路由前完成，无法隐藏；3FS 到 host shared memory 的 fetch 在独立进程异步执行；host 到 HBM 的逐层 swap-in 再与 forward 重叠。来源：[DeepSeek 部署实践：KVCache Storage](https://zhuanlan.zhihu.com/p/2095560295930508953)、[DeepInfer Q&A：KV cache storage](https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/doc/inference_deployment_qa.md#kv-cache-storage)。
+
 #### Agentic State Reuse：面向 Agent 上下文编辑的状态复用
 
 > 来源：[机器之心：单卡5090跑满血DeepSeek V4Flash，已开源，Token自由了！](https://mp.weixin.qq.com/s/Hz-mm3Izi8M2uMZHL3wx5w)、[FreeToken: Efficient Edge-Native MoE Serving with Bandwidth-Adaptive Execution（arXiv 2608.16157）](https://arxiv.org/abs/2608.16157)、[FlashML-org/FreeToken](https://github.com/FlashML-org/FreeToken)（commit `0ab982f`，Apache-2.0）。整理时间：2026-08-22。
@@ -1544,6 +1561,10 @@ https://arxiv.org/pdf/2410.01359
 
 ![image-20250601012653322](./LLM-MLSys/image-20250601012653322.png)
 
+DeepInfer 的 **DSpark** 把“per-sequence speculation length”推进到了生产实现。draft model 每次先生成 5 个 token，Confidence Head 预测不同请求、不同位置的接受概率；调度器再结合硬件吞吐曲线，只验证边际收益最高的前缀，而不是固定验证 5 个。生产工作点约为每个 rank 60 条并发序列时，平均验证长度从 5.00 降到 3.58，平均接受长度从 3.30 小幅降到 3.21，估算吞吐提高 5.4%；48–72 并发时提高 3.6%–6.7%，16 并发时反而下降 1.5%。因此动态验证是随 batch 和硬件曲线变化的调度问题，不是固定会加速的算法开关。
+
+异步调度又带来一步反馈延迟：CPU 规划 `schedule(N+1)` 时还拿不到第 $N$ 步的置信度，只先确定总验证预算；各请求的实际长度随后由 GPU kernel 重新计算。来源：[DeepInfer 部署 Q&A：Speculative decoding](https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/doc/inference_deployment_qa.md#speculative-decoding)。
+
 ##### Batch expansion
 
 - Problem: How to support scoring when **PagedAttention only supports 1 query token per sequence**?
@@ -1637,6 +1658,30 @@ https://arxiv.org/abs/2504.02263
 #### Triton v.s. In-house inference server
 
 ![image-20251021140125431](./LLM-MLSys/image-20251021140125431.png)
+
+### DeepInfer：生产推理系统不只是模型执行引擎
+
+> 来源：[DeepSeek V4.1 Flash 大规模推理部署实践（中文原文）](https://zhuanlan.zhihu.com/p/2095560295930508953)、[DeepInfer 官方仓库](https://github.com/deepseek-ai/DeepInfer/tree/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9)、[持续更新的部署 Q&A](https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/doc/inference_deployment_qa.md)。整理时间：2026-10-21。
+
+DeepInfer 是 DeepSeek V4.1 Flash 生产服务使用的推理框架。官方披露单集群每天处理 **155 万亿 token**，折合约 **17.9 亿 token/s 的集群总吞吐**；按谷价计算，每 GPU-hour 收入为 **38 美元**。这组数字说明它已经运行在商业规模，但不能直接当作框架 benchmark：官方没有同时给出 GPU 数量、输入/输出 token 口径、请求长度和并发分布、SLO、峰谷利用率及成本，收入也不等于利润或硬件成本，因此无法反推 tokens/s/GPU，也不能直接与 vLLM、SGLang 的离线结果比较。
+
+**先区分生产系统与开源范围。** 仓库开源的是离线推理核心，包括优化 kernel、模型与采样 runtime、EP/EPLB、DSpark、SWA bounded replay、异步调度、batch-invariant inference 和 structured output。一个完整在线服务还需要 KV cache 系统、Vision Encoder / Prefill / Decode 分离、跨 DP 副本负载均衡；这些组件与 DeepSeek 内部基础设施耦合，Q&A 公开了设计，但代码并未完整开源。因而“DeepInfer 开源”不等于截图中的生产集群已经可以原样复现。
+
+![DeepInfer 的 VE/P/D 分离与 KV cache 存储架构](./LLM-MLSys/deepinfer-v4.1-inference-architecture.png)
+
+*图：DeepSeek 官方架构。黑线是请求流，蓝线是 KV cache 流；API 在 Entrypoint 进入独立的 Vision Encoder、Prefill、Decode 服务，并由各自的 load balancer 调度，block KV cache 落到外部 3FS。*
+
+生产架构围绕不同阶段的瓶颈分别选并行和调度策略：
+
+- **Prefill** 使用 EP2–8 / DP2–8，在 HBM 容得下的前提下尽量采用较小 EP，以保留单机部署和计算效率。请求先按上下文长度分成 `<16K / 16–64K / 64–256K / ≥256K` 四档，再根据历史 compute quota 动态分配 engine；单卡 chunk 大小由拟合的二次成本模型在时间预算内求解。
+- **Decode** 使用 EP64–128 / DP64–128 的 Wide-EP。它用更多 GPU 分摊 MoE 专家权重的读取，并依赖冗余热专家与 EPLB 避免 straggler；Decode Load Balancer 同时平衡请求数和 KV 总长度。官方称生产调度约达到理想均衡离线 benchmark 的 80%。
+- **VE/P/D 分离**让 Vision Encoder、Prefill、Decode 分别扩缩容，也把 TTFT 与 TBT 的资源控制拆开。DeepSeek 当前不用 TP/CP；推荐的最小高效单元约为 64 张 prefill GPU 加 64 张 decode GPU。这里的选择依赖 V4.1 Flash 的 MoE、节点规模和互连，不能推广为所有模型的固定配置。
+
+![DeepInfer Wide-EP 的 decode 吞吐与单用户速度](./LLM-MLSys/deepinfer-wide-ep-decode-pareto.png)
+
+*图：官方离线数据。EP64DP64 相比 EP8DP8 把吞吐—交互速度 Pareto 前沿向外推，但总卡数和专家副本数也不同；它说明 Wide-EP 在这一部署上有效，不是等资源的框架横评。*
+
+它提供了一个更完整的推理优化视角：kernel 只决定局部执行效率，生产吞吐还取决于[阶段分离](#prefill-decode-disaggregating-pd分离)、[KV-cache 的跨请求复用](#deepinferblock-kv-与-swa-state-分层)、MoE 热点专家再平衡、请求路由、异步 CPU/GPU 流水线以及 API 编解码。DeepSeek 另外开源 `deepseek-recipe`，把 Chat Completions、Responses、Messages 三类协议统一为 token 序列，并用 special-token 分段并行编码和流式状态机减少长输入与工具参数的 CPU 开销。
 
 
 

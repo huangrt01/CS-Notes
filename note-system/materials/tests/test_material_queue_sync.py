@@ -139,6 +139,38 @@ class QueuePublication(unittest.TestCase):
         self.assertEqual(archived, ["material-archive"])
         self.assertEqual((external[0]["queue_rank"], private[0]["queue_rank"]), (1, 1))
 
+    def test_public_ranking_is_an_order_preserving_canonical_subset(self):
+        second = copy.deepcopy(self.reviews["records"][0])
+        second["material_ref"] = "material-new"
+        second["entry_digest"] = "content-new"
+        second["record_digest"] = q.digest(q.canonical_json(self.records[2]))
+        second["public_card"] = copy.deepcopy(second["public_card"])
+        second["public_card"].update(
+            material_ref="material-new", title="Second public paper"
+        )
+        self.reviews["records"].append(second)
+        changed = copy.deepcopy(self.catalog)
+        changed["rankings"]["ranked_entries"]["entries"].append(
+            {"rank": 3, "material_refs": ["material-new"]}
+        )
+        external, _, _ = q.partition(changed, self.reviews)
+        ranked = sorted(
+            (card for card in external if card["queue_rank"] is not None),
+            key=lambda card: card["queue_rank"],
+        )
+        self.assertEqual(
+            [card["material_ref"] for card in ranked],
+            ["material-public", "material-new"],
+        )
+        self.assertEqual([card["queue_rank"] for card in ranked], [1, 2])
+
+    def test_order_preserving_subset_validator_rejects_reordering(self):
+        with self.assertRaisesRegex(ValueError, "preserve canonical order"):
+            q.validate_order_preserving_subset(
+                ["material-a", "material-b", "material-c"],
+                ["material-c", "material-a"],
+            )
+
     def test_changed_content_or_lifecycle_evidence_revokes_review(self):
         for field in ("entry_digest", "lifecycle_transition_ref"):
             with self.subTest(field=field):
@@ -159,6 +191,11 @@ class QueuePublication(unittest.TestCase):
         exported = q.load(self.publisher.targets["catalog.json"])
         self.assertEqual(exported["entries"][0]["material_ref"], "material-neutral-id")
         self.assertEqual(exported["entries"][0]["queue_rank"], 1)
+        receipt = q.load(self.publisher.pointer)
+        self.assertTrue(receipt["public_order_preserving_subset_verified"])
+        self.assertTrue(
+            receipt["public_aliases_resolved_before_subset_validation"]
+        )
         self.assertEqual(self.catalog, before)
         for name, path in self.publisher.targets.items():
             if name != "PRIVATE_QUEUE.md":

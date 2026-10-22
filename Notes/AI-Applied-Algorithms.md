@@ -3802,9 +3802,97 @@ LoopX 的正确方向不是把所有 runtime 变成同一个 Hermes-like agent�
 | Project control plane | LoopX | 谁能继续、下一轮是否该跑、证据写哪里 | registry、goal state、todo ownership、gate、quota、run history、evidence refs |
 | Goal audit | Codex / Claude / Kimi 的 goal mode | 能否宣称完成、是否真的 blocked、预算是否还能继续 | objective、completion evidence、usage accounting；区分模型自审规则与运行时强制熔断 |
 | Method trace | Flowtrace | 方法图、步骤证据和局部重跑边界如何从 transcript 外部化 | trace.json、state.json、replies、path-backed evidence |
+| Research search control plane | Stateless Language Agents | 长程搜索如何保存候选、分派实验、隔离角色上下文并从 checkpoint 续跑 | global / local best、outcome evidence、assignment、role context、protected evaluator |
 | Human / multi-agent gate | LangGraph Interrupts、Claude Code Agent Teams | 人类和多个 agent 如何接力、审批和恢复 | gate id、task ledger、mailbox、permission lease、artifact refs |
 
 LoopX 应在这一层被理解：它不是 goal mode 的替代，而是项目级 / 多轮 / 多 agent 的本地控制面。Goal mode 管“能不能结束”，Dynamic Workflow 管“路径怎么走”，Flowtrace 管“方法和证据怎么留”，LoopX 管“谁能继续、为何继续、带着什么状态继续、跑完写回哪里”。因此，LoopX 的 registry、active goal state、todo ownership、quota、run history、evidence 和 handoff，不应只放在产品笔记里，也应作为 long-running agent control plane 的代表案例进入 Agent Harness 总框架。
+
+#### Stateless Language Agents：把研究状态与角色上下文分开
+
+> 来源：[Stateless Language Agents](https://arxiv.org/html/2610.07625v1)、[论文仓库（commit `1271183`）](https://github.com/Alex-q-z/stateless-language-agents/tree/1271183f6c73729d0c5e1602e12951fba59cf657)。这里的 stateless 指 Agent 的对话不跨 invocation 保留，不是整个系统没有状态。公开仓库只有论文，没有框架实现。
+
+SLA 把长期研究拆成：
+
+> durable harness state + 每轮重建的角色上下文 + 明确实验分派 + 独立评测
+
+![SLA：harness 持有研究状态，每轮重建 Advisor / Worker 上下文](./AI-Applied-Algorithms/stateless-language-agents-workflow.png)
+
+*图源：论文 Figure 2。底部的 research state 才是跨轮持久层；Advisor 和 Worker 每次调用都从中投影出当前角色需要的上下文。*
+
+| 对象 | 持有什么 |
+| --- | --- |
+| Harness | global best、各 Worker 的 local candidate、分数、完整实验结果与 evidence status |
+| Advisor context | 任务、global best、按搜索方向汇总的近期结果、Worker 状态和诊断 |
+| Worker context | 当前 assignment、自己的 retained candidate、上一轮本地反馈 |
+| Evaluator | 在 Worker 环境之外检查正确性并打分；候选、评测输出与事件日志由 Harness checkpoint |
+
+每个 epoch 的控制流是：
+
+1. Harness 从完整 research state 构造新的 Advisor context。
+2. 新 Advisor session 根据跨方向证据，为每个 Worker 输出具体 assignment。
+3. 每个 Worker 开新 session，只看到任务、assignment、自己的 retained candidate 和局部反馈。
+4. Worker 在隔离 workspace 修改候选，外部 protected evaluator 检查正确性并打分。
+5. Harness 更新 Worker local best、global best 和 outcome record；失败或被丢弃的 trial 恢复到该 Worker 的 retained candidate。
+6. 下一 epoch 从新的 research state 重建上下文，不继承 Advisor / Worker 对话。
+
+这条控制链可以写成：
+
+$$
+\text{durable state}
+\xrightarrow{\text{role projection}}
+\text{focused context}
+\xrightarrow{\text{assignment}}
+\text{next experiment}
+$$
+
+这里有两个容易混淆的判断：
+
+1. **拥有全部信息不等于拥有有效上下文。** 移除 Worker isolation 后，Worker 能看到完整历史和其他 lane 的候选，信息更多，进步反而更少。长期 Agent 不仅会遗忘，也会被无关证据、其他 lane 未验证的想法和重复劳动污染判断。
+2. **Advisor 不只是保存状态，而是把状态投影成行动。** research state 完整保留时，移除 Advisor context reconstruction 或具体 assignment 仍会退化。状态持久化只保证证据还在；role projection 决定各角色看见什么，assignment 决定下一步验证什么。
+
+这不是简单的 best-only 搜索。Appendix E 在 SOL-ExecBench 的特化 prompt 中写了两条关键规则：
+
+- **同一 regime 继续搜索**：候选只需超过该 lane 自己的 local best 就可以保留。新方向暂时落后 global best，不会立刻被成熟方向淘汰。
+- **切换 regime**：从 global best 重新播种，清空该 lane 的 local anchor；第一个合法候选成为新方向基线，即使它暂时更差。
+
+因此 multi-agent 同时维护 local best 与 global best：前者给不同路线成熟时间，后者负责在路线切换时传播当前最强解。这里的策略不是一份完全通用的 orchestration prompt；Appendix E 为 VLIW、FrontierSWE、SOL-ExecBench 等任务分别注入评分语义、诊断信息和搜索规则，任务特化本身也是效果的一部分。
+
+一个可核验轨迹来自 FrontierSWE `libexpat`。无 assignment 时，三个 Worker 从相同父候选重复实现 XML entity decode，均未涨分；随后两个 Worker 又独立实现几乎相同的 duplicate-attribute check。完整 SLA 中，Worker 1 改进 UTF-8 文本和 XML name 处理，分数达到 18.99；下一 epoch，Advisor 让 Worker 2 从该候选继续补 namespace name 校验，分数升至 19.64，通过的 namespace 测试从 20/31 增至 22/31。代码版本确认 Worker 2 确实继承了 Worker 1 的候选。这个案例解释了 assignment 如何减少重复并传播有效候选，但不能估计该机制出现的频率或对总收益的贡献比例。
+
+论文选择的任务不追求 benchmark 知名度，而是要求 **连续指标、可保护的 evaluator 和长预算下仍有 headroom**：
+
+| Benchmark | 长程优化信号 |
+| --- | --- |
+| Anthropic VLIW kernel | 连续 cycles 指标 |
+| SOL-ExecBench 三个 GPU kernel | 连续 SOL score |
+| FrontierSWE 四个软件重实现任务 | 可持续增加功能覆盖，分数不是一次性 pass / fail |
+| FrontierCS Structured-LWE | 可持续改进算法得分 |
+
+按这套实验目标，HumanEval 类短题很快结束，SWE-bench 的一次性成功率不利于观察同一任务内的渐进改进，Terminal-Bench 还会把环境噪声混入长程曲线；常用于 AutoResearch 的 circle packing 则在较小 token 预算后接近饱和。它们可以回答别的问题，但不适合隔离“追加搜索预算后还能否持续进步”。
+
+**共同 checkpoint 消融测量的是条件效应。** 设 $S_t$ 是完整 SLA 在时刻 $t$ 保存的 research state，$B$ 是后续预算，$j$ 是被移除的组件；这组实验近似测量：
+
+$$
+\Delta_j(s_t)
+=
+\mathbb E\left[
+Y_{t+B}^{\text{full}}
+- Y_{t+B}^{-\!j}
+\mid S_t=s_t
+\right]
+$$
+
+作者先用完整 SLA 跑到 10% 或 20% token checkpoint，保存相同的 global best、local candidates 和累计证据，再 fork 完整 SLA 与三个消融版本，各追加 100M tokens。它回答的是：**在完整 SLA 已经创造出的状态上，接下来移除组件 $j$ 会损失多少进步？** 它不是“从零删除组件”的端到端总效应。消融版本继承了完整 SLA 前期创造的高质量状态，因而可能低估组件对整条研究轨迹的长期价值；这个结论也只对被选中的 SLA checkpoint 状态分布成立。
+
+主要结果与边界要一起读：
+
+- SLA 在全部任务的完整预算终点领先。Anthropic kernel 的共同目标上，SLA 使用 67.9M tokens，SwarmResearch 使用 986.3M，约为 **14.5 倍 token 差距**；FrontierSWE 在 25% 预算时四题均落后最强基线，完整预算时四题均领先，说明短预算可能反转方法排序。
+- [Table 4](https://arxiv.org/html/2610.07625v1#S4.T4) 的三个消融分别移除 Advisor context reconstruction、Worker context isolation 和 Advisor assignment；四个 checkpoint continuation 中完整 SLA 的平均进步都最好。但这是逐项移除，不是 factorial experiment，百分比不能相加，也不能确定组件间的交互。这里的“相同 research state”只适用于这些 checkpoint continuation；SLA 与 CORAL、EvoX、SwarmResearch 的主比较只共享初始 seed、模型 / agent 配置、任务、evaluator 与预算，各方法随后产生自己的 research state。
+- 三组消融中的 Agent 全部 stateless。结果较有力地支持 focused context 和 explicit assignment，**没有直接比较 stateful agent 与 stateless agent**，因此不能推出“stateless 一定优于 stateful”。完整 1B-token 的无 Worker isolation 单次运行得到 1336 cycles，完整 SLA 三次平均为 1112，提示上下文污染可能随长程搜索累积；但消融版本只有一次完整运行，不能把差值当作稳定效应量。
+- [Table 6](https://arxiv.org/html/2610.07625v1#S4.T6) 的固定 token 预算实验同时改变搜索宽度、单 lane 连续推进深度和 Advisor 重规划频率。宽搜索的收益可能延迟出现：Kernel 上 7/15 Workers 在 25% 预算时比单 Worker 差 337/174 cycles，完整预算时四种宽度却都落在 1107–1113 cycles。并行度也不是越高越好：更多 Worker 增加路线多样性，却压缩每条 lane 的连续推进与全局重规划机会；FrontierSWE 的最优宽度随任务变化，Lua 到完整预算仍是单 Worker 最好。因此不能按早期分数过早清除宽搜索，也不能把固定 Worker 数当作通用最优配置。
+- Advisor 只占 0.24%–0.51% tokens、1.20%–2.29% 模型费用；该成本统计没有覆盖 evaluator 的 CPU / GPU 执行成本。多数 task / 配置只有单次完整长跑，小幅终点差异仍可能受随机性影响。
+
+对 Harness 设计最稳妥的抽象是：长期状态应成为可检查、可 checkpoint、可回滚的控制面对象；Agent context 是从该状态按角色和本轮 assignment 生成的读视图。这样既能跨 session 延续研究，也能把“保留什么、谁能看到什么、下一步由谁决定”变成显式 policy。
 
 #### Agent 原生身份与外部通信：DSH + AWiki 的实现样本
 
