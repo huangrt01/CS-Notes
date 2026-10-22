@@ -13,6 +13,13 @@
 历史归档：仍在原 catalog / backing，不进入公开当前队列
 ```
 
+公开当前队列是同一 authority revision 下完整私有排名的保序子序列：字段审查可以让
+条目留在私有侧，但不能改变其余公开条目的相对顺序。每个公开条目必须一一解析到
+canonical material ref；需要隐藏私有来源标识时，导出 public-safe alias，子集与顺序校验
+仍在 alias 解析后的 canonical refs 上执行。公开 rank 为过滤后的连续编号，不要求等于
+全局 rank。任何公开条目无法解析、映射不唯一、顺序与全局排名不一致，或私有可读投影
+绑定旧 authority revision，都属于投影错误，必须在发布或读取时拒绝。
+
 ## 数据与约束
 
 | 层 | 职责 | 可公开内容 |

@@ -142,6 +142,12 @@ open -a Typora <file.md>
 内部材料、私人批注、待确认来源及历史归档维持本地。受管 catalog 仍是唯一
 生命周期与排序 authority；公开 Markdown 不是第二套可写队列。字段审查必须绑定
 稳定 material ref、正文与完整 record digest；新记录、正文变化和重新激活的归档记录在审查前留私有侧。
+公开队列必须是当前完整私有排序按“可公开”过滤得到的**保序子序列**：每个公开条目都要
+在同一 authority revision 中解析到唯一 canonical material ref，过滤只能删除条目，
+不能改变剩余条目的相对顺序；为隐藏私有来源标识可以导出一一对应的 public-safe alias，
+公开 rank 可以重新连续编号。用户未限定“私有”时，`队列`、`Top1`、`打开队列` 默认指
+`Learning-Materials/QUEUE.md`。读取 `.local/material-lifecycle/CURRENT_TOP30.md`
+前必须核对其 `Authority revision` 与 `authority/current.json`；不一致即为 stale，禁止用于回答或推荐。
 经核验的公开来源默认在同一素材工作流内完成字段审查并导出公开队列，不等用户另说“公开”。
 `素材：` 已授权这一步；公开卡片只保留可分享的书目、真实读取范围和脱敏判断，完整正文与证据留本地。
 内部材料、私人批注及来源未确认的内容继续留私有侧，不凭 URL 域名判定公开。

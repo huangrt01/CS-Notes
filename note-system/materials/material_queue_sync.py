@@ -93,6 +93,21 @@ def write_immutable(path, payload):
     fsync_directory(path.parent)
 
 
+def validate_order_preserving_subset(full_ranked_refs, projected_ranked_refs):
+    """Validate canonical refs before any public-safe alias is exported."""
+    if len(full_ranked_refs) != len(set(full_ranked_refs)):
+        raise ValueError("canonical ranked identities are not unique")
+    if len(projected_ranked_refs) != len(set(projected_ranked_refs)):
+        raise ValueError("projected ranked identities are not unique")
+    positions = {ref: index for index, ref in enumerate(full_ranked_refs)}
+    try:
+        projected_positions = [positions[ref] for ref in projected_ranked_refs]
+    except KeyError as error:
+        raise ValueError("public ranking is not a subset of canonical ranking") from error
+    if projected_positions != sorted(projected_positions):
+        raise ValueError("public ranking does not preserve canonical order")
+
+
 def partition(catalog, reviews):
     decisions = {d["material_ref"]: d for d in reviews["records"]}
     if len(decisions) != len(reviews["records"]):
@@ -139,6 +154,7 @@ def partition(catalog, reviews):
         source_ranks
     ) != list(range(1, len(source_ranks) + 1)):
         raise ValueError("source ranks must be unique and contiguous")
+    full_ranked_refs = []
     for entry in sorted(ranked_entries, key=lambda entry: entry["rank"]):
         # Current adapter intentionally has one primary material per reading unit.
         if len(entry["material_refs"]) != 1:
@@ -146,12 +162,21 @@ def partition(catalog, reviews):
                 "review semantic grouping before splitting a multi-material entry"
             )
         ref = entry["material_refs"][0]
+        full_ranked_refs.append(ref)
         if ref in seen or ref not in byref:
             raise ValueError("invalid ranked membership")
         seen.add(ref)
         q = "external" if ref in external_refs else "private"
         ranks[q] += 1
         byref[ref]["queue_rank"] = ranks[q]
+    public_ranked_refs = [
+        card["material_ref"]
+        for card in sorted(
+            (card for card in external if card["queue_rank"] is not None),
+            key=lambda card: card["queue_rank"],
+        )
+    ]
+    validate_order_preserving_subset(full_ranked_refs, public_ranked_refs)
     refs = [c["material_ref"] for c in external + private] + archived
     if len(refs) != len(set(refs)) or set(refs) != {
         r["stable_id"] for r in catalog["records"]
@@ -280,6 +305,8 @@ class QueuePublisher:
             "archived_count": len(archived),
             "external_ranked_count": counts["ranked"],
             "private_ranked_count": sum(c["queue_rank"] is not None for c in private),
+            "public_order_preserving_subset_verified": True,
+            "public_aliases_resolved_before_subset_validation": True,
             "expected_destination_digests": {
                 k: current_digest(p) for k, p in self.targets.items()
             },
