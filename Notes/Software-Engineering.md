@@ -457,6 +457,7 @@ Mutation testing 的成本较高，因为每个 mutant 都可能触发一次测�
 * 定位：全球最大代码托管与协作平台（git 仓库 + PR / issue + 社交化开源）。
 * 核心：PR review 流程、GitHub Actions（CI/CD）、Codespaces、Packages、Copilot / AI 助手、开源生态（stars / forks / discussion）。
 * 适合：开源项目与默认云端托管；生态最全但平台有绑定。
+* 公开贡献画像与人才发现可用 [ghfind](./git.md#ghfind公开贡献画像与开发者发现) 辅助召回；账号分数、star 和活跃量均不能代替具体代码、review 与交付质量评估。
 
 **GitLab**
 * 定位：DevOps 一体化平台，一个应用内包含 repo + CI/CD + 安全扫描 + 容器 / 部署 + wiki。

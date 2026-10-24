@@ -4,6 +4,8 @@
 * [MIT 6.NULL - git](https://missing.csail.mit.edu/2020/version-control/)
 * [Learn Git Branching](https://learngitbranching.js.org/?locale=en_US)
 
+GitHub 公开贡献的发现与评估见 [ghfind：公开贡献画像与开发者发现](#ghfind公开贡献画像与开发者发现)。
+
 
 #### VCS(version control system)
 ##### Git的理念
@@ -372,6 +374,31 @@ requests](https://help.github.com/en/github/collaborating-with-issues-and-pull-r
   hosts, like [GitLab](https://about.gitlab.com/) and
   [BitBucket](https://bitbucket.org/).
   - 自建 / 内网场景的选项与对比（Gitea、Forgejo、GitLab）见 [Software-Engineering：开发协作工具链](./Software-Engineering.md#开发协作工具链github--gitlab--gitea--sonarcloud--1password--confluence--jira--netlify)。
+
+#### ghfind：公开贡献画像与开发者发现
+
+来源：[ghfind](https://ghfind.com/)、[评分方法](https://ghfind.com/en/methodology)、[API 文档](https://ghfind.com/en/docs)；源码核对版本为 [`hikariming/ghfind@e3f5b7c`](https://github.com/hikariming/ghfind/blob/e3f5b7c87f080d661c0207ddc761530fb6572843/README.md)，2026-10-24 查阅。已读官网与文档、固定版本 README、评分函数及点评路由相关代码；未登录、提交账号扫描、安装 SDK / Bot 或实测评分准确性。
+
+ghfind 把公开 GitHub 足迹转成贡献画像，用于自查、发现开发者与寻找潜在合作者。入口是 GitHub 用户名；结果包括 0–100 分、分项、风险信号和可选的“毒舌”点评。站内还提供账号对比、排行榜、按语言／组织／参与仓库发现开发者、项目发现与编辑推荐、招聘及人才匹配等入口。榜单和推荐适合召回线索，关键判断仍应回到具体仓库、PR、讨论与交付证据。
+
+评分不是让大模型凭印象评价一个人。固定版本的 [`score()`](https://github.com/hikariming/ghfind/blob/e3f5b7c87f080d661c0207ddc761530fb6572843/src/lib/score.ts#L254)按公开指标计算六项基础分，再减风险罚分并限制到 0–100：
+
+| 维度 | 基础分上限 | 主要观察 |
+| --- | ---: | --- |
+| 账号成熟度 | 10 | 账号年限、持续贡献年份 |
+| 原创／主导项目质量 | 18 | 原创项目质量与影响信号，非只数仓库和 star |
+| 贡献质量 | 27 | 合入 PR、接受情况、issue 参与及贡献实质信号 |
+| 生态／维护影响 | 20 | 参与项目的影响与贡献深度 |
+| 社区影响力 | 8 | 关注者及关注关系等公开信号 |
+| 活跃真实性 | 17 | 活跃量、近期活动、类型多样性 |
+
+这些指标是规则对贡献的代理描述，不是已经验证的工程能力量表。相同输入确定性出分，不代表跨日期、采集范围或评分版本永远同分。风险标记也只是模式信号，不能直接证明某人刷量、作弊或不可信；私有仓库内的工作不可见，企业工程师、低曝光维护者和新账号可能被低估。招聘时应核对实际 diff、技术取舍、review 反馈和交付，不以单一分数代替判断。
+
+官网说明大模型只生成可选点评。固定 README 的旧说明仍写有 LLM 可作 ±10 校准，但本次所读 [`scoreSummary()` / `computeMeta()`](https://github.com/hikariming/ghfind/blob/e3f5b7c87f080d661c0207ddc761530fb6572843/src/app/api/roast/route.ts#L533)直接使用确定性分数，`delta=0`，与官网现行方法说明一致；不把旧文档描述当成当前执行事实，也未证明线上部署恰好对应此 commit。
+
+使用方式按需求递进：先在网页输入账号，看分项与原始贡献，再用账号对比和开发者目录找同领域的人；批量或 Agent 集成可查 [OpenAPI](https://ghfind.com/openapi.json)、npm/PyPI SDK 与 MCP。`GET /api/score/{username}` 文档标为无需鉴权、无 LLM，但未收录账号可能触发实时采集并持久化；响应应留意 `source`、`coverage`、`stale` 与版本，不能把 quick / 旧缓存和完整扫描混为同一覆盖。`POST /api/scan` 与点评接口有验证／API key 要求，不能从“公开评分可读”推断所有接口匿名可用。SDK 与独立 Go CLI 的实现／支持模式也应分别查对应版本，不能把安装 CLI 等同本地离线评分。
+
+网页浏览无需本地部署；API / MCP 集成需处理限流、缓存、版本与失败响应。自行托管还要配置 GitHub API 凭据、持久化数据库及运行环境，启用点评再增加模型供应商和调用费用；持续维护包括数据刷新、限流、存储与升级。代码以 AGPL 开源，使用或改作服务前查看项目许可证。此次未核实完整托管费率、额度或总账，也没有运行耗时测量，不能据“开源”推断免费、无限或固定响应时间。研发工具链定位见 [Software-Engineering](./Software-Engineering.md#开发协作工具链github--gitlab--gitea--sonarcloud--1password--confluence--jira--netlify)。
 
 #### 和Github联动
 * GitHub is a Git hosting repository that provides developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, or the use of a collection of free and for-purchase apps in the GitHub Marketplace. 
